@@ -71,6 +71,7 @@
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/esm4interactive.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
+#include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include "apps/openmw/mwmechanics/actors.hpp"
 #include "apps/openmw/mwlua/context.hpp"
 #include "apps/openmw/mwlua/localscripts.hpp"
@@ -12112,4 +12113,224 @@ TEST(OblivionWorldTest, NativeScriptRestoreOmittedQuestsUseWinningDefaultsWithou
     readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
+}
+
+namespace
+{
+    ESM4::RuntimeState populatedAiRestore(PopulatedMigrationFixture& fixture)
+    {
+        auto& world = fixture.mWorld;
+        ESM4::AIPackage package{};
+        package.mId = {0xa30, 0};
+        package.mFormKey = ESM::FormKey::content("headless.esm", 0xa30);
+        package.mPackageType = ESM4::AIPackageType::Travel;
+        package.mScheduleData.mStartHour = 6;
+        package.mScheduleData.mDuration = 4;
+        world.getStore().getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+        ESM4::Pathgrid graph{};
+        graph.mId = {0xa40, 0};
+        graph.mFormKey = ESM::FormKey::content("headless.esm", 0xa40);
+        graph.mData = 2;
+        graph.mNodes = {{0, 0, 0, 0, 0, 0}, {10, 0, 0, 0, 0, 0}};
+        graph.mLinks = {{0, 1}};
+        auto state = world.captureOblivionRuntimeState();
+        world.getStore().getOblivionPathgridService().registerPathgrid(graph, state.mPlayer.mCell);
+        ESM4::RuntimeActorAiState actor;
+        actor.mActor = fixture.mActor.getCellRef().getFormKey();
+        actor.mBase = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+        actor.mCell = state.mPlayer.mCell;
+        actor.mLastValidCell = actor.mCell;
+        actor.mTier = ESM4::ProcessTier::Low;
+        actor.mSelectionGeneration = 3;
+        state.mActorAi = {actor};
+        state.mAiRngState = 41;
+        state.mDetectionVectors = {{actor.mActor, state.mPlayer.mReference, 12.5, true, true}};
+        state.mPathPoints = {{graph.mFormKey, 1, false}};
+        state.mPendingPackageDone = {{actor.mActor, package.mFormKey}, {actor.mActor, package.mFormKey}};
+        return state;
+    }
+}
+
+TEST(OblivionWorldTest, NativeAiRestorePreparationDiscardsAndCommitsActorsEventsAndOverlaysOnce)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    const auto saved = populatedAiRestore(fixture);
+    const auto before = world.captureOblivionRuntimeState();
+    const auto* navigator = world.getStore().getOblivionPathgridService().navigatorPathgrid(saved.mPathPoints.front().mPathgrid);
+    {
+        auto cancelled = ai.prepareRestore(saved);
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mActorAi, before.mActorAi);
+        EXPECT_EQ(after.mAiRngState, before.mAiRngState);
+        EXPECT_EQ(after.mPendingPackageDone, before.mPendingPackageDone);
+        EXPECT_EQ(after.mPathPoints, before.mPathPoints);
+        EXPECT_EQ(after.mDetectionVectors, before.mDetectionVectors);
+    }
+    auto prepared = ai.prepareRestore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    auto moved = std::move(prepared);
+    EXPECT_FALSE(prepared.commit());
+    EXPECT_TRUE(moved.commit());
+    EXPECT_FALSE(moved.commit());
+    const auto captured = world.captureOblivionRuntimeState();
+    EXPECT_EQ(captured.mActorAi, saved.mActorAi);
+    EXPECT_EQ(captured.mAiRngState, saved.mAiRngState);
+    EXPECT_EQ(captured.mPendingPackageDone, saved.mPendingPackageDone);
+    EXPECT_EQ(captured.mPathPoints, saved.mPathPoints);
+    EXPECT_EQ(captured.mDetectionVectors, saved.mDetectionVectors);
+    EXPECT_EQ(world.getStore().getOblivionPathgridService().navigatorPathgrid(saved.mPathPoints.front().mPathgrid), navigator);
+    auto empty = saved;
+    empty.mActorAi.clear(); empty.mPendingPackageDone.clear(); empty.mPathPoints.clear();
+    ASSERT_NO_THROW(ai.restore(empty));
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mPathPoints.empty());
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mPendingPackageDone.empty());
+}
+
+TEST(OblivionWorldTest, NativeAiRestoreRejectsBindingsAndConversionsBeforeWorldPublication)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto saved = populatedAiRestore(fixture);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1; item.mCondition = 43.125f; item.mCharge = 7.25f;
+    saved.mPlayer.mInventory = {item};
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto before = world.captureOblivionRuntimeState();
+    const auto clock = world.getTimeStamp();
+    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    for (int invalid : {0, 1, 2, 3, 4, 5, 6, 7, 8})
+    {
+        SCOPED_TRACE(invalid);
+        auto candidate = before;
+        candidate.mClock.mHour = 9;
+        candidate.mNextDynamicSerial += 10;
+        candidate.mPlayer.mInventory.clear();
+        if (invalid == 0) candidate.mPathPoints.front().mPathgrid = ESM::FormKey::content("headless.esm", 0xdead);
+        if (invalid == 1) candidate.mPathPoints.front().mNode = 99;
+        if (invalid == 2) candidate.mActorAi.front().mBase = item.mBase;
+        if (invalid == 3) candidate.mActorAi.front().mCell = item.mBase;
+        if (invalid == 4) candidate.mActorAi.front().mActor = ESM::FormKey::content("headless.esm", 0xdead);
+        if (invalid == 5)
+        {
+            auto& actor = candidate.mActorAi.front();
+            actor.mScriptPackage = actor.mPackage = ESM::FormKey::dynamic("force-flee", 2);
+            actor.mSource = ESM4::PackageSource::Script;
+            actor.mPackageType = ESM4::AIPackageType::FleeNotCombat;
+            actor.mProcedure = ESM4::packageProcedure(actor.mPackageType);
+            actor.mDurationRemaining = 1e32f;
+        }
+        if (invalid == 6) candidate.mPendingPackageDone.front().mPackage = ESM::FormKey::content("headless.esm", 0xdead);
+        if (invalid == 7) candidate.mDetectionVectors.front().mObserver = ESM::FormKey::content("headless.esm", 0xdead);
+        if (invalid == 8) candidate.mPendingPackageDone.front().mActor = ESM::FormKey::content("headless.esm", 0xdead);
+        ASSERT_NO_THROW(candidate.validate());
+        readNativeSnapshot(fixture, candidate);
+        EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.getTimeStamp(), clock);
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), inventory);
+        ESM4::RuntimeState after;
+        world.getOblivionAiService()->capture(after);
+        EXPECT_EQ(after.mActorAi, before.mActorAi);
+        EXPECT_EQ(after.mAiRngState, before.mAiRngState);
+        EXPECT_EQ(after.mPendingPackageDone, before.mPendingPackageDone);
+        EXPECT_EQ(after.mPathPoints, before.mPathPoints);
+        EXPECT_EQ(after.mDetectionVectors, before.mDetectionVectors);
+        EXPECT_TRUE(pending->isValid());
+    }
+    readNativeSnapshot(fixture, before);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(pending->isValid());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+}
+
+TEST(OblivionWorldTest, NativeAiRestorePreservesLeaderGroupAndNonActorTargetBaseExactly)
+{
+    for (bool actorLeader : {false, true})
+    {
+        SCOPED_TRACE(actorLeader);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = populatedAiRestore(fixture);
+        auto package = *world.getStore().search<ESM4::AIPackage>(saved.mPendingPackageDone.front().mPackage);
+        package.mPackageType = ESM4::AIPackageType::Follow;
+        world.getStore().getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+        ESM::FormKey leader, leaderBase;
+        if (actorLeader)
+        {
+            const auto ptr = addNativeNpc(fixture, 0x910);
+            leader = ptr.getCellRef().getFormKey();
+            leaderBase = ptr.get<ESM4::Npc>()->mBase->mFormKey;
+            auto reference = captureNativeActorState(fixture, ptr).mReferences.front();
+            reference.mCell = saved.mPlayer.mCell;
+            saved.mReferences.push_back(reference);
+            auto state = saved.mActorAi.front();
+            state.mActor = leader;
+            state.mBase = leaderBase;
+            state.mCompanionGroup = {}; // Explicit null must survive restore.
+            saved.mActorAi.push_back(state);
+        }
+        else
+        {
+            ESM4::Reference reference{};
+            reference.mId = {0xa50, 0};
+            reference.mFormKey = ESM::FormKey::content("headless.esm", 0xa50);
+            reference.mBaseObj = {0x940, 0};
+            reference.mBaseKey = ESM::FormKey::content("headless.esm", 0x940);
+            world.getStore().getWritable<ESM4::Reference>().insertStatic(reference, reference.mFormKey);
+            leader = reference.mFormKey;
+            leaderBase = reference.mBaseKey;
+            // Deliberately not resident or in the snapshot: resolve winning
+            // REFR metadata without creating a class/cell cache during prepare.
+        }
+        auto& member = saved.mActorAi.front();
+        member.mPackage = package.mFormKey;
+        member.mSource = ESM4::PackageSource::Base;
+        member.mPackageType = package.mPackageType;
+        member.mProcedure = ESM4::packageProcedure(member.mPackageType);
+        member.mTarget = leader;
+        member.mTargetBase = leaderBase;
+        member.mCompanionGroup = leader;
+        member.mFormationIndex = 0;
+        saved.mCompanions = {{leader, member.mActor, leader, {}, 0}};
+        ASSERT_NO_THROW(saved.validate());
+        auto& ai = *world.getOblivionAiService();
+        ASSERT_NO_THROW(ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary())));
+        ESM4::RuntimeState captured;
+        ai.capture(captured);
+        EXPECT_EQ(captured.mActorAi, saved.mActorAi);
+        EXPECT_EQ(captured.mCompanions, saved.mCompanions);
+    }
+}
+
+TEST(OblivionWorldTest, NativeAiRestoreMigratesPopulatedQueuesOverlaysAndDetectionFromEverySupportedVersion)
+{
+    for (std::uint32_t version = 5; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = populatedAiRestore(fixture);
+        saved.mVersion = version;
+        if (version < 6) saved.mPendingPackageDone.clear();
+        // Match the already defined wrap policy, including the maximum saved
+        // generation. Restore must not narrow the accepted uint64 contract.
+        saved.mActorAi.front().mSelectionGeneration = std::numeric_limits<std::uint64_t>::max();
+        saved.mAiRngState = 1;
+        ASSERT_NO_THROW(saved.validate());
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto migrated = world.captureOblivionRuntimeState();
+        EXPECT_EQ(migrated.mVersion, ESM4::CurrentRuntimeStateVersion);
+        EXPECT_EQ(migrated.mActorAi, saved.mActorAi);
+        EXPECT_EQ(migrated.mAiRngState, saved.mAiRngState);
+        EXPECT_EQ(migrated.mPendingPackageDone, saved.mPendingPackageDone);
+        EXPECT_EQ(migrated.mPathPoints, saved.mPathPoints);
+        EXPECT_EQ(migrated.mDetectionVectors, saved.mDetectionVectors);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
+    }
 }

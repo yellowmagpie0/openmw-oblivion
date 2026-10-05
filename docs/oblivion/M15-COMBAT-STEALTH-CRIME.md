@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script restore, populated migration and restart evidence below | Complete AI/reference and outer load/cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, populated migration and restart evidence below | Complete clear/legacy-overlay reset and outer load/cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,74 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 prepared AI/event/pathgrid restore checkpoint — 2026-10-05
+
+World now prepares AI actors, detection vectors, package-completion FIFO and
+pathgrid overlays before inventory, globals, clock or dynamic-identity
+publication. Winning actor/base/cell/package and detection/event owner bindings
+reject early, as do unsafe force-flee duration conversions. Schedule fallback
+uses the incoming saved calendar. Maximum uint64 selection generations retain
+the existing deliberate evaluation-stream wrap behavior.
+
+Prepared commit replaces actor/detection maps and event storage once, resets
+route/transient handles, retires old door-collision exceptions and preserves
+the queue dispatch guard while invalidating the outgoing callback batch. All
+state allocation occurs during preparation; diagnostic flushing is best effort.
+Complete overlay replacement resets omitted nodes, stages navigator/coarse
+route views, and preserves graph and navigator object addresses. Unchanged
+node sets do not increment graph generations. Invalid graph/node and duplicate
+overlays reject the whole prepared replacement.
+
+Stock snapshot reinspection identified two existing fidelity defects: restore
+added companion groups to leaders whose saved group was null, and lost the
+base of a non-actor Follow target. The prepared path preserves leader state and
+resolves target bases from saved/winning REFR metadata without cold class/cell
+construction. These are persistence corrections, not new AI gameplay behavior.
+
+Two component tests, one package-queue test and four actual World tests cover
+cancellation/move/single commit, stable navigator addresses and foreign routes,
+whole-overlay rejection, queue replacement inside a callback, nine invalid
+bindings/conversions before World publication with corrected retry, exact
+leader/non-actor target fidelity, and populated AI/queue/overlay/detection
+migration for every supported version **5–41**. Version5 has no invented
+package-completion events; current-schema resaves reapply unchanged.
+
+Verification binds parent `8bb3ff7fa71518372f03811a47ef3f9a6c6a22dc` and source
+fingerprint `03e69be10b6987af28159eaf8374ca764680356611410cbee3f400ca4ec81ace`.
+
+- `S3/ai-preparation-full-01`: all **2,568** component and **1,132** engine tests
+  pass with exact inventories, zero failures/skips; all three engine targets build.
+- `S3/ai-preparation-engine-sanitize-02`: all **1,132** engine tests pass under
+  ASan/UBSan with the same exact inventory; all engine targets build. Leak checks
+  are disabled and UBSan halts with stack traces. Attempt01 is retained: its
+  build was deliberately stopped before tests to correct the fidelity/wrap issues.
+- `S3/ai-preparation-component-sanitize-01`: all **693** ESM4 component tests
+  pass before the final AI-only corrections. Pathgrid production/test source is
+  unchanged afterward; this earlier run is not claimed as final AI-source evidence.
+- `S3/ai-preparation-runtime-01` and `ai-preparation-sanitized-runtime-01`:
+  actual fresh-process stock load/F5 resave/clean quit. At **load-complete tick0**,
+  independent comparison requires exact equality of all **3,663** AI actors,
+  evaluation counter, **18** companion relations, mounts, detection, overlays
+  and package-event FIFO. All seven AI fields match in both courses; ongoing
+  ordinary AI advancement before resave is a separate boundary.
+  Resaving preserves the complete Player/action/native-actor vectors, all **130**
+  initial script instances, **390** quests and **33,376** saved reference
+  inventories. Both courses add **1,172** cached references, explicitly counted.
+  Both final screenshots were inspected: matching prison view and full bars.
+  Audio is disabled; SDL offscreen is diagnostic idle runtime coverage.
+
+Aggregate evidence is `S3/ai-preparation-report.json`. Documentation follows
+completed verification and retains all nine tested source hashes. No processes
+remain from these checks. The unrelated untracked implementation-tour HTML is
+preserved and excluded from this commit.
+
+**S3 remains active and in progress.** Next fix pathgrid-overlay reset during
+World clear/new game and accepted legacy loads without T4ST. Reference/cell/cache
+reconciliation, the outer StateManager cleanup-before-read boundary, remaining
+populated active-action/passive-effect migration, active-action continuation and
+final S3 requirement-by-requirement acceptance remain open. Later AI/combat/crime
+mechanics are outside this S3 completion work.
 
 ## S3 prepared script restore checkpoint — 2026-10-05
 

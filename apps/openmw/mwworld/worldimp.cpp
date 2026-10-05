@@ -2215,6 +2215,9 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
         if (mOblivionScriptManager)
             preparedScripts.emplace(mOblivionScriptManager->prepareRestore(state));
+        std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
+        if (mOblivionAi)
+            preparedAi.emplace(mOblivionAi->prepareRestore(state));
         const bool nativePlayerValues = preparedCombat
             && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
         static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
@@ -2810,8 +2813,8 @@ namespace MWWorld
                          << stats.getAttribute(ESM::Attribute::Speed).getBase();
         if (preparedScripts)
             preparedScripts->commit();
-        if (mOblivionAi)
-            mOblivionAi->restore(state);
+        if (preparedAi)
+            preparedAi->commit();
         if (preparedActorState)
             preparedActorState->commit();
         // All physical data was prepared before World publication. Commit the

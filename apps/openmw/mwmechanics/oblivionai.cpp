@@ -539,6 +539,11 @@ namespace MWMechanics
 
     void OblivionAiService::seedActors()
     {
+        seedActors(mActors);
+    }
+
+    void OblivionAiService::seedActors(std::map<ESM::FormKey, LiveActor>& actors)
+    {
         const ESM::FormKey playerKey = ESM::FormKey::dynamic("player", 1);
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         const auto add = [&](const ESM4::ActorCharacter& reference) {
@@ -569,7 +574,7 @@ namespace MWMechanics
             live.mState.mNextLowProcessTick = 0.f;
             live.mLastRiddenHorse = reference.mHorseKey;
             live.mNeedsSelection = true;
-            mActors.emplace(reference.mFormKey, std::move(live));
+            actors.emplace(reference.mFormKey, std::move(live));
         };
 
         for (const ESM4::ActorCharacter& reference : mWorld.mStore.get<ESM4::ActorCharacter>())
@@ -6267,17 +6272,104 @@ namespace MWMechanics
             state.mPathPoints.push_back({ node.mPathgrid, node.mNode, false });
     }
 
-    void OblivionAiService::restore(const ESM4::RuntimeState& state)
+    struct OblivionAiService::PreparedRestore::Impl
     {
-        mPendingPackageDone.restore(state.mPendingPackageDone);
-        mActors.clear();
-        mDetectionVectors.clear();
-        flushDiagnosticCounters();
+        OblivionAiService* mTarget;
+        std::map<ESM::FormKey, LiveActor> mActors;
+        std::map<std::pair<ESM::FormKey, ESM::FormKey>, ESM4::RuntimeDetectionVector> mDetection;
+        std::deque<ESM4::RuntimePackageDoneEvent> mEvents;
+        std::optional<ESM4::PathgridService::PreparedOverlayRestore> mPathgrids;
+        std::vector<std::pair<MWWorld::Ptr, MWWorld::Ptr>> mCollisionExceptions;
+        std::uint64_t mNextGeneration = 1;
+    };
+
+    OblivionAiService::PreparedRestore::PreparedRestore(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionAiService::PreparedRestore::~PreparedRestore() = default;
+    OblivionAiService::PreparedRestore::PreparedRestore(PreparedRestore&&) noexcept = default;
+    OblivionAiService::PreparedRestore&
+    OblivionAiService::PreparedRestore::operator=(PreparedRestore&&) noexcept = default;
+
+    bool OblivionAiService::PreparedRestore::commit() noexcept
+    {
+        if (!mImpl || !mImpl->mTarget)
+            return false;
+        auto& target = *mImpl->mTarget;
+        // Removing an existing ignored pair uses erase and Bullet removal,
+        // neither insertion nor allocation. Registrations are borrowed until commit.
+        for (const auto& [actor, door] : mImpl->mCollisionExceptions)
+            target.mWorld.mPhysics->setIgnoreCollision(actor, door, false);
+        mImpl->mPathgrids->commit();
+        target.mActors.swap(mImpl->mActors);
+        target.mDetectionVectors.swap(mImpl->mDetection);
+        target.mPendingPackageDone.installPrepared(mImpl->mEvents);
+        target.mNextEvaluationGeneration = mImpl->mNextGeneration;
+        mImpl->mTarget = nullptr;
+        try { target.flushDiagnosticCounters(); }
+        catch (...) { target.mDiagnosticCounters.clear(); }
+        return true;
+    }
+
+    OblivionAiService::PreparedRestore OblivionAiService::prepareRestore(const ESM4::RuntimeState& state)
+    {
+        state.validate();
+        auto plan = std::make_unique<PreparedRestore::Impl>();
+        plan->mTarget = this;
+        plan->mEvents.assign(state.mPendingPackageDone.begin(), state.mPendingPackageDone.end());
+        const ESM4::CalendarInstant restoredNow{
+            state.mClock.mYear, state.mClock.mMonth, state.mClock.mDay, state.mClock.mHour};
+        std::map<ESM::FormKey, ESM::FormKey> referenceBases;
+        for (const auto& reference : state.mReferences)
+            referenceBases.emplace(reference.mKey, reference.mBase);
+        const auto restoredBase = [&](const ESM::FormKey& key) {
+            if (key == state.mPlayer.mReference)
+                return ESM::FormKey::dynamic("player-base", 1);
+            if (const auto found = referenceBases.find(key); found != referenceBases.end())
+                return found->second;
+            if (const auto* reference = mWorld.mStore.search<ESM4::ActorCharacter>(key))
+                return reference->mBaseKey;
+            if (const auto* reference = mWorld.mStore.search<ESM4::ActorCreature>(key))
+                return reference->mBaseKey;
+            if (const auto* reference = mWorld.mStore.search<ESM4::Reference>(key))
+                return reference->mBaseKey;
+            return ESM::FormKey{};
+        };
+        const auto actorBase = [&](const ESM::FormKey& key) {
+            const auto* npc = mWorld.mStore.search<ESM4::Npc>(key);
+            const auto* creature = mWorld.mStore.search<ESM4::Creature>(key);
+            return (npc && npc->mIsTES4) || (creature && creature->mAttackReach);
+        };
+        const auto validatePackage = [&](const ESM::FormKey& key) {
+            if (key.isNull()) return;
+            if (key.isContent() && package(key)) return;
+            if (key.isDynamic() && key.mNamespace == "force-flee") return;
+            throw std::invalid_argument("TES4 restored AI package has no winning or supported transient binding");
+        };
+        for (const auto& event : state.mPendingPackageDone)
+        {
+            if (event.mActor != state.mPlayer.mReference && !actorBase(restoredBase(event.mActor)))
+                throw std::invalid_argument("TES4 restored package completion has no actor binding");
+            validatePackage(event.mPackage);
+        }
         for (const ESM4::RuntimeDetectionVector& vector : state.mDetectionVectors)
-            mDetectionVectors.emplace(std::make_pair(vector.mObserver, vector.mTarget), vector);
-        mNextEvaluationGeneration = std::max<std::uint64_t>(1, state.mAiRngState);
+        {
+            if (restoredBase(vector.mObserver).isNull() || restoredBase(vector.mTarget).isNull())
+                throw std::invalid_argument("TES4 restored detection vector has a missing reference binding");
+            plan->mDetection.emplace(std::make_pair(vector.mObserver, vector.mTarget), vector);
+        }
+        plan->mNextGeneration = std::max<std::uint64_t>(1, state.mAiRngState);
         for (const ESM4::RuntimeActorAiState& saved : state.mActorAi)
         {
+            if (saved.mActor != state.mPlayer.mReference && !actorBase(saved.mBase))
+                throw std::invalid_argument("TES4 restored AI actor requires a winning NPC/CREA base");
+            if (restoredBase(saved.mActor) != saved.mBase)
+                throw std::invalid_argument("TES4 restored AI actor/base binding disagrees with saved reference");
+            if (!mWorld.mStore.search<ESM4::Cell>(saved.mCell))
+                throw std::invalid_argument("TES4 restored AI actor cell is not a winning CELL");
+            validatePackage(saved.mPackage);
+            validatePackage(saved.mScriptPackage);
+            if (const auto* selected = package(saved.mPackage); selected && selected->mPackageType != saved.mPackageType)
+                throw std::invalid_argument("TES4 restored AI package type disagrees with winning PACK");
             LiveActor live;
             live.mState = saved;
             if (!saved.mScriptPackage.isNull())
@@ -6286,7 +6378,7 @@ namespace MWMechanics
             if (!saved.mPackage.isNull())
                 if (const ESM4::AIPackage* selected = package(saved.mPackage))
                     if (!live.mSelectedWindow)
-                        live.mSelectedWindow = selected->mScheduleData.activeWindow(now());
+                        live.mSelectedWindow = selected->mScheduleData.activeWindow(restoredNow);
             if (saved.mHasDestination)
             {
                 live.mDestination = osg::Vec3f(saved.mDestinationPosition.pos[0],
@@ -6302,44 +6394,45 @@ namespace MWMechanics
             if (!live.mScriptPackage && saved.mScriptPackage.isDynamic()
                 && saved.mScriptPackage.mNamespace == "force-flee")
             {
+                const double duration = std::max(1.0, static_cast<double>(saved.mDurationRemaining));
+                if (duration > std::numeric_limits<std::int32_t>::max())
+                    throw std::invalid_argument("TES4 restored force-flee duration exceeds the integer domain");
                 ESM4::PackageCandidate candidate;
                 candidate.mKey = saved.mScriptPackage;
                 candidate.mType = ESM4::AIPackageType::FleeNotCombat;
                 candidate.mSchedule.mStartHour = -1;
-                candidate.mSchedule.mDuration = static_cast<std::int32_t>(
-                    std::max(1.f, saved.mDurationRemaining));
+                candidate.mSchedule.mDuration = static_cast<std::int32_t>(duration);
                 live.mScriptPackage = std::move(candidate);
                 ESM4::AIPackage transient;
                 transient.mFormKey = saved.mScriptPackage;
                 transient.mPackageType = ESM4::AIPackageType::FleeNotCombat;
                 transient.mScheduleData.mStartHour = -1;
-                transient.mScheduleData.mDuration = static_cast<std::int32_t>(
-                    std::max(1.f, saved.mDurationRemaining));
+                transient.mScheduleData.mDuration = static_cast<std::int32_t>(duration);
                 transient.mTargetData.mKind = ESM4::PackageTargetKind::SpecificReference;
                 transient.mTargetData.mReferenceKey = saved.mTarget;
                 live.mTransientPackage = std::move(transient);
             }
-            mActors.emplace(saved.mActor, std::move(live));
-            mNextEvaluationGeneration = std::max(mNextEvaluationGeneration, saved.mSelectionGeneration + 1);
+            plan->mActors.emplace(saved.mActor, std::move(live));
+            // Unsigned wrap is deliberate, matching the existing evaluation
+            // stream: a saved maximum does not advance a nonzero next value.
+            plan->mNextGeneration = std::max(plan->mNextGeneration, saved.mSelectionGeneration + 1);
         }
         for (const ESM4::RuntimeCompanionRelation& relation : state.mCompanions)
         {
-            const auto member = mActors.find(relation.mMember);
-            if (member == mActors.end())
+            const auto member = plan->mActors.find(relation.mMember);
+            if (member == plan->mActors.end())
                 continue;
             member->second.mState.mTarget = relation.mLeader;
             member->second.mState.mTargetBase = {};
             member->second.mState.mCompanionGroup = relation.mGroup;
             member->second.mState.mCompanionSideWith = relation.mSideWith;
             member->second.mState.mFormationIndex = relation.mFormationIndex;
-            if (const auto leaderActor = mActors.find(relation.mLeader); leaderActor != mActors.end())
+            if (const auto leaderActor = plan->mActors.find(relation.mLeader); leaderActor != plan->mActors.end())
             {
                 member->second.mState.mTargetBase = leaderActor->second.mState.mBase;
-                if (leaderActor->second.mState.mCompanionGroup.isNull())
-                    leaderActor->second.mState.mCompanionGroup = relation.mGroup;
             }
-            else if (const MWWorld::Ptr leaderPtr = ptrFor(relation.mLeader); !leaderPtr.isEmpty())
-                member->second.mState.mTargetBase = baseKey(leaderPtr);
+            else
+                member->second.mState.mTargetBase = restoredBase(relation.mLeader);
         }
         // Mount relations are authoritative for current attachment state;
         // non-mounted relations retain only the last-ridden horse identity.
@@ -6347,37 +6440,46 @@ namespace MWMechanics
         // rider/horse view without relying on load-order enumeration.
         for (const ESM4::RuntimeMountRelation& relation : state.mMounts)
         {
-            auto found = mActors.find(relation.mRider);
-            if (found == mActors.end())
+            auto found = plan->mActors.find(relation.mRider);
+            if (found == plan->mActors.end())
                 continue;
             found->second.mLastRiddenHorse = relation.mLastRidden;
             if (relation.mMounted)
             {
                 found->second.mState.mMount = relation.mHorse;
                 found->second.mState.mRider = {};
-                if (auto horse = mActors.find(relation.mHorse); horse != mActors.end())
+                if (auto horse = plan->mActors.find(relation.mHorse); horse != plan->mActors.end())
                     horse->second.mState.mRider = relation.mRider;
             }
             else
                 found->second.mState.mMount = {};
         }
-        for (const ESM4::RuntimePathPointState& point : state.mPathPoints)
-        {
-            try
-            {
-                mWorld.mStore.getOblivionPathgridService().applyOverlay(
-                    { point.mPathgrid, point.mNode }, point.mEnabled);
-            }
-            catch (const std::out_of_range&)
-            {
-                Log(Debug::Warning) << "TES4 runtime AI overlay references missing pathgrid "
-                                    << point.mPathgrid.serialize();
-            }
-        }
+        std::vector<std::pair<ESM4::PathgridNodeKey, bool>> overlays;
+        overlays.reserve(state.mPathPoints.size());
+        for (const auto& point : state.mPathPoints)
+            overlays.push_back({{point.mPathgrid, point.mNode}, point.mEnabled});
+        plan->mPathgrids.emplace(mWorld.mStore.getOblivionPathgridService().prepareOverlayRestore(overlays));
+        // Retire old door-collision exceptions without retaining route handles.
+        if (mWorld.mPhysics)
+            for (const auto& [_, live] : mActors)
+                if (!live.mIgnoredPhysicalDoor.isNull())
+                {
+                    auto actor = loadedPtrFor(live.mState.mActor);
+                    auto door = loadedPtrFor(live.mIgnoredPhysicalDoor);
+                    if (!actor.isEmpty() && !door.isEmpty())
+                        plan->mCollisionExceptions.emplace_back(actor, door);
+                }
         // Older saves and saves written before an actor was promoted to high
         // process contain no per-actor native state. Seed the remaining
         // winning ACHR/ACRE records after applying saved state so those actors
         // still receive low-process ticks without overwriting restored intent.
-        seedActors();
+        seedActors(plan->mActors);
+        return PreparedRestore(std::move(plan));
+    }
+
+    void OblivionAiService::restore(const ESM4::RuntimeState& state)
+    {
+        auto plan = prepareRestore(state);
+        plan.commit();
     }
 }

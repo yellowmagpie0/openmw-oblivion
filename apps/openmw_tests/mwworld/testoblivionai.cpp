@@ -656,3 +656,24 @@ namespace
         EXPECT_EQ(state.mRepathAttempts, 0u);
     }
 }
+
+TEST(OblivionAiTest, PreparedPackageQueueReplacementInvalidatesCallbackBatchAndKeepsDispatchGuard)
+{
+    MWMechanics::OblivionPackageDoneQueue queue;
+    queue.record(ESM4::PackagePhase::Act, ESM4::PackagePhase::Complete, key(1), key(10));
+    queue.record(ESM4::PackagePhase::Act, ESM4::PackagePhase::Complete, key(2), key(20));
+    std::deque<ESM4::RuntimePackageDoneEvent> prepared{{key(3), key(30)}, {key(4), key(40)}};
+    int calls = 0;
+    queue.dispatch([&](const auto& event) {
+        ++calls;
+        EXPECT_EQ(event.mActor, key(1));
+        queue.installPrepared(prepared);
+        queue.dispatch([](const auto&) { ADD_FAILURE() << "recursive dispatch crossed restored queue epoch"; });
+    });
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(queue.capture(), (std::vector<ESM4::RuntimePackageDoneEvent>{{key(3), key(30)}, {key(4), key(40)}}));
+    std::vector<ESM4::RuntimePackageDoneEvent> delivered;
+    queue.dispatch([&](const auto& event) { delivered.push_back(event); });
+    EXPECT_EQ(delivered, (std::vector<ESM4::RuntimePackageDoneEvent>{{key(3), key(30)}, {key(4), key(40)}}));
+    EXPECT_TRUE(queue.capture().empty());
+}

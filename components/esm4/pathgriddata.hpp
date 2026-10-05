@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <span>
@@ -228,6 +229,23 @@ namespace ESM4
         std::vector<PathgridNodeKey> disabledNodes() const;
         void applyOverlay(const PathgridNodeKey& node, bool enabled);
 
+        class PreparedOverlayRestore
+        {
+        public:
+            ~PreparedOverlayRestore();
+            PreparedOverlayRestore(PreparedOverlayRestore&&) noexcept;
+            PreparedOverlayRestore& operator=(PreparedOverlayRestore&&) noexcept;
+            bool commit() noexcept;
+        private:
+            friend class PathgridService;
+            struct Impl;
+            explicit PreparedOverlayRestore(std::unique_ptr<Impl> impl);
+            std::unique_ptr<Impl> mImpl;
+        };
+        // Complete replacement: omitted nodes return to enabled. The handle
+        // borrows this service/graph registration until synchronous commit.
+        PreparedOverlayRestore prepareOverlayRestore(std::span<const std::pair<PathgridNodeKey, bool>> overlays);
+
     private:
         std::map<ESM::FormKey, PathgridGraph> mGraphs;
         std::map<ESM::FormKey, ESM::FormKey> mCells;
@@ -245,6 +263,9 @@ namespace ESM4
 
         void rebuildNavigatorPathgrid(const ESM::FormKey& pathgrid);
         void rebuildCoarseGraphIndex();
+        void buildCoarseGraphIndex(const std::map<ESM::FormKey, std::set<std::uint32_t>>& overrides,
+            std::map<ESM::FormKey, std::vector<ESM::FormKey>>& adjacency,
+            std::map<ESM::FormKey, std::size_t>& components) const;
         void insertPathgrid(const Pathgrid& definition, const ESM::FormKey& cell, PathgridTransform transform);
     };
 }

@@ -328,3 +328,64 @@ TEST(ESM4PathgridData, BulkConstructionSupportsEmptyAndReplacedGraphs)
     service.registerPathgrid(first, key(101));
     EXPECT_TRUE(service.route({ key(1), 0 }, { key(1), 0 }));
 }
+
+TEST(ESM4PathgridData, PreparedOverlayRestoreCancelsMovesAndPreservesNavigatorAddresses)
+{
+    auto first = makeGrid(1, {point(0), point(10)}, {{0, 1}});
+    first.mForeign.push_back({1, 0, 30, 0, 0});
+    const auto second = makeGrid(2, {point(30)});
+    ESM4::PathgridService service;
+    service.registerPathgrid(first, key(101));
+    service.registerPathgrid(second, key(102));
+    ASSERT_TRUE(service.resolveForeignLinks(.01f));
+    const auto* graph = service.graph(key(1));
+    const auto* navigator = service.navigatorPathgrid(key(1));
+    const auto generation = graph->generation();
+    const std::array changes{std::pair{ESM4::PathgridNodeKey{key(1), 1}, false}};
+    {
+        auto cancelled = service.prepareOverlayRestore(changes);
+        EXPECT_TRUE(service.disabledNodes().empty());
+        EXPECT_EQ(service.generation(key(1)), generation);
+        EXPECT_TRUE(service.route({key(1), 0}, {key(2), 0}));
+    }
+    auto prepared = service.prepareOverlayRestore(changes);
+    auto moved = std::move(prepared);
+    EXPECT_FALSE(prepared.commit());
+    EXPECT_TRUE(moved.commit());
+    EXPECT_FALSE(moved.commit());
+    EXPECT_EQ(service.graph(key(1)), graph);
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+    EXPECT_GT(graph->generation(), generation);
+    EXPECT_FALSE(service.route({key(1), 0}, {key(2), 0}));
+    EXPECT_TRUE(navigator->mEdges.empty());
+    const auto disabledGeneration = graph->generation();
+    auto identical = service.prepareOverlayRestore(changes);
+    ASSERT_TRUE(identical.commit());
+    EXPECT_EQ(graph->generation(), disabledGeneration);
+    auto reset = service.prepareOverlayRestore({});
+    ASSERT_TRUE(reset.commit());
+    EXPECT_TRUE(service.disabledNodes().empty());
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+    EXPECT_TRUE(service.route({key(1), 0}, {key(2), 0}));
+    EXPECT_FALSE(navigator->mEdges.empty());
+}
+
+TEST(ESM4PathgridData, PreparedOverlayRestoreRejectsWholeReplacementBeforeAnyNodeChange)
+{
+    ESM4::PathgridService service;
+    service.registerPathgrid(makeGrid(1, {point(0), point(10)}, {{0, 1}}), key(101));
+    ASSERT_TRUE(service.setNodeEnabled({key(1), 0}, false));
+    const auto before = service.disabledNodes();
+    const auto generation = service.generation(key(1));
+    for (int invalid : {0, 1, 2})
+    {
+        SCOPED_TRACE(invalid);
+        std::vector<std::pair<ESM4::PathgridNodeKey, bool>> changes{{{key(1), 0}, true}, {{key(1), 1}, false}};
+        if (invalid == 0) changes.push_back({{key(99), 0}, false});
+        if (invalid == 1) changes.push_back({{key(1), 99}, false});
+        if (invalid == 2) changes.push_back({{key(1), 0}, false});
+        EXPECT_ANY_THROW(service.prepareOverlayRestore(changes));
+        EXPECT_EQ(service.disabledNodes(), before);
+        EXPECT_EQ(service.generation(key(1)), generation);
+    }
+}

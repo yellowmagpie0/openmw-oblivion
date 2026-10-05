@@ -15,6 +15,7 @@
 #include <queue>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 
 namespace
@@ -645,30 +646,42 @@ namespace ESM4
 
     void PathgridService::rebuildCoarseGraphIndex()
     {
-        mCoarseGraphAdjacency.clear();
-        mGraphComponents.clear();
+        buildCoarseGraphIndex({}, mCoarseGraphAdjacency, mGraphComponents);
+    }
+
+    void PathgridService::buildCoarseGraphIndex(
+        const std::map<ESM::FormKey, std::set<std::uint32_t>>& overrides,
+        std::map<ESM::FormKey, std::vector<ESM::FormKey>>& adjacency,
+        std::map<ESM::FormKey, std::size_t>& components) const
+    {
+        const auto enabled = [&](const PathgridGraph& graphValue, std::uint32_t node) {
+            const auto changed = overrides.find(graphValue.pathgridKey());
+            return changed == overrides.end() ? graphValue.isEnabled(node) : !changed->second.contains(node);
+        };
+        adjacency.clear();
+        components.clear();
         for (const auto& [key, _] : mGraphs)
-            mCoarseGraphAdjacency.emplace(key, std::vector<ESM::FormKey>{});
+            adjacency.emplace(key, std::vector<ESM::FormKey>{});
 
         for (const auto& [key, graphValue] : mGraphs)
         {
-            auto sourceAdjacency = mCoarseGraphAdjacency.find(key);
-            if (sourceAdjacency == mCoarseGraphAdjacency.end())
+            auto sourceAdjacency = adjacency.find(key);
+            if (sourceAdjacency == adjacency.end())
                 continue;
             for (const PathgridForeignLink& link : graphValue.mForeignLinks)
             {
-                if (link.mAmbiguous || !link.mDestination || !graphValue.isEnabled(link.mSourceNode))
+                if (link.mAmbiguous || !link.mDestination || !enabled(graphValue, link.mSourceNode))
                     continue;
                 const auto destinationGraph = mGraphs.find(link.mDestination->mPathgrid);
                 if (destinationGraph == mGraphs.end()
-                    || !destinationGraph->second.isEnabled(link.mDestination->mNode))
+                    || !enabled(destinationGraph->second, link.mDestination->mNode))
                     continue;
                 sourceAdjacency->second.push_back(link.mDestination->mPathgrid);
-                mCoarseGraphAdjacency[link.mDestination->mPathgrid].push_back(key);
+                adjacency[link.mDestination->mPathgrid].push_back(key);
             }
         }
 
-        for (auto& [_, neighbours] : mCoarseGraphAdjacency)
+        for (auto& [_, neighbours] : adjacency)
         {
             std::sort(neighbours.begin(), neighbours.end());
             neighbours.erase(std::unique(neighbours.begin(), neighbours.end()), neighbours.end());
@@ -676,25 +689,25 @@ namespace ESM4
 
         std::set<ESM::FormKey> visited;
         std::size_t component = 0;
-        for (const auto& [key, _] : mCoarseGraphAdjacency)
+        for (const auto& [key, _] : adjacency)
         {
             if (!visited.insert(key).second)
                 continue;
             std::queue<ESM::FormKey> queue;
             queue.push(key);
-            mGraphComponents[key] = component;
+            components[key] = component;
             while (!queue.empty())
             {
                 const ESM::FormKey current = queue.front();
                 queue.pop();
-                const auto neighbours = mCoarseGraphAdjacency.find(current);
-                if (neighbours == mCoarseGraphAdjacency.end())
+                const auto neighbours = adjacency.find(current);
+                if (neighbours == adjacency.end())
                     continue;
                 for (const ESM::FormKey& neighbour : neighbours->second)
                 {
                     if (visited.insert(neighbour).second)
                     {
-                        mGraphComponents[neighbour] = component;
+                        components[neighbour] = component;
                         queue.push(neighbour);
                     }
                 }
@@ -924,4 +937,79 @@ namespace ESM4
             throw std::out_of_range("TES4 pathgrid overlay addresses a missing graph");
         static_cast<void>(setNodeEnabled(node, enabled));
     }
+    struct PathgridService::PreparedOverlayRestore::Impl
+    {
+        struct Binding
+        {
+            PathgridGraph* mGraph;
+            ESM::Pathgrid* mNavigator;
+            std::set<std::uint32_t> mDisabled;
+            ESM::Pathgrid mPreparedNavigator;
+        };
+        PathgridService* mTarget;
+        std::vector<Binding> mBindings;
+        std::map<ESM::FormKey, std::vector<ESM::FormKey>> mAdjacency;
+        std::map<ESM::FormKey, std::size_t> mComponents;
+    };
+
+    PathgridService::PreparedOverlayRestore::PreparedOverlayRestore(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    PathgridService::PreparedOverlayRestore::~PreparedOverlayRestore() = default;
+    PathgridService::PreparedOverlayRestore::PreparedOverlayRestore(PreparedOverlayRestore&&) noexcept = default;
+    PathgridService::PreparedOverlayRestore&
+    PathgridService::PreparedOverlayRestore::operator=(PreparedOverlayRestore&&) noexcept = default;
+
+    bool PathgridService::PreparedOverlayRestore::commit() noexcept
+    {
+        if (!mImpl || !mImpl->mTarget)
+            return false;
+        static_assert(std::is_nothrow_swappable_v<ESM::Pathgrid>);
+        for (auto& binding : mImpl->mBindings)
+        {
+            binding.mGraph->mDisabledNodes.swap(binding.mDisabled);
+            ++binding.mGraph->mGeneration;
+            // Keep addresses used by navigator ObjectIds stable.
+            std::swap(*binding.mNavigator, binding.mPreparedNavigator);
+        }
+        mImpl->mTarget->mCoarseGraphAdjacency.swap(mImpl->mAdjacency);
+        mImpl->mTarget->mGraphComponents.swap(mImpl->mComponents);
+        mImpl->mTarget = nullptr;
+        return true;
+    }
+
+    PathgridService::PreparedOverlayRestore PathgridService::prepareOverlayRestore(
+        std::span<const std::pair<PathgridNodeKey, bool>> overlays)
+    {
+        auto plan = std::make_unique<PreparedOverlayRestore::Impl>();
+        plan->mTarget = this;
+        std::map<ESM::FormKey, std::set<std::uint32_t>> disabled;
+        std::set<PathgridNodeKey> seen;
+        for (const auto& [node, enabled] : overlays)
+        {
+            const auto* target = graph(node.mPathgrid);
+            if (!target || !target->contains(node.mNode))
+                throw std::out_of_range("TES4 restored pathgrid overlay addresses a missing graph/node");
+            if (!seen.insert(node).second)
+                throw std::invalid_argument("Duplicate TES4 restored pathgrid overlay");
+            if (!enabled)
+                disabled[node.mPathgrid].insert(node.mNode);
+        }
+        std::map<ESM::FormKey, std::set<std::uint32_t>> changed;
+        for (auto& [key, graphValue] : mGraphs)
+        {
+            auto& next = disabled[key];
+            if (graphValue.mDisabledNodes == next)
+                continue;
+            // Only changed graphs need a temporary geometry copy. The full
+            // static graph corpus and existing navigator registrations stay live.
+            auto preparedGraph = graphValue;
+            preparedGraph.mDisabledNodes = next;
+            plan->mBindings.push_back({&graphValue, &mNavigatorPathgrids.at(key),
+                next, makeNavigatorPathgrid(preparedGraph)});
+            changed.emplace(key, std::move(next));
+        }
+        buildCoarseGraphIndex(changed, plan->mAdjacency, plan->mComponents);
+        return PreparedOverlayRestore(std::move(plan));
+    }
+
 }

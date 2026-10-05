@@ -12,6 +12,7 @@
 
 #include <fstream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -98,6 +99,21 @@ namespace MWMechanics
         MWWorld::Ptr resolveReference(const ESM::FormKey& key) const;
 
         void capture(ESM4::RuntimeState& state) const;
+        class PreparedRestore
+        {
+        public:
+            ~PreparedRestore();
+            PreparedRestore(PreparedRestore&&) noexcept;
+            PreparedRestore& operator=(PreparedRestore&&) noexcept;
+            bool commit() noexcept;
+        private:
+            friend class OblivionAiService;
+            struct Impl;
+            explicit PreparedRestore(std::unique_ptr<Impl> impl);
+            std::unique_ptr<Impl> mImpl;
+        };
+        // Borrows this service and synchronous graph/physics registrations.
+        PreparedRestore prepareRestore(const ESM4::RuntimeState& state);
         void restore(const ESM4::RuntimeState& state);
 
     private:
@@ -218,6 +234,7 @@ namespace MWMechanics
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
         void seedActors();
+        void seedActors(std::map<ESM::FormKey, LiveActor>& actors);
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;
         ESM4::ConditionEvaluationContext unloadedConditionContext(const LiveActor& live) const;
         ESM4::PackageSelection selectUnloaded(LiveActor& live, bool restart = true);

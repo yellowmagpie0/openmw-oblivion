@@ -58,7 +58,14 @@ namespace MWMechanics
 
         void restore(std::span<const ESM4::RuntimePackageDoneEvent> events)
         {
-            mPending.assign(events.begin(), events.end());
+            std::deque<ESM4::RuntimePackageDoneEvent> prepared(events.begin(), events.end());
+            installPrepared(prepared);
+        }
+
+        // Preserve the dispatch guard while invalidating the old callback batch.
+        void installPrepared(std::deque<ESM4::RuntimePackageDoneEvent>& events) noexcept
+        {
+            mPending.swap(events);
             ++mEpoch;
         }
 
