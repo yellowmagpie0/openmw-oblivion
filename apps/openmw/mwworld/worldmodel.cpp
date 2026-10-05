@@ -146,6 +146,7 @@ MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 
 void MWWorld::WorldModel::clear()
 {
+    mPreparationIdentity.reset();
     mPtrRegistry.clear();
     mInteriors.clear();
     mExteriors.clear();
@@ -355,6 +356,8 @@ namespace MWWorld
         , mRegistry(world.mPtrRegistry)
         , mInserted(inserted.begin(), inserted.end())
     {
+        if (!world.mPreparationIdentity) world.mPreparationIdentity = std::make_shared<const char>(0);
+        mIdentity = world.mPreparationIdentity;
         for (const Ptr& ptr : removed)
         {
             if (ptr.isEmpty() || ptr.mRef->mWorldModel != &world
@@ -391,6 +394,7 @@ namespace MWWorld
 
     WorldModel::PreparedPtrReplacement::PreparedPtrReplacement(PreparedPtrReplacement&& other) noexcept
         : mWorld(std::exchange(other.mWorld, nullptr))
+        , mIdentity(std::move(other.mIdentity))
         , mRevision(other.mRevision)
         , mLastGenerated(other.mLastGenerated)
         , mRegistry(std::move(other.mRegistry))
@@ -398,14 +402,23 @@ namespace MWWorld
     {
     }
 
-    void WorldModel::PreparedPtrReplacement::commit()
+    bool WorldModel::PreparedPtrReplacement::isValid() const noexcept
     {
-        if (!mWorld || mWorld->getPtrRegistryRevision() != mRevision
+        const auto identity = mIdentity.lock();
+        if (!identity || !mWorld || identity != mWorld->mPreparationIdentity
+            || mWorld->getPtrRegistryRevision() != mRevision
             || mWorld->getLastGeneratedRefNum() != mLastGenerated)
-            throw std::logic_error("pointer replacement preparation is stale or already committed");
+            return false;
         for (const Ptr& ptr : mInserted)
             if (ptr.mRef->mWorldModel != nullptr || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()) != ptr)
-                throw std::logic_error("prepared pointer replacement reference changed before commit");
+                return false;
+        return true;
+    }
+
+    void WorldModel::PreparedPtrReplacement::commit()
+    {
+        if (!isValid())
+            throw std::logic_error("pointer replacement preparation is stale or already committed");
         mWorld->mPtrRegistry.swap(mRegistry);
         for (const Ptr& ptr : mInserted)
             ptr.mRef->mWorldModel = mWorld;

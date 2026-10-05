@@ -778,12 +778,14 @@ namespace MWPhysics
     struct PreparedLooseObject::Data
     {
         PhysicsSystem* mOwner = nullptr;
-        std::shared_ptr<const char> mIdentity;
+        std::weak_ptr<const char> mIdentity;
         MWWorld::Ptr mPtr;
         std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> mPhysical;
     };
     PreparedLooseObject::PreparedLooseObject(std::unique_ptr<Data> data) : mData(std::move(data)) {}
     PreparedLooseObject::~PreparedLooseObject() = default;
+    bool PreparedLooseObject::hasLiveOwner() const noexcept
+    { return mData && !mData->mIdentity.expired(); }
 
     std::unique_ptr<PreparedLooseObject> PhysicsSystem::prepareLooseObject(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
@@ -802,7 +804,7 @@ namespace MWPhysics
     bool PhysicsSystem::validatePreparedLooseObject(const PreparedLooseObject& prepared)
     {
         const auto* data = prepared.mData.get();
-        return data && data->mOwner == this && data->mIdentity == mLoosePreparationOwner
+        return data && data->mOwner == this && data->mIdentity.lock() == mLoosePreparationOwner
             && data->mPhysical && !mObjects.contains(data->mPtr.mRef) && !mActors.contains(data->mPtr.mRef)
             && !mTriggers.contains(data->mPtr.mRef)
             && mTaskScheduler->validatePreparedLooseObject(*data->mPhysical);

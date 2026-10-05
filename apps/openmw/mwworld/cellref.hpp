@@ -37,6 +37,9 @@ namespace MWWorld
         // Stable TES4 identity. TES3 references return a null key because their
         // persistent identity remains ESM::RefNum/RefId.
         ESM::FormKey getFormKey() const;
+        const ESM4::Reference* getNativeReference() const noexcept
+        { return std::get_if<ESM4::Reference>(&mCellRef.mVariant); }
+
 
         // Returns RefNum.
         // If RefNum is not set, assigns a generated one and changes the "lastAssignedRefNum" counter.

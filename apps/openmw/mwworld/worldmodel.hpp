@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_WORLDMODEL_H
 
 #include <list>
+#include <memory>
 #include <map>
 #include <span>
 #include <string>
@@ -34,6 +35,12 @@ namespace Loading
     class Listener;
 }
 
+namespace osg { class Quat; }
+namespace MWRender { class Objects; }
+namespace MWPhysics { class PhysicsSystem; }
+namespace NifBullet { struct ActorRagdollDefinition; }
+class btTransform;
+
 namespace MWWorld
 {
     class ESMStore;
@@ -51,6 +58,7 @@ namespace MWWorld
         {
             friend class WorldModel;
             WorldModel* mWorld;
+            std::weak_ptr<const char> mIdentity;
             std::size_t mRevision;
             ESM::RefNum mLastGenerated;
             PtrRegistry mRegistry;
@@ -67,11 +75,38 @@ namespace MWWorld
 
             // Reject a stale or already committed preparation before mutation.
             // Successful publication performs no allocations or callbacks.
+            bool isValid() const noexcept;
             void commit();
         };
 
         PreparedPtrReplacement preparePtrReplacement(std::span<const Ptr> removed,
             std::span<const Ptr> inserted);
+
+        class PreparedLooseWeaponAdmission
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedLooseWeaponAdmission(std::unique_ptr<Data> data);
+            friend class WorldModel;
+        public:
+            ~PreparedLooseWeaponAdmission();
+            PreparedLooseWeaponAdmission(const PreparedLooseWeaponAdmission&) = delete;
+            PreparedLooseWeaponAdmission& operator=(const PreparedLooseWeaponAdmission&) = delete;
+            bool isValid() const;
+            // Scene/physical admission may throw. Failed publication rolls back
+            // both before any cell or registry change. No game observers.
+            Ptr commit();
+        };
+
+        // Caller reserves the stable dynamic identity and supplies resolved
+        // placement, ownership, extras and authored model/body metadata.
+        // Does not debit source inventory or advance a World dynamic serial.
+        std::unique_ptr<PreparedLooseWeaponAdmission> prepareLooseWeaponAdmission(
+            CellStore& cell, const LiveCellRef<ESM4::Weapon>& reference,
+            MWRender::Objects& objects, MWPhysics::PhysicsSystem& physics,
+            const std::string& model, const osg::Quat& rotation, unsigned nodeMask,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask);
 
         WorldModel(const WorldModel&) = delete;
         WorldModel& operator=(const WorldModel&) = delete;
@@ -148,6 +183,7 @@ namespace MWWorld
     private:
         struct GetCellStoreCallback;
 
+        std::shared_ptr<const char> mPreparationIdentity;
         PtrRegistry mPtrRegistry; // defined before mCells because during destruction it should be the last
 
         MWWorld::ESMStore& mStore;

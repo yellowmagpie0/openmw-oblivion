@@ -115,6 +115,7 @@ namespace MWPhysics
         friend class PhysicsSystem;
     public:
         ~PreparedLooseObject();
+        bool hasLiveOwner() const noexcept;
         PreparedLooseObject(const PreparedLooseObject&) = delete;
         PreparedLooseObject& operator=(const PreparedLooseObject&) = delete;
     };

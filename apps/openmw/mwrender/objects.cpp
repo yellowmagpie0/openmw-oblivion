@@ -49,7 +49,7 @@ namespace MWRender
     struct Objects::PreparedModel::Data
     {
         Objects* mOwner = nullptr;
-        std::shared_ptr<const char> mIdentity;
+        std::weak_ptr<const char> mIdentity;
         MWWorld::Ptr mPtr;
         MWWorld::CellStore* mCell = nullptr;
         ESM::Position mPosition;
@@ -67,6 +67,8 @@ namespace MWRender
 
     Objects::PreparedModel::PreparedModel(std::unique_ptr<Data> data) : mData(std::move(data)) {}
     Objects::PreparedModel::~PreparedModel() = default;
+    bool Objects::PreparedModel::hasLiveOwner() const noexcept
+    { return mData && !mData->mIdentity.expired(); }
 
     std::unique_ptr<Objects::PreparedModel> Objects::prepareModel(const MWWorld::Ptr& ptr,
         const std::string& model, const osg::Quat& rotation, unsigned nodeMask)
@@ -138,7 +140,7 @@ namespace MWRender
     bool Objects::validatePreparedModel(const PreparedModel& prepared) const
     {
         const auto* data = prepared.mData.get();
-        if (!data || data->mOwner != this || data->mIdentity != mModelPreparationIdentity
+        if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
             || data->mPublished || data->mConsumed || data->mObjectEntry.empty())
             return false;
         const auto& ptr = data->mPtr;
@@ -184,7 +186,7 @@ namespace MWRender
     bool Objects::rollbackModelAdmission(PreparedModel& prepared)
     {
         auto* data = prepared.mData.get();
-        if (!data || data->mOwner != this || data->mIdentity != mModelPreparationIdentity
+        if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
             || !data->mPublished || data->mConsumed)
             return false;
         const auto object = mObjects.find(data->mPtr.mRef);

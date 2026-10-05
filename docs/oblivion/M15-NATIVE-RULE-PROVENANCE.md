@@ -13490,3 +13490,75 @@ persist loose-body motion or implement pickup. Ordinary NPC broken-bow release
 continues rejecting preparation until the complete transaction is wired.
 Native Drop ObScript context and normal-input/restart campaigns remain open.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint284: compound native loose-weapon admission
+
+WorldModel now owns a preparation that stages a native WEAP cell node,
+its registry entry, an actual rendered ObjectAnimation and a native loose
+physical body. Preparation leaves the cell, registry, scene and physics
+unchanged. Cancellation destroys the private preparations before their
+backing reference. Publication adds the model and body before the guarded,
+callback-free registry replacement and same-address CellStore splice.
+Scene failure or a scene callback changing/clearing the registry rolls back
+the exact published model before any logical or physical item escapes.
+
+Admission requires an enabled, undeleted single native instance, exact
+winning WEAP base and managed native cell identities, validated dynamic
+namespace, unresolved legacy RefNum, unit scale, resolved model, valid native
+condition/enchantment capacity and one valid loose body. Existing stable
+identities reject duplication. The caller still owns dynamic serial
+reservation, final ownership/placement resolution and authored asset/body
+binding.
+
+Registry preparations now reject retired WorldModel instances before touching
+borrowed references; clear retires that identity before cell destruction.
+Rendered-model and physical preparations expose weak owner-lifetime guards,
+allowing the compound transaction to reject destroyed managers safely.
+Seven new actual WorldModel/Objects/PhysicsSystem cases cover cancellation,
+same-instance publication, exact negative-zero condition and fractional
+enchantment charge, invalid identity/extras/body, scene rejection and
+insert-then-throw, reentrant registry replacement and world clear, manager
+destruction and WorldModel address reuse with a deleted borrowed reference.
+These fixtures use an owned OSG model and synthetic spherical body; they do
+not establish stock NIF rendering or gameplay acceptance.
+
+Corrected normal and ASan/UBSan builds pass1050 full engine cases with exact
+inventories, no failures/skips and no compiler warnings. Leak checks remain
+disabled. Both initial01 runs stopped in the new fixture constructor because
+its Environment/store context was missing. A retained fixture-only ASan
+diagnostic against normal production archives identified native Cell's store
+lookup; it is not full sanitizer coverage. The fixture now owns Environment
+for its full lifetime and registers the actual store before creating Cell.
+The failed full runs and partial diagnostic remain retained. Warnings in the
+initial broad rebuild came from unchanged existing sources, with byte hashes
+recorded in native-loose-weapon-admission-normal-01/unchanged-warning-sources.json.
+
+An independent original-executable audit executes full ownership-claim query
+4CAAC0 across3392 cases and10104 actual CRT RTTI casts. Original actor/base/
+faction vtables, NPC faction-list lookup and cached ExtraOwnership/ExtraRank
+queries execute, with Win32 FS/TLS and raw object/cache layouts as explicit
+fixture boundaries. No game-callee stub is reached. Unowned cells return
+false from this positive ownership-claim query. An absent required rank or
+only -1 normalizes to0; other signed required ranks remain unchanged.
+Player faction raw flag08 filters membership to absent rank-1, whereas NPC
+membership ignores that flag. Absent rank-1 can satisfy required ranks<=-2.
+The semantic name of raw08 is not established. Slow ExtraData cache/list
+locking, native construction, the whole drop factory and gameplay remain
+outside this audit; no C++ cross-comparison is claimed.
+
+Evidence: S5/native-loose-weapon-admission-normal-02 and
+S5/native-loose-weapon-admission-sanitized-02; failed01 runs and
+S5/native-loose-weapon-fixture-diagnostic-01 retained.
+Original audit: S5/native-drop-cell-access-oracle-01/verification.json and
+cases.json. Original PE SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Oracle source SHA256:
+950ddcc8ae718ceffbeeac8048d7fd81b28c6c89122505ed3c53095516d8c108.
+Latest engine-tested fingerprint: 67443d5835dca9f42559fa694cd197735af58267e3ce6372fdd9839c644cfe95
+
+No World drop frontend or arrow/source-inventory transaction invokes this
+admission yet. Dynamic serial allocation, loose-body world-frame rendering,
+save/recreation, pickup, Drop script context and normal-input/restart courses
+remain open. Ordinary NPC broken-bow release retains its explicit preparation
+rejection until that complete transaction exists. S5 and full M15 remain in progress.

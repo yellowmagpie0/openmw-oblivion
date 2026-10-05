@@ -83,6 +83,7 @@ namespace MWRender
             friend class Objects;
         public:
             ~PreparedModel();
+            bool hasLiveOwner() const noexcept;
             PreparedModel(const PreparedModel&) = delete;
             PreparedModel& operator=(const PreparedModel&) = delete;
         };
