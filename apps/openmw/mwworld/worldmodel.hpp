@@ -82,6 +82,17 @@ namespace MWWorld
         PreparedPtrReplacement preparePtrReplacement(std::span<const Ptr> removed,
             std::span<const Ptr> inserted);
 
+        struct LooseWeaponPublicationHooks
+        {
+            void* mContext = nullptr;
+            bool (*mValidate)(void*) noexcept = nullptr;
+            // Called once after the last fallible scene/body work and final
+            // validation, immediately before guaranteed cell/registry splice.
+            // Must perform only already-validated noexcept resource/serial
+            // writes: no allocation, callbacks or registry/cell mutation.
+            void (*mPublish)(void*) noexcept = nullptr;
+        };
+
         class PreparedLooseWeaponAdmission
         {
             struct Data;
@@ -96,6 +107,7 @@ namespace MWWorld
             // Scene/physical admission may throw. Failed publication rolls back
             // both before any cell or registry change. No game observers.
             Ptr commit();
+            Ptr commit(const LooseWeaponPublicationHooks& hooks);
         };
 
         // Caller reserves the stable dynamic identity and supplies resolved

@@ -10034,3 +10034,156 @@ TEST(OblivionWorldTest, NativeReferenceKeyResidentIdentityCollisionIncludesDisab
         EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 1u);
     }
 }
+
+#include "apps/openmw/mwrender/objects.hpp"
+#include <components/sceneutil/unrefqueue.hpp>
+#include "apps/openmw/mwrender/vismask.hpp"
+#include <components/nifbullet/actorragdoll.hpp>
+
+namespace
+{
+    struct CompoundWeaponSceneRoot : osg::Group
+    {
+        enum class Failure { None, Reject, InsertThrow };
+        Failure mFailure = Failure::None;
+        std::function<void()> mAfterInsert;
+        bool addChild(osg::Node* child) override
+        {
+            if (mFailure == Failure::Reject) return false;
+            const bool added = osg::Group::addChild(child);
+            if (mAfterInsert) mAfterInsert();
+            if (mFailure == Failure::InsertThrow) throw std::runtime_error("compound scene insertion failed");
+            return added;
+        }
+    };
+
+    struct CompoundEquippedWeaponPublication
+    {
+        MWWorld::InventoryStore& mInventory;
+        MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& mRemoval;
+        MWWorld::World::PreparedOblivionDynamicReferenceKey& mKey;
+        MWWorld::Ptr mSource;
+        MWWorld::CellRef mFinalCondition;
+        unsigned mValidations = 0, mPublications = 0;
+        bool mSerialCommitted = false, mRemoved = false;
+        CompoundEquippedWeaponPublication(MWWorld::InventoryStore& inventory,
+            MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& removal,
+            MWWorld::World::PreparedOblivionDynamicReferenceKey& key, MWWorld::Ptr source)
+            : mInventory(inventory), mRemoval(removal), mKey(key), mSource(source),
+              mFinalCondition(source.getCellRef())
+        { mFinalCondition.setNativeItemCondition(0); }
+        static bool validate(void* opaque) noexcept
+        {
+            auto& c = *static_cast<CompoundEquippedWeaponPublication*>(opaque);
+            ++c.mValidations;
+            return c.mKey.isValid() && c.mInventory.validatePreparedEquippedWeaponRemoval(c.mRemoval)
+                && c.mSource.getCellRef().getNativeItemCondition() == std::optional<float>(50)
+                && c.mSource.getCellRef().getEnchantmentCharge() == 7.25f;
+        }
+        static void publish(void* opaque) noexcept
+        {
+            auto& c = *static_cast<CompoundEquippedWeaponPublication*>(opaque);
+            ++c.mPublications;
+            c.mSerialCommitted = c.mKey.commit();
+            (void)c.mSource.getCellRef().swapNativeItemCondition(c.mFinalCondition);
+            c.mRemoved = c.mInventory.commitPreparedEquippedWeaponRemoval(c.mRemoval);
+        }
+    };
+}
+
+TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventoryAndWorldSerialOrRollsBack)
+{
+    // Owned OSGT and a synthetic one-body definition isolate external asset
+    // loading. This exercises actual World/InventoryStore/Objects/PhysicsSystem
+    // publication, not the stock bow factory, native ownership or bow release.
+    for (int outcome = 0; outcome < 5; ++outcome)
+    {
+        SCOPED_TRACE(outcome);
+        NativeWorldFixture fixture;
+        const auto resident = installNativeLooseItemCapture(fixture);
+        auto& world = fixture.mWorld;
+        const auto detachedNpc = addNativeNpc(fixture, 0x801);
+        const auto npc = detachedNpc.getCell()->moveTo(detachedNpc, resident.getCell());
+        auto& inventory = npc.getClass().getInventoryStore(npc);
+        ESM::Weapon projection; projection.blank();
+        projection.mId = ESM::RefId(ESM::FormId{0x940, 0});
+        projection.mData.mType = ESM::Weapon::MarksmanCrossbow;
+        projection.mData.mHealth = 100;
+        world.getStore().insertStatic(projection);
+        MWClass::Weapon::registerSelf();
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = 1; item.mCondition = 50; item.mCharge = 7.25f;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, npc, {item});
+        const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        auto key = world.prepareOblivionDynamicReferenceKey();
+        auto removal = inventory.prepareEquippedWeaponRemoval();
+
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        model->setName("Owned compound native weapon model");
+        ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "compound-weapon.osgt").string()));
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        SceneUtil::UnrefQueue unref;
+        osg::ref_ptr<CompoundWeaponSceneRoot> root = new CompoundWeaponSceneRoot;
+        MWRender::Objects objects(&fixture.mResources, root, unref);
+        auto& physics = world.initializePhysics(new osg::Group);
+        ESM4::Reference placed = *resident.getCellRef().getNativeReference();
+        placed.mId = {}; placed.mFormKey = key->key();
+        placed.mPos.pos[2] = 2;
+        MWWorld::LiveCellRef<ESM4::Weapon> drop(placed, resident.get<ESM4::Weapon>()->mBase);
+        drop.mRef.setNativeItemCondition(0);
+        drop.mRef.setEnchantmentCharge(7.25f);
+        NifBullet::ActorRagdollDefinition definition;
+        NifBullet::RagdollBodyDefinition body{};
+        body.mRecord = 12; body.mMass = 2; body.mInertia = {1,0,0,0,1,0,0,0,1};
+        body.mShape = NifBullet::RagdollSphere{.5f};
+        definition.mBodies.push_back(body);
+        const std::array<btTransform, 1> poses{btTransform(btQuaternion::getIdentity(), btVector3(0,0,2))};
+        auto prepared = world.getWorldModel().prepareLooseWeaponAdmission(*resident.getCell(), drop,
+            objects, physics, "compound-weapon.osgt", osg::Quat(), MWRender::Mask_Object,
+            definition, 1.f, poses, 1, -1);
+        CompoundEquippedWeaponPublication context(inventory, *removal, *key, bow);
+        MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{
+            &context, CompoundEquippedWeaponPublication::validate, CompoundEquippedWeaponPublication::publish};
+        const auto cellCount = resident.getCell()->count();
+        if (outcome == 1) root->mAfterInsert = [&] { bow.getCellRef().setNativeItemCondition(49); };
+        if (outcome == 2) root->mAfterInsert = [&] { EXPECT_TRUE(key->commit()); };
+        if (outcome == 3) root->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
+        if (outcome == 4) root->mFailure = CompoundWeaponSceneRoot::Failure::InsertThrow;
+        if (outcome == 0)
+        {
+            const auto published = prepared->commit(hooks);
+            ASSERT_FALSE(published.isEmpty());
+            EXPECT_EQ(context.mValidations, 2u);
+            EXPECT_EQ(context.mPublications, 1u);
+            EXPECT_TRUE(context.mSerialCommitted); EXPECT_TRUE(context.mRemoved);
+            EXPECT_EQ(bow.getCellRef().getCount(false), 0);
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), std::optional<float>(0));
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(published.getCellRef().getFormKey(), key->key());
+            EXPECT_EQ(published.getCellRef().getNativeItemCondition(), std::optional<float>(0));
+            EXPECT_FLOAT_EQ(published.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(resident.getCell()->count(), cellCount + 1);
+            EXPECT_TRUE(physics.hasLooseObject(published));
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 2u);
+            EXPECT_TRUE(prepared->commit(hooks).isEmpty());
+            EXPECT_EQ(context.mPublications, 1u);
+        }
+        else
+        {
+            EXPECT_ANY_THROW(prepared->commit(hooks));
+            EXPECT_EQ(context.mPublications, 0u);
+            EXPECT_EQ(bow.getCellRef().getCount(false), 1);
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), std::optional<float>(outcome == 1 ? 49 : 50));
+            EXPECT_FLOAT_EQ(bow.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), bow);
+            EXPECT_EQ(resident.getCell()->count(), cellCount);
+            EXPECT_EQ(root->getNumChildren(), 0u);
+            EXPECT_TRUE(physics.looseObjectOwners().empty());
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, outcome == 2 ? 2u : 1u);
+            EXPECT_FALSE(prepared->isValid());
+        }
+    }
+}

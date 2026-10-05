@@ -334,3 +334,73 @@ TEST(CellRefNativeCondition, SwapsOnlySupportedConditionStorageAcrossItemVariant
     EXPECT_FALSE(projected.getNativeItemCondition());
     EXPECT_EQ(std::bit_cast<std::uint32_t>(*placed.getNativeItemCondition()), 0x80000000u);
 }
+
+TEST_F(LooseWeaponAdmissionTest, CompoundHooksRejectIncompletePairsAndStaleResourcesBeforeLogicalPublication)
+{
+    struct Context
+    {
+        LooseWeaponAdmissionTest* fixture;
+        unsigned validations = 0, publications = 0;
+        bool rejectInitially = false;
+        static bool validate(void* opaque) noexcept
+        {
+            auto& c = *static_cast<Context*>(opaque);
+            ++c.validations;
+            if (c.validations == 2)
+            {
+                EXPECT_EQ(c.fixture->mRoot->getNumChildren(), 1u);
+                EXPECT_EQ(c.fixture->mPhysics->looseObjectOwners().size(), 1u);
+                EXPECT_EQ(c.fixture->mCell->count(), 0u);
+            }
+            return !c.rejectInitially && c.validations != 2;
+        }
+        static void publish(void* opaque) noexcept
+        { ++static_cast<Context*>(opaque)->publications; }
+    } context{this};
+    auto prepared = prepare(source());
+    MWWorld::WorldModel::LooseWeaponPublicationHooks incomplete{&context, Context::validate, nullptr};
+    EXPECT_THROW(prepared->commit(incomplete), std::invalid_argument);
+    EXPECT_EQ(context.validations, 0u);
+    emptyPublication();
+    MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{&context, Context::validate, Context::publish};
+    context.rejectInitially = true;
+    EXPECT_TRUE(prepared->commit(hooks).isEmpty());
+    EXPECT_EQ(context.validations, 1u);
+    EXPECT_EQ(context.publications, 0u);
+    emptyPublication();
+    context.rejectInitially = false;
+    context.validations = 0;
+    EXPECT_THROW(prepared->commit(hooks), std::logic_error);
+    EXPECT_EQ(context.validations, 2u);
+    EXPECT_EQ(context.publications, 0u);
+    emptyPublication();
+    EXPECT_FALSE(prepared->isValid());
+}
+
+TEST_F(LooseWeaponAdmissionTest, CompoundPublicationHookRunsOnceAfterFallibleAdmissionsBeforeCellSplice)
+{
+    struct Context
+    {
+        LooseWeaponAdmissionTest* fixture;
+        unsigned validations = 0, publications = 0;
+        static bool validate(void* opaque) noexcept
+        { ++static_cast<Context*>(opaque)->validations; return true; }
+        static void publish(void* opaque) noexcept
+        {
+            auto& c = *static_cast<Context*>(opaque);
+            ++c.publications;
+            EXPECT_EQ(c.fixture->mRoot->getNumChildren(), 1u);
+            EXPECT_EQ(c.fixture->mCell->count(), 0u);
+        }
+    } context{this};
+    MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{&context, Context::validate, Context::publish};
+    auto prepared = prepare(source());
+    const auto published = prepared->commit(hooks);
+    ASSERT_FALSE(published.isEmpty());
+    EXPECT_EQ(context.validations, 2u);
+    EXPECT_EQ(context.publications, 1u);
+    EXPECT_EQ(mCell->count(), 1u);
+    EXPECT_EQ(mWorld->getPtr(published.getCellRef().getRefNum()), published);
+    EXPECT_TRUE(prepared->commit(hooks).isEmpty());
+    EXPECT_EQ(context.publications, 1u);
+}

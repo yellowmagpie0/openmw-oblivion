@@ -13704,3 +13704,58 @@ Identity reservation does not create a loose WEAP, remove source inventory,
 construct asset-bound physics, publish an arrow or prove pickup/restart
 acceptance. The ordinary NPC broken-bow safety rejection remains until the
 complete transaction is installed. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint288: last validation and compound loose-weapon publication
+
+Prepared native loose-weapon admission accepts paired noexcept validation and
+publication hooks. It checks source inputs before scene admission, rechecks its
+own lifetime/registry/cell guards after validation, completes fallible model
+and physical admission, then validates source inputs and guards again before
+any source inventory, serial, cell or registry write. Late rejection rolls the
+admitted model/body back. Incomplete hook pairs reject before admission.
+Rollback checks external owner lifetime before cleanup. The publication hook
+runs once in the no-callback/no-allocation interval before the existing
+prepared registry/cell commits. It must leave those guards unchanged.
+
+Three new engine cases exercise incomplete hooks, initial/final rejection,
+actual model/body rollback, hook ordering and repeated-commit suppression.
+One case composes actual NPC InventoryStore equipped-instance removal and
+the real World's saved serial reservation with actual Objects/PhysicsSystem
+and managed native CELL admission. Success publishes one native dropped
+instance with zero condition and charge7.25, removes one projected source bow
+with matching final wear/charge, clears its slot and advances the serial once.
+Failures cover changed source condition, an externally committed serial,
+scene rejection and insertion followed by a throw. They leave source count
+and slot intact and publish no drop/model/body. External condition/serial
+changes remain intact; rollback does not reverse someone else's changes.
+
+The integration uses an owned OSGT and synthetic one-body sphere at the asset
+boundary. It does not exercise the stock NIF factory or normal bow release.
+Both normal and ASan/UBSan full engine suites pass1063 cases with exact
+inventories and no failures/skips. Leak checks remain disabled. Relevant
+rebuild-warning sources match checkpoint287 unchanged. Component/Python/schema
+code did not change; no fresh component/Python pass is claimed.
+
+A syntax attempt initially failed on the nested aggregate default argument;
+an explicit no-argument forwarding overload keeps prior callers compatible.
+Both initial01 full runs failed in the new World fixture during setup:
+normal segfault and sanitizer WindowManager-null assertion. Direct inventory
+add invokes UI updates; corrected setup uses the existing actual staged actor
+inventory path and explicitly registers the projected weapon class. These
+failures and fixture-only diagnostics are retained; partial ASan diagnostic
+coverage is not counted as a full sanitizer pass.
+The retained committed checkpoint287 header independently lacks the new
+compound API. That is API absence characterization, not a gameplay baseline.
+
+Evidence: S5/native-loose-compound-publication-normal-02,
+S5/native-loose-compound-publication-sanitized-02,
+S5/native-loose-compound-syntax-01 and
+S5/native-loose-compound-api-baseline-01.
+Latest engine-tested fingerprint: 841df5268eb295f11426aa56dce119ca56f2e589174eaa31959d75b587663a9a
+
+This provides the compound publication interval. The actual native drop
+factory, original ownership/post-shot state mapping, bow frontend/arrow
+publication, loose-body model synchronization/recreation and exact pickup
+remain open. Ordinary NPC broken-bow release remains safely rejected until
+its complete transaction is installed. S5 and full M15 remain in progress.

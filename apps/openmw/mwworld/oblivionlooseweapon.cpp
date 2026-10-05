@@ -42,7 +42,14 @@ namespace MWWorld
 
     Ptr WorldModel::PreparedLooseWeaponAdmission::commit()
     {
-        if (!isValid()) return {};
+        return commit(LooseWeaponPublicationHooks{});
+    }
+
+    Ptr WorldModel::PreparedLooseWeaponAdmission::commit(const LooseWeaponPublicationHooks& hooks)
+    {
+        if (bool(hooks.mValidate) != bool(hooks.mPublish))
+            throw std::invalid_argument("loose weapon compound publication requires both hooks");
+        if (!isValid() || (hooks.mValidate && !hooks.mValidate(hooks.mContext)) || !isValid()) return {};
         auto& data = *mData;
         bool modelPublished = false, bodyPublished = false;
         try
@@ -57,6 +64,18 @@ namespace MWWorld
                 || !data.mPhysics->commitLooseObject(*data.mBody))
                 throw std::logic_error("loose weapon admission changed during scene publication");
             bodyPublished = true;
+            // Source resource/key validation must follow all fallible scene and
+            // physical admission. A stale source rolls both back, before source
+            // inventory, serial, registry or cell publication.
+            if ((hooks.mValidate && !hooks.mValidate(hooks.mContext))
+                || !data.mRegistry->isValid() || !data.mModel->hasLiveOwner()
+                || !data.mBody->hasLiveOwner()
+                || !data.mOwner->validatePreparedInsertion(*data.mCell))
+                throw std::logic_error("loose weapon compound inputs changed before publication");
+            // After this final guard, the hook and existing cell/registry
+            // commits allocate/dispatch nothing. Hook publication must leave
+            // the registry and cell unchanged so their guards remain valid.
+            if (hooks.mPublish) hooks.mPublish(hooks.mContext);
             // This guard can throw, but successful commit itself allocates and
             // dispatches nothing. Immediately splice the exact stable node.
             data.mRegistry->commit();
@@ -66,8 +85,8 @@ namespace MWWorld
         }
         catch (...)
         {
-            if (bodyPublished) data.mPhysics->removeLooseObject(data.mPtr);
-            if (modelPublished) data.mObjects->rollbackModelAdmission(*data.mModel);
+            if (bodyPublished && data.mBody->hasLiveOwner()) data.mPhysics->removeLooseObject(data.mPtr);
+            if (modelPublished && data.mModel->hasLiveOwner()) data.mObjects->rollbackModelAdmission(*data.mModel);
             data.mConsumed = true;
             throw;
         }
