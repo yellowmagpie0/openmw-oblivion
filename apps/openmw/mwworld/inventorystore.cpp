@@ -889,6 +889,92 @@ bool MWWorld::InventoryStore::notifyPreparedAmmunitionDebit(PreparedAmmunitionDe
     return true;
 }
 
+struct MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::Impl
+{
+    InventoryStore* mOwner = nullptr;
+    std::shared_ptr<const char> mIdentity;
+    Ptr mItem;
+    bool mCommitted = false;
+    bool mNotified = false;
+};
+
+MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::PreparedEquippedWeaponRemoval(std::unique_ptr<Impl> impl)
+    : mImpl(std::move(impl)) {}
+MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::~PreparedEquippedWeaponRemoval() = default;
+MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::PreparedEquippedWeaponRemoval(
+    PreparedEquippedWeaponRemoval&&) noexcept = default;
+MWWorld::InventoryStore::PreparedEquippedWeaponRemoval&
+MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::operator=(PreparedEquippedWeaponRemoval&&) noexcept = default;
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedEquippedWeaponRemoval>
+MWWorld::InventoryStore::prepareEquippedWeaponRemoval()
+{
+    const auto slot = getSlot(Slot_CarriedRight);
+    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon)
+        throw std::invalid_argument("prepared weapon removal requires an equipped weapon");
+    const auto item = *slot;
+    const auto* ref = std::get_if<ESM::CellRef>(&item.getCellRef().mCellRef.mVariant);
+    if (item.getContainerStore() != this || !ref || ref->mCount != 1)
+        throw std::invalid_argument("prepared weapon removal requires one projected instance");
+    for (int i = 0; i < Slots; ++i)
+        if (i != Slot_CarriedRight && mSlots[i] != end() && *mSlots[i] == item)
+            throw std::invalid_argument("prepared weapon removal cannot clear another slot");
+    auto impl = std::make_unique<PreparedEquippedWeaponRemoval::Impl>();
+    if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
+    impl->mOwner = this;
+    impl->mIdentity = mPreparedAmmunitionIdentity;
+    impl->mItem = item;
+    return std::unique_ptr<PreparedEquippedWeaponRemoval>(new PreparedEquippedWeaponRemoval(std::move(impl)));
+}
+
+bool MWWorld::InventoryStore::validatePreparedEquippedWeaponRemoval(
+    const PreparedEquippedWeaponRemoval& removal) const noexcept
+{
+    const auto* value = removal.mImpl.get();
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
+        return false;
+    const auto& slot = mSlots[Slot_CarriedRight];
+    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon || *slot != value->mItem)
+        return false;
+    const auto* ref = std::get_if<ESM::CellRef>(&value->mItem.getCellRef().mCellRef.mVariant);
+    if (!ref || ref->mCount != 1) return false;
+    for (int i = 0; i < Slots; ++i)
+        if (i != Slot_CarriedRight && mSlots[i] != end() && *mSlots[i] == value->mItem)
+            return false;
+    return true;
+}
+
+bool MWWorld::InventoryStore::commitPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal) noexcept
+{
+    if (!validatePreparedEquippedWeaponRemoval(removal)) return false;
+    auto& value = *removal.mImpl;
+    auto& cell = value.mItem.getCellRef();
+    // Caller has already committed final wear. Change only count/slot/caches;
+    // swapping an earlier CellRef snapshot here would resurrect or undo wear.
+    std::get<ESM::CellRef>(cell.mCellRef.mVariant).mCount = 0;
+    cell.mChanged = true;
+    if (mSelectedEnchantItem == mSlots[Slot_CarriedRight]) mSelectedEnchantItem = end();
+    mSlots[Slot_CarriedRight] = end();
+    ContainerStore::flagAsModified();
+    value.mCommitted = true;
+    return true;
+}
+
+bool MWWorld::InventoryStore::notifyPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal)
+{
+    auto* value = removal.mImpl.get();
+    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity
+        || !value->mCommitted || value->mNotified)
+        return false;
+    value->mNotified = true;
+    MWBase::Environment::get().getWorld()->removeRefScript(&value->mItem.getCellRef());
+    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    fireEquipmentChangedEvent();
+    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    if (mListener) mListener->itemRemoved(value->mItem, 1);
+    return true;
+}
+
 struct MWWorld::InventoryStore::PreparedUnequip::Impl
 {
     InventoryStore* mOwner;

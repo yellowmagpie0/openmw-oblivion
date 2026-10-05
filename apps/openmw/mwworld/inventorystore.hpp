@@ -104,6 +104,29 @@ namespace MWWorld
         // One actual equipped ammunition instance. Preparation/cancellation
         // do not debit. Publication is allocation/callback-free and once-only;
         // owner replacement, slot replacement or changed count reject it.
+        class PreparedEquippedWeaponRemoval
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedEquippedWeaponRemoval(std::unique_ptr<Impl> impl);
+            friend class InventoryStore;
+        public:
+            ~PreparedEquippedWeaponRemoval();
+            PreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval&&) noexcept;
+            PreparedEquippedWeaponRemoval& operator=(PreparedEquippedWeaponRemoval&&) noexcept;
+            PreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval&) = delete;
+            PreparedEquippedWeaponRemoval& operator=(const PreparedEquippedWeaponRemoval&) = delete;
+        };
+
+        // Remove one exact carried-right weapon instance after its replacement
+        // world reference, rendering and physics have been admitted. The caller
+        // validates item extras and commits wear before this callback-free debit.
+        // Removal preserves the item extras and all unrelated inventory pointers.
+        std::unique_ptr<PreparedEquippedWeaponRemoval> prepareEquippedWeaponRemoval();
+        bool validatePreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval& removal) const noexcept;
+        bool commitPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal) noexcept;
+        bool notifyPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal);
+
         class PreparedUnequip
         {
             struct Impl;

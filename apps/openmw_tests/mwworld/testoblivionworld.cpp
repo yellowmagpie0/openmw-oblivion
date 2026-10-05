@@ -9670,3 +9670,136 @@ TEST(OblivionWorldTest, DropExtraOwnerResolverUsesFreshNativeSettingsAndRejectsL
     EXPECT_THROW(MWWorld::resolveOblivionDropExtraOwner(store, ESM::GameProfile::Morrowind,
         0, false, true, 1), std::invalid_argument);
 }
+
+TEST(OblivionWorldTest, PreparedWeaponRemovalPublishesFinalWearSlotAndQuantityBeforeObservers)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, false);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    const int ammoCount = ammo.getCellRef().getCount();
+    bow.getCellRef().setEnchantmentCharge(7.25f);
+    struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+    {
+        MWWorld::InventoryStore& inventory;
+        MWWorld::Ptr bow, ammo;
+        int ammoCount, equipment = 0, removed = 0;
+        Observer(MWWorld::InventoryStore& store, MWWorld::Ptr b, MWWorld::Ptr a, int count)
+            : inventory(store), bow(b), ammo(a), ammoCount(count) {}
+        void check()
+        {
+            EXPECT_EQ(bow.getCellRef().getCount(), 0);
+            EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), 0);
+            EXPECT_FLOAT_EQ(bow.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(inventory.getSelectedEnchantItem(), inventory.end());
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), ammo);
+            EXPECT_EQ(ammo.getCellRef().getCount(), ammoCount);
+        }
+        void equipmentChanged() override { ++equipment; check(); }
+        void itemRemoved(const MWWorld::ConstPtr& item, int count) override
+        { ++removed; EXPECT_EQ(item, bow); EXPECT_EQ(count, 1); check(); }
+    } observer(inventory, bow, ammo, ammoCount);
+    inventory.setInvListener(&observer);
+    inventory.setContListener(&observer);
+    auto cancelled = inventory.prepareEquippedWeaponRemoval();
+    cancelled.reset();
+    EXPECT_EQ(bow.getCellRef().getCount(), 1);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), bow);
+    auto removal = inventory.prepareEquippedWeaponRemoval();
+    EXPECT_FALSE(inventory.notifyPreparedEquippedWeaponRemoval(*removal));
+    // The compound caller publishes final wear first. This primitive must
+    // preserve that newer state instead of swapping an earlier item snapshot.
+    bow.getCellRef().setNativeItemCondition(0);
+    inventory.setSelectedEnchantItem(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight));
+    ASSERT_TRUE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+    EXPECT_EQ(observer.equipment, 0);
+    EXPECT_EQ(observer.removed, 0);
+    observer.check();
+    EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+    ASSERT_TRUE(inventory.notifyPreparedEquippedWeaponRemoval(*removal));
+    EXPECT_EQ(observer.equipment, 1);
+    EXPECT_EQ(observer.removed, 1);
+    EXPECT_FALSE(inventory.notifyPreparedEquippedWeaponRemoval(*removal));
+    EXPECT_THROW(inventory.prepareEquippedWeaponRemoval(), std::invalid_argument);
+    inventory.setInvListener(nullptr);
+    inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, PreparedWeaponRemovalRejectsChangedCountsCopiedClearedAndReusedInventories)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, false);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    auto removal = inventory.prepareEquippedWeaponRemoval();
+    MWWorld::InventoryStore copy(inventory);
+    EXPECT_FALSE(copy.commitPreparedEquippedWeaponRemoval(*removal));
+    bow.getCellRef().setCount(2);
+    EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+    EXPECT_EQ(bow.getCellRef().getCount(), 2);
+    EXPECT_THROW(inventory.prepareEquippedWeaponRemoval(), std::invalid_argument);
+    bow.getCellRef().setCount(1);
+    inventory.clear();
+    EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+    inventory = copy;
+    auto assigned = inventory.prepareEquippedWeaponRemoval();
+    inventory = copy;
+    EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*assigned));
+    auto swapped = inventory.prepareEquippedWeaponRemoval();
+    inventory.swapPreparedContents(copy);
+    EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*swapped));
+    EXPECT_FALSE(copy.commitPreparedEquippedWeaponRemoval(*swapped));
+    using Inventory = MWWorld::InventoryStore;
+    alignas(Inventory) std::byte storage[sizeof(Inventory)];
+    auto* owner = new (storage) Inventory(inventory);
+    auto retired = owner->prepareEquippedWeaponRemoval();
+    owner->~Inventory();
+    owner = new (storage) Inventory(inventory);
+    EXPECT_FALSE(owner->commitPreparedEquippedWeaponRemoval(*retired));
+    EXPECT_FALSE(owner->notifyPreparedEquippedWeaponRemoval(*retired));
+    auto current = owner->prepareEquippedWeaponRemoval();
+    ASSERT_TRUE(owner->commitPreparedEquippedWeaponRemoval(*current));
+    owner->~Inventory();
+    retired.reset();
+    current.reset();
+}
+
+TEST(OblivionWorldTest, PreparedWeaponRemovalObserversCannotReplayAfterThrowingOrDeletingInventory)
+{
+    for (bool throws : {false, true})
+    {
+        NativeWorldFixture fixture;
+        const auto actors = installPreparedBowRelease(fixture, false);
+        auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+        struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+        {
+            MWWorld::InventoryStore& inventory;
+            bool throws;
+            int equipment = 0, removed = 0;
+            Observer(MWWorld::InventoryStore& store, bool shouldThrow) : inventory(store), throws(shouldThrow) {}
+            void equipmentChanged() override
+            {
+                ++equipment;
+                inventory.clear();
+                if (throws) throw std::runtime_error("weapon-removal observer failed after deleting item");
+            }
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++removed; }
+        } observer(inventory, throws);
+        inventory.setInvListener(&observer);
+        inventory.setContListener(&observer);
+        auto removal = inventory.prepareEquippedWeaponRemoval();
+        ASSERT_TRUE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+        if (throws)
+            EXPECT_THROW(inventory.notifyPreparedEquippedWeaponRemoval(*removal), std::runtime_error);
+        else
+            EXPECT_TRUE(inventory.notifyPreparedEquippedWeaponRemoval(*removal));
+        EXPECT_FALSE(inventory.notifyPreparedEquippedWeaponRemoval(*removal));
+        EXPECT_FALSE(inventory.commitPreparedEquippedWeaponRemoval(*removal));
+        EXPECT_EQ(observer.equipment, 1);
+        EXPECT_EQ(observer.removed, 0);
+        inventory.setInvListener(nullptr);
+        inventory.setContListener(nullptr);
+    }
+}

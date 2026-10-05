@@ -13426,3 +13426,67 @@ body admission, update loose-item rendered poses or recreate/pick up dynamic
 items. Character bow input, native flight/impact/recovery and normal-input,
 restart and visual campaign acceptance remain open. S5 and full M15 remain
 in progress.
+
+
+### S5 checkpoint283: final equipped-weapon removal and original base-gold query
+
+InventoryStore can prepare removal of exactly one projected weapon instance
+from CarriedRight without changing slots, quantity, extras or observers.
+An opaque preparation captures the inventory lifetime identity and exact item.
+Foreign, replaced, cleared, reassigned, swapped, reused and changed-count
+inventories reject publication before dereferencing their former item.
+A weapon claimed by another slot is rejected.
+
+The callback-free commit changes only quantity, CarriedRight, selected
+enchantment and inventory caches. It deliberately preserves final item
+condition and enchantment charge written by the compound caller immediately
+before removal; swapping an older CellRef would restore stale wear or quantity.
+Unrelated ammunition retains its identity and count. The compound caller must
+validate all original resource snapshots before its first resource write.
+
+Deferred notification removes the reference script, notifies equipment and
+reports one item removed. It marks notification consumed before invoking any
+observer, checks the inventory identity between observers and cannot replay
+after a throwing observer or an observer deleting/replacing the inventory.
+Discarding a preparation after owner destruction does not touch its old item.
+
+Three new actual native-world/shared-inventory integration cases exercise
+cancellation, final zero condition with retained fractional enchantment charge,
+selected-slot clearing, ammunition conservation, source/owner invalidation,
+owner-address reuse and reentrant/throwing observer deletion.
+Both corrected normal and ASan/UBSan builds pass1043 full engine cases with
+exact inventories, no failures/skips and no compiler warnings. Leak checks
+remain disabled. Both initial01 attempts ran1043 cases with one failure in the
+new fixture: it used the integer condition charge field for a fractional
+enchantment charge and then correctly zeroed that condition. The fixture now
+uses setEnchantmentCharge/getEnchantmentCharge; no production behavior changed
+for that correction. Failed01 evidence remains retained.
+
+An independent original-executable query audit also establishes the native
+WEAP price source for drop ownership. Original cdecl470520 executes its actual
+CRT RTTI against original WEAP vtable A45354, casting TESForm to TESValueForm
+B05C24 at object offset112 and returning the unsigned gold DWORD at offset116
+unchanged. All192 cases pass:12 gold bit patterns across4 base health values,
+2 header flags and both x87 control words. No game-callee stub is reached.
+The mapped raw WEAP fixture and Win32 FS exception-chain head are explicit
+fixture boundaries; original RTTI and SEH restoration execute. This is not a
+native weapon constructor, inventory removal, drop factory or gameplay probe.
+The downstream verified ownership selector interprets EAX through signed
+int32 FILD, so high-bit gold values preserve that signed interpretation;
+condition-adjusted shared item value is not this query's input.
+
+Evidence: S5/prepared-equipped-weapon-removal-normal-02 and
+S5/prepared-equipped-weapon-removal-sanitized-02, with failed01 retained.
+Original query: S5/native-weapon-drop-value-oracle-01/verification.json and
+cases.json; pinned original PE SHA256
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Oracle source SHA256:
+31a60563edcce12a1bfe08d4bfd70f810bb0b24a51d0902f334f758176eeba02.
+Latest engine-tested fingerprint: 1314116165908e5f9bab9dff7b23ab1cfa85691e48e314827d37081d7cf41255
+
+This primitive does not create a dropped native reference, admit its model or
+body, reserve a dynamic identity, couple arrow publication with wear/removal,
+persist loose-body motion or implement pickup. Ordinary NPC broken-bow release
+continues rejecting preparation until the complete transaction is wired.
+Native Drop ObScript context and normal-input/restart campaigns remain open.
+S5 and full M15 remain in progress.
