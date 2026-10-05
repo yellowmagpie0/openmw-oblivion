@@ -4,6 +4,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
+#include <map>
 #include <optional>
 #include <set>
 #include <shared_mutex>
@@ -93,6 +94,39 @@ namespace MWPhysics
 
         void resetSimulation(const ActorMap& actors);
         void suspendActorCollision(Actor& actor, bool suspended);
+
+        class PreparedLooseObject
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedLooseObject(std::unique_ptr<Impl> impl);
+            friend class PhysicsTaskScheduler;
+        public:
+            ~PreparedLooseObject();
+            PreparedLooseObject(PreparedLooseObject&&) noexcept;
+            PreparedLooseObject& operator=(PreparedLooseObject&&) noexcept;
+            PreparedLooseObject(const PreparedLooseObject&) = delete;
+            PreparedLooseObject& operator=(const PreparedLooseObject&) = delete;
+        };
+
+        // One non-actor body, independently of actor life/ragdoll ownership.
+        // The caller keeps the borrowed reference alive through preparation
+        // and registration, then removes physics before deleting that reference.
+        // Construction/cancellation do not register collision or consume state.
+        std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+        bool validatePreparedLooseObject(const PreparedLooseObject& object);
+        bool commitLooseObject(PreparedLooseObject& object);
+        bool hasLooseObject(const MWWorld::Ptr& ptr);
+        std::vector<MWWorld::Ptr> looseObjectOwners();
+        std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativePackedVelocityState> captureLooseObjectPackedVelocities(
+            const MWWorld::Ptr& ptr);
+        void restoreLooseObject(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollBodyState> states,
+            std::span<const NifBullet::RagdollNativePackedVelocityState> velocities);
+        void removeLooseObject(const MWWorld::Ptr& ptr);
 
         // Main-thread ownership operations wait for the previous worker frame.
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
@@ -207,6 +241,9 @@ namespace MWPhysics
     private:
         class WorkersSync;
         class ActorRagdoll;
+        class LooseObject;
+        void clearLooseObjects();
+        bool validatePreparedLooseObjectLocked(const PreparedLooseObject& object) const;
         void clearActorRagdolls();
         ActorRagdoll& actorRagdoll(const MWWorld::Ptr& ptr);
 
@@ -237,6 +274,10 @@ namespace MWPhysics
         class NativeSceneBinding;
         std::unique_ptr<NativeSceneBinding> mNativeSceneBinding;
         std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
+        using LooseObjectMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<LooseObject>>;
+        LooseObjectMap mLooseObjects;
+        std::shared_ptr<const char> mLoosePreparationIdentity;
+
         // Shared by owned native physical controllers across actors. Access
         // only after the worker barrier under the collision-world lock.
         std::shared_ptr<const NativeRagdollRestoreLifetime> mNativeRagdollRestoreLifetime;

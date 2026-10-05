@@ -462,6 +462,176 @@ namespace MWPhysics
         std::vector<osg::Vec3f> mLinearDeltas;
     };
 
+    class PhysicsTaskScheduler::LooseObject : public PtrHolder
+    {
+    public:
+        LooseObject(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
+            : PtrHolder(ptr, {})
+            , mPhysics(definition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this),
+                nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred)
+            , mLinearDeltas(definition.mBodies.size())
+        {
+            for (auto* object : mPhysics.collisionObjects())
+            {
+                auto* body = btRigidBody::upcast(object);
+                body->setFlags(body->getFlags() | BT_DISABLE_WORLD_GRAVITY);
+                body->setGravity(btVector3(0, 0, 0));
+            }
+        }
+        NifBullet::ActorRagdollPhysics mPhysics;
+        std::vector<osg::Vec3f> mLinearDeltas;
+    };
+
+    struct PhysicsTaskScheduler::PreparedLooseObject::Impl
+    {
+        PhysicsTaskScheduler* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        LooseObjectMap::node_type mNode;
+        int mExpectedCount = 0;
+    };
+    PhysicsTaskScheduler::PreparedLooseObject::PreparedLooseObject(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    PhysicsTaskScheduler::PreparedLooseObject::~PreparedLooseObject() = default;
+    PhysicsTaskScheduler::PreparedLooseObject::PreparedLooseObject(PreparedLooseObject&&) noexcept = default;
+    PhysicsTaskScheduler::PreparedLooseObject&
+    PhysicsTaskScheduler::PreparedLooseObject::operator=(PreparedLooseObject&&) noexcept = default;
+
+    std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> PhysicsTaskScheduler::prepareLooseObject(
+        const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+        float lengthScale, std::span<const btTransform> poses, int group, int mask)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        if (!world || ptr.isEmpty() || ptr.getClass().isActor() || ptr.getContainerStore()
+            || ptr.getCellRef().getCount() <= 0 || definition.mBodies.size() != 1
+            || !definition.mJoints.empty() || definition.mBodies[0].mBlend
+            || definition.mBodies[0].mBlendController
+            || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef))
+            throw std::invalid_argument("loose physics requires one live non-actor body in a native World");
+        auto object = std::make_unique<LooseObject>(ptr, definition, *world, lengthScale, poses, group, mask);
+        LooseObjectMap staged;
+        staged.emplace(ptr.mRef, std::move(object));
+        auto impl = std::make_unique<PreparedLooseObject::Impl>();
+        if (!mLoosePreparationIdentity) mLoosePreparationIdentity = std::make_shared<const char>();
+        impl->mOwner = this;
+        impl->mIdentity = mLoosePreparationIdentity;
+        impl->mExpectedCount = ptr.getCellRef().getCount();
+        impl->mNode = staged.extract(staged.begin());
+        return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(impl)));
+    }
+
+    bool PhysicsTaskScheduler::validatePreparedLooseObjectLocked(const PreparedLooseObject& object) const
+    {
+        const auto* impl = object.mImpl.get();
+        if (!impl || impl->mOwner != this || impl->mNode.empty()) return false;
+        const auto identity = impl->mIdentity.lock();
+        if (!identity || identity != mLoosePreparationIdentity) return false;
+        return !mLooseObjects.contains(impl->mNode.key()) && !mActorRagdolls.contains(impl->mNode.key())
+            && impl->mNode.mapped()->getPtr().getCellRef().getCount() == impl->mExpectedCount;
+    }
+
+    bool PhysicsTaskScheduler::validatePreparedLooseObject(const PreparedLooseObject& object)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return validatePreparedLooseObjectLocked(object);
+    }
+
+    bool PhysicsTaskScheduler::commitLooseObject(PreparedLooseObject& object)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        if (!validatePreparedLooseObjectLocked(object)) return false;
+        auto& node = object.mImpl->mNode;
+        auto& owned = *node.mapped();
+        auto* body = owned.mPhysics.collisionObjects()[0];
+        // Complete routing allocation before the final fallible physics write.
+        const auto [entry, inserted] = mCollisionObjects.insert(body);
+        if (!inserted) return false;
+        try
+        {
+            auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+            if (!world || !owned.mPhysics.publish(*world))
+                throw std::invalid_argument("loose physics graph publication rejected");
+        }
+        catch (...)
+        {
+            mCollisionObjects.erase(entry);
+            throw;
+        }
+        // Prepared map node insertion allocates nothing; all duplicate/owner
+        // guards preceded registration under this same worker/World barrier.
+        mLooseObjects.insert(std::move(node));
+        return true;
+    }
+
+    bool PhysicsTaskScheduler::hasLooseObject(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return mLooseObjects.contains(ptr.mRef);
+    }
+
+    std::vector<MWWorld::Ptr> PhysicsTaskScheduler::looseObjectOwners()
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        std::vector<MWWorld::Ptr> owners;
+        owners.reserve(mLooseObjects.size());
+        for (const auto& [_, object] : mLooseObjects) owners.push_back(object->getPtr());
+        return owners;
+    }
+
+    std::vector<NifBullet::RagdollBodyState> PhysicsTaskScheduler::captureLooseObject(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        return found->second->mPhysics.capture();
+    }
+
+    std::vector<NifBullet::RagdollNativePackedVelocityState>
+    PhysicsTaskScheduler::captureLooseObjectPackedVelocities(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        return found->second->mPhysics.captureNativePackedVelocities();
+    }
+
+    void PhysicsTaskScheduler::restoreLooseObject(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollBodyState> states,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> velocities)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        found->second->mPhysics.restore(states, velocities);
+    }
+
+    void PhysicsTaskScheduler::removeLooseObject(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) return;
+        for (auto* body : found->second->mPhysics.collisionObjects()) mCollisionObjects.erase(body);
+        mLooseObjects.erase(found);
+    }
+
+    void PhysicsTaskScheduler::clearLooseObjects()
+    {
+        for (const auto& [_, object] : mLooseObjects)
+            for (auto* body : object->mPhysics.collisionObjects()) mCollisionObjects.erase(body);
+        mLooseObjects.clear();
+        mLoosePreparationIdentity.reset();
+    }
+
     class PhysicsTaskScheduler::NativeSceneBinding
     {
         NifBullet::NativeDynamicsWorld* mWorld;
@@ -541,6 +711,7 @@ namespace MWPhysics
         for (auto& thread : mThreads)
             thread.join();
         clearActorRagdolls();
+        clearLooseObjects();
     }
 
     std::tuple<unsigned, float> PhysicsTaskScheduler::calculateStepConfig(float timeAccum) const
@@ -721,7 +892,7 @@ namespace MWPhysics
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<btDynamicsWorld*>(mCollisionWorld);
-        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef))
+        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate ragdoll owner/world");
         auto ragdoll = std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
             poses, collisionGroup, collisionMask, internalFilter);
@@ -975,8 +1146,8 @@ namespace MWPhysics
         auto found = mActorRagdolls.find(old.mRef);
         if (found == mActorRagdolls.end())
             return;
-        if (updated.isEmpty())
-            throw std::invalid_argument("empty updated ragdoll owner");
+        if (updated.isEmpty() || mLooseObjects.contains(updated.mRef))
+            throw std::invalid_argument("empty or conflicting updated ragdoll owner");
         if (old.mRef != updated.mRef)
         {
             auto [destination, inserted] = mActorRagdolls.try_emplace(updated.mRef);
@@ -1496,6 +1667,7 @@ namespace MWPhysics
         mUpdateAabb.clear();
         MaybeExclusiveLock worldLock(mCollisionWorldMutex, mLockingPolicy);
         clearActorRagdolls();
+        clearLooseObjects();
     }
 
     void PhysicsTaskScheduler::afterPreStep()
@@ -1516,7 +1688,7 @@ namespace MWPhysics
         {
             --mRemainingSteps;
             updateActorsPositions();
-            if (!mActorRagdolls.empty())
+            if (!mActorRagdolls.empty() || !mLooseObjects.empty())
             {
                 // The barrier completion runs once, after every movement job.
                 // Reuse this step duration without a second Bullet accumulator.
@@ -1527,6 +1699,11 @@ namespace MWPhysics
                 {
                     std::fill(ragdoll->mLinearDeltas.begin(), ragdoll->mLinearDeltas.end(), delta);
                     ragdoll->mPhysics.applyNativeVelocityStep(mPhysicsDt, ragdoll->mLinearDeltas);
+                }
+                for (auto& [_, object] : mLooseObjects)
+                {
+                    std::fill(object->mLinearDeltas.begin(), object->mLinearDeltas.end(), delta);
+                    object->mPhysics.applyNativeVelocityStep(mPhysicsDt, object->mLinearDeltas);
                 }
                 static_cast<btDynamicsWorld*>(mCollisionWorld)->stepSimulation(mPhysicsDt, 0);
             }

@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection and body admission; checkpoints255–279 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
+| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, body admission and loose-body scheduling; checkpoints255–280 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -20810,3 +20810,54 @@ NPC bow breaks, own loose bodies in the scheduler, publish their rendered pose,
 or restore/pick up dynamic items. Compound projectile/drop publication,
 Character input and full flight/impact/recovery and normal-input/restart gates
 remain open. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint280: separate loose-body scheduler ownership
+
+The native physics scheduler now owns a prepared single non-actor body separately
+from actor ragdolls. Cancellation registers no physics or collision routing.
+Admission reserves routing before the final fallible body publication, then
+inserts the prepared map node without allocation. A World that inserts a body
+and throws leaves no physical or logical owner and permits retry. Foreign,
+consumed, duplicate and changed-count preparations reject before admission.
+Actor-body admission and rebinding also reject references already owned by
+loose physics; the two owner maps cannot claim the same live reference.
+
+Loose bodies receive native gravity and damping through the existing worker
+barrier, even when no actors or movement jobs exist. Mixed actor/loose owners
+share exactly one DynamicsWorld step. Per-body Bullet gravity stays disabled
+and global gravity stays unchanged. Removal and scheduler unload/destruction
+remove collision routing, physics and motion registrations. Clearing a scheduler
+retires pending preparations; a replacement scheduler at the same address
+rejects stale handles before accessing their borrowed reference.
+
+The caller must keep the reference alive through preparation and registration
+and remove its physics before deleting it. This scheduler API does not establish
+a general live-reference lifetime guard. Its captured pose and native packed
+velocities support validated whole-state restoration for the registered body.
+
+Six parameterized integration cases run with zero, one and two workers:
+private preparation/cancellation and ownership guards, a real collision floor,
+one shared actor/loose step with independently pinned native gravity stores,
+invalid snapshot rejection and physical free-flight continuation, post-insertion
+admission failure/retry, and retired/reused schedulers after deleting the
+borrowed reference. These use live abstract Static references and real Bullet
+bodies; they are not actual WEAP drop or normal-input gameplay fixtures.
+
+Both final normal and ASan/UBSan runs pass1025 full engine tests with exact
+inventories, no failures/skips and no compiler warnings. Leak checks remain
+disabled. Earlier 01 runs also passed1025; subsequent review added the cross-map
+admission/rebind guard and regression assertions, then both 02 runs passed.
+Component/Python/schema40 and native arithmetic sources are unchanged since
+their preceding passing checks.
+
+Evidence: S5/native-loose-body-scheduler-normal-02 and
+S5/native-loose-body-scheduler-sanitized-02 (01 retained).
+Tested fingerprint: f560ee038e1e9e57a5e0b759a30702300cf5e167a2ec68a9615a7764c5604e4d
+
+PhysicsSystem/World drop integration, rendered pose publication, exact source
+inventory transfer, pickup and dynamic-reference save recreation remain open.
+The continuation case is an in-process physical test, not process restart or
+normal-input acceptance. Compound projectile/drop publication, Character bow
+input, native flight/impact/recovery and all required M15 campaigns remain open.
+S5 and full M15 remain in progress.

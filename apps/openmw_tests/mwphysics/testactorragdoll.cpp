@@ -16,6 +16,9 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <gtest/gtest.h>
 #include <limits>
+#include <components/nifbullet/nativedynamicsworld.hpp>
+#include <cstddef>
+#include <new>
 #include <bit>
 #include <cmath>
 #include <osg/Stats>
@@ -1231,4 +1234,247 @@ namespace
 
     INSTANTIATE_TEST_SUITE_P(WorkerCounts, RagdollSchedulerTest, ::testing::Values(0, 1, 2));
 
+}
+
+namespace
+{
+    class LooseAdmissionFailureWorld : public NifBullet::NativeDynamicsWorld
+    {
+    public:
+        using NifBullet::NativeDynamicsWorld::NativeDynamicsWorld;
+        bool mFailAfterInsertion = true;
+        void addRigidBody(btRigidBody* body, int group, int mask) override
+        {
+            NifBullet::NativeDynamicsWorld::addRigidBody(body, group, mask);
+            if (mFailAfterInsertion) throw std::runtime_error("loose fixture admission failed");
+        }
+    };
+
+    TEST_P(RagdollSchedulerTest, LooseBodyPreparationRejectsStaleAndDuplicateOwnersWithoutActorPublication)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::NativeDynamicsWorld foreignWorld(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        MWPhysics::PhysicsTaskScheduler foreign(1.f / 60.f, &foreignWorld, nullptr);
+        {
+            auto cancelled = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+            EXPECT_TRUE(scheduler.validatePreparedLooseObject(*cancelled));
+            EXPECT_FALSE(scheduler.hasLooseObject(mPtr));
+            EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+            EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_FALSE(foreign.commitLooseObject(*cancelled));
+            EXPECT_EQ(foreignWorld.getNumCollisionObjects(), 0);
+        }
+        auto first = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto second = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        mPtr.getCellRef().setCount(2);
+        EXPECT_FALSE(scheduler.commitLooseObject(*first));
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        mPtr.getCellRef().setCount(1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*first));
+        EXPECT_FALSE(scheduler.commitLooseObject(*first));
+        EXPECT_FALSE(scheduler.validatePreparedLooseObject(*second));
+        EXPECT_FALSE(scheduler.commitLooseObject(*second));
+        EXPECT_EQ(scheduler.looseObjectOwners(), std::vector<MWWorld::Ptr>{mPtr});
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        EXPECT_THROW(scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1), std::invalid_argument);
+        EXPECT_THROW(scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1), std::invalid_argument);
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase);
+        const MWWorld::Ptr otherPtr(&other);
+        scheduler.addActorRagdoll(otherPtr, mGraph, 1, mPoses, 1, -1);
+        EXPECT_THROW(scheduler.updateActorRagdollPtr(otherPtr, mPtr), std::invalid_argument);
+        EXPECT_TRUE(scheduler.hasActorRagdoll(otherPtr));
+        EXPECT_TRUE(scheduler.hasLooseObject(mPtr));
+        EXPECT_EQ(world.getNumCollisionObjects(), 2);
+        scheduler.removeActorRagdoll(otherPtr);
+
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        const auto* body = world.getCollisionObjectArray()[0];
+        auto* holder = static_cast<MWPhysics::PtrHolder*>(scheduler.getUserPointer(body));
+        ASSERT_NE(holder, nullptr);
+        EXPECT_EQ(holder->getPtr(), mPtr);
+        scheduler.removeLooseObject(mPtr);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_EQ(scheduler.getUserPointer(body), nullptr);
+        EXPECT_THROW(scheduler.captureLooseObject(mPtr), std::invalid_argument);
+        EXPECT_THROW(scheduler.prepareLooseObject({}, mGraph, 1, mPoses, 1, -1), std::invalid_argument);
+        auto bad = mGraph;
+        bad.mBodies.push_back(bad.mBodies[0]);
+        EXPECT_THROW(scheduler.prepareLooseObject(mPtr, bad, 1, mPoses, 1, -1), std::invalid_argument);
+        bad = mGraph;
+        bad.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{};
+        EXPECT_THROW(scheduler.prepareLooseObject(mPtr, bad, 1, mPoses, 1, -1), std::invalid_argument);
+        MWPhysics::PhysicsTaskScheduler legacy(1.f / 60.f, &mWorld, nullptr);
+        EXPECT_THROW(legacy.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1), std::invalid_argument);
+    }
+
+    TEST_P(RagdollSchedulerTest, LooseBodiesFallOntoRealFloorWithNoActorRagdollsAndCleanUpOnUnload)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        btStaticPlaneShape floorShape(btVector3(0, 0, 1), 0);
+        btCollisionObject floor;
+        floor.setCollisionShape(&floorShape);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addCollisionObject(&floor, 1, -1);
+        const auto removeFloor = [&](btCollisionObject* object) { scheduler.removeCollisionObject(object); };
+        std::unique_ptr<btCollisionObject, decltype(removeFloor)> floorGuard(&floor, removeFloor);
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        ASSERT_EQ(world.getNumCollisionObjects(), 2);
+        auto* body = btRigidBody::upcast(world.getCollisionObjectArray()[1]);
+        ASSERT_NE(body, nullptr);
+        EXPECT_TRUE(body->getFlags() & BT_DISABLE_WORLD_GRAVITY);
+        const auto* identity = body;
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("loose-body floor");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        for (unsigned frame = 0; frame < 180; ++frame)
+        {
+            time += 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                *stats, MWPhysics::WorldFrameData(false, {}));
+        }
+        const auto state = scheduler.captureLooseObject(mPtr);
+        ASSERT_EQ(state.size(), 1);
+        EXPECT_NEAR(state[0].mPose.getOrigin().z(), .5, .03);
+        EXPECT_LT(std::abs(state[0].mLinearVelocity.z()), .2);
+        EXPECT_EQ(world.getGravity(), btVector3(0, 0, 0));
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        scheduler.releaseSharedStates();
+        EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(scheduler.getUserPointer(identity), nullptr);
+        EXPECT_EQ(world.getNumConstraints(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, MixedLooseAndActorBodiesShareExactlyOneNativeDynamicsStep)
+    {
+        constexpr float dt = 1.f / 60.f;
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        MWWorld::LiveCellRef<ESM::Static> actorRef(mReference, &mBase);
+        const MWWorld::Ptr actor(&actorRef);
+        auto actorPoses = mPoses;
+        actorPoses[0].setOrigin(btVector3(100, 0, 2));
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &world, nullptr);
+        mGraph.mBodies[0].mLinearDamping = 2;
+        scheduler.addActorRagdoll(actor, mGraph, 1, actorPoses, 1, -1);
+        auto loose = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*loose));
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("shared native dynamics step");
+        std::vector<MWPhysics::Simulation> frames;
+        float time = dt;
+        scheduler.applyQueuedMovements(time, frames, osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto a = scheduler.captureActorRagdoll(actor)[0];
+        const auto b = scheduler.captureLooseObject(mPtr)[0];
+        // Independently pinned original native gravity, separate float stores.
+        constexpr float nativeGravity = -73.57500457763672f;
+        const float delta = float(double(nativeGravity) * double(dt));
+        const float factor = float(1. - double(dt) * 2.);
+        const float velocity = float(double(delta) * double(factor));
+        EXPECT_DOUBLE_EQ(a.mLinearVelocity.z(), velocity);
+        EXPECT_DOUBLE_EQ(b.mLinearVelocity.z(), velocity);
+        EXPECT_NEAR(a.mPose.getOrigin().z(), 2 + double(velocity) * double(dt), 1e-12);
+        EXPECT_NEAR(b.mPose.getOrigin().z(), 2 + double(velocity) * double(dt), 1e-12);
+        EXPECT_EQ(scheduler.actorRagdollOwners(), std::vector<MWWorld::Ptr>{actor});
+        EXPECT_EQ(scheduler.looseObjectOwners(), std::vector<MWWorld::Ptr>{mPtr});
+        scheduler.removeLooseObject(mPtr);
+        scheduler.removeActorRagdoll(actor);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, LooseBodySnapshotsValidateWholeStateAndResumeTheSameFreeFlight)
+    {
+        constexpr float dt = 1.f / 60.f;
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        mGraph.mBodies[0].mLinearDamping = .1f;
+        mPoses[0].setOrigin(btVector3(1, 2, 500));
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &world, nullptr);
+        auto admitted = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*admitted));
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("loose-body snapshot continuation");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        const auto advance = [&](unsigned start, unsigned stop) {
+            for (unsigned frame = start; frame < stop; ++frame)
+            {
+                time += dt;
+                scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                    *stats, MWPhysics::WorldFrameData(false, {}));
+            }
+        };
+        advance(0, 30);
+        const auto saved = scheduler.captureLooseObject(mPtr);
+        const auto packed = scheduler.captureLooseObjectPackedVelocities(mPtr);
+        auto bad = saved;
+        bad[0].mPose.getOrigin().setX(std::numeric_limits<btScalar>::quiet_NaN());
+        EXPECT_THROW(scheduler.restoreLooseObject(mPtr, bad, packed), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, saved[0].mPose);
+        auto badPacked = packed;
+        badPacked[0].mRecord += 1;
+        EXPECT_THROW(scheduler.restoreLooseObject(mPtr, saved, badPacked), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, packed[0].mVelocities);
+        advance(30, 60);
+        const auto uninterrupted = scheduler.captureLooseObject(mPtr)[0];
+        scheduler.removeLooseObject(mPtr);
+        admitted = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*admitted));
+        scheduler.restoreLooseObject(mPtr, saved, packed);
+        advance(60, 90);
+        const auto resumed = scheduler.captureLooseObject(mPtr)[0];
+        EXPECT_NEAR(resumed.mPose.getOrigin().z(), uninterrupted.mPose.getOrigin().z(), 1e-9);
+        EXPECT_EQ(resumed.mLinearVelocity, uninterrupted.mLinearVelocity);
+        EXPECT_EQ(resumed.mAngularVelocity, uninterrupted.mAngularVelocity);
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        scheduler.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, LooseAdmissionFailureRemovesRoutingAndPhysicsBeforeRetry)
+    {
+        LooseAdmissionFailureWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        EXPECT_THROW(scheduler.commitLooseObject(*prepared), std::runtime_error);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        EXPECT_TRUE(scheduler.validatePreparedLooseObject(*prepared));
+        world.mFailAfterInsertion = false;
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        auto* body = world.getCollisionObjectArray()[0];
+        ASSERT_NE(scheduler.getUserPointer(body), nullptr);
+        scheduler.removeLooseObject(mPtr);
+        EXPECT_EQ(scheduler.getUserPointer(body), nullptr);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, PendingLooseBodiesRejectClearedAndReusedSchedulersBeforeTouchingDeletedReferences)
+    {
+        using Scheduler = MWPhysics::PhysicsTaskScheduler;
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        alignas(Scheduler) std::byte storage[sizeof(Scheduler)];
+        auto* scheduler = new (storage) Scheduler(1.f / 60.f, &world, nullptr);
+        auto cleared = scheduler->prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler->releaseSharedStates();
+        EXPECT_FALSE(scheduler->validatePreparedLooseObject(*cleared));
+        EXPECT_FALSE(scheduler->commitLooseObject(*cleared));
+        auto retired = scheduler->prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler->~Scheduler();
+        mLive.reset(); // Borrowed ptr is now invalid; reject identity first.
+        scheduler = new (storage) Scheduler(1.f / 60.f, &world, nullptr);
+        EXPECT_FALSE(scheduler->validatePreparedLooseObject(*retired));
+        EXPECT_FALSE(scheduler->commitLooseObject(*retired));
+        EXPECT_FALSE(scheduler->validatePreparedLooseObject(*cleared));
+        EXPECT_FALSE(scheduler->commitLooseObject(*cleared));
+        cleared.reset();
+        retired.reset();
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        scheduler->~Scheduler();
+    }
 }
