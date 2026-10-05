@@ -269,6 +269,10 @@ namespace MWPhysics
         bool hasLooseObject(const MWWorld::Ptr& ptr);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
+        // Reverse the retained authored body/bind transforms for a native
+        // one-body model. Read-only; waits for the prior physical frame.
+        // Requires the native length scale, independently of actor ragdolls.
+        osg::Matrixf captureLooseObjectRootPose(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativePackedVelocityState> captureLooseObjectPackedVelocities(
             const MWWorld::Ptr& ptr);
         void restoreLooseObject(const MWWorld::Ptr& ptr,

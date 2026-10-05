@@ -820,6 +820,8 @@ namespace MWPhysics
     std::vector<MWWorld::Ptr> PhysicsSystem::looseObjectOwners() { return mTaskScheduler->looseObjectOwners(); }
     std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureLooseObject(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObject(ptr); }
+    osg::Matrixf PhysicsSystem::captureLooseObjectRootPose(const MWWorld::Ptr& ptr)
+    { return mTaskScheduler->captureLooseObjectRootPose(ptr); }
     std::vector<NifBullet::RagdollNativePackedVelocityState>
     PhysicsSystem::captureLooseObjectPackedVelocities(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObjectPackedVelocities(ptr); }

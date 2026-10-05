@@ -1587,3 +1587,73 @@ namespace
         physics->~Physics();
     }
 }
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, LooseNativeRootPoseReversesOwnedBodyAndBindTransforms)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 3;
+        body.mBoneBind = osg::Matrixf::rotate(osg::PI_2, osg::Vec3f(0, 0, 1))
+            * osg::Matrixf::translate(30, -7, 15);
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = {.5f, .25f, -.75f};
+        body.mRotation = osg::Quat(osg::PI_2, osg::Vec3f(1, 0, 0));
+        const auto root = osg::Matrixf::rotate(osg::PI_2, osg::Vec3f(0, 1, 0))
+            * osg::Matrixf::translate(100, 40, 80);
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{
+            {body.mNodeRecord, body.mBoneBind * root}}};
+        const auto poses = NifBullet::ragdollBodyWorldPoses(mGraph, bones);
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph,
+            NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        // The authored file/definition may be released or reused after preparation.
+        body.mBoneBind = osg::Matrixf::scale(2, 3, 4);
+        body.mTranslation = {100, 100, 100};
+        body.mRotation = {};
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        const auto check = [&](const osg::Matrixf& expected) {
+            const auto actual = scheduler.captureLooseObjectRootPose(mPtr);
+            for (unsigned i = 0; i < 16; ++i)
+                EXPECT_NEAR(actual.ptr()[i], expected.ptr()[i], .0003f) << i;
+        };
+        check(root);
+        auto state = scheduler.captureLooseObject(mPtr);
+        const auto velocities = scheduler.captureLooseObjectPackedVelocities(mPtr);
+        state.front().mPose.setOrigin(state.front().mPose.getOrigin() + btVector3(10, 20, 30));
+        scheduler.restoreLooseObject(mPtr, state, velocities);
+        auto moved = root;
+        moved.setTrans(root.getTrans() + osg::Vec3f(10, 20, 30));
+        check(moved);
+        const auto before = scheduler.captureLooseObject(mPtr);
+        check(moved);
+        const auto after = scheduler.captureLooseObject(mPtr);
+        EXPECT_EQ(before.front().mPose, after.front().mPose);
+        EXPECT_EQ(before.front().mLinearVelocity, after.front().mLinearVelocity);
+        scheduler.removeLooseObject(mPtr);
+        EXPECT_THROW(scheduler.captureLooseObjectRootPose(mPtr), std::invalid_argument);
+    }
+
+    TEST_P(RagdollSchedulerTest, LooseNativeRootPoseRejectsUnsupportedUnitsAndSceneBindingsWithoutMutation)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        for (const bool invalidBind : {false, true})
+        {
+            SCOPED_TRACE(invalidBind);
+            mGraph.mBodies.front().mBoneBind = invalidBind
+                ? osg::Matrixf::scale(2, 1, 1) : osg::Matrixf::identity();
+            auto prepared = scheduler.prepareLooseObject(mPtr, mGraph,
+                invalidBind ? NifBullet::RagdollNativeLengthScale : 1.f, mPoses, 1, -1);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            const auto before = scheduler.captureLooseObject(mPtr);
+            EXPECT_THROW(scheduler.captureLooseObjectRootPose(mPtr), std::invalid_argument);
+            const auto after = scheduler.captureLooseObject(mPtr);
+            EXPECT_EQ(before.front().mPose, after.front().mPose);
+            EXPECT_EQ(before.front().mLinearVelocity, after.front().mLinearVelocity);
+            EXPECT_EQ(world.getNumCollisionObjects(), 1);
+            scheduler.removeLooseObject(mPtr);
+        }
+    }
+}

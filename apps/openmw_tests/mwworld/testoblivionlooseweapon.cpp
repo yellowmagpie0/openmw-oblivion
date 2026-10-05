@@ -14,6 +14,7 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/testing/util.hpp>
 #include <components/vfs/manager.hpp>
 #include <gtest/gtest.h>
@@ -403,4 +404,46 @@ TEST_F(LooseWeaponAdmissionTest, CompoundPublicationHookRunsOnceAfterFallibleAdm
     EXPECT_EQ(mWorld->getPtr(published.getCellRef().getRefNum()), published);
     EXPECT_TRUE(prepared->commit(hooks).isEmpty());
     EXPECT_EQ(context.publications, 1u);
+}
+
+namespace
+{
+    TEST_F(LooseWeaponAdmissionTest, NativePhysicalRootPoseMatchesManagedWeaponPlacementWithoutLogicalMutation)
+    {
+        auto value = source();
+        mDefinition.mBodies.front().mNodeRecord = 0;
+        mDefinition.mBodies.front().mBoneBind = osg::Matrixf::identity();
+        const auto rotation = osg::Quat(osg::PI_2, osg::Vec3f(0, 0, 1));
+        auto position = value.mRef.getPosition();
+        position.rot[2] = -osg::PI_2f;
+        value.mRef.setPosition(position);
+        value.mData.setPosition(position);
+        const auto expected = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(0, 0, 2);
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{0, expected}}};
+        const auto poses = NifBullet::ragdollBodyWorldPoses(mDefinition, bones);
+        auto prepared = mWorld->prepareLooseWeaponAdmission(*mCell, value, *mObjects, *mPhysics,
+            "weapon.osgt", rotation, MWRender::Mask_Object, mDefinition,
+            NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        const auto ptr = prepared->commit();
+        ASSERT_FALSE(ptr.isEmpty());
+        const auto reference = *ptr.getCellRef().getNativeReference();
+        const auto number = ptr.getCellRef().getRefNum();
+        const auto revision = mWorld->getPtrRegistryRevision();
+        const auto root = mPhysics->captureLooseObjectRootPose(ptr);
+        for (unsigned i = 0; i < 16; ++i)
+            EXPECT_NEAR(root.ptr()[i], expected.ptr()[i], .0003f) << i;
+        EXPECT_EQ(ptr.getCellRef().getFormKey(), reference.mFormKey);
+        EXPECT_EQ(ptr.getCellRef().getRefNum(), number);
+        EXPECT_EQ(mWorld->getPtrRegistryRevision(), revision);
+        EXPECT_EQ(mCell->count(), 1u);
+        ASSERT_TRUE(ptr.getCellRef().getNativeItemCondition());
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(*ptr.getCellRef().getNativeItemCondition()), 0x80000000u);
+        EXPECT_FLOAT_EQ(ptr.getCellRef().getEnchantmentCharge(), 7.25f);
+        ASSERT_NE(ptr.getRefData().getBaseNode(), nullptr);
+        const auto* node = ptr.getRefData().getBaseNode();
+        const auto scene = osg::Matrixf::rotate(node->getAttitude())
+            * osg::Matrixf::translate(node->getPosition());
+        for (unsigned i = 0; i < 16; ++i)
+            EXPECT_NEAR(root.ptr()[i], scene.ptr()[i], .0003f) << i;
+    }
 }

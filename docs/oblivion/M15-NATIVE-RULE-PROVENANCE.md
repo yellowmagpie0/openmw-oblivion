@@ -13811,3 +13811,53 @@ access, legality, witness or crime-report policy, and does not prove normal
 gameplay. The actual stock drop factory, compound native bow/arrow release,
 loose model synchronization/recreation, exact native pickup and fresh-process
 acceptance remain open. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint290: retain loose-body metadata and recover native model-root poses
+
+Loose physics now owns its authored body definition and length scale through
+preparation, publication, owner rebinding and removal. The read-only scheduler
+and PhysicsSystem root-pose query waits for workers, reads the physical pose,
+uses the existing native position and bodyT reverse conversions, and removes
+the authored bone binding in OSG row-vector order. It validates the native
+length scale and rigid scene bindings. Missing owners, unsupported units and
+invalid scene bindings reject without changing physical state.
+
+Seven new engine cases cover all three worker configurations, a nonidentity
+authored binding combined with bodyT rotation/translation, source-definition
+mutation after preparation, restored body motion, repeated read-only capture,
+missing ownership after removal, and rejection without physical mutation.
+A WorldModel/Objects/PhysicsSystem case verifies the recovered pose against the
+actual model PAT and managed native WEAP placement while preserving registry,
+FormKey, RefNum, count, exact negative-zero condition and fractional charge.
+This asset boundary uses an owned OSGT and synthetic sphere. Its declared
+matrix tolerance is 0.0003 per element; it is integration of previously
+verified native converters rather than a new independent original-rule probe.
+
+Both normal and ASan/UBSan full engine suites pass 1075 cases with exact
+inventories and no failures/skips. Leak checks remain disabled. One fixture
+syntax error attempted to write through CellRef's const position getter;
+the corrected fixture uses its setter. No full-suite failure occurred.
+No component, Python or schema source changed, so those checks were not rerun.
+Evidence: S5/native-loose-root-pose-normal-01 and
+S5/native-loose-root-pose-sanitized-01.
+Engine-tested fingerprint: 35ba1fc339c991a3caee738c5ce5ecc70d635414582ab3c56be08bf3d6bf9c43
+
+A separate diagnostic loads the hash-pinned stock iron bow through the
+production owned-definition loader in normal and instrumented component
+libraries: one hull body, record5 targeting root0, mass5, ordinary body
+rather than bodyT, identity bone binding, no joints or actor blend controller.
+The original extracted asset SHA256 is
+cdb868ceb74131e95a56a100522dda1923a79220c217b242c2d3b7f8972c56ac.
+Evidence: S5/native-stock-loose-definition-diagnostic-02. Its first attempt
+failed Python UTF-8 decoding because the NIF source hash is a raw16-byte
+parser identity, not a printable SHA256 string. The corrected diagnostic
+hex-encodes that field. The failed directory and binary-byte output repeat
+are retained. This diagnostic does not prove independent raw NIF validation,
+scene/physics admission of the stock asset, a drop transaction or gameplay.
+
+This provides the physical-to-model conversion needed by the drop factory.
+It does not install a World frame synchronization loop or new drop caller.
+The stock drop factory, compound bow/arrow release, exact pickup, loose-body
+save/recreation and normal-input/fresh-process acceptance remain open.
+S5 and full M15 remain in progress.

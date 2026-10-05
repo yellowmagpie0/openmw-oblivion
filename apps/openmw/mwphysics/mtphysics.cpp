@@ -468,7 +468,9 @@ namespace MWPhysics
         LooseObject(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
             : PtrHolder(ptr, {})
-            , mPhysics(definition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this),
+            , mDefinition(definition)
+            , mLengthScale(lengthScale)
+            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this),
                 nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred)
             , mLinearDeltas(definition.mBodies.size())
         {
@@ -479,6 +481,8 @@ namespace MWPhysics
                 body->setGravity(btVector3(0, 0, 0));
             }
         }
+        const NifBullet::ActorRagdollDefinition mDefinition;
+        const float mLengthScale;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
     };
@@ -591,6 +595,37 @@ namespace MWPhysics
         const auto found = mLooseObjects.find(ptr.mRef);
         if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
         return found->second->mPhysics.capture();
+    }
+
+    osg::Matrixf PhysicsTaskScheduler::captureLooseObjectRootPose(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end())
+            throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (object.mLengthScale != NifBullet::RagdollNativeLengthScale)
+            throw std::invalid_argument("loose native scene pose requires the native length scale");
+        const auto& body = object.mDefinition.mBodies.front();
+        // A physical graph can be used without renderer metadata. Reject bad
+        // scene metadata before returning a pose rather than guessing identity.
+        (void)NifBullet::ragdollNativeSceneTargetPose(body.mBoneBind);
+        const auto states = object.mPhysics.capture();
+        const auto& pose = states.front().mPose;
+        const auto& origin = pose.getOrigin();
+        const auto rotation = pose.getRotation();
+        NifBullet::RagdollNativeTargetPose physical{
+            NifBullet::ragdollWorldToNativePosition(
+                osg::Vec3f(float(origin.x()), float(origin.y()), float(origin.z()))),
+            {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
+        const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+        osg::Matrixf inverse;
+        if (!inverse.invert(body.mBoneBind))
+            throw std::invalid_argument("loose native model bind is not invertible");
+        const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(target);
+        (void)NifBullet::ragdollNativeSceneTargetPose(root);
+        return root;
     }
 
     std::vector<NifBullet::RagdollNativePackedVelocityState>
