@@ -13,6 +13,10 @@
 #include <boost/geometry/geometry.hpp>
 
 #include <limits>
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 
 namespace DetourNavigator
 {
@@ -237,21 +241,89 @@ namespace DetourNavigator
         return true;
     }
 
+    struct TileCachedRecastMeshManager::PreparedObjectRemoval::Data
+    {
+        TileCachedRecastMeshManager* mOwner = nullptr;
+        ScopedUpdateGuard mGuard;
+        decltype(TileCachedRecastMeshManager::mObjectIndex) mIndex;
+        std::map<osg::Vec2i, ChangeType> mExpectedChanges, mChanges;
+        std::vector<ObjectId> mRemoved;
+        ESM::RefId mWorldspace;
+        TilesPositionsRange mRange;
+        std::size_t mRevision = 0;
+        std::size_t mRevisionIncrement = 0;
+        bool mCommitted = false;
+    };
+
+    TileCachedRecastMeshManager::PreparedObjectRemoval::PreparedObjectRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    TileCachedRecastMeshManager::PreparedObjectRemoval::~PreparedObjectRemoval() = default;
+
+    std::unique_ptr<TileCachedRecastMeshManager::PreparedObjectRemoval>
+    TileCachedRecastMeshManager::prepareObjectRemoval(std::span<const ObjectId> ids,
+        std::span<const std::pair<TilePosition, ChangeType>> additionalChanges, const UpdateGuard* guard)
+    {
+        auto data = std::make_unique<PreparedObjectRemoval::Data>();
+        data->mOwner = this;
+        if (!guard) data->mGuard = makeUpdateGuard();
+        data->mRevision = mRevision;
+        data->mWorldspace = mWorldspace;
+        data->mRange = mRange;
+        data->mExpectedChanges = mChangedTiles;
+        data->mChanges = mChangedTiles;
+        // R-tree removal can allocate when reinserting an underfilled node.
+        // Prepare its entire replacement privately, retaining ObjectData
+        // identities and all other objects in the live manager.
+        data->mIndex = mObjectIndex;
+        const auto change = [&](const TilePosition& tile, ChangeType type) {
+            auto [entry, inserted] = data->mChanges.emplace(tile, type);
+            if (!inserted && type == ChangeType::remove) entry->second = type;
+        };
+        for (const auto id : ids)
+        {
+            if (std::find(data->mRemoved.begin(), data->mRemoved.end(), id) != data->mRemoved.end()) continue;
+            const auto object = mObjects.find(id);
+            if (object == mObjects.end()) continue;
+            const auto range = object->second->mRange;
+            if (data->mIndex.remove(makeObjectIndexValue(range, object->second.get())) != 1)
+                throw std::logic_error("navigation removal object has no unique index binding");
+            data->mRemoved.push_back(id);
+            getTilesPositions(getIntersection(range, mRange),
+                [&](const TilePosition& tile) { change(tile, ChangeType::remove); });
+        }
+        for (const auto& [tile, type] : additionalChanges) change(tile, type);
+        data->mRevisionIncrement = data->mRemoved.size() + !additionalChanges.empty();
+        return std::unique_ptr<PreparedObjectRemoval>(new PreparedObjectRemoval(std::move(data)));
+    }
+
+    bool TileCachedRecastMeshManager::PreparedObjectRemoval::isValid() const
+    {
+        return !mData->mCommitted && mData->mOwner->mRevision == mData->mRevision
+            && mData->mOwner->mWorldspace == mData->mWorldspace
+            && mData->mOwner->mRange == mData->mRange
+            && mData->mOwner->mChangedTiles == mData->mExpectedChanges;
+    }
+
+    bool TileCachedRecastMeshManager::PreparedObjectRemoval::commit()
+    {
+        if (!isValid()) return false;
+        auto& owner = *mData->mOwner;
+        owner.mObjectIndex.swap(mData->mIndex);
+        owner.mChangedTiles.swap(mData->mChanges);
+        for (const auto id : mData->mRemoved) owner.mObjects.erase(id);
+        owner.mRevision += mData->mRevisionIncrement;
+        mData->mCommitted = true;
+        return true;
+    }
+
     void TileCachedRecastMeshManager::removeObject(ObjectId id, const UpdateGuard* guard)
     {
-        TilesPositionsRange range;
-        {
-            const MaybeLockGuard lock(mMutex, guard);
-            const auto it = mObjects.find(id);
-            if (it == mObjects.end())
-                return;
-            range = it->second->mRange;
-            mObjectIndex.remove(makeObjectIndexValue(range, it->second.get()));
-            mObjects.erase(it);
-            ++mRevision;
-        }
-        getTilesPositions(
-            getIntersection(range, mRange), [&](const TilePosition& v) { addChangedTile(v, ChangeType::remove); });
+        const MaybeLockGuard lock(mMutex, guard);
+        if (!mObjects.contains(id)) return;
+        const std::array ids{id};
+        auto removal = prepareObjectRemoval(ids, {}, guard ? guard : &mUpdateGuard);
+        if (!removal->commit())
+            throw std::logic_error("navigation removal changed during its update guard");
     }
 
     void TileCachedRecastMeshManager::addWater(

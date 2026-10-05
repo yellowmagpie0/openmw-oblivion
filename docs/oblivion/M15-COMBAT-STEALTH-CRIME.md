@@ -21804,3 +21804,56 @@ removal and exact loose-item metadata. Container loot, remaining interaction
 callbacks, compound bow/drop/arrow admission, native flight/impact/recovery,
 frame/save reconstruction and normal-input ranged/restart acceptance remain
 open. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint297: prepare navigation removals before publication
+
+An isolated allocation-failure probe reproduces the former actual navigation
+removal defect: failing the first allocation after removal begins throws
+bad_alloc after the object is erased and revision advances from two to three.
+The source object is absent from its live mesh. Evidence:
+S5/native-pickup-navigation-baseline-02. The initial -01 attempt failed
+compilation because the standalone fixture omitted the concrete settings
+header; it executed no case and remains retained.
+
+TileCachedRecastMeshManager now prepares a private replacement R-tree and
+changed-tile notices before removing live ObjectData. Commit validates the
+revision, worldspace, tile range and existing notices, then swaps the prepared
+index/notices and erases only selected objects. Existing ObjectData identities
+remain intact. Duplicate/missing IDs do not repeat removal, and external tile
+notices preserve the established remove precedence. An external-only notice
+batch also advances the revision so navigation updates can observe it. The
+ordinary removeObject method uses this preparation, preserving the absent-ID
+no-op without copying the index.
+
+The scoped preparation holds the update lock or borrows a supplied guard. The
+manager and borrowed guard must outlive it; destroy it before callbacks or an
+unguarded update. This is a scoped navigation transaction, not an inventory
+owner-lifetime token. Cancellation leaves the live manager untouched.
+
+Six regular component cases cover cancellation, unique batch commit/replay
+rejection, unaffected objects and notice precedence, changed-notice rejection,
+guarded object-update rejection, and external notices/absent IDs. Both full
+normal and ASan/UBSan runs pass 2545 component cases and 1104 engine cases with
+exact unfiltered inventories, no failed or skipped cases.
+Evidence: S5/native-pickup-navigation-normal-01 and
+S5/native-pickup-navigation-sanitized-01. ASan leak checking is disabled.
+Tested source fingerprint: dcdd3d41189abe0c17daa40c9cc4248e8ae3103bd21a6fa9d0ec96bf395f8714
+
+The committed standalone C++ fixture overrides allocation only in its isolated
+probe process, never in the game or regular test binaries. The corrected probe
+against completed normal libraries sweeps 65 allocation limits; it records
+5 rejected preparations with unchanged
+revision/object/notices and 60 complete
+removals. Library hashes and source fingerprint remain unchanged during the
+probe. Evidence: S5/native-pickup-navigation-allocation-01.
+
+The preparation copies the current spatial index; final performance and
+large-cell teardown acceptance remain open. Complete native pickup must still
+coordinate primary/avoid/water navigation shapes and off-mesh connections with
+prepared rendering, collision and Lua removal before debiting its source.
+World deleteObject still marks its source deleted before ordinary scene
+cleanup; this resource fix alone does not make that compound path atomic.
+Exact live pickup metadata, bow/drop/arrow publication, flight/impact/recovery,
+frame/save reconstruction and normal-input/restart courses remain required.
+S5 and full M15 remain in progress.

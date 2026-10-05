@@ -7,6 +7,8 @@
 
 #include <osg/io_utils>
 
+#include <array>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -576,5 +578,123 @@ namespace
         for (int x = -1; x < 1; ++x)
             for (int y = -1; y < 1; ++y)
                 EXPECT_NE(manager.getMesh(mWorldspace, TilePosition(x, y)), nullptr) << x << " " << y;
+    }
+}
+
+namespace
+{
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_removal_cancellation_preserves_live_mesh)
+    {
+        TileCachedRecastMeshManager manager(mSettings); manager.setWorldspace(mWorldspace, nullptr);
+        manager.setRange({TilePosition(0, 0), TilePosition(1, 1)}, nullptr);
+        const btBoxShape box(btVector3(20, 20, 100));
+        const CollisionShape shape(mInstance, box, mObjectTransform);
+        const ObjectId id(&box);
+        ASSERT_TRUE(manager.addObject(id, shape, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        manager.takeChangedTiles(nullptr);
+        const auto revision = manager.getRevision();
+        { const std::array ids{id}; auto prepared = manager.prepareObjectRemoval(ids); EXPECT_TRUE(prepared->isValid()); }
+        EXPECT_EQ(manager.getRevision(), revision);
+        EXPECT_NE(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr), IsEmpty());
+    }
+
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_batch_removes_unique_existing_ids_once)
+    {
+        TileCachedRecastMeshManager manager(mSettings); manager.setWorldspace(mWorldspace, nullptr);
+        manager.setRange({TilePosition(0, 0), TilePosition(1, 1)}, nullptr);
+        const btBoxShape first(btVector3(20, 20, 100)), second(btVector3(10, 10, 100));
+        const CollisionShape a(mInstance, first, mObjectTransform), b(mInstance, second, mObjectTransform);
+        ASSERT_TRUE(manager.addObject(ObjectId(&first), a, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        ASSERT_TRUE(manager.addObject(ObjectId(&second), b, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        manager.takeChangedTiles(nullptr);
+        const auto revision = manager.getRevision();
+        {
+            const std::array ids{ObjectId(&first), ObjectId(&first), ObjectId(&second), ObjectId(&manager)};
+            auto prepared = manager.prepareObjectRemoval(ids);
+            ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(prepared->isValid());
+        }
+        EXPECT_EQ(manager.getRevision(), revision + 2);
+        EXPECT_EQ(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr), ElementsAre(std::pair(TilePosition(0, 0), ChangeType::remove)));
+    }
+
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_removal_preserves_other_object_identity_and_tiles)
+    {
+        TileCachedRecastMeshManager manager(mSettings); manager.setWorldspace(mWorldspace, nullptr);
+        manager.setRange({TilePosition(0, 0), TilePosition(2, 2)}, nullptr);
+        const btBoxShape first(btVector3(20, 20, 100)), second(btVector3(10, 10, 100));
+        const CollisionShape a(mInstance, first, mObjectTransform), b(mInstance, second, mObjectTransform);
+        ASSERT_TRUE(manager.addObject(ObjectId(&first), a, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        ASSERT_TRUE(manager.addObject(ObjectId(&second), b, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        manager.takeChangedTiles(nullptr);
+        manager.addChangedTile(TilePosition(1, 1), ChangeType::add);
+        {
+            const std::array ids{ObjectId(&first)};
+            const std::array changes{std::pair{TilePosition(1, 1), ChangeType::update},
+                std::pair{TilePosition(0, 0), ChangeType::add}};
+            auto prepared = manager.prepareObjectRemoval(ids, changes);
+            ASSERT_TRUE(prepared->commit());
+        }
+        EXPECT_NE(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr),
+            ElementsAre(std::pair(TilePosition(0, 0), ChangeType::remove),
+                std::pair(TilePosition(1, 1), ChangeType::add)));
+        // An unaffected binding remains live and still accepts its ordinary removal.
+        manager.removeObject(ObjectId(&second), nullptr);
+        EXPECT_EQ(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+    }
+
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_removal_rejects_changed_notice_map_without_erasing_object)
+    {
+        TileCachedRecastMeshManager manager(mSettings); manager.setWorldspace(mWorldspace, nullptr);
+        manager.setRange({TilePosition(0, 0), TilePosition(2, 2)}, nullptr);
+        const btBoxShape box(btVector3(20, 20, 100));
+        const CollisionShape shape(mInstance, box, mObjectTransform); const ObjectId id(&box);
+        ASSERT_TRUE(manager.addObject(id, shape, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        manager.takeChangedTiles(nullptr);
+        const auto revision = manager.getRevision();
+        {
+            const std::array ids{id}; auto prepared = manager.prepareObjectRemoval(ids);
+            manager.addChangedTile(TilePosition(1, 1), ChangeType::update);
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+        }
+        EXPECT_EQ(manager.getRevision(), revision);
+        EXPECT_NE(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr), ElementsAre(std::pair(TilePosition(1, 1), ChangeType::update)));
+    }
+
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_removal_rejects_guarded_object_updates)
+    {
+        TileCachedRecastMeshManager manager(mSettings); manager.setWorldspace(mWorldspace, nullptr);
+        manager.setRange({TilePosition(0, 0), TilePosition(2, 2)}, nullptr);
+        const btBoxShape box(btVector3(20, 20, 100));
+        const CollisionShape shape(mInstance, box, mObjectTransform); const ObjectId id(&box);
+        ASSERT_TRUE(manager.addObject(id, shape, btTransform::getIdentity(), AreaType::AreaType_ground, nullptr));
+        {
+            auto guard = manager.makeUpdateGuard(); const std::array ids{id};
+            auto prepared = manager.prepareObjectRemoval(ids, {}, guard.get());
+            btTransform moved = btTransform::getIdentity(); moved.setOrigin(btVector3(10, 10, 0));
+            ASSERT_TRUE(manager.updateObject(id, moved, AreaType::AreaType_ground, guard.get()));
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+        }
+        EXPECT_NE(manager.getMesh(mWorldspace, TilePosition(0, 0)), nullptr);
+    }
+
+    TEST_F(DetourNavigatorTileCachedRecastMeshManagerTest, prepared_external_notices_advance_revision_without_objects)
+    {
+        TileCachedRecastMeshManager manager(mSettings);
+        const auto revision = manager.getRevision();
+        {
+            const std::array changes{std::pair{TilePosition(1, 1), ChangeType::update}};
+            auto prepared = manager.prepareObjectRemoval({}, changes);
+            ASSERT_TRUE(prepared->commit());
+        }
+        EXPECT_EQ(manager.getRevision(), revision + 1);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr), ElementsAre(std::pair(TilePosition(1, 1), ChangeType::update)));
+        const auto unchanged = manager.getRevision();
+        manager.removeObject(ObjectId(&manager), nullptr);
+        EXPECT_EQ(manager.getRevision(), unchanged);
+        EXPECT_THAT(manager.takeChangedTiles(nullptr), IsEmpty());
     }
 }

@@ -25,6 +25,8 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
+#include <utility>
 #include <unordered_map>
 
 namespace DetourNavigator
@@ -53,6 +55,28 @@ namespace DetourNavigator
             const UpdateGuard* guard);
 
         bool updateObject(ObjectId id, const btTransform& transform, AreaType areaType, const UpdateGuard* guard);
+
+        class PreparedObjectRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedObjectRemoval(std::unique_ptr<Data> data);
+            friend class TileCachedRecastMeshManager;
+        public:
+            ~PreparedObjectRemoval();
+            PreparedObjectRemoval(const PreparedObjectRemoval&) = delete;
+            PreparedObjectRemoval& operator=(const PreparedObjectRemoval&) = delete;
+            bool isValid() const;
+            // Validate then swap prebuilt index/tile notices and erase objects.
+            // No allocation; false leaves the current navigation state intact.
+            bool commit();
+        };
+        // Holds the manager update lock unless the caller supplies its guard.
+        // The manager and any supplied guard must outlive this scoped plan.
+        // Destroy the plan before callbacks or another unguarded manager update.
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(std::span<const ObjectId> ids,
+            std::span<const std::pair<TilePosition, ChangeType>> additionalChanges = {},
+            const UpdateGuard* guard = nullptr);
 
         void removeObject(ObjectId id, const UpdateGuard* guard);
 
