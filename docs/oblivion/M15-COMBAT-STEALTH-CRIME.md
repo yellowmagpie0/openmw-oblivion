@@ -21114,3 +21114,45 @@ admission yet. Dynamic serial allocation, loose-body world-frame rendering,
 save/recreation, pickup, Drop script context and normal-input/restart courses
 remain open. Ordinary NPC broken-bow release retains its explicit preparation
 rejection until that complete transaction exists. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint285: exact bow-release extras and condition-only publication
+
+Prepared native bow release now snapshots the instance's enchantment charge
+as binary32 bits, owner, faction, permission global and required faction rank.
+Changes to these inputs invalidate release before ammunition, fatigue,
+condition, process action or action ownership is written. This includes
+negative-zero versus positive-zero charge. Discarding a stale preparation
+and retrying captures the new extras and consumes the pending release once.
+
+Final wear publication no longer swaps the whole CellRef. A checked,
+allocation-free and noexcept condition-storage swap changes only the optional
+native condition and change flags, preserving identity, placement, ownership,
+enchantment charge and every unrelated field. It supports projected inventory
+and native placed-item variants, including swapping absent/negative-zero
+conditions across them, and rejects actor variants before either changes.
+Bow validation checks both supported condition storage variants before the
+first ammunition write.
+
+Three new engine cases exercise twelve actual Player/NPC stale-extra changes and
+fresh retries, independent placement/scale changes surviving final wear, and
+native/projected condition-only swapping with actor rejection.
+Both corrected normal and ASan/UBSan suites pass1053 full engine cases with
+exact inventories, no failures/skips or compiler warnings. Leak checks remain
+disabled. Both initial01 attempts are retained: a new fixture placed two
+SCOPED_TRACE macros on one line, producing duplicate generated variable
+names and a compile failure before tests. The fixture now uses separate
+lines. Review also found its signed-zero change would be ignored by the
+shared TES3 setter; it now passes through absent-charge sentinel-1 before
+setting+0, preserving the shared TES3 setter behavior. Initial broad-rebuild warnings from
+unchanged sources are retained rather than attributed to these new APIs.
+
+Evidence: S5/bow-release-extra-snapshot-normal-02 and
+S5/bow-release-extra-snapshot-sanitized-02, with initial01 retained.
+Latest engine-tested fingerprint: 1df651092488642ff3481dd64cffee0fe019478057ac28ecc531950b26da44c3
+
+This closes resource-snapshot and condition-publication defects in prepared
+release. It does not attach the bow frontend, admit or move native arrows,
+publish an ordinary NPC broken-bow drop, persist loose objects/projectiles,
+execute enchantment effects or establish normal-input/restart acceptance.
+S5 and full M15 remain in progress.

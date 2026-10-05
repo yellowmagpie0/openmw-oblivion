@@ -222,6 +222,27 @@ namespace MWWorld
         mChanged = true;
     }
 
+    bool CellRef::supportsNativeItemCondition() const noexcept
+    {
+        return std::holds_alternative<ESM::CellRef>(mCellRef.mVariant)
+            || std::holds_alternative<ESM4::Reference>(mCellRef.mVariant);
+    }
+
+    bool CellRef::swapNativeItemCondition(CellRef& other) noexcept
+    {
+        if (!supportsNativeItemCondition() || !other.supportsNativeItemCondition())
+            return false;
+        auto storage = [](CellRef& value) -> std::optional<float>&
+        {
+            if (auto* item = std::get_if<ESM::CellRef>(&value.mCellRef.mVariant))
+                return item->mNativeItemCondition;
+            return value.mNativePlacedItemCondition;
+        };
+        storage(*this).swap(storage(other));
+        mChanged = other.mChanged = true;
+        return true;
+    }
+
     void CellRef::resetNativeItemCondition() noexcept
     {
         if (auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant))

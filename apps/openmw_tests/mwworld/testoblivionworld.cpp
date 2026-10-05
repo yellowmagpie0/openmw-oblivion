@@ -3,6 +3,7 @@
 #include "apps/openmw/mwworld/manualref.hpp"
 #include "apps/openmw/mwphysics/collisiontype.hpp"
 #include <components/esm3/inventorystate.hpp>
+#include <components/esm3/objectstate.hpp>
 #include <bit>
 #include <cstddef>
 #include <new>
@@ -8760,6 +8761,107 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsStaleAuthorityInventoryEquipmen
         EXPECT_FALSE(service.notifyBowRelease(*release,inventory));
         EXPECT_EQ(captureNativeActorState(fixture,actors.npc).serializeBinary(),before);
     }
+}
+
+TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBeforeResourcePublication)
+{
+    // Ownership and fractional charge belong to this item instance. They can
+    // change without changing count, condition, equipment or actor authority.
+    for (bool player : {false, true})
+        for (unsigned change = 0; change < 6; ++change)
+        {
+            SCOPED_TRACE(player);
+            SCOPED_TRACE(change);
+            NativeWorldFixture fixture;
+            const auto actors = installPreparedBowRelease(fixture, player, 2);
+            auto& world = fixture.mWorld;
+            auto& service = *world.getOblivionCombatService();
+            auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+            const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            const auto ammo = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+            auto& ref = bow.getCellRef();
+            ref.setEnchantmentCharge(change == 1 ? -0.f : 7.25f);
+            if (change == 5)
+            {
+                ESM::ObjectState state;
+                ref.writeState(state);
+                state.mRef.mGlobalVariable = "prepared_owner_permission";
+                ref = MWWorld::CellRef(state.mRef);
+            }
+            const auto id = admitPreparedBowRelease(fixture, actors.actor);
+            auto stale = service.prepareBowRelease(world, actors.actor, id);
+            switch (change)
+            {
+                case 0: ref.setEnchantmentCharge(6.5f); break;
+                case 1:
+                    // The shared TES3 setter treats signed zero as numerically
+                    // equal. Pass through the absent sentinel so this fixture
+                    // actually changes the stored negative-zero bits.
+                    ref.setEnchantmentCharge(-1.f);
+                    ref.setEnchantmentCharge(0.f);
+                    break;
+                case 2: ref.setOwner(ESM::RefId(ESM::FormId{0x801, 0})); break;
+                case 3: ref.setFaction(ESM::RefId(ESM::FormId{0x960, 0})); break;
+                case 4: ref.setFactionRank(5); break;
+                case 5: ref.resetGlobalVariable(); break;
+            }
+            const auto before = captureNativeActorState(fixture, actors.npc).serializeBinary();
+            const auto charge = std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge());
+            const auto owner = ref.getOwner(), faction = ref.getFaction();
+            const auto rank = ref.getFactionRank();
+            const auto global = ref.getGlobalVariable();
+            const auto condition = ref.getNativeItemCondition();
+            EXPECT_FALSE(service.validateBowRelease(*stale, inventory));
+            EXPECT_FALSE(service.commitBowRelease(*stale, inventory));
+            EXPECT_FALSE(service.notifyBowRelease(*stale, inventory));
+            EXPECT_EQ(captureNativeActorState(fixture, actors.npc).serializeBinary(), before);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()), charge);
+            EXPECT_EQ(ref.getOwner(), owner); EXPECT_EQ(ref.getFaction(), faction);
+            EXPECT_EQ(ref.getFactionRank(), rank);
+            EXPECT_EQ(ref.getGlobalVariable(), global);
+            EXPECT_EQ(ref.getNativeItemCondition(), condition);
+            EXPECT_EQ(ammo.getCellRef().getCount(), 2);
+            // Retrying captures the new extras and consumes the same release
+            // once, preserving them through the final condition publication.
+            stale.reset();
+            auto fresh = service.prepareBowRelease(world, actors.actor, id);
+            ASSERT_TRUE(service.validateBowRelease(*fresh, inventory));
+            ASSERT_TRUE(service.commitBowRelease(*fresh, inventory));
+            EXPECT_FALSE(service.commitBowRelease(*fresh, inventory));
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()), charge);
+            EXPECT_EQ(ref.getOwner(), owner); EXPECT_EQ(ref.getFaction(), faction);
+            EXPECT_EQ(ref.getFactionRank(), rank);
+            EXPECT_EQ(ref.getGlobalVariable(), global);
+            EXPECT_LT(*ref.getNativeItemCondition(), *condition);
+            EXPECT_EQ(ammo.getCellRef().getCount(), player ? 1 : 2);
+        }
+}
+
+TEST(OblivionWorldTest, PreparedBowReleasePublishesOnlyWearAndPreservesIndependentPlacementChanges)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, true, 2);
+    auto& world = fixture.mWorld;
+    auto& service = *world.getOblivionCombatService();
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    auto& ref = bow.getCellRef();
+    const auto id = admitPreparedBowRelease(fixture, actors.actor);
+    auto release = service.prepareBowRelease(world, actors.actor, id);
+    // Inventory placement metadata is independent of the sampled native
+    // damage/resources. Publishing wear must not replace the whole CellRef.
+    ESM::Position position = ref.getPosition();
+    position.pos[0] = 17.f; position.rot[2] = .25f;
+    ref.setPosition(position); ref.setScale(1.25f);
+    const auto sourceRefNum = ref.getRefNum();
+    ASSERT_TRUE(service.validateBowRelease(*release, inventory));
+    ASSERT_TRUE(service.commitBowRelease(*release, inventory));
+    EXPECT_FLOAT_EQ(ref.getPosition().pos[0], 17.f);
+    EXPECT_FLOAT_EQ(ref.getPosition().rot[2], .25f);
+    EXPECT_FLOAT_EQ(ref.getScale(), 1.25f);
+    EXPECT_EQ(ref.getRefNum(), sourceRefNum);
+    EXPECT_LT(*ref.getNativeItemCondition(), 50.f);
+    EXPECT_EQ(ref.getCount(), 1);
 }
 
 TEST(OblivionWorldTest, PreparedBowReleaseCancellationForeignOwnersAndBrokenBowAreAtomic)

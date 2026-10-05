@@ -6,6 +6,7 @@
 #include <apps/openmw/mwrender/objects.hpp>
 #include <apps/openmw/mwrender/vismask.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadachr.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <memory>
 #include <components/esm4/loadcell.hpp>
@@ -300,4 +301,36 @@ namespace
         EXPECT_THROW(pending.commit(), std::logic_error);
         std::destroy_at(owner);
     }
+}
+
+TEST(CellRefNativeCondition, SwapsOnlySupportedConditionStorageAcrossItemVariants)
+{
+    ESM::CellRef projectedRecord{};
+    projectedRecord.mOwner = ESM::RefId(ESM::FormId{0x801, 0});
+    projectedRecord.mEnchantmentCharge = 7.25f;
+    ESM4::Reference placedRecord{};
+    placedRecord.mOwner = {0x802, 0};
+    placedRecord.mFormKey = ESM::FormKey::dynamic("condition-swap", 1);
+    MWWorld::CellRef projected(projectedRecord), placed(placedRecord);
+    placed.setNativeItemCondition(-0.f);
+    placed.setEnchantmentCharge(6.5f);
+    ASSERT_TRUE(projected.supportsNativeItemCondition());
+    ASSERT_TRUE(placed.supportsNativeItemCondition());
+    ASSERT_TRUE(projected.swapNativeItemCondition(placed));
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*projected.getNativeItemCondition()), 0x80000000u);
+    EXPECT_FALSE(placed.getNativeItemCondition());
+    EXPECT_FLOAT_EQ(projected.getEnchantmentCharge(), 7.25f);
+    EXPECT_FLOAT_EQ(placed.getEnchantmentCharge(), 6.5f);
+    EXPECT_EQ(projected.getOwner(), projectedRecord.mOwner);
+    EXPECT_EQ(placed.getOwner(), ESM::RefId(placedRecord.mOwner));
+    EXPECT_EQ(placed.getFormKey(), placedRecord.mFormKey);
+    ESM4::ActorCharacter actorRecord{};
+    MWWorld::CellRef actor(actorRecord);
+    EXPECT_FALSE(actor.supportsNativeItemCondition());
+    EXPECT_FALSE(projected.swapNativeItemCondition(actor));
+    EXPECT_FALSE(actor.swapNativeItemCondition(projected));
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*projected.getNativeItemCondition()), 0x80000000u);
+    ASSERT_TRUE(projected.swapNativeItemCondition(placed));
+    EXPECT_FALSE(projected.getNativeItemCondition());
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*placed.getNativeItemCondition()), 0x80000000u);
 }

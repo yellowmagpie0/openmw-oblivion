@@ -12,6 +12,7 @@
 #include <components/esm4/actorclock.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <stdexcept>
 #include <type_traits>
@@ -938,6 +939,10 @@ namespace MWMechanics
         std::optional<float> mExpectedCondition;
         int mExpectedCharge = -1;
         float mExpectedRemainder = 0;
+        std::uint32_t mExpectedEnchantmentCharge = 0;
+        ESM::RefId mExpectedOwner, mExpectedFaction;
+        std::string mExpectedGlobal;
+        int mExpectedFactionRank = 0;
         std::unique_ptr<MWWorld::CellRef> mCondition;
         std::unique_ptr<OblivionActorProjection> mPlayerView;
         std::unique_ptr<PreparedNonPlayerView> mNpcView;
@@ -1016,6 +1021,11 @@ namespace MWMechanics
         prepared->mExpectedCondition = reference.getNativeItemCondition();
         prepared->mExpectedCharge = reference.getCharge();
         prepared->mExpectedRemainder = reference.getChargeIntRemainder();
+        prepared->mExpectedEnchantmentCharge = std::bit_cast<std::uint32_t>(reference.getEnchantmentCharge());
+        prepared->mExpectedOwner = reference.getOwner();
+        prepared->mExpectedFaction = reference.getFaction();
+        prepared->mExpectedGlobal = reference.getGlobalVariable();
+        prepared->mExpectedFactionRank = reference.getFactionRank();
         prepared->mDebitAmmunition = player && !godMode;
         if (!godMode)
         {
@@ -1093,9 +1103,16 @@ namespace MWMechanics
         const auto slot = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         if (slot == inventory.end() || *slot != prepared->mBow) return false;
         const auto& ref = prepared->mBow.getCellRef();
-        return ref.getCount() == 1 && ref.getNativeItemCondition() == prepared->mExpectedCondition
+        return ref.supportsNativeItemCondition()
+            && (!prepared->mCondition || prepared->mCondition->supportsNativeItemCondition())
+            && ref.getCount() == 1 && ref.getNativeItemCondition() == prepared->mExpectedCondition
             && ref.getCharge() == prepared->mExpectedCharge
-            && ref.getChargeIntRemainder() == prepared->mExpectedRemainder;
+            && ref.getChargeIntRemainder() == prepared->mExpectedRemainder
+            && std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()) == prepared->mExpectedEnchantmentCharge
+            && ref.getOwner() == prepared->mExpectedOwner
+            && ref.getFaction() == prepared->mExpectedFaction
+            && ref.getGlobalVariable() == prepared->mExpectedGlobal
+            && ref.getFactionRank() == prepared->mExpectedFactionRank;
     }
 
     bool OblivionCombatService::commitBowRelease(
@@ -1107,7 +1124,10 @@ namespace MWMechanics
             return false;
         static_assert(std::is_nothrow_swappable_v<MWWorld::CellRef>);
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
-        if (prepared.mCondition) std::swap(prepared.mBow.getCellRef(), *prepared.mCondition);
+        // The storage variants were checked before the ammunition write.
+        // Publish only final wear, preserving every unrelated instance field.
+        if (prepared.mCondition)
+            (void)prepared.mBow.getCellRef().swapNativeItemCondition(*prepared.mCondition);
         // All exact slot/count/lifetime checks precede the first resource
         // write. Ammunition debit and condition swap preserve the bow count
         // and its slot, so this already-validated commit cannot become stale.
