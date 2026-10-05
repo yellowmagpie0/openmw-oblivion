@@ -294,6 +294,56 @@ namespace ESM4
     std::optional<std::uint8_t> jailSkillBaseAfterPenalty(std::uint8_t base, float current);
     void validateCrimeFineSettings(const CrimeFineSettings& settings);
     void validateJailSettings(const JailSettings& settings);
+
+    struct FineConfiscationInput
+    {
+        std::int32_t mEntryCount;
+        bool mQuestItem;
+        bool mHasExtraData;
+        ESM::FormKey mOwner;
+        ESM::FormKey mSourceReference;
+        ESM::FormKey mRequiredOwner; // Empty disables the optional owner filter.
+    };
+    // Direct instance selection from PayFine's stolen-property transfer.
+    // Owner identity is raw ExtraOwnership, not the general permission policy.
+    bool fineConfiscatesInstance(const FineConfiscationInput& input);
+
+    struct ServedPropertyInput
+    {
+        std::int32_t mEntryCount;
+        bool mHasExtraData;
+        ESM::FormKey mOwner;
+        ESM::FormKey mDestinationBase;
+    };
+    // Direct instance selection on served release. Unowned portions of mixed
+    // stacks are handled separately by the native remainder request below.
+    bool servedReleaseReturnsInstance(const ServedPropertyInput& input);
+
+    // The original mixed-stack branch requests entry count minus the sum of
+    // its simple-instance scan and post-normalization complex-instance scan.
+    // Null means no transfer call. Zero/negative requests are preserved here;
+    // actual inventory removal/clamping and metadata normalization are external.
+    std::optional<std::int32_t> servedReleaseRemainderRequest(std::int32_t entryCount,
+        std::int32_t simpleInstances, std::int32_t complexInstances);
+
+    struct JailDoorInput
+    {
+        bool mActivatorPlayer;
+        std::int32_t mSentenceDays;
+        bool mHasTeleportDestination;
+        bool mPlayerInShiveringIsles;
+    };
+    struct JailDoorDecision
+    {
+        bool mClearSentence = false;
+        std::optional<bool> mSetEscaped;
+        bool mClearJailedFlag = false;
+        std::optional<float> mBountyIncrement;
+    };
+    // Executed after the earlier native door admission guards. A local door
+    // escape leaves sentence/property context intact; teleport clears sentence
+    // and jailed state before later teleport success is known.
+    JailDoorDecision jailDoorDecision(const JailDoorInput& input, const CrimeFineSettings& settings);
 }
 
 #endif

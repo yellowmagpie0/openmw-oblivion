@@ -15,7 +15,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | --- | --- | --- | --- |
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
-| S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
+| S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
@@ -28,6 +28,63 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S2 closure — 2026-10-05
+
+**S2 passed** its native-data and pure-rule gate. The current closure supersedes
+the historical S2 open-gate notes below; it does not close full M15 gameplay.
+[The rule review index](M15-S2-RULE-MATRIX.json),
+[native provenance](M15-NATIVE-RULE-PROVENANCE.md),
+[typed setting inputs](M15-PHYSICAL-RULE-INPUTS.json), and
+[41-ability mastery matrix](M15-MASTERY-ABILITY-MATRIX.json) explain the rules,
+units, native rounding, independent expected values and remaining world gates.
+
+| S2 requirement | Closed implementation and review |
+| --- | --- |
+| Typed data and registration | CSTY exact historical layouts, raw/padding preservation, compressed records, malformed fields, later-game separation, native store/loader/esmtool registration, master remapping, overrides and deletion tombstones |
+| Winning input and asset inventory | All 11 official plugins; typed settings, faction relationships/crime flags, NPC/creature flags and attack inputs, equipment/ammo, creature sound entries, animation evidence and named prison/reference topology |
+| Pure section 3.3 rules | Physical/block/armor/durability/mastery/reaction/bow/detection/pickpocket/crime/jail families reviewed; completed recoil, FOV/dodge, yield, confiscation/release, jail-door and death/essential decisions use immutable inputs without world singletons |
+| Verified defaults and diagnostics | Original constructor/legacy-loader rules and typed GMST overrides resolve all 3,636 actors into 130 explained policies; invalid/missing inputs diagnose rather than borrowing TES3 rules |
+| Semantic audit, count lock and exceptions | Full hash/count lock passes; exactly three shipped script-link defects are record/plugin-hash bound, independently inspected and explicitly M16-owned; unknown, changed or stale exceptions fail |
+
+Fresh C++ policy readback agrees with independent binary inspection on **7,540
+fields**, all **130 policies** and **3,636 actor links**
+(`S2/closure-policy-comparison-01`). The final added rule comparison passes
+**38,768 original-instruction results**, including every raw 15-bit yield draw
+and every signed hit byte across the reviewed states/thresholds
+(`S2/closure-rule-comparison-02`). Camera interpolation separately matches
+**1,289** original results exactly. The 11 new original campaigns contain
+39,601 observations with declared data/query boundaries; these remain distinct
+from normal-input original-game or fork gameplay acceptance.
+
+Verification passes with exact inventories and no failures or skips:
+
+- `S2/closure-normal-02`: **2,566** full component tests, **1,116** full engine
+  tests, **265** full Python tests; `openmw`, `openmw-tests` and `esmtool` link.
+- `S2/closure-sanitized-components-02`: all **691 `ESM4*`** component tests under
+  ASan/UBSan. Leak checking is disabled; this is parser/rule sanitizer coverage.
+- `S2/closure-native-normal-01` and `S2/closure-native-sanitized-02`: rebuilt
+  normal/instrumented native readers load all 11 official plugins, including
+  **129 CSTY** and **1,001 CREA** records, and reject the malformed NaN CSTY.
+- `S2/closure-data-final-01`: native data audit passes with no unclassified
+  failures; `runtime_rules_verified` remains false.
+
+Both broad test runs bind HEAD `54fd9496c0564f266e1bfa8df2241ba880f0c9b5` and
+dirty-source fingerprint
+`b2bcb34602e7d1a681b9c562d4df4ff6ed3c3d92acbeed37f5ed0b13a000937b`.
+The final review-index corrections and closure notes are documentation-only;
+the source-byte snapshot confirms production code is unchanged after testing.
+Aggregate evidence is `S2/closure-report.json`. Failed harness/build attempts
+remain retained, including the stopped first broad builds before the yield
+RNG-domain correction and the first readback checker's diagnostic mismatch.
+
+S3-S14 still own world transactions, controller/animation/physics publication,
+normal input, save/restart, official campaigns and universal acceptance.
+Guild fine choices and `TGGrayCowlScript` execution are S12 authored-content
+integration; reviewed normal/alternate bounty arithmetic does not establish
+those script outcomes. Hostile active-effect queries and the three shipped
+script-link defects remain explicit M16 boundaries. Mastery gameplay/restart
+verification and the full original-game probe inventory remain pending.
 
 ## S0 requirements and execution
 

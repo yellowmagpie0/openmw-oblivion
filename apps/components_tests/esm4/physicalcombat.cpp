@@ -4799,3 +4799,30 @@ TEST(ESM4PhysicalCombat, NativeDroppedWeaponRotationRejectsNonfiniteInputInEvery
             EXPECT_THROW(ESM4::nativeDroppedReferenceRotation(matrix), std::invalid_argument);
         }
 }
+
+TEST(ESM4PhysicalCombat, NativeHealthCallbackUsesOneHealthAndLifeStateExclusions)
+{
+    for (std::uint32_t state : {0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 0xffffffffu})
+        for (float health : {-1.f, -0.f, 0.f, .5f, std::nextafter(1.f, 0.f), 1.f,
+                 std::nextafter(1.f, 2.f), std::numeric_limits<float>::max()})
+            EXPECT_EQ(ESM4::nativeHealthCallbackEligible(state, health),
+                state != 1 && state != 2 && state != 6 && health < 1);
+    EXPECT_THROW(ESM4::nativeHealthCallbackEligible(0, std::numeric_limits<float>::quiet_NaN()), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, NativeDeathDecisionDistinguishesEssentialRefreshAndNormalDeath)
+{
+    using Decision = ESM4::NativeDeathDecision;
+    constexpr std::array expected{Decision::EnterEssentialUnconscious, Decision::Skip, Decision::Skip,
+        Decision::RefreshEssentialHealth, Decision::EnterEssentialUnconscious, Decision::RefreshEssentialHealth,
+        Decision::Skip, Decision::EnterEssentialUnconscious};
+    for (std::uint32_t state = 0; state < expected.size(); ++state)
+        for (bool enabled : {false, true})
+            for (bool essential : {false, true})
+            {
+                const auto result = ESM4::nativeDeathDecision({state, enabled, essential});
+                EXPECT_EQ(result, expected[state] == Decision::Skip ? Decision::Skip
+                        : enabled && essential ? expected[state] : Decision::Die);
+            }
+    EXPECT_EQ(ESM4::nativeDeathDecision({0xffffffffu, true, true}), Decision::EnterEssentialUnconscious);
+}

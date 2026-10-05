@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "scope": "Exact reviewed shipped data defects; not a generic unresolved-reference allowlist",
+  "provenance": "M15-NATIVE-RULE-PROVENANCE.md#shipped-script-effect-link-defects",
+  "exceptions": [
+    {
+      "source": "content:oblivion.esm:09812b",
+      "target": "content:oblivion.esm:00c079",
+      "expected_types": [
+        "SCPT"
+      ],
+      "actual_type": "REFR",
+      "record_sha256": "0ce2feb30710e6cb0b0d0266fe1247eb63010b41c7907cd805a51ae0853111b0",
+      "plugin": "Oblivion.esm",
+      "plugin_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "owner": "M16",
+      "reason": "Shipped script effect has a dangling script identity. Preserve it and diagnose on effect activation; no script or spell execution is inferred. These spells are outside the selected M15 physical campaigns."
+    },
+    {
+      "source": "content:knights.esp:000e01",
+      "target": "content:knights.esp:020ae4",
+      "expected_types": [
+        "SCPT"
+      ],
+      "actual_type": null,
+      "record_sha256": "bc03eccc4ddb410735a8c135ba8d255ccf02697efe4c4bb20179f2ed9f06a293",
+      "plugin": "Knights.esp",
+      "plugin_sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "owner": "M16",
+      "reason": "Shipped script effect has a dangling script identity. Preserve it and diagnose on effect activation; no script or spell execution is inferred. These spells are outside the selected M15 physical campaigns."
+    },
+    {
+      "source": "content:knights.esp:000e04",
+      "target": "content:knights.esp:020ae2",
+      "expected_types": [
+        "SCPT"
+      ],
+      "actual_type": null,
+      "record_sha256": "236c444a59773fd7306a3ff9454aa8aec835d4495693e357e8e42696dfc47d34",
+      "plugin": "Knights.esp",
+      "plugin_sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "owner": "M16",
+      "reason": "Shipped script effect has a dangling script identity. Preserve it and diagnose on effect activation; no script or spell execution is inferred. These spells are outside the selected M15 physical campaigns."
+    }
+  ]
+}

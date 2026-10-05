@@ -1,0 +1,373 @@
+{
+  "schema_version": 1,
+  "game_version": "Oblivion 1.2.0416",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "S2 native data and pure rule review index; exact independent values, stubs and retained failures are in the linked provenance sections. World integration and normal-input/restart acceptance remain S3-S14.",
+  "rule_inputs": "M15-PHYSICAL-RULE-INPUTS.json",
+  "mastery_matrix": "M15-MASTERY-ABILITY-MATRIX.json",
+  "count_lock": "../../scripts/data/oblivion_compat/m15_count_lock.json",
+  "magic_exceptions": "M15-DATA-EXCEPTIONS.json",
+  "provenance": "M15-NATIVE-RULE-PROVENANCE.md",
+  "families": [
+    {
+      "id": "M15-S2-DATA",
+      "family": "Typed native data and winning policy inputs",
+      "implementation": [
+        "loadcsty",
+        "loadcrea",
+        "loadfact",
+        "combatsettings",
+        "tes4_m15_audit"
+      ],
+      "units": "native record widths and typed GMST values",
+      "rounding": "Lossless payload and padding; version-specific layouts; no guessed defaults",
+      "expected": {
+        "official_actors": 3636,
+        "resolved_policies": 130,
+        "combat_styles": 129,
+        "default_style_actors": 2218,
+        "creature_sound_entries_independently_decoded": 771
+      },
+      "provenance": [
+        "combat-style-binary-layout",
+        "original-combat-style-initialization-and-legacy-loading",
+        "creature-and-equipment-input-layouts",
+        "resolved-combat-style-audit-projection"
+      ],
+      "tests": [
+        "ESM4CombatStyle",
+        "ESM4CombatSettings",
+        "ESM4CreatureCombat",
+        "ESM4Faction",
+        "M15NativeAuditTests"
+      ]
+    },
+    {
+      "id": "M15-S2-PHYSICAL",
+      "family": "Melee, hand to hand, creatures, fatigue, difficulty, power, reach and timing",
+      "implementation": [
+        "physicalcombat",
+        "actorvalues",
+        "actorstats"
+      ],
+      "units": "health/fatigue points, game distance, seconds, native skill values",
+      "rounding": "Explicit native float stores, floor/base-value queries and signed integer conversions; see individual provenance tables",
+      "expected": {
+        "difficulty_example": {
+          "incoming_damage": 1,
+          "normalized_slider": 1,
+          "installed_multiplier": 5,
+          "role": "PlayerVictim",
+          "result": 6
+        }
+      },
+      "provenance": [
+        "first-physical-arithmetic-helpers-behavioral-gate-still-open",
+        "hand-to-hand-block-fraction-and-player-difficulty-arithmetic",
+        "creature-natural-attack-arithmetic",
+        "native-melee-reach"
+      ],
+      "tests": [
+        "ESM4PhysicalCombat",
+        "ESM4ActorValues",
+        "ESM4ActorStats"
+      ]
+    },
+    {
+      "id": "M15-S2-DEFENSE",
+      "family": "Shield, weapon and unarmed block; armor and durability",
+      "implementation": [
+        "physicalcombat"
+      ],
+      "units": "absorbed fraction, armor hundredths/rating, condition points, fatigue",
+      "rounding": "Contact eligibility precedes stored absorption; mitigation and wear preserve native stores and slot sampling",
+      "expected": {
+        "compiled_maximum_armor_rating": 90,
+        "installed_maximum_armor_rating": 85,
+        "armor_example": {
+          "base_armor_hundredths": 1499,
+          "effective_skill": 50,
+          "condition_ratio": 0.5,
+          "armor_rating_base": 0.3499999940395355,
+          "armor_rating_max": 1,
+          "condition_base": 0,
+          "condition_multiplier": 1,
+          "result": 4.5
+        },
+        "zero_absorption_unarmed_recoil_endpoint_25": true,
+        "zero_absorption_unarmed_recoil_draw_26": false
+      },
+      "provenance": [
+        "armor-input-rounding-and-total-cap",
+        "durability-amount-arithmetic",
+        "armor-wear-slot-selection",
+        "block-contact-eligibility-and-zero-absorption-reactions"
+      ],
+      "tests": [
+        "ESM4PhysicalCombat",
+        "ESM4MasteryRules"
+      ]
+    },
+    {
+      "id": "M15-S2-MASTERY",
+      "family": "Combat mastery, sneak armor bypass, armor weight and blocking dodge",
+      "implementation": [
+        "masteryrules",
+        "physicalcombat",
+        "stealthrules"
+      ],
+      "units": "base skill thresholds, percentiles 0..99, degrees and seconds",
+      "rounding": "Native unlocks use base skill; proc strict/inclusive comparisons differ; zoom stores float before clamp; resolved dodge groups 11..14",
+      "expected": {
+        "default_thresholds": [
+          25,
+          50,
+          75,
+          100
+        ],
+        "zoom_at_start_delay": 75,
+        "zoom_at_2_875_seconds": 52.5,
+        "zoom_at_3_seconds": 30,
+        "zoom_one_float_above_delay_bits": 1117126650,
+        "movement_flags_3_requested_dodge_group": 11,
+        "movement_flags_0_requested_dodge_group": 255
+      },
+      "provenance": [
+        "mastery-rank-and-directional-power-damage-selection",
+        "mastery-proc-decisions",
+        "s2-remaining-mastery-decisions"
+      ],
+      "tests": [
+        "ESM4MasteryRules",
+        "ESM4PhysicalCombat",
+        "ESM4StealthRules"
+      ]
+    },
+    {
+      "id": "M15-S2-REACTIONS",
+      "family": "Stagger, knockdown, fatigue knockout, essential recovery and normal death",
+      "implementation": [
+        "physicalcombat",
+        "actorvalues"
+      ],
+      "units": "health/fatigue points, signed state bytes, seconds, velocities",
+      "rounding": "Health callback threshold is below one; states 1/2/6 exclude transition; essential 3/5 refresh instead of new unconscious entry; original stored recovery arithmetic",
+      "expected": {
+        "fatigue_zero_requires_knockout": false,
+        "fatigue_negative_requires_knockout": true,
+        "health_one_callback": false,
+        "health_half_callback_alive": true,
+        "essential_state_3_decision": "refresh-essential",
+        "essential_state_0_decision": "enter-essential",
+        "nonessential_state_0_decision": "die"
+      },
+      "provenance": [
+        "damage-knockdown-roll",
+        "essential-unconscious-health-reset",
+        "sustained-incapacitation-requirement",
+        "negative-health-callback-and-script-getdead-gates",
+        "native-deathessential-transition-selection"
+      ],
+      "tests": [
+        "ESM4PhysicalCombat",
+        "ESM4ActorValues"
+      ]
+    },
+    {
+      "id": "M15-S2-BOW",
+      "family": "Bow hold/release, ammunition, speed, gravity, range, recovery and collision",
+      "implementation": [
+        "projectilerules",
+        "physicalcombat"
+      ],
+      "units": "seconds, damage points, world distance/velocity, projectile radius and percentile draws",
+      "rounding": "Native draw and launch stores, mastery and RNG admission; one existing detector/physics authority; world publication is later-stage",
+      "expected_reference": "M15-NATIVE-RULE-PROVENANCE.md#bow-launch-arithmetic",
+      "provenance": [
+        "bow-launch-arithmetic",
+        "bow-fatigue-and-launch-sampling"
+      ],
+      "tests": [
+        "ESM4ProjectileRules",
+        "ESM4PhysicalCombat"
+      ]
+    },
+    {
+      "id": "M15-S2-STEALTH",
+      "family": "Sneak attacks, visibility, light, sound, motion, distance, awareness and pickpocket",
+      "implementation": [
+        "stealthrules",
+        "detection"
+      ],
+      "units": "signed native awareness, skills, item value/count/weight, seconds and percentiles",
+      "rounding": "Native stored terms and signed awareness; distinct pickpocket attempt/exit comparisons; no second detector",
+      "expected_reference": "M15-NATIVE-RULE-PROVENANCE.md#signed-native-detection-arithmetic-and-sneak-noise-mastery",
+      "provenance": [
+        "sneak-attack-contact-policy",
+        "signed-native-detection-arithmetic-and-sneak-noise-mastery",
+        "pickpocket-chance-amount-and-check-boundaries",
+        "pickpocket-item-eligibility",
+        "pickpocket-check-scheduling-and-knocked-targets"
+      ],
+      "tests": [
+        "ESM4StealthRules",
+        "ESM4Detection"
+      ]
+    },
+    {
+      "id": "M15-S2-CRIME",
+      "family": "Ownership, access, trespass, theft, assault/murder, witnesses, fines and realm identity",
+      "implementation": [
+        "crimerules",
+        "combatairules"
+      ],
+      "units": "FormKey identities, membership ranks, seconds, signed integer scores and fractional gold",
+      "rounding": "Field-wise ownership inheritance; native warning/report timing and signed conversion; positive stored bounty fraction queries as one; normal and alternate storage differ",
+      "expected": {
+        "stored_bounty_0_25_query": 1,
+        "normal_negative_bounty_clamped": 0,
+        "alternate_negative_bounty_preserved": true
+      },
+      "provenance": [
+        "ownership-claim-predicate",
+        "independent-ownership-field-inheritance",
+        "crime-base-fines-faction-scaling-and-sentence-arithmetic",
+        "native-cell-trespass-classification",
+        "crime-witness-candidate-enumeration",
+        "bounty-storage-query-rounding-and-player-realm-routing"
+      ],
+      "tests": [
+        "ESM4CrimeRules",
+        "ESM4CombatAIRules"
+      ]
+    },
+    {
+      "id": "M15-S2-JAIL",
+      "family": "Surrender, confiscation, sentence, skill penalty, served release and escape",
+      "implementation": [
+        "crimerules",
+        "combatairules"
+      ],
+      "units": "raw owner/source/destination identities, days/hours, skill bases, gold, seconds and raw15-bit RNG draws",
+      "rounding": "Fine compares source reference; release compares destination base; mixed request wraps signed32; native modulo jail selection and yield duration; realm exception suppresses local escape fine",
+      "expected": {
+        "yield_duration_draw_0": 1,
+        "yield_duration_draw_9": 3.7,
+        "yield_duration_draw_99": 3.7,
+        "mixed_entry_10_simple_1_complex_2_request": 7,
+        "local_escape_clears_sentence": false,
+        "teleport_clears_sentence": true,
+        "alternate_realm_local_escape_charges": false
+      },
+      "provenance": [
+        "jail-skill-selection-and-penalty-arithmetic",
+        "fine-confiscation-and-served-property-selection",
+        "surrender-acceptance-score-and-duration",
+        "admitted-jail-door-decision-and-realm-exception"
+      ],
+      "tests": [
+        "ESM4CrimeRules",
+        "ESM4CombatAIRules"
+      ]
+    }
+  ],
+  "closure_oracles": [
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-mastery-oracle-03/report.json",
+      "sha256": "c68bfb3efc1c753014033d1ffb96dfe4d86b00c36578525b252502413035728a",
+      "observations": 256,
+      "scope": "Original5FFEDF..5FFF52/600528 recoil entry; mastery queries, percentile source and recoil application are supplied boundaries; complete intervening guards execute."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-zoom-oracle-01/report.json",
+      "sha256": "559680d4badc504e4ca007eece0d05d31fbf1872d3c7409abb188f6ff7fc7c0c",
+      "observations": 729,
+      "scope": "Full666670 camera update; process action, input query, mastery query, setting-address access and camera setter are supplied boundaries. All FOV selection/arithmetic/stores execute."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-zoom-boundary-oracle-01/report.json",
+      "sha256": "6ce10f77a6802c73fd05dd0cfd3fa867328292f3cd7dc2459b543bf35f5bee78",
+      "observations": 560,
+      "scope": "Complete666670 with default/custom settings, adjacent float delay/FOV values, zero/min-subnormal durations and large finite elapsed/duration. Same declared boundaries as closure-zoom-oracle-01."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-dodge-oracle-01/report.json",
+      "sha256": "f31cbbbcc5688233acd2f405e605d1b5775ea2387e60aa94fefa1d008fe8855a",
+      "observations": 312,
+      "scope": "Original6729F8 dodge-request prefix,5F5050 data/process/direction/selected-group prefix. UI/mastery/busy/data/animation selection are boundary fixtures. Jump admission and actual dodge playback/motion are outside these decisions."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-property-oracle-01/report.json",
+      "sha256": "4dbe22419e6e5a928176262739c96b64a01b32e7ed367a5dffeff9474cac766d",
+      "observations": 360,
+      "scope": "Native fine-confiscation 491A54..491AF2 and served-release 49180F..491927/4919A5. Ownership getter, quest flag and destination base are supplied data boundaries. Unowned portions of mixed stacks require the later 491886 branch and are not inferred by this direct-selection probe."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-property-remainder-oracle-01/report.json",
+      "sha256": "cb559e084c6f8f7a7359ccea1656fbf50ad91fdc8044e769a708e726416dea5e",
+      "observations": 112,
+      "scope": "Original 4918AB..4918DF/4918E4 mixed-stack arithmetic. Post-normalization complex-instance scan is a supplied boundary; native signed branch and wraparound subtraction execute."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-yield-oracle-02/report.json",
+      "sha256": "1eb392d74985d018a24f452214b14328a6fc68f47605f99fe6a6e7bf80fb5265",
+      "observations": 596,
+      "scope": "Full NPC611BD0 acceptance with data/query boundaries; complete546D10 numeric score and61977D duration arithmetic. FightScore and hostile-effect query are supplied boundaries, not magic execution."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-jail-door-oracle-01/report.json",
+      "sha256": "39994e7573e89c0ef065233c45e8b454327a6c6157615fa3bef5523c859ea417",
+      "observations": 32,
+      "scope": "Original admitted-door branch4B909E..4B90E6/4B91B3 including native65DA50 sentence query. Escape flag setter and bounty publication are observable supplied boundaries; door lock/admission and later teleport publication excluded."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-life-oracle-02/report.json",
+      "sha256": "90914661e1d686ad35ae88c0405cb15dc8bd321cf215b0d18d85c27302ad7c26",
+      "observations": 36,
+      "scope": "Original600618 life-transition selector including5E33B0(false) native state query and977C50 actor-type constant. Base getter is supplied, cleanup5EF930 is stubbed; world death/essential side effects are not executed."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-yield-duration-oracle-01/report.json",
+      "sha256": "ce8768379c74d38751b335ee6ee7ecdd768612ccca71560aab43e916a8e39e96",
+      "observations": 32768,
+      "scope": "All 32768 raw15-bit draws through complete original61977D duration arithmetic. Original9859DD RNG masks to7FFF; its state source is outside this pure decision."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-yield-hit-oracle-01/report.json",
+      "sha256": "ab80eb3e7ce08b528d6aae50d643e6629d187a82ba22f3b11c4d878144db6aca",
+      "observations": 3840,
+      "scope": "Complete original624F4E..624F60/624F85 interrupt selection, all signed hit bytes and default/override thresholds. Later AI action reset excluded."
+    }
+  ],
+  "pure_rule_review_status": "passed",
+  "identity_content_integration": {
+    "owner": "M15S12",
+    "examples": [
+      "guild fine choices",
+      "TGGrayCowlScript identity effects"
+    ],
+    "scope": "Native normal/alternate bounty storage and arithmetic are reviewed here; authored script and dialogue execution remain S12 world integration."
+  },
+  "production_comparisons": [
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-policy-comparison-01/comparison.json",
+      "sha256": "d4b198b76d14ed3630f12024dd3c7ab39ea7ebda5ff59f408c3943cb66e63e6c",
+      "scope": "Actual C++ results against independent raw-record or original-instruction values; no world acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-rule-comparison-02/comparison.json",
+      "sha256": "159ce905b5d12b8914b8c83894838517d6750a1dc9470ef1e37bd1b92a241d4d",
+      "scope": "Actual C++ results against independent raw-record or original-instruction values; no world acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-zoom-oracle-01/comparison.json",
+      "sha256": "532955940e9ed2e78d28f1aad3b71bc8f77878cf884a9c842a007c03eb560f08",
+      "scope": "Actual C++ results against independent raw-record or original-instruction values; no world acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/closure-zoom-boundary-oracle-01/comparison.json",
+      "sha256": "4f08e6a0a7b4699a3b98cfa2112167df747e218c77de3fa545e1024617c9e755",
+      "scope": "Actual C++ results against independent raw-record or original-instruction values; no world acceptance."
+    }
+  ]
+}

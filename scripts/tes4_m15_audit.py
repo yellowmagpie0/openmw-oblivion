@@ -20,6 +20,55 @@ class M15AuditError(ValueError):
     pass
 
 
+def classify_shipped_magic_links(result: dict, catalog: dict) -> dict:
+    """Explain exact shipped defects without waiving unknown or modified links.
+
+    This only changes the data classification. Effect activation remains an
+    explicit M16 failure, and neither the rule nor gameplay gate is passed.
+    """
+    if catalog.get('schema_version') != 1 or not isinstance(catalog.get('exceptions'), list):
+        raise M15AuditError('invalid shipped-link exception catalog')
+    plugins = {item['name'].casefold(): item['sha256'] for item in result['plugins']}
+    seen = set()
+    classified, failures = [], []
+    remaining = list(result['failures'])
+    for exception in catalog['exceptions']:
+        required = ('source', 'target', 'plugin', 'plugin_sha256', 'record_sha256', 'reason')
+        if (not isinstance(exception, dict)
+                or any(not isinstance(exception.get(field), str) or not exception[field].strip()
+                       for field in required)
+                or 'actual_type' not in exception
+                or exception['actual_type'] is not None and not isinstance(exception['actual_type'], str)
+                or any(len(exception[field]) != 64
+                       or any(character not in '0123456789abcdef' for character in exception[field])
+                       for field in ('plugin_sha256', 'record_sha256'))):
+            raise M15AuditError('malformed shipped-link exception')
+        identity = (exception['source'], exception['target'])
+        if (identity in seen or exception.get('owner') != 'M16'
+                or exception.get('expected_types') != ['SCPT'] or not exception.get('reason')):
+            raise M15AuditError('duplicate or unsupported shipped-link exception')
+        seen.add(identity)
+        spell = result['spells'].get(exception['source'])
+        matches = [issue for issue in result['link_issues']
+                   if (issue['source'], issue['target']) == identity
+                   and issue['expected_types'] == exception['expected_types']
+                   and issue['actual_type'] == exception['actual_type'] and not issue['deleted']]
+        if (spell is None or spell['record_sha256'] != exception['record_sha256']
+                or spell['plugin'].casefold() != exception['plugin'].casefold()
+                or plugins.get(exception['plugin'].casefold()) != exception['plugin_sha256']
+                or len(matches) != 1 or matches[0]['message'] not in remaining):
+            failures.append(f'{exception["source"]}: shipped-link exception no longer matches content')
+            continue
+        issue = dict(matches[0], owner='M16', reason=exception['reason'],
+                     activation_supported=False, record_sha256=spell['record_sha256'])
+        classified.append(issue)
+        remaining.remove(issue['message'])
+    result['failures'] = remaining + failures
+    result['data_passed'] = not result['failures']
+    result['shipped_magic_link_defects'] = classified
+    return {'passed': not failures, 'classified': len(classified), 'failures': failures}
+
+
 def skill_definition(index: bytes, data: bytes) -> dict[str, Any]:
     if len(index) != 4 or len(data) != 20:
         raise M15AuditError('SKIL requires four-byte INDX and 20-byte DATA')
@@ -342,6 +391,8 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
                 key = _stable_key(path.name, ident, masters)
                 record = {'key': key, 'type': tag, 'plugin': path.name, 'flags': flags,
                           'deleted': bool(flags & binary.DELETED_FLAG), 'cell': cell, 'masters': masters}
+                if tag == 'SPEL':
+                    record['sha256'] = hashlib.sha256(data[start:finish]).hexdigest()
                 if tag in wanted and not record['deleted']:
                     payload = binary._payload(data, start + 20, size, flags, path.name, tag)
                     record['subrecords'] = binary._subrecords(payload, path.name, tag)
@@ -488,7 +539,8 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             elif record['type'] == 'MGEF':
                 effect_definitions[key] = effect_definition(record)
             elif record['type'] == 'SPEL':
-                spells[key] = dict(spell_definition(record), editor_id=edid)
+                spells[key] = dict(spell_definition(record), editor_id=edid,
+                                   record_sha256=record['sha256'], plugin=record['plugin'])
             elif record['type'] == 'SKIL':
                 skills[key] = dict(skill_definition(_one(subs, 'INDX', True), _one(subs, 'DATA', True)),
                                    editor_id=edid)
@@ -570,9 +622,14 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
     for key, actor in actors.items():
         if actor['style'] != 'null' and actor['style'] not in styles:
             failures.append(f'{key}: missing/deleted/wrong-type combat style {actor["style"]}')
+    link_issues = []
     def check_link(source, target, types):
         if target != 'null' and (target not in winners or winners[target]['deleted'] or winners[target]['type'] not in types):
-            failures.append(f'{source}: missing/deleted/wrong-type {target}; expected {types}')
+            message = f'{source}: missing/deleted/wrong-type {target}; expected {types}'
+            failures.append(message)
+            link_issues.append(dict(source=source, target=target, expected_types=list(types),
+                actual_type=winners[target]['type'] if target in winners else None,
+                deleted=winners[target]['deleted'] if target in winners else False, message=message))
     for key, access in ownership.items():
         check_link(key, access['owner'], ('FACT', 'NPC_'))
         check_link(key, access['global'], ('GLOB',))
@@ -644,7 +701,8 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
         'settings': settings, 'skills': skills, 'spells': spells, 'effect_definitions': effect_definitions, 'factions': factions, 'equipment': equipment,
-        'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures, 'data_passed': not failures,
+        'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures,
+        'link_issues': link_issues, 'data_passed': not failures,
         'skill_inventory_complete': skill_counts == collections.Counter(range(12, 33)),
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],

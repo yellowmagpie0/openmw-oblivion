@@ -459,6 +459,15 @@ namespace ESM4
         return result;
     }
 
+    BowZoomSettings buildBowZoomSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const BowZoomSettings result{inputs.number("fArrowFOVZoom", 30.f),
+            inputs.number("fArrowFOVTimeChange", .25f), inputs.number("fArrowFOVTimeStart", 2.75f)};
+        validateBowZoomSettings(result);
+        return result;
+    }
+
     NativeDetectionSettings buildNativeDetectionSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
@@ -534,6 +543,16 @@ namespace ESM4
             inputs.number("fCrimeAlarmRespMult", 1.7f),
         };
         validateFightScoreSettings(result);
+        return result;
+    }
+
+    YieldSettings buildYieldSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const YieldSettings result{inputs.number("fAIYieldBase", 0.f), inputs.number("fAIYieldMult", 1.f),
+            inputs.number("fAIYieldDurationBase", 1.f), inputs.number("fAIYieldDurationMult", 3.f),
+            inputs.number("iAIYieldMaxHitCount", std::int32_t{2})};
+        validateYieldSettings(result);
         return result;
     }
 

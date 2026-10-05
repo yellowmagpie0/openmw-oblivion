@@ -14181,3 +14181,205 @@ loose-item metadata capture; container transfer and other interaction callbacks
 also need their cached-reference audit. Complete bow/drop/arrow publication,
 frame/save recreation and normal-input ranged/restart courses remain open.
 S5 and full M15 remain in progress; no gameplay acceptance gate is closed here.
+
+### S2 remaining mastery decisions
+
+Original executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The zero-absorption contact branch at 5FFEDF..5FFF52/600528 tests active
+unarmed melee blocking against a weapon. Journeyman Hand to Hand bypasses
+this branch; Journeyman Block permits an inclusive `draw <=
+iPerkHandToHandBlockRecoilChance` roll. The stack float is absorbed fraction,
+not incoming damage. Caller owns positive damage, facing and actual opponent
+recoil admission. The two earlier mistaken harnesses remain retained.
+Corrected original instruction campaign: 256 cases in
+S2/closure-mastery-oracle-03; source-controlled boundary/distribution tests
+use a predeclared 600-count tolerance over 100000 fixed-seed draws (26%
+expected for inclusive 25 with draws 0..99).
+
+Original 666670 updates bow FOV. Journeyman Marksman, action 5, block held,
+aiming enabled, elapsed **at or above** the start delay, and current FOV
+**above** target are required. Candidate is normal FOV plus elapsed-after-delay
+/time-change times (zoom-normal), stored as float and clamped at zoom.
+Restoration adds duration/time-change times (normal-zoom), stores float then
+clamps at normal. Third-person/restricted camera restores scene FOV if needed;
+disabled zoom and failed aiming/mastery guards make no setter call.
+Compiled defaults: zoom 30 degrees, change .25 seconds, start 2.75 seconds.
+Winning typed GMST overrides feed the helper. Original campaign in
+S2/closure-zoom-oracle-01 has 729 setter decisions, all matched bit-for-bit
+against production C++; camera/input/mastery queries are declared boundaries.
+
+Original blocking jump admission at 6729F8 requires held block, no interface
+rejection, Journeyman Acrobatics and no animation busy flag. Animation selection
+at 5F5050 prioritizes low movement bits forward/back/left/right (groups 11..14);
+no bit requests FF. A non-null process and animation data are required, and
+actual resolved group must be 11..14. It need not equal the requested group.
+S2/closure-dodge-oracle-01 executes 312 original admission/selection cases,
+including all 256 direction flag combinations. Actual animation playback,
+movement and persistence remain later-stage acceptance work.
+
+### Shipped script-effect link defects
+
+`M15-DATA-EXCEPTIONS.json` binds three exact unresolved SEFF script links to
+source record, encoded-record hash and official plugin hash. Independent raw
+record inspection confirms MS40TestSpell points to an Oblivion REFR rather
+than SCPT; Knights HolyAura and WoodlandGrace point to absent Knights forms.
+These are genuine shipped dangling script identities. Preserve and diagnose
+on effect activation; no script execution or fallback is inferred. Magic
+execution remains M16-owned. The audit retains raw link issues and removes
+only the exact reviewed defects from the physical data failure list. New,
+changed, deleted or ambiguous links still fail, as do stale exception entries.
+The physical audit classification does not certify gameplay or runtime rules.
+
+### Fine confiscation and served-property selection
+
+Original 491A54..491AF2 rejects nonpositive entry counts, quest items, absent
+extra data, unowned instances, instances whose owner equals the **source
+reference**, and owner-filter mismatches. Served release at
+49180F..491927/4919A5 returns positive-count stacks with no extra data and
+instances unowned or owned by the **destination base**. These exact identities
+must remain distinct; general ownership permission and evil-faction exemptions
+do not replace the direct ExtraOwnership comparison. Original selection
+campaign S2/closure-property-oracle-01: 360 cases. Quest flag, raw owner getter
+and destination base query are supplied data boundaries.
+
+For a non-returned explicit instance, 4918AB..4918DF/4918E4 adds the original
+simple-instance scan and the post-normalization complex-instance count. A
+signed nonpositive sum makes no transfer call. Otherwise the request is
+entry count minus that sum, with 32-bit native wrapping. Zero/negative requests
+are preserved; this decision does not claim successful removal. Original
+arithmetic campaign S2/closure-property-remainder-oracle-01: 112 cases including
+INT_MIN/INT_MAX. Metadata normalization, inventory removal/clamping, prison
+reference resolution and transactional world publication remain separate.
+
+### Surrender acceptance, score and duration
+
+Original NPC acceptance611BD0 rejects paralysis, an escaped Player target,
+combat style RejectYields, positive native fight score, and a hostile active
+effect cast by the yielding target. The active-effect scan6A1EE0 compares
+exact MagicCaster identity at actor+5C, checks EffectItem hostility413470,
+and reads receiver MagicTarget+68. This is an explicit M16 data boundary,
+not permission to invent absent spell execution. Player65D6D0 accepts unless
+paralyzed; Creature6FE080 always rejects. Acceptance611B40 applies real
+combat/disposition changes separately, and remains later-stage integration.
+
+546D10 returns float `base + fight + (disposition - aggression) * multiplier`;
+the subtraction wraps as signed32 before scaling, and there is one final
+float store. Compiled defaults are0 and1; winning official fAIYieldBase is-20.
+61977D uses one original raw15-bit draw's remainder modulo10, divided by10,
+times duration multiplier plus duration base. Compiled duration defaults are
+1 and3 seconds. Combat state6's signed-byte hit count interrupts only when
+strictly above iAIYieldMaxHitCount (compiled2), at624F4E. Finite malformed inputs
+and output overflow diagnose; negative finite override values stay intact.
+
+Original campaign S2/closure-yield-oracle-02 contains596 acceptance/score/
+duration cases. The first duration capture incorrectly addressed the local
+slot before the native caller argument pop; that failed harness is retained.
+NPC distance, aggression/disposition, fight score, style and hostile-effect
+queries are supplied boundaries. Score and duration arithmetic execute fully.
+Deterministic cases establish the branches; the fixed-seed distribution test
+predeclares100000 uniform15-bit draws: residues0..7 have3277/32768
+probability and8/9 have3276/32768; tolerance600 per bin. No runtime surrender or restart acceptance is asserted by these helpers.
+
+### Admitted jail-door decision and realm exception
+
+Original4B909E queries65DA50 (signed sentence days >0) only for the Player
+activator. A teleport destination clears sentence, sets escaped false and
+clears jailed byte200 **before** later teleport publication. A local door
+with no teleport, while jailed, sets escaped true and adds iCrimeGoldJailBreak,
+except when the explicit alternate-realm flag116 is set. That same flag
+routes bounty through the already-reviewed Player alternate storage700.
+A local escape retains sentence/property context; the flag setter's true
+branch65D670 does not clear them. No once-only guard is invented here.
+
+S2/closure-jail-door-oracle-01 executes32 original cases, including native
+sentence queries. Escape setter and bounty publication are observable
+boundaries; earlier door admission and later teleport success are excluded.
+`jailDoorDecision` describes exactly these requested transitions. Transaction
+idempotency, prison geography, actual movement and inventory publication remain
+S10/S11 integration and acceptance work.
+
+### Native death/essential transition selection
+
+The pure negative-Health callback gate exposes the already-reviewed6034B0
+rule: current Health <1 and raw life state outside1/2/6. Explicit Kill bypasses
+the Health condition, but6005F0 still uses5E33B0(false) to reject those states.
+With essential handling enabled (original byteB14E98) and resolved actor-base
+ACBS essential bit1, raw states3/5 select the health refresh branch6007F5;
+other admitted states enter essential unconsciousness at6006A7. Otherwise
+600865 selects ordinary death. Actor type constant977C50 is shared by NPC,
+creature and Player vtables at+190; creature base essential flags are not
+silently ignored. No body/callback/world cleanup is asserted by the selector.
+
+S2/closure-life-oracle-02 executes36 original selector cases including the
+actual state query and shared actor-type constant. Base getter is supplied;
+cleanup5EF930 is omitted. The initial prefix harness omitted its inherited
+ECX actor register and is retained as failed evidence. Health threshold evidence
+remains the1024 original callback cases documented above.
+
+### S2 rule review index
+
+`M15-S2-RULE-MATRIX.json` indexes all section3.3 families, their implementation,
+units, rounding policy, independent examples and detailed provenance. The
+original matrix/corpora remain independent from production C++. New property
+and surrender C++ comparison S2/closure-rule-comparison-01 matches1068 original
+results; FOV boundary comparison S2/closure-zoom-boundary-oracle-01 matches560
+additional complete-original decisions, including custom settings, adjacent
+float start/FOV thresholds and zero/subnormal/large time values. Combined with
+the729 default camera decisions, camera interpolation has1289 exact comparisons.
+Finite times can saturate through the original clamps; nonfinite final FOV
+outputs diagnose explicitly rather than entering camera state.
+
+The semantic `m15-audit` command's exit status now reflects its native **data**
+scope: winning policies, exact shipped-link review and complete hash/count lock.
+Its report explicitly retains `runtime_rules_verified: false` and later-stage
+world/normal-input/restart gates. Passing the data command alone does not pass
+rule tests or full M15 gameplay acceptance.
+
+Final RNG-domain review traces47DF80 to CRT9859DD, whose output is masked to
+7FFF. Yield duration takes that raw15-bit draw modulo10 directly, whereas
+mastery contact branches reduce it modulo100 before their proc comparisons.
+The first yield helper incorrectly rejected raw draws100..32767; the broad
+normal/sanitizer01 builds were stopped before changing source and retained.
+The corrected duration campaign S2/closure-yield-duration-oracle-01 executes
+all32768 possible raw inputs, with exact residue counts3277 for0..7 and3276
+for8/9. This distinguishes native draw reduction from a uniform-percentile
+helper test and preserves the original single-draw consumption contract.
+
+The final production comparison, S2/closure-rule-comparison-02, passes
+**38,768** independent original results: the earlier 1,068 property/yield
+results, all 32,768 duration draws, 3,840 signed hit-count/state/threshold
+decisions, 36 life selectors, 32 admitted jail-door decisions, and the prior
+1,024 Health callback cases. The hit campaign executes original
+624F4E..624F60/624F85 across every signed hit byte, states 5/6/7, and thresholds
+-1/0/2/127/128. These comparisons execute the current production C++ helpers;
+the expected corpora execute the hash-identified original instructions.
+
+Fresh policy comparison S2/closure-policy-comparison-01 matches **7,540**
+fields across all **130** resolved policies and all **3,636** official actor
+links. S2/closure-shipped-link-inspection-01 independently walks raw records
+across all 11 plugins and confirms the three exact script-link defects without
+importing either production loader or semantic audit code.
+
+Normal and alternate-realm bounty routing is an intrinsic rule reviewed here.
+Guild fine choices and `TGGrayCowlScript` identity effects also require actual
+authored script/dialogue execution, owned by **S12**. They are not an invented
+additional engine identity mode, and their gameplay gates remain open.
+
+Final S2 checks pass in S2/closure-normal-02 (2,566 component tests, 1,116
+engine tests, 265 Python tests) and S2/closure-sanitized-components-02 (all
+691 `ESM4*` component tests under ASan/UBSan). Inventories match exactly, with
+no failures or skips. Leak checking is disabled. Fresh normal and instrumented
+`esmtool` readback in S2/closure-native-normal-01 and
+S2/closure-native-sanitized-02 passes all 11 official plugins, including all
+129 CSTY and 1,001 CREA records, and rejects the NaN CSTY negative control.
+The initial readback report checker expected different diagnostic wording;
+its failed harness/log remain retained in the first sanitized attempt.
+
+Both test runs bind HEAD `54fd9496c0564f266e1bfa8df2241ba880f0c9b5` and dirty
+source fingerprint
+`b2bcb34602e7d1a681b9c562d4df4ff6ed3c3d92acbeed37f5ed0b13a000937b`.
+Subsequent closure edits only correct the review index's armor/difficulty
+examples and record results in documentation; production source bytes remain
+unchanged. S2 native data and pure-rule review is passed. World integration,
+normal-input gameplay, media review and restart acceptance remain S3-S14.

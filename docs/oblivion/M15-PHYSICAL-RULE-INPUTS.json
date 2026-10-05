@@ -1947,6 +1947,82 @@
         "value": 0.019999999552965164
       },
       "live_setting_probe": null
+    },
+    {
+      "name": "fAIYieldBase",
+      "value": 0,
+      "storage": "0xb36d58",
+      "constructor": "0x9e8830",
+      "type": "float32",
+      "installed_override": {
+        "key": "content:oblivion.esm:0287a1",
+        "type": "f",
+        "value": -20.0
+      },
+      "live_setting_probe": null
+    },
+    {
+      "name": "fAIYieldMult",
+      "value": 1,
+      "storage": "0xb36d60",
+      "constructor": "0x9e8860",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "fAIYieldDurationBase",
+      "value": 1,
+      "storage": "0xb36d68",
+      "constructor": "0x9e8890",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "fAIYieldDurationMult",
+      "value": 3,
+      "storage": "0xb36d70",
+      "constructor": "0x9e88c0",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "iAIYieldMaxHitCount",
+      "value": 2,
+      "storage": "0xb36d78",
+      "constructor": "0x9e88f0",
+      "type": "int32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "fArrowFOVZoom",
+      "value": 30.0,
+      "storage": "0xb370a0",
+      "constructor": "0x9e9b6f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "fArrowFOVTimeChange",
+      "value": 0.25,
+      "storage": "0xb370a8",
+      "constructor": "0x9e9b9f",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
+    },
+    {
+      "name": "fArrowFOVTimeStart",
+      "value": 2.75,
+      "storage": "0xb370b0",
+      "constructor": "0x9e9bcf",
+      "type": "float32",
+      "installed_override": null,
+      "live_setting_probe": null
     }
   ]
 }

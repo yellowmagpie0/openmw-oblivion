@@ -5,6 +5,9 @@
 #include <array>
 #include <random>
 #include <stdexcept>
+#include <cmath>
+#include <limits>
+#include <bit>
 
 namespace
 {
@@ -182,4 +185,150 @@ TEST(ESM4MasteryRules, FixedSeedInclusiveAndStrictProcDistributions)
     EXPECT_EQ(knockdown, 0);
     EXPECT_NEAR(blockDisarm, 6000, 500);
     EXPECT_NEAR(stagger, 26000, 700);
+}
+
+TEST(ESM4MasteryRules, UnarmedRecoilUsesZeroAbsorptionBlockRankAndInclusiveDraw)
+{
+    // Original5FFEDF..5FFF52, independently executed in closure-mastery-oracle-03.
+    for (int block : {49, 50, 51})
+        for (int hand : {49, 50, 51})
+            for (bool active : {false, true})
+                for (bool unarmed : {false, true})
+                    for (bool projectile : {false, true})
+                        for (bool weapon : {false, true})
+                            for (float absorbed : {-1.f, -0.f, 0.f, std::nextafter(0.f, 1.f), 1.f})
+                                for (unsigned draw : {0, 24, 25, 26, 99})
+                                {
+                                    const auto result = ESM4::unarmedBlockRecoil(
+                                        {block, hand, absorbed, unarmed, active, projectile, weapon}, draw, settings, mastery);
+                                    const bool eligible = block >= 50 && hand < 50 && active && unarmed
+                                        && !projectile && weapon && absorbed <= 0;
+                                    EXPECT_EQ(result.mConsumesDraw, eligible);
+                                    EXPECT_EQ(result.mTriggered, eligible && draw <= 25);
+                                }
+    auto thresholds = mastery;
+    thresholds.mMinimumSkill = {5, 10, 15, 20};
+    EXPECT_TRUE(ESM4::unarmedBlockRecoil({10, 9, 0, true, true, false, true}, 25, settings, thresholds).mTriggered);
+    EXPECT_FALSE(ESM4::unarmedBlockRecoil({9, 9, 0, true, true, false, true}, 25, settings, thresholds).mConsumesDraw);
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::unarmedBlockRecoil({50, 49, value, true, true, false, true}, 25, settings, mastery),
+            std::invalid_argument);
+    EXPECT_THROW(ESM4::unarmedBlockRecoil({50, 49, 0, true, true, false, true}, 100, settings, mastery),
+        std::invalid_argument);
+}
+
+TEST(ESM4MasteryRules, UnarmedRecoilDistributionIncludesTheChanceEndpoint)
+{
+    std::mt19937 random(0x4d1552);
+    unsigned triggered = 0;
+    // Declared tolerance: 26000 +/-600 for100000 uniform percentile draws.
+    std::uniform_int_distribution<unsigned> percent(0, 99);
+    for (unsigned i = 0; i < 100000; ++i)
+        triggered += ESM4::unarmedBlockRecoil({50, 49, 0, true, true, false, true},
+            percent(random), settings, mastery).mTriggered;
+    EXPECT_GE(triggered, 25400u);
+    EXPECT_LE(triggered, 26600u);
+}
+
+TEST(ESM4MasteryRules, BowZoomMatchesOriginalDelayFovStoresAndRestoration)
+{
+    const ESM4::BowZoomSettings zoom{30, .25f, 2.75f};
+    ESM4::BowZoomInput input{50, 5, 2.75f, 75, 75, 75, .125f, true, false, false, true, true};
+    // Literal original666670 observations; equality at the delay passes.
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 75.f);
+    input.mElapsed = std::nextafter(2.75f, 0.f);
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+    input.mElapsed = std::nextafter(2.75f, 3.f);
+    const auto adjacent = ESM4::bowZoomFov(input, zoom, mastery);
+    ASSERT_TRUE(adjacent);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*adjacent), 1117126650u);
+    input.mElapsed = 2.875f;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 52.5f);
+    input.mElapsed = 3;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 30.f);
+    input.mElapsed = 3.5f;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 30.f);
+    input.mCurrentFov = 30;
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+    input.mCurrentFov = 45;
+    input.mBaseMarksman = 49;
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+    input.mBaseMarksman = 50;
+    input.mBlockHeld = false;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 67.5f);
+    input.mDuration = .25f;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 75.f);
+    input.mDuration = 0;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 45.f);
+    input.mBlockHeld = true;
+    input.mProcessAction = 4;
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+    input.mThirdPerson = true;
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+    input.mSceneFov = 45;
+    EXPECT_EQ(ESM4::bowZoomFov(input, zoom, mastery), 75.f);
+    input.mEnabled = false;
+    EXPECT_FALSE(ESM4::bowZoomFov(input, zoom, mastery));
+}
+
+TEST(ESM4MasteryRules, BowZoomSettingsAreTypedAndMalformedInputsDiagnose)
+{
+    const auto defaults = ESM4::buildBowZoomSettings({});
+    EXPECT_FLOAT_EQ(defaults.mZoomFov, 30);
+    EXPECT_FLOAT_EQ(defaults.mTimeChange, .25f);
+    EXPECT_FLOAT_EQ(defaults.mTimeStart, 2.75f);
+    ESM4::GameSetting zoom{}, time{}, delay{};
+    zoom.mEditorId = "fArrowFOVZoom"; zoom.mData = 40.f;
+    time.mEditorId = "fArrowFOVTimeChange"; time.mData = .5f;
+    delay.mEditorId = "fArrowFOVTimeStart"; delay.mData = 1.f;
+    const std::array<const ESM4::GameSetting*, 3> records{&zoom, &time, &delay};
+    const auto custom = ESM4::buildBowZoomSettings(records);
+    EXPECT_FLOAT_EQ(custom.mZoomFov, 40);
+    EXPECT_FLOAT_EQ(custom.mTimeChange, .5f);
+    EXPECT_FLOAT_EQ(custom.mTimeStart, 1);
+    ESM4::BowZoomInput input{50, 5, 1.25f, 75, 75, 75, .125f, true, false, false, true, true};
+    EXPECT_EQ(ESM4::bowZoomFov(input, custom, mastery), 57.5f);
+    zoom.mData = 40;
+    EXPECT_THROW(ESM4::buildBowZoomSettings(records), std::invalid_argument);
+    for (float bad : {-1.f, 0.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::validateBowZoomSettings({30, bad, 2.75f}), std::invalid_argument);
+        EXPECT_THROW(ESM4::validateBowZoomSettings({bad, .25f, 2.75f}), std::invalid_argument);
+    }
+    input.mDuration = -1;
+    EXPECT_THROW(ESM4::bowZoomFov(input, defaults, mastery), std::invalid_argument);
+    input.mDuration = .125f;
+    input.mElapsed = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::bowZoomFov(input, defaults, mastery), std::invalid_argument);
+}
+
+TEST(ESM4MasteryRules, BlockingDodgeSelectsMovementPriorityAndResolvedAnimation)
+{
+    constexpr std::array<std::uint8_t, 16> expected{255,11,12,11,13,11,12,11,14,11,12,11,13,11,12,11};
+    for (unsigned flags = 0; flags < 256; ++flags)
+        EXPECT_EQ(ESM4::requestedDodgeGroup(flags), expected[flags & 15]);
+    for (int skill : {49, 50, 51})
+        for (bool held : {false, true})
+            for (bool blocked : {false, true})
+                for (bool busy : {false, true})
+                    for (bool animation : {false, true})
+                        for (bool process : {false, true})
+                            for (std::optional<std::uint16_t> group : {std::optional<std::uint16_t>{},
+                                     {10}, {11}, {12}, {13}, {14}, {15}, {0x10b}, {255}})
+                            {
+                                const bool allowed = skill >= 50 && held && !blocked && !busy && animation
+                                    && process && group && *group >= 11 && *group <= 14;
+                                EXPECT_EQ(ESM4::blockingDodgeAllowed({skill, group, held, blocked, busy,
+                                              animation, process}, mastery), allowed);
+                            }
+}
+
+TEST(ESM4MasteryRules, BowZoomClampsLargeFiniteTimeAndDiagnosesOutputOverflow)
+{
+    ESM4::BowZoomInput input{50, 5, std::numeric_limits<float>::max(), 75, 75, 75,
+        std::numeric_limits<float>::max(), true, false, false, true, true};
+    EXPECT_EQ(ESM4::bowZoomFov(input, {30, .25f, 2.75f}, mastery), 30.f);
+    input.mCurrentFov = std::numeric_limits<float>::max();
+    input.mNormalFov = 1;
+    EXPECT_THROW(ESM4::bowZoomFov(input, {100, std::numeric_limits<float>::min(), 0}, mastery), std::overflow_error);
 }

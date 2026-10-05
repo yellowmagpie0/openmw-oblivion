@@ -4,12 +4,50 @@
 #include "loadfact.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 
 namespace ESM4
 {
+    JailDoorDecision jailDoorDecision(const JailDoorInput& input, const CrimeFineSettings& settings)
+    {
+        validateCrimeFineSettings(settings);
+        if (!input.mActivatorPlayer || input.mSentenceDays <= 0)
+            return {};
+        if (input.mHasTeleportDestination)
+            return {true, false, true, std::nullopt};
+        if (input.mPlayerInShiveringIsles)
+            return {};
+        return {false, true, false, static_cast<float>(settings.mJailBreak)};
+    }
+
+    bool fineConfiscatesInstance(const FineConfiscationInput& input)
+    {
+        return input.mEntryCount > 0 && !input.mQuestItem && input.mHasExtraData
+            && !input.mOwner.isNull() && input.mOwner != input.mSourceReference
+            && (input.mRequiredOwner.isNull() || input.mOwner == input.mRequiredOwner);
+    }
+
+    bool servedReleaseReturnsInstance(const ServedPropertyInput& input)
+    {
+        return input.mEntryCount > 0 && (!input.mHasExtraData
+            || input.mOwner.isNull() || input.mOwner == input.mDestinationBase);
+    }
+
+    std::optional<std::int32_t> servedReleaseRemainderRequest(std::int32_t entryCount,
+        std::int32_t simpleInstances, std::int32_t complexInstances)
+    {
+        if (simpleInstances < 0 || complexInstances < 0)
+            throw std::invalid_argument("negative native property instance count");
+        // Explicit native 32-bit arithmetic, including authored extreme counts.
+        const auto instances = std::uint32_t(simpleInstances) + std::uint32_t(complexInstances);
+        if (std::bit_cast<std::int32_t>(instances) <= 0)
+            return std::nullopt;
+        return std::bit_cast<std::int32_t>(std::uint32_t(entryCount) - instances);
+    }
+
     namespace
     {
         void validateBountyState(const CrimeBountyState& state)

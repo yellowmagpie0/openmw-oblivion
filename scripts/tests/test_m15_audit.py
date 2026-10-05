@@ -32,6 +32,60 @@ def plugin(records, masters=()):
 
 
 class M15NativeAuditTests(unittest.TestCase):
+    def test_shipped_magic_link_review_requires_exact_record_plugin_and_issue(self):
+        issue = dict(source='content:base.esm:000800', target='content:base.esm:000810',
+                     expected_types=['SCPT'], actual_type='REFR', deleted=False, message='wrong type')
+        result = dict(plugins=[dict(name='base.esm', sha256='a'*64)],
+                      spells={issue['source']: dict(plugin='base.esm', record_sha256='b'*64)},
+                      link_issues=[issue], failures=['wrong type'], data_passed=False,
+                      runtime_rules_verified=False, passed=False)
+        exception = dict(source=issue['source'], target=issue['target'], expected_types=['SCPT'],
+                         actual_type='REFR', plugin='base.esm', plugin_sha256='a'*64,
+                         record_sha256='b'*64, owner='M16', reason='Reviewed shipped defect')
+        catalog = dict(schema_version=1, exceptions=[exception])
+        reviewed = copy.deepcopy(result)
+        self.assertTrue(audit.classify_shipped_magic_links(reviewed, catalog)['passed'])
+        self.assertTrue(reviewed['data_passed'])
+        self.assertFalse(reviewed['passed'])
+        self.assertFalse(reviewed['runtime_rules_verified'])
+        self.assertFalse(reviewed['shipped_magic_link_defects'][0]['activation_supported'])
+        self.assertEqual(reviewed['link_issues'], result['link_issues'])
+        unknown = copy.deepcopy(result)
+        unknown['failures'].append('another unsupported link')
+        audit.classify_shipped_magic_links(unknown, catalog)
+        self.assertEqual(unknown['failures'], ['another unsupported link'])
+        self.assertFalse(unknown['data_passed'])
+        for field, value in [('plugin_sha256','c'*64), ('record_sha256','c'*64),
+                             ('plugin','patch.esp'), ('target','content:base.esm:000811'),
+                             ('actual_type',None)]:
+            changed = copy.deepcopy(catalog)
+            changed['exceptions'][0][field] = value
+            reviewed = copy.deepcopy(result)
+            self.assertFalse(audit.classify_shipped_magic_links(reviewed, changed)['passed'])
+            self.assertIn('wrong type', reviewed['failures'])
+            self.assertFalse(reviewed['data_passed'])
+        for change in ('missing_source', 'missing_issue', 'duplicate_issue', 'deleted'):
+            reviewed = copy.deepcopy(result)
+            if change == 'missing_source': reviewed['spells'].clear()
+            elif change == 'missing_issue': reviewed['link_issues'].clear()
+            elif change == 'duplicate_issue': reviewed['link_issues'].append(copy.deepcopy(issue))
+            else: reviewed['link_issues'][0]['deleted'] = True
+            self.assertFalse(audit.classify_shipped_magic_links(reviewed, catalog)['passed'])
+            self.assertFalse(reviewed['data_passed'])
+        for field, value in [('owner','M15'), ('expected_types',['NPC_']), ('reason','')]:
+            changed = copy.deepcopy(catalog)
+            changed['exceptions'][0][field] = value
+            with self.assertRaises(audit.M15AuditError):
+                audit.classify_shipped_magic_links(copy.deepcopy(result), changed)
+        with self.assertRaises(audit.M15AuditError):
+            audit.classify_shipped_magic_links(copy.deepcopy(result),
+                dict(schema_version=1, exceptions=[exception, exception]))
+        for malformed in (None, {}, dict(exception, reason=' '), dict(exception, plugin_sha256='invalid'),
+                          dict(exception, record_sha256=None), dict(exception, actual_type=[])):
+            with self.assertRaises(audit.M15AuditError):
+                audit.classify_shipped_magic_links(copy.deepcopy(result),
+                    dict(schema_version=1, exceptions=[malformed]))
+
     def test_effect_prefix_preserves_partial_layouts_padding_and_reference_identity(self):
         def decode(data,code=b'FOSP\0'):
             return audit.effect_definition(dict(plugin='patch.esp',masters=['other.esm','base.esm'],

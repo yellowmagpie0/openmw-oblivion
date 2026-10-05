@@ -5246,7 +5246,7 @@ def make_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--maximum-mean", type=float, default=0.999)
     inspect.add_argument("--report", type=Path)
 
-    m15_audit = subparsers.add_parser("m15-audit", help="audit native combat data and report unresolved rule gates")
+    m15_audit = subparsers.add_parser("m15-audit", help="audit native combat data against reviewed policies and count lock")
     m15_audit.add_argument("--oblivion-data", type=Path, required=True)
     m15_audit.add_argument("--output", type=Path, required=True)
 
@@ -5487,6 +5487,11 @@ def main(argv: list[str] | None = None) -> int:
             case_inventory = json.loads((Path(__file__).resolve().parents[1] / "docs/oblivion/M15-CASE-INVENTORY.json").read_text())
             result = tes4_m15_audit.inventory([args.oblivion_data / name for name in OFFICIAL_PLUGIN_ORDER],
                                               case_inventory["prisons"])
+            exceptions_path = Path(__file__).resolve().parents[1] / "docs/oblivion/M15-DATA-EXCEPTIONS.json"
+            exceptions_bytes = exceptions_path.read_bytes()
+            result["exception_review"] = tes4_m15_audit.classify_shipped_magic_links(
+                result, json.loads(exceptions_bytes))
+            result["exception_review"]["catalog_sha256"] = hashlib.sha256(exceptions_bytes).hexdigest()
             if not result["skill_inventory_complete"]:
                 result["failures"].append("official native SKIL inventory is incomplete or ambiguous")
                 result["data_passed"] = False
@@ -5499,11 +5504,12 @@ def main(argv: list[str] | None = None) -> int:
             result["data_passed"] = result["data_passed"] and policies["passed"]
             result["unresolved_default_actors"] = [key for key in result["unresolved_default_actors"]
                                                      if key not in policies["actor_policy_keys"]]
-            result["open_gates"] = ["original-game combat policy gameplay verification",
-                                    "independent physical/crime rule matrix"]
+            result["acceptance_scope"] = "native data inventory; independent rule tests and gameplay evidence are separate"
+            result["open_gates"] = ["M15 world integration and normal-input/restart acceptance (S3-S14)"]
             lock_path = Path(__file__).resolve().parent / "data/oblivion_compat/m15_count_lock.json"
             result["count_lock"] = tes4_m15_audit.check_count_lock(result, json.loads(lock_path.read_text()))
             result["data_passed"] = result["data_passed"] and result["count_lock"]["passed"]
+            result["passed"] = result["data_passed"]
             write_json(args.output / "m15-audit.json", result)
         elif args.command == "m15-verify":
             if args.restart:
@@ -5584,6 +5590,8 @@ def main(argv: list[str] | None = None) -> int:
         printable = {
             "passed": result.get("passed", False),
             "data_passed": result.get("data_passed", False),
+            "acceptance_scope": result.get("acceptance_scope"),
+            "runtime_rules_verified": result.get("runtime_rules_verified", False),
             "milestone": "M15",
             "summary": result.get("summary", {}),
             "failure_count": len(result.get("failures", [])),

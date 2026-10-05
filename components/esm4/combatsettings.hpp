@@ -37,6 +37,7 @@ namespace ESM4
     KnockdownSettings buildKnockdownSettings(std::span<const GameSetting* const> settings);
     KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings);
     MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings);
+    BowZoomSettings buildBowZoomSettings(std::span<const GameSetting* const> settings);
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings);
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings);
     AttackFatigueSettings buildAttackFatigueSettings(std::span<const GameSetting* const> settings);
@@ -64,6 +65,7 @@ namespace ESM4
     CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings);
     TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings);
     FightScoreSettings buildFightScoreSettings(std::span<const GameSetting* const> settings);
+    YieldSettings buildYieldSettings(std::span<const GameSetting* const> settings);
     CrimeAlarmSettings buildCrimeAlarmSettings(std::span<const GameSetting* const> settings);
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings);
     PickpocketSettings buildPickpocketSettings(std::span<const GameSetting* const> settings);

@@ -682,14 +682,17 @@
       "ability": "unarmed recoil",
       "normal_input": "hold unarmed block through incoming melee",
       "prerequisites": [
-        "unarmed",
-        "valid block"
+        "unarmed active melee block through positive-damage/facing admission",
+        "zero or negative absorbed fraction",
+        "armed attacker",
+        "base Block at least Journeyman",
+        "base Hand to Hand below Journeyman"
       ],
       "consequence": "opponent recoil; original damage policy separately verified",
       "probability_and_draw": {
         "setting": "iPerkHandToHandBlockRecoilChance",
         "compiled": 25,
-        "draw": "0..99 inclusive <= from 005FFF31; full eligibility pending"
+        "draw": "raw15-bit draw reduced modulo100; inclusive <=25; full entry guards reviewed at5FFEDF..5FFF52"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -698,7 +701,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "unarmedBlockRecoil; original zero-absorption contact selection and inclusive proc verified; opponent action/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -710,10 +713,10 @@
         "fixed-seed distribution with predeclared tolerance"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input consequence and restart acceptance remain in the owning integration stage"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/mastery/block-03/"
+      "evidence": "build/oblivion-compat/m15/S2/closure-mastery-oracle-03/",
+      "pure_rule_status": "reviewed"
     },
     {
       "id": "M15-MASTERY-BLOCK-04",
@@ -854,7 +857,11 @@
       "ability": "aim zoom",
       "normal_input": "hold block while arrow is nocked",
       "prerequisites": [
-        "bow drawn with ammunition"
+        "zoom enabled, first person, unrestricted camera",
+        "action5, block held, aiming",
+        "base Marksman at least Journeyman",
+        "elapsed at or above fArrowFOVTimeStart",
+        "current FOV strictly above fArrowFOVZoom"
       ],
       "consequence": "camera zoom while aiming",
       "probability_and_draw": null,
@@ -865,7 +872,7 @@
         "camera restoration policy"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": null,
+      "rule_implementation": "bowZoomFov; native setter decision and FOV interpolation verified; camera/input lifecycle pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -875,10 +882,10 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input consequence and restart acceptance remain in the owning integration stage"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/mastery/marksman-02/"
+      "evidence": "build/oblivion-compat/m15/S2/closure-zoom-oracle-01/",
+      "pure_rule_status": "reviewed"
     },
     {
       "id": "M15-MASTERY-MARKSMAN-03",
@@ -1586,7 +1593,7 @@
         "airborne",
         "normal attack only"
       ],
-      "consequence": "normal attack allowed; power attack remains restricted",
+      "consequence": "normal airborne melee allowed at Apprentice; held airborne power attack allowed at Journeyman; swimming excludes held power attack",
       "probability_and_draw": null,
       "duration_seconds": null,
       "save_fields_required": [
@@ -1595,7 +1602,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2/S4 narrow attack posture prerequisite",
-      "rule_implementation": null,
+      "rule_implementation": "airborneMeleeStartAllowed; heldPowerAttackAllowed; nativeAttackAirborne; original entry guards verified; action/restart pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1605,10 +1612,10 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input consequence and restart acceptance remain in the owning integration stage"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/mastery/acrobatics-01/"
+      "evidence": "build/oblivion-compat/m15/S4/native-airborne-predicate-oracle-01/",
+      "pure_rule_status": "reviewed"
     },
     {
       "id": "M15-MASTERY-ACROBATICS-02",
@@ -1621,7 +1628,12 @@
       "ability": "blocking dodge",
       "normal_input": "block and jump with movement direction",
       "prerequisites": [
-        "eligible grounded dodge start"
+        "earlier normal jump admission",
+        "block held",
+        "interface permits dodge",
+        "base Acrobatics at least Journeyman",
+        "animation not busy; process and animation data present",
+        "resolved animation group11..14"
       ],
       "consequence": "directional dodge animation/movement and attack avoidance",
       "probability_and_draw": null,
@@ -1632,7 +1644,7 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2/S4/M14 movement integration prerequisite",
-      "rule_implementation": null,
+      "rule_implementation": "requestedDodgeGroup; blockingDodgeAllowed; native group selection and admission verified; playback/movement/persistence pending",
       "verification_status": "pending",
       "required_cases": [
         "base skill threshold -1 / at / +1",
@@ -1642,10 +1654,10 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "native normal-input consequence and restart acceptance remain in the owning integration stage"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/mastery/acrobatics-02/"
+      "evidence": "build/oblivion-compat/m15/S2/closure-dodge-oracle-01/",
+      "pure_rule_status": "reviewed"
     },
     {
       "id": "M15-MASTERY-HANDTOHAND-06",
@@ -1693,5 +1705,6 @@
       "evidence": "build/oblivion-compat/m15/S2/mastery/handtohand-06/",
       "source_code": "005F3C30\u2013005F3CBA; explicit unarmed branch selects Hand to Hand Expert"
     }
-  ]
+  ],
+  "s2_rule_review_index": "M15-S2-RULE-MATRIX.json"
 }

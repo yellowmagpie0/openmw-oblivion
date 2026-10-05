@@ -733,6 +733,23 @@ namespace ESM4
         nonnegative(settings.mHealthFraction);
     }
 
+    bool nativeHealthCallbackEligible(std::uint32_t rawLifeState, float currentHealth)
+    {
+        finite(currentHealth);
+        return rawLifeState != 1 && rawLifeState != 2 && rawLifeState != 6 && currentHealth < 1;
+    }
+
+    NativeDeathDecision nativeDeathDecision(const NativeDeathInput& input)
+    {
+        if (input.mRawLifeState == 1 || input.mRawLifeState == 2 || input.mRawLifeState == 6)
+            return NativeDeathDecision::Skip;
+        if (!input.mEssentialHandlingEnabled || !input.mBaseEssential)
+            return NativeDeathDecision::Die;
+        if (input.mRawLifeState == 3 || input.mRawLifeState == 5)
+            return NativeDeathDecision::RefreshEssentialHealth;
+        return NativeDeathDecision::EnterEssentialUnconscious;
+    }
+
     EssentialRecoveryHealth essentialRecoveryHealth(std::int32_t baseHealth, float currentHealth,
         const EssentialRecoverySettings& settings)
     {

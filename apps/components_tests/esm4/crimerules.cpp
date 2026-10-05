@@ -958,3 +958,100 @@ TEST(ESM4CrimeRules, BountyRejectsInvalidStateAndOverflowBeforeReturningAChange)
     EXPECT_THROW(ESM4::modifyCrimeBounty({limit, 0}, limit, true, false), std::overflow_error);
     EXPECT_THROW(ESM4::modifyCrimeBounty({0, -limit}, -limit, true, true), std::overflow_error);
 }
+
+TEST(ESM4CrimeRules, FineConfiscationUsesRawReferenceOwnershipAndPreservesQuestItems)
+{
+    const auto playerRef = ESM::FormKey::content("Oblivion.esm", 0x14);
+    const auto playerBase = ESM::FormKey::content("Oblivion.esm", 7);
+    const auto other = ESM::FormKey::content("Fixture.esm", 7);
+    ESM4::FineConfiscationInput input{1, false, true, other, playerRef, {}};
+    EXPECT_TRUE(ESM4::fineConfiscatesInstance(input));
+    input.mOwner = {};
+    EXPECT_FALSE(ESM4::fineConfiscatesInstance(input));
+    input.mOwner = playerRef;
+    EXPECT_FALSE(ESM4::fineConfiscatesInstance(input));
+    input.mOwner = playerBase;
+    EXPECT_TRUE(ESM4::fineConfiscatesInstance(input));
+    input.mRequiredOwner = other;
+    EXPECT_FALSE(ESM4::fineConfiscatesInstance(input));
+    input.mRequiredOwner = playerBase;
+    EXPECT_TRUE(ESM4::fineConfiscatesInstance(input));
+    input.mQuestItem = true;
+    EXPECT_FALSE(ESM4::fineConfiscatesInstance(input));
+    input.mQuestItem = false;
+    input.mHasExtraData = false;
+    EXPECT_FALSE(ESM4::fineConfiscatesInstance(input));
+    input.mHasExtraData = true;
+    for (int count : {-1, 0, 1, 2, std::numeric_limits<int>::max()})
+    {
+        input.mEntryCount = count;
+        EXPECT_EQ(ESM4::fineConfiscatesInstance(input), count > 0);
+    }
+}
+
+TEST(ESM4CrimeRules, ServedReleaseReturnsUnownedAndDestinationBaseOwnedInstances)
+{
+    const auto playerRef = ESM::FormKey::content("Oblivion.esm", 0x14);
+    const auto playerBase = ESM::FormKey::content("Oblivion.esm", 7);
+    ESM4::ServedPropertyInput input{1, true, {}, playerBase};
+    EXPECT_TRUE(ESM4::servedReleaseReturnsInstance(input));
+    input.mOwner = playerBase;
+    EXPECT_TRUE(ESM4::servedReleaseReturnsInstance(input));
+    input.mOwner = playerRef;
+    EXPECT_FALSE(ESM4::servedReleaseReturnsInstance(input));
+    input.mOwner = ESM::FormKey::content("Fixture.esm", 7);
+    EXPECT_FALSE(ESM4::servedReleaseReturnsInstance(input));
+    input.mHasExtraData = false;
+    EXPECT_TRUE(ESM4::servedReleaseReturnsInstance(input));
+    for (int count : {-1, 0, 1, 2, std::numeric_limits<int>::max()})
+    {
+        input.mEntryCount = count;
+        EXPECT_EQ(ESM4::servedReleaseReturnsInstance(input), count > 0);
+    }
+}
+
+TEST(ESM4CrimeRules, ServedMixedStackRemainderPreservesNativeRequestArithmetic)
+{
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(10, 0, 0), std::nullopt);
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(10, 1, 2), 7);
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(3, 1, 2), 0);
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(2, 1, 2), -1);
+    const auto limit = std::numeric_limits<std::int32_t>::max();
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(limit, limit, 1), std::nullopt);
+    EXPECT_EQ(ESM4::servedReleaseRemainderRequest(std::numeric_limits<std::int32_t>::min(), 1, 0), limit);
+    EXPECT_THROW(ESM4::servedReleaseRemainderRequest(10, -1, 0), std::invalid_argument);
+    EXPECT_THROW(ESM4::servedReleaseRemainderRequest(10, 0, -1), std::invalid_argument);
+}
+
+TEST(ESM4CrimeRules, JailDoorDistinguishesLocalEscapeTeleportAndAlternateRealm)
+{
+    const auto settings = ESM4::buildCrimeFineSettings({});
+    for (bool player : {false, true})
+        for (int days : {-1, 0, 1, 2})
+            for (bool teleport : {false, true})
+                for (bool realm : {false, true})
+                {
+                    const auto result = ESM4::jailDoorDecision({player, days, teleport, realm}, settings);
+                    const bool jailed = player && days > 0;
+                    EXPECT_EQ(result.mClearSentence, jailed && teleport);
+                    EXPECT_EQ(result.mClearJailedFlag, jailed && teleport);
+                    if (jailed && teleport)
+                    {
+                        ASSERT_TRUE(result.mSetEscaped.has_value());
+                        EXPECT_FALSE(*result.mSetEscaped);
+                        EXPECT_FALSE(result.mBountyIncrement);
+                    }
+                    else if (jailed && !realm)
+                    {
+                        ASSERT_TRUE(result.mSetEscaped.has_value());
+                        EXPECT_TRUE(*result.mSetEscaped);
+                        ASSERT_TRUE(result.mBountyIncrement.has_value());
+                        EXPECT_EQ(*result.mBountyIncrement, settings.mJailBreak);
+                    }
+                    else
+                    {
+                        EXPECT_FALSE(result.mSetEscaped);
+                        EXPECT_FALSE(result.mBountyIncrement);
+                    }
+                }
+}

@@ -226,6 +226,19 @@ namespace ESM4
         float mDelay;
         float mHealthFraction;
     };
+    enum class NativeDeathDecision : std::uint8_t { Skip, Die, EnterEssentialUnconscious, RefreshEssentialHealth };
+    struct NativeDeathInput
+    {
+        std::uint32_t mRawLifeState;
+        bool mEssentialHandlingEnabled;
+        bool mBaseEssential;
+    };
+    // Negative-Health callback gate; explicit Kill bypasses the Health check.
+    bool nativeHealthCallbackEligible(std::uint32_t rawLifeState, float currentHealth);
+    // Already admitted original6005F0 transition. Base flags are resolved for
+    // NPCs, creatures and Player; this returns no world-side effects.
+    NativeDeathDecision nativeDeathDecision(const NativeDeathInput& input);
+
     struct EssentialRecoveryHealth
     {
         float mTarget;

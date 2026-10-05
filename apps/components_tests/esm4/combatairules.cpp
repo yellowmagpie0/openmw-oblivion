@@ -1,9 +1,12 @@
 #include <components/esm4/combatairules.hpp>
 #include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include <gtest/gtest.h>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <random>
+#include <array>
 
 namespace
 {
@@ -85,4 +88,96 @@ TEST(ESM4CombatAIRules, InvalidInputsAndOverflowAreDiagnosed)
     settings = installed;
     settings.mAggressionBase = 2147483648.f;
     EXPECT_THROW(ESM4::fightScore(input, settings), std::overflow_error);
+}
+
+TEST(ESM4CombatAIRules, YieldAcceptanceUsesReceiverTypeAndNativeExclusions)
+{
+    ESM4::YieldAcceptanceInput input{true, false, false, true, false, false, 0, false};
+    EXPECT_TRUE(ESM4::acceptsYield(input));
+    input.mFightScore = -1;
+    EXPECT_TRUE(ESM4::acceptsYield(input));
+    input.mFightScore = 1;
+    EXPECT_FALSE(ESM4::acceptsYield(input));
+    input.mFightScore = 0;
+    input.mHasHostileEffectFromTarget = true;
+    EXPECT_FALSE(ESM4::acceptsYield(input));
+    input.mHasHostileEffectFromTarget = false;
+    input.mRejectYields = true;
+    EXPECT_FALSE(ESM4::acceptsYield(input));
+    input.mRejectYields = false;
+    input.mTargetEscapedJail = true;
+    EXPECT_FALSE(ESM4::acceptsYield(input));
+    input.mTargetPlayer = false;
+    EXPECT_TRUE(ESM4::acceptsYield(input));
+    input.mReceiverNpc = false;
+    EXPECT_FALSE(ESM4::acceptsYield(input)); // Creature virtual always returns false.
+    input.mReceiverPlayer = true;
+    EXPECT_TRUE(ESM4::acceptsYield(input)); // Player ignores NPC acceptance policy.
+    input.mParalyzed = true;
+    EXPECT_FALSE(ESM4::acceptsYield(input));
+}
+
+TEST(ESM4CombatAIRules, YieldScoreAndDurationPreserveNativeArithmetic)
+{
+    auto settings = ESM4::buildYieldSettings({});
+    EXPECT_FLOAT_EQ(ESM4::yieldScore(10, 50, 75, settings), 35);
+    settings.mBase = -20; // Winning Oblivion.esm override.
+    EXPECT_FLOAT_EQ(ESM4::yieldScore(10, 50, 75, settings), 15);
+    EXPECT_FLOAT_EQ(ESM4::yieldScore(0, 75, 50, settings), -45);
+    const auto limit = std::numeric_limits<std::int32_t>::max();
+    EXPECT_FLOAT_EQ(ESM4::yieldScore(0, -1, limit, settings), -2147483648.f);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(0, settings), 1);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(9, settings), 3.7f);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(10, settings), 1);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(99, settings), 3.7f);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(100, settings), 1);
+    EXPECT_FLOAT_EQ(ESM4::yieldDuration(32767, settings), 3.1f);
+    EXPECT_THROW(ESM4::yieldDuration(32768, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::yieldScore(std::numeric_limits<float>::quiet_NaN(), 50, 50, settings), std::invalid_argument);
+    settings.mDurationMultiplier = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::yieldDuration(0, settings), std::invalid_argument);
+}
+
+TEST(ESM4CombatAIRules, YieldHitInterruptUsesSignedByteAndStrictThreshold)
+{
+    const auto settings = ESM4::buildYieldSettings({});
+    for (int state : {5, 6, 7})
+        for (int hits : {-128, -1, 0, 1, 2, 3, 127})
+            EXPECT_EQ(ESM4::yieldInterruptedByHits(state, static_cast<std::int8_t>(hits), settings),
+                state == 6 && hits > 2);
+}
+
+TEST(ESM4CombatAIRules, YieldDefaultsAndTypedOverrides)
+{
+    const auto defaults = ESM4::buildYieldSettings({});
+    EXPECT_EQ(defaults.mBase, 0);
+    EXPECT_EQ(defaults.mMultiplier, 1);
+    EXPECT_EQ(defaults.mDurationBase, 1);
+    EXPECT_EQ(defaults.mDurationMultiplier, 3);
+    EXPECT_EQ(defaults.mMaxHitCount, 2);
+    ESM4::GameSetting base{};
+    base.mEditorId = "fAIYieldBase";
+    base.mData = -20.f;
+    const ESM4::GameSetting* values[]{&base};
+    EXPECT_EQ(ESM4::buildYieldSettings(values).mBase, -20);
+    base.mData = std::int32_t{-20};
+    EXPECT_THROW(ESM4::buildYieldSettings(values), std::invalid_argument);
+}
+
+TEST(ESM4CombatAIRules, YieldDurationFixedSeedDistribution)
+{
+    const auto settings = ESM4::buildYieldSettings({});
+    std::mt19937 random(0x4d1552);
+    std::uniform_int_distribution<unsigned> draw(0, 32767);
+    std::array<unsigned, 10> counts{};
+    // Declared before sampling: 100000 uniform 15-bit draws. Residues 0..7
+    // have 3277/32768 probability, 8/9 have 3276/32768; tolerance 600 per bin.
+    for (unsigned i = 0; i < 100000; ++i)
+    {
+        const auto sample = draw(random);
+        EXPECT_EQ(ESM4::yieldDuration(sample, settings), ESM4::yieldDuration(sample % 10, settings));
+        ++counts[sample % 10];
+    }
+    for (std::size_t i = 0; i < counts.size(); ++i)
+        EXPECT_NEAR(counts[i], (i < 8 ? 3277. : 3276.) / 32768 * 100000, 600);
 }
