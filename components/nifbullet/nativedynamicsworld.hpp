@@ -5,6 +5,7 @@
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <span>
 #include <stdexcept>
 #include <vector>
@@ -16,12 +17,17 @@ namespace NifBullet
     // velocity behavior. Owners must unregister before their bodies disappear.
     class NativeDynamicsWorld : public btDiscreteDynamicsWorld
     {
+    public:
+        struct Lifetime { bool mAlive = true; };
+
+    private:
         struct Owner
         {
             const void* mIdentity;
             std::function<void(float)> mStep;
             std::vector<btCollisionObject*> mBodies;
         };
+        const std::shared_ptr<Lifetime> mLifetime = std::make_shared<Lifetime>();
         std::vector<Owner> mNativeOwners;
         const void* mNativeSceneOwner = nullptr;
 
@@ -53,6 +59,11 @@ namespace NifBullet
 
     public:
         using btDiscreteDynamicsWorld::btDiscreteDynamicsWorld;
+
+        // Independent identity for detached graphs; retained handles cannot
+        // match a new World constructed at the same address.
+        std::weak_ptr<const Lifetime> lifetimeIdentity() const noexcept { return mLifetime; }
+        ~NativeDynamicsWorld() override { mLifetime->mAlive = false; }
 
         // Engine wrapper binding, analogous to original889BB0's World+2B0
         // backreference. This is ownership presence, not simulation enablement.

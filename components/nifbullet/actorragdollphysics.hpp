@@ -276,7 +276,9 @@ namespace NifBullet
     };
 
     // Owns collision shapes, rigid bodies and constraints. The borrowed world
-    // must outlive the instance; destruction removes every registered object.
+    // must outlive the instance for ordinary Bullet worlds. Native worlds use
+    // lifetime identities; retained graphs safely discard after World destruction.
+    // Destruction removes every registration while its World remains alive.
     // Poses and velocities use the caller's world units. Native shape/inertia
     // lengths are converted once with the supplied positive length scale.
     // Optional internal filtering consumes caller-resolved group/masks during
@@ -284,12 +286,23 @@ namespace NifBullet
     class ActorRagdollPhysics
     {
     public:
+        enum class Publication { Immediate, Deferred };
+
         ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
             float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask,
-            void* userPointer = nullptr, const RagdollInternalCollisionFilter* internalFilter = nullptr);
+            void* userPointer = nullptr, const RagdollInternalCollisionFilter* internalFilter = nullptr,
+            Publication publication = Publication::Immediate);
         ~ActorRagdollPhysics();
         ActorRagdollPhysics(const ActorRagdollPhysics&) = delete;
         ActorRagdollPhysics& operator=(const ActorRagdollPhysics&) = delete;
+
+        // Deferred construction requires NativeDynamicsWorld and creates no
+        // broadphase bodies, constraints or native motion registration.
+        // Explicit publication is once-only; foreign/replaced World identities
+        // reject. Any throwing admission removes every partial registration.
+        // Caller publishes its logical owner only after this succeeds.
+        bool publish(btDynamicsWorld& world);
+        bool isPublished() const noexcept;
 
         // Borrowed identities for engine collision routing; ownership stays here.
         std::span<btCollisionObject* const> collisionObjects() const;

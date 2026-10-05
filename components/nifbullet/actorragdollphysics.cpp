@@ -269,6 +269,35 @@ namespace NifBullet
         std::vector<btCollisionObject*> mCollisionObjects;
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
         std::size_t mRegisteredBodies = 0, mRegisteredConstraints = 0;
+        int mCollisionGroup = 0, mCollisionMask = 0;
+        bool mDisableLinkedCollisions = true;
+        bool mPublished = false, mNativeWorld = false;
+        std::weak_ptr<const NativeDynamicsWorld::Lifetime> mWorldLifetime;
+
+        bool worldAlive() const noexcept
+        {
+            if (!mNativeWorld) return true;
+            const auto lifetime = mWorldLifetime.lock();
+            return lifetime && lifetime->mAlive;
+        }
+        void removePublished() noexcept
+        {
+            if (!worldAlive())
+            {
+                mRegisteredBodies = mRegisteredConstraints = 0;
+                mPublished = false;
+                return;
+            }
+            if (mPublished)
+                if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&mWorld))
+                    native->unregisterNativeMotionOwner(mOwner);
+            while (mRegisteredConstraints)
+                mWorld.removeConstraint(mConstraints[--mRegisteredConstraints].get());
+            while (mRegisteredBodies)
+                mWorld.removeRigidBody(mBodies[--mRegisteredBodies].mBody.get());
+            mPublished = false;
+        }
+        const void* mOwner = nullptr;
 
         void setMotion(Body& owned, RagdollNativeMotion motion)
         {
@@ -298,13 +327,7 @@ namespace NifBullet
         }
 
         Impl(btDynamicsWorld& world, float scale) : mWorld(world), mLengthScale(scale) {}
-        ~Impl()
-        {
-            while (mRegisteredConstraints)
-                mWorld.removeConstraint(mConstraints[--mRegisteredConstraints].get());
-            while (mRegisteredBodies)
-                mWorld.removeRigidBody(mBodies[--mRegisteredBodies].mBody.get());
-        }
+        ~Impl() { removePublished(); }
     };
 
     osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position)
@@ -866,9 +889,20 @@ namespace NifBullet
 
     ActorRagdollPhysics::ActorRagdollPhysics(const ActorRagdollDefinition& definition, btDynamicsWorld& world,
         float lengthScale, std::span<const btTransform> bodyPoses, int collisionGroup, int collisionMask, void* userPointer,
-        const RagdollInternalCollisionFilter* internalFilter)
+        const RagdollInternalCollisionFilter* internalFilter, Publication publication)
         : mImpl(std::make_unique<Impl>(world, lengthScale))
     {
+        auto* native = dynamic_cast<NativeDynamicsWorld*>(&world);
+        require(publication == Publication::Immediate || publication == Publication::Deferred,
+            "invalid graph publication mode");
+        require(publication == Publication::Immediate || native,
+            "deferred graph publication requires native World lifetime ownership");
+        mImpl->mOwner = this;
+        mImpl->mCollisionGroup = collisionGroup;
+        mImpl->mCollisionMask = collisionMask;
+        mImpl->mDisableLinkedCollisions = internalFilter == nullptr;
+        mImpl->mNativeWorld = native != nullptr;
+        if (native) mImpl->mWorldLifetime = native->lifetimeIdentity();
         require(std::isfinite(lengthScale) && lengthScale > 0, "invalid length scale");
         require(!definition.mBodies.empty() && bodyPoses.size() == definition.mBodies.size(), "pose count");
         const bool hasControllers = std::any_of(definition.mBodies.begin(), definition.mBodies.end(),
@@ -1063,26 +1097,59 @@ namespace NifBullet
             mImpl->mBodies[index].mActivationGroup = group;
             mImpl->mActivationGroups[group].push_back(index);
         }
-        // Publish only after every body, constraint and filter was admitted.
-        for (auto& body : mImpl->mBodies)
-        {
-            world.addRigidBody(body.mBody.get(), collisionGroup, collisionMask);
-            ++mImpl->mRegisteredBodies;
-        }
-        for (auto& constraint : mImpl->mConstraints)
-        {
-            world.addConstraint(constraint.get(), internalFilter == nullptr);
-            ++mImpl->mRegisteredConstraints;
-        }
-        if (auto* nativeWorld = dynamic_cast<NativeDynamicsWorld*>(&world))
-            nativeWorld->registerNativeMotionOwner(this, mImpl->mCollisionObjects,
-                [this](float frame) { stepNativeKeyframedMotion(frame); });
+        // Every owned body, constraint and filter is prepared before any
+        // registration. Deferred callers may prepare resource state first.
+        if (publication == Publication::Immediate)
+            (void)publish(world);
     }
 
-    ActorRagdollPhysics::~ActorRagdollPhysics()
+    ActorRagdollPhysics::~ActorRagdollPhysics() = default;
+
+    bool ActorRagdollPhysics::isPublished() const noexcept
     {
-        if (auto* world = dynamic_cast<NativeDynamicsWorld*>(&mImpl->mWorld))
-            world->unregisterNativeMotionOwner(this);
+        return mImpl->mPublished && mImpl->worldAlive();
+    }
+
+    bool ActorRagdollPhysics::publish(btDynamicsWorld& world)
+    {
+        if (mImpl->mPublished || &world != &mImpl->mWorld || !mImpl->worldAlive())
+            return false;
+        if (mImpl->mNativeWorld)
+        {
+            const auto* native = dynamic_cast<NativeDynamicsWorld*>(&world);
+            if (!native || native->lifetimeIdentity().lock() != mImpl->mWorldLifetime.lock())
+                return false;
+        }
+        for (const auto& body : mImpl->mBodies)
+            if (body.mBody->getBroadphaseHandle())
+                return false;
+        try
+        {
+            for (auto& body : mImpl->mBodies)
+            {
+                // A virtual World may publish its proxy and then throw.
+                // Include the currently attempted body in rollback.
+                ++mImpl->mRegisteredBodies;
+                world.addRigidBody(body.mBody.get(), mImpl->mCollisionGroup, mImpl->mCollisionMask);
+            }
+            for (auto& constraint : mImpl->mConstraints)
+            {
+                ++mImpl->mRegisteredConstraints;
+                world.addConstraint(constraint.get(), mImpl->mDisableLinkedCollisions);
+            }
+            if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&world))
+                native->registerNativeMotionOwner(this, mImpl->mCollisionObjects,
+                    [this](float frame) { stepNativeKeyframedMotion(frame); });
+            mImpl->mPublished = true;
+        }
+        catch (...)
+        {
+            // Registration uses strong vector insertion; an unsuccessful
+            // native motion registration has not installed this owner.
+            mImpl->removePublished();
+            throw;
+        }
+        return true;
     }
 
     std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const
@@ -1235,7 +1302,7 @@ namespace NifBullet
             body.setCenterOfMassTransform(pose);
             body.clearForces();
             body.activate(true);
-            mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 
@@ -1483,7 +1550,7 @@ namespace NifBullet
             // keeps the old interpolation pose, so replace that explicitly.
             body.setCenterOfMassTransform(change.mPose);
             body.setInterpolationWorldTransform(change.mPose);
-            mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 
@@ -1662,7 +1729,7 @@ namespace NifBullet
             {
                 body.setCenterOfMassTransform(*change.mPose);
                 body.setInterpolationWorldTransform(*change.mPose);
-                mImpl->mWorld.updateSingleAabb(&body);
+                if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
             }
             if (change.mVelocities)
             {
@@ -2458,7 +2525,7 @@ namespace NifBullet
             // For kinematic bodies Bullet retains the previous transform here
             // and copies our capped velocities into interpolation state.
             body.setCenterOfMassTransform(change.mPose);
-            mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 

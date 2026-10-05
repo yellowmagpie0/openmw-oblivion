@@ -14,6 +14,8 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <cstddef>
+#include <new>
 #include <bit>
 
 namespace
@@ -4935,5 +4937,195 @@ namespace
         EXPECT_EQ(reused.mState.mClock.mElapsed, 7); EXPECT_EQ(reused.mState.mFrameDelta, 99);
         EXPECT_EQ(reused.mState.mTiming.mStopKey, .2f);
         EXPECT_EQ(reused.mState.mForceVector, (std::array<float, 4>{1, -2, .5f, 0}));
+    }
+}
+
+namespace
+{
+    using GraphPublication = NifBullet::ActorRagdollPhysics::Publication;
+    class ThrowingNativeBodyWorld : public NifBullet::NativeDynamicsWorld
+    {
+    public:
+        using NifBullet::NativeDynamicsWorld::NativeDynamicsWorld;
+        int mBodyAttempts = 0, mFailBody = 0;
+        bool mFailConstraint = false;
+        void addRigidBody(btRigidBody* body, int group, int mask) override
+        {
+            ++mBodyAttempts;
+            NifBullet::NativeDynamicsWorld::addRigidBody(body, group, mask);
+            if (mBodyAttempts == mFailBody)
+                throw std::runtime_error("fixture body admission failed after insertion");
+        }
+        void addConstraint(btTypedConstraint* constraint, bool linked) override
+        {
+            NifBullet::NativeDynamicsWorld::addConstraint(constraint, linked);
+            if (mFailConstraint)
+                throw std::runtime_error("fixture constraint admission failed after insertion");
+        }
+    };
+
+    TEST_F(ActorRagdollPhysicsTest, DeferredGraphKeepsBodiesAndRestoredStateOutOfLiveWorld)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        {
+            NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 4, 7,
+                nullptr, nullptr, GraphPublication::Deferred);
+            EXPECT_FALSE(graph.isPublished());
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_EQ(world.getNumConstraints(), 0);
+            auto* body = btRigidBody::upcast(graph.collisionObjects()[0]);
+            ASSERT_NE(body, nullptr);
+            EXPECT_EQ(body->getBroadphaseHandle(), nullptr);
+            auto state = graph.capture();
+            state[0].mPose.setOrigin(btVector3(4, 5, 6));
+            state[0].mLinearVelocity = btVector3(1, 2, 3);
+            graph.restore(state);
+            EXPECT_EQ(graph.capture()[0].mPose.getOrigin(), btVector3(4, 5, 6));
+            EXPECT_EQ(graph.capture()[0].mLinearVelocity, btVector3(1, 2, 3));
+            world.stepSimulation(.1, 0);
+            EXPECT_EQ(graph.capture()[0].mPose.getOrigin(), btVector3(4, 5, 6));
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        }
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_THROW(NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ActorRagdollPhysics(mGraph, world, 1, mPoses, 1, -1,
+            nullptr, nullptr, static_cast<GraphPublication>(99)), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, DeferredGraphPublishesSameBodiesOnceAndIntegratesOnlyAfterAdmission)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::NativeDynamicsWorld foreign(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        {
+            NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 4, 7,
+                nullptr, nullptr, GraphPublication::Deferred);
+            auto* body = btRigidBody::upcast(graph.collisionObjects()[0]);
+            ASSERT_NE(body, nullptr);
+            EXPECT_FALSE(graph.publish(foreign));
+            EXPECT_EQ(foreign.getNumCollisionObjects(), 0);
+            ASSERT_TRUE(graph.publish(world));
+            EXPECT_TRUE(graph.isPublished());
+            EXPECT_FALSE(graph.publish(world));
+            ASSERT_EQ(world.getNumCollisionObjects(), 1);
+            EXPECT_EQ(world.getCollisionObjectArray()[0], body);
+            ASSERT_NE(body->getBroadphaseHandle(), nullptr);
+            EXPECT_EQ(body->getBroadphaseHandle()->m_collisionFilterGroup, 4);
+            EXPECT_EQ(body->getBroadphaseHandle()->m_collisionFilterMask, 7);
+            EXPECT_DOUBLE_EQ(body->getInvMass(), .5);
+            EXPECT_DOUBLE_EQ(body->getFriction(), btScalar(mGraph.mBodies[0].mFriction));
+            EXPECT_DOUBLE_EQ(body->getRestitution(), btScalar(mGraph.mBodies[0].mRestitution));
+            graph.applyImpulse(0, btVector3(2, 0, 0), mPoses[0].getOrigin());
+            world.stepSimulation(.1, 0);
+            EXPECT_NEAR(graph.capture()[0].mPose.getOrigin().x(), .1, 1e-6);
+            EXPECT_EQ(world.getGravity(), btVector3(0, 0, 0));
+        }
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_EQ(world.getNumConstraints(), 0);
+        // A freed owner's motion callback must have been unregistered.
+        world.stepSimulation(.1, 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, GraphPublicationRollsBackPartialBodyAdmissionAndCanRetry)
+    {
+        addHinge();
+        for (const int failure : {1, 2})
+        {
+            ThrowingNativeBodyWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+            world.mFailBody = failure;
+            {
+                NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1,
+                    nullptr, nullptr, GraphPublication::Deferred);
+                const auto first = graph.collisionObjects()[0];
+                const auto second = graph.collisionObjects()[1];
+                EXPECT_THROW(graph.publish(world), std::runtime_error);
+                EXPECT_FALSE(graph.isPublished());
+                EXPECT_EQ(world.getNumCollisionObjects(), 0);
+                EXPECT_EQ(world.getNumConstraints(), 0);
+                EXPECT_EQ(first->getBroadphaseHandle(), nullptr);
+                EXPECT_EQ(second->getBroadphaseHandle(), nullptr);
+                world.stepSimulation(.01, 0);
+                world.mFailBody = 0;
+                ASSERT_TRUE(graph.publish(world));
+                ASSERT_EQ(world.getNumCollisionObjects(), 2);
+                EXPECT_EQ(graph.collisionObjects()[0], first);
+                EXPECT_EQ(graph.collisionObjects()[1], second);
+                EXPECT_EQ(world.getNumConstraints(), 1);
+            }
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_EQ(world.getNumConstraints(), 0);
+            world.mBodyAttempts = 0;
+            world.mFailBody = failure;
+            EXPECT_THROW(NifBullet::ActorRagdollPhysics(mGraph, world, 1, mPoses, 1, -1),
+                std::runtime_error);
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_EQ(world.getNumConstraints(), 0);
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, GraphPublicationRollsBackConstraintAddedBeforeFailure)
+    {
+        addHinge();
+        ThrowingNativeBodyWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.mFailConstraint = true;
+        {
+            NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1,
+                nullptr, nullptr, GraphPublication::Deferred);
+            EXPECT_THROW(graph.publish(world), std::runtime_error);
+            EXPECT_FALSE(graph.isPublished());
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_EQ(world.getNumConstraints(), 0);
+            for (const auto* body : graph.collisionObjects())
+                EXPECT_EQ(body->getBroadphaseHandle(), nullptr);
+            world.mFailConstraint = false;
+            EXPECT_TRUE(graph.publish(world));
+            EXPECT_EQ(world.getNumCollisionObjects(), 2);
+            EXPECT_EQ(world.getNumConstraints(), 1);
+        }
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_EQ(world.getNumConstraints(), 0);
+        world.stepSimulation(.01, 0);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, DeferredGraphRejectsReusedWorldAddressAndSurvivesWorldDestruction)
+    {
+        using NativeWorld = NifBullet::NativeDynamicsWorld;
+        alignas(NativeWorld) std::byte storage[sizeof(NativeWorld)];
+        auto* world = new (storage) NativeWorld(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        const auto retiredLifetime = world->lifetimeIdentity().lock();
+        ASSERT_TRUE(retiredLifetime);
+        auto old = std::make_unique<NifBullet::ActorRagdollPhysics>(mGraph, *world, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred);
+        world->~NativeWorld();
+        EXPECT_FALSE(retiredLifetime->mAlive); // Strong observers cannot prolong World validity.
+        world = new (storage) NativeWorld(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        EXPECT_FALSE(old->publish(*world));
+        EXPECT_FALSE(old->isPublished());
+        auto current = std::make_unique<NifBullet::ActorRagdollPhysics>(mGraph, *world, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred);
+        ASSERT_TRUE(current->publish(*world));
+        old.reset();
+        EXPECT_EQ(world->getNumCollisionObjects(), 1);
+        world->~NativeWorld();
+        EXPECT_FALSE(current->isPublished());
+        EXPECT_EQ(current->collisionObjects()[0]->getBroadphaseHandle(), nullptr);
+        current.reset(); // No access to the destroyed World.
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, DeferredGraphRejectsExternallyRegisteredBodyWithoutRemovingItsProxy)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred);
+        auto* body = btRigidBody::upcast(graph.collisionObjects()[0]);
+        world.addRigidBody(body);
+        EXPECT_FALSE(graph.publish(world));
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_FALSE(graph.isPublished());
+        world.removeRigidBody(body);
+        EXPECT_TRUE(graph.publish(world));
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
     }
 }

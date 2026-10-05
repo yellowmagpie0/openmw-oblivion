@@ -13206,3 +13206,55 @@ Tested fingerprint: d87bccd6c8d73fad2db86557402333a3c6b995ef5e21630c3b6253b3f964
 Native drop publication, full dropped-reference ownership, loose-body physics,
 pickup/restart, compound arrow publication and Character input remain open.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint279: deferred native body admission and rollback
+
+The owned body graph can now construct and restore its complete private bodies,
+shapes, full inertia, materials and constraints before registering anything in
+Bullet. Deferred construction requires a NativeDynamicsWorld lifetime identity.
+Publication preserves the prepared body addresses and collision masks and
+registers the native motion callback only after all bodies and constraints
+succeed. Existing immediate callers retain their default behavior.
+
+Partial admission is now rolled back even when a World inserts the current body
+or constraint and then throws. The attempted object is included in cleanup
+before entering the virtual admission call. Failure leaves no bodies,
+constraints or native callback and permits a retry with the same private graph.
+Successful publication is once-only. An externally registered body causes
+rejection without removing its caller-owned proxy.
+
+Native World markers retire explicitly during destruction. A retained strong
+observer of the marker cannot prolong World validity, and a replacement World
+at the same address cannot admit a stale graph. Native graphs may be discarded
+after World destruction without dereferencing that World. Ordinary Bullet
+Worlds retain the existing requirement to outlive their immediate graphs.
+Detached restore avoids updating live AABBs; detached World steps do not advance
+the private body. Graph destruction unregisters the native callback before
+removing bodies while its World remains alive.
+
+Six actual Bullet integration cases cover cancellation/restored detached state,
+real impulse integration only after admission, exact mass/material/masks,
+foreign and repeated publication, failures after body1/body2 and constraint
+insertion, retry, immediate-constructor rollback, replaced World addresses,
+strong marker observers, post-World discard and externally registered proxies.
+Each normal and ASan/UBSan build passes2479 full component tests and1007 full
+engine tests with exact inventories, no failures/skips and no compiler warnings.
+ASan leak checks remain disabled. Python/schema40 codecs and native arithmetic
+rules are unchanged.
+
+Evidence: S5/deferred-native-body-publication-normal-01 and
+S5/deferred-native-body-publication-sanitized-01.
+Tested fingerprint: 47f9316b0ad319ddeb84d1d9e6e0e253392050b5ccd0f7f9c83e3c6ca0831712
+
+Development input for the next drop integration is retained in
+S5/native-loose-bow-body-audit-01: the hash-pinned stock iron bow has one convex
+hull body with authored mass5; the arrow model has distinct arrow/quiver bodies.
+That inspection used the checkpoint278 component library and is production NIF
+metadata inspection, not independent raw-record verification or drop dynamics.
+
+This admission API does not yet create a dropped reference, route ordinary
+NPC bow breaks, own loose bodies in the scheduler, publish their rendered pose,
+or restore/pick up dynamic items. Compound projectile/drop publication,
+Character input and full flight/impact/recovery and normal-input/restart gates
+remain open. S5 and full M15 remain in progress.
