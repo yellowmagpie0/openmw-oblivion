@@ -8,6 +8,8 @@
 
 #include <gtest/gtest.h>
 #include <osg/Group>
+#include <osg/MatrixTransform>
+#include <limits>
 
 namespace
 {
@@ -74,5 +76,125 @@ namespace
         EXPECT_EQ(selected->getName(), "Arrow:0");
         EXPECT_EQ(spare->getNodeMask(), 0u);
         EXPECT_EQ(spare->getNumParents(), 1u);
+    }
+}
+
+namespace
+{
+    TEST(OblivionAttachedWeaponPoseTest, EmptyAndMovedFromCapturesHaveNoBorrowedSceneNodes)
+    {
+        MWRender::OblivionAttachedWeaponPose empty;
+        EXPECT_EQ(empty.getPlacementNode(), nullptr);
+        EXPECT_EQ(empty.getAttachedNode(), nullptr);
+        EXPECT_FALSE(empty.matchesCurrentScene());
+        osg::ref_ptr<osg::Group> node = new osg::Group;
+        auto captured = MWRender::OblivionAttachedWeaponPose::capture(*node, *node);
+        ASSERT_TRUE(captured);
+        auto moved = std::move(*captured);
+        EXPECT_TRUE(moved.matchesCurrentScene());
+        EXPECT_EQ(captured->getPlacementNode(), nullptr);
+        EXPECT_EQ(captured->getAttachedNode(), nullptr);
+        EXPECT_FALSE(captured->matchesCurrentScene());
+    }
+
+    TEST(OblivionAttachedWeaponPoseTest, CapturesActualAttachmentIncludingAuthoredTransformAndActorPlacement)
+    {
+        osg::ref_ptr<osg::MatrixTransform> actor = new osg::MatrixTransform;
+        actor->setMatrix(osg::Matrix::rotate(.5, osg::Vec3(0, 0, 1)) * osg::Matrix::translate(100, 20, 30));
+        osg::ref_ptr<osg::MatrixTransform> hand = new osg::MatrixTransform;
+        hand->setMatrix(osg::Matrix::rotate(.25, osg::Vec3(1, 0, 0)) * osg::Matrix::translate(3, -4, 5));
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        model->setName("Bow");
+        model->setMatrix(osg::Matrix::translate(1, 2, 3));
+        actor->addChild(hand);
+        hand->addChild(model);
+        const auto pose = MWRender::OblivionAttachedWeaponPose::capture(*actor, *model);
+        ASSERT_TRUE(pose);
+        EXPECT_EQ(pose->getPlacementNode(), actor.get());
+        EXPECT_EQ(pose->getAttachedNode(), model.get());
+        const auto expected = model->getMatrix() * hand->getMatrix() * actor->getMatrix();
+        // Independent multiplication association can differ by one double ULP.
+        for (unsigned row = 0; row != 4; ++row)
+            for (unsigned column = 0; column != 4; ++column)
+                EXPECT_NEAR(pose->getWorldMatrix()(row, column), expected(row, column), 1e-12);
+        EXPECT_TRUE(pose->matchesCurrentScene());
+        EXPECT_EQ(hand->getNumChildren(), 1u);
+        EXPECT_EQ(model->getNumParents(), 1u);
+    }
+
+    TEST(OblivionAttachedWeaponPoseTest, DetectsChangesAtEveryLevelWithoutChangingTheSnapshot)
+    {
+        osg::ref_ptr<osg::MatrixTransform> actor = new osg::MatrixTransform;
+        osg::ref_ptr<osg::MatrixTransform> hand = new osg::MatrixTransform;
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        actor->addChild(hand); hand->addChild(model);
+        const auto pose = MWRender::OblivionAttachedWeaponPose::capture(*actor, *model);
+        ASSERT_TRUE(pose);
+        const auto matrix = pose->getWorldMatrix();
+        for (auto* node : { actor.get(), hand.get(), model.get() })
+        {
+            node->setMatrix(osg::Matrix::translate(1, 2, 3));
+            EXPECT_FALSE(pose->matchesCurrentScene());
+            EXPECT_EQ(pose->getWorldMatrix(), matrix);
+            node->setMatrix(osg::Matrix::identity());
+            EXPECT_TRUE(pose->matchesCurrentScene());
+            node->setNodeMask(0);
+            EXPECT_FALSE(pose->matchesCurrentScene());
+            node->setNodeMask(~0u);
+            EXPECT_TRUE(pose->matchesCurrentScene());
+            node->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+            EXPECT_FALSE(pose->matchesCurrentScene());
+            node->setReferenceFrame(osg::Transform::RELATIVE_RF);
+        }
+    }
+
+    TEST(OblivionAttachedWeaponPoseTest, RejectsDetachedReparentedAndAmbiguousAttachments)
+    {
+        osg::ref_ptr<osg::Group> actor = new osg::Group;
+        osg::ref_ptr<osg::Group> hand = new osg::Group;
+        osg::ref_ptr<osg::Group> other = new osg::Group;
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        actor->addChild(hand); actor->addChild(other); hand->addChild(model);
+        const auto pose = MWRender::OblivionAttachedWeaponPose::capture(*actor, *model);
+        ASSERT_TRUE(pose);
+        other->addChild(model);
+        EXPECT_FALSE(pose->matchesCurrentScene());
+        EXPECT_FALSE(MWRender::OblivionAttachedWeaponPose::capture(*actor, *model));
+        hand->removeChild(model);
+        EXPECT_FALSE(pose->matchesCurrentScene());
+        ASSERT_TRUE(MWRender::OblivionAttachedWeaponPose::capture(*actor, *model));
+        other->removeChild(model);
+        EXPECT_FALSE(pose->matchesCurrentScene());
+        EXPECT_FALSE(MWRender::OblivionAttachedWeaponPose::capture(*actor, *model));
+        EXPECT_FALSE(MWRender::OblivionAttachedWeaponPose::capture(*other, *hand));
+    }
+
+    TEST(OblivionAttachedWeaponPoseTest, OwnsPathAfterExternalHandlesAreReleasedAndRejectsNonfiniteTransforms)
+    {
+        osg::ref_ptr<osg::MatrixTransform> actor = new osg::MatrixTransform;
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        actor->addChild(model);
+        auto pose = MWRender::OblivionAttachedWeaponPose::capture(*actor, *model);
+        ASSERT_TRUE(pose);
+        actor = nullptr;
+        EXPECT_TRUE(pose->matchesCurrentScene());
+        auto invalid = osg::Matrix::identity();
+        invalid(0, 0) = std::numeric_limits<double>::infinity();
+        model->setMatrix(invalid);
+        EXPECT_FALSE(pose->matchesCurrentScene());
+        EXPECT_FALSE(MWRender::OblivionAttachedWeaponPose::capture(
+            *const_cast<osg::Node*>(pose->getPlacementNode()), *model));
+        model = nullptr;
+        EXPECT_FALSE(pose->matchesCurrentScene());
+    }
+
+    TEST(OblivionAttachedWeaponPoseTest, RejectsCyclesRatherThanWalkingAnUnboundedParentChain)
+    {
+        osg::ref_ptr<osg::Group> actor = new osg::Group;
+        osg::ref_ptr<osg::Group> first = new osg::Group;
+        osg::ref_ptr<osg::Group> second = new osg::Group;
+        first->addChild(second); second->addChild(first);
+        EXPECT_FALSE(MWRender::OblivionAttachedWeaponPose::capture(*actor, *first));
+        second->removeChild(first); first->removeChild(second);
     }
 }

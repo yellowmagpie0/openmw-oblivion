@@ -13861,3 +13861,68 @@ It does not install a World frame synchronization loop or new drop caller.
 The stock drop factory, compound bow/arrow release, exact pickup, loose-body
 save/recreation and normal-input/fresh-process acceptance remain open.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint291: capture the actual carried weapon's scene placement
+
+ESM4NpcAnimation now retains the exact rendered right-slot item, normalized
+model path and attachment generation. Its read-only capture requires that
+same live equipped instance and one count, and owns the complete actor-PAT
+to attached-model path while drop preparation proceeds. Validation rejects
+equipment refresh, sheathing, changed slot/count/model, a replaced actor PAT,
+movement, detachment, ambiguous parents, hidden nodes, absolute reference
+frames and nonfinite matrices. Empty or moved-from captures return no borrowed
+scene nodes. This is an assembled model matrix, not a native reference Euler
+rotation or an inventory lifetime token. The eventual drop factory must also
+validate its World and prepared inventory authority before borrowing items.
+
+Seven new cases include six renderer tests and a real native NPC animation
+case with test-owned OSGT skeleton and weapon. They cover each transform level,
+authored placement, topology, retained-node lifetime, cycles, rejection without
+mutation and moved-from state. The NPC case reads the real equipped bow and
+checks movement, refresh, sheath/destruction, invalid items/counts, preserved
+broken condition and fractional CellRef charge. It uses no GL draw and no
+stock asset. Mathematical matrix comparisons allow 1e-12 per element;
+revalidation still detects exact changes to the stored matrix.
+
+Both normal and ASan/UBSan full engine suites pass 1082 cases, with exact
+inventories, no failures/skips and leak checks disabled.
+Evidence: S5/native-carried-weapon-pose-normal-05 and
+S5/native-carried-weapon-pose-sanitized-05.
+Engine-tested fingerprint: 74723277f36bcd0775f475b84cc20c0e85045eb01cd8e4a67547774ba2693c12
+
+Retained initial failures: attempt01 executed1081 cases and failed two fixture
+assertions (one double ULP from multiplication association, and prohibited
+replacement of an existing shared weapon record); attempt02 failed compilation
+on the shared bow enum name; attempts03/04 each executed1081 cases and failed
+the NPC fixture because its empty attachment bone was optimized away. The
+corrected fixture uses a dynamic osgAnimation bone and authored model transform.
+A narrowed diagnostic01 lacked a header, diagnostic02 verified attachment but
+incorrectly expected an inapplicable enchantment charge in native inventory
+capture, and diagnostic03 passes with the actual CellRef charge assertion.
+Those diagnostics use completed normal libraries; they are not full engine
+or sanitizer acceptance. Initial syntax mistakes in ConstPtr/count access and
+numeric fields were corrected before suite execution. No component, Python or
+schema implementation changed, so those suites were not rerun.
+
+Independent original-executable placement probe02 passes5184 cases under
+both x87 control modes for NPC and Creature callers, 216 generated matrices
+and three finite positions including minus zero, a subnormal and FLT_MAX.
+The hash-pinned original suffix5F3A59..5F3AF7 calls actual711440 and its native
+asin/atan callees. A nonzero caller selector queries process+120; zero queries
+process+118. Raw XYZ bits are copied from the returned held node+88. Actor+168,
+process node getters and actor+2C8 drop request are declared boundary stubs.
+The actual original static initializers A09B90/A09BB0/A09BD0 initialize math
+constants first. The raw PE has zero in the half-pi global; attempt01 rejected
+that uninitialized state before executing any cases. Both attempts are retained.
+Evidence: S5/native-broken-drop-placement-oracle-02.
+Executable SHA256: a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Probe source SHA256: 18afd344a5fe2e2dfe27f3df0211252df2c66f89a92aabc7c64da3e3c22d344c
+The observed rotations include the original approximate atan behavior;
+outputs are recorded, not compared with production Euler converters. This
+does not prove reference/inventory publication or original-game observations.
+
+The capture provides the real renderer source needed by stock drop preparation.
+Native Euler conversion, model/body source-hash binding, the stock drop factory,
+full compound bow/arrow release, exact pickup, loose-body frame/save/recreation
+and normal-input/fresh-process acceptance remain open. S5 and M15 remain in progress.

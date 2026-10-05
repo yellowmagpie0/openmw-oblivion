@@ -1,5 +1,10 @@
 #include "util.hpp"
 
+#include <algorithm>
+#include <cmath>
+
+#include <osg/Group>
+#include <osg/Transform>
 #include <osg/Node>
 #include <osg/Drawable>
 #include <osg/ValueObject>
@@ -15,6 +20,71 @@
 
 namespace MWRender
 {
+    namespace
+    {
+        bool readAttachedWeaponMatrix(
+            const std::vector<osg::ref_ptr<osg::Node>>& path, osg::Matrix& matrix)
+        {
+            if (path.empty())
+                return false;
+            matrix.makeIdentity();
+            for (std::size_t index = 0; index < path.size(); ++index)
+            {
+                const osg::Node& node = *path[index];
+                if (node.getNodeMask() == 0
+                    || (index != 0 && (node.getNumParents() != 1 || node.getParent(0) != path[index - 1])))
+                    return false;
+                if (const auto* transform = dynamic_cast<const osg::Transform*>(&node))
+                {
+                    if (transform->getReferenceFrame() != osg::Transform::RELATIVE_RF
+                        || !transform->computeLocalToWorldMatrix(matrix, nullptr))
+                        return false;
+                }
+            }
+            for (unsigned int row = 0; row != 4; ++row)
+                for (unsigned int column = 0; column != 4; ++column)
+                    if (!std::isfinite(matrix(row, column)))
+                        return false;
+            return true;
+        }
+    }
+
+    std::optional<OblivionAttachedWeaponPose> OblivionAttachedWeaponPose::capture(
+        osg::Node& placement, osg::Node& attached)
+    {
+        OblivionAttachedWeaponPose result;
+        osg::Node* node = &attached;
+        while (true)
+        {
+            if (std::any_of(result.mPath.begin(), result.mPath.end(),
+                    [node](const auto& previous) { return previous.get() == node; }))
+                return std::nullopt;
+            result.mPath.emplace_back(node);
+            if (node == &placement)
+                break;
+            if (node->getNumParents() != 1)
+                return std::nullopt;
+            node = node->getParent(0);
+        }
+        std::reverse(result.mPath.begin(), result.mPath.end());
+        if (!readAttachedWeaponMatrix(result.mPath, result.mWorldMatrix))
+            return std::nullopt;
+        return result;
+    }
+
+    bool OblivionAttachedWeaponPose::matchesCurrentScene() const noexcept
+    {
+        try
+        {
+            osg::Matrix current;
+            return readAttachedWeaponMatrix(mPath, current) && current == mWorldMatrix;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
     osg::ref_ptr<osg::Node> cloneOblivionArrowGeometry(
         const osg::Node& ammunition, Resource::SceneManager& sceneManager)
     {

@@ -28,6 +28,7 @@
 #include <components/resource/imagemanager.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/attach.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/riggeometry.hpp>
 #include <components/sceneutil/skeleton.hpp>
 #include <components/vfs/manager.hpp>
@@ -116,6 +117,9 @@ namespace MWRender
     void ESM4NpcAnimation::updateWeapon()
     {
         detachOblivionArrow();
+        mWeaponBindingIdentity.reset();
+        mCarriedWeapon = MWWorld::ConstPtr();
+        mCarriedWeaponModel = VFS::Path::Normalized();
         mWeaponParts.clear();
         mNodeMap.clear();
         mNodeMapCreated = false;
@@ -150,9 +154,60 @@ namespace MWRender
         if (osg::ref_ptr<osg::Node> attached = insertPart(model, "Weapon", {}, false, &mWeaponParts))
         {
             hideOblivionWeaponScabbard(*attached);
+            mCarriedWeapon = *weapon;
+            mCarriedWeaponModel = path;
+            mWeaponBindingIdentity = std::make_shared<const char>(0);
             Log(Debug::Info) << "M15 carried weapon attached: ref=" << mPtr.getCellRef().getRefId()
                              << " item=" << weapon->getCellRef().getRefId() << " model=" << model
                              << " bone=Weapon";
+        }
+    }
+
+    std::optional<ESM4NpcAnimation::CarriedWeaponPose> ESM4NpcAnimation::captureCarriedWeaponPose(
+        const MWWorld::ConstPtr& item) const
+    {
+        if (!mShowWeapon || !mWeaponBindingIdentity || item.isEmpty() || item != mCarriedWeapon
+            || mWeaponParts.size() != 1)
+            return std::nullopt;
+        const MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
+        const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if (equipped == inventory.end() || *equipped != item || item.getCellRef().getCount() != 1)
+            return std::nullopt;
+        auto* placement = mPtr.getRefData().getBaseNode();
+        if (!placement)
+            return std::nullopt;
+        auto scene = OblivionAttachedWeaponPose::capture(*placement, *mWeaponParts.front()->getNode());
+        if (!scene)
+            return std::nullopt;
+        CarriedWeaponPose result{ item, mCarriedWeaponModel, std::move(*scene), mWeaponBindingIdentity };
+        if (!isCurrentCarriedWeaponPose(result))
+            return std::nullopt;
+        return result;
+    }
+
+    bool ESM4NpcAnimation::isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept
+    {
+        try
+        {
+            const auto identity = pose.mBindingIdentity.lock();
+            if (!identity || identity != mWeaponBindingIdentity || !mShowWeapon
+                || pose.mItem.isEmpty() || pose.mItem != mCarriedWeapon
+                || pose.mModel != mCarriedWeaponModel
+                || mWeaponParts.size() != 1
+                || pose.mScene.getAttachedNode() != mWeaponParts.front()->getNode().get()
+                || pose.mScene.getPlacementNode() != mPtr.getRefData().getBaseNode())
+                return false;
+            const MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            return equipped != inventory.end() && *equipped == pose.mItem
+                && pose.mItem.getCellRef().getCount() == 1
+                && Misc::ResourceHelpers::correctMeshPath(
+                       VFS::Path::Normalized(pose.mItem.getClass().getModel(pose.mItem).value())) == pose.mModel
+                && pose.mScene.matchesCurrentScene();
+        }
+        catch (...)
+        {
+            return false;
         }
     }
 

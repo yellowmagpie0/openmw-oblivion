@@ -3,6 +3,7 @@
 
 #include "animation.hpp"
 #include "tes4facegen.hpp"
+#include "util.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -22,6 +23,16 @@ namespace MWRender
     public:
         ESM4NpcAnimation(
             const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem);
+
+        struct CarriedWeaponPose
+        {
+            MWWorld::ConstPtr mItem;
+            VFS::Path::Normalized mModel;
+            OblivionAttachedWeaponPose mScene;
+            std::weak_ptr<const char> mBindingIdentity;
+        };
+        std::optional<CarriedWeaponPose> captureCarriedWeaponPose(const MWWorld::ConstPtr& item) const;
+        bool isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept;
 
         osg::Vec3f runAnimation(float timepassed) override;
         void refreshEquipment();
@@ -48,6 +59,9 @@ namespace MWRender
         // Carried objects have their own lifetime: sheathing must not detach
         // the actor's body or invalidate the face morph geometry.
         std::vector<PartHolderPtr> mWeaponParts;
+        MWWorld::ConstPtr mCarriedWeapon;
+        VFS::Path::Normalized mCarriedWeaponModel;
+        std::shared_ptr<const char> mWeaponBindingIdentity;
         bool mShowWeapon = false;
         std::vector<Tes4FaceMorph> mFaceMorphs;
         float mFaceAnimationTime = 0.f;

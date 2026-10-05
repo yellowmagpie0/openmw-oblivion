@@ -2,6 +2,10 @@
 #define OPENMW_MWRENDER_UTIL_H
 
 #include <cstddef>
+#include <optional>
+#include <vector>
+
+#include <osg/Matrix>
 
 #include <components/vfs/pathutil.hpp>
 
@@ -21,6 +25,23 @@ namespace Resource
 
 namespace MWRender
 {
+    // Own the exact attachment path while a native drop is prepared. A later
+    // scene move, detach, duplicate parent, or hidden attachment invalidates it.
+    // This is an assembled model matrix, not an ESM reference rotation.
+    class OblivionAttachedWeaponPose
+    {
+    public:
+        static std::optional<OblivionAttachedWeaponPose> capture(osg::Node& placement, osg::Node& attached);
+        const osg::Matrix& getWorldMatrix() const { return mWorldMatrix; }
+        const osg::Node* getPlacementNode() const { return mPath.empty() ? nullptr : mPath.front().get(); }
+        const osg::Node* getAttachedNode() const { return mPath.empty() ? nullptr : mPath.back().get(); }
+        bool matchesCurrentScene() const noexcept;
+
+    private:
+        std::vector<osg::ref_ptr<osg::Node>> mPath;
+        osg::Matrix mWorldMatrix;
+    };
+
     // TES4 weapon meshes contain their sheath alongside the blade. Hide only
     // that geometry on the drawn instance, leaving the cached model intact.
     void hideOblivionWeaponScabbard(osg::Node& node);

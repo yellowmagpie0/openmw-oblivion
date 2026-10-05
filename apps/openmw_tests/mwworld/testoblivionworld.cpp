@@ -65,6 +65,8 @@
 
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/esm4npc.hpp"
+#include "apps/openmw/mwrender/esm4npcanimation.hpp"
+#include <osgAnimation/Bone>
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/esm4interactive.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
@@ -10379,4 +10381,103 @@ TEST(OblivionWorldTest, NativeCellClaimDistinguishesNonOwnerRecordsFromMissingAn
     EXPECT_TRUE(fixture.claim(false));
     ASSERT_TRUE(store.getWritable<ESM4::Faction>().eraseStatic(ESM::RefId(ESM::FormId{0x850, 0})));
     EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejectsStaleBindings)
+{
+    NativeWorldFixture fixture;
+    const auto actor = addNativeNpc(fixture, 0x900);
+    auto& store = fixture.mWorld.getStore();
+    auto npc = *actor.get<ESM4::Npc>()->mBase;
+    npc.mModel = "m15-carried-skeleton.osgt";
+    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+    MWClass::Weapon::registerSelf();
+    const auto key = ESM::FormKey::content("headless.esm", 0x940);
+    ESM4::Weapon native{}; native.mId = {0x940, 0};
+    native.mData.health = 100; native.mData.type = 5;
+    native.mModel = "m15-carried-bow.osgt";
+    store.getWritable<ESM4::Weapon>().insertStatic(native, key);
+    ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(native.mId);
+    shared.mData.mType = ESM::Weapon::MarksmanBow; shared.mData.mHealth = 100;
+    shared.mModel = "m15-carried-bow.osgt";
+    store.insertStatic(shared);
+
+    osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+    skeleton->setName("Owned skeleton");
+    osg::ref_ptr<osgAnimation::Bone> bone = new osgAnimation::Bone;
+    bone->setName("weapon");
+    bone->setDataVariance(osg::Object::DYNAMIC);
+    bone->setMatrix(osg::Matrix::translate(3, -4, 5));
+    skeleton->addChild(bone);
+    osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+    model->setName("Bow");
+    model->setDataVariance(osg::Object::DYNAMIC);
+    model->setMatrix(osg::Matrix::translate(1, 2, 3));
+    std::filesystem::create_directories(fixture.mDirectory / "meshes");
+    ASSERT_TRUE(osgDB::writeNodeFile(*skeleton,
+        (fixture.mDirectory / "meshes/m15-carried-skeleton.osgt").string()));
+    ASSERT_TRUE(osgDB::writeNodeFile(*model,
+        (fixture.mDirectory / "meshes/m15-carried-bow.osgt").string()));
+    fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+    fixture.mVfs.buildIndex();
+    auto* scene = fixture.mResources.getSceneManager();
+    scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+    auto defines = Shader::getDefaultDefines();
+    for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+        defines[name] = value;
+    osg::ref_ptr<SceneUtil::LightManager> lights
+        = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+    for (const auto& [name, value] : lights->getLightDefines())
+        defines[name] = value;
+    scene->getShaderManager().setGlobalDefines(defines);
+    ESM4::RuntimeInventoryItem saved;
+    saved.mBase = key; saved.mCount = 1; saved.mCondition = 0.f; saved.mCharge = 7.25f;
+    saved.mEquippedSlots = ESM4::InventorySlotWeapon;
+    installEquipmentInventory(fixture, actor, {saved});
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    ASSERT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
+    placement->setPosition({100, 20, 30});
+    actor.getRefData().setBaseNode(placement);
+    std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponPose> retained;
+    {
+        MWRender::ESM4NpcAnimation animation(actor, placement, &fixture.mResources);
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+        animation.showWeapons(true);
+        auto pose = animation.captureCarriedWeaponPose(item);
+        ASSERT_TRUE(pose);
+        EXPECT_EQ(pose->mItem, item);
+        EXPECT_EQ(pose->mModel, VFS::Path::Normalized("meshes/m15-carried-bow.osgt"));
+        EXPECT_EQ(pose->mScene.getWorldMatrix().getTrans(), osg::Vec3(104, 18, 38));
+        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(actor));
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(MWWorld::ConstPtr()));
+        placement->setPosition({101, 20, 30});
+        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+        placement->setPosition({100, 20, 30});
+        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
+        item.getCellRef().setCount(2);
+        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+        item.getCellRef().setCount(1);
+        animation.refreshEquipment();
+        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+        auto refreshed = animation.captureCarriedWeaponPose(item);
+        ASSERT_TRUE(refreshed);
+        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*refreshed));
+        animation.showWeapons(false);
+        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*refreshed));
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+        animation.showWeapons(true);
+        retained = animation.captureCarriedWeaponPose(item);
+        ASSERT_TRUE(retained);
+        const auto inventoryBefore = fixture.mWorld.captureOblivionActorInventory(actor);
+        EXPECT_FLOAT_EQ(inventoryBefore.front().mCondition, 0.f);
+        EXPECT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(item.getCellRef().getCount(), 1);
+        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), item);
+    }
+    EXPECT_TRUE(retained->mBindingIdentity.expired());
+    EXPECT_FALSE(retained->mScene.matchesCurrentScene());
 }
