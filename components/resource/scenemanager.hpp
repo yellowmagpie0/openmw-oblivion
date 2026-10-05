@@ -150,7 +150,9 @@ namespace Resource
         /// @note If the given filename does not exist or fails to load, an error marker mesh will be used instead.
         ///  If even the error marker mesh can not be found, an exception is thrown.
         /// @note Thread safe.
-        osg::ref_ptr<const osg::Node> getTemplate(VFS::Path::NormalizedView path, bool compile = true);
+        // strict rejects load failure, including a cached error-marker fallback.
+        osg::ref_ptr<const osg::Node> getTemplate(
+            VFS::Path::NormalizedView path, bool compile = true, bool strict = false);
 
         /// Clone osg::Node safely.
         /// @note Thread safe.

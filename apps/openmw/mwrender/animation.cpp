@@ -2780,7 +2780,14 @@ namespace MWRender
 
     ObjectAnimation::ObjectAnimation(const MWWorld::Ptr& ptr, const std::string& model,
         Resource::ResourceSystem* resourceSystem, bool animated, bool allowLight)
-        : Animation(ptr, osg::ref_ptr<osg::Group>(ptr.getRefData().getBaseNode()), resourceSystem)
+        : ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(ptr.getRefData().getBaseNode()), model,
+            resourceSystem, animated, allowLight)
+    {
+    }
+
+    ObjectAnimation::ObjectAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
+        const std::string& model, Resource::ResourceSystem* resourceSystem, bool animated, bool allowLight)
+        : Animation(ptr, std::move(parentNode), resourceSystem)
     {
         if (!model.empty())
         {

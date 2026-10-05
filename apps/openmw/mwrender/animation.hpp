@@ -617,6 +617,8 @@ namespace MWRender
     public:
         ObjectAnimation(const MWWorld::Ptr& ptr, const std::string& model, Resource::ResourceSystem* resourceSystem,
             bool animated, bool allowLight);
+        ObjectAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, const std::string& model,
+            Resource::ResourceSystem* resourceSystem, bool animated, bool allowLight);
 
         bool canBeHarvested() const override;
         void harvest(const MWWorld::Ptr& ptr) override;

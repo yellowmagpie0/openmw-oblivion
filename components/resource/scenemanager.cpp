@@ -940,23 +940,34 @@ namespace Resource
         return static_cast<osg::Node*>(mErrorMarker->clone(osg::CopyOp::DEEP_COPY_ALL));
     }
 
-    osg::ref_ptr<const osg::Node> SceneManager::getTemplate(VFS::Path::NormalizedView path, bool compile)
+    osg::ref_ptr<const osg::Node> SceneManager::getTemplate(VFS::Path::NormalizedView path, bool compile, bool strict)
     {
         osg::ref_ptr<osg::Object> obj = mCache->getRefFromObjectCache(path);
         if (obj)
+        {
+            bool failed = false;
+            obj->getUserValue("openmw.resource.loadFailed", failed);
+            if (strict && failed)
+                throw std::runtime_error(std::format("Cached scene is an error marker for {}", path.value()));
             return osg::ref_ptr<const osg::Node>(static_cast<osg::Node*>(obj.get()));
+        }
         else
         {
             osg::ref_ptr<osg::Node> loaded;
+            bool failed = false;
             try
             {
                 loaded = load(path, mVFS, mImageManager, mNifFileManager, mBgsmFileManager);
             }
             catch (const std::exception& e)
             {
+                if (strict) throw;
                 Log(Debug::Error) << "Failed to load '" << path << "': " << e.what() << ", using marker_error instead";
                 loaded = cloneErrorMarker();
+                failed = true;
             }
+
+            loaded->setUserValue("openmw.resource.loadFailed", failed);
 
             // set filtering settings
             SetFilterSettingsVisitor setFilterSettingsVisitor(mMinFilter, mMagFilter, mMaxAnisotropy);

@@ -1,9 +1,15 @@
 #include "objects.hpp"
 
 #include <osg/Group>
+#include <bit>
+#include <cmath>
+#include <cstdint>
+#include <stdexcept>
 #include <osg/UserDataContainer>
 
 #include <components/esm/gameprofile.hpp>
+#include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
@@ -38,6 +44,167 @@ namespace MWRender
         for (CellMap::iterator iter = mCellSceneNodes.begin(); iter != mCellSceneNodes.end(); ++iter)
             iter->second->getParent(0)->removeChild(iter->second);
         mCellSceneNodes.clear();
+    }
+
+    struct Objects::PreparedModel::Data
+    {
+        Objects* mOwner = nullptr;
+        std::shared_ptr<const char> mIdentity;
+        MWWorld::Ptr mPtr;
+        MWWorld::CellStore* mCell = nullptr;
+        ESM::Position mPosition;
+        float mScale = 1;
+        int mCount = 0;
+        osg::ref_ptr<osg::Group> mCellNode;
+        osg::ref_ptr<SceneUtil::PositionAttitudeTransform> mInsert;
+        osg::ref_ptr<Animation> mAnimation;
+        CellMap::node_type mCellEntry;
+        PtrAnimationMap::node_type mObjectEntry;
+        bool mNewCell = false;
+        bool mPublished = false;
+        bool mConsumed = false;
+    };
+
+    Objects::PreparedModel::PreparedModel(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    Objects::PreparedModel::~PreparedModel() = default;
+
+    std::unique_ptr<Objects::PreparedModel> Objects::prepareModel(const MWWorld::Ptr& ptr,
+        const std::string& model, const osg::Quat& rotation, unsigned nodeMask)
+    {
+        if (ptr.isEmpty() || !ptr.isInCell() || ptr.getClass().isActor() || ptr.getClass().useAnim()
+            || ptr.getContainerStore()
+            || ptr.getCellRef().getCount() <= 0 || ptr.getRefData().getBaseNode() || mObjects.contains(ptr.mRef))
+            throw std::invalid_argument("prepared model requires an unregistered non-animated world object");
+        auto data = std::make_unique<PreparedModel::Data>();
+        data->mOwner = this;
+        data->mIdentity = mModelPreparationIdentity;
+        data->mPtr = ptr;
+        data->mCell = ptr.getCell();
+        data->mPosition = ptr.getRefData().getPosition();
+        data->mScale = ptr.getCellRef().getScale();
+        data->mCount = ptr.getCellRef().getCount();
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (!std::isfinite(data->mPosition.pos[axis]) || !std::isfinite(data->mPosition.rot[axis]))
+                throw std::invalid_argument("nonfinite prepared model placement");
+        if (!std::isfinite(data->mScale) || data->mScale <= 0)
+            throw std::invalid_argument("invalid prepared model scale");
+        double norm = 0;
+        for (unsigned axis = 0; axis < 4; ++axis)
+        {
+            if (!std::isfinite(rotation[axis]))
+                throw std::invalid_argument("nonfinite prepared model rotation");
+            norm += rotation[axis] * rotation[axis];
+        }
+        if (std::abs(norm - 1.) > 1e-5)
+            throw std::invalid_argument("prepared model rotation is not a unit quaternion");
+        data->mInsert = new SceneUtil::PositionAttitudeTransform;
+        data->mInsert->setPosition(data->mPosition.asVec3());
+        data->mInsert->setAttitude(rotation);
+        osg::Vec3f scale(data->mScale, data->mScale, data->mScale);
+        ptr.getClass().adjustScale(ptr, scale, true);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (!std::isfinite(scale[axis]) || scale[axis] <= 0)
+                throw std::invalid_argument("invalid adjusted prepared model scale");
+        data->mInsert->setScale(scale);
+        data->mInsert->setNodeMask(nodeMask);
+        data->mInsert->getOrCreateUserDataContainer()->addUserObject(new PtrHolder(ptr));
+        // Require a real source template rather than the ordinary error marker.
+        // ObjectAnimation subsequently clones this same cached valid template.
+        if (!model.empty())
+            mResourceSystem->getSceneManager()->getTemplate(VFS::Path::toNormalized(model), true, true);
+        // Build the actual animation/model on its detached parent, without
+        // changing the live reference's base node.
+        data->mAnimation = new ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(data->mInsert),
+            model, mResourceSystem, false, true);
+        PtrAnimationMap stagedObjects;
+        stagedObjects.emplace(ptr.mRef, data->mAnimation);
+        data->mObjectEntry = stagedObjects.extract(stagedObjects.begin());
+        if (const auto found = mCellSceneNodes.find(data->mCell); found != mCellSceneNodes.end())
+            data->mCellNode = found->second;
+        else
+        {
+            data->mNewCell = true;
+            data->mCellNode = new osg::Group;
+            data->mCellNode->setName("Cell Root");
+            if (!data->mCellNode->addChild(data->mInsert))
+                throw std::runtime_error("private model parent admission rejected");
+            CellMap stagedCells;
+            stagedCells.emplace(data->mCell, data->mCellNode);
+            data->mCellEntry = stagedCells.extract(stagedCells.begin());
+        }
+        return std::unique_ptr<PreparedModel>(new PreparedModel(std::move(data)));
+    }
+
+    bool Objects::validatePreparedModel(const PreparedModel& prepared) const
+    {
+        const auto* data = prepared.mData.get();
+        if (!data || data->mOwner != this || data->mIdentity != mModelPreparationIdentity
+            || data->mPublished || data->mConsumed || data->mObjectEntry.empty())
+            return false;
+        const auto& ptr = data->mPtr;
+        if (ptr.getCell() != data->mCell || ptr.getCellRef().getCount() != data->mCount
+            || ptr.getRefData().getBaseNode() || mObjects.contains(ptr.mRef)
+            || std::bit_cast<std::uint32_t>(ptr.getCellRef().getScale()) != std::bit_cast<std::uint32_t>(data->mScale))
+            return false;
+        const auto& pos = ptr.getRefData().getPosition();
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (std::bit_cast<std::uint32_t>(pos.pos[axis]) != std::bit_cast<std::uint32_t>(data->mPosition.pos[axis])
+                || std::bit_cast<std::uint32_t>(pos.rot[axis]) != std::bit_cast<std::uint32_t>(data->mPosition.rot[axis]))
+                return false;
+        const auto cell = mCellSceneNodes.find(data->mCell);
+        return data->mNewCell ? cell == mCellSceneNodes.end() && !data->mCellEntry.empty()
+            : cell != mCellSceneNodes.end() && cell->second == data->mCellNode
+                && mRootNode->containsNode(data->mCellNode);
+    }
+
+    bool Objects::commitModel(PreparedModel& prepared)
+    {
+        if (!validatePreparedModel(prepared)) return false;
+        auto& data = *prepared.mData;
+        osg::Group* parent = data.mNewCell ? mRootNode.get() : data.mCellNode.get();
+        osg::Node* child = data.mNewCell ? static_cast<osg::Node*>(data.mCellNode.get()) : data.mInsert.get();
+        try
+        {
+            if (!parent->addChild(child))
+                throw std::runtime_error("model scene admission rejected");
+        }
+        catch (...)
+        {
+            // Include the attempted child if a parent inserts and then throws.
+            if (parent->containsNode(child)) parent->removeChild(child);
+            throw;
+        }
+        if (data.mNewCell) mCellSceneNodes.insert(std::move(data.mCellEntry));
+        mObjects.insert(std::move(data.mObjectEntry));
+        data.mPtr.getRefData().setBaseNode(data.mInsert);
+        data.mPublished = true;
+        return true;
+    }
+
+    bool Objects::rollbackModelAdmission(PreparedModel& prepared)
+    {
+        auto* data = prepared.mData.get();
+        if (!data || data->mOwner != this || data->mIdentity != mModelPreparationIdentity
+            || !data->mPublished || data->mConsumed)
+            return false;
+        const auto object = mObjects.find(data->mPtr.mRef);
+        const auto cell = mCellSceneNodes.find(data->mCell);
+        if (object == mObjects.end() || object->second != data->mAnimation
+            || data->mPtr.getRefData().getBaseNode() != data->mInsert
+            || cell == mCellSceneNodes.end() || cell->second != data->mCellNode
+            || !data->mCellNode->containsNode(data->mInsert))
+            return false;
+        data->mCellNode->removeChild(data->mInsert);
+        data->mPtr.getRefData().setBaseNode(nullptr);
+        mObjects.erase(object);
+        if (data->mNewCell && data->mCellNode->getNumChildren() == 0)
+        {
+            mRootNode->removeChild(data->mCellNode);
+            mCellSceneNodes.erase(cell);
+        }
+        data->mPublished = false;
+        data->mConsumed = true;
+        return true;
     }
 
     void Objects::insertBegin(const MWWorld::Ptr& ptr)

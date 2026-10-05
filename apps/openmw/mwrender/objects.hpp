@@ -2,6 +2,8 @@
 #define GAME_RENDER_OBJECTS_H
 
 #include <map>
+#include <memory>
+#include <osg/Quat>
 #include <string>
 
 #include <osg/Object>
@@ -66,11 +68,35 @@ namespace MWRender
         SceneUtil::UnrefQueue& mUnrefQueue;
 
         void insertBegin(const MWWorld::Ptr& ptr);
+        std::shared_ptr<const char> mModelPreparationIdentity = std::make_shared<const char>(0);
 
     public:
         Objects(Resource::ResourceSystem* resourceSystem, const osg::ref_ptr<osg::Group>& rootNode,
             SceneUtil::UnrefQueue& unrefQueue);
         ~Objects();
+
+        class PreparedModel
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedModel(std::unique_ptr<Data> data);
+            friend class Objects;
+        public:
+            ~PreparedModel();
+            PreparedModel(const PreparedModel&) = delete;
+            PreparedModel& operator=(const PreparedModel&) = delete;
+        };
+
+        // Borrowed reference and cell must outlive preparation and registration.
+        // Main-thread non-actor admission; no physics or game observers.
+        std::unique_ptr<PreparedModel> prepareModel(const MWWorld::Ptr& ptr, const std::string& model,
+            const osg::Quat& rotation, unsigned nodeMask);
+        bool validatePreparedModel(const PreparedModel& prepared) const;
+        bool commitModel(PreparedModel& prepared);
+        // Synchronous rollback before observers or another scene mutation.
+        // Returns false if ownership no longer matches; never removes a
+        // replacement model. The original preparation is consumed on rollback.
+        bool rollbackModelAdmission(PreparedModel& prepared);
 
         /// @param allowLight If false, no lights will be created, and particles systems will be removed.
         void insertModel(const MWWorld::Ptr& ptr, const std::string& model, bool allowLight = true);

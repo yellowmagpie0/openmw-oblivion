@@ -34,6 +34,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwrender/testtes4facegen.cpp
     mwrender/testphysicalpose.cpp
     mwrender/testoblivionarrowgeometry.cpp
+    mwrender/testpreparedobjects.cpp
 
     mwgui/tooltips.cpp
     mwgui/weightedsearch.cpp

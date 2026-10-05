@@ -13352,3 +13352,77 @@ on load or complete pickup. Reversible rendering admission is the next bounded
 prerequisite for compound projectile/drop publication. Native flight/impact,
 normal-input/restart campaigns and full M15 acceptance remain open.
 S5 remains in progress.
+
+
+### S5 checkpoint282: detached and reversible model admission
+
+Objects can now prepare a non-actor, non-animated model on an explicitly detached
+parent without changing the reference base node, live cell scene graph or
+animation registry. The real ObjectAnimation constructor builds that private
+model and preserves ordinary light/particle/glow behavior. Prepared animation
+and optional cell registry nodes allocate before publication. Strong owner
+identity plus exact count, cell, placement and scale checks reject foreign,
+replaced or stale preparations before scene admission.
+
+Publication checks the parent addChild result and rolls back an attempted
+attachment even if the parent inserted the child before returning false or
+throwing. Registry insertion and base-node assignment follow successful scene
+admission without allocating. A failed attachment can retry the same private
+model. Successful publication remains owned by Objects after the preparation
+is discarded and uses ordinary removal/unref behavior thereafter.
+
+A synchronous rollback operation removes only the exact published model,
+clears its base node and removes a newly created empty cell root. It preserves
+existing cell siblings, refuses to remove a replacement animation and consumes
+the rolled-back preparation. It uses no deferred unref allocation and emits no
+game observers. Callers must use it before publishing compound resources or
+allowing another scene mutation. Borrowed reference/cell lifetime remains the
+caller's responsibility.
+
+SceneManager now supports strict template loading. It rethrows an uncached
+load failure before creating an error marker and rejects a previously cached
+fallback marker. Ordinary callers retain their default fallback behavior.
+Prepared model admission strictly checks its source template before cloning it,
+so a missing or malformed model cannot silently become a successful native drop
+represented by an error marker.
+
+Two component cases cover missing/malformed source bytes, actual test-owned
+scene-file loading, cache identity, strict rejection and preserved ordinary
+fallback behavior. Six engine cases use actual OSG graphs and ObjectAnimation:
+private construction/cancellation, source/owner guards, rejected and
+post-insertion failed attachment/retry, normal removal, synchronous rollback,
+existing cell preservation, replacement models and reused Objects addresses
+after deleting the borrowed reference. Their authored OSG scene fixtures are
+not stock native NIF assets or rendered GL captures.
+
+Both final normal and ASan/UBSan runs pass1040 full engine tests with exact
+inventories, no failures/skips and no compiler warnings. Leak checks remain
+disabled. The initial normal run passed1040; the first sanitizer engine run
+aborted on the first new rendering fixture because it had created a reference
+without a cell, violating Ptr.getCell's debug assertion. The fixture now uses
+a real loaded CellStore, and preparation explicitly rejects orphan references
+before calling getCell. The next sanitizer02 attempt exposed a second fixture
+lifetime error: its CellVariant borrowed an ESM::Cell record local to a helper.
+The source record is now owned by the fixture and outlives CellStore. Both
+final03 runs pass the corrected fixtures and orphan-rejection assertion.
+Both earlier01/02 attempts remain in their original evidence directories.
+
+The unchanged strict-loader component implementation/tests passed2481 full
+component cases in both initial01 builds with exact inventories and no failures,
+skips or compiler warnings. Their fingerprint is 0408fc9a56954aef52bc87ab8a70921b12dc122c1596cf6496d63b6c75d01df1; the correction
+changes only Objects preparation and the engine fixture. The broader initial
+engine rebuild emitted two normal and one sanitized warnings in existing
+Character/actor-stats test sources byte-identical to checkpoint281, verified
+by normal-01/unchanged-warning-sources.json. No changed file produced a warning.
+Python/schema40 and native arithmetic are unchanged.
+
+Evidence: S5/prepared-model-publication-normal-03 and
+S5/prepared-model-publication-sanitized-03; both01/02 directories retained.
+Latest engine-tested fingerprint: 828a2de7a0ccd8526e226c75e8efbaa803e6d513257c55dbda5d6293464c9533
+
+This reversible admission primitive does not yet publish an actual native
+dropped reference, couple source inventory/weapon wear with arrow and dropped
+body admission, update loose-item rendered poses or recreate/pick up dynamic
+items. Character bow input, native flight/impact/recovery and normal-input,
+restart and visual campaign acceptance remain open. S5 and full M15 remain
+in progress.
