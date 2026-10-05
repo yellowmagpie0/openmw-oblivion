@@ -128,6 +128,7 @@ namespace MWWorld
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
+        std::shared_ptr<const char> mOblivionDynamicReferenceIdentity;
         std::unique_ptr<OblivionScriptManager> mOblivionScriptManager;
         std::unique_ptr<MWMechanics::OblivionAiService> mOblivionAi;
         std::unique_ptr<MWMechanics::OblivionCombatService> mOblivionCombat;
@@ -614,6 +615,30 @@ namespace MWWorld
         // restoration precedes optional scene attachment in saveLoaded.
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
+        class PreparedOblivionDynamicReferenceKey
+        {
+            friend class World;
+            World* mOwner;
+            std::weak_ptr<const char> mIdentity;
+            ESM::FormKey mKey;
+            std::unique_ptr<WorldModel::PreparedPtrReplacement> mRegistry;
+            bool mCommitted = false;
+            PreparedOblivionDynamicReferenceKey(World& owner, ESM::FormKey key,
+                std::unique_ptr<WorldModel::PreparedPtrReplacement> registry);
+        public:
+            PreparedOblivionDynamicReferenceKey(const PreparedOblivionDynamicReferenceKey&) = delete;
+            PreparedOblivionDynamicReferenceKey& operator=(const PreparedOblivionDynamicReferenceKey&) = delete;
+            const ESM::FormKey& key() const noexcept { return mKey; }
+            bool isValid() const noexcept;
+            // Serial publication only. The compound reference transaction must
+            // validate every participant first, then commit without callbacks.
+            bool commit() noexcept;
+        };
+        // Preparation/cancellation do not advance the serial saved in T4ST.
+        // Keys belong to the fixed native-reference namespace. Clear, successful
+        // restore, registry changes and owner destruction retire old handles.
+        std::unique_ptr<PreparedOblivionDynamicReferenceKey> prepareOblivionDynamicReferenceKey();
+
         // Retain current physical projections before scene ownership is released.
         // Validation failure leaves native authority and physical owners intact.
         void retainOblivionPhysicalState();

@@ -9905,3 +9905,132 @@ TEST(OblivionWorldTest, PreparedWeaponRemovalObserversCannotReplayAfterThrowingO
         inventory.setContListener(nullptr);
     }
 }
+
+TEST(OblivionWorldTest, NativeReferenceKeyPreparationCancellationAndCommitUseTheSavedSerial)
+{
+    NativeWorldFixture fixture;
+    installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    ASSERT_EQ(before.mNextDynamicSerial, 1u);
+    {
+        const auto cancelled = world.prepareOblivionDynamicReferenceKey();
+        EXPECT_EQ(cancelled->key(), ESM::FormKey::dynamic("native-reference", 1));
+        ASSERT_TRUE(cancelled->isValid());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    }
+    auto first = world.prepareOblivionDynamicReferenceKey();
+    auto competing = world.prepareOblivionDynamicReferenceKey();
+    EXPECT_EQ(first->key(), competing->key());
+    ASSERT_TRUE(first->commit());
+    EXPECT_FALSE(first->isValid());
+    EXPECT_FALSE(first->commit());
+    EXPECT_FALSE(competing->isValid());
+    EXPECT_FALSE(competing->commit());
+    const auto saved = world.captureOblivionRuntimeState();
+    EXPECT_EQ(saved.mNextDynamicSerial, 2u);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()).mNextDynamicSerial, 2u);
+    const auto next = world.prepareOblivionDynamicReferenceKey();
+    EXPECT_EQ(next->key(), ESM::FormKey::dynamic("native-reference", 2));
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyRegistryAndClearChangesRetireBorrowedPreparations)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    auto stale = world.prepareOblivionDynamicReferenceKey();
+    world.getWorldModel().registerPtr(item);
+    EXPECT_FALSE(stale->isValid());
+    EXPECT_FALSE(stale->commit());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 1u);
+    auto fresh = world.prepareOblivionDynamicReferenceKey();
+    ASSERT_TRUE(fresh->isValid());
+    world.clear();
+    EXPECT_FALSE(fresh->isValid());
+    EXPECT_FALSE(fresh->commit());
+    const auto reset = world.prepareOblivionDynamicReferenceKey();
+    EXPECT_EQ(reset->key(), ESM::FormKey::dynamic("native-reference", 1));
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeySuccessfulRestoreRetiresSameSerialAndContinuesFreshSnapshot)
+{
+    NativeWorldFixture fixture;
+    installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    const auto saved = world.captureOblivionRuntimeState();
+    auto beforeRestore = world.prepareOblivionDynamicReferenceKey();
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(beforeRestore->commit());
+    auto first = world.prepareOblivionDynamicReferenceKey();
+    ASSERT_TRUE(first->commit());
+    const auto advanced = world.captureOblivionRuntimeState();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    readNativeSnapshot(fixture, advanced);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(pending->commit());
+    auto continuation = world.prepareOblivionDynamicReferenceKey();
+    EXPECT_EQ(continuation->key(), ESM::FormKey::dynamic("native-reference", 2));
+    ASSERT_TRUE(continuation->commit());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 3u);
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyRejectsSavedHighWaterCollisionsAndExhaustionBeforeMutation)
+{
+    NativeWorldFixture fixture;
+    installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    auto bad = before;
+    bad.mClock.mHour = 9;
+    bad.mReferences.front().mKey = ESM::FormKey::dynamic("native-reference", 1);
+    readNativeSnapshot(fixture, bad);
+    const auto time = world.getTimeStamp();
+    EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+    EXPECT_EQ(world.getTimeStamp(), time);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 1u);
+    EXPECT_TRUE(pending->isValid());
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKey(), std::invalid_argument);
+    auto exhausted = before;
+    exhausted.mNextDynamicSerial = std::numeric_limits<std::uint64_t>::max();
+    readNativeSnapshot(fixture, exhausted);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(pending->isValid());
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKey(), std::overflow_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, exhausted.mNextDynamicSerial);
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyOwnerDestructionRejectsBeforeBorrowedWorldAccess)
+{
+    std::unique_ptr<MWWorld::World::PreparedOblivionDynamicReferenceKey> retained;
+    {
+        NativeWorldFixture fixture;
+        installNativeLooseItemCapture(fixture);
+        retained = fixture.mWorld.prepareOblivionDynamicReferenceKey();
+        ASSERT_TRUE(retained->isValid());
+    }
+    EXPECT_FALSE(retained->isValid());
+    EXPECT_FALSE(retained->commit());
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyResidentIdentityCollisionIncludesDisabledDeletedAndUnregisteredNodes)
+{
+    for (const std::uint32_t flags : {0u, std::uint32_t(ESM4::Rec_Disabled), std::uint32_t(ESM4::Rec_Deleted)})
+    {
+        NativeWorldFixture fixture;
+        const auto item = installNativeLooseItemCapture(fixture);
+        auto& world = fixture.mWorld;
+        auto& cell = *item.getCell();
+        cell.load();
+        ESM4::Reference placed = *item.getCellRef().getNativeReference();
+        placed.mId = {};
+        placed.mFormKey = ESM::FormKey::dynamic("native-reference", 1);
+        placed.mFlags = flags;
+        MWWorld::LiveCellRef<ESM4::Weapon> duplicate(placed, item.get<ESM4::Weapon>()->mBase);
+        cell.insert(&duplicate);
+        EXPECT_THROW(world.prepareOblivionDynamicReferenceKey(), std::invalid_argument);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 1u);
+    }
+}

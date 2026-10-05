@@ -21212,3 +21212,47 @@ native faction membership, final drop ownership, a native loose-weapon factory,
 bow frontend/arrow admission or crime/runtime acceptance. S2 and S5 remain in
 progress. The next integration task is the compound native broken-bow release,
 using the prepared inventory, cell, model and physical admission foundations.
+
+
+### S5 checkpoint287: provisional World-owned native reference identities
+
+The actual native World now prepares fixed-namespace native-reference keys
+from the same serial captured/restored by T4ST. Preparation and destruction
+advance nothing. A checked noexcept commit publishes the next serial once;
+competing reservations become stale after the first commit. This is serial
+publication only: the compound item transaction must validate all participants
+before a callback-free reference/inventory/serial commit.
+
+Weak World lifetime identity and the actual WorldModel preparation guard
+reject handles after destruction, registry changes, clear or successful
+restore, including restoring the same serial. The guard precedes borrowed
+World reads. Resident identity collision checks include disabled, deleted and
+unregistered loaded nodes; cached save identities are also checked. Exhaustion
+rejects before uint64 wrap. Native restore rejects a high-water serial that
+would reuse any saved native-reference key before changing global time or
+serials. An invalid restore leaves existing preparations valid because it has
+not published logical state.
+
+Six new actual World cases exercise cancellation, competing/repeated commits,
+binary serial roundtrip, registry and clear invalidation, same-serial restore,
+continued allocation from restored serials, saved/resident collisions,
+exhaustion and owner destruction. Both normal and ASan/UBSan full engine suites
+pass1060 cases with exact inventories and no failures/skips. Leak checks remain
+disabled. Relevant rebuild-warning sources match checkpoint286 unchanged.
+Components, schema layout and Python codecs did not change; no fresh component
+or Python result is claimed for this checkpoint.
+
+The committed checkpoint286 World header independently fails compilation of
+the new reservation API as expected. This characterizes API absence only, not
+a baseline gameplay assertion. The saved next_dynamic_serial field already
+existed; the new allocator adds no wire fields or schema version.
+
+Evidence: S5/native-reference-identity-normal-01,
+S5/native-reference-identity-sanitized-01 and
+S5/native-reference-identity-api-baseline-01.
+Latest engine-tested fingerprint: cf6b73b2adce8735f91418d2c92eb695bd4da9c34eb1d0ea1f0a9c2773076159
+
+Identity reservation does not create a loose WEAP, remove source inventory,
+construct asset-bound physics, publish an arrow or prove pickup/restart
+acceptance. The ordinary NPC broken-bow safety rejection remains until the
+complete transaction is installed. S5 and full M15 remain in progress.

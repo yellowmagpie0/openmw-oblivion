@@ -788,6 +788,7 @@ namespace MWWorld
 
     void World::clear()
     {
+        mOblivionDynamicReferenceIdentity.reset();
         if (mWeatherManager)
             mWeatherManager->clear();
         if (mRendering)
@@ -2192,6 +2193,12 @@ namespace MWWorld
             return;
         }
         const ESM4::RuntimeState& state = *mOblivionRuntimeState;
+        // This namespace is allocated exclusively by the native World. A
+        // restored high-water mark must not reuse a live or deleted identity.
+        for (const auto& reference : state.mReferences)
+            if (reference.mKey.isDynamic() && reference.mKey.mNamespace == "native-reference"
+                && reference.mKey.mValue >= state.mNextDynamicSerial)
+                throw std::invalid_argument("native reference serial would reuse a saved identity");
         if (!mPlayer || getPlayerPtr().isEmpty())
             throw std::runtime_error("TES4 runtime-state apply requires ready Player data");
         // Native actor bindings and service allocation must fail before any
@@ -2592,6 +2599,7 @@ namespace MWWorld
         // Every binding/conversion/allocation above succeeds before changing
         // any global. Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
+        mOblivionDynamicReferenceIdentity.reset();
         mNextOblivionDynamicSerial = state.mNextDynamicSerial;
         for (auto& [target, prepared] : preparedGlobals)
             *target = std::move(prepared);
