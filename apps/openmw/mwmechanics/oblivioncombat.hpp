@@ -732,6 +732,24 @@ namespace MWMechanics
         // Projection requires the canonical Player aliases and raw form inputs.
         // World checks this on detached authority before changing world data.
         void validateRestoredPlayerBinding() const;
+        class PreparedRestoredActorState
+        {
+            friend class OblivionCombatService;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedRestoredActorState(std::unique_ptr<Impl> impl);
+
+        public:
+            ~PreparedRestoredActorState();
+            PreparedRestoredActorState(PreparedRestoredActorState&&) noexcept;
+            PreparedRestoredActorState& operator=(PreparedRestoredActorState&&) noexcept;
+            // Synchronous borrowed views: target service and actor custom data
+            // must outlive the plan and must not change before commit. Dropping
+            // the plan publishes nothing. No allocations/callbacks at commit.
+            bool commit() noexcept;
+        };
+        PreparedRestoredActorState prepareRestoredActorState(OblivionCombatService&& replacement,
+            std::span<const MWWorld::Ptr> residents, MWWorld::Player* player = nullptr);
         // Install a validated replacement with Player and resident actor views.
         // Prepare every view before changing authority or committing projections.
         // Actors absent from replacement authority are not initialized here.

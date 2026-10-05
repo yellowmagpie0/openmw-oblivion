@@ -11564,3 +11564,234 @@ return {engineHandlers = {onInactive = function() probe.inactive() end}})"};
     EXPECT_TRUE(scripts->isActive()); // A consumed inactive event cannot replay.
     EXPECT_EQ(inactiveCalls, 1);
 }
+
+TEST(OblivionWorldTest, NativeRestoreCharacterBindingsRejectBeforeWorldPublication)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto player = world.getPlayerPtr();
+    const auto* record = player.get<ESM::NPC>()->mBase;
+    const auto name = record->mName;
+    const auto race = record->mRace;
+    const auto characterClass = record->mClass;
+    const auto male = record->isMale();
+    const auto birthSign = world.getPlayer().getBirthSign();
+    const auto inventory = world.captureOblivionActorInventory(player);
+    const auto lastGenerated = world.getWorldModel().getLastGeneratedRefNum();
+    const auto clock = world.getTimeStamp();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    for (int invalid : {0, 1, 2, 3})
+    {
+        SCOPED_TRACE(invalid);
+        auto candidate = saved;
+        candidate.mClock.mHour = 9;
+        candidate.mNextDynamicSerial += 20;
+        candidate.mPlayer.mName = "Rejected character";
+        candidate.mPlayer.mFemale = !candidate.mPlayer.mFemale;
+        candidate.mPlayer.mInventory.clear();
+        const auto missing = ESM::FormKey::content("headless.esm", 0x9ff);
+        if (invalid == 0) candidate.mPlayer.mRace = missing;
+        if (invalid == 1) candidate.mPlayer.mClass = missing;
+        if (invalid == 2) candidate.mPlayer.mBirthSign = missing;
+        if (invalid == 3) candidate.mPlayer.mBirthSign = candidate.mReferences.front().mBase;
+        ASSERT_NO_THROW(candidate.validate());
+        readNativeSnapshot(fixture, candidate);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+        EXPECT_EQ(world.getTimeStamp(), clock);
+        EXPECT_EQ(player.get<ESM::NPC>()->mBase, record);
+        EXPECT_EQ(record->mName, name);
+        EXPECT_EQ(record->mRace, race);
+        EXPECT_EQ(record->mClass, characterClass);
+        EXPECT_EQ(record->isMale(), male);
+        EXPECT_EQ(world.getPlayer().getBirthSign(), birthSign);
+        EXPECT_EQ(world.captureOblivionActorInventory(player), inventory);
+        EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), lastGenerated);
+        EXPECT_TRUE(pending->isValid());
+    }
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionActorInventory(player), inventory);
+    EXPECT_FALSE(pending->isValid());
+}
+
+TEST(OblivionWorldTest, NativeRestoreInventoryPublicationPreservesExtrasAndDoesNotReplayListeners)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto player = world.getPlayerPtr();
+    auto& inventory = player.getClass().getInventoryStore(player);
+    const auto old = *inventory.begin();
+    const auto oldId = old.getCellRef().getRefNum();
+    ASSERT_EQ(world.getWorldModel().getPtr(oldId), old);
+    NativePickupFixture::Listener listener;
+    listener.mCallback = [](const MWWorld::ConstPtr&, int) { ADD_FAILURE() << "restore replayed item acquisition"; };
+    inventory.setContListener(&listener);
+    for (int repeat = 0; repeat < 2; ++repeat)
+    {
+        SCOPED_TRACE(repeat);
+        readNativeSnapshot(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(listener.mCalls, 0);
+        EXPECT_EQ(world.captureOblivionActorInventory(player), saved.mPlayer.mInventory);
+        EXPECT_TRUE(world.getWorldModel().getPtr(oldId).isEmpty());
+        const auto item = *inventory.begin();
+        EXPECT_EQ(item.getContainerStore(), &inventory);
+        const auto registered = world.getWorldModel().getPtr(item.getCellRef().getRefNum());
+        EXPECT_EQ(registered, item);
+        EXPECT_EQ(registered.getContainerStore(), &inventory);
+    }
+    inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, NativeRestoreActorViewPreparationCancelsAndCommitsOnce)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = addNativeNpc(fixture, 0x900);
+    auto& service = *world.getOblivionCombatService();
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+    const auto initial = captureNativeActorState(fixture, actor);
+    const auto health = actor.getClass().getCreatureStats(actor).getHealth().getCurrent();
+    auto changed = initial;
+    changed.mNativeActorValues.front().mValues[8].mModifiers[2] = -9;
+    const std::array residents{actor};
+    {
+        MWMechanics::OblivionCombatService replacement;
+        replacement.restore(ESM4::RuntimeState::deserializeBinary(changed.serializeBinary()), world.getStore());
+        auto plan = service.prepareRestoredActorState(std::move(replacement), residents);
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), initial.serializeBinary());
+        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getHealth().getCurrent(), health);
+    }
+    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), initial.serializeBinary());
+    MWMechanics::OblivionCombatService replacement;
+    replacement.restore(changed, world.getStore());
+    auto plan = service.prepareRestoredActorState(std::move(replacement), residents);
+    auto moved = std::move(plan);
+    EXPECT_FALSE(plan.commit());
+    EXPECT_TRUE(moved.commit());
+    EXPECT_FALSE(moved.commit());
+    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), changed.serializeBinary());
+    EXPECT_EQ(actor.getClass().getCreatureStats(actor).getHealth().getCurrent(), health - 9);
+    EXPECT_THROW(service.prepareRestoredActorState(std::move(service), residents), std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, NativeRestoreResidentProjectionRejectsBeforeInventoryClockAndIdentityChanges)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    auto npc = addNativeNpc(fixture, 0x900);
+    npc = npc.getCell()->moveTo(npc, world.getPlayerPtr().getCell());
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc, ESM4::ActorValueProcess::Active));
+    ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto beforeInventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    const auto beforeClock = world.getTimeStamp();
+    const auto beforeHealth = npc.getClass().getCreatureStats(npc).getHealth().getCurrent();
+    const auto beforeRegistry = world.getWorldModel().getLastGeneratedRefNum();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    auto candidate = saved;
+    candidate.mClock.mHour = 9;
+    candidate.mNextDynamicSerial += 7;
+    candidate.mPlayer.mInventory.clear();
+    auto values = std::find_if(candidate.mNativeActorValues.begin(), candidate.mNativeActorValues.end(),
+        [&](const auto& actor) { return actor.mActor == npc.getCellRef().getFormKey(); });
+    ASSERT_NE(values, candidate.mNativeActorValues.end());
+    values->mValues[8].mModifiers[2] = -5;
+    values->mValues[33].mModifiers[1] = 1e32f; // Valid float authority, invalid shared integer AI view.
+    ASSERT_NO_THROW(candidate.validate());
+    readNativeSnapshot(fixture, candidate);
+    EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+    EXPECT_EQ(world.getTimeStamp(), beforeClock);
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), beforeInventory);
+    EXPECT_EQ(npc.getClass().getCreatureStats(npc).getHealth().getCurrent(), beforeHealth);
+    EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), beforeRegistry);
+    EXPECT_TRUE(pending->isValid());
+    ESM4::RuntimeState authority = saved;
+    world.getOblivionCombatService()->capture(authority);
+    EXPECT_EQ(authority.serializeBinary(), saved.serializeBinary());
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(pending->isValid());
+}
+
+TEST(OblivionWorldTest, NativeRestorePreparesEmptyAuthorityFromEveryAcceptedRuntimeVersion)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    MWClass::Npc::registerSelf();
+    world.setupPlayer();
+    ESM::Race race{}; race.blank(); race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+    world.getStore().getWritable<ESM::Race>().insertStatic(race);
+    auto character = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    character.mRace = race.mId;
+    auto metadata = world.getStore().preparePlayerRecord(character);
+    world.getPlayer().set(metadata.commit());
+    ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{1, 0});
+    cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+    cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "LegacyRestoreCell";
+    world.getStore().getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+    world.getPlayer().setCell(&world.getWorldModel().getCell(cell.mId));
+    const auto current = world.captureOblivionRuntimeState();
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        ESM4::RuntimeState legacy;
+        legacy.mVersion = version;
+        legacy.mContent = current.mContent;
+        legacy.mClock = current.mClock;
+        legacy.mClock.mHour = 7;
+        legacy.mPlayer = current.mPlayer;
+        legacy.mPlayer.mInventory.clear();
+        legacy.mPlayer.mActorValues["health.current"] = 67;
+        if (version < 3)
+        {
+            legacy.mPlayer.mName.clear(); legacy.mPlayer.mRace = {}; legacy.mPlayer.mClass = {};
+            legacy.mPlayer.mBirthSign = {}; legacy.mPlayer.mFemale = false;
+            legacy.mPlayer.mCharacterGenerationFlags = 0;
+        }
+        ASSERT_NO_THROW(legacy.validate());
+        readNativeSnapshot(fixture, legacy);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto captured = world.captureOblivionRuntimeState();
+        EXPECT_EQ(captured.mVersion, ESM4::CurrentRuntimeStateVersion);
+        EXPECT_EQ(captured.mClock.mHour, 7);
+        EXPECT_EQ(captured.mPlayer.mActorValues.at("health.current"), 67);
+        EXPECT_TRUE(captured.mNativeActorValues.empty());
+        EXPECT_TRUE(captured.mNativeActorLife.empty());
+        EXPECT_TRUE(captured.mPendingDeathEvents.empty());
+        EXPECT_TRUE(captured.mPlayer.mInventory.empty());
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(captured.serializeBinary());
+        readNativeSnapshot(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), captured.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, NativeRestoreRejectsInPlaceAuthorityDowngradeBeforeWorldChanges)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto saved = world.captureOblivionRuntimeState();
+    auto legacy = saved;
+    legacy.mNativeActorValues.clear();
+    legacy.mNativeActorLife.clear();
+    legacy.mNativeActorBreath.clear();
+    legacy.mClock.mHour = 9;
+    legacy.mNextDynamicSerial += 10;
+    ASSERT_NO_THROW(legacy.validate());
+    const auto clock = world.getTimeStamp();
+    const auto health = world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr()).getHealth();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    readNativeSnapshot(fixture, legacy);
+    EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+    EXPECT_EQ(world.getTimeStamp(), clock);
+    EXPECT_EQ(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr()).getHealth(), health);
+    EXPECT_TRUE(pending->isValid());
+    ESM4::RuntimeState authority = saved;
+    world.getOblivionCombatService()->capture(authority);
+    EXPECT_EQ(authority.serializeBinary(), saved.serializeBinary());
+}

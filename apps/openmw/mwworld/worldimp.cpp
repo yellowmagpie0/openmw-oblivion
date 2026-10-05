@@ -2296,11 +2296,43 @@ namespace MWWorld
             };
             const auto player = getPlayerPtr();
             const auto& current = player.getClass().getCreatureStats(player);
+            // Legacy snapshots have no authority that can own an existing
+            // native projection. Normal load reconstructs plain Player data;
+            // reject an in-place downgrade before publishing any World state.
+            if (current.getHealth().isNativeProjection() || current.getMagicka().isNativeProjection()
+                || current.getFatigue().isNativeProjection())
+                throw std::invalid_argument("legacy native restore requires reconstructed Player data");
             preparedLegacyResources.emplace(std::array{
                 prepareDynamicStat("health", current.getHealth()), prepareDynamicStat("magicka", current.getMagicka()),
                 prepareDynamicStat("fatigue", current.getFatigue())});
         }
         const ESM::FormKeyResolver resolver(mContentFiles);
+        std::optional<ESMStore::PreparedPlayerRecord> preparedPlayerRecord;
+        ESM::RefId preparedBirthSign;
+        if (state.mVersion >= 3)
+        {
+            const auto race = resolver.toFormId(state.mPlayer.mRace);
+            const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
+            ESM::NPC candidate = *mStore.get<ESM::NPC>().find(ESM::RefId::stringRefId("Player"));
+            if (!characterClass && !state.mPlayer.mClass.isDynamic())
+                throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
+            const ESM::RefId classId = characterClass ? ESM::RefId(*characterClass) : candidate.mClass;
+            if (!race || !mStore.get<ESM::Race>().search(ESM::RefId(*race))
+                || !mStore.get<ESM::Class>().search(classId))
+                throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+            if (!state.mPlayer.mBirthSign.isNull())
+            {
+                const auto sign = resolver.toFormId(state.mPlayer.mBirthSign);
+                if (!sign || !mStore.get<ESM::BirthSign>().search(ESM::RefId(*sign)))
+                    throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
+                preparedBirthSign = ESM::RefId(*sign);
+            }
+            candidate.mName = state.mPlayer.mName;
+            candidate.mRace = ESM::RefId(*race);
+            candidate.mClass = classId;
+            candidate.setIsMale(!state.mPlayer.mFemale);
+            preparedPlayerRecord.emplace(mStore.preparePlayerRecord(candidate));
+        }
         const std::optional<ESM::FormId> playerCellId = resolver.toFormId(state.mPlayer.mCell);
         if (!playerCellId || !playerCellId->hasContentFile())
             throw std::runtime_error("TES4 runtime-state player cell cannot be resolved");
@@ -2484,21 +2516,35 @@ namespace MWWorld
                 preparedActorInventories.emplace(reference.mKey,
                     OblivionProfileServices::prepareActorInventory(mStore, resolver, reference.mInventory));
         }
-        const auto applyPreparedInventory = [](InventoryStore& inventory,
-                                               const std::vector<PreparedOblivionInventoryItem>& prepared) {
-            std::vector<std::pair<ContainerStoreIterator, int>> equipped;
-            equipped.reserve(prepared.size());
-            inventory.clear();
-            for (const auto& item : prepared)
-            {
-                const Ptr ptr = item.mReference.getPtr();
-                const auto added = inventory.add(ptr, ptr.getCellRef().getCount(false), false);
-                if (item.mEquipmentSlot)
-                    equipped.emplace_back(added, *item.mEquipmentSlot);
-            }
-            for (const auto& [item, slot] : equipped)
-                inventory.equip(slot, item);
+        struct PreparedInventoryBinding
+        {
+            InventoryStore* mTarget;
+            std::unique_ptr<InventoryStore> mContents;
         };
+        std::vector<PreparedInventoryBinding> inventories;
+        inventories.reserve(preparedReferences.size() + 1);
+        std::vector<Ptr> removedItems, insertedItems;
+        const auto stageInventory = [&](const Ptr& actor, const std::vector<PreparedOblivionInventoryItem>& items) {
+            auto& target = actor.getClass().getInventoryStore(actor);
+            auto contents = OblivionProfileServices::stageActorInventory(items);
+            for (auto item = target.begin(); item != target.end(); ++item)
+            {
+                const Ptr ptr = *item;
+                if (ptr.mRef->mWorldModel)
+                    removedItems.push_back(ptr);
+            }
+            for (auto item = contents->begin(); item != contents->end(); ++item)
+            {
+                Ptr ptr = *item;
+                ptr.setContainerStore(&target);
+                insertedItems.push_back(ptr);
+            }
+            inventories.push_back({&target, std::move(contents)});
+        };
+        stageInventory(getPlayerPtr(), preparedPlayerInventory);
+        for (const auto& binding : preparedReferences)
+            if (binding.mReference.getType() == ESM::REC_NPC_4 || binding.mReference.getType() == ESM::REC_CREA4)
+                stageInventory(binding.mReference, preparedActorInventories.at(binding.mState->mKey));
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
@@ -2614,9 +2660,25 @@ namespace MWWorld
                 physical.mActors.emplace(binding.mActor, state.mNativeActorRagdolls.at(binding.mActor));
             preparedPhysics = mPhysics->prepareActorRagdollSnapshots(physical, bound.mBindings);
         }
-        // Every binding/conversion/allocation above succeeds before changing
-        // any global. Preserve FormKey ordering even for editor-ID aliases.
+        std::optional<MWMechanics::OblivionCombatService::PreparedRestoredActorState> preparedActorState;
+        if (preparedCombat)
+        {
+            auto residents = mWorldModel.getResidentPtrs();
+            for (const auto& binding : preparedReferences)
+                residents.push_back(binding.mReference);
+            preparedActorState.emplace(mOblivionCombat->prepareRestoredActorState(
+                std::move(*preparedCombat), residents, mPlayer.get()));
+        }
+        // Prepare one registry replacement after all class/view construction.
+        // Incoming item Ptrs already name their final live inventory owner.
+        auto preparedRegistry = mWorldModel.preparePtrReplacement(removedItems, insertedItems);
+        // Character, inventory, registry and native-view preparation completes
+        // before any global changes. No acquisition/equipment callbacks run.
+        // Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
+        preparedRegistry.commit();
+        for (auto& inventory : inventories)
+            inventory.mTarget->swapPreparedContents(*inventory.mContents);
         mOblivionDynamicReferenceIdentity.reset();
         mNextOblivionDynamicSerial = state.mNextDynamicSerial;
         for (auto& [target, prepared] : preparedGlobals)
@@ -2629,37 +2691,16 @@ namespace MWWorld
         mTimeManager->setup(mGlobalVariables);
         synchronizeOblivionCalendarGlobals(mGlobalVariables);
 
-        if (state.mVersion >= 3)
+        if (preparedPlayerRecord)
         {
-            const std::optional<ESM::FormId> race = resolver.toFormId(state.mPlayer.mRace);
-            const std::optional<ESM::FormId> characterClass = resolver.toFormId(state.mPlayer.mClass);
-            ESM::NPC playerBase = *mStore.get<ESM::NPC>().find(ESM::RefId::stringRefId("Player"));
-            if (!characterClass && !state.mPlayer.mClass.isDynamic())
-                throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
-            const ESM::RefId classId
-                = characterClass ? ESM::RefId(*characterClass) : playerBase.mClass;
-            if (!race || mStore.get<ESM::Race>().search(ESM::RefId(*race)) == nullptr
-                || mStore.get<ESM::Class>().search(classId) == nullptr)
-                throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
-            playerBase.mName = state.mPlayer.mName;
-            playerBase.mRace = ESM::RefId(*race);
-            playerBase.mClass = classId;
-            playerBase.setIsMale(!state.mPlayer.mFemale);
-            const ESM::NPC* inserted = mStore.insert(playerBase);
-            mPlayer->set(inserted);
-            if (state.mPlayer.mBirthSign.isNull())
-                mPlayer->setBirthSign({});
-            else if (const std::optional<ESM::FormId> birthSign = resolver.toFormId(state.mPlayer.mBirthSign))
-                mPlayer->setBirthSign(ESM::RefId(*birthSign));
-            else
-                throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
+            static_assert(std::is_nothrow_copy_assignable_v<ESM::RefId>);
+            mPlayer->set(preparedPlayerRecord->commit());
+            mPlayer->setBirthSign(preparedBirthSign);
             mPlayer->setOblivionCharacterGenerationFlags(state.mPlayer.mCharacterGenerationFlags);
         }
 
         mPlayer->setCell(&playerCell);
         const Ptr player = getPlayerPtr();
-        InventoryStore& playerInventory = player.getClass().getInventoryStore(player);
-        applyPreparedInventory(playerInventory, preparedPlayerInventory);
         player.getRefData().setPosition(state.mPlayer.mPosition);
         MWMechanics::CreatureStats& stats = player.getClass().getCreatureStats(player);
         // Native channels are installed by the prepared authority/view commit.
@@ -2752,8 +2793,6 @@ namespace MWWorld
 
             if (ptr.getClass().getType() == ESM::REC_NPC_4 || ptr.getClass().getType() == ESM::REC_CREA4)
             {
-                applyPreparedInventory(ptr.getClass().getInventoryStore(ptr),
-                    preparedActorInventories.at(reference.mKey));
                 restoreOblivionActorDrawState(ptr);
             }
 
@@ -2772,11 +2811,8 @@ namespace MWWorld
             mOblivionScriptManager->restore(state);
         if (mOblivionAi)
             mOblivionAi->restore(state);
-        if (preparedCombat)
-        {
-            const auto residents = mWorldModel.getResidentPtrs();
-            mOblivionCombat->installRestoredActorState(std::move(*preparedCombat), residents, mPlayer.get());
-        }
+        if (preparedActorState)
+            preparedActorState->commit();
         // All physical data was prepared before World publication. Commit the
         // complete loaded projection and optional shared clock as one group.
         // Retained unowned poses remain in the restored native authority.

@@ -3871,29 +3871,62 @@ namespace MWMechanics
                 validatePlayerIdentity(values);
     }
 
-    void OblivionCombatService::installRestoredActorState(OblivionCombatService&& replacement,
-        std::span<const MWWorld::Ptr> residents, MWWorld::Player* player)
+    struct OblivionCombatService::PreparedRestoredActorState::Impl
+    {
+        OblivionCombatService* mTarget;
+        OblivionCombatService mReplacement;
+        std::optional<OblivionActorProjection> mPlayer;
+        std::list<PreparedNonPlayerView> mResidents;
+
+        explicit Impl(OblivionCombatService& target)
+            : mTarget(&target) {}
+    };
+
+    OblivionCombatService::PreparedRestoredActorState::PreparedRestoredActorState(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionCombatService::PreparedRestoredActorState::~PreparedRestoredActorState() = default;
+    OblivionCombatService::PreparedRestoredActorState::PreparedRestoredActorState(
+        PreparedRestoredActorState&&) noexcept = default;
+    OblivionCombatService::PreparedRestoredActorState&
+    OblivionCombatService::PreparedRestoredActorState::operator=(PreparedRestoredActorState&&) noexcept = default;
+
+    bool OblivionCombatService::PreparedRestoredActorState::commit() noexcept
+    {
+        if (!mImpl || !mImpl->mTarget)
+            return false;
+        static_assert(std::is_nothrow_move_assignable_v<OblivionCombatService>);
+        *mImpl->mTarget = std::move(mImpl->mReplacement);
+        if (mImpl->mPlayer)
+            mImpl->mPlayer->commit();
+        for (auto& view : mImpl->mResidents)
+            view.commit();
+        mImpl->mTarget = nullptr;
+        return true;
+    }
+
+    OblivionCombatService::PreparedRestoredActorState OblivionCombatService::prepareRestoredActorState(
+        OblivionCombatService&& replacement, std::span<const MWWorld::Ptr> residents, MWWorld::Player* player)
     {
         if (this == &replacement)
             throw std::invalid_argument("native restore replacement aliases live authority");
         replacement.validateRestoredPlayerBinding();
-        std::optional<OblivionActorProjection> preparedPlayer;
-        if (const auto* values = replacement.findActorValues(ESM::FormKey::dynamic("player", 1)))
+        auto plan = std::make_unique<PreparedRestoredActorState::Impl>(*this);
+        auto& authority = replacement;
+        if (const auto* values = authority.findActorValues(ESM::FormKey::dynamic("player", 1)))
         {
             if (!player || player->getPlayer().isEmpty())
                 throw std::invalid_argument("native restore requires a ready Player view");
             const auto ptr = player->getPlayer();
-            preparedPlayer.emplace(ptr.getClass().getNpcStats(ptr),
-                actorProjection(*values, replacement.findActorBase(values->mBase),
-                    replacement.findActorLife(values->mActor)));
+            plan->mPlayer.emplace(ptr.getClass().getNpcStats(ptr),
+                actorProjection(*values, authority.findActorBase(values->mBase),
+                    authority.findActorLife(values->mActor)));
         }
-        std::list<PreparedNonPlayerView> prepared;
         std::map<ESM::FormKey, MWWorld::Ptr> seen;
         for (const auto& actor : residents)
         {
             if (actor.isEmpty())
                 continue;
-            const auto* values = replacement.findActorValues(actor.getCellRef().getFormKey());
+            const auto* values = authority.findActorValues(actor.getCellRef().getFormKey());
             if (!values || values->mOwner != ESM4::ActorValueOwner::NonPlayer)
                 continue;
             // Validate even duplicate keys so a second conflicting live owner
@@ -3906,15 +3939,19 @@ namespace MWMechanics
                     throw std::invalid_argument("native restore has multiple live owners for one actor key");
                 continue;
             }
-            prepared.emplace_back(actor, *values, replacement.findActorBase(values->mBase),
-                replacement.findActorLife(values->mActor));
+            plan->mResidents.emplace_back(actor, *values, authority.findActorBase(values->mBase),
+                authority.findActorLife(values->mActor));
         }
-        static_assert(std::is_nothrow_move_assignable_v<OblivionCombatService>);
-        *this = std::move(replacement);
-        if (preparedPlayer)
-            preparedPlayer->commit();
-        for (auto& view : prepared)
-            view.commit();
+        // Rejection must leave the caller's replacement intact for retry.
+        plan->mReplacement = std::move(replacement);
+        return PreparedRestoredActorState(std::move(plan));
+    }
+
+    void OblivionCombatService::installRestoredActorState(OblivionCombatService&& replacement,
+        std::span<const MWWorld::Ptr> residents, MWWorld::Player* player)
+    {
+        auto plan = prepareRestoredActorState(std::move(replacement), residents, player);
+        plan.commit();
     }
 
     void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)

@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view restore and restart evidence below | Complete load/cache reconciliation, populated migration and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,71 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 restore preparation checkpoint — 2026-10-05
+
+This completes the character/inventory/native-view preparation chunk; **S3
+remains in progress**. World now resolves winning race/class/birthsign records,
+prepares the Player record, stages complete inventories and pointer replacement,
+and prepares every loaded native actor projection before publishing globals,
+clock or dynamic-reference serials. Missing and wrong-type birthsigns reject
+alongside invalid race/class bindings. An invalid resident integer AI projection
+also rejects before inventory, clock, identity or authority publication.
+
+Inventory publication uses prepared contents and one registry replacement,
+preserves extras/equipment and points incoming registered items at their final
+live inventory owner. Restore no longer replays acquisition/equipment listeners.
+Native actor preparation is cancellable, movable and commits once without
+allocation or callbacks. A rejected preparation retains the caller's replacement
+for corrected retry; conflicting live owners of one stable key still reject.
+The prepared handle borrows synchronous actor data and service lifetimes.
+
+Six new regressions exercise actual T4ST read/apply boundaries, malformed
+character bindings, invalid resident projections, listener-free repeated
+inventory replacement, prepared-view discard/move/commit, and authority-free
+migration from every accepted version **1–41** followed by current-schema
+read/apply/recapture. Applying an authority-free snapshot onto an already-native
+Player is rejected early; normal legacy loads reconstruct plain Player data.
+This does not establish every populated historical migration contract.
+
+Verification binds HEAD `cba930c3d9690095f0c34905d244cfb45569bbdb` and dirty-source
+fingerprint `07b18d861211dc33de62da9022418fdf94c50713e4ce72551003e63bb5d2566a`.
+
+- `S3/restore-preparation-engine-02`: all **1,122** engine tests pass with exact
+  inventory, no failures/skips, and rebuilt `openmw`, `openmw-tests`, `esmtool`.
+- `S3/restore-preparation-sanitize-04`: all **1,122** engine tests pass under
+  ASan/UBSan with the same exact inventory and no failures/skips. Leak checking
+  is disabled; UBSan halts with stack traces. All three engine targets rebuild.
+- `S3/restore-preparation-runtime-01`: real stock dungeon F5 save, clean quit,
+  fresh process load and F5 resave, independently decoded as schema41. Distinct
+  PID/epoch streams have progressing ticks and real save/load boundaries. All
+  nine actors' native value/base/life/breath vectors, death counters and queue,
+  complete Player snapshot, physical-action ledger and all **5,900** saved
+  reference inventories are preserved, including **313** nonempty inventories,
+  **106** equipped entries and four Player entries with their item extras.
+  Fresh loading adds **27,602** cached references; this report preserves that
+  limitation rather than claiming equality of complete cache sets. Both final
+  screenshots were inspected and show the same prison view and full resource
+  bars. Audio is disabled and SDL offscreen replay is diagnostic runtime coverage.
+- `S3/restore-preparation-sanitized-runtime-03`: instrumented stock load/F5
+  resave/clean quit passes without sanitizer diagnostics. Independent decoding
+  preserves the same Player/action/actor vectors and all 5,900 saved inventories.
+  Its cache adds 26,594 references; the final screenshot was inspected. Compiler
+  scratch files use the ignored build filesystem after `/tmp` quota exhaustion.
+
+Failed baseline, interrupted runner/build attempts, the migration-fixture
+correction, replacement-retry regression and overly broad cache-map checker
+remain retained in their original evidence directories, alongside the compiler
+temporary-directory quota failure, ASan linker-script preload error and first
+instrumented runtime loading deadline failure. Aggregate evidence is
+`S3/restore-preparation-report.json`. Closure documentation is added after the
+check runners finish; production source hashes remain unchanged after testing.
+
+The chunk does **not** make the entire StateManager load transaction atomic.
+Lazy cell/class initialization can change caches during preparation; later
+reference movement and script/AI restore can still allocate. Complete load/cache
+reconciliation, populated legacy migration, active-action continuation and the
+remaining normal-input S3 acceptance matrix are still open.
 
 ## S2 closure — 2026-10-05
 
