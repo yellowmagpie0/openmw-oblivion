@@ -265,6 +265,10 @@ namespace MWWorld
 
         int findStatic(const ESM::RefId& id) const;
 
+        // Winning typed native content records, including record types omitted
+        // from the placeable-object ID cache. No load, insertion or mutation.
+        bool hasEsm4ContentRecord(const ESM::RefId& id) const;
+
         ESMStore();
         ~ESMStore();
 

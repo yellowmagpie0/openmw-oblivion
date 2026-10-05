@@ -10187,3 +10187,196 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
         }
     }
 }
+
+#include "apps/openmw/mwworld/oblivionownership.hpp"
+#include <components/esm4/loadfact.hpp>
+
+namespace
+{
+#include "native_cell_claim_expected.inc"
+
+    struct NativeCellClaimFixture : NativeWorldFixture
+    {
+        MWWorld::Ptr mItem = installNativeLooseItemCapture(*this);
+        MWWorld::Ptr mNpc;
+
+        NativeCellClaimFixture()
+        {
+            auto& store = mWorld.getStore();
+            auto base = *store.get<ESM4::Npc>().search(ESM::RefId(ESM::FormId{0x800, 0}));
+            base.mId = {0x840, 0}; base.mFormKey = ESM::FormKey::content("headless.esm", 0x840);
+            base.mEditorId = "CellClaimNpc";
+            store.getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+            MWClass::ESM4Npc::registerSelf();
+            ESM4::ActorCharacter placed{}; placed.mId = {0x841, 0};
+            placed.mFormKey = ESM::FormKey::content("headless.esm", 0x841);
+            placed.mBaseObj = base.mId; placed.mBaseKey = base.mFormKey;
+            placed.mParent = ESM::RefId(ESM::FormId{1, 0}); placed.mParentKey = ESM::FormKey::content("headless.esm", 1);
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, placed.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Npc> live(placed, store.search<ESM4::Npc>(base.mFormKey));
+            mNpc = MWWorld::Ptr(mItem.getCell()->insert(&live), mItem.getCell());
+            mWorld.getWorldModel().registerPtr(mNpc);
+            for (const std::uint32_t id : {0x850u, 0x851u})
+            {
+                ESM4::Faction faction{}; faction.mId = {id, 0};
+                faction.mFormKey = ESM::FormKey::content("headless.esm", id);
+                store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+            }
+            store.rebuildIdsIndex();
+        }
+
+        void configure(bool player, int owner, std::optional<std::int32_t> required,
+            int membership = 0, std::int8_t rank = 0, std::uint8_t flags = 0)
+        {
+            auto& store = mWorld.getStore();
+            const ESM::FormId baseId{player ? 0x800u : 0x840u, 0};
+            auto base = *store.get<ESM4::Npc>().search(ESM::RefId(baseId));
+            base.mFactions.clear();
+            if (membership == 2) base.mFactions.push_back({0x851, 127, 0, 0, 0});
+            if (membership != 0) base.mFactions.push_back({0x850, rank, 0, 0, 0});
+            // The primary compatibility field must not replace the full list.
+            base.mFaction = {0x851, -128, 0, 0, 0};
+            store.getWritable<ESM4::Npc>().insertStatic(base,
+                ESM::FormKey::content("headless.esm", baseId.mIndex));
+            auto faction = *store.get<ESM4::Faction>().search(ESM::RefId(ESM::FormId{0x850, 0}));
+            faction.mFactionFlags = flags;
+            store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+            auto cell = *store.get<ESM4::Cell>().search(ESM::RefId(ESM::FormId{1, 0}));
+            switch (owner)
+            {
+                case 0: cell.mOwner = {}; break;
+                case 1: cell.mOwner = baseId; break;
+                case 2: cell.mOwner = {player ? 0x840u : 0x800u, 0}; break;
+                case 3: cell.mOwner = {0x940, 0}; break;
+                case 4: cell.mOwner = {0x850, 0}; break;
+                default: throw std::invalid_argument("invalid test owner kind");
+            }
+            cell.mOwnershipRank = required;
+            store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        }
+
+        bool claim(bool player)
+        {
+            return MWWorld::oblivionActorHasCellOwnershipClaim(
+                mWorld, player ? mWorld.getPlayerPtr() : mNpc, *mItem.getCell());
+        }
+    };
+}
+
+TEST(OblivionWorldTest, NativeCellClaimMatches3376IndependentOriginalInstructionResults)
+{
+    NativeCellClaimFixture fixture;
+    const auto revision = fixture.mWorld.getWorldModel().getPtrRegistryRevision();
+    std::size_t index = 0;
+    const auto check = [&](bool player, int owner, std::optional<std::int32_t> required,
+        int membership = 0, std::int8_t rank = 0, std::uint8_t flags = 0) {
+        SCOPED_TRACE(index);
+        fixture.configure(player, owner, required, membership, rank, flags);
+        const auto digit = nativeCellClaimExpectedBits.at(index / 4);
+        const auto nibble = digit <= '9' ? digit - '0' : digit - 'a' + 10;
+        const bool expected = (nibble & (1 << (index % 4))) != 0;
+        EXPECT_EQ(fixture.claim(player), expected);
+        ++index;
+    };
+    // The two oracle x87 controls have separate recorded expected bits; this
+    // integer-only adapter does not change or depend on the host x87 control.
+    for (bool player : {false, true})
+        for (int owner = 0; owner != 4; ++owner)
+            for (int control = 0; control != 2; ++control)
+                check(player, owner, {});
+    const std::array<std::optional<std::int32_t>, 10> required{
+        std::nullopt, std::numeric_limits<std::int32_t>::min(), -2, -1, 0,
+        1, 5, 127, 128, std::numeric_limits<std::int32_t>::max()};
+    for (bool player : {false, true})
+        for (const auto requirement : required)
+            for (int membership = 0; membership != 3; ++membership)
+                for (const std::int8_t rank : {-128, -2, -1, 0, 1, 5, 127})
+                    for (const std::uint8_t flags : {0, 1, 8, 9})
+                        for (int control = 0; control != 2; ++control)
+                            check(player, 4, requirement, membership, rank, flags);
+    ASSERT_EQ(index, 3376u);
+    ASSERT_EQ(index, nativeCellClaimExpectedBits.size() * 4);
+    EXPECT_EQ(fixture.mWorld.getWorldModel().getPtrRegistryRevision(), revision);
+}
+
+TEST(OblivionWorldTest, NativeCellClaimReadsWinningRecordsWithoutCachingFactionOrRank)
+{
+    NativeCellClaimFixture fixture;
+    for (bool player : {false, true})
+    {
+        fixture.configure(player, 4, 5, 2, 5, 0);
+        EXPECT_TRUE(fixture.claim(player));
+        fixture.configure(player, 4, 5, 2, 4, 0);
+        EXPECT_FALSE(fixture.claim(player));
+        fixture.configure(player, 4, {}, 1, -1, 0);
+        EXPECT_FALSE(fixture.claim(player));
+        fixture.configure(player, 4, -2, 0);
+        EXPECT_TRUE(fixture.claim(player));
+        fixture.configure(player, 1, {});
+        EXPECT_TRUE(fixture.claim(player));
+        fixture.configure(player, 2, {});
+        EXPECT_FALSE(fixture.claim(player));
+    }
+}
+
+TEST(OblivionWorldTest, NativeCellClaimRejectsInvalidWorldAndRecordBindings)
+{
+    NativeCellClaimFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& cell = *fixture.mItem.getCell();
+    EXPECT_THROW(MWWorld::oblivionActorHasCellOwnershipClaim(world, {}, cell), std::invalid_argument);
+    EXPECT_THROW(MWWorld::oblivionActorHasCellOwnershipClaim(world, fixture.mItem, cell), std::invalid_argument);
+    EXPECT_THROW(MWWorld::oblivionActorHasCellOwnershipClaim(
+        world, fixture.mNpc, world.getWorldModel().getDraftCell()), std::invalid_argument);
+    auto* live = fixture.mNpc.get<ESM4::Npc>();
+    const auto* valid = live->mBase;
+    auto stale = *valid; live->mBase = &stale;
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+    live->mBase = nullptr;
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+    live->mBase = valid;
+    auto& store = world.getStore();
+    auto broken = *store.get<ESM4::Cell>().search(ESM::RefId(ESM::FormId{1, 0}));
+    broken.mOwner = {0xdead, 0};
+    store.getWritable<ESM4::Cell>().insertStatic(broken, broken.mFormKey);
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+    fixture.configure(false, 1, {});
+    EXPECT_TRUE(fixture.claim(false));
+    world.getWorldModel().deregisterLiveCellRef(*fixture.mNpc.get<ESM4::Npc>());
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, NativeCellClaimValidCreatureBaseHasNoNpcOwnershipClaim)
+{
+    NativeCellClaimFixture fixture;
+    const auto detached = addEquipmentCreature(fixture);
+    const auto creature = detached.getCell()->moveTo(detached, fixture.mItem.getCell());
+    fixture.mWorld.getWorldModel().registerPtr(creature);
+    fixture.configure(false, 4, std::numeric_limits<std::int32_t>::min(), 1, 127, 0);
+    EXPECT_FALSE(MWWorld::oblivionActorHasCellOwnershipClaim(
+        fixture.mWorld, creature, *fixture.mItem.getCell()));
+}
+
+TEST(OblivionWorldTest, NativeCellClaimDistinguishesNonOwnerRecordsFromMissingAndDeletedOwners)
+{
+    NativeCellClaimFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    ESM4::Quest quest{};
+    quest.mId = {0x860, 0}; quest.mFormKey = ESM::FormKey::content("headless.esm", 0x860);
+    store.getWritable<ESM4::Quest>().insertStatic(quest, quest.mFormKey);
+    store.rebuildIdsIndex();
+    // QUST is deliberately omitted from the placeable-object ID cache.
+    ASSERT_EQ(store.find(ESM::RefId(quest.mId)), 0);
+    ASSERT_TRUE(store.hasEsm4ContentRecord(ESM::RefId(quest.mId)));
+    auto cell = *store.get<ESM4::Cell>().search(ESM::RefId(ESM::FormId{1, 0}));
+    cell.mOwner = quest.mId;
+    store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+    EXPECT_FALSE(fixture.claim(false));
+    ASSERT_TRUE(store.getWritable<ESM4::Quest>().eraseStatic(ESM::RefId(quest.mId)));
+    EXPECT_FALSE(store.hasEsm4ContentRecord(ESM::RefId(quest.mId)));
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+    fixture.configure(false, 4, 0, 1, 5);
+    EXPECT_TRUE(fixture.claim(false));
+    ASSERT_TRUE(store.getWritable<ESM4::Faction>().eraseStatic(ESM::RefId(ESM::FormId{0x850, 0})));
+    EXPECT_THROW(fixture.claim(false), std::invalid_argument);
+}

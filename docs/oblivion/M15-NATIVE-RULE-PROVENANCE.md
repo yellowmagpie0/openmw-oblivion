@@ -13759,3 +13759,55 @@ factory, original ownership/post-shot state mapping, bow frontend/arrow
 publication, loose-body model synchronization/recreation and exact pickup
 remain open. Ordinary NPC broken-bow release remains safely rejected until
 its complete transaction is installed. S5 and full M15 remain in progress.
+
+
+### S5 checkpoint289: actual World native CELL ownership claim
+
+The native CELL positive-claim adapter resolves the actual Player or an admitted
+native NPC/creature and its winning content base. It requires a CELL managed by
+that World, validates stable content identities, and reads winning CELL owner
+and optional signed XRNK. Missing or authored -1 rank resolves to zero; other
+negative ranks remain signed. Unowned cells have no positive claim. NPC owners
+match the native actor base, including Player's content NPC base rather than
+the dynamic Player AV-base namespace. FACT owners use the full static native
+base faction list, preserving signed byte rank and first matching membership.
+Raw FACT bit 8 filters Player membership only. The primary TES3 compatibility
+faction field does not substitute for the native list.
+
+ESMStore's read-only native-content lookup visits typed stores rather than the
+placeable-object ID cache, which intentionally omits QUST and other records.
+Valid non-NPC/non-FACT owners produce no claim; missing/deleted owners reject.
+Empty, wrong-type, unregistered, foreign-cell and stale/null-base bindings
+reject. A valid native creature fails the original TESNPC base-type gate.
+
+Five new engine tests include an actual World/store/reference matrix against
+3376 independently captured original 1.2.0416 results: 1084 positive and 2292
+negative claims. The compact expected-bit fixture comes directly from the
+original instruction corpus, whose SHA256 is
+a6720020c5d3133a76fb96014209908bf7c7e722d767d1f78fdbdfd72ea73f76.
+Its input enumeration was checked against every supported original row before
+encoding. Both original x87 controls have recorded expected bits; this adapter
+is integer-only and does not change the host x87 mode. The 16 null/non-NPC raw
+base oracle rows are outside the admitted World adapter domain, whose invalid
+bindings instead have explicit rejection tests. Additional cases cover winning
+record changes without query caching, compatibility-field/list disagreement,
+creatures, QUST owners and owner deletion. Querying does not change the Ptr
+registry revision. This fixture is hermetic; it does not read external oracle
+files at test execution time.
+
+Both full normal and ASan/UBSan engine suites pass 1068 cases with exact
+inventories, no failures and no skips. Leak checks remain disabled. Two fixture
+type errors were corrected during the initial syntax check (parent RefId and
+faction FormId). Rebuild warning sources match checkpoint288 unchanged.
+Component/Python/schema code did not change; no fresh check of those layers is
+claimed. Evidence: S5/native-cell-claim-normal-01,
+S5/native-cell-claim-sanitized-01; original corpus/provenance remains
+S5/native-drop-cell-access-oracle-01.
+Engine-tested fingerprint: 27a708c6291f4a739ee9e7ce04f6c77d6760d2a5583529314fe9cbc09f1e0509
+
+This is a static-base membership adapter. Native faction mutation and its
+persistent authority remain open in S9/S12. It is not a permission-global,
+access, legality, witness or crime-report policy, and does not prove normal
+gameplay. The actual stock drop factory, compound native bow/arrow release,
+loose model synchronization/recreation, exact native pickup and fresh-process
+acceptance remain open. S5 and full M15 remain in progress.

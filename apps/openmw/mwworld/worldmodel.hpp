@@ -158,6 +158,14 @@ namespace MWWorld
         // once. Does not load cells or publish registry entries.
         std::vector<Ptr> getResidentPtrs();
 
+        // Membership only: does not create, load or register a cell.
+        bool ownsCell(const CellStore& cell) const noexcept
+        {
+            const auto found = mCells.find(cell.getCell()->getId());
+            return found != mCells.end() && &found->second == &cell;
+        }
+
+
         PtrRegistryView getPtrRegistryView() const { return PtrRegistryView(mPtrRegistry); }
 
         ESM::RefNum getLastGeneratedRefNum() const { return mPtrRegistry.getLastGenerated(); }

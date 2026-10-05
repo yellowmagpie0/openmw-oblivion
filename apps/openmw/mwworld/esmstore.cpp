@@ -373,6 +373,20 @@ namespace MWWorld
         return it->second;
     }
 
+    bool ESMStore::hasEsm4ContentRecord(const ESM::RefId& id) const
+    {
+        const auto has = [&id](const auto& typed) {
+            if constexpr (requires { typed.findFormKey(id); typed.search(id); })
+            {
+                const auto key = typed.findFormKey(id);
+                return key && key->isContent() && typed.search(id) != nullptr;
+            }
+            else
+                return false;
+        };
+        return std::apply([&has](const auto&... typed) { return (has(typed) || ...); }, mStoreImp->mStores);
+    }
+
     int ESMStore::findStatic(const ESM::RefId& id) const
     {
         IDMap::const_iterator it = mStoreImp->mStaticIds.find(id);
