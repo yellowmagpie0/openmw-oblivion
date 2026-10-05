@@ -109,6 +109,7 @@ namespace MWBase
         Misc::NotNullPtr<ScriptManager> getScriptManager() const { return mScriptManager; }
 
         Misc::NotNullPtr<WindowManager> getWindowManager() const { return mWindowManager; }
+        WindowManager* getWindowManagerOrNull() const noexcept { return mWindowManager; }
 
         Misc::NotNullPtr<MechanicsManager> getMechanicsManager() const { return mMechanicsManager; }
         MechanicsManager* getMechanicsManagerOrNull() const noexcept { return mMechanicsManager; }

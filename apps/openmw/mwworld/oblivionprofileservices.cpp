@@ -741,6 +741,8 @@ namespace MWWorld
     ESM::RefId OblivionProfileServices::resolveOwnershipGlobal(const ESMStore& store,
         const ESM::FormKeyResolver& resolver, const ESM::FormKey& key)
     {
+        if (ESM::FormKey::deserialize(key.serialize()) != key)
+            throw std::invalid_argument("Native ownership global is not canonical");
         if (key.isNull()) return {};
         const auto id = resolver.toFormId(key);
         if (!key.isContent() || !id || !store.get<ESM4::GlobalVariable>().search(ESM::RefId(*id)))

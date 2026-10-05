@@ -14108,3 +14108,76 @@ insertStatic(base,key) identity. Attempt01 remains retained. Only model assets
 are extracted: the missing ironbow.dds warning is recorded, and no render
 context, texture completeness, frame dynamics, original pose comparison,
 complete bow-drop transaction or normal-input gameplay is claimed.
+
+
+### S5 checkpoint295: publish native inventory additions before observers
+
+The public native Player addition adapter now resolves and prepares the exact
+projected item, its stack publication and any new registry identity before
+changing live inventory. The prepared addition splices one owned list node or
+changes a validated compatible stack count without allocating or notifying.
+Existing equipment and other live item instances retain their identities.
+Overflow, stale stack count/equipment, cleared/replaced/moved inventory, owner
+rebinding and owner destruction reject an uncommitted preparation. Detached
+sources with scene, registry, Lua-script or TES3-script ownership are rejected;
+the native World adapter supplies an independently prepared projection.
+
+Only after inventory and registry publication does the token notify the
+inventory listener, once. Its weak ownership guard allows that listener to
+destroy the inventory. The World adapter also checks its World epoch and
+current Player before subsequent UI refresh and saved-cache capture. Clearing
+or replacing a store inside a surviving Player also refreshes its current
+inventory. Notification failures propagate after the surviving World's cache
+refresh; the committed grant is not undone or replayed. It reads
+the observers' final live inventory instead of incrementing an old cached
+inventory list. A nullable presentation accessor permits the same native
+service in a headless integration fixture. Normal game presentation still
+receives its inventory refresh. Canonical ownership-global resolution now
+rejects dirty null identities directly in the public preparation helper.
+
+Eight new real engine fixture cases cover final count edits and state-cache
+replacement inside itemAdded, exact registry visibility before notification,
+condition/charge/owner/rank metadata, malformed input before publication,
+cancellation, unchanged equipment identity, stale targets, overflow, clear,
+five assignment/move/swap/rebinding invalidations, inventory destruction by its
+listener, World clearing by its listener, removed-item hotkey rejection after
+a listener clears inventory, and normal/clearing observer exceptions whose
+cache results must still agree with committed live inventory.
+
+The first two baseline probes had incomplete Player setup and are retained.
+The corrected probe uses the checkpoint294 source headers and completed
+checkpoint294 libraries, a real Player and an installed save cache. Its public
+addition terminates with SIGSEGV11 rather than the declared successful exit.
+Baseline binary SHA256: a8ffb6f0422449de09ea77bf097cfb4efb8f025c92200c7f74e048ec1b2df9ee
+Baseline fixture SHA256: 6f56a76f04a65573b17ad49788301d7430270aa34f3dbf9370ba35a8c441efe2
+Evidence: S5/native-inventory-addition-baseline-03.
+
+The first normal and sanitizer builds retained in
+S5/native-inventory-addition-{normal,sanitized}-01 fail compilation because
+the existing presentation accessor returns NotNullPtr, not a raw pointer.
+The corrected nullable accessor and initial complete test source pass syntax
+checks in S5/native-inventory-addition-syntax-01. Complete-02 runs retain a
+malformed-input fixture failure: the first observation performed ordinary
+lazy Player registration after its registry baseline. The final fixture
+initializes the empty Player inventory before recording that boundary.
+
+Review also identified stale cache after an observer clears inventory or
+throws following a committed grant. Real public-API probes against completed
+normal-02 libraries reproduce incorrect hotkey admission in both directions:
+a removed item remains available, or a committed item is unavailable.
+Evidence: S5/native-inventory-cleared-cache-regression-01 and
+S5/native-inventory-observer-error-regression-01. Their source fingerprint is
+201c745917ed8eea7bbfe61cb81814cf50e5167b26fdb6ad11877bbdaee25b6c.
+These failures are retained before the final guard and exception corrections.
+Both final full engine runs pass
+1096 cases with exact unfiltered inventories, no failures or skips.
+Evidence: S5/native-inventory-addition-normal-03 and
+S5/native-inventory-addition-sanitized-03. ASan leak checking is disabled.
+Tested source fingerprint: a559cd61bfa0ec1b19c52f8bc5e95ce100a833a954612e46735fc2788c817b92
+
+This is actual native addition and callback integration coverage. Native Take
+still requires the complete source/scene/physics removal transaction and exact
+loose-item metadata capture; container transfer and other interaction callbacks
+also need their cached-reference audit. Complete bow/drop/arrow publication,
+frame/save recreation and normal-input ranged/restart courses remain open.
+S5 and full M15 remain in progress; no gameplay acceptance gate is closed here.

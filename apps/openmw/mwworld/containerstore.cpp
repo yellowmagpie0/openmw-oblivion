@@ -2,6 +2,7 @@
 #include "inventorystore.hpp"
 
 #include <cassert>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
 
@@ -199,6 +200,7 @@ MWWorld::ContainerStore::ContainerStore(MWWorld::ContainerStore&& store)
     , mRechargingItemsUpToDate(false)
 {
     const std::ptrdiff_t distance = store.index(store.mSelectedEnchantItem);
+    store.mPreparedAdditionIdentity.reset();
     mLists = std::move(store.mLists);
     if (distance != -1)
     {
@@ -211,6 +213,7 @@ MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(const ContainerStore
 {
     if (this == &store)
         return *this;
+    mPreparedAdditionIdentity.reset();
     mListener = store.mListener;
     mLists = store.mLists;
     mCachedWeight = store.mCachedWeight;
@@ -234,6 +237,9 @@ MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(const ContainerStore
 
 MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(ContainerStore&& store)
 {
+    if (this == &store) return *this;
+    mPreparedAdditionIdentity.reset();
+    store.mPreparedAdditionIdentity.reset();
     const std::ptrdiff_t distance = store.index(store.mSelectedEnchantItem);
     mListener = store.mListener;
     mLists = std::move(store.mLists);
@@ -265,6 +271,8 @@ void MWWorld::ContainerStore::swapPreparedContents(ContainerStore& other) noexce
 {
     if (this == &other)
         return;
+    mPreparedAdditionIdentity.reset();
+    other.mPreparedAdditionIdentity.reset();
     static_assert(std::is_nothrow_swappable_v<Lists>);
     using std::swap;
     swap(mLists, other.mLists);
@@ -446,6 +454,163 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(const ESM::RefId& i
 {
     MWWorld::ManualRef ref(*MWBase::Environment::get().getESMStore(), id, count);
     return add(ref.getPtr(), count, allowAutoEquip);
+}
+
+
+struct MWWorld::ContainerStore::PreparedItemAddition::Impl
+{
+    ContainerStore* mOwner = nullptr;
+    std::weak_ptr<const char> mIdentity;
+    std::unique_ptr<ContainerStore> mStaged;
+    Ptr mItem;
+    Ptr mExisting;
+    std::optional<CellRef> mExpected;
+    float mUsage = -1.f;
+    int mCount = 0;
+    int mExistingCount = 0;
+    bool mCommitted = false;
+    bool mNotified = false;
+
+    bool matches(const Ptr& ptr) const
+    {
+        const auto& actual = ptr.getCellRef();
+        const auto& expected = *mExpected;
+        return actual.getRefId() == expected.getRefId()
+            && actual.getOwner() == expected.getOwner()
+            && actual.getNativeOwnershipRank() == expected.getNativeOwnershipRank()
+            && actual.getNativeOwnershipGlobal() == expected.getNativeOwnershipGlobal()
+            && actual.getFaction() == expected.getFaction()
+            && actual.getFactionRank() == expected.getFactionRank()
+            && actual.getSoul() == expected.getSoul()
+            && actual.getCharge() == expected.getCharge()
+            && actual.getNativeItemCondition() == expected.getNativeItemCondition()
+            && actual.getEnchantmentCharge() == expected.getEnchantmentCharge()
+            && ptr.getClass().getRemainingUsageTime(ptr) == mUsage;
+    }
+};
+
+MWWorld::ContainerStore::PreparedItemAddition::PreparedItemAddition(std::unique_ptr<Impl> impl)
+    : mImpl(std::move(impl))
+{
+}
+MWWorld::ContainerStore::PreparedItemAddition::~PreparedItemAddition() = default;
+
+bool MWWorld::ContainerStore::PreparedItemAddition::ownerIsCurrent() const noexcept
+{
+    return mImpl && !mImpl->mIdentity.expired();
+}
+
+MWWorld::Ptr MWWorld::ContainerStore::PreparedItemAddition::getItem() const
+{
+    if (!ownerIsCurrent()) return {};
+    return mImpl->mExisting.isEmpty() ? mImpl->mItem : mImpl->mExisting;
+}
+
+bool MWWorld::ContainerStore::PreparedItemAddition::needsRegistration() const
+{
+    return mImpl && mImpl->mExisting.isEmpty();
+}
+
+std::unique_ptr<MWWorld::ContainerStore::PreparedItemAddition>
+MWWorld::ContainerStore::prepareItemAddition(const ConstPtr& source, int count)
+{
+    if (source.isEmpty() || count <= 0 || !isStorableType(source.getType()))
+        throw std::invalid_argument("Prepared inventory addition requires a positive storable item");
+    if (source.mRef->mWorldModel || source.getCellRef().getRefNum().isSet()
+        || source.getRefData().getBaseNode() || source.getRefData().getLuaScripts())
+        throw std::invalid_argument("Prepared inventory addition requires a detached source");
+    // TES4 projection does not run TES3 item scripts. Their registration and
+    // onpcadd handling belongs to the legacy add path.
+    if (!source.getClass().getScript(source).empty())
+        throw std::invalid_argument("Prepared inventory addition cannot register a TES3 item script");
+    if (!mResolved && !getPtr().isEmpty() && getPtr().getType() == ESM::REC_CONT)
+        throw std::invalid_argument("Prepared inventory addition requires a resolved container");
+    auto value = std::make_unique<PreparedItemAddition::Impl>();
+    value->mOwner = this;
+    value->mStaged = std::make_unique<ContainerStore>();
+    value->mItem = *value->mStaged->addNewStack(source, count);
+    // Never copy scene, registry or script ownership from a loose reference.
+    value->mItem.getRefData().setBaseNode(nullptr);
+    value->mItem.getCellRef().unsetRefNum();
+    value->mItem.getCellRef().setPosition(ESM::Position{});
+    value->mItem.mRef->mWorldModel = nullptr;
+    value->mItem.setContainerStore(this);
+    value->mExpected = value->mItem.getCellRef();
+    value->mUsage = value->mItem.getClass().getRemainingUsageTime(value->mItem);
+    value->mCount = count;
+    for (auto item : *this)
+    {
+        if (auto* inventory = dynamic_cast<InventoryStore*>(this); inventory && inventory->isEquipped(item))
+            continue;
+        if (!stacks(item, value->mItem)) continue;
+        const int previous = item.getCellRef().getCount(false);
+        if (previous <= 0 || previous > std::numeric_limits<int>::max() - count)
+            throw std::overflow_error("Prepared inventory addition would overflow its target stack");
+        value->mExisting = item;
+        value->mExistingCount = previous;
+        break;
+    }
+    if (!mPreparedAdditionIdentity) mPreparedAdditionIdentity = std::make_shared<const char>(0);
+    value->mIdentity = mPreparedAdditionIdentity;
+    return std::unique_ptr<PreparedItemAddition>(new PreparedItemAddition(std::move(value)));
+}
+
+bool MWWorld::ContainerStore::PreparedItemAddition::isValid() const
+{
+    if (!ownerIsCurrent() || mImpl->mCommitted
+        || mImpl->mItem.getCellRef().getCount(false) != mImpl->mCount || !mImpl->matches(mImpl->mItem))
+        return false;
+    auto& owner = *mImpl->mOwner;
+    if (mImpl->mExisting.isEmpty()) return true;
+    for (auto item : owner)
+    {
+        if (item != mImpl->mExisting) continue;
+        if (auto* inventory = dynamic_cast<InventoryStore*>(&owner); inventory && inventory->isEquipped(item))
+            return false;
+        return item.getCellRef().getCount(false) == mImpl->mExistingCount
+            && owner.stacks(item, mImpl->mItem);
+    }
+    return false;
+}
+
+MWWorld::Ptr MWWorld::ContainerStore::PreparedItemAddition::commit()
+{
+    if (!isValid()) return {};
+    auto& owner = *mImpl->mOwner;
+    if (!mImpl->mExisting.isEmpty())
+        mImpl->mExisting.getCellRef().setCount(mImpl->mExistingCount + mImpl->mCount);
+    else
+    {
+#define OPENMW_SPLICE_PREPARED_ITEM(Member) \
+        owner.mLists.Member.mList.splice(owner.mLists.Member.mList.end(), mImpl->mStaged->mLists.Member.mList)
+        OPENMW_SPLICE_PREPARED_ITEM(mPotions);
+        OPENMW_SPLICE_PREPARED_ITEM(mAppas);
+        OPENMW_SPLICE_PREPARED_ITEM(mArmors);
+        OPENMW_SPLICE_PREPARED_ITEM(mBooks);
+        OPENMW_SPLICE_PREPARED_ITEM(mClothes);
+        OPENMW_SPLICE_PREPARED_ITEM(mIngreds);
+        OPENMW_SPLICE_PREPARED_ITEM(mLights);
+        OPENMW_SPLICE_PREPARED_ITEM(mLockpicks);
+        OPENMW_SPLICE_PREPARED_ITEM(mMiscItems);
+        OPENMW_SPLICE_PREPARED_ITEM(mProbes);
+        OPENMW_SPLICE_PREPARED_ITEM(mRepairs);
+        OPENMW_SPLICE_PREPARED_ITEM(mWeapons);
+#undef OPENMW_SPLICE_PREPARED_ITEM
+    }
+    owner.mModified = true;
+    owner.ContainerStore::flagAsModified();
+    mImpl->mCommitted = true;
+    return getItem();
+}
+
+bool MWWorld::ContainerStore::PreparedItemAddition::notify()
+{
+    if (!ownerIsCurrent() || !mImpl->mCommitted || mImpl->mNotified) return false;
+    mImpl->mNotified = true;
+    if (auto* listener = mImpl->mOwner->mListener)
+        listener->itemAdded(getItem(), mImpl->mCount);
+    // Do not access the owner after observers: they may have destroyed it.
+    return true;
 }
 
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
@@ -833,6 +998,7 @@ void MWWorld::ContainerStore::addInitialItemImp(
 
 void MWWorld::ContainerStore::clear()
 {
+    mPreparedAdditionIdentity.reset();
     for (auto&& iter : *this)
         iter.getCellRef().setCount(0);
 

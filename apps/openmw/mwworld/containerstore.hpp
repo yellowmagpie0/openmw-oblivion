@@ -278,6 +278,7 @@ namespace MWWorld
 
     private:
         Lists mLists;
+        std::shared_ptr<const char> mPreparedAdditionIdentity;
 
         mutable float mCachedWeight = 0;
         unsigned int mSeed = 0;
@@ -340,7 +341,11 @@ namespace MWWorld
 
         // Container or actor that holds this store.
         const Ptr& getPtr() const { return mPtr.ptrOrEmpty(); }
-        void setPtr(const Ptr& ptr) { mPtr = SafePtr(ptr); }
+        void setPtr(const Ptr& ptr)
+        {
+            if (getPtr() != ptr) mPreparedAdditionIdentity.reset();
+            mPtr = SafePtr(ptr);
+        }
 
         ConstContainerStoreIterator cbegin(int mask = Type_All) const;
         ConstContainerStoreIterator cend() const;
@@ -351,6 +356,30 @@ namespace MWWorld
         ContainerStoreIterator end();
 
         bool hasVisibleItems() const;
+
+        // Prepare a detached projected item without touching live counts,
+        // registry, equipment or observers. Caller owns registry publication.
+        class PreparedItemAddition
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedItemAddition(std::unique_ptr<Impl> impl);
+            friend class ContainerStore;
+        public:
+            ~PreparedItemAddition();
+            PreparedItemAddition(const PreparedItemAddition&) = delete;
+            PreparedItemAddition& operator=(const PreparedItemAddition&) = delete;
+            Ptr getItem() const;
+            bool needsRegistration() const;
+            bool isValid() const;
+            // Validates before the allocation-free splice/count publication.
+            Ptr commit();
+            // Standalone token remains safe if its listener destroys the store.
+            // UI refresh is the World adapter's responsibility.
+            bool notify();
+            bool ownerIsCurrent() const noexcept;
+        };
+        std::unique_ptr<PreparedItemAddition> prepareItemAddition(const ConstPtr& source, int count);
 
         virtual ContainerStoreIterator add(
             const ConstPtr& itemPtr, int count, bool allowAutoEquip = true, bool resolve = true);

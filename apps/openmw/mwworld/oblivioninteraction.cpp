@@ -1,9 +1,11 @@
 #include "oblivioninteraction.hpp"
 
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cctype>
 #include <cmath>
+#include <exception>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -229,44 +231,73 @@ namespace MWWorld
 
     int World::oblivionAddPlayerInventoryItem(ESM4::RuntimeInventoryItem item)
     {
+        const auto canonical = [](const ESM::FormKey& key) {
+            return ESM::FormKey::deserialize(key.serialize()) == key;
+        };
         if (mGameProfile != ESM::GameProfile::Oblivion || item.mBase.isNull() || item.mCount <= 0
             || !std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1)
-            || item.mCondition > std::numeric_limits<float>::max())
+            || item.mCondition > std::numeric_limits<float>::max()
+            || !std::isfinite(item.mCharge) || item.mCharge < -1.f
+            || !std::isfinite(item.mRemainingUsageTime) || item.mRemainingUsageTime < -1.f
+            || !canonical(item.mBase) || !canonical(item.mOwner) || !canonical(item.mOwnershipGlobal))
             return 0;
-        const std::optional<ESM::FormId> id = ESM::FormKeyResolver(mContentFiles).toFormId(item.mBase);
-        if (!id)
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const auto id = resolver.toFormId(item.mBase);
+        if (!id || !OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id)))
             return 0;
-        const ESM::RefId nativeId(*id);
-        const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId);
-        if (!definition)
+        if (!item.mOwner.isNull() && !resolver.toFormId(item.mOwner))
             return 0;
-        if (!mOblivionRuntimeState)
-            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
-
         item.mCondition = static_cast<float>(item.mCondition);
-        item.mCount = std::min(item.mCount, std::numeric_limits<int>::max());
         item.mEquippedSlots = 0;
         item.mHotkey = -1;
-        ManualRef source(mStore, OblivionProfileServices::sharedItemId(mStore, nativeId), item.mCount);
-        if (item.mCondition >= 0)
-            source.getPtr().getCellRef().setNativeItemCondition(static_cast<float>(item.mCondition));
-        if (item.mCharge >= 0.f)
-            source.getPtr().getCellRef().setEnchantmentCharge(item.mCharge);
-        if (item.mRemainingUsageTime >= 0.f)
-            source.getPtr().getClass().setRemainingUsageTime(source.getPtr(), item.mRemainingUsageTime);
-        if (!item.mOwner.isNull())
+        // Resolve every field and allocate the projected item before publishing
+        // either inventory counts or registry identity.
+        auto sources = OblivionProfileServices::prepareActorInventory(mStore, resolver, {item});
+        const Ptr player = getPlayerPtr();
+        auto& inventory = player.getClass().getInventoryStore(player);
+        auto addition = inventory.prepareItemAddition(sources.front().mReference.getPtr(), item.mCount);
+        std::optional<WorldModel::PreparedPtrReplacement> registration;
+        if (addition->needsRegistration())
         {
-            const std::optional<ESM::FormId> ownerId = ESM::FormKeyResolver(mContentFiles).toFormId(item.mOwner);
-            if (!ownerId)
-                return 0;
-            source.getPtr().getCellRef().setOwner(ESM::RefId(*ownerId));
+            const std::array inserted{addition->getItem()};
+            registration.emplace(mWorldModel.preparePtrReplacement({}, inserted));
         }
-        const ESM::FormKeyResolver ownershipResolver(mContentFiles);
-        source.getPtr().getCellRef().setNativeOwnershipGlobal(
-            OblivionProfileServices::resolveOwnershipGlobal(mStore, ownershipResolver, item.mOwnershipGlobal));
-        source.getPtr().getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
-        getPlayerPtr().getClass().getInventoryStore(getPlayerPtr()).add(source.getPtr(), item.mCount, false);
-        ESM4::addInventoryItem(mOblivionRuntimeState->mPlayer.mInventory, item);
+        if (!addition->isValid() || (registration && !registration->isValid()))
+            return 0;
+        if (!mOblivionDynamicReferenceIdentity)
+            mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
+        const std::weak_ptr<const char> worldIdentity = mOblivionDynamicReferenceIdentity;
+        const Ptr published = addition->commit();
+        if (published.isEmpty()) return 0;
+        if (registration) registration->commit();
+        std::exception_ptr observerFailure;
+        try { addition->notify(); }
+        catch (...) { observerFailure = std::current_exception(); }
+        // Observers may clear the World or replace its inventory/cache. The
+        // committed transfer stays committed even if notification throws.
+        // Reacquire the current Player's store while its World epoch survives.
+        if (worldIdentity.expired() || getPlayerPtr() != player)
+        {
+            if (observerFailure) std::rethrow_exception(observerFailure);
+            return item.mCount;
+        }
+        try
+        {
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+                windows->inventoryUpdated(getPlayerPtr());
+        }
+        catch (...)
+        {
+            if (!observerFailure) observerFailure = std::current_exception();
+        }
+        if (worldIdentity.expired() || getPlayerPtr() != player)
+        {
+            if (observerFailure) std::rethrow_exception(observerFailure);
+            return item.mCount;
+        }
+        if (mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mInventory = captureOblivionActorInventory(getPlayerPtr());
+        if (observerFailure) std::rethrow_exception(observerFailure);
         return item.mCount;
     }
 
