@@ -19,7 +19,7 @@ from typing import Any
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 40
+CURRENT_VERSION = 41
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -251,6 +251,33 @@ def _write_script_value(writer: _Writer, value: dict[str, Any] | None) -> None:
         raise RuntimeStateError(f"Unsupported TES4 runtime-state script value {value!r}")
 
 
+def _read_ownership_extras(reader: _Reader, value: dict[str, Any]) -> None:
+    present = reader.unpack("<B")
+    if present > 1:
+        raise RuntimeStateError("Invalid TES4 ownership rank presence flag")
+    value["ownership_rank"] = reader.unpack("<i") if present else None
+    value["ownership_global"] = reader.string()
+
+
+def _write_ownership_extras(writer: _Writer, value: dict[str, Any]) -> None:
+    rank = value.get("ownership_rank")
+    writer.pack("<B", int(rank is not None))
+    if rank is not None:
+        writer.pack("<i", rank)
+    writer.string(value.get("ownership_global", "null"))
+
+
+def _validate_ownership_extras(value: dict[str, Any], version: int) -> None:
+    rank = value.get("ownership_rank")
+    global_ = value.get("ownership_global", "null")
+    if version < 41 and (rank is not None or global_ != "null"):
+        raise RuntimeStateError("Native ownership extras require runtime-state version41")
+    if rank is not None and (type(rank) is not int or not -2147483648 <= rank <= 2147483647):
+        raise RuntimeStateError("Invalid TES4 native ownership rank")
+    if global_ != "null" and _global_identity(global_)[0] != "content":
+        raise RuntimeStateError("Native ownership global requires a content FormKey")
+
+
 def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
     result = []
     for _ in range(reader.count()):
@@ -264,6 +291,8 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
                 "owner": reader.string(),
                 "remaining_usage_time": reader.unpack("<f"),
             })
+            if version >= 41:
+                _read_ownership_extras(reader, item)
         result.append(item)
     return result
 
@@ -282,6 +311,8 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
             writer.pack("<b", int(item.get("hotkey", -1)))
             writer.string(str(item.get("owner", "null")))
             writer.pack("<f", float(item.get("remaining_usage_time", -1.0)))
+            if version >= 41:
+                _write_ownership_extras(writer, item)
 
 
 def _finite_float(reader: _Reader, label: str) -> float:
@@ -660,6 +691,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if owner is not None and str(owner) == "null":
             raise RuntimeStateError("TES4 runtime-state reference has a null owner")
 
+        _validate_ownership_extras(reference, version)
         for name in ("item_condition", "item_charge"):
             extra = reference.get(name)
             if extra is not None:
@@ -1410,6 +1442,7 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
         "condition", "charge", "equipped_slots", "hotkey", "owner", "remaining_usage_time"
     }
     for item in value:
+        _validate_ownership_extras(item, version)
         count = int(item.get("count", 0))
         if str(item.get("base", "null")) == "null" or count == 0 or (version >= 4 and count < 0):
             raise RuntimeStateError("Invalid TES4 runtime-state inventory entry")
@@ -1452,6 +1485,8 @@ def _upgrade_inventory(value: list[dict[str, Any]]) -> None:
         item.setdefault("hotkey", -1)
         item.setdefault("owner", "null")
         item.setdefault("remaining_usage_time", -1.0)
+        item.setdefault("ownership_rank", None)
+        item.setdefault("ownership_global", "null")
 
 
 def decode_payload(payload: bytes) -> dict[str, Any]:
@@ -1551,6 +1586,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 loose item extra flag")
                 reference[name] = reader.unpack("<f") if present else None
+        if version >= 41:
+            _read_ownership_extras(reader, reference)
         references.append(reference)
     result["references"] = references
     _validate_inventory(result["player"]["inventory"], version, True)
@@ -1964,6 +2001,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", int(extra is not None))
                 if extra is not None:
                     writer.pack("<f", extra)
+        if version >= 41:
+            _write_ownership_extras(writer, reference)
     if version >= 2:
         writer.pack("<Q", int(state.get("script_event_sequence", 0)))
         scripts = sorted(state.get("script_instances", []), key=lambda item: (item["unit"], item["context"]))
@@ -2447,6 +2486,8 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_inventory(state["player"]["inventory"])
     for reference in state["references"]:
         _upgrade_inventory(reference["inventory"])
+        reference.setdefault("ownership_rank", None)
+        reference.setdefault("ownership_global", "null")
     payload = encode_payload(state)
     record_body = struct.pack("<4sI", b"VERS", 4) + struct.pack("<I", CURRENT_VERSION)
     for offset in range(0, len(payload), CHUNK_SIZE):
@@ -2496,6 +2537,8 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_inventory(result["player"]["inventory"])
     for reference in result["references"]:
         _upgrade_inventory(reference["inventory"])
+        reference.setdefault("ownership_rank", None)
+        reference.setdefault("ownership_global", "null")
     player = result["player"]
     player.setdefault("name", "Bendu Olo")
     player.setdefault("race", "content:oblivion.esm:000907")
@@ -2599,6 +2642,8 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_inventory(player["inventory"])
     for reference in references:
         _upgrade_inventory(reference["inventory"])
+        reference.setdefault("ownership_rank", None)
+        reference.setdefault("ownership_global", "null")
     return result
 
 

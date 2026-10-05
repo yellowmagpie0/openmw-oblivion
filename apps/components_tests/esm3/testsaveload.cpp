@@ -359,6 +359,117 @@ namespace ESM
             }
         }
 
+        struct NativeOwnershipInventoryRecord
+        {
+            CellRef mRef;
+            void save(ESMWriter& writer) const { mRef.save(writer, true, true); }
+            void load(ESMReader& reader)
+            {
+                bool deleted = false;
+                mRef.load(reader, deleted, true);
+                if (deleted) throw std::runtime_error("native inventory fixture deleted");
+            }
+        };
+
+        TEST_P(Esm3SaveLoadRecordTest, nativeOwnershipRankSurvivesInventoryWithoutAliasingLegacyFields)
+        {
+            const std::array<std::optional<std::int32_t>, 8> ranks{std::nullopt,
+                std::numeric_limits<std::int32_t>::min(), -2, -1, 0, 1, 9,
+                std::numeric_limits<std::int32_t>::max()};
+            for (const auto rank : ranks)
+            {
+                NativeOwnershipInventoryRecord source;
+                source.mRef.blank();
+                source.mRef.mRefID = RefId::stringRefId("native_ownership");
+                source.mRef.mFactionRank = 17;
+                source.mRef.mGlobalVariable = "legacy_rental_global";
+                source.mRef.mNativeOwnershipRank = rank;
+                source.mRef.mNativeItemCondition = 0.f;
+                source.mRef.mEnchantmentCharge = 7.25f;
+                NativeOwnershipInventoryRecord restored;
+                saveAndLoadRecord(source, GetParam(), restored);
+                EXPECT_EQ(restored.mRef.mNativeOwnershipRank, rank);
+                EXPECT_EQ(restored.mRef.mFactionRank, -2); // legacy inventory INDX is omitted
+                EXPECT_EQ(restored.mRef.mGlobalVariable, source.mRef.mGlobalVariable);
+                EXPECT_TRUE(restored.mRef.mNativeOwnershipGlobal.empty());
+                EXPECT_EQ(restored.mRef.mNativeItemCondition, 0.f);
+                EXPECT_EQ(restored.mRef.mEnchantmentCharge, 7.25f);
+                restored.mRef.blank();
+                EXPECT_FALSE(restored.mRef.mNativeOwnershipRank);
+                EXPECT_TRUE(restored.mRef.mNativeOwnershipGlobal.empty());
+            }
+        }
+
+        TEST_P(Esm3SaveLoadRecordTest, nativeOwnershipGlobalRetainsTypedIdentityOrRejectsUnrepresentableLegacyFormat)
+        {
+            NativeOwnershipInventoryRecord source;
+            source.mRef.blank();
+            source.mRef.mRefID = RefId::stringRefId("native_ownership");
+            source.mRef.mNativeOwnershipRank = -1;
+            source.mRef.mNativeOwnershipGlobal = RefId(FormId{9, 1});
+            source.mRef.mGlobalVariable = "legacy_global";
+            if (GetParam() <= MaxStringRefIdFormatVersion)
+            {
+                EXPECT_THROW(makeEsmStream(source, GetParam()), std::runtime_error);
+                return;
+            }
+            NativeOwnershipInventoryRecord restored;
+            saveAndLoadRecord(source, GetParam(), restored);
+            EXPECT_EQ(restored.mRef.mNativeOwnershipGlobal, source.mRef.mNativeOwnershipGlobal);
+            EXPECT_EQ(restored.mRef.mNativeOwnershipRank, -1);
+            EXPECT_EQ(restored.mRef.mGlobalVariable, "legacy_global");
+        }
+
+        struct MalformedNativeOwnershipRecord
+        {
+            unsigned mFault;
+            CellRef mRef;
+            void save(ESMWriter& writer) const
+            {
+                CellRef base;
+                base.blank();
+                base.mRefID = RefId::stringRefId("invalid_native_ownership");
+                base.save(writer, true, true);
+                if (mFault < 5)
+                {
+                    constexpr unsigned sizes[] = {0, 1, 3, 5, 8};
+                    writer.writeHNString("NORK", std::string(sizes[mFault], '\0'));
+                }
+                else if (mFault < 8)
+                {
+                    constexpr std::int32_t ranks[] = {0, -1, -2};
+                    writer.writeHNT("NORK", ranks[mFault - 5]);
+                    writer.writeHNT("NORK", ranks[mFault - 5]);
+                }
+                else if (mFault == 8)
+                    writer.writeHNRefId("NOGB", RefId::stringRefId("not_a_native_global"));
+                else if (mFault == 9)
+                    writer.writeHNRefId("NOGB", RefId::generated(1));
+                else
+                {
+                    const auto global = mFault == 10 ? RefId{} : RefId(FormId{7, 0});
+                    writer.writeHNRefId("NOGB", global);
+                    writer.writeHNRefId("NOGB", global);
+                }
+            }
+            void load(ESMReader& reader)
+            {
+                bool deleted = false;
+                mRef.load(reader, deleted, true);
+            }
+        };
+
+        TEST(Esm3NativeOwnership, RejectsMalformedRanksWrongGlobalTypesAndDuplicateNullExtras)
+        {
+            for (unsigned fault = 0; fault < 12; ++fault)
+            {
+                SCOPED_TRACE(fault);
+                MalformedNativeOwnershipRecord source{fault, {}}, restored{};
+                EXPECT_THROW(saveAndLoadRecord(source, CurrentSaveGameFormatVersion, restored),
+                    std::runtime_error);
+            }
+        }
+
         TEST_P(Esm3SaveLoadRecordTest, cellRefShouldNotChange)
         {
             CellRef record;

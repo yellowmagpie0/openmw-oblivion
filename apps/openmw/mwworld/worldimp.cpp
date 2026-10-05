@@ -1053,6 +1053,9 @@ namespace MWWorld
                 const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
                 if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
+                item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
+                item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
+                    mStore, inventoryResolver, itemPtr.getCellRef());
                 if (const auto previous = previousHotkeys.find(item.mBase); previous != previousHotkeys.end())
                 {
                     item.mHotkey = previous->second;
@@ -1347,6 +1350,9 @@ namespace MWWorld
                     const ESM::RefId ownerId = ptr.getCellRef().getOwner();
                     if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
                         reference.mOwner = resolver.toFormKey(*owner);
+                    reference.mOwnershipRank = ptr.getCellRef().getNativeOwnershipRank();
+                    reference.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
+                        mStore, resolver, ptr.getCellRef());
                     const unsigned type = ptr.getClass().getType();
                     const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
                     if (!actorReference)
@@ -2369,6 +2375,18 @@ namespace MWWorld
                 if (reference.mItemCondition)
                     itemCellRef->setNativeItemCondition(*reference.mItemCondition);
                 itemCellRef->setEnchantmentCharge(reference.mItemCharge.value_or(-1.f));
+            }
+
+            if (state.mVersion >= 41)
+            {
+                if (!itemCellRef) itemCellRef.emplace(found->second.getCellRef());
+                const auto global = OblivionProfileServices::resolveOwnershipGlobal(mStore, resolver,
+                    reference.mOwnershipGlobal);
+                itemCellRef->setNativeOwnershipGlobal(global);
+                if (itemCellRef->getNativeReference() || !itemClass.isActor())
+                    itemCellRef->setNativeOwnershipRank(reference.mOwnershipRank);
+                else if (reference.mOwnershipRank)
+                    throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
             }
 
             std::optional<ESM::RefId> owner;

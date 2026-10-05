@@ -49,6 +49,7 @@ namespace ESM
         template <bool load>
         void loadDataImpl(ESMReader& esm, bool& isDeleted, CellRef& cellRef)
         {
+            [[maybe_unused]] bool seenNativeGlobal = false;
             const auto getRefIdOrSkip = [&](ESM::RefId& refId) {
                 if constexpr (load)
                     refId = esm.getRefId();
@@ -107,6 +108,29 @@ namespace ESM
                         break;
                     case fourCC("INTV"):
                         getHTOrSkip(cellRef.mChargeInt);
+                        break;
+                    case fourCC("NORK"):
+                        if constexpr (load)
+                        {
+                            std::int32_t rank;
+                            esm.getHT(rank);
+                            if (cellRef.mNativeOwnershipRank)
+                                throw std::runtime_error("Duplicate native ownership rank");
+                            cellRef.mNativeOwnershipRank = rank;
+                        }
+                        else esm.skipHT<std::int32_t>();
+                        break;
+                    case fourCC("NOGB"):
+                        if constexpr (load)
+                        {
+                            auto global = esm.getRefId();
+                            if (seenNativeGlobal || (!global.empty() && !global.getIf<ESM::FormId>()))
+                                throw std::runtime_error("Invalid native ownership global");
+                            seenNativeGlobal = true;
+                            const auto* id = global.getIf<ESM::FormId>();
+                            cellRef.mNativeOwnershipGlobal = id && id->isZeroOrUnset() ? ESM::RefId{} : global;
+                        }
+                        else esm.skipHRefId();
                         break;
                     case fourCC("NCHL"):
                         if constexpr (load)
@@ -232,6 +256,16 @@ namespace ESM
         if (mChargeInt != -1)
             esm.writeHNT("INTV", mChargeInt);
 
+        if (mNativeOwnershipRank)
+            esm.writeHNT("NORK", *mNativeOwnershipRank);
+        if (!mNativeOwnershipGlobal.empty())
+        {
+            const auto* id = mNativeOwnershipGlobal.getIf<ESM::FormId>();
+            if (!id || id->isZeroOrUnset())
+                throw std::runtime_error("Invalid native ownership global");
+            esm.writeHNRefId("NOGB", mNativeOwnershipGlobal);
+        }
+
         if (mNativeItemCondition)
         {
             if (!std::isfinite(*mNativeItemCondition) || *mNativeItemCondition < 0)
@@ -281,6 +315,8 @@ namespace ESM
         mChargeInt = -1;
         mChargeIntRemainder = 0.0f;
         mNativeItemCondition.reset();
+        mNativeOwnershipRank.reset();
+        mNativeOwnershipGlobal = {};
         mEnchantmentCharge = -1;
         mCount = 1;
         mDestCell.clear();

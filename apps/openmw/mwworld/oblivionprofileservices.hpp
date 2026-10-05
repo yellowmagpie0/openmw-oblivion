@@ -15,6 +15,7 @@ namespace MWWorld
 {
     class ESMStore;
     class InventoryStore;
+    class CellRef;
 
     struct PreparedOblivionInventoryItem
     {
@@ -44,6 +45,12 @@ namespace MWWorld
         static ESM::RefId sharedItemId(const ESMStore& store, const ESM::RefId& nativeId);
         static ESM::RefId nativeItemId(const ESMStore& store, const ESM::RefId& sharedId);
         static int sharedItemType(const ESMStore& store, const ESM::RefId& sharedId);
+
+        // Resolve a native ownership condition to a live winning GLOB record.
+        static ESM::RefId resolveOwnershipGlobal(const ESMStore& store,
+            const ESM::FormKeyResolver& resolver, const ESM::FormKey& key);
+        static ESM::FormKey captureOwnershipGlobal(const ESMStore& store,
+            const ESM::FormKeyResolver& resolver, const CellRef& reference);
 
         // Resolve and construct the entire replacement before a caller clears
         // a live inventory. These references are detached and unregistered.

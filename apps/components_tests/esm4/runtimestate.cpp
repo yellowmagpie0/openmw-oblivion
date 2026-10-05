@@ -412,7 +412,7 @@ namespace
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
                                  "\"condition\":125,\"charge\":80,\"equipped_slots\":4,\"hotkey\":2,"
                                  "\"owner\":\"content:oblivion.esm:000007\","
-                                 "\"remaining_usage_time\":812.5}]"),
+                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\"}]"),
             std::string::npos);
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
@@ -3040,5 +3040,189 @@ TEST(ESM4RuntimeState, LooseItemExtras40DoNotMigrateBrokenDefaultsOrAttachToActo
         (charge ? invalid.mReferences.front().mItemCharge : invalid.mReferences.front().mItemCondition) = 0.f;
         EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
         EXPECT_THROW(invalid.canonicalJson(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, OwnershipExtras41HaveIndependentWireAndNullableSignedRank)
+{
+    ESM4::RuntimeState state;
+    state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+    state.mPlayer.mCell = ESM::FormKey::content("items.esm", 1);
+    state.mPlayer.mRace = ESM::FormKey::content("items.esm", 2);
+    state.mPlayer.mClass = ESM::FormKey::content("items.esm", 3);
+    ESM4::RuntimeReferenceState reference;
+    reference.mKey = ESM::FormKey::dynamic("dropped-item", 1);
+    reference.mBase = ESM::FormKey::content("items.esm", 4);
+    reference.mCell = state.mPlayer.mCell;
+    constexpr std::string_view marker = "native-ownership-wire-boundary";
+    reference.mCustomState.emplace("boundary", std::string(marker));
+    state.mReferences.push_back(reference);
+    const std::array<std::optional<std::int32_t>, 8> ranks{std::nullopt,
+        std::numeric_limits<std::int32_t>::min(), -2, -1, 0, 1, 9,
+        std::numeric_limits<std::int32_t>::max()};
+    for (const auto rank : ranks)
+    for (const auto& global : {ESM::FormKey{}, ESM::FormKey::content("items.esm", 9)})
+    {
+        state.mReferences.front().mOwnershipRank = rank;
+        state.mReferences.front().mOwnershipGlobal = global;
+        const auto bytes = state.serializeBinary();
+        const auto found = std::search(bytes.begin(), bytes.end(), marker.begin(), marker.end());
+        ASSERT_NE(found, bytes.end());
+        // Public wire: the custom string is followed by absent draw, condition
+        // and charge flags, then v41 rank flag/int32 and length-prefixed key.
+        const auto boundary = std::distance(bytes.begin(), found) + marker.size() + 3;
+        std::vector<std::uint8_t> expected{static_cast<std::uint8_t>(rank.has_value())};
+        const auto put32 = [&](std::uint32_t value) {
+            for (unsigned i = 0; i < 4; ++i)
+                expected.push_back(static_cast<std::uint8_t>(value >> (8 * i)));
+        };
+        if (rank) put32(static_cast<std::uint32_t>(*rank));
+        const auto key = global.serialize();
+        put32(static_cast<std::uint32_t>(key.size()));
+        expected.insert(expected.end(), key.begin(), key.end());
+        ASSERT_LE(boundary + expected.size(), bytes.size());
+        EXPECT_TRUE(std::equal(expected.begin(), expected.end(), bytes.begin() + boundary));
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mReferences.front().mOwnershipRank, rank);
+        EXPECT_EQ(restored.mReferences.front().mOwnershipGlobal, global);
+        auto corrupt = bytes;
+        corrupt[boundary] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        const auto json = restored.canonicalJson();
+        EXPECT_NE(json.find("\"ownership_global\":\"" + key + "\""), std::string::npos);
+    }
+}
+
+TEST(ESM4RuntimeState, OwnershipExtras41PreserveInventoryAndRejectOlderEnvelopeLoss)
+{
+    auto state = makeState();
+    auto& item = state.mPlayer.mInventory.front();
+    item.mOwnershipRank = -1;
+    item.mOwnershipGlobal = ESM::FormKey::content("oblivion.esm", 0x34);
+    state.mReferences.front().mOwnershipRank = -2;
+    state.mReferences.front().mOwnershipGlobal = ESM::FormKey::content("oblivion.esm", 0x33);
+    state.mReferences.front().mInventory.front().mOwnershipRank = std::numeric_limits<std::int32_t>::min();
+    state.mReferences.front().mInventory.front().mOwnershipGlobal = item.mOwnershipGlobal;
+    const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mPlayer.mInventory, state.mPlayer.mInventory);
+    EXPECT_EQ(restored.mReferences, state.mReferences);
+    state.mVersion = 40;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mVersion = 41;
+    item.mOwnershipGlobal = ESM::FormKey::dynamic("not-a-content-global", 1);
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    item.mOwnershipGlobal = {};
+    state.mReferences.front().mOwnershipGlobal = ESM::FormKey::dynamic("not-a-content-global", 1);
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, OlderOwnershipEnvelopesDefaultToAbsentRatherThanInventedRank)
+{
+    for (std::uint32_t version = 1; version <= 40; ++version)
+    {
+        SCOPED_TRACE(version);
+        ESM4::RuntimeState state;
+        state.mVersion = version;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("items.esm", 1);
+        if (version >= 3)
+        {
+            state.mPlayer.mRace = ESM::FormKey::content("items.esm", 2);
+            state.mPlayer.mClass = ESM::FormKey::content("items.esm", 3);
+        }
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("items.esm", 4);
+        item.mCount = 1;
+        state.mPlayer.mInventory.push_back(item);
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = ESM::FormKey::content("items.esm", 5);
+        reference.mBase = ESM::FormKey::content("items.esm", 4);
+        reference.mCell = state.mPlayer.mCell;
+        state.mReferences.push_back(reference);
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_FALSE(restored.mPlayer.mInventory.front().mOwnershipRank);
+        EXPECT_TRUE(restored.mPlayer.mInventory.front().mOwnershipGlobal.isNull());
+        EXPECT_FALSE(restored.mReferences.front().mOwnershipRank);
+        EXPECT_TRUE(restored.mReferences.front().mOwnershipGlobal.isNull());
+    }
+}
+
+TEST(ESM4RuntimeState, OwnershipExtras41ReadIndependentPythonPayloadAndReproduceExactBytes)
+{
+    // SHA-256: 6ddc656a3139a7d7cf2eb5b06f73ad0cd908d3f98c9c66e7065ece0a7a302740.
+    // Input declared independently in the Python fixture, including signed rank
+    // presence, different GLOB identities and exhausted item condition.
+    const std::vector<std::uint8_t> payload{
+#include "native_ownership_schema41_expected.inc"
+    };
+    const auto restored = ESM4::RuntimeState::deserializeBinary(payload);
+    ASSERT_EQ(restored.mVersion, 41u);
+    ASSERT_FALSE(restored.mPlayer.mInventory.empty());
+    EXPECT_EQ(restored.mPlayer.mInventory.front().mOwnershipRank, -1);
+    EXPECT_EQ(restored.mPlayer.mInventory.front().mOwnershipGlobal,
+        ESM::FormKey::content("oblivion.esm", 0x34));
+    ASSERT_EQ(restored.mReferences.size(), 1u);
+    const auto& reference = restored.mReferences.front();
+    EXPECT_EQ(reference.mKey, ESM::FormKey::content("oblivion.esm", 0x100));
+    EXPECT_EQ(reference.mBase, ESM::FormKey::content("oblivion.esm", 0x200));
+    EXPECT_EQ(reference.mOwner, ESM::FormKey::content("oblivion.esm", 0x300));
+    EXPECT_EQ(reference.mOwnershipRank, -2);
+    EXPECT_EQ(reference.mOwnershipGlobal, ESM::FormKey::content("oblivion.esm", 0x33));
+    EXPECT_EQ(reference.mItemCondition, 0.f);
+    EXPECT_EQ(reference.mItemCharge, 7.25f);
+    ASSERT_EQ(reference.mInventory.size(), 1u);
+    EXPECT_EQ(reference.mInventory.front().mCount, 3);
+    EXPECT_EQ(reference.mInventory.front().mOwnershipRank, std::numeric_limits<std::int32_t>::min());
+    EXPECT_EQ(reference.mInventory.front().mOwnershipGlobal, ESM::FormKey::content("oblivion.esm", 0x34));
+    EXPECT_EQ(restored.serializeBinary(), payload);
+}
+
+TEST(ESM4RuntimeState, OwnershipExtras41RejectLossyGlobalKeysBeforeEncodingOrAfterReading)
+{
+    // Public FormKey fields can bypass its factories; reject lossy encodings
+    // and invalid bindings before either binary or JSON output.
+    const std::array<ESM::FormKey, 7> globals{{
+        {ESM::FormKeyKind::Content, "oblivion.esm", 0},
+        {ESM::FormKeyKind::Content, "oblivion.esm", 0x1000000},
+        {ESM::FormKeyKind::Content, "Oblivion.esm", 0x33},
+        {ESM::FormKeyKind::Content, "bad:plugin.esm", 0x33},
+        {ESM::FormKeyKind::Content, "", 0x33},
+        {ESM::FormKeyKind::Null, "ignored", 0},
+        {ESM::FormKeyKind::Null, "", 1},
+    }};
+    for (const auto& global : globals)
+    {
+        SCOPED_TRACE(global.serialize());
+        for (bool inventory : {false, true})
+        {
+            SCOPED_TRACE(inventory);
+            auto state = makeState();
+            if (inventory) state.mPlayer.mInventory.front().mOwnershipGlobal = global;
+            else state.mReferences.front().mOwnershipGlobal = global;
+            EXPECT_THROW(state.serializeBinary(), std::exception);
+            EXPECT_THROW(state.canonicalJson(), std::exception);
+        }
+    }
+}
+
+TEST(ESM4RuntimeState, OwnershipExtras41RejectExplicitZeroGlobalIdentityInBinaryPayload)
+{
+    // Preserve length and all unrelated fields while replacing the declared
+    // non-null content identity with zero. Both inventory and REFR readers
+    // must reject it rather than silently treating it as the null sentinel.
+    const auto global = ESM::FormKey::content("ownership-wire.esm", 9);
+    const auto encoded = global.serialize();
+    for (bool inventory : {false, true})
+    {
+        SCOPED_TRACE(inventory);
+        auto state = makeState();
+        if (inventory) state.mPlayer.mInventory.front().mOwnershipGlobal = global;
+        else state.mReferences.front().mOwnershipGlobal = global;
+        auto payload = state.serializeBinary();
+        const auto found = std::search(payload.begin(), payload.end(), encoded.begin(), encoded.end());
+        ASSERT_NE(found, payload.end());
+        std::fill(found + static_cast<std::ptrdiff_t>(encoded.size()) - 6,
+            found + static_cast<std::ptrdiff_t>(encoded.size()), '0');
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(payload), std::runtime_error);
     }
 }

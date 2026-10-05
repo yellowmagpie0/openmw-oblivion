@@ -249,9 +249,14 @@ namespace MWWorld
         {
             return std::visit(ESM::VisitOverload{
                 [](const ESM4::Reference& ref) { return ref.mFactionRank; },
+                [](const ESM::CellRef& ref) { return ref.mNativeOwnershipRank; },
                 [](const auto&) { return std::optional<std::int32_t>{}; }
             }, mCellRef.mVariant);
         }
+
+        void setNativeOwnershipRank(std::optional<std::int32_t> rank);
+        ESM::RefId getNativeOwnershipGlobal() const;
+        void setNativeOwnershipGlobal(const ESM::RefId& global);
 
         // Lock level for doors and containers
         // Positive for a locked door. 0 for a door that was never locked.

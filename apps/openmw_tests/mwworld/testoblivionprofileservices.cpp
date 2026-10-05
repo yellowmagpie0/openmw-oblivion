@@ -62,6 +62,14 @@ namespace
         savedWeapon.mCharge = 7.5f;
         savedWeapon.mOwner = ESM::FormKey::content("owners.esm", 0x200);
         savedWeapon.mEquippedSlots = ESM4::InventorySlotWeapon;
+        ESM4::GlobalVariable permission{};
+        permission.mId = {0x201, 1};
+        permission.mType = 'f';
+        permission.mValue = 1.f;
+        const auto permissionKey = ESM::FormKey::content("owners.esm", 0x201);
+        store.getWritable<ESM4::GlobalVariable>().insertStatic(permission, permissionKey);
+        savedWeapon.mOwnershipRank = -1;
+        savedWeapon.mOwnershipGlobal = permissionKey;
         ESM4::RuntimeInventoryItem savedRing;
         savedRing.mBase = ringKey;
         savedRing.mCount = 1;
@@ -81,6 +89,10 @@ namespace
             EXPECT_EQ(ptr.getCellRef().getCharge(), 31);
             EXPECT_EQ(ptr.getCellRef().getEnchantmentCharge(), 7.5f);
             EXPECT_EQ(ptr.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x200, 1}));
+            EXPECT_EQ(ptr.getCellRef().getNativeOwnershipRank(), -1);
+            EXPECT_EQ(ptr.getCellRef().getNativeOwnershipGlobal(), ESM::RefId(permission.mId));
+            EXPECT_EQ(MWWorld::OblivionProfileServices::captureOwnershipGlobal(store, resolver, ptr.getCellRef()),
+                permissionKey);
             EXPECT_FALSE(ptr.getCellRef().getRefNum().isSet());
             EXPECT_EQ(prepared[0].mEquipmentSlot, MWWorld::InventoryStore::Slot_CarriedRight);
             EXPECT_EQ(prepared[1].mEquipmentSlot, MWWorld::InventoryStore::Slot_LeftRing);
@@ -103,6 +115,16 @@ namespace
                 bad.mOwner = ESM::FormKey::content("missing.esm", 0x200);
             EXPECT_THROW(MWWorld::OblivionProfileServices::prepareActorInventory(
                 store, resolver, {savedWeapon, bad}), std::runtime_error);
+            checkUntouched();
+        }
+        for (const auto& global : {ESM::FormKey::content("owners.esm", 0x999),
+                ESM::FormKey::content("missing.esm", 0x201), weaponKey,
+                ESM::FormKey::dynamic("not-a-global", 1)})
+        {
+            auto bad = savedRing;
+            bad.mOwnershipGlobal = global;
+            EXPECT_THROW(MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, resolver, {savedWeapon, bad}), std::invalid_argument);
             checkUntouched();
         }
         EXPECT_TRUE(MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {}).empty());

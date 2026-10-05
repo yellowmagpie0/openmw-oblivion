@@ -151,6 +151,92 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def ownership_state(self):
+        state = make_state()
+        state["ai_rng_state"] = 1
+        state["references"] = [{
+            "key": "dynamic:dropped-item:0000000000000001",
+            "base": "content:oblivion.esm:000200",
+            "cell": state["player"]["cell"], "enabled": True, "deleted": False,
+            "position": [0.] * 6, "owner": None, "lock_level": 0,
+            "inventory": [], "custom_state": {}}]
+        return state
+
+    def test_native_ownership41_exact_wire_inventory_and_legacy_defaults(self):
+        state = self.ownership_state()
+        state["schema_version"] = 41
+        state["ai_rng_state"] = 1
+        marker = "native-ownership-wire-boundary"
+        ref = state["references"][0]
+        ref["actor_draw_state"] = None
+        ref["item_condition"] = None
+        ref["item_charge"] = None
+        ref["custom_state"] = {"boundary": marker}
+        ranks = (None, -2147483648, -2, -1, 0, 1, 9, 2147483647)
+        for rank in ranks:
+            for global_ in ("null", "content:oblivion.esm:000034"):
+                with self.subTest(rank=rank, global_=global_):
+                    ref["ownership_rank"] = rank
+                    ref["ownership_global"] = global_
+                    item = state["player"]["inventory"][0]
+                    item["ownership_rank"] = rank
+                    item["ownership_global"] = global_
+                    payload = state_io.encode_payload(state)
+                    boundary = payload.index(marker.encode()) + len(marker) + 3
+                    expected = bytes([int(rank is not None)])
+                    if rank is not None:
+                        expected += struct.pack("<i", rank)
+                    expected += struct.pack("<I", len(global_)) + global_.encode()
+                    self.assertEqual(payload[boundary:boundary + len(expected)], expected)
+                    restored = state_io.decode_payload(payload)
+                    for value in (restored["references"][0], restored["player"]["inventory"][0]):
+                        self.assertEqual(value["ownership_rank"], rank)
+                        self.assertEqual(value["ownership_global"], global_)
+                    corrupt = bytearray(payload)
+                    corrupt[boundary] = 2
+                    with self.assertRaises(state_io.RuntimeStateError):
+                        state_io.decode_payload(bytes(corrupt))
+        for version in range(1, 41):
+            old = self.ownership_state()
+            old["schema_version"] = version
+            old["script_instances"] = []; old["quests"] = []; old["script_event_sequence"] = 0
+            if version < 3:
+                for name in ("name", "race", "class", "birthsign", "female", "character_generation_flags"):
+                    old["player"].pop(name, None)
+            if version < 4:
+                for item in old["player"]["inventory"]:
+                    for name in ("condition", "charge", "equipped_slots", "hotkey", "owner", "remaining_usage_time"):
+                        item.pop(name, None)
+                for reference in old["references"]:
+                    for item in reference["inventory"]:
+                        for name in ("condition", "charge", "equipped_slots", "hotkey", "owner", "remaining_usage_time"):
+                            item.pop(name, None)
+            restored = state_io.decode_payload(state_io.encode_payload(old))
+            self.assertNotIn("ownership_rank", restored["player"]["inventory"][0])
+            self.assertNotIn("ownership_global", restored["references"][0])
+
+    def test_native_ownership41_rejects_loss_bad_types_and_dynamic_global(self):
+        for target in ("item", "reference"):
+            for field, value in (("ownership_rank", -1), ("ownership_global", "content:oblivion.esm:000034")):
+                state = self.ownership_state(); state["schema_version"] = 40
+                entry = state["player"]["inventory"][0] if target == "item" else state["references"][0]
+                entry[field] = value
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+            for rank in (True, False, 1.5, "1", -2147483649, 2147483648):
+                state = self.ownership_state(); state["schema_version"] = 41
+                entry = state["player"]["inventory"][0] if target == "item" else state["references"][0]
+                entry["ownership_rank"] = rank
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+            for global_ in ("dynamic:global:0000000000000001", "", None, True,
+                            "content:oblivion.esm:000000", "content:oblivion.esm:1000000"):
+                state = self.ownership_state(); state["schema_version"] = 41
+                entry = state["player"]["inventory"][0] if target == "item" else state["references"][0]
+                entry["ownership_global"] = global_
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+
     def test_loose_item40_exact_nullable_wire_invalid_flags_values_and_legacy_absence(self):
         old = make_state()
         old["schema_version"] = 39

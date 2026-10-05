@@ -252,6 +252,64 @@ namespace MWWorld
             EXPECT_FALSE(tes3.getNativeOwnershipRank());
         }
 
+        TEST(MWWorldPtrTest, cellRefNativeOwnershipExtrasStayTypedAndSeparateFromLegacy)
+        {
+            ESM::CellRef projected;
+            projected.blank();
+            projected.mFactionRank = 9;
+            projected.mGlobalVariable = "legacy_global";
+            CellRef item(projected);
+            EXPECT_FALSE(item.getNativeOwnershipRank());
+            item.setNativeOwnershipRank(-1);
+            EXPECT_EQ(item.getNativeOwnershipRank(), -1);
+            EXPECT_EQ(item.getFactionRank(), 9);
+            const ESM::RefId global(ESM::FormId{42, 1});
+            item.setNativeOwnershipGlobal(global);
+            EXPECT_EQ(item.getNativeOwnershipGlobal(), global);
+            EXPECT_EQ(item.getGlobalVariable(), "legacy_global");
+            item.setNativeOwnershipRank(std::nullopt);
+            EXPECT_FALSE(item.getNativeOwnershipRank());
+            EXPECT_EQ(item.getFactionRank(), 9);
+            item.resetGlobalVariable();
+            EXPECT_TRUE(item.getNativeOwnershipGlobal().empty());
+            EXPECT_TRUE(item.getGlobalVariable().empty());
+            EXPECT_EQ(projected.mFactionRank, 9);
+            EXPECT_TRUE(projected.mNativeOwnershipGlobal.empty());
+
+            ESM4::Reference placed{};
+            placed.mFactionRank = -2;
+            placed.mGlobal = {42, 1};
+            CellRef native(placed);
+            EXPECT_EQ(native.getNativeOwnershipRank(), -2);
+            EXPECT_EQ(native.getNativeOwnershipGlobal(), global);
+            native.setNativeOwnershipRank(std::nullopt);
+            native.resetGlobalVariable();
+            EXPECT_FALSE(native.getNativeOwnershipRank());
+            EXPECT_TRUE(native.getNativeOwnershipGlobal().empty());
+            EXPECT_EQ(placed.mFactionRank, -2);
+            EXPECT_EQ(placed.mGlobal, (ESM::FormId{42, 1}));
+        }
+
+        TEST(MWWorldPtrTest, cellRefNativeOwnershipRejectsWrongGlobalAndUnsupportedActorRankBeforeMutation)
+        {
+            ESM4::Reference placed{};
+            CellRef ref(placed);
+            EXPECT_FALSE(ref.hasChanged());
+            EXPECT_THROW(ref.setNativeOwnershipGlobal(ESM::RefId::stringRefId("legacy_name")), std::invalid_argument);
+            EXPECT_THROW(ref.setNativeOwnershipGlobal(ESM::RefId::generated(1)), std::invalid_argument);
+            EXPECT_FALSE(ref.hasChanged());
+            EXPECT_TRUE(ref.getNativeOwnershipGlobal().empty());
+            ESM4::ActorCharacter source{};
+            CellRef actor(source);
+            EXPECT_THROW(actor.setNativeOwnershipRank(0), std::invalid_argument);
+            EXPECT_FALSE(actor.hasChanged());
+            const ESM::RefId global(ESM::FormId{43, 0});
+            actor.setNativeOwnershipGlobal(global);
+            EXPECT_EQ(actor.getNativeOwnershipGlobal(), global);
+            actor.resetGlobalVariable();
+            EXPECT_TRUE(actor.getNativeOwnershipGlobal().empty());
+        }
+
         TEST(MWWorldPtrTest, cellRefExposesSavedNpcAndCreatureRagdollPoses)
         {
             ESM4::ActorCharacter actor;

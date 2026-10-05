@@ -943,6 +943,8 @@ namespace MWMechanics
         ESM::RefId mExpectedOwner, mExpectedFaction;
         std::string mExpectedGlobal;
         int mExpectedFactionRank = 0;
+        std::optional<std::int32_t> mExpectedNativeOwnershipRank;
+        ESM::RefId mExpectedNativeOwnershipGlobal;
         std::unique_ptr<MWWorld::CellRef> mCondition;
         std::unique_ptr<OblivionActorProjection> mPlayerView;
         std::unique_ptr<PreparedNonPlayerView> mNpcView;
@@ -1026,6 +1028,8 @@ namespace MWMechanics
         prepared->mExpectedFaction = reference.getFaction();
         prepared->mExpectedGlobal = reference.getGlobalVariable();
         prepared->mExpectedFactionRank = reference.getFactionRank();
+        prepared->mExpectedNativeOwnershipRank = reference.getNativeOwnershipRank();
+        prepared->mExpectedNativeOwnershipGlobal = reference.getNativeOwnershipGlobal();
         prepared->mDebitAmmunition = player && !godMode;
         if (!godMode)
         {
@@ -1112,7 +1116,9 @@ namespace MWMechanics
             && ref.getOwner() == prepared->mExpectedOwner
             && ref.getFaction() == prepared->mExpectedFaction
             && ref.getGlobalVariable() == prepared->mExpectedGlobal
-            && ref.getFactionRank() == prepared->mExpectedFactionRank;
+            && ref.getFactionRank() == prepared->mExpectedFactionRank
+            && ref.getNativeOwnershipRank() == prepared->mExpectedNativeOwnershipRank
+            && ref.getNativeOwnershipGlobal() == prepared->mExpectedNativeOwnershipGlobal;
     }
 
     bool OblivionCombatService::commitBowRelease(

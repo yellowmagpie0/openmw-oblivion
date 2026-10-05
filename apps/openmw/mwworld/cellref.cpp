@@ -333,6 +333,8 @@ namespace MWWorld
 
     void CellRef::resetGlobalVariable()
     {
+        if (!getNativeOwnershipGlobal().empty())
+            setNativeOwnershipGlobal({});
         if (!getGlobalVariable().empty())
         {
             mChanged = true;
@@ -343,6 +345,42 @@ namespace MWWorld
                        },
                 mCellRef.mVariant);
         }
+    }
+
+    void CellRef::setNativeOwnershipRank(std::optional<std::int32_t> rank)
+    {
+        if (std::holds_alternative<ESM4::ActorCharacter>(mCellRef.mVariant))
+            throw std::invalid_argument("Native ownership rank requires an item instance");
+        if (getNativeOwnershipRank() == rank) return;
+        std::visit(ESM::VisitOverload{
+            [&](ESM::CellRef& ref) { ref.mNativeOwnershipRank = rank; },
+            [&](ESM4::Reference& ref) { ref.mFactionRank = rank; },
+            [](ESM4::ActorCharacter&) {}
+        }, mCellRef.mVariant);
+        mChanged = true;
+    }
+
+    ESM::RefId CellRef::getNativeOwnershipGlobal() const
+    {
+        return std::visit(ESM::VisitOverload{
+            [](const ESM::CellRef& ref) { return ref.mNativeOwnershipGlobal; },
+            [](const auto& ref) {
+                return ref.mGlobal.isZeroOrUnset() ? ESM::RefId{} : ESM::RefId(ref.mGlobal);
+            }
+        }, mCellRef.mVariant);
+    }
+
+    void CellRef::setNativeOwnershipGlobal(const ESM::RefId& global)
+    {
+        const auto* id = global.getIf<ESM::FormId>();
+        if (!global.empty() && (!id || id->isZeroOrUnset()))
+            throw std::invalid_argument("Native ownership global requires a non-null FormId");
+        if (getNativeOwnershipGlobal() == global) return;
+        std::visit(ESM::VisitOverload{
+            [&](ESM::CellRef& ref) { ref.mNativeOwnershipGlobal = global; },
+            [&](auto& ref) { ref.mGlobal = id ? *id : ESM::FormId{}; }
+        }, mCellRef.mVariant);
+        mChanged = true;
     }
 
     void CellRef::setFactionRank(int factionRank)

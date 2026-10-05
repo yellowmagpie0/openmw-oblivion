@@ -261,6 +261,10 @@ namespace MWWorld
                 return 0;
             source.getPtr().getCellRef().setOwner(ESM::RefId(*ownerId));
         }
+        const ESM::FormKeyResolver ownershipResolver(mContentFiles);
+        source.getPtr().getCellRef().setNativeOwnershipGlobal(
+            OblivionProfileServices::resolveOwnershipGlobal(mStore, ownershipResolver, item.mOwnershipGlobal));
+        source.getPtr().getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
         getPlayerPtr().getClass().getInventoryStore(getPlayerPtr()).add(source.getPtr(), item.mCount, false);
         ESM4::addInventoryItem(mOblivionRuntimeState->mPlayer.mInventory, item);
         return item.mCount;

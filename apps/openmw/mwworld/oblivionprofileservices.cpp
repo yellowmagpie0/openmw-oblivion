@@ -738,6 +738,28 @@ namespace
 
 namespace MWWorld
 {
+    ESM::RefId OblivionProfileServices::resolveOwnershipGlobal(const ESMStore& store,
+        const ESM::FormKeyResolver& resolver, const ESM::FormKey& key)
+    {
+        if (key.isNull()) return {};
+        const auto id = resolver.toFormId(key);
+        if (!key.isContent() || !id || !store.get<ESM4::GlobalVariable>().search(ESM::RefId(*id)))
+            throw std::invalid_argument("Native ownership global is not a winning GLOB: " + key.serialize());
+        return ESM::RefId(*id);
+    }
+
+    ESM::FormKey OblivionProfileServices::captureOwnershipGlobal(const ESMStore& store,
+        const ESM::FormKeyResolver& resolver, const CellRef& reference)
+    {
+        const auto value = reference.getNativeOwnershipGlobal();
+        if (value.empty()) return {};
+        const auto* id = value.getIf<ESM::FormId>();
+        if (!id) throw std::invalid_argument("Native ownership global is not a FormId");
+        const auto key = resolver.toFormKey(*id);
+        resolveOwnershipGlobal(store, resolver, key);
+        return key;
+    }
+
     std::vector<PreparedOblivionInventoryItem> OblivionProfileServices::prepareActorInventory(
         const ESMStore& store, const ESM::FormKeyResolver& resolver,
         const std::vector<ESM4::RuntimeInventoryItem>& items)
@@ -769,6 +791,8 @@ namespace MWWorld
                         + item.mOwner.serialize());
                 ptr.getCellRef().setOwner(ESM::RefId(*ownerId));
             }
+            ptr.getCellRef().setNativeOwnershipGlobal(resolveOwnershipGlobal(store, resolver, item.mOwnershipGlobal));
+            ptr.getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {

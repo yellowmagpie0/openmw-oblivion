@@ -278,6 +278,46 @@ namespace ESM4
 
         std::string escapeJson(std::string_view value);
 
+        void writeOwnershipExtras(BinaryWriter& writer, std::optional<std::int32_t> rank,
+            const ESM::FormKey& global)
+        {
+            writer.integer<std::uint8_t>(rank.has_value() ? 1 : 0);
+            if (rank) writer.integer(*rank);
+            writeKey(writer, global);
+        }
+
+        void readOwnershipExtras(BinaryReader& reader, std::optional<std::int32_t>& rank,
+            ESM::FormKey& global)
+        {
+            const auto present = reader.integer<std::uint8_t>();
+            if (present > 1)
+                throw std::runtime_error("Invalid TES4 ownership rank presence flag");
+            if (present) rank = reader.integer<std::int32_t>();
+            const auto encoded = reader.string();
+            global = ESM::FormKey::deserialize(encoded);
+            if (global.isNull() && encoded != "null")
+                throw std::runtime_error("Native ownership global cannot encode a zero content identity");
+        }
+
+        void writeJsonOwnershipExtras(std::ostream& stream, std::optional<std::int32_t> rank,
+            const ESM::FormKey& global)
+        {
+            stream << ",\"ownership_rank\":";
+            if (rank) stream << *rank;
+            else stream << "null";
+            stream << ",\"ownership_global\":\"" << escapeJson(global.serialize()) << '\"';
+        }
+
+        void validateOwnershipExtras(std::optional<std::int32_t> rank,
+            const ESM::FormKey& global, std::uint32_t version)
+        {
+            if (version < 41 && (rank || !global.isNull()))
+                throw std::runtime_error("Native ownership extras require runtime-state version41");
+            if ((!global.isNull() && !global.isContent())
+                || ESM::FormKey::deserialize(global.serialize()) != global)
+                throw std::runtime_error("Native ownership global requires a canonical content FormKey");
+        }
+
         void writeInventory(BinaryWriter& writer, const std::vector<RuntimeInventoryItem>& inventory,
             std::uint32_t version)
         {
@@ -295,6 +335,7 @@ namespace ESM4
                     writer.integer(item.mHotkey);
                     writeKey(writer, item.mOwner);
                     writer.floating(item.mRemainingUsageTime);
+                    if (version >= 41) writeOwnershipExtras(writer, item.mOwnershipRank, item.mOwnershipGlobal);
                 }
             }
         }
@@ -318,6 +359,7 @@ namespace ESM4
                     item.mHotkey = reader.integer<std::int8_t>();
                     item.mOwner = readKey(reader);
                     item.mRemainingUsageTime = reader.float32();
+                    if (version >= 41) readOwnershipExtras(reader, item.mOwnershipRank, item.mOwnershipGlobal);
                 }
                 result.push_back(std::move(item));
             }
@@ -347,6 +389,7 @@ namespace ESM4
                            << ",\"owner\":\"" << escapeJson(item.mOwner.serialize())
                            << "\",\"remaining_usage_time\":" << std::setprecision(17)
                            << item.mRemainingUsageTime;
+                    if (version >= 41) writeJsonOwnershipExtras(stream, item.mOwnershipRank, item.mOwnershipGlobal);
                 }
                 stream << '}';
             }
@@ -1082,6 +1125,7 @@ namespace ESM4
             std::uint8_t occupiedHotkeys = 0;
             for (const RuntimeInventoryItem& item : inventory)
             {
+                validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
                 if (item.mBase.isNull() || item.mCount == 0 || (mVersion >= 4 && item.mCount < 0))
                     throw std::runtime_error("Invalid TES4 runtime-state " + std::string(label) + " entry");
                 if (mVersion < 4)
@@ -1127,6 +1171,7 @@ namespace ESM4
         std::set<ESM::FormKey> referenceKeys;
         for (const RuntimeReferenceState& reference : mReferences)
         {
+            validateOwnershipExtras(reference.mOwnershipRank, reference.mOwnershipGlobal, mVersion);
             if (reference.mKey.isNull() || reference.mBase.isNull() || reference.mCell.isNull())
                 throw std::runtime_error("TES4 runtime-state reference has a null required FormKey");
             if (!referenceKeys.insert(reference.mKey).second)
@@ -1445,6 +1490,8 @@ namespace ESM4
                     writer.integer<std::uint8_t>(extra.has_value() ? 1 : 0);
                     if (extra) writer.floating(*extra);
                 }
+            if (mVersion >= 41)
+                writeOwnershipExtras(writer, reference.mOwnershipRank, reference.mOwnershipGlobal);
         }
 
         if (mVersion >= 2)
@@ -2091,6 +2138,8 @@ namespace ESM4
                         throw std::runtime_error("Invalid TES4 loose item extra flag");
                     if (present) *extra = reader.float32();
                 }
+            if (result.mVersion >= 41)
+                readOwnershipExtras(reader, reference.mOwnershipRank, reference.mOwnershipGlobal);
             result.mReferences.push_back(std::move(reference));
         }
 
@@ -2998,6 +3047,8 @@ namespace ESM4
                 }
                 else stream << "null";
             }
+            if (mVersion >= 41)
+                writeJsonOwnershipExtras(stream, reference.mOwnershipRank, reference.mOwnershipGlobal);
             stream << '}';
         }
         stream << "],\"script_event_sequence\":" << mScriptEventSequence << ",\"script_instances\":[";

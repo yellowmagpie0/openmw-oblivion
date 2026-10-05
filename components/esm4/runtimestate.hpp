@@ -33,7 +33,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 40;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 41;
 
     struct RuntimeContentIdentity
     {
@@ -64,6 +64,9 @@ namespace ESM4
         // Portable lights keep a fractional burn duration independently from
         // durability and enchantment charge. -1 selects the base duration.
         float mRemainingUsageTime = -1.f;
+        // v41: native ownership extras of this exact inventory instance.
+        std::optional<std::int32_t> mOwnershipRank = std::nullopt;
+        ESM::FormKey mOwnershipGlobal = {};
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };
@@ -90,6 +93,9 @@ namespace ESM4
         // select the winning base defaults; zero remains broken/discharged.
         std::optional<float> mItemCondition;
         std::optional<float> mItemCharge;
+        // v41: absent rank is distinct from every signed explicit rank.
+        std::optional<std::int32_t> mOwnershipRank = std::nullopt;
+        ESM::FormKey mOwnershipGlobal = {};
 
         friend bool operator==(const RuntimeReferenceState&, const RuntimeReferenceState&) = default;
     };

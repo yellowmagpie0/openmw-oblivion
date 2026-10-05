@@ -64,6 +64,9 @@ namespace ESM
         };
         float mChargeIntRemainder; // Fractional part of mChargeInt
         std::optional<float> mNativeItemCondition; // TES4 live inventory authority; not light/enchantment charge.
+        // Native projected inventory extras, independent of TES3 INDX/BNAM.
+        std::optional<std::int32_t> mNativeOwnershipRank;
+        ESM::RefId mNativeOwnershipGlobal;
 
         // Remaining enchantment charge. This could be -1 if the charge was not touched yet (i.e. full).
         float mEnchantmentCharge;

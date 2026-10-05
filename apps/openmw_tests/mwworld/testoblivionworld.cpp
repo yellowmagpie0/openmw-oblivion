@@ -8770,13 +8770,21 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBefore
     // Ownership and fractional charge belong to this item instance. They can
     // change without changing count, condition, equipment or actor authority.
     for (bool player : {false, true})
-        for (unsigned change = 0; change < 6; ++change)
+        for (unsigned change = 0; change < 8; ++change)
         {
             SCOPED_TRACE(player);
             SCOPED_TRACE(change);
             NativeWorldFixture fixture;
             const auto actors = installPreparedBowRelease(fixture, player, 2);
             auto& world = fixture.mWorld;
+            if (change == 7)
+            {
+                ESM4::GlobalVariable permission{};
+                permission.mId = {0x970, 0};
+                permission.mType = 'f'; permission.mValue = 1.f;
+                world.getStore().getWritable<ESM4::GlobalVariable>().insertStatic(
+                    permission, ESM::FormKey::content("headless.esm", 0x970));
+            }
             auto& service = *world.getOblivionCombatService();
             auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
             const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
@@ -8806,6 +8814,8 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBefore
                 case 3: ref.setFaction(ESM::RefId(ESM::FormId{0x960, 0})); break;
                 case 4: ref.setFactionRank(5); break;
                 case 5: ref.resetGlobalVariable(); break;
+                case 6: ref.setNativeOwnershipRank(-1); break;
+                case 7: ref.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0x970, 0})); break;
             }
             const auto before = captureNativeActorState(fixture, actors.npc).serializeBinary();
             const auto charge = std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge());
@@ -8813,6 +8823,8 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBefore
             const auto rank = ref.getFactionRank();
             const auto global = ref.getGlobalVariable();
             const auto condition = ref.getNativeItemCondition();
+            const auto nativeRank = ref.getNativeOwnershipRank();
+            const auto nativeGlobal = ref.getNativeOwnershipGlobal();
             EXPECT_FALSE(service.validateBowRelease(*stale, inventory));
             EXPECT_FALSE(service.commitBowRelease(*stale, inventory));
             EXPECT_FALSE(service.notifyBowRelease(*stale, inventory));
@@ -8821,6 +8833,8 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBefore
             EXPECT_EQ(ref.getOwner(), owner); EXPECT_EQ(ref.getFaction(), faction);
             EXPECT_EQ(ref.getFactionRank(), rank);
             EXPECT_EQ(ref.getGlobalVariable(), global);
+            EXPECT_EQ(ref.getNativeOwnershipRank(), nativeRank);
+            EXPECT_EQ(ref.getNativeOwnershipGlobal(), nativeGlobal);
             EXPECT_EQ(ref.getNativeItemCondition(), condition);
             EXPECT_EQ(ammo.getCellRef().getCount(), 2);
             // Retrying captures the new extras and consumes the same release
@@ -8834,6 +8848,8 @@ TEST(OblivionWorldTest, PreparedBowReleaseRejectsChangedChargeAndOwnershipBefore
             EXPECT_EQ(ref.getOwner(), owner); EXPECT_EQ(ref.getFaction(), faction);
             EXPECT_EQ(ref.getFactionRank(), rank);
             EXPECT_EQ(ref.getGlobalVariable(), global);
+            EXPECT_EQ(ref.getNativeOwnershipRank(), nativeRank);
+            EXPECT_EQ(ref.getNativeOwnershipGlobal(), nativeGlobal);
             EXPECT_LT(*ref.getNativeItemCondition(), *condition);
             EXPECT_EQ(ammo.getCellRef().getCount(), player ? 1 : 2);
         }
@@ -9486,7 +9502,7 @@ TEST(OblivionWorldTest, NativeLooseItemSaveCaptureAndApplyPreserveBrokenFraction
         if (value) ref.setNativeItemCondition(*value);
         ref.setEnchantmentCharge(value.value_or(-1.f));
         const auto saved = world.captureOblivionRuntimeState();
-        ASSERT_EQ(saved.mVersion, 40u);
+        ASSERT_EQ(saved.mVersion, ESM4::CurrentRuntimeStateVersion);
         ASSERT_EQ(saved.mReferences.size(), 1u);
         EXPECT_EQ(saved.mReferences.front().mItemCondition, value);
         EXPECT_EQ(saved.mReferences.front().mItemCharge, value);
@@ -10480,4 +10496,115 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
     }
     EXPECT_TRUE(retained->mBindingIdentity.expired());
     EXPECT_FALSE(retained->mScene.matchesCurrentScene());
+}
+
+TEST(OblivionWorldTest, NativeOwnershipExtrasCaptureAndRestoreExactPresenceWhileOlderSavesRetainLiveExtras)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    auto& ref = item.getCellRef();
+    ESM4::GlobalVariable permission{};
+    permission.mId = {0x970, 0};
+    permission.mType = 'f'; permission.mValue = 1.f;
+    const auto permissionKey = ESM::FormKey::content("headless.esm", 0x970);
+    world.getStore().getWritable<ESM4::GlobalVariable>().insertStatic(permission, permissionKey);
+    const ESM::RefId permissionId(permission.mId);
+    const std::array<std::optional<std::int32_t>, 8> ranks{std::nullopt,
+        std::numeric_limits<std::int32_t>::min(), -2, -1, 0, 1, 9,
+        std::numeric_limits<std::int32_t>::max()};
+    for (const auto rank : ranks)
+    for (const bool withGlobal : {false, true})
+    {
+        ref.setNativeOwnershipRank(rank);
+        ref.setNativeOwnershipGlobal(withGlobal ? permissionId : ESM::RefId{});
+        ref.setNativeItemCondition(0.f);
+        ref.setEnchantmentCharge(7.25f);
+        const auto saved = world.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mVersion, 41u);
+        ASSERT_EQ(saved.mReferences.size(), 1u);
+        EXPECT_EQ(saved.mReferences.front().mOwnershipRank, rank);
+        EXPECT_EQ(saved.mReferences.front().mOwnershipGlobal, withGlobal ? permissionKey : ESM::FormKey{});
+        const auto key = ref.getFormKey();
+        const auto number = ref.getRefNum();
+        ref.setNativeOwnershipRank(3);
+        ref.setNativeOwnershipGlobal({});
+        ref.setNativeItemCondition(75.f);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(ref.getFormKey(), key);
+        EXPECT_EQ(ref.getRefNum(), number);
+        EXPECT_EQ(ref.getNativeOwnershipRank(), rank);
+        EXPECT_EQ(ref.getNativeOwnershipGlobal(), withGlobal ? permissionId : ESM::RefId{});
+        EXPECT_EQ(ref.getNativeItemCondition(), 0.f);
+        EXPECT_EQ(ref.getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    }
+    auto old = world.captureOblivionRuntimeState();
+    old.mVersion = 40;
+    old.mReferences.front().mOwnershipRank.reset();
+    old.mReferences.front().mOwnershipGlobal = {};
+    ref.setNativeOwnershipRank(-2);
+    ref.setNativeOwnershipGlobal(permissionId);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(old.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(ref.getNativeOwnershipRank(), -2);
+    EXPECT_EQ(ref.getNativeOwnershipGlobal(), permissionId);
+}
+
+TEST(OblivionWorldTest, NativeOwnershipRestoreRejectsMissingOrWrongGlobalBeforePublishingAnyReference)
+{
+    for (const auto& global : {ESM::FormKey::content("headless.esm", 0x999),
+            ESM::FormKey::content("headless.esm", 0x940)})
+    {
+        NativeWorldFixture fixture;
+        const auto item = installNativeLooseItemCapture(fixture);
+        auto& world = fixture.mWorld;
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mClock.mHour = 9;
+        saved.mReferences.front().mOwnershipRank = -1;
+        saved.mReferences.front().mOwnershipGlobal = global;
+        const auto before = world.getTimeStamp();
+        const auto position = item.getRefData().getPosition();
+        const auto condition = item.getCellRef().getNativeItemCondition();
+        const auto rank = item.getCellRef().getNativeOwnershipRank();
+        const auto ownershipGlobal = item.getCellRef().getNativeOwnershipGlobal();
+        readNativeSnapshot(fixture, saved);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        EXPECT_EQ(world.getTimeStamp(), before);
+        EXPECT_EQ(item.getRefData().getPosition(), position);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), condition);
+        EXPECT_EQ(item.getCellRef().getNativeOwnershipRank(), rank);
+        EXPECT_EQ(item.getCellRef().getNativeOwnershipGlobal(), ownershipGlobal);
+    }
+}
+
+TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAndGlobal)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, true);
+    auto& world = fixture.mWorld;
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto id = ESM::RefId(ESM::FormId{0x940, 0});
+    MWWorld::ManualRef first(world.getStore(), id, 1), second(world.getStore(), id, 1);
+    auto& left = first.getPtr().getCellRef();
+    auto& right = second.getPtr().getCellRef();
+    left.setNativeItemCondition(100.f);
+    right.setNativeItemCondition(100.f);
+    ASSERT_TRUE(inventory.stacks(first.getPtr(), second.getPtr()));
+    right.setNativeOwnershipRank(-1);
+    EXPECT_FALSE(inventory.stacks(first.getPtr(), second.getPtr()));
+    left.setNativeOwnershipRank(-1);
+    EXPECT_TRUE(inventory.stacks(first.getPtr(), second.getPtr()));
+    right.setNativeOwnershipRank(-2);
+    EXPECT_FALSE(inventory.stacks(first.getPtr(), second.getPtr()));
+    left.setNativeOwnershipRank(-2);
+    EXPECT_TRUE(inventory.stacks(first.getPtr(), second.getPtr()));
+    const ESM::RefId global(ESM::FormId{0x970, 0});
+    right.setNativeOwnershipGlobal(global);
+    EXPECT_FALSE(inventory.stacks(first.getPtr(), second.getPtr()));
+    left.setNativeOwnershipGlobal(global);
+    EXPECT_TRUE(inventory.stacks(first.getPtr(), second.getPtr()));
+    right.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0x971, 0}));
+    EXPECT_FALSE(inventory.stacks(first.getPtr(), second.getPtr()));
 }

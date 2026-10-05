@@ -14032,3 +14032,79 @@ callback-safe pickup, complete stock loose-weapon factory, compound arrow
 release, native scene orientation, physical frame/save/recreation and actual
 normal-input ranged/fresh-process courses remain open. S5 and M15 remain in
 progress; this parser/metadata checkpoint does not close a gameplay gate.
+
+
+### S5 checkpoint294: retain native ownership extras across live projection and saves
+
+Native ownership rank is now an optional signed extra in both native REFR and
+projected inventory CellRef storage. Native permission globals use typed FormId
+identity, independently of TES3 string globals and faction-rank sentinels.
+Projected save fields NORK/NOGB preserve absence, explicit negative ranks and
+typed globals; malformed lengths, duplicate fields and non-native identifiers
+are rejected. Older string-only RefId save formats explicitly reject native
+global output rather than silently losing its identity.
+
+The canonical runtime envelope advances to version 41. Inventory instances and
+references retain optional signed rank and content-global keys in binary and
+JSON, with matching Python codecs. Versions 1–40 decode absent/null extras;
+serialization into an older envelope rejects lossy nonempty extras. Actual
+actor/reference capture reads the live extras. Private inventory preparation
+and private reference copies resolve permission keys against the winning typed
+GLOB store before publication. Applying an older reference envelope preserves
+the reference's available live ownership extras. Native stack equality and
+prepared bow-release validation now include rank presence and permission-global
+identity. TES3 transfer cleanup retains its historical behavior.
+
+Tests cover 19 projected save formats, signed boundaries, malformed and duplicate
+fields, separate legacy domains, all 40 old runtime envelopes, canonical stack
+distinctions, actual CellRef mutation, typed-global preparation, actual world
+capture/restore and rejection before publishing any reference. A 1145-byte save
+fixture independently encoded from declared Python input is read and reproduced
+byte-for-byte by C++; its SHA256 is
+6ddc656a3139a7d7cf2eb5b06f73ad0cd908d3f98c9c66e7065ece0a7a302740.
+Actual inventory stacking and prepared-release stale-extra guards have engine
+coverage; they do not prove normal-input pickup or complete arrow publication.
+
+The first full normal and sanitizer attempts retained in
+S5/native-ownership-extras-{normal,sanitized}-01 failed one existing JSON golden
+expectation, which omitted the new default fields. All new component cases
+passed. The expectation was corrected and new aggregate defaults made explicit
+before the complete-02 runs. Review then identified manually constructed
+noncanonical C++ permission keys that could lose identity during encoding.
+The final-03 source rejects those keys in both binary and JSON serialization;
+new tests cover14 manually constructed inventory/reference contexts and
+two independently corrupted wire identities. The new fixture's range-loop
+copy warning was also removed. Complete-02 evidence is retained separately. Earlier focused Python fixture failures are
+retained separately; the final diagnostic Python suite passed 264 tests.
+
+Both final full normal and ASan/UBSan runs pass 2539 component cases and 1088
+engine cases with exact unfiltered inventories, no failures or skips. The
+normal run also passes the full 264-case Python suite. Leak checking is disabled.
+Evidence: S5/native-ownership-extras-normal-03 and
+S5/native-ownership-extras-sanitized-03.
+Tested source fingerprint: 4ca2e52579d0be0d5b7b47f17da5d3eb09e3a15e66886d69003c7d59c2598928
+
+Native callback-safe pickup, complete stock loose-weapon factory, compound arrow
+release, native scene orientation, physical frame/save recreation and required
+normal-input ranged/restart courses remain open. M15 and S5 remain in progress.
+These parser, storage and actual service tests do not close gameplay gates.
+
+A preparatory diagnostic against the completed-02 libraries admits the
+hash-pinned stock iron bow through the actual WorldModel, Objects and Physics
+owners, verifies cancellation and publication, and compares its initial
+physical root with the declared scene placement. Normal and sanitizer probes
+each verify one exact GoogleTest case. They precede the final key-validation
+changes and are diagnostic evidence, not acceptance of the final runtime.
+Evidence: S5/native-stock-loose-admission-normal-diagnostic-02 and
+S5/native-stock-loose-admission-sanitized-diagnostic-01.
+Diagnostic source fingerprint: 1ec37a11f0335430a91b5bdb0226688cbb4dffccc6b1064164710d37c370a893
+Fixture SHA256: 930938e4ec9674e28636aa00e61d4671d96cac4f6262d1a9e1ad80fd7b0d11ba
+Normal binary SHA256: 069e4dd12422974ac77fdf93c75ce3576918a11e724cbdba13199bf814013a0b
+Sanitizer binary SHA256: 03f417b246dacbac7520b08d13c4736b5f4fea0e819b08d2f0f77e3adece447b
+
+The first normal diagnostic failed to compile because its fixture assigned a
+nonexistent Weapon.mFormKey field; correction uses the actual typed store's
+insertStatic(base,key) identity. Attempt01 remains retained. Only model assets
+are extracted: the missing ironbow.dds warning is recorded, and no render
+context, texture completeness, frame dynamics, original pose comparison,
+complete bow-drop transaction or normal-input gameplay is claimed.

@@ -15,7 +15,8 @@ namespace ESM4
             return left.mBase == right.mBase && left.mCondition == right.mCondition
                 && left.mCharge == right.mCharge && left.mRemainingUsageTime == right.mRemainingUsageTime
                 && left.mEquippedSlots == right.mEquippedSlots
-                && left.mHotkey == right.mHotkey && left.mOwner == right.mOwner;
+                && left.mHotkey == right.mHotkey && left.mOwner == right.mOwner
+                && left.mOwnershipRank == right.mOwnershipRank && left.mOwnershipGlobal == right.mOwnershipGlobal;
         }
 
         std::int32_t saturatingAdd(std::int32_t left, std::int32_t right)

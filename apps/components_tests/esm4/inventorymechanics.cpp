@@ -389,3 +389,28 @@ namespace
             ESM4::lockpickAutoChance(25, 60.f, 55.f, 75));
     }
 }
+
+TEST(ESM4InventoryMechanics, OwnershipRankPresenceAndGlobalKeepDifferentInstancesApart)
+{
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("items.esm", 1);
+    item.mCount = 1;
+    item.mOwner = ESM::FormKey::content("items.esm", 2);
+    std::vector<ESM4::RuntimeInventoryItem> inventory;
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    item.mOwnershipRank = -1;
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    item.mOwnershipRank = -2;
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    item.mOwnershipRank = 0;
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    item.mOwnershipGlobal = ESM::FormKey::content("items.esm", 3);
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    item.mOwnershipGlobal = ESM::FormKey::content("items.esm", 4);
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    ASSERT_EQ(inventory.size(), 6u);
+    for (const auto& instance : inventory) EXPECT_EQ(instance.mCount, 1);
+    ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
+    EXPECT_EQ(inventory.size(), 6u);
+    EXPECT_EQ(inventory.back().mCount, 2);
+}

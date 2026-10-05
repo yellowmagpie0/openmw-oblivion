@@ -421,7 +421,9 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2)
         // Morrowind deliberately discards ownership when an item enters a
         // container, so keep that historical behavior profile-gated.
         && (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion
-            || ptr1.getCellRef().getOwner() == ptr2.getCellRef().getOwner())
+            || (ptr1.getCellRef().getOwner() == ptr2.getCellRef().getOwner()
+                && ptr1.getCellRef().getNativeOwnershipRank() == ptr2.getCellRef().getNativeOwnershipRank()
+                && ptr1.getCellRef().getNativeOwnershipGlobal() == ptr2.getCellRef().getNativeOwnershipGlobal()))
         && ptr1.getCellRef().getSoul() == ptr2.getCellRef().getSoul()
 
         && ptr1.getClass().getRemainingUsageTime(ptr1) == ptr2.getClass().getRemainingUsageTime(ptr2)
@@ -472,10 +474,12 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
     // TES4 retains ownership on stolen items through inventory transfers.
     // TES3 container ownership remains intentionally actor/container based.
     if (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+    {
         item.getCellRef().setOwner(ESM::RefId());
-    item.getCellRef().resetGlobalVariable();
-    item.getCellRef().setFaction(ESM::RefId());
-    item.getCellRef().setFactionRank(-2);
+        item.getCellRef().resetGlobalVariable();
+        item.getCellRef().setFaction(ESM::RefId());
+        item.getCellRef().setFactionRank(-2);
+    }
 
     const ESM::RefId& script = item.getClass().getScript(item);
     const Ptr& contPtr = getPtr();
