@@ -9,6 +9,7 @@
 #include "heightfieldshape.hpp"
 #include "objectid.hpp"
 #include "objecttransform.hpp"
+#include "preparedobjectremoval.hpp"
 #include "recastmeshtiles.hpp"
 #include "sharednavmeshcacheitem.hpp"
 #include "updateguard.hpp"
@@ -139,6 +140,7 @@ namespace DetourNavigator
          * @brief removeObject to make it no more available at the scene.
          * @param id is used to find object.
          */
+        virtual std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(ObjectId id, const UpdateGuard* guard) = 0;
         virtual void removeObject(const ObjectId id, const UpdateGuard* guard) = 0;
 
         /**

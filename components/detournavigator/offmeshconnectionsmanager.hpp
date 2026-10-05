@@ -22,6 +22,22 @@ namespace DetourNavigator
 
         void add(const ObjectId id, const OffMeshConnection& value);
 
+        class PreparedRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedRemoval(std::unique_ptr<Data> data);
+            friend class OffMeshConnectionsManager;
+        public:
+            ~PreparedRemoval();
+            PreparedRemoval(const PreparedRemoval&) = delete;
+            PreparedRemoval& operator=(const PreparedRemoval&) = delete;
+            const std::set<TilePosition>& changedTiles() const;
+            bool isValid() const;
+            bool commit();
+        };
+        // Holds the connection lock until destruction; manager must outlive it.
+        std::unique_ptr<PreparedRemoval> prepareRemoval(ObjectId id);
         std::set<TilePosition> remove(const ObjectId id);
 
         std::vector<OffMeshConnection> get(const TilePosition& tilePosition) const;

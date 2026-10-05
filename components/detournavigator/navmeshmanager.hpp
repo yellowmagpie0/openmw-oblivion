@@ -6,6 +6,7 @@
 #include "cellgridbounds.hpp"
 #include "heightfieldshape.hpp"
 #include "offmeshconnectionsmanager.hpp"
+#include "preparedobjectremoval.hpp"
 #include "recastmeshtiles.hpp"
 #include "waitconditiontype.hpp"
 
@@ -33,6 +34,8 @@ namespace DetourNavigator
 
         bool updateObject(ObjectId id, const btTransform& transform, AreaType areaType, const UpdateGuard* guard);
 
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(
+            std::span<const ObjectId> ids, ObjectId connectionId, const UpdateGuard* guard);
         void removeObject(const ObjectId id, const UpdateGuard* guard);
 
         void addAgent(const AgentBounds& agentBounds);

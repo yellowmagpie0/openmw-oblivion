@@ -21857,3 +21857,51 @@ cleanup; this resource fix alone does not make that compound path atomic.
 Exact live pickup metadata, bow/drop/arrow publication, flight/impact/recovery,
 frame/save reconstruction and normal-input/restart courses remain required.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint298: commit complete navigation object removals together
+
+The retained standalone baseline reproduces a second allocation defect in
+actual NavigatorImpl removal. At allocation limit twelve, removal throws
+after deleting the primary shape while the avoidance shape remains (object
+count changes from two to one). Evidence:
+S5/native-pickup-navigation-group-baseline-02. The initial -01 probe emitted
+the same partial-removal diagnostic, but its harness incorrectly parsed worker
+log lines as JSON; it has no verified result and remains retained.
+
+NavigatorImpl now prepares the primary and both mapped auxiliary shape IDs,
+along with the primary object's off-mesh connections, as one transaction.
+OffMeshConnectionsManager prepares its affected tiles under its connection
+lock before erasing any binding. NavMeshManager holds the recast update guard
+and connection lock while preparing the replacement shape index and merged
+tile notices. Commit validates both preparations, publishes the prepared
+shape index/notices, and erases connections without allocating or invoking
+callbacks. Cancellation leaves the geometry and connections intact. Ordinary
+removeObject and removeOffMeshConnections use these paths; existing auxiliary
+ID map conventions are preserved.
+
+The public scoped preparation supports the later source/inventory transaction.
+The navigator and borrowed update guard must outlive it; destroy the plan
+before callbacks or unguarded navigation operations. Disabled navigation has
+an explicit, single-use no-op preparation. Four regular component cases cover
+cancellation, primary/avoidance deletion and replay, connection preservation
+for another owner, borrowed guards/missing IDs, and disabled navigation.
+
+Normal and ASan/UBSan full unfiltered checks each pass 2549 component cases
+and 1104 engine cases with exact inventories and no failures or skips.
+Evidence: S5/native-pickup-navigation-group-normal-01 and
+S5/native-pickup-navigation-group-sanitized-01. Leak checking is disabled.
+Tested source fingerprint: ec32a17806bd3ed2bc7ac042c2497cd0461607fea4dc9868b4583fc9976fe400
+
+The isolated allocation probe against the completed normal component library
+passes all 65 limits: 21 allocation
+failures preserve both objects and 44
+successful removals delete both. The probe is not a normal-input gameplay
+test, and its allocator override is confined to the standalone process.
+Evidence: S5/native-pickup-navigation-group-allocation-01.
+
+This closes the navigation group resource preparation, not native pickup or
+M15 S5 acceptance. Source count, inventory, rendering, physics and Lua still
+need one complete pickup transaction before observers run. Large-cell removal
+performance remains open because each preparation copies the shape index.
+All remaining stage and normal-input acceptance gates remain open.

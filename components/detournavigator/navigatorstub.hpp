@@ -49,6 +49,24 @@ namespace DetourNavigator
         {
         }
 
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(ObjectId, const UpdateGuard*) override
+        {
+            class Removal final : public PreparedObjectRemoval
+            {
+                bool mCommitted = false;
+            public:
+                bool isValid() const override { return !mCommitted; }
+                bool commit() override
+                {
+                    if (!isValid())
+                        return false;
+                    mCommitted = true;
+                    return true;
+                }
+            };
+            return std::make_unique<Removal>();
+        }
+
         void removeObject(const ObjectId /*id*/, const UpdateGuard* /*guard*/) override {}
 
         void addWater(const osg::Vec2i& /*cellPosition*/, int /*cellSize*/, float /*level*/,

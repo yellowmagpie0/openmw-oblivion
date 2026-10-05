@@ -121,6 +121,51 @@ namespace DetourNavigator
         return mRecastMeshManager.updateObject(id, transform, areaType, guard);
     }
 
+    namespace
+    {
+        class PreparedNavigationRemoval final : public PreparedObjectRemoval
+        {
+        public:
+            ScopedUpdateGuard mGuard;
+            std::unique_ptr<OffMeshConnectionsManager::PreparedRemoval> mConnections;
+            std::unique_ptr<TileCachedRecastMeshManager::PreparedObjectRemoval> mObjects;
+
+            bool isValid() const override
+            {
+                return mObjects && mObjects->isValid() && mConnections->isValid();
+            }
+
+            bool commit() override
+            {
+                if (!isValid())
+                    return false;
+                // Both managers remain locked, and all allocation preceded this
+                // interval. No callback or competing update can invalidate either.
+                if (!mObjects->commit())
+                    return false;
+                return mConnections->commit();
+            }
+        };
+    }
+
+    std::unique_ptr<PreparedObjectRemoval> NavMeshManager::prepareObjectRemoval(
+        std::span<const ObjectId> ids, ObjectId connectionId, const UpdateGuard* guard)
+    {
+        auto plan = std::make_unique<PreparedNavigationRemoval>();
+        if (!guard)
+        {
+            plan->mGuard = makeUpdateGuard();
+            guard = plan->mGuard.get();
+        }
+        plan->mConnections = mOffMeshConnectionsManager.prepareRemoval(connectionId);
+        std::vector<std::pair<TilePosition, ChangeType>> notices;
+        notices.reserve(plan->mConnections->changedTiles().size());
+        for (const auto& tile : plan->mConnections->changedTiles())
+            notices.emplace_back(tile, ChangeType::update);
+        plan->mObjects = mRecastMeshManager.prepareObjectRemoval(ids, notices, guard);
+        return plan;
+    }
+
     void NavMeshManager::removeObject(const ObjectId id, const UpdateGuard* guard)
     {
         mRecastMeshManager.removeObject(id, guard);
@@ -185,9 +230,8 @@ namespace DetourNavigator
 
     void NavMeshManager::removeOffMeshConnections(const ObjectId id)
     {
-        const auto changedTiles = mOffMeshConnectionsManager.remove(id);
-        for (const auto& tile : changedTiles)
-            mRecastMeshManager.addChangedTile(tile, ChangeType::update);
+        auto plan = prepareObjectRemoval({}, id, nullptr);
+        plan->commit();
     }
 
     void NavMeshManager::update(const osg::Vec3f& playerPosition, const UpdateGuard* guard)

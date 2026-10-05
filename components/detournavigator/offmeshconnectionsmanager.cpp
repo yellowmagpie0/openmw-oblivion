@@ -31,39 +31,69 @@ namespace DetourNavigator
             values->mByTilePosition[endTilePosition].insert(id);
     }
 
+    struct OffMeshConnectionsManager::PreparedRemoval::Data
+    {
+        Misc::Locked<Values> mValues;
+        ObjectId mId;
+        std::set<TilePosition> mTiles;
+        bool mCommitted = false;
+
+        Data(Misc::Locked<Values> values, ObjectId id)
+            : mValues(std::move(values)), mId(id) {}
+    };
+
+    OffMeshConnectionsManager::PreparedRemoval::PreparedRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    OffMeshConnectionsManager::PreparedRemoval::~PreparedRemoval() = default;
+
+    const std::set<TilePosition>& OffMeshConnectionsManager::PreparedRemoval::changedTiles() const
+    {
+        return mData->mTiles;
+    }
+
+    bool OffMeshConnectionsManager::PreparedRemoval::isValid() const
+    {
+        return !mData->mCommitted;
+    }
+
+    bool OffMeshConnectionsManager::PreparedRemoval::commit()
+    {
+        if (!isValid())
+            return false;
+        auto& values = *mData->mValues;
+        for (const TilePosition& tile : mData->mTiles)
+        {
+            const auto it = values.mByTilePosition.find(tile);
+            if (it == values.mByTilePosition.end())
+                continue;
+            it->second.erase(mData->mId);
+            if (it->second.empty())
+                values.mByTilePosition.erase(it);
+        }
+        const auto range = values.mById.equal_range(mData->mId);
+        values.mById.erase(range.first, range.second);
+        mData->mCommitted = true;
+        return true;
+    }
+
+    std::unique_ptr<OffMeshConnectionsManager::PreparedRemoval>
+    OffMeshConnectionsManager::prepareRemoval(ObjectId id)
+    {
+        auto data = std::make_unique<PreparedRemoval::Data>(mValues.lock(), id);
+        const auto range = data->mValues->mById.equal_range(id);
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            data->mTiles.emplace(getTilePosition(mSettings, it->second.mStart));
+            data->mTiles.emplace(getTilePosition(mSettings, it->second.mEnd));
+        }
+        return std::unique_ptr<PreparedRemoval>(new PreparedRemoval(std::move(data)));
+    }
+
     std::set<TilePosition> OffMeshConnectionsManager::remove(const ObjectId id)
     {
-        const auto values = mValues.lock();
-
-        const auto byId = values->mById.equal_range(id);
-
-        if (byId.first == byId.second)
-            return {};
-
-        std::set<TilePosition> removed;
-
-        std::for_each(byId.first, byId.second, [&](const auto& v) {
-            const auto startTilePosition = getTilePosition(mSettings, v.second.mStart);
-            const auto endTilePosition = getTilePosition(mSettings, v.second.mEnd);
-
-            removed.emplace(startTilePosition);
-            if (startTilePosition != endTilePosition)
-                removed.emplace(endTilePosition);
-        });
-
-        for (const TilePosition& tilePosition : removed)
-        {
-            const auto it = values->mByTilePosition.find(tilePosition);
-            if (it == values->mByTilePosition.end())
-                continue;
-            it->second.erase(id);
-            if (it->second.empty())
-                values->mByTilePosition.erase(it);
-        }
-
-        values->mById.erase(byId.first, byId.second);
-
-        return removed;
+        auto plan = prepareRemoval(id);
+        plan->commit();
+        return std::move(plan->mData->mTiles);
     }
 
     std::vector<OffMeshConnection> OffMeshConnectionsManager::get(const TilePosition& tilePosition) const

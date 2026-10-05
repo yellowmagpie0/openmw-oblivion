@@ -1,3 +1,4 @@
+#include <array>
 #include "navigatorimpl.hpp"
 #include "makenavmesh.hpp"
 #include "settingsutils.hpp"
@@ -94,16 +95,23 @@ namespace DetourNavigator
         return updateObject(id, static_cast<const ObjectShapes&>(shapes), transform, guard);
     }
 
-    void NavigatorImpl::removeObject(const ObjectId id, const UpdateGuard* guard)
+    std::unique_ptr<PreparedObjectRemoval> NavigatorImpl::prepareObjectRemoval(ObjectId id, const UpdateGuard* guard)
     {
-        mNavMeshManager.removeObject(id, guard);
+        std::array<ObjectId, 3> ids{id, id, id};
+        std::size_t count = 1;
         const auto avoid = mAvoidIds.find(id);
         if (avoid != mAvoidIds.end())
-            mNavMeshManager.removeObject(avoid->second, guard);
+            ids[count++] = avoid->second;
         const auto water = mWaterIds.find(id);
         if (water != mWaterIds.end())
-            mNavMeshManager.removeObject(water->second, guard);
-        mNavMeshManager.removeOffMeshConnections(id);
+            ids[count++] = water->second;
+        return mNavMeshManager.prepareObjectRemoval(std::span(ids).first(count), id, guard);
+    }
+
+    void NavigatorImpl::removeObject(const ObjectId id, const UpdateGuard* guard)
+    {
+        auto plan = prepareObjectRemoval(id, guard);
+        plan->commit();
     }
 
     void NavigatorImpl::addWater(const osg::Vec2i& cellPosition, int cellSize, float level, const UpdateGuard* guard)

@@ -90,4 +90,5 @@ int main()
     if (!failures || !successes) return 19;
     std::cout << "{\"passed\":true,\"cases\":65,\"allocation_failures\":" << failures
               << ",\"successful_removals\":" << successes << "}\n";
+    return 0;
 }

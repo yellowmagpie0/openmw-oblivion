@@ -3,6 +3,8 @@
 
 #include <components/bullethelpers/heightfield.hpp>
 #include <components/detournavigator/navigatorimpl.hpp>
+#include <components/detournavigator/settingsutils.hpp>
+#include <components/detournavigator/stats.hpp>
 #include <components/detournavigator/navigatorutils.hpp>
 #include <components/detournavigator/navmeshdb.hpp>
 #include <components/esm3/loadland.hpp>
@@ -1521,4 +1523,87 @@ namespace
     };
 
     INSTANTIATE_TEST_SUITE_P(DifferentNavMeshData, DetourNavigatorUpdateTest, ValuesIn(addNavMeshData));
+}
+
+namespace
+{
+    using namespace DetourNavigator;
+
+    TEST(M15PreparedNavigationRemoval, CancelPreservesPrimaryAvoidanceAndConnections)
+    {
+        auto settings = Tests::makeSettings();
+        NavigatorImpl navigator(settings, nullptr);
+        osg::ref_ptr<Resource::BulletShape> shape = new Resource::BulletShape;
+        shape->mCollisionShape.reset(new btBoxShape(btVector3(20, 20, 100)));
+        shape->mAvoidCollisionShape.reset(new btBoxShape(btVector3(10, 10, 100)));
+        osg::ref_ptr<Resource::BulletShapeInstance> instance = new Resource::BulletShapeInstance(shape);
+        const ObjectTransform placement{ESM::Position{{0, 0, 0}, {0, 0, 0}}, 0};
+        const ObjectId id(instance->mCollisionShape.get());
+        navigator.addObject(id, DoorShapes(instance, placement, osg::Vec3f(0, 0, 0), osg::Vec3f(500, 500, 0)),
+            btTransform::getIdentity(), nullptr);
+        {
+            auto plan = navigator.prepareObjectRemoval(id, nullptr);
+            ASSERT_TRUE(plan->isValid());
+        }
+        EXPECT_EQ(navigator.getStats().mRecast.mObjects, 2);
+        {
+            auto plan = navigator.prepareObjectRemoval(id, nullptr);
+            ASSERT_TRUE(plan->commit());
+            EXPECT_FALSE(plan->isValid());
+            EXPECT_FALSE(plan->commit());
+        }
+        EXPECT_EQ(navigator.getStats().mRecast.mObjects, 0);
+        navigator.removeObject(id, nullptr);
+        EXPECT_EQ(navigator.getStats().mRecast.mObjects, 0);
+    }
+
+    TEST(M15PreparedNavigationRemoval, ConnectionCancellationAndCommitPreserveUnrelatedOwner)
+    {
+        auto settings = Tests::makeSettings();
+        OffMeshConnectionsManager manager(settings.mRecast);
+        const ObjectId first(1), second(2);
+        const osg::Vec3f start(0, 0, 0), end(500, 500, 0);
+        manager.add(first, OffMeshConnection{start, end, AreaType_ground});
+        manager.add(first, OffMeshConnection{end, start, AreaType_ground});
+        manager.add(second, OffMeshConnection{start, end, AreaType_ground});
+        const auto tile = getTilePosition(settings.mRecast, start);
+        ASSERT_EQ(manager.get(tile).size(), 3);
+        {
+            auto plan = manager.prepareRemoval(first);
+            EXPECT_FALSE(plan->changedTiles().empty());
+            EXPECT_TRUE(plan->isValid());
+        }
+        EXPECT_EQ(manager.get(tile).size(), 3);
+        {
+            auto plan = manager.prepareRemoval(first);
+            ASSERT_TRUE(plan->commit());
+            EXPECT_FALSE(plan->commit());
+        }
+        EXPECT_EQ(manager.get(tile).size(), 1);
+        EXPECT_FALSE(manager.remove(second).empty());
+        EXPECT_TRUE(manager.get(tile).empty());
+        EXPECT_TRUE(manager.remove(first).empty());
+    }
+
+    TEST(M15PreparedNavigationRemoval, BorrowedGuardAndMissingObjectAreSupported)
+    {
+        auto settings = Tests::makeSettings();
+        NavigatorImpl navigator(settings, nullptr);
+        auto guard = navigator.makeUpdateGuard();
+        auto plan = navigator.prepareObjectRemoval(ObjectId(123), guard.get());
+        ASSERT_TRUE(plan->isValid());
+        EXPECT_TRUE(plan->commit());
+        EXPECT_FALSE(plan->commit());
+    }
+
+    TEST(M15PreparedNavigationRemoval, DisabledNavigationSupportsSingleCommit)
+    {
+        auto navigator = makeNavigatorStub();
+        auto cancelled = navigator->prepareObjectRemoval(ObjectId(123), nullptr);
+        cancelled.reset();
+        auto plan = navigator->prepareObjectRemoval(ObjectId(123), nullptr);
+        ASSERT_TRUE(plan->isValid());
+        EXPECT_TRUE(plan->commit());
+        EXPECT_FALSE(plan->commit());
+    }
 }

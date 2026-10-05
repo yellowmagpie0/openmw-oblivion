@@ -42,6 +42,7 @@ namespace DetourNavigator
         void updateObject(const ObjectId id, const DoorShapes& shapes, const btTransform& transform,
             const UpdateGuard* guard) override;
 
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(ObjectId id, const UpdateGuard* guard) override;
         void removeObject(const ObjectId id, const UpdateGuard* guard) override;
 
         void addWater(const osg::Vec2i& cellPosition, int cellSize, float level, const UpdateGuard* guard) override;
