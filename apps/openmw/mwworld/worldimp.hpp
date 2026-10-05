@@ -136,6 +136,7 @@ namespace MWWorld
         std::unique_ptr<ESM4::PhysicalBlendProfilesConfiguration> mOblivionPhysicalBlendConfiguration;
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
+        void takeOblivionReference(const Ptr& ptr);
         bool mDispatchingOblivionDeathEvents = false;
 
         std::string mCurrentWorldSpace;

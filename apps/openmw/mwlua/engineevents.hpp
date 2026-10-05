@@ -2,6 +2,8 @@
 #define MWLUA_ENGINEEVENTS_H
 
 #include <variant>
+#include <algorithm>
+#include <stdexcept>
 
 #include <osg/Vec3f>
 
@@ -106,6 +108,22 @@ namespace MWLua
 
         void clear() { mQueue.clear(); }
         void addToQueue(Event e) { mQueue.push_back(std::move(e)); }
+        std::size_t queueSize() const { return mQueue.size(); }
+        void reserveNextEvent()
+        {
+            if (mQueue.size() == mQueue.max_size())
+                throw std::length_error("engine event queue reservation overflow");
+            if (mQueue.size() == mQueue.capacity())
+            {
+                const auto grown = mQueue.capacity() > mQueue.max_size() / 2
+                    ? mQueue.max_size() : mQueue.capacity() * 2;
+                mQueue.reserve(std::max(mQueue.size() + 1, grown));
+            }
+        }
+        bool canPushPrepared(std::size_t size) const
+        {
+            return mQueue.size() == size && mQueue.capacity() > size;
+        }
         void callEngineHandlers();
 
     private:

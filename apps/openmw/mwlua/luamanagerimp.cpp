@@ -385,6 +385,7 @@ namespace MWLua
 
     void LuaManager::clear()
     {
+        mScenePreparationIdentity = std::make_shared<const char>(0);
         LuaUi::clearGameInterface();
         mUiResourceManager.clear();
         MWBase::Environment::get().getWorld()->getPostProcessor()->disableDynamicShaders();
@@ -701,6 +702,61 @@ namespace MWLua
         }
         if (localScripts)
             mActiveLocalScripts.insert(localScripts->getWeakPointer());
+    }
+
+    class LuaManager::SceneRemoval final : public MWBase::LuaManager::PreparedSceneRemoval
+    {
+        LuaManager& mOwner;
+        std::weak_ptr<const char> mIdentity;
+        MWWorld::Ptr mPtr;
+        ESM::RefNum mId;
+        LocalScripts* mScripts;
+        std::size_t mQueueSize;
+        bool mInactive;
+        bool mCommitted = false;
+    public:
+        SceneRemoval(LuaManager& owner, const MWWorld::Ptr& ptr)
+            : mOwner(owner), mIdentity(owner.mScenePreparationIdentity), mPtr(ptr), mId(getId(ptr))
+            , mScripts(ptr.getRefData().getLuaScripts()), mQueueSize(owner.mEngineEvents.queueSize())
+            , mInactive(mScripts && !MWBase::Environment::get().getWorldModel()->getPtr(mId).isEmpty())
+        {
+            if (mInactive)
+                owner.mEngineEvents.reserveNextEvent();
+        }
+
+        bool isValid() const override
+        {
+            if (mCommitted || mIdentity.expired())
+                return false;
+            return getId(mPtr) == mId && mPtr.getRefData().getLuaScripts() == mScripts
+                && (!mInactive || (mOwner.mEngineEvents.canPushPrepared(mQueueSize)
+                    && MWBase::Environment::get().getWorldModel()->getPtr(mId) == mPtr));
+        }
+
+        bool commit() override
+        {
+            if (!isValid())
+                return false;
+            mOwner.mObjectLists.objectRemovedFromScene(mPtr);
+            if (mScripts)
+            {
+                const auto script = mOwner.mActiveLocalScripts.find(mScripts);
+                if (script != mOwner.mActiveLocalScripts.end())
+                    mOwner.mActiveLocalScripts.erase(script);
+            }
+            if (mInactive)
+                mOwner.mEngineEvents.addToQueue(EngineEvents::OnInactive{mId});
+            mCommitted = true;
+            return true;
+        }
+    };
+
+    std::unique_ptr<MWBase::LuaManager::PreparedSceneRemoval> LuaManager::prepareSceneRemoval(
+        const MWWorld::Ptr& ptr)
+    {
+        if (ptr.isEmpty())
+            throw std::invalid_argument("empty prepared Lua scene removal");
+        return std::make_unique<SceneRemoval>(*this, ptr);
     }
 
     void LuaManager::objectRemovedFromScene(const MWWorld::Ptr& ptr)

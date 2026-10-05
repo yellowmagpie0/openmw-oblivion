@@ -518,6 +518,72 @@ namespace MWPhysics
             mAnimatedObjects.emplace(obj.get(), false);
     }
 
+    struct PhysicsSystem::PreparedObjectRemoval::Data
+    {
+        PhysicsSystem& mOwner;
+        MWWorld::Ptr mPtr;
+        int mCount;
+        std::shared_ptr<Object> mObject;
+        std::unique_ptr<PhysicsTaskScheduler::PreparedObjectRemoval> mScheduler;
+        bool mCommitted = false;
+
+        Data(PhysicsSystem& owner, const MWWorld::Ptr& ptr)
+            : mOwner(owner), mPtr(ptr), mCount(ptr.getCellRef().getCount()) {}
+    };
+
+    PhysicsSystem::PreparedObjectRemoval::PreparedObjectRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    PhysicsSystem::PreparedObjectRemoval::~PreparedObjectRemoval() = default;
+
+    bool PhysicsSystem::PreparedObjectRemoval::isValid() const
+    {
+        const auto& data = *mData;
+        if (data.mCommitted || data.mOwner.mActors.contains(data.mPtr.mRef)
+            || data.mOwner.mTriggers.contains(data.mPtr.mRef) || !data.mScheduler->isValid())
+            return false;
+        const auto object = data.mOwner.mObjects.find(data.mPtr.mRef);
+        if (data.mObject ? object == data.mOwner.mObjects.end() || object->second != data.mObject
+                        : object != data.mOwner.mObjects.end())
+            return false;
+        return data.mPtr.getCellRef().getCount() == data.mCount
+            && (!data.mObject || data.mObject->mCollisionRegistered);
+    }
+
+    bool PhysicsSystem::PreparedObjectRemoval::commit()
+    {
+        if (!isValid())
+            return false;
+        auto& data = *mData;
+        // The scheduler lock is already held and its snapshot is valid.
+        for (auto* object : data.mScheduler->collisionObjects())
+            data.mOwner.clearIgnoredCollisionPairs(object);
+        if (!data.mScheduler->commit())
+            return false;
+        if (data.mObject)
+        {
+            data.mObject->mCollisionRegistered = false;
+            data.mOwner.mAnimatedObjects.erase(data.mObject.get());
+            data.mOwner.mObjects.erase(data.mPtr.mRef);
+        }
+        data.mCommitted = true;
+        return true;
+    }
+
+    std::unique_ptr<PhysicsSystem::PreparedObjectRemoval> PhysicsSystem::prepareObjectRemoval(const MWWorld::Ptr& ptr)
+    {
+        if (ptr.isEmpty() || !ptr.isInCell() || ptr.getClass().isActor() || ptr.getClass().useAnim()
+            || ptr.getContainerStore() || ptr.getCellRef().getCount() <= 0
+            || mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
+            throw std::invalid_argument("prepared physics removal requires a live world item");
+        auto data = std::make_unique<PreparedObjectRemoval::Data>(*this, ptr);
+        const auto object = mObjects.find(ptr.mRef);
+        if (object != mObjects.end())
+            data->mObject = object->second;
+        data->mScheduler = mTaskScheduler->prepareObjectRemoval(ptr,
+            data->mObject ? data->mObject->getCollisionObject() : nullptr);
+        return std::unique_ptr<PreparedObjectRemoval>(new PreparedObjectRemoval(std::move(data)));
+    }
+
     void PhysicsSystem::remove(const MWWorld::Ptr& ptr)
     {
         mTaskScheduler->removeActorRagdoll(ptr);

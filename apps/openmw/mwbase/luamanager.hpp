@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <map>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
@@ -78,6 +79,15 @@ namespace MWBase
         virtual void gameEnded() = 0;
         virtual void noGame() = 0;
         virtual void objectAddedToScene(const MWWorld::Ptr& ptr) = 0;
+        class PreparedSceneRemoval
+        {
+        public:
+            virtual ~PreparedSceneRemoval() = default;
+            virtual bool isValid() const = 0;
+            virtual bool commit() = 0;
+        };
+        // Synchronous main-thread preparation; borrowed reference outlives it.
+        virtual std::unique_ptr<PreparedSceneRemoval> prepareSceneRemoval(const MWWorld::Ptr& ptr) = 0;
         virtual void objectRemovedFromScene(const MWWorld::Ptr& ptr) = 0;
         virtual void objectTeleported(const MWWorld::Ptr& ptr) = 0;
         virtual void itemConsumed(const MWWorld::Ptr& consumable, const MWWorld::Ptr& actor) = 0;

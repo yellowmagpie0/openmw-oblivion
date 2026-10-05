@@ -57,6 +57,8 @@ namespace MWMechanics
 
         void getObjectsInRange(const osg::Vec3f& position, float radius, std::vector<MWWorld::Ptr>& out) const;
 
+        bool hasController(const MWWorld::Ptr& ptr) const { return mIndex.contains(ptr.mRef); }
+
         std::size_t size() const { return mObjects.size(); }
     };
 }

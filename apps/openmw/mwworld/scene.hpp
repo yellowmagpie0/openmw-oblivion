@@ -185,6 +185,22 @@ namespace MWWorld
         void addObjectToScene(const Ptr& ptr);
         ///< Add an object that already exists in the world model to the scene.
 
+        class PreparedItemRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedItemRemoval(std::unique_ptr<Data> data);
+            friend class Scene;
+        public:
+            ~PreparedItemRemoval();
+            bool isValid() const;
+            bool commitResources();
+            // After source count/inventory publication, before game observers.
+            bool commitInactiveEvent();
+        };
+        // Synchronous world-item transaction. Source/cell and scene must outlive
+        // it; destroy all held resource locks before invoking any game observer.
+        std::unique_ptr<PreparedItemRemoval> prepareItemRemoval(const Ptr& ptr);
         void removeObjectFromScene(const Ptr& ptr, bool keepActive = false);
         ///< Remove an object from the scene, but not from the world model.
 

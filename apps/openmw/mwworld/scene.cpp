@@ -1106,6 +1106,65 @@ namespace MWWorld
         }
     }
 
+    struct Scene::PreparedItemRemoval::Data
+    {
+        Scene& mOwner;
+        Ptr mPtr;
+        std::unique_ptr<MWRender::RenderingManager::PreparedItemRemoval> mRendering;
+        std::unique_ptr<MWPhysics::PhysicsSystem::PreparedObjectRemoval> mPhysics;
+        std::unique_ptr<DetourNavigator::PreparedObjectRemoval> mNavigation;
+        std::unique_ptr<MWBase::LuaManager::PreparedSceneRemoval> mLua;
+        bool mResourcesCommitted = false;
+        bool mInactiveCommitted = false;
+        Data(Scene& owner, const Ptr& ptr) : mOwner(owner), mPtr(ptr) {}
+    };
+    Scene::PreparedItemRemoval::PreparedItemRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Scene::PreparedItemRemoval::~PreparedItemRemoval() = default;
+    bool Scene::PreparedItemRemoval::isValid() const
+    {
+        const auto& data = *mData;
+        return !data.mResourcesCommitted
+            && MWBase::Environment::get().getMechanicsManager()->canRemovePreparedItem(data.mPtr)
+            && data.mRendering->isValid() && data.mPhysics->isValid()
+            && (!data.mNavigation || data.mNavigation->isValid()) && data.mLua->isValid();
+    }
+    bool Scene::PreparedItemRemoval::commitResources()
+    {
+        if (!isValid())
+            return false;
+        auto& data = *mData;
+        // Main-thread interval, resource locks retained, no allocation/callback.
+        const bool rendered = data.mRendering->commit();
+        const bool physical = data.mPhysics->commit();
+        const bool navigated = !data.mNavigation || data.mNavigation->commit();
+        assert(rendered && physical && navigated);
+        data.mResourcesCommitted = true;
+        return rendered && physical && navigated;
+    }
+    bool Scene::PreparedItemRemoval::commitInactiveEvent()
+    {
+        auto& data = *mData;
+        if (!data.mResourcesCommitted || data.mInactiveCommitted || !data.mLua->isValid())
+            return false;
+        data.mInactiveCommitted = data.mLua->commit();
+        return data.mInactiveCommitted;
+    }
+    std::unique_ptr<Scene::PreparedItemRemoval> Scene::prepareItemRemoval(const Ptr& ptr)
+    {
+        if (!MWBase::Environment::get().getMechanicsManager()->canRemovePreparedItem(ptr))
+            throw std::invalid_argument("item has an unexpected mechanics binding");
+        auto data = std::make_unique<PreparedItemRemoval::Data>(*this, ptr);
+        data->mRendering = mRendering.prepareItemRemoval(ptr);
+        data->mLua = MWBase::Environment::get().getLuaManager()->prepareSceneRemoval(ptr);
+        // Sample the static shape before taking the scheduler lock.
+        const auto* object = mPhysics->getObject(ptr);
+        if (object && object->getShapeInstance()->mVisualCollisionType == Resource::VisualCollisionType::None)
+            data->mNavigation = mNavigator.prepareObjectRemoval(DetourNavigator::ObjectId(object), nullptr);
+        data->mPhysics = mPhysics->prepareObjectRemoval(ptr);
+        return std::unique_ptr<PreparedItemRemoval>(new PreparedItemRemoval(std::move(data)));
+    }
+
     void Scene::removeObjectFromScene(const Ptr& ptr, bool keepActive)
     {
         if (mPhysics->hasActorRagdoll(ptr))

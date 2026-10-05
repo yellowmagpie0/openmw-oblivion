@@ -649,6 +649,87 @@ namespace MWPhysics
         found->second->mPhysics.restore(states, velocities);
     }
 
+    struct PhysicsTaskScheduler::PreparedObjectRemoval::Data
+    {
+        PhysicsTaskScheduler& mOwner;
+        MaybeExclusiveLock<std::shared_mutex> mLock;
+        MWWorld::Ptr mPtr;
+        btCollisionObject* mStatic = nullptr;
+        LooseObject* mLoose = nullptr;
+        std::vector<btCollisionObject*> mObjects;
+        bool mCommitted = false;
+
+        Data(PhysicsTaskScheduler& owner, const MWWorld::Ptr& ptr)
+            : mOwner(owner), mLock(owner.mCollisionWorldMutex, owner.mLockingPolicy), mPtr(ptr) {}
+    };
+
+    PhysicsTaskScheduler::PreparedObjectRemoval::PreparedObjectRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    PhysicsTaskScheduler::PreparedObjectRemoval::~PreparedObjectRemoval() = default;
+
+    std::span<btCollisionObject* const> PhysicsTaskScheduler::PreparedObjectRemoval::collisionObjects() const
+    {
+        return mData->mObjects;
+    }
+
+    bool PhysicsTaskScheduler::PreparedObjectRemoval::isValid() const
+    {
+        const auto& data = *mData;
+        if (data.mCommitted || data.mOwner.mActorRagdolls.contains(data.mPtr.mRef))
+            return false;
+        const auto loose = data.mOwner.mLooseObjects.find(data.mPtr.mRef);
+        if (data.mLoose ? loose == data.mOwner.mLooseObjects.end() || loose->second.get() != data.mLoose
+                        : loose != data.mOwner.mLooseObjects.end())
+            return false;
+        for (auto* object : data.mObjects)
+            if (!data.mOwner.mCollisionObjects.contains(object))
+                return false;
+        return true;
+    }
+
+    bool PhysicsTaskScheduler::PreparedObjectRemoval::commit()
+    {
+        if (!isValid())
+            return false;
+        auto& data = *mData;
+        for (auto* object : data.mObjects)
+            data.mOwner.mCollisionObjects.erase(object);
+        if (data.mStatic)
+            data.mOwner.mCollisionWorld->removeCollisionObject(data.mStatic);
+        if (data.mLoose)
+            data.mOwner.mLooseObjects.erase(data.mPtr.mRef);
+        data.mObjects.clear();
+        data.mStatic = nullptr;
+        data.mLoose = nullptr;
+        data.mCommitted = true;
+        return true;
+    }
+
+    std::unique_ptr<PhysicsTaskScheduler::PreparedObjectRemoval> PhysicsTaskScheduler::prepareObjectRemoval(
+        const MWWorld::Ptr& ptr, btCollisionObject* staticObject)
+    {
+        waitForWorkers();
+        auto data = std::make_unique<PreparedObjectRemoval::Data>(*this, ptr);
+        if (mActorRagdolls.contains(ptr.mRef))
+            throw std::invalid_argument("item removal has an actor ragdoll binding");
+        const auto loose = mLooseObjects.find(ptr.mRef);
+        if (staticObject && loose != mLooseObjects.end())
+            throw std::invalid_argument("item has both static and loose collision");
+        data->mStatic = staticObject;
+        if (staticObject)
+            data->mObjects.push_back(staticObject);
+        if (loose != mLooseObjects.end())
+        {
+            data->mLoose = loose->second.get();
+            const auto objects = data->mLoose->mPhysics.collisionObjects();
+            data->mObjects.assign(objects.begin(), objects.end());
+        }
+        auto plan = std::unique_ptr<PreparedObjectRemoval>(new PreparedObjectRemoval(std::move(data)));
+        if (!plan->isValid())
+            throw std::invalid_argument("item collision registration is inconsistent");
+        return plan;
+    }
+
     void PhysicsTaskScheduler::removeLooseObject(const MWWorld::Ptr& ptr)
     {
         waitForWorkers();

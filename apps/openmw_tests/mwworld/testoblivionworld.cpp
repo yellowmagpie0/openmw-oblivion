@@ -74,6 +74,8 @@
 #include "apps/openmw/mwmechanics/actors.hpp"
 #include "apps/openmw/mwlua/context.hpp"
 #include "apps/openmw/mwlua/localscripts.hpp"
+#include "apps/openmw/mwlua/globalscripts.hpp"
+#include "apps/openmw/mwlua/engineevents.hpp"
 #include "apps/openmw/mwlua/luamanagerimp.hpp"
 #include "apps/openmw/mwlua/stats.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
@@ -11214,4 +11216,351 @@ TEST(OblivionWorldTest, NativeRemovalPartialNpcAmmunitionPreservesInstanceUntilD
     EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 1), 0);
     EXPECT_EQ(listener.mCalls, 2);
     inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, NativePickupPublishesSourceDebitAndExactMetadataBeforeThrowingObserver)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto source = installNativeLooseItemCapture(fixture);
+    MWClass::Weapon::registerSelf();
+    ESM::Weapon projected; projected.blank();
+    projected.mId = ESM::RefId(ESM::FormId{0x940, 0});
+    projected.mData.mType = ESM::Weapon::MarksmanBow;
+    projected.mData.mHealth = 100;
+    world.getStore().insertStatic(projected);
+    auto& ref = source.getCellRef();
+    ref.setCount(2);
+    ref.setNativeItemCondition(43.125f);
+    ref.setEnchantmentCharge(7.25f);
+    ref.setOwner(ESM::RefId(ESM::FormId{0x800, 0}));
+    ref.setNativeOwnershipRank(-1);
+    const auto cache = world.captureOblivionRuntimeState();
+    readNativeSnapshot(fixture, cache);
+    auto player = world.getPlayerPtr();
+    auto& inventory = player.getClass().getInventoryStore(player);
+    struct Listener : MWWorld::ContainerStoreListener
+    {
+        MWWorld::Ptr mSource;
+        int mCalls = 0;
+        void itemAdded(const MWWorld::ConstPtr& item, int count) override
+        {
+            ++mCalls;
+            EXPECT_EQ(mSource.getCellRef().getCount(), 0);
+            EXPECT_EQ(count, 2);
+            EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 43.125f);
+            EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(item.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+            EXPECT_EQ(item.getCellRef().getNativeOwnershipRank(), -1);
+            throw std::runtime_error("pickup observer boundary");
+        }
+    } listener;
+    listener.mSource = source;
+    inventory.setContListener(&listener);
+    EXPECT_THROW(world.interactWithOblivionReference(source, MWWorld::OblivionInteractionKind::Take),
+        std::runtime_error);
+    EXPECT_EQ(listener.mCalls, 1);
+    EXPECT_EQ(ref.getCount(), 0);
+    EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 2);
+    inventory.setContListener(nullptr);
+}
+
+namespace
+{
+    struct NativePickupFixture : NativeWorldFixture
+    {
+        MWWorld::Ptr mSource = installNativeLooseItemCapture(*this);
+        NativePickupFixture()
+        {
+            MWClass::Weapon::registerSelf();
+            ESM::Weapon projected; projected.blank();
+            projected.mId = ESM::RefId(ESM::FormId{0x940, 0});
+            projected.mData.mType = ESM::Weapon::MarksmanBow;
+            projected.mData.mHealth = 100;
+            mWorld.getStore().insertStatic(projected);
+            mSource.getCellRef().setCount(2);
+            mSource.getCellRef().setNativeItemCondition(43.125f);
+            mSource.getCellRef().setEnchantmentCharge(7.25f);
+            readNativeSnapshot(*this, mWorld.captureOblivionRuntimeState());
+        }
+        struct Listener : MWWorld::ContainerStoreListener
+        {
+            std::function<void(const MWWorld::ConstPtr&, int)> mCallback;
+            int mCalls = 0;
+            void itemAdded(const MWWorld::ConstPtr& ptr, int count) override
+            {
+                ++mCalls;
+                mCallback(ptr, count);
+            }
+        };
+    };
+}
+
+TEST(OblivionWorldTest, NativePickupRecursiveObserverCannotRepeatSourceTransfer)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    auto player = world.getPlayerPtr();
+    auto& inventory = player.getClass().getInventoryStore(player);
+    NativePickupFixture::Listener listener;
+    listener.mCallback = [&](const MWWorld::ConstPtr&, int count) {
+        EXPECT_EQ(count, 2);
+        ASSERT_EQ(fixture.mSource.getCellRef().getCount(), 0);
+        world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take);
+        EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 2);
+    };
+    inventory.setContListener(&listener);
+    EXPECT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+    EXPECT_EQ(listener.mCalls, 1);
+    world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take);
+    EXPECT_EQ(listener.mCalls, 1);
+    EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 2);
+    inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, NativePickupObserverCanClearWorldAfterCommittedTransfer)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    auto player = world.getPlayerPtr();
+    auto& inventory = player.getClass().getInventoryStore(player);
+    NativePickupFixture::Listener listener;
+    listener.mCallback = [&](const MWWorld::ConstPtr& item, int count) {
+        EXPECT_EQ(count, 2);
+        EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 0);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 43.125f);
+        EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+        world.clear();
+    };
+    inventory.setContListener(&listener);
+    EXPECT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+    EXPECT_EQ(listener.mCalls, 1);
+    // World.clear retires the source; do not dereference it or the old store.
+}
+
+TEST(OblivionWorldTest, NativePickupCapturesObserverClearedInventoryBeforePropagatingFailure)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    auto player = world.getPlayerPtr();
+    auto& inventory = player.getClass().getInventoryStore(player);
+    NativePickupFixture::Listener listener;
+    listener.mCallback = [&](const MWWorld::ConstPtr&, int) {
+        EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 0);
+        inventory.clear();
+        throw std::runtime_error("pickup cleared inventory");
+    };
+    inventory.setContListener(&listener);
+    try
+    {
+        world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take);
+        FAIL() << "observer failure was swallowed";
+    }
+    catch (const std::runtime_error& error) { EXPECT_STREQ(error.what(), "pickup cleared inventory"); }
+    EXPECT_EQ(listener.mCalls, 1);
+    EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 0);
+    EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1));
+    inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, NativePickupInvalidLiveMetadataLeavesSourceAndInventoryUnchanged)
+{
+    for (int field = 0; field != 5; ++field)
+    {
+        NativePickupFixture fixture;
+        auto& world = fixture.mWorld;
+        auto player = world.getPlayerPtr();
+        auto& inventory = player.getClass().getInventoryStore(player);
+        auto& ref = fixture.mSource.getCellRef();
+        if (field == 0) ref.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0xdead, 0}));
+        if (field == 1) ref.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0x940, 0}));
+        auto* native = const_cast<ESM4::Reference*>(ref.getNativeReference());
+        ASSERT_NE(native, nullptr);
+        if (field == 2) native->mOwner = ESM::FormId{1, 99};
+        if (field == 3) native->mFormKey = {};
+        if (field == 4) native->mBaseObj = ESM::FormId{0xdead, 0};
+        NativePickupFixture::Listener listener;
+        listener.mCallback = [](const MWWorld::ConstPtr&, int) { ADD_FAILURE() << "invalid pickup published"; };
+        inventory.setContListener(&listener);
+        EXPECT_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take),
+            std::exception);
+        EXPECT_EQ(listener.mCalls, 0);
+        EXPECT_EQ(ref.getCount(), 2);
+        EXPECT_EQ(inventory.count(ESM::RefId(ESM::FormId{0x940, 0})), 0);
+        EXPECT_EQ(world.getWorldModel().getPtr(ref.getRefNum()), fixture.mSource);
+        inventory.setContListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupPreservesRawAbsentZeroFractionalAndOwnershipGlobalExtras)
+{
+    const std::array<std::optional<float>, 6> conditions{std::nullopt, 0.f, -0.f, 43.125f, 100.f,
+        std::numeric_limits<float>::max()};
+    const std::array<float, 6> charges{-1.f, 0.f, -0.f, 7.25f, 20.f, std::numeric_limits<float>::max()};
+    const std::array<std::int32_t, 6> ranks{std::numeric_limits<std::int32_t>::min(), -2, -1, 0, 1,
+        std::numeric_limits<std::int32_t>::max()};
+    for (std::size_t i = 0; i != conditions.size(); ++i)
+    {
+        SCOPED_TRACE(i);
+        NativePickupFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& ref = fixture.mSource.getCellRef();
+        if (conditions[i]) ref.setNativeItemCondition(*conditions[i]);
+        else ref.resetNativeItemCondition();
+        ref.setEnchantmentCharge(charges[i]);
+        ref.setNativeOwnershipRank(ranks[i]);
+        ref.setOwner(ESM::RefId(ESM::FormId{0x800, 0}));
+        ESM4::GlobalVariable permission{}; permission.mId = {0x970, 0}; permission.mType = 'f'; permission.mValue = 1;
+        const auto permissionKey = ESM::FormKey::content("headless.esm", 0x970);
+        world.getStore().getWritable<ESM4::GlobalVariable>().insertStatic(permission, permissionKey);
+        ref.setNativeOwnershipGlobal(ESM::RefId(permission.mId));
+        auto player = world.getPlayerPtr();
+        auto& inventory = player.getClass().getInventoryStore(player);
+        NativePickupFixture::Listener listener;
+        listener.mCallback = [&](const MWWorld::ConstPtr& item, int count) {
+            EXPECT_EQ(count, 2);
+            EXPECT_EQ(ref.getCount(), 0);
+            EXPECT_EQ(item.getCellRef().getNativeItemCondition().has_value(), conditions[i].has_value());
+            if (conditions[i])
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(*item.getCellRef().getNativeItemCondition()),
+                    std::bit_cast<std::uint32_t>(*conditions[i]));
+            }
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(item.getCellRef().getEnchantmentCharge()),
+                std::bit_cast<std::uint32_t>(charges[i]));
+            EXPECT_EQ(item.getCellRef().getNativeOwnershipRank(), ranks[i]);
+            EXPECT_EQ(item.getCellRef().getNativeOwnershipGlobal(), ESM::RefId(permission.mId));
+            EXPECT_EQ(item.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+        };
+        inventory.setContListener(&listener);
+        ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+        EXPECT_EQ(listener.mCalls, 1);
+        EXPECT_EQ(ref.getCount(), 0);
+        const auto captured = world.captureOblivionActorInventory(player);
+        ASSERT_EQ(captured.size(), 1u);
+        EXPECT_EQ(captured.front().mOwnershipGlobal, permissionKey);
+        EXPECT_EQ(captured.front().mOwnershipRank, ranks[i]);
+        inventory.setContListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupSavedSourceDeletionAndInventoryExtrasRestoreIntoFreshWorld)
+{
+    std::vector<std::uint8_t> bytes;
+    const auto permissionKey = ESM::FormKey::content("headless.esm", 0x970);
+    const auto installPermission = [&](NativePickupFixture& fixture) {
+        ESM4::GlobalVariable permission{}; permission.mId = {0x970, 0};
+        permission.mType = 'f'; permission.mValue = 1;
+        fixture.mWorld.getStore().getWritable<ESM4::GlobalVariable>().insertStatic(permission, permissionKey);
+    };
+    {
+        NativePickupFixture fixture;
+        installPermission(fixture);
+        auto& ref = fixture.mSource.getCellRef();
+        ref.setOwner(ESM::RefId(ESM::FormId{0x800, 0}));
+        ref.setNativeOwnershipRank(-2);
+        ref.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0x970, 0}));
+        ASSERT_NO_THROW(fixture.mWorld.interactWithOblivionReference(fixture.mSource, MWWorld::OblivionInteractionKind::Take));
+        const auto saved = fixture.mWorld.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mReferences.size(), 1u);
+        EXPECT_TRUE(saved.mReferences[0].mDeleted);
+        EXPECT_EQ(std::get<std::int64_t>(saved.mReferences[0].mCustomState.at("count")), 0);
+        EXPECT_TRUE(std::get<bool>(saved.mReferences[0].mCustomState.at("taken")));
+        ASSERT_EQ(saved.mPlayer.mInventory.size(), 1u);
+        EXPECT_EQ(saved.mPlayer.mInventory[0].mCount, 2);
+        EXPECT_EQ(saved.mPlayer.mInventory[0].mCondition, 43.125);
+        EXPECT_EQ(saved.mPlayer.mInventory[0].mCharge, 7.25f);
+        EXPECT_EQ(saved.mPlayer.mInventory[0].mOwnershipGlobal, permissionKey);
+        bytes = saved.serializeBinary();
+    }
+    {
+        NativePickupFixture fresh;
+        installPermission(fresh);
+        const auto saved = ESM4::RuntimeState::deserializeBinary(bytes);
+        readNativeSnapshot(fresh, saved);
+        ASSERT_NO_THROW(fresh.mWorld.applyOblivionRuntimeState());
+        EXPECT_EQ(fresh.mSource.getCellRef().getCount(), 0);
+        const auto inventory = fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr());
+        ASSERT_EQ(inventory.size(), 1u);
+        EXPECT_EQ(inventory[0].mCount, 2);
+        EXPECT_EQ(inventory[0].mCondition, 43.125);
+        EXPECT_EQ(inventory[0].mCharge, 7.25f);
+        EXPECT_EQ(inventory[0].mOwner, ESM::FormKey::content("headless.esm", 0x800));
+        EXPECT_EQ(inventory[0].mOwnershipRank, -2);
+        EXPECT_EQ(inventory[0].mOwnershipGlobal, permissionKey);
+        EXPECT_NO_THROW(fresh.mWorld.interactWithOblivionReference(fresh.mSource, MWWorld::OblivionInteractionKind::Take));
+        EXPECT_EQ(fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr())[0].mCount, 2);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupLuaPreparationPreservesInactiveEventAndRejectsStaleQueue)
+{
+    TestingOpenMW::VFSTestFile file{R"(local probe = require('pickup_probe')
+return {engineHandlers = {onInactive = function() probe.inactive() end}})"};
+    auto vfs = TestingOpenMW::createTestVFS({{VFS::Path::NormalizedView("pickup.lua"), &file}});
+    ESM::LuaScriptCfg script{};
+    script.mScriptPath = VFS::Path::Normalized("pickup.lua");
+    script.mFlags = ESM::LuaScriptCfg::sCustom;
+    ESM::LuaScriptsCfg config;
+    config.mScripts.push_back(script);
+    LuaUtil::ScriptsConfiguration configuration;
+    configuration.init(std::move(config), false);
+    LuaUtil::LuaState state(vfs.get(), &configuration);
+    NativePickupFixture fixture;
+    auto scripts = std::make_shared<MWLua::LocalScripts>(&state,
+        MWLua::LObject(fixture.mSource.getCellRef().getRefNum()));
+    int inactiveCalls = 0;
+    state.protectedCall([&](LuaUtil::LuaView& view) {
+        sol::table probe = view.newTable();
+        probe["inactive"] = [&] {
+            ++inactiveCalls;
+            EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 0);
+        };
+        scripts->addPackage("pickup_probe", LuaUtil::makeReadOnly(probe));
+    });
+    ASSERT_TRUE(scripts->addCustomScript(0));
+    fixture.mSource.getRefData().setLuaScripts(std::shared_ptr<MWLua::LocalScripts>(scripts));
+    scripts->setActive(true, false);
+    auto& lua = *fixture.mLuaManager;
+    lua.objectAddedToScene(fixture.mSource);
+    ASSERT_NO_THROW(lua.update());
+    ASSERT_TRUE(scripts->isActive());
+    {
+        auto cancelled = lua.prepareSceneRemoval(fixture.mSource);
+        ASSERT_TRUE(cancelled->isValid());
+    }
+    EXPECT_TRUE(scripts->isActive());
+    EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 2);
+    {
+        auto stale = lua.prepareSceneRemoval(fixture.mSource);
+        lua.objectTeleported(fixture.mSource);
+        EXPECT_FALSE(stale->isValid());
+        EXPECT_FALSE(stale->commit());
+    }
+    EXPECT_TRUE(scripts->isActive());
+    ASSERT_NO_THROW(lua.update());
+    auto removal = lua.prepareSceneRemoval(fixture.mSource);
+    auto competing = lua.prepareSceneRemoval(fixture.mSource);
+    fixture.mSource.getCellRef().setCount(0);
+    ASSERT_TRUE(removal->commit());
+    EXPECT_FALSE(removal->commit());
+    // Committing enqueues the inactive event, invalidating another plan that
+    // reserved against the same real manager queue. No synchronous handler.
+    EXPECT_FALSE(competing->isValid());
+    EXPECT_FALSE(competing->commit());
+    EXPECT_TRUE(scripts->isActive());
+
+    // This fixture does not initialize a Lua game session. Verify delivery and
+    // consumption with the same engine dispatcher and live script container.
+    MWLua::GlobalScripts globals(&state);
+    MWLua::EngineEvents events(globals);
+    events.addToQueue(MWLua::EngineEvents::OnInactive{fixture.mSource.getCellRef().getRefNum()});
+    ASSERT_NO_THROW(events.callEngineHandlers());
+    EXPECT_FALSE(scripts->isActive());
+    EXPECT_EQ(inactiveCalls, 1);
+    scripts->setActive(true, false);
+    ASSERT_NO_THROW(events.callEngineHandlers());
+    EXPECT_TRUE(scripts->isActive()); // A consumed inactive event cannot replay.
+    EXPECT_EQ(inactiveCalls, 1);
 }

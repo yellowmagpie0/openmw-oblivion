@@ -21905,3 +21905,58 @@ M15 S5 acceptance. Source count, inventory, rendering, physics and Lua still
 need one complete pickup transaction before observers run. Large-cell removal
 performance remains open because each preparation copies the shape index.
 All remaining stage and normal-input acceptance gates remain open.
+
+
+### S5 checkpoint299: publish native pickup before inventory observers
+
+Native loose-item Take now prepares the live source's exact count, condition,
+charge, usage and native ownership extras, a detached inventory addition,
+registry publication, and active Scene removal before changing resources.
+Scene preparation combines rendering, physics, navigation and deferred Lua
+inactivity. Rendering retains detached animation resources in a reserved cleanup
+queue; physics holds its scheduler lock and retains static collision ownership
+until removal can finish without a destructor relocking it. Navigation uses the
+previous checkpoint's grouped geometry/off-mesh preparation. Unexpected actor,
+animated-object, trigger or mechanics-controller bindings are rejected.
+
+Publication removes the resources, debits the source to zero, commits inventory
+and registration, records the taken state and queues inactivity before any
+inventory or UI observer. The scoped plans release resource locks before
+notifications. Recursive Take cannot grant the source again. Observer failures
+preserve committed changes, refresh the current inventory when the World and
+player still exist, and propagate the first exception. A callback can clear
+inventory or World without later access to retired storage.
+
+The retained -02 baseline fails exact source-debit and metadata assertions.
+Integration attempts -01 and -05 caught compilation defects; -03 exposed a
+missing shader setup in the static collision fixture. Attempts -04/-06 and the
+sanitized diagnostic exposed fresh-World restore calling an absent window
+manager. Both inventory add layers now conditionally notify the UI when it
+exists. The real UI still receives its existing calls. The initial Lua probe
+incorrectly expected frame dispatch from an uninitialized fixture Lua session;
+the corrected case separates actual manager queue admission/stale-plan
+rejection from actual EngineEvents dispatch into a registered Lua onInactive
+handler, and proves consumption without replay. Attempt -07 also caught the
+fixture package missing its required read-only wrapper; corrected -08 passes
+all twelve focused cases. All failed evidence remains
+under S5/native-pickup-transaction-* and S5/native-pickup-lua-probe-01.
+
+Eight World cases cover observer ordering and exceptions, recursion, World
+clear, inventory clear, invalid metadata, absent/zero/fractional extras and
+ownership globals, binary save into a fresh World, and Lua event reservation
+and handler dispatch. Four resource cases exercise real rendering and Bullet
+loose/static collision cancellation, commit, replay rejection and stale count.
+The save fixture is a same-process fresh World integration test, not the
+required separate-process normal-input save/load campaign. The separate
+resource fixtures do not prove the full active Scene transaction in gameplay.
+
+Full unfiltered normal and ASan/UBSan runs each pass 2549 component cases and
+1116 engine cases, with exact inventories and no failures or skips:
+S5/native-pickup-transaction-normal-01 and
+S5/native-pickup-transaction-sanitized-01. Leak checking is disabled.
+Tested source fingerprint: a7b084e090ec67670e72b4aa611b4f53c9f13b3c351f530911fc3a9e94e329de
+
+This closes the pickup implementation checkpoint, not S5 acceptance.
+Concrete native bow/projectile launch, impact/recovery persistence and normal
+input acceptance remain open, as do S6-S14. Container/lock interaction observer
+safety and navigation removal performance remain follow-up work.

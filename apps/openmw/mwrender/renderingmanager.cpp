@@ -824,6 +824,42 @@ namespace MWRender
             mCamera->processViewChange();
     }
 
+    struct RenderingManager::PreparedItemRemoval::Data
+    {
+        RenderingManager& mOwner;
+        MWWorld::Ptr mPtr;
+        std::unique_ptr<Objects::PreparedModelRemoval> mModel;
+        bool mCommitted = false;
+        Data(RenderingManager& owner, const MWWorld::Ptr& ptr)
+            : mOwner(owner), mPtr(ptr), mModel(owner.mObjects->prepareModelRemoval(ptr)) {}
+    };
+    RenderingManager::PreparedItemRemoval::PreparedItemRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    RenderingManager::PreparedItemRemoval::~PreparedItemRemoval() = default;
+    bool RenderingManager::PreparedItemRemoval::isValid() const
+    {
+        return !mData->mCommitted && mData->mModel->isValid()
+            && !mData->mOwner.mActorsPaths->contains(mData->mPtr);
+    }
+    bool RenderingManager::PreparedItemRemoval::commit()
+    {
+        if (!isValid())
+            return false;
+        if (!mData->mModel->commit())
+            return false;
+        mData->mOwner.mWater->removeEmitter(mData->mPtr);
+        mData->mCommitted = true;
+        return true;
+    }
+    std::unique_ptr<RenderingManager::PreparedItemRemoval>
+    RenderingManager::prepareItemRemoval(const MWWorld::Ptr& ptr)
+    {
+        auto plan = std::unique_ptr<PreparedItemRemoval>(new PreparedItemRemoval(std::make_unique<PreparedItemRemoval::Data>(*this, ptr)));
+        if (!plan->isValid())
+            throw std::invalid_argument("unexpected actor path binding for prepared item");
+        return plan;
+    }
+
     void RenderingManager::removeObject(const MWWorld::Ptr& ptr)
     {
         mActorsPaths->remove(ptr);

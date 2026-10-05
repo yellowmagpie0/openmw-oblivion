@@ -320,6 +320,94 @@ namespace MWRender
         }
     }
 
+    struct Objects::PreparedModelRemoval::Data
+    {
+        Objects* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        MWWorld::Ptr mPtr;
+        MWWorld::CellStore* mCell = nullptr;
+        int mCount = 0;
+        osg::ref_ptr<osg::Group> mCellNode;
+        osg::ref_ptr<osg::Node> mInsert;
+        osg::ref_ptr<Animation> mAnimation;
+        std::size_t mQueueSize = 0;
+        bool mCommitted = false;
+    };
+
+    Objects::PreparedModelRemoval::PreparedModelRemoval(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Objects::PreparedModelRemoval::~PreparedModelRemoval() = default;
+
+    bool Objects::PreparedModelRemoval::isValid() const
+    {
+        const auto& data = *mData;
+        if (data.mCommitted || data.mIdentity.expired())
+            return false;
+        const auto& owner = *data.mOwner;
+        const auto object = owner.mObjects.find(data.mPtr.mRef);
+        if (!data.mAnimation)
+            return object == owner.mObjects.end() && !data.mPtr.getRefData().getBaseNode()
+                && data.mPtr.getCellRef().getCount() == data.mCount;
+        const auto cell = owner.mCellSceneNodes.find(data.mCell);
+        return object != owner.mObjects.end() && object->second == data.mAnimation
+            && cell != owner.mCellSceneNodes.end() && cell->second == data.mCellNode
+            && data.mPtr.getRefData().getBaseNode() == data.mInsert
+            && data.mInsert->getNumParents() == 1 && data.mInsert->getParent(0) == data.mCellNode
+            && data.mPtr.getCellRef().getCount() == data.mCount
+            && owner.mUnrefQueue.canPushPrepared(data.mQueueSize);
+    }
+
+    bool Objects::PreparedModelRemoval::commit()
+    {
+        if (!isValid())
+            return false;
+        auto& data = *mData;
+        if (data.mAnimation)
+        {
+            auto& owner = *data.mOwner;
+            const auto index = data.mCellNode->getChildIndex(data.mInsert);
+            // The engine owns this exact ordinary Group. Detach the public
+            // placement node while retaining its private animation subtree.
+            data.mCellNode->osg::Group::removeChildren(index, 1);
+            owner.mObjects.erase(data.mPtr.mRef);
+            owner.mUnrefQueue.push(osg::ref_ptr<osg::Referenced>(data.mAnimation));
+            data.mPtr.getRefData().setBaseNode(nullptr);
+        }
+        data.mCommitted = true;
+        return true;
+    }
+
+    std::unique_ptr<Objects::PreparedModelRemoval> Objects::prepareModelRemoval(const MWWorld::Ptr& ptr)
+    {
+        if (ptr.isEmpty() || !ptr.isInCell() || ptr.getClass().isActor() || ptr.getClass().useAnim()
+            || ptr.getContainerStore() || ptr.getCellRef().getCount() <= 0)
+            throw std::invalid_argument("prepared model removal requires a live non-animated world item");
+        auto data = std::make_unique<PreparedModelRemoval::Data>();
+        data->mOwner = this;
+        data->mIdentity = mModelPreparationIdentity;
+        data->mPtr = ptr;
+        data->mCell = ptr.getCell();
+        data->mCount = ptr.getCellRef().getCount();
+        data->mInsert = ptr.getRefData().getBaseNode();
+        const auto object = mObjects.find(ptr.mRef);
+        if (data->mInsert)
+        {
+            const auto cell = mCellSceneNodes.find(data->mCell);
+            if (object == mObjects.end() || cell == mCellSceneNodes.end()
+                || typeid(*object->second) != typeid(ObjectAnimation)
+                || typeid(*cell->second) != typeid(osg::Group)
+                || data->mInsert->getNumParents() != 1 || data->mInsert->getParent(0) != cell->second)
+                throw std::invalid_argument("unexpected prepared item model binding");
+            data->mCellNode = cell->second;
+            data->mAnimation = object->second;
+            data->mQueueSize = mUnrefQueue.getSize();
+            mUnrefQueue.reserveAdditional(1);
+        }
+        else if (object != mObjects.end())
+            throw std::invalid_argument("item animation has no placement node");
+        return std::unique_ptr<PreparedModelRemoval>(new PreparedModelRemoval(std::move(data)));
+    }
+
     bool Objects::removeObject(const MWWorld::Ptr& ptr)
     {
         if (!ptr.getRefData().getBaseNode())

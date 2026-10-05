@@ -13,11 +13,17 @@
 #include <components/esm4/common.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
+#include <components/shader/shadermanager.hpp>
+#include <components/sceneutil/lightmanager.hpp>
+#include <components/sceneutil/shadow.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/testing/util.hpp>
 #include <components/vfs/manager.hpp>
 #include <gtest/gtest.h>
+#include <osg/Geode>
+#include <osg/ShapeDrawable>
 #include <osgDB/Registry>
 #include <osgDB/ReaderWriter>
 #include <bit>
@@ -446,4 +452,110 @@ namespace
         for (unsigned i = 0; i < 16; ++i)
             EXPECT_NEAR(root.ptr()[i], scene.ptr()[i], .0003f) << i;
     }
+}
+
+TEST_F(LooseWeaponAdmissionTest, PreparedPickupResourceCancellationPreservesRenderingAndLooseCollision)
+{
+    auto admission = prepare(source());
+    const auto ptr = admission->commit();
+    ASSERT_FALSE(ptr.isEmpty());
+    const auto node = osg::ref_ptr<osg::Node>(ptr.getRefData().getBaseNode());
+    const auto pose = mPhysics->captureLooseObject(ptr);
+    {
+        auto rendering = mObjects->prepareModelRemoval(ptr);
+        auto physics = mPhysics->prepareObjectRemoval(ptr);
+        ASSERT_TRUE(rendering->isValid());
+        ASSERT_TRUE(physics->isValid());
+    }
+    EXPECT_EQ(ptr.getRefData().getBaseNode(), node);
+    EXPECT_NE(mObjects->getAnimation(ptr), nullptr);
+    EXPECT_TRUE(mPhysics->hasLooseObject(ptr));
+    EXPECT_EQ(mPhysics->captureLooseObject(ptr)[0].mPose, pose[0].mPose);
+    EXPECT_EQ(mUnref.getSize(), 0u);
+    EXPECT_EQ(ptr.getCellRef().getCount(), 1);
+}
+
+TEST_F(LooseWeaponAdmissionTest, PreparedPickupResourceCommitDetachesModelAndLooseBodyWithoutDeletingReference)
+{
+    auto admission = prepare(source());
+    const auto ptr = admission->commit();
+    ASSERT_FALSE(ptr.isEmpty());
+    const auto node = osg::ref_ptr<osg::Node>(ptr.getRefData().getBaseNode());
+    {
+        auto rendering = mObjects->prepareModelRemoval(ptr);
+        auto physics = mPhysics->prepareObjectRemoval(ptr);
+        ASSERT_TRUE(rendering->isValid());
+        ASSERT_TRUE(physics->isValid());
+        ASSERT_TRUE(rendering->commit());
+        ASSERT_TRUE(physics->commit());
+        EXPECT_FALSE(rendering->commit());
+        EXPECT_FALSE(physics->commit());
+    }
+    EXPECT_EQ(node->getNumParents(), 0u);
+    EXPECT_EQ(ptr.getRefData().getBaseNode(), nullptr);
+    EXPECT_EQ(mObjects->getAnimation(ptr), nullptr);
+    EXPECT_FALSE(mPhysics->hasLooseObject(ptr));
+    EXPECT_EQ(mUnref.getSize(), 1u);
+    EXPECT_EQ(ptr.getCellRef().getCount(), 1);
+    EXPECT_EQ(mWorld->getPtr(ptr.getCellRef().getRefNum()), ptr);
+}
+
+TEST_F(LooseWeaponAdmissionTest, PreparedPickupResourceStaleCountRejectsWithoutDetaching)
+{
+    auto admission = prepare(source());
+    const auto ptr = admission->commit();
+    ASSERT_FALSE(ptr.isEmpty());
+    {
+        auto rendering = mObjects->prepareModelRemoval(ptr);
+        auto physics = mPhysics->prepareObjectRemoval(ptr);
+        ptr.getCellRef().setCount(2);
+        EXPECT_FALSE(rendering->commit());
+        EXPECT_FALSE(physics->commit());
+    }
+    EXPECT_NE(ptr.getRefData().getBaseNode(), nullptr);
+    EXPECT_NE(mObjects->getAnimation(ptr), nullptr);
+    EXPECT_TRUE(mPhysics->hasLooseObject(ptr));
+    EXPECT_EQ(mUnref.getSize(), 0u);
+    ptr.getCellRef().setCount(1);
+}
+
+TEST_F(LooseWeaponAdmissionTest, PreparedPickupResourceStaticCollisionCancelsAndCommitsWithoutDestructorRelock)
+{
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    geode->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3f(), 2.f)));
+    std::ostringstream data;
+    auto* writer = osgDB::Registry::instance()->getReaderWriterForExtension("osgt");
+    ASSERT_TRUE(writer && writer->writeNode(*geode, data).success());
+    TestingOpenMW::VFSTestFile file{data.str()};
+    auto vfs = TestingOpenMW::createTestVFS({{VFS::Path::NormalizedView("static.osgt"), &file}});
+    Resource::ResourceSystem resources(vfs.get(), 0., nullptr);
+    auto* scene = resources.getSceneManager();
+    scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+    auto defines = Shader::getDefaultDefines();
+    for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+        defines[name] = value;
+    osg::ref_ptr<SceneUtil::LightManager> lights = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &resources);
+    for (const auto& [name, value] : lights->getLightDefines())
+        defines[name] = value;
+    scene->getShaderManager().setGlobalDefines(defines);
+    MWPhysics::PhysicsSystem physics(&resources, mPhysicsRoot);
+    auto value = source();
+    const MWWorld::Ptr ptr(mCell->insert(&value), mCell);
+    mWorld->registerPtr(ptr);
+    physics.addObject(ptr, VFS::Path::NormalizedView("static.osgt"), osg::Quat());
+    ASSERT_NE(physics.getObject(ptr), nullptr);
+    const auto* original = physics.getObject(ptr);
+    {
+        auto cancelled = physics.prepareObjectRemoval(ptr);
+        ASSERT_TRUE(cancelled->isValid());
+    }
+    EXPECT_EQ(physics.getObject(ptr), original);
+    {
+        auto removal = physics.prepareObjectRemoval(ptr);
+        ASSERT_TRUE(removal->commit());
+        EXPECT_FALSE(removal->commit());
+    }
+    EXPECT_EQ(physics.getObject(ptr), nullptr);
+    EXPECT_EQ(ptr.getCellRef().getCount(), 1);
+    EXPECT_EQ(mWorld->getPtr(ptr.getCellRef().getRefNum()), ptr);
 }

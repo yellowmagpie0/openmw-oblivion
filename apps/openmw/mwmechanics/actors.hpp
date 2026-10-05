@@ -42,6 +42,8 @@ namespace MWMechanics
     public:
         std::list<Actor>::const_iterator begin() const { return mActors.begin(); }
         std::list<Actor>::const_iterator end() const { return mActors.end(); }
+        bool hasController(const MWWorld::Ptr& ptr) const { return mIndex.contains(ptr.mRef); }
+
         std::size_t size() const { return mActors.size(); }
 
         void notifyDied(const MWWorld::Ptr& actor);

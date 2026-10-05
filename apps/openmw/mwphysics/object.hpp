@@ -61,6 +61,8 @@ namespace MWPhysics
         bool mTransformUpdatePending = false;
         mutable std::mutex mPositionMutex;
         PhysicsTaskScheduler* mTaskScheduler;
+        bool mCollisionRegistered = true;
+        friend class PhysicsSystem;
         char mCollidedWith;
     };
 }

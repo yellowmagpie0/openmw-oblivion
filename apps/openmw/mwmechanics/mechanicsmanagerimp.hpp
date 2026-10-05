@@ -48,6 +48,7 @@ namespace MWMechanics
         void add(const MWWorld::Ptr& ptr) override;
         ///< Register an object for management
 
+        bool canRemovePreparedItem(const MWWorld::Ptr& ptr) const override;
         void remove(const MWWorld::Ptr& ptr, bool keepActive) override;
         ///< Deregister an object for management
 

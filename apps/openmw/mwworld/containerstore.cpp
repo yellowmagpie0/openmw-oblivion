@@ -681,7 +681,8 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
     // we should not fire event for InventoryStore yet - it has some custom logic
     if (mListener && typeid(*this) == typeid(ContainerStore))
         mListener->itemAdded(item, count);
-    MWBase::Environment::get().getWindowManager()->inventoryUpdated(contPtr);
+    if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+        windows->inventoryUpdated(contPtr);
 
     return it;
 }

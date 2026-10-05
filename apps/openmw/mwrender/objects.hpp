@@ -109,6 +109,23 @@ namespace MWRender
         Animation* getAnimation(const MWWorld::Ptr& ptr);
         const Animation* getAnimation(const MWWorld::ConstPtr& ptr) const;
 
+        class PreparedModelRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedModelRemoval(std::unique_ptr<Data> data);
+            friend class Objects;
+        public:
+            ~PreparedModelRemoval();
+            PreparedModelRemoval(const PreparedModelRemoval&) = delete;
+            PreparedModelRemoval& operator=(const PreparedModelRemoval&) = delete;
+            bool isValid() const;
+            bool commit();
+        };
+
+        // Synchronous non-actor removal. Reference and cell must outlive the
+        // scoped plan; destroy it before callbacks or another scene mutation.
+        std::unique_ptr<PreparedModelRemoval> prepareModelRemoval(const MWWorld::Ptr& ptr);
         bool removeObject(const MWWorld::Ptr& ptr);
         ///< \return found?
 

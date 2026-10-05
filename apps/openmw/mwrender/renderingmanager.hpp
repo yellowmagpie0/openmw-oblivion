@@ -162,6 +162,18 @@ namespace MWRender
         void moveObject(const MWWorld::Ptr& ptr, const osg::Vec3f& pos);
         void scaleObject(const MWWorld::Ptr& ptr, const osg::Vec3f& scale);
 
+        class PreparedItemRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedItemRemoval(std::unique_ptr<Data> data);
+            friend class RenderingManager;
+        public:
+            ~PreparedItemRemoval();
+            bool isValid() const;
+            bool commit();
+        };
+        std::unique_ptr<PreparedItemRemoval> prepareItemRemoval(const MWWorld::Ptr& ptr);
         void removeObject(const MWWorld::Ptr& ptr);
 
         void setWaterEnabled(bool enabled);

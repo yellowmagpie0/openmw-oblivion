@@ -45,6 +45,7 @@
 #include "datetimemanager.hpp"
 #include "inventorystore.hpp"
 #include "manualref.hpp"
+#include "scene.hpp"
 #include "oblivionprofileservices.hpp"
 #include "worldimp.hpp"
 
@@ -656,9 +657,142 @@ namespace MWWorld
         return result;
     }
 
+    void World::takeOblivionReference(const Ptr& ptr)
+    {
+        if (ptr.isEmpty() || !ptr.isInCell() || ptr.getContainerStore() || ptr.getClass().isActor()
+            || !ptr.getClass().isItem(ptr) || ptr.getClass().useAnim() || ptr.getCellRef().getCount() <= 0)
+            return;
+        const auto canonical = [](const ESM::FormKey& value) {
+            return ESM::FormKey::deserialize(value.serialize()) == value;
+        };
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const ESM::FormKey key = ptr.getCellRef().getFormKey();
+        const ESM::RefId sourceId = ptr.getCellRef().getRefId();
+        const auto* id = sourceId.getIf<ESM::FormId>();
+        if (!id || key.isNull() || !canonical(key)
+            || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr)
+            throw std::invalid_argument("pickup source has no current native reference identity");
+        const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
+        if (!definition)
+            throw std::invalid_argument("pickup source has no winning native item definition");
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = resolver.toFormKey(*id);
+        item.mCount = ptr.getCellRef().getCount();
+        const auto condition = ptr.getCellRef().getNativeItemCondition();
+        const float charge = ptr.getCellRef().getEnchantmentCharge();
+        if ((condition && definition->mMaxCondition < 0) || (charge >= 0 && definition->mMaxCharge < 0))
+            throw std::invalid_argument("pickup extras are unsupported by the native item definition");
+        item.mCondition = condition.value_or(-1.f);
+        item.mCharge = charge;
+        item.mRemainingUsageTime = definition->mMaxUsageTime < 0 ? -1
+            : ptr.getClass().getRemainingUsageTime(ptr);
+        const ESM::RefId owner = ptr.getCellRef().getOwner();
+        if (!owner.empty())
+        {
+            const auto* ownerId = owner.getIf<ESM::FormId>();
+            if (!ownerId)
+                throw std::invalid_argument("pickup source ownership is not a native identity");
+            item.mOwner = resolver.toFormKey(*ownerId);
+            if (item.mOwner.isNull() || !resolver.toFormId(item.mOwner))
+                throw std::invalid_argument("pickup owner cannot be resolved to native content");
+        }
+        item.mOwnershipRank = ptr.getCellRef().getNativeOwnershipRank();
+        item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(mStore, resolver, ptr.getCellRef());
+        if (item.mBase.isNull() || !canonical(item.mBase) || !canonical(item.mOwner)
+            || !std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1)
+            || item.mCondition > std::numeric_limits<float>::max()
+            || !std::isfinite(item.mCharge) || item.mCharge < -1
+            || !std::isfinite(item.mRemainingUsageTime) || item.mRemainingUsageTime < -1)
+            throw std::invalid_argument("invalid native pickup metadata");
+        const std::string name(ptr.getClass().getName(ptr));
+        if (!mOblivionRuntimeState)
+            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        const auto findSource = [&]() -> ESM4::RuntimeReferenceState* {
+            if (!mOblivionRuntimeState) return nullptr;
+            const auto found = std::find_if(mOblivionRuntimeState->mReferences.begin(), mOblivionRuntimeState->mReferences.end(),
+                [&](const auto& reference) { return reference.mKey == key; });
+            return found == mOblivionRuntimeState->mReferences.end() ? nullptr : &*found;
+        };
+        auto* cached = findSource();
+        if (!cached || cached->mBase != item.mBase)
+            throw std::invalid_argument("pickup source is absent from the current native state");
+        auto custom = cached->mCustomState;
+        custom["taken"] = true;
+        if (!owner.empty()) custom["ownership_checked"] = true;
+        auto sources = OblivionProfileServices::prepareActorInventory(mStore, resolver, {item});
+        const Ptr player = getPlayerPtr();
+        auto& inventory = player.getClass().getInventoryStore(player);
+        auto addition = inventory.prepareItemAddition(sources.front().mReference.getPtr(), item.mCount);
+        std::optional<WorldModel::PreparedPtrReplacement> registration;
+        if (addition->needsRegistration())
+        {
+            const std::array inserted{addition->getItem()};
+            registration.emplace(mWorldModel.preparePtrReplacement({}, inserted));
+        }
+        if (!mOblivionDynamicReferenceIdentity)
+            mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
+        const std::weak_ptr<const char> worldIdentity = mOblivionDynamicReferenceIdentity;
+        std::unique_ptr<Scene::PreparedItemRemoval> scene;
+        if (mWorldScene)
+            scene = mWorldScene->prepareItemRemoval(ptr);
+        else if (ptr.getRefData().getBaseNode())
+            throw std::invalid_argument("pickup source model has no owning scene");
+        if (worldIdentity.expired() || getPlayerPtr() != player || findSource() != cached
+            || ptr.getCellRef().getCount() != item.mCount
+            || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr
+            || !addition->isValid() || (registration && !registration->isValid())
+            || (scene && !scene->isValid()))
+            throw std::invalid_argument("native pickup preparation became stale");
+        // No allocation or external observer in this publication interval.
+        if (scene && !scene->commitResources())
+            throw std::logic_error("validated pickup scene removal was rejected");
+        ptr.getCellRef().setCount(0);
+        const Ptr published = addition->commit();
+        if (published.isEmpty())
+            throw std::logic_error("validated pickup inventory addition was rejected");
+        if (registration) registration->commit();
+        cached->mCustomState.swap(custom);
+        if (scene)
+        {
+            if (!scene->commitInactiveEvent())
+                throw std::logic_error("validated pickup inactive event was rejected");
+        }
+        // Release navigation/collision locks before any inventory/UI observer.
+        scene.reset();
+        std::exception_ptr failure;
+        try { addition->notify(); } catch (...) { failure = std::current_exception(); }
+        if (!worldIdentity.expired() && getPlayerPtr() == player)
+        {
+            try
+            {
+                if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+                    windows->inventoryUpdated(getPlayerPtr());
+            }
+            catch (...) { if (!failure) failure = std::current_exception(); }
+        }
+        if (!worldIdentity.expired() && getPlayerPtr() == player)
+        {
+            try
+            {
+                if (mOblivionRuntimeState)
+                    mOblivionRuntimeState->mPlayer.mInventory = captureOblivionActorInventory(getPlayerPtr());
+            }
+            catch (...) { if (!failure) failure = std::current_exception(); }
+        }
+        if (failure) std::rethrow_exception(failure);
+        if (worldIdentity.expired() || getPlayerPtr() != player) return;
+        if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+            windows->messageBox("Taken: " + name + (item.mCount > 1 ? " (" + std::to_string(item.mCount) + ")" : ""));
+        Log(Debug::Info) << "M5 interaction: kind=take result=taken ref=" << key.serialize()
+                         << " base=" << item.mBase.serialize();
+    }
+
     void World::interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || ptr.isEmpty())
+            return;
+
+        if (kind == OblivionInteractionKind::Take && ptr.getCellRef().getCount() <= 0)
             return;
 
         if (dispatchOblivionActivation(ptr, actor))
@@ -667,6 +801,12 @@ namespace MWWorld
         if (kind == OblivionInteractionKind::Door || kind == OblivionInteractionKind::Actor)
         {
             activateOblivionReferenceDefault(ptr, actor);
+            return;
+        }
+
+        if (kind == OblivionInteractionKind::Take)
+        {
+            takeOblivionReference(ptr);
             return;
         }
 
@@ -754,17 +894,7 @@ namespace MWWorld
         switch (kind)
         {
             case OblivionInteractionKind::Take:
-            {
-                const int count = std::max(1, ptr.getCellRef().getCount());
-                const ESM::FormKey owner = state.mOwner.value_or(ESM::FormKey{});
-                oblivionChangePlayerInventory(state.mBase, count, owner);
-                const std::string name(ptr.getClass().getName(ptr));
-                state.mCustomState["taken"] = true;
-                deleteObject(ptr);
-                message("Taken: " + name + (count > 1 ? " (" + std::to_string(count) + ")" : ""));
-                report("taken");
-                break;
-            }
+                break; // Handled before any borrowed cached reference state.
             case OblivionInteractionKind::Container:
             {
                 if (state.mInventory.empty())

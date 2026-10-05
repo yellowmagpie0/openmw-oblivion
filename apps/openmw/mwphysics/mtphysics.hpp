@@ -95,6 +95,25 @@ namespace MWPhysics
         void resetSimulation(const ActorMap& actors);
         void suspendActorCollision(Actor& actor, bool suspended);
 
+        class PreparedObjectRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedObjectRemoval(std::unique_ptr<Data> data);
+            friend class PhysicsTaskScheduler;
+        public:
+            ~PreparedObjectRemoval();
+            PreparedObjectRemoval(const PreparedObjectRemoval&) = delete;
+            PreparedObjectRemoval& operator=(const PreparedObjectRemoval&) = delete;
+            bool isValid() const;
+            bool commit();
+            std::span<btCollisionObject* const> collisionObjects() const;
+        };
+        // Holds the collision lock after waiting for workers. The scheduler,
+        // reference and optional static collision object must outlive the plan.
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(
+            const MWWorld::Ptr& ptr, btCollisionObject* staticObject);
+
         class PreparedLooseObject
         {
             struct Impl;

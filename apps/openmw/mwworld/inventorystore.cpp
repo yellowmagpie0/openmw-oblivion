@@ -188,7 +188,8 @@ MWWorld::ContainerStoreIterator MWWorld::InventoryStore::add(
 
     if (mListener)
         mListener->itemAdded(*retVal, count);
-    MWBase::Environment::get().getWindowManager()->inventoryUpdated(actor);
+    if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+        windows->inventoryUpdated(actor);
 
     return retVal;
 }

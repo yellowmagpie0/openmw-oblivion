@@ -41,7 +41,8 @@ namespace MWPhysics
 
     Object::~Object()
     {
-        mTaskScheduler->removeCollisionObject(mCollisionObject.get());
+        if (mCollisionRegistered)
+            mTaskScheduler->removeCollisionObject(mCollisionObject.get());
     }
 
     const Resource::BulletShapeInstance* Object::getShapeInstance() const

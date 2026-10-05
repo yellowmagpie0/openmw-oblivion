@@ -259,6 +259,23 @@ namespace MWPhysics
             int collisionType = CollisionType_World, bool respectVisualCollisionType = true);
         void addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh);
 
+        class PreparedObjectRemoval
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedObjectRemoval(std::unique_ptr<Data> data);
+            friend class PhysicsSystem;
+        public:
+            ~PreparedObjectRemoval();
+            PreparedObjectRemoval(const PreparedObjectRemoval&) = delete;
+            PreparedObjectRemoval& operator=(const PreparedObjectRemoval&) = delete;
+            bool isValid() const;
+            bool commit();
+        };
+        // Main-thread non-actor removal. Owns the scheduler collision lock;
+        // destroy before callbacks. Physics, reference and cell outlive it.
+        std::unique_ptr<PreparedObjectRemoval> prepareObjectRemoval(const MWWorld::Ptr& ptr);
+
         // Detached native body admission. Caller owns reference lifetime and
         // selects the profile/model; ordinary static collision stays separate.
         std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,

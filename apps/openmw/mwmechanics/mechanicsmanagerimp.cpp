@@ -271,6 +271,15 @@ namespace MWMechanics
             mActors.castSpell(ptr, spellId, scriptedSpell);
     }
 
+    bool MechanicsManager::canRemovePreparedItem(const MWWorld::Ptr& ptr) const
+    {
+        if (ptr.isEmpty() || ptr.getClass().isActor() || ptr.getClass().useAnim()
+            || mActors.hasController(ptr) || mObjects.hasController(ptr))
+            return false;
+        const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
+        return !windows || windows->getWatchedActor() != ptr;
+    }
+
     void MechanicsManager::remove(const MWWorld::Ptr& ptr, bool keepActive)
     {
         if (ptr == MWBase::Environment::get().getWindowManager()->getWatchedActor())

@@ -60,6 +60,7 @@ namespace MWBase
         virtual void add(const MWWorld::Ptr& ptr) = 0;
         ///< Register an object for management
 
+        virtual bool canRemovePreparedItem(const MWWorld::Ptr& ptr) const = 0;
         virtual void remove(const MWWorld::Ptr& ptr, bool keepActive) = 0;
         ///< Deregister an object for management
 

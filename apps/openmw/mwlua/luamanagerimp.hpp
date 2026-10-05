@@ -79,6 +79,7 @@ namespace MWLua
         void gameEnded() override;
         void noGame() override;
         void objectAddedToScene(const MWWorld::Ptr& ptr) override;
+        std::unique_ptr<PreparedSceneRemoval> prepareSceneRemoval(const MWWorld::Ptr& ptr) override;
         void objectRemovedFromScene(const MWWorld::Ptr& ptr) override;
         void inputEvent(const InputEvent& event) override;
         void itemConsumed(const MWWorld::Ptr& consumable, const MWWorld::Ptr& actor) override
@@ -227,6 +228,8 @@ namespace MWLua
         std::vector<LuaUtil::ScriptsContainerWeakPtr> mQueuedAutoStartedScripts;
         std::map<ESM::FormKey, ESM::LuaScripts> mPendingNativeScripts;
         ObjectLists mObjectLists;
+        class SceneRemoval;
+        std::shared_ptr<const char> mScenePreparationIdentity = std::make_shared<const char>(0);
 
         MWWorld::Ptr mPlayer;
 

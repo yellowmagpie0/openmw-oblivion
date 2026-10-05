@@ -5,6 +5,8 @@
 #include <osg/ref_ptr>
 
 #include <vector>
+#include <algorithm>
+#include <stdexcept>
 
 namespace SceneUtil
 {
@@ -25,6 +27,25 @@ namespace SceneUtil
         void flush(SceneUtil::WorkQueue& workQueue);
 
         std::size_t getSize() const { return mObjects.size(); }
+
+        // Main-thread preparation; no publication or work scheduling.
+        void reserveAdditional(std::size_t count)
+        {
+            if (count > mObjects.max_size() - mObjects.size())
+                throw std::length_error("unreference queue reservation overflow");
+            const auto required = mObjects.size() + count;
+            if (required > mObjects.capacity())
+            {
+                const auto grown = mObjects.capacity() > mObjects.max_size() / 2
+                    ? mObjects.max_size() : mObjects.capacity() * 2;
+                mObjects.reserve(std::max(required, grown));
+            }
+        }
+
+        bool canPushPrepared(std::size_t expectedSize) const
+        {
+            return mObjects.size() == expectedSize && mObjects.capacity() > expectedSize;
+        }
 
     private:
         std::vector<osg::ref_ptr<osg::Referenced>> mObjects;

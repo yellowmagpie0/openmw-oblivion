@@ -34,6 +34,7 @@ namespace MWRender
             const DetourNavigator::AgentBounds& agentBounds, const osg::Vec3f& start, const osg::Vec3f& end,
             const DetourNavigator::Settings& settings);
 
+        bool contains(const MWWorld::ConstPtr& actor) const { return mGroups.contains(actor.mRef); }
         void remove(const MWWorld::ConstPtr& actor);
 
         void removeCell(const MWWorld::CellStore* const store);
