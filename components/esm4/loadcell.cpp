@@ -54,6 +54,7 @@ void ESM4::Cell::load(ESM4::Reader& reader)
     mParent = reader.currWorld();
     mParentKey = reader.currWorldFormKey();
     mWaterHeight = sInvalidWaterLevel;
+    mOwnershipRank.reset();
     reader.clearCellGrid(); // clear until XCLC FIXME: somehow do this automatically?
 
     // Sometimes cell 0,0 does not have an XCLC sub record (e.g. ToddLand 000009BF)
@@ -75,6 +76,7 @@ void ESM4::Cell::load(ESM4::Reader& reader)
     reader.setCurrCellFormKey(reader.getFormKeyFromHeader());
     std::uint32_t esmVer = reader.esmVersion();
     bool isSkyrim = (esmVer == ESM::VER_170 || esmVer == ESM::VER_094);
+    const bool isTES4 = (esmVer == ESM::VER_080 || esmVer == ESM::VER_100) && !reader.hasFormVersion();
 
     while (reader.getSubRecordHeader())
     {
@@ -169,6 +171,18 @@ void ESM4::Cell::load(ESM4::Reader& reader)
                 }
                 break;
             }
+            case ESM::fourCC("XRNK"):
+                if (!isTES4)
+                    reader.skipSubRecordData();
+                else
+                {
+                    if (subHdr.dataSize != 4 || mOwnershipRank)
+                        throw std::runtime_error("CELL XRNK requires one signed four-byte rank");
+                    std::int32_t rank;
+                    reader.get(rank);
+                    mOwnershipRank = rank;
+                }
+                break;
             case ESM::fourCC("XGLB"):
                 reader.getFormId(mGlobal);
                 break; // Oblivion only?
@@ -227,7 +241,6 @@ void ESM4::Cell::load(ESM4::Reader& reader)
             case ESM::fourCC("XEZN"):
             case ESM::fourCC("XWEM"):
             case ESM::fourCC("XILL"):
-            case ESM::fourCC("XRNK"):
             case ESM::fourCC("XCET"): // FO3
             case ESM::fourCC("IMPF"): // FO3 Zeta
             case ESM::fourCC("CNAM"): // FO4

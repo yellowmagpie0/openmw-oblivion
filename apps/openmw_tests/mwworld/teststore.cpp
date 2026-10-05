@@ -5,6 +5,7 @@
 #include <array>
 #include <fstream>
 #include <span>
+#include <optional>
 #include <type_traits>
 
 #include <boost/program_options/options_description.hpp>
@@ -1300,4 +1301,64 @@ TEST(MWWorldStoreTest, preparedPlayerRecordRejectsInvalidIdentityMissingDefiniti
     auto ordinary = store.preparePlayerRecord(player);
     EXPECT_NE(ordinary.commit(), nullptr);
     EXPECT_EQ(store.generateId(), ESM::RefId::generated(0));
+}
+
+TEST(MWWorldStoreTest, tes4CellOwnershipRankUsesWinningOverridesAndMasterRemapping)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{{"base.esm", 0}, {"other.esm", 1}, {"patch.esp", 2}};
+    const std::vector<std::string> patchMasters{"other.esm", "base.esm"};
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t id, std::optional<std::int32_t> rank, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900}));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0')
+                + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        std::string payload;
+        if (!deleted)
+        {
+            payload = sub(ESM::fourCC("DATA"), std::string(1, '\1'))
+                + sub(ESM::fourCC("EDID"), name + "_Cell" + '\0')
+                + sub(ESM::fourCC("XOWN"), bytes(std::uint32_t{0x801}));
+            if (rank) payload += sub(ESM::fourCC("XRNK"), bytes(*rank));
+        }
+        const auto cell = record(ESM4::REC_CELL, id,
+            deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u, payload);
+        const auto group = bytes(ESM4::REC_GRUP) + bytes(static_cast<std::uint32_t>(20 + cell.size()))
+            + bytes(ESM4::REC_CELL) + bytes(std::int32_t{0}) + bytes(std::uint32_t{0}) + cell;
+        auto stream = std::make_unique<std::stringstream>(
+            record(ESM4::REC_TES4, 0, 1, header) + group, std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name)); reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 0, false);
+    load("other.esm", {}, 0x800, 8, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::Cell>(base), nullptr);
+    ASSERT_NE(store.search<ESM4::Cell>(other), nullptr);
+    EXPECT_EQ(store.search<ESM4::Cell>(base)->mOwnershipRank, 0);
+    EXPECT_EQ(store.search<ESM4::Cell>(other)->mOwnershipRank, 8);
+    load("patch.esp", patchMasters, 0x01000800, 9, false);
+    EXPECT_EQ(store.search<ESM4::Cell>(base)->mOwnershipRank, 9);
+    EXPECT_EQ(store.search<ESM4::Cell>(other)->mOwnershipRank, 8);
+    EXPECT_EQ(store.search<ESM4::Cell>(base)->mOwner, (ESM::FormId{0x801, 1}));
+    // Omitted rank is a replacement, not a merge with the prior requirement.
+    load("patch.esp", patchMasters, 0x01000800, std::nullopt, false);
+    EXPECT_FALSE(store.search<ESM4::Cell>(base)->mOwnershipRank);
+    EXPECT_EQ(store.search<ESM4::Cell>(other)->mOwnershipRank, 8);
+    load("patch.esp", patchMasters, 0x01000800, std::nullopt, true);
+    EXPECT_EQ(store.search<ESM4::Cell>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::Cell>(other), nullptr);
 }

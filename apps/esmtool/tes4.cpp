@@ -192,7 +192,8 @@ namespace EsmTool
                 params.mGraph->apply(std::move(metadata));
             }
 
-            const std::string_view recordType = ESM::NAME(reader.hdr().record.typeId).toStringView();
+            const ESM::NAME recordName(reader.hdr().record.typeId);
+            const std::string_view recordType = recordName.toStringView();
             if (params.mQuite
                 || (params.mTypes != nullptr && !params.mTypes->empty()
                     && std::find(params.mTypes->begin(), params.mTypes->end(), recordType) == params.mTypes->end()))
@@ -438,6 +439,15 @@ namespace EsmTool
             if constexpr (requires { value.mOwner; })
                 if (!value.mOwner.isZeroOrUnset())
                     std::cout << "\n  Owner: " << value.mOwner;
+            if constexpr (requires { value.mOwnershipRank; })
+            {
+                std::cout << "\n  Ownership key: " << reader.getFormKeyFromHeader().serialize()
+                          << "\n  Ownership rank: ";
+                if (value.mOwnershipRank)
+                    std::cout << *value.mOwnershipRank;
+                else
+                    std::cout << "absent";
+            }
             if constexpr (requires { value.mIsLocked; value.mLockLevel; value.mKey; })
             {
                 std::cout << "\n  Lock: " << (value.mIsLocked ? "locked" : "unlocked") << ' '

@@ -28,6 +28,7 @@
 #define ESM4_CELL_H
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -81,6 +82,9 @@ namespace ESM4
         std::int32_t mY = 0;
 
         ESM::FormId mOwner;
+        // Preserve absent versus explicit signed XRNK. The native ownership
+        // query normalizes only absent/-1 to zero at its call boundary.
+        std::optional<std::int32_t> mOwnershipRank;
         ESM::FormId mGlobal;
         ESM::FormId mClimate;
         ESM::FormId mWater;

@@ -13604,3 +13604,59 @@ release. It does not attach the bow frontend, admit or move native arrows,
 publish an ordinary NPC broken-bow drop, persist loose objects/projectiles,
 execute enchantment effects or establish normal-input/restart acceptance.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint286: optional signed native CELL ownership ranks
+
+Native TES4 CELL loading now preserves XRNK as an optional signed int32.
+Absence, explicit zero and negative ranks remain distinct, and each load
+clears the previous value before applying a replacement record. TES4 XRNK
+must contain exactly four bytes and appear once; malformed sizes and duplicate
+zero/nonzero ranks fail with a CELL XRNK diagnostic. Other supported formats
+retain their previous compatibility behavior. Typed esmtool CELL dumps expose
+the canonical header key and rank presence/value.
+
+Five new component cases cover both TES4 header versions, compressed and
+uncompressed records, signed extremes, malformed lengths, duplicate ranks,
+reused loaders and following-subrecord alignment. One actual ESMStore load
+case covers master-order owner remapping, rank replacement, omission and
+deletion. Both normal and ASan/UBSan runs pass2486 full component cases and
+1054 full engine cases with exact inventories and no failures/skips.
+Leak checks remain disabled. Rebuild warnings are retained; relevant warning
+sources match checkpoint285 byte-for-byte.
+
+Both initial01 attempts are retained. The new positive CELL fixtures lacked
+the real GRUP context required by Cell::load and failed before rank parsing;
+negative fixtures could then pass from that unrelated exception. Corrected
+fixtures supply real CELL groups and assert the CELL XRNK diagnostic for
+negative cases. The focused five-case normal fixture check is retained
+separately and is not counted as a full suite.
+
+An independent raw audit verifies all11 pinned official plugins and counts
+35787 physical CELL records,35565 live winners,33 physical explicit ranks and
+32 winning explicit ranks. Both actual typed esmtool binaries independently
+match every physical rank presence/value and every winning rank after the
+pinned load order. Per-plugin uniqueness, plugin hashes, binary hashes and
+unchanged before/after source fingerprints are verified. This is typed
+content readback, not a gameplay ownership query.
+
+Evidence: S5/native-cell-ownership-rank-normal-03 and
+S5/native-cell-ownership-rank-sanitized-03; failed01 and focused fixture-normal-01
+retained. Independent input: S5/native-cell-ownership-rank-raw-audit-01.
+Typed comparisons: S5/native-cell-ownership-rank-typed-normal-03 and
+S5/native-cell-ownership-rank-typed-sanitized-03.
+Initial typed-comparer01 startup failed before any dump because the skill helper
+import lacked its sibling module search path. Both failures are retained;
+corrected02 uses the actual skill scripts directory. The corrected normal02 comparison passed; sanitized02 found a real existing
+stack-use-after-scope in typed record filtering: recordType viewed a temporary
+ESM::NAME. A named ESM::NAME now owns that storage through filtering and printing.
+Both02 attempts are retained; fresh03 builds and comparisons cover the correction.
+Raw audit source SHA256: 9c362c182f85630abdf9bc5de7041122aec813421ad475dc8a8ec659e4930683
+Typed comparator SHA256: cf565922dc502fd34d41f939b12dd9ba2fd8622dd6fb2d03c89d48e62f952f72
+Latest tested fingerprint: 81a850a6b84b60348e8298e3df9d4b9b2170ff9974e4733566dd0afe3b19b4e1
+
+This closes the missing static CELL rank input. It does not implement mutable
+native faction membership, final drop ownership, a native loose-weapon factory,
+bow frontend/arrow admission or crime/runtime acceptance. S2 and S5 remain in
+progress. The next integration task is the compound native broken-bow release,
+using the prepared inventory, cell, model and physical admission foundations.
