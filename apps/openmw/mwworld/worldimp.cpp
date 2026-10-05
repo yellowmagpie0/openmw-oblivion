@@ -217,6 +217,21 @@ namespace MWWorld
             };
         }
 
+        void migrateLegacyActorEquipment(std::vector<ESM4::RuntimeInventoryItem>& inventory,
+            const ESMStore& store, const ESM::FormKeyResolver& resolver)
+        {
+            // Versions 1-3 stored quantities only. Apply the same deliberate
+            // default-equipment migration in lazy loading and prepared restore.
+            const auto original = inventory;
+            for (const auto& item : original)
+                if (const auto id = resolver.toFormId(item.mBase))
+                    if (auto definition = OblivionProfileServices::itemDefinition(store, ESM::RefId(*id)))
+                    {
+                        definition->mBase = item.mBase;
+                        ESM4::equipInventoryItem(inventory, *definition);
+                    }
+        }
+
         std::uint32_t getNativeEquippedSlots(const InventoryStore& inventory, const ConstPtr& item,
             const ESM4::InventoryItemDefinition& definition)
         {
@@ -977,19 +992,7 @@ namespace MWWorld
         const ESM::FormKeyResolver resolver(mContentFiles);
         auto inventory = saved->mInventory;
         if (mOblivionRuntimeState->mVersion < 4)
-        {
-            // Versions 1-3 have quantities but no saved equipment metadata.
-            // Match the existing deliberate legacy capture migration; current
-            // unequipped/empty inventories must never acquire default gear.
-            const auto original = inventory;
-            for (const auto& item : original)
-                if (const auto id = resolver.toFormId(item.mBase))
-                    if (auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id)))
-                    {
-                        definition->mBase = item.mBase;
-                        ESM4::equipInventoryItem(inventory, *definition);
-                    }
-        }
+            migrateLegacyActorEquipment(inventory, mStore, resolver);
         return OblivionProfileServices::stageActorInventory(
             OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
     }
@@ -1378,17 +1381,7 @@ namespace MWWorld
                         if (mOblivionRuntimeState->mVersion < 4
                             && (ptr.getClass().getType() == ESM::REC_NPC_4
                                 || ptr.getClass().getType() == ESM::REC_CREA4))
-                        {
-                            const std::vector<ESM4::RuntimeInventoryItem> migrated = reference.mInventory;
-                            for (const ESM4::RuntimeInventoryItem& item : migrated)
-                                if (const std::optional<ESM::FormId> id = resolver.toFormId(item.mBase))
-                                    if (auto definition = OblivionProfileServices::itemDefinition(
-                                            mStore, ESM::RefId(*id)))
-                                    {
-                                        definition->mBase = item.mBase;
-                                        ESM4::equipInventoryItem(reference.mInventory, *definition);
-                                    }
-                        }
+                            migrateLegacyActorEquipment(reference.mInventory, mStore, resolver);
 
                         // Scripted non-looping animations retain their final
                         // visual pose after playback, but the renderer's live
@@ -2513,8 +2506,13 @@ namespace MWWorld
             const auto base = resolver.toFormId(reference.mBase);
             if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
                 || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+            {
+                auto inventory = reference.mInventory;
+                if (state.mVersion < 4)
+                    migrateLegacyActorEquipment(inventory, mStore, resolver);
                 preparedActorInventories.emplace(reference.mKey,
-                    OblivionProfileServices::prepareActorInventory(mStore, resolver, reference.mInventory));
+                    OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
+            }
         }
         struct PreparedInventoryBinding
         {

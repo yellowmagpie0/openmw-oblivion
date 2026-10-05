@@ -11795,3 +11795,194 @@ TEST(OblivionWorldTest, NativeRestoreRejectsInPlaceAuthorityDowngradeBeforeWorld
     world.getOblivionCombatService()->capture(authority);
     EXPECT_EQ(authority.serializeBinary(), saved.serializeBinary());
 }
+
+namespace
+{
+    // Historical loads start with plain character data, rather than attempting
+    // an unsupported in-place downgrade of an already published native Player.
+    struct PopulatedMigrationFixture : NativeWorldFixture
+    {
+        MWWorld::Ptr mActor;
+        PopulatedMigrationFixture()
+        {
+            MWClass::Npc::registerSelf();
+            MWClass::Weapon::registerSelf();
+            MWClass::ESM4Takeable<ESM4::Weapon>::registerSelf();
+            mWorld.setupPlayer();
+            ESM::Race race{};
+            race.blank();
+            race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+            mWorld.getStore().getWritable<ESM::Race>().insertStatic(race);
+            auto character = *mWorld.getPlayerPtr().get<ESM::NPC>()->mBase;
+            character.mRace = race.mId;
+            auto metadata = mWorld.getStore().preparePlayerRecord(character);
+            mWorld.getPlayer().set(metadata.commit());
+            ESM4::Cell cell{};
+            cell.mId = ESM::RefId(ESM::FormId{1, 0});
+            cell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+            cell.mCellFlags = ESM4::CELL_Interior;
+            cell.mEditorId = "PopulatedMigrationCell";
+            mWorld.getStore().getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+            auto& resident = mWorld.getWorldModel().getCell(cell.mId);
+            mWorld.getPlayer().setCell(&resident);
+            mActor = addNativeNpc(*this, 0x900);
+            mActor = mActor.getCell()->moveTo(mActor, &resident);
+            mWorld.getWorldModel().registerPtr(mActor);
+            ESM4::Weapon weapon{};
+            weapon.mId = {0x940, 0};
+            weapon.mData.type = 5;
+            weapon.mData.health = 100;
+            weapon.mEnchantment = {0x950, 0};
+            weapon.mEnchantmentPoints = 20;
+            mWorld.getStore().getWritable<ESM4::Weapon>().insertStatic(
+                weapon, ESM::FormKey::content("headless.esm", 0x940));
+            ESM::Weapon projected;
+            projected.blank();
+            projected.mId = ESM::RefId(weapon.mId);
+            projected.mData.mType = ESM::Weapon::MarksmanBow;
+            projected.mData.mHealth = 100;
+            mWorld.getStore().insertStatic(projected);
+        }
+    };
+}
+
+TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFromEveryVersion)
+{
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto legacy = world.captureOblivionRuntimeState();
+        legacy.mVersion = version;
+        legacy.mClock.mHour = 7;
+        legacy.mPlayer.mActorValues["health.current"] = 67;
+        if (version < 3)
+        {
+            legacy.mPlayer.mName.clear();
+            legacy.mPlayer.mRace = {};
+            legacy.mPlayer.mClass = {};
+            legacy.mPlayer.mBirthSign = {};
+            legacy.mPlayer.mFemale = false;
+            legacy.mPlayer.mCharacterGenerationFlags = 0;
+        }
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = version < 4 ? 3 : 1;
+        if (version >= 4)
+        {
+            item.mCondition = version < 24 ? 43.f : 43.125f;
+            item.mCharge = 7.25f;
+            item.mEquippedSlots = ESM4::InventorySlotWeapon;
+            item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        }
+        legacy.mPlayer.mInventory = {item};
+        ASSERT_EQ(legacy.mReferences.size(), 1u);
+        legacy.mReferences.front().mInventory = {item};
+        if (version >= 4)
+        {
+            item.mCount = 2;
+            item.mCondition = 0.f;
+            item.mCharge = 0.f;
+            item.mEquippedSlots = 0;
+            legacy.mPlayer.mInventory.push_back(item);
+            legacy.mReferences.front().mInventory.push_back(item);
+        }
+        ASSERT_NO_THROW(legacy.validate());
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+        EXPECT_EQ(decoded.mPlayer.mInventory, legacy.mPlayer.mInventory);
+        EXPECT_EQ(decoded.mReferences.front().mInventory, legacy.mReferences.front().mInventory);
+        const auto beforeClock = world.getTimeStamp();
+        const auto beforePlayer = world.captureOblivionActorInventory(world.getPlayerPtr());
+        const auto beforeActor = world.captureOblivionActorInventory(fixture.mActor);
+        auto pending = world.prepareOblivionDynamicReferenceKey();
+        auto invalid = decoded;
+        invalid.mNextDynamicSerial += 10;
+        invalid.mReferences.front().mInventory.back().mBase = ESM::FormKey::content("headless.esm", 0xdead);
+        readNativeSnapshot(fixture, invalid);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+        EXPECT_EQ(world.getTimeStamp(), beforeClock);
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), beforePlayer);
+        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), beforeActor);
+        EXPECT_TRUE(pending->isValid());
+        readNativeSnapshot(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_FALSE(pending->isValid());
+        auto expectedPlayer = legacy.mPlayer.mInventory;
+        auto expectedActor = legacy.mReferences.front().mInventory;
+        if (version < 4)
+        {
+            // Quantity-only saves acquire winning full condition/charge. NPCs
+            // also regain default gear; the Player chooses equipment explicitly.
+            expectedPlayer.front().mCondition = 100.f;
+            expectedPlayer.front().mCharge = 20.f;
+            auto equipped = expectedPlayer.front();
+            equipped.mCount = 1;
+            equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+            expectedActor = {expectedPlayer.front(), equipped};
+            expectedActor.front().mCount = 2;
+        }
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expectedPlayer);
+        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), expectedActor);
+        const auto migrated = world.captureOblivionRuntimeState();
+        EXPECT_EQ(migrated.mVersion, ESM4::CurrentRuntimeStateVersion);
+        EXPECT_EQ(migrated.mPlayer.mActorValues.at("health.current"), 67);
+        EXPECT_EQ(migrated.mClock.mHour, 7);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedActorAuthorityFromEverySupportedVersion)
+{
+    for (std::uint32_t version = 9; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+        auto legacy = world.captureOblivionRuntimeState();
+        legacy.mVersion = version;
+        if (version < 29) legacy.mReferences.front().mActorDrawState.reset();
+        ASSERT_EQ(legacy.mNativeActorValues.size(), 1u);
+        auto& values = legacy.mNativeActorValues.front();
+        values.mValues[8].mModifiers[2] = -9.f;
+        if (version < 17) values.mNonPlayerFormHealth.reset();
+        if (version < 18) values.mPassiveAbilities.reset();
+        if (version < 25) values.mProcessKnockedState.reset();
+        else values.mProcessKnockedState = 0;
+        if (version < 26) values.mProcessAction.reset();
+        else values.mProcessAction = -1;
+        if (version < 12) legacy.mNativeActorLife.clear();
+        if (version < 14) legacy.mNativeActorBreath.clear();
+        else legacy.mNativeActorBreath[values.mActor] = 13.25f;
+        if (version >= 13) legacy.mNativeDeathCounts[values.mBase] = 3;
+        if (version < 16)
+        {
+            legacy.mNativeActorManagerTime = 0.f;
+            legacy.mNativeActorUpdateTimes.clear();
+        }
+        else
+        {
+            legacy.mNativeActorManagerTime = 12.5f;
+            legacy.mNativeActorUpdateTimes[values.mActor] = 11.25f;
+        }
+        ASSERT_NO_THROW(legacy.validate());
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+        EXPECT_EQ(decoded.mNativeActorValues, legacy.mNativeActorValues);
+        readNativeSnapshot(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto migrated = world.captureOblivionRuntimeState();
+        EXPECT_EQ(migrated.mNativeActorValues, legacy.mNativeActorValues);
+        EXPECT_EQ(migrated.mNativeActorLife, legacy.mNativeActorLife);
+        EXPECT_EQ(migrated.mNativeActorBreath, legacy.mNativeActorBreath);
+        EXPECT_EQ(migrated.mNativeDeathCounts, legacy.mNativeDeathCounts);
+        EXPECT_EQ(migrated.mNativeActorManagerTime, legacy.mNativeActorManagerTime);
+        EXPECT_EQ(migrated.mNativeActorUpdateTimes, legacy.mNativeActorUpdateTimes);
+        EXPECT_EQ(fixture.mActor.getClass().getCreatureStats(fixture.mActor).getHealth().getCurrent(), 91.f);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
+    }
+}

@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view restore and restart evidence below | Complete load/cache reconciliation, populated migration and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view restore, populated migration and restart evidence below | Complete load/cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,55 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 populated migration checkpoint — 2026-10-05
+
+The preceding restore-preparation chunk is committed as `ce0cb7adf3`. This
+chunk fixes quantity-only NPC/creature inventory restore: versions **1–3**
+already regain default equipment during lazy loading, but prepared restore
+replaced those contents with an unequipped copy. Lazy loading, capture and
+prepared restore now share the existing deliberate equipment migration.
+Versions **4–41** continue to use saved equipment choices; Player equipment
+remains explicitly selected. No schema or native gameplay rule changes.
+
+Two new headless world regressions use actual T4ST write/read/apply/recapture:
+
+- **41** populated Player/NPC inventory cases, one per accepted version 1–41.
+  Quantity-only data recaptures winning full condition/charge; version4 starts
+  preserving equipment/owner/extras, and version24 retains fractional condition.
+  Distinct equipped worn and unequipped broken stacks preserve quantities,
+  charges and ownership. Each version rejects an unresolved later NPC item
+  before publishing Player inventory, clock or dynamic identity, then accepts
+  corrected retry. All versions reapply the current-schema resave unchanged.
+- **33** populated native NPC authority cases, versions 9–41. Resource damage
+  and the live Health projection agree; supported life, breath, death counters,
+  manager/update clocks and optional process fields survive. Unsupported fields
+  are deliberately absent at their schema boundaries. Current-schema resaves
+  reapply without changing their binary capture.
+
+Verification binds parent `ce0cb7adf341bd80d47aa034d8ef1cc678c34aed` and tested
+source fingerprint
+`1d1bdb487c1b2d80f9224ee4e83245f2f701630dfd74389196c4ef1b321471da`.
+
+- `S3/populated-migration-focused-02`: both new tests pass across all 74 schema
+  cases; the initial equipment/fixture failures remain in `focused-01`.
+- `S3/populated-migration-engine-01`: all **1,124** engine tests pass, exact
+  inventory, zero failures/skips; `openmw`, `openmw-tests`, `esmtool` build.
+- `S3/populated-migration-sanitize-01`: all **1,124** engine tests pass with
+  the same exact inventory under ASan/UBSan. Leak checks are disabled;
+  UBSan halts with stack traces. All three engine targets build.
+- Aggregate evidence: `S3/populated-migration-report.json`. Documentation is
+  updated after verification; the two tested source hashes are recorded there.
+
+**S3 remains in progress.** This closes the populated inventory/resource/life/
+clock migration integration chunk, not every populated historical contract or
+fresh-process gameplay acceptance. Remaining work includes active actions,
+queued events and passive-effect migration, complete load/cache reconciliation
+and the normal-input active-action continuation matrix. No new runtime course
+was run in this chunk and no processes remain active from its checks. The next
+bounded action is populated active-action/queued-event migration through T4ST,
+followed by restart continuation; preserve the earlier whole-load atomicity
+limitations until separately resolved.
 
 ## S3 restore preparation checkpoint — 2026-10-05
 
