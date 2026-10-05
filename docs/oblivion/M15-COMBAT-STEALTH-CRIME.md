@@ -21478,3 +21478,48 @@ The capture provides the real renderer source needed by stock drop preparation.
 Native Euler conversion, model/body source-hash binding, the stock drop factory,
 full compound bow/arrow release, exact pickup, loose-body frame/save/recreation
 and normal-input/fresh-process acceptance remain open. S5 and M15 remain in progress.
+
+
+### S5 checkpoint292: reproduce native dropped-reference rotation
+
+ESM4::nativeDroppedReferenceRotation converts the original nine-float
+NiAVObject world rotation layout into dropped-reference XYZ rotation. It
+reproduces actual711440's clamped, stored asin and singular branches plus
+7070B0's polynomial atan, separate binary32 stores, zero-ratio branch and
+quadrant adjustments. Signed zeros are preserved. Every matrix component must
+be finite; the function reads its input without changing a scene or reference.
+It does not decompose an OSG matrix, strip actor scale or publish an item.
+
+The new rule first failed all three focused component cases against a deliberate
+zero-result placeholder (S5/native-drop-rotation-baseline-01). Its implemented
+version passes a hermetic table of228 distinct original matrix/output bit
+patterns, signed-zero/read-only checks and nonfinite rejection in all nine
+components. The expected table is extracted directly from original outputs;
+production C++ and the separate Python formula hypothesis do not produce it.
+
+The independent placement probe03 captures5472 original contexts:228 matrices,
+NPC/Creature, both process-query selector branches, three positions and both
+x87 controls. The added matrices cover exact signed-zero180-degree branches,
+adjacent float values at +/-1, stored subnormal components and native clamp
+branches. Outputs are consistent across repeated caller/precision contexts.
+Actual original static initializers and711440/asin/atan instructions execute.
+Actor+168, process node queries and actor+2C8 drop request remain declared
+boundaries. This is no original-game visual or inventory publication proof.
+Evidence: S5/native-broken-drop-placement-oracle-03.
+Executable SHA256: a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+Probe source SHA256: 70e3b950cf42087e9935a1a3f02114a4610bbd71de863a28e3f75991c2eb49f2
+
+Both full normal and ASan/UBSan runs pass2489 component cases and1082 engine
+cases, exact inventories and no failures/skips. Leak checks remain disabled.
+Evidence: S5/native-drop-rotation-normal-01 and
+S5/native-drop-rotation-sanitized-01.
+Tested fingerprint: 0213841805dcd6ed3705ea1f24c89f9b398a114b2d465e1d51f1f4c6374c44b1
+Rebuild warnings in existing inventory fixtures, character animation restore,
+actor-stat tests or standard-library/Sol code were inspected; unchanged source
+hashes are retained in normal-01/unchanged-warning-sources.json. No Python,
+schema or fixture-format implementation changed, so Python was not rerun.
+
+Native-to-OSG rotation and scale binding, the stock model/body source-hash check,
+complete native ownership metadata, actual drop factory and compound release,
+pickup/frame/save/recreation and normal-input/fresh-process acceptance remain
+open. S5 and M15 remain in progress.

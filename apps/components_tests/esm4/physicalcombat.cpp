@@ -4756,3 +4756,46 @@ TEST(ESM4PhysicalCombat, DropExtraOwnerSelectionRejectsNonfiniteThresholdsAcross
     for (const bool cellOwner : {false, true})
         EXPECT_THROW(ESM4::selectDropExtraOwner(state, owner, cellOwner, 1, invalid), std::invalid_argument);
 }
+
+
+namespace
+{
+#include "native_drop_rotation_expected.inc"
+}
+
+TEST(ESM4PhysicalCombat, NativeDroppedWeaponRotationMatchesOriginalInstructionOutputs)
+{
+    for (std::size_t index = 0; index < NativeDropRotationCases.size(); ++index)
+    {
+        SCOPED_TRACE(index);
+        const auto& expected = NativeDropRotationCases[index];
+        std::array<float, 9> matrix;
+        for (std::size_t component = 0; component != matrix.size(); ++component)
+            matrix[component] = std::bit_cast<float>(expected.mMatrix[component]);
+        const auto actual = ESM4::nativeDroppedReferenceRotation(matrix);
+        for (std::size_t component = 0; component != actual.size(); ++component)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[component]), expected.mRotation[component]);
+    }
+}
+
+TEST(ESM4PhysicalCombat, NativeDroppedWeaponRotationPreservesSignedZeroAndReadOnlyInput)
+{
+    const std::array<float, 9> identity{1, 0, 0, 0, 1, 0, 0, 0, 1};
+    const auto original = identity;
+    const auto rotation = ESM4::nativeDroppedReferenceRotation(identity);
+    for (const float component : rotation)
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(component), 0x80000000u);
+    EXPECT_EQ(identity, original);
+}
+
+TEST(ESM4PhysicalCombat, NativeDroppedWeaponRotationRejectsNonfiniteInputInEveryComponent)
+{
+    for (std::size_t component = 0; component != 9; ++component)
+        for (const float invalid : {std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            std::array<float, 9> matrix{1, 0, 0, 0, 1, 0, 0, 0, 1};
+            matrix[component] = invalid;
+            EXPECT_THROW(ESM4::nativeDroppedReferenceRotation(matrix), std::invalid_argument);
+        }
+}

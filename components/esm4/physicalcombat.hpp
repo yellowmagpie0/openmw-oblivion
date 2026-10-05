@@ -780,6 +780,11 @@ namespace ESM4
     std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
         const PhysicalCombatSettings& settings);
     void validatePhysicalCombatSettings(const PhysicalCombatSettings& settings);
+    // Original held NiAVObject world rotation layout (nine float values).
+    // Return the dropped reference XYZ rotation, including native atan stores
+    // and singular branches. This does not decompose an OSG scene matrix.
+    std::array<float, 3> nativeDroppedReferenceRotation(const std::array<float, 9>& rotation);
+
     enum class DropExtraOwnerSelection : std::uint8_t { KeepExisting, ClearExisting, PlayerBase };
 
     // Original drop prelude only. This selects the item's ExtraOwnership

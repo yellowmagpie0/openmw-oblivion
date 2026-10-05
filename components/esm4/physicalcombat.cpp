@@ -1565,6 +1565,65 @@ namespace ESM4
         nonnegative(maximum);
         return maximum == 0.f ? total : std::min(total, maximum);
     }
+    namespace
+    {
+        float nativeDropAtanPolynomial(float ratio)
+        {
+            // Original7070B0, coefficients A7DED8/D0/C8/C0/B8. Every
+            // multiplication and addition below has a separate binary32 store.
+            const float square = rounded(double(ratio) * ratio);
+            float value = rounded(0.02083509974181652 * square);
+            value = rounded(double(value) - 0.08513300120830536);
+            value = rounded(double(value) * square);
+            value = rounded(double(value) + 0.18014100193977356);
+            value = rounded(double(value) * square);
+            value = rounded(double(value) - 0.3302994966506958);
+            value = rounded(double(value) * square);
+            value = rounded(double(value) + 0.9998660087585449);
+            return rounded(double(ratio) * value);
+        }
+
+        float nativeDropAtan2(float y, float x)
+        {
+            constexpr float halfPi = 1.5707963705062866f;
+            constexpr float pi = 3.1415927410125732f;
+            if (x == 0.f && y == 0.f)
+                return 0.f;
+            if (std::abs(y) > std::abs(x))
+            {
+                const float ratio = rounded(double(x) / y);
+                const float base = y > 0.f ? halfPi : -halfPi;
+                return rounded(double(base) - nativeDropAtanPolynomial(ratio));
+            }
+            const float ratio = rounded(double(y) / x);
+            // Original tests the stored ratio before the final quadrant path.
+            // A negative tiny y whose ratio underflows to zero therefore
+            // returns +pi for x<0; std::atan2 would choose the negative branch.
+            if (ratio == 0.f)
+                return x < 0.f ? pi : 0.f;
+            const float angle = nativeDropAtanPolynomial(ratio);
+            return x < 0.f ? rounded(double(angle) + (y >= 0.f ? pi : -pi)) : angle;
+        }
+    }
+
+    std::array<float, 3> nativeDroppedReferenceRotation(const std::array<float, 9>& rotation)
+    {
+        for (const float value : rotation)
+            finite(value);
+        constexpr float halfPi = 1.5707963705062866f;
+        // Actual711440 stores its asin result, clamps at +/-1, then negates
+        // into reference X. Signed zero is retained in the captured rotations.
+        const float x = rotation[7] <= -1.f ? halfPi
+            : rotation[7] >= 1.f ? -halfPi : -rounded(std::asin(double(rotation[7])));
+        if (x > -halfPi && x < halfPi)
+            return {x, -nativeDropAtan2(-rotation[6], rotation[8]),
+                -nativeDropAtan2(-rotation[1], rotation[4])};
+        const float angle = nativeDropAtan2(rotation[2], rotation[0]);
+        // Original singular paths clear Y; Z subtracts the original +0
+        // double initializer A2FC68, or subtracts the angle from FLDZ.
+        return {x, 0.f, x == -halfPi ? rounded(double(angle) - 0.0) : rounded(0.0 - double(angle))};
+    }
+
     DropExtraOwnerSelection selectDropExtraOwner(std::uint32_t nativeActorState,
         bool hasExistingOwner, bool cellHasOwner, std::int32_t basePrice, float threshold)
     {
