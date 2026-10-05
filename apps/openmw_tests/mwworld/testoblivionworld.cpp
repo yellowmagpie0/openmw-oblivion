@@ -9629,3 +9629,44 @@ TEST(OblivionWorldTest, PreparedCellInsertionRejectsUnloadedTargetAndPreservesPr
     EXPECT_EQ(source.getPtr().getCellRef().getNativeItemCondition(), std::optional<float>{12.5f});
     EXPECT_EQ(source.getPtr().getCellRef().getCount(), 2);
 }
+
+#include "apps/openmw/mwworld/oblivioncombatdata.hpp"
+#include <components/esm4/loadgmst.hpp>
+#include <components/esm3/loadgmst.hpp>
+
+TEST(OblivionWorldTest, DropExtraOwnerResolverUsesFreshNativeSettingsAndRejectsLegacyFallback)
+{
+    using Choice = ESM4::DropExtraOwnerSelection;
+    NativeWorldFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    const auto query = [&] {
+        return MWWorld::resolveOblivionDropExtraOwner(store, ESM::GameProfile::Oblivion, 0, false, true, 46);
+    };
+    ESM::GameSetting legacy{};
+    legacy.mId = ESM::RefId::stringRefId("fValueofItemForNoOwnership");
+    legacy.mValue = ESM::Variant(100.f);
+    store.getWritable<ESM::GameSetting>().insertStatic(legacy);
+    EXPECT_EQ(query(), Choice::KeepExisting); // Native absent initializer45, never TES3 value100.
+    ESM4::GameSetting native{};
+    native.mId = {0x990, 0};
+    native.mEditorId = "fValueofItemForNoOwnership";
+    native.mData = 60.f;
+    const auto key = ESM::FormKey::content("headless.esm", 0x990);
+    store.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+    const auto earlier = query();
+    EXPECT_EQ(earlier, Choice::PlayerBase);
+    native.mData = 42.f;
+    store.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+    EXPECT_EQ(query(), Choice::KeepExisting);
+    EXPECT_EQ(earlier, Choice::PlayerBase);
+    native.mData = std::int32_t{45};
+    store.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+    EXPECT_THROW(query(), std::invalid_argument);
+    native.mData = std::numeric_limits<float>::quiet_NaN();
+    store.getWritable<ESM4::GameSetting>().insertStatic(native, key);
+    EXPECT_THROW(query(), std::invalid_argument);
+    ASSERT_TRUE(store.getWritable<ESM4::GameSetting>().eraseStatic(ESM::RefId(native.mId)));
+    EXPECT_EQ(query(), Choice::KeepExisting);
+    EXPECT_THROW(MWWorld::resolveOblivionDropExtraOwner(store, ESM::GameProfile::Morrowind,
+        0, false, true, 1), std::invalid_argument);
+}

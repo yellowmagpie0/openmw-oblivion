@@ -1565,4 +1565,19 @@ namespace ESM4
         nonnegative(maximum);
         return maximum == 0.f ? total : std::min(total, maximum);
     }
+    DropExtraOwnerSelection selectDropExtraOwner(std::uint32_t nativeActorState,
+        bool hasExistingOwner, bool cellHasOwner, std::int32_t basePrice, float threshold)
+    {
+        if (!std::isfinite(threshold))
+            throw std::invalid_argument("nonfinite native drop ownership threshold");
+        const bool inactive = nativeActorState == 1 || nativeActorState == 2 || nativeActorState == 6;
+        if (hasExistingOwner && !inactive)
+            return DropExtraOwnerSelection::KeepExisting;
+        // FILD int32 retains every price bit. Casting the price to float first
+        // changes the branch for16777217 versus a float16777216 threshold.
+        if (cellHasOwner && (inactive || double(basePrice) <= double(threshold)))
+            return DropExtraOwnerSelection::PlayerBase;
+        return inactive ? DropExtraOwnerSelection::ClearExisting : DropExtraOwnerSelection::KeepExisting;
+    }
+
 }

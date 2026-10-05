@@ -54,6 +54,10 @@ namespace MWWorld
     ESM4::CombatStyleDefaults buildOblivionCombatDefaults(const ESMStore& store);
     OblivionCombatPolicy resolveOblivionCombatPolicy(const ESMStore& store,
         const ESM::FormKey& actorBase, const ESM4::CombatStyleDefaults& defaults);
+    ESM4::DropExtraOwnerSelection resolveOblivionDropExtraOwner(const ESMStore& store,
+        ESM::GameProfile profile, std::uint32_t nativeActorState, bool hasExistingOwner,
+        bool cellHasOwner, std::int32_t basePrice);
+
 }
 
 #endif

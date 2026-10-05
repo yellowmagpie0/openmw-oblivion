@@ -4712,3 +4712,47 @@ TEST(ESM4PhysicalCombat, HitBlendSetupUsesConfiguredGainsForMiddleKeyWithoutMini
     EXPECT_EQ(previous.mSetupState, 0u);
     EXPECT_TRUE(previous.mKeys.empty());
 }
+
+TEST(ESM4PhysicalCombat, DropExtraOwnerSelectionRetainsNativeStateBranchesAndExactIntegerPrices)
+{
+    using Choice = ESM4::DropExtraOwnerSelection;
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, true, true, 1, 45.f), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, false, 1, 45.f), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 44, 45.f), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 45, 45.f), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 46, 45.f), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 45,
+        std::nextafter(45.f, -std::numeric_limits<float>::infinity())), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 45,
+        std::nextafter(45.f, std::numeric_limits<float>::infinity())), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 16777217, 16777216.f), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 16777216, 16777216.f), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, std::numeric_limits<std::int32_t>::max(),
+        2147483648.f), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, std::numeric_limits<std::int32_t>::min(),
+        -2147483648.f), Choice::PlayerBase);
+    for (const auto state : {1u, 2u, 6u})
+    for (const bool owner : {false, true})
+    {
+        EXPECT_EQ(ESM4::selectDropExtraOwner(state, owner, false, 46, 45.f), Choice::ClearExisting);
+        EXPECT_EQ(ESM4::selectDropExtraOwner(state, owner, true, 46, 45.f), Choice::PlayerBase);
+    }
+    for (const auto state : {0u, 3u, 4u, 5u, 7u, 255u, std::numeric_limits<std::uint32_t>::max()})
+    {
+        EXPECT_EQ(ESM4::selectDropExtraOwner(state, true, false, 1, 45.f), Choice::KeepExisting);
+        EXPECT_EQ(ESM4::selectDropExtraOwner(state, false, true, 1, 45.f), Choice::PlayerBase);
+    }
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, -46, -45.f), Choice::PlayerBase);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, -44, -45.f), Choice::KeepExisting);
+    EXPECT_EQ(ESM4::selectDropExtraOwner(0, false, true, 0, -0.f), Choice::PlayerBase);
+}
+
+TEST(ESM4PhysicalCombat, DropExtraOwnerSelectionRejectsNonfiniteThresholdsAcrossEarlyBranches)
+{
+    for (const float invalid : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    for (const auto state : {0u, 1u, 2u, 6u})
+    for (const bool owner : {false, true})
+    for (const bool cellOwner : {false, true})
+        EXPECT_THROW(ESM4::selectDropExtraOwner(state, owner, cellOwner, 1, invalid), std::invalid_argument);
+}

@@ -107,4 +107,20 @@ namespace MWWorld
         result.mAdvanced = ESM4::resolveCombatStyleAdvanced(style, defaults.mAdvanced);
         return result;
     }
+    ESM4::DropExtraOwnerSelection resolveOblivionDropExtraOwner(const ESMStore& store,
+        ESM::GameProfile profile, std::uint32_t nativeActorState, bool hasExistingOwner,
+        bool cellHasOwner, std::int32_t basePrice)
+    {
+        if (profile != ESM::GameProfile::Oblivion)
+            throw std::invalid_argument("native drop ownership requires the Oblivion profile");
+        std::vector<const ESM4::GameSetting*> settings;
+        const auto& native = store.get<ESM4::GameSetting>();
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : native)
+            if (seen.insert(setting.mId).second)
+                settings.push_back(native.search(setting.mId));
+        return ESM4::selectDropExtraOwner(nativeActorState, hasExistingOwner, cellHasOwner,
+            basePrice, ESM4::buildDropExtraOwnerThreshold(settings));
+    }
+
 }

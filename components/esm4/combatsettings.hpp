@@ -72,6 +72,8 @@ namespace ESM4
     ArmorRatingSettings buildArmorRatingSettings(std::span<const GameSetting* const> settings);
     float buildMaximumArmorRating(std::span<const GameSetting* const> settings);
     float buildDifficultyDamageMultiplier(std::span<const GameSetting* const> settings);
+    float buildDropExtraOwnerThreshold(std::span<const GameSetting* const> settings);
+
 }
 
 #endif

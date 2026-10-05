@@ -18,7 +18,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S2 native data/rules | in-progress | Typed CSTY/CREA/FACT, 3,636 resolved actor-style policies, locked audit and reviewed rules below | Remaining physical/crime/mastery rules, asset semantics and original behavioral probes |
 | S3 services/persistence | in-progress | Action ledger, schema evolution, actual NPC/creature/player publication and idle restart evidence below | Live writer activation, migration reconciliation and active-actor continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
-| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras and cell staging; checkpoints255–277 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
+| S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging and native ownership selection; checkpoints255–278 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
 | S7 combat AI | pending | No implementation/evidence | Autonomous combat and native schedule resumption |
 | S8 stealth/pickpocket | pending | No implementation/evidence | Shared perception, normal interactions, mastery |
@@ -20697,3 +20697,64 @@ restore. The registry-then-cell interval must remain synchronous and callback
 free. Full drop consequences, compound shot publication, Character input,
 flight/impact/recovery and normal-input/restart acceptance remain open. S5 and
 M15 remain in progress.
+
+
+### S5 checkpoint278: native drop ExtraOwnership selection
+
+The original drop prelude selects whether to preserve existing ExtraOwnership,
+remove it, or set Player-base ownership. The new pure rule preserves the raw
+native actor-state branches1/2/6 and compares signed integer prices directly
+against the binary32 threshold without rounding the integer to binary32.
+Cell ownership comes from the original cell owner getter; it is not a generic
+loaded-cell predicate. This selection does not establish the final ownership
+of a newly created dropped reference.
+
+The native typed setting builder uses the independently verified absent
+initializer45 for fValueofItemForNoOwnership. A profile-gated World resolver
+reads current winning TES4 settings on each call and rejects wrong types and
+nonfinite values, without falling back to legacy TES3 settings. Finite negative
+overrides remain valid native comparisons. The installed-content audit confirms
+the setting is absent after reverifying all11 plugin hashes.
+
+Three new component cases cover exact integer/binary32 boundaries, all early
+branches, malformed values and strict typed settings. One actual World/store
+case covers absent settings, fresh overrides, deletion and legacy/profile
+rejection. Each build passes2473 full component and1007 full engine tests with
+exact inventories and no failures/skips. Normal and ASan/UBSan builds each
+also match10692 independently executed original-instruction cases. Expected
+selections derive solely from original owner remove/set requests. Both x87
+precisions are represented. Leak checks remain disabled; Python/schema40
+codecs are unchanged from checkpoint276.
+
+Initial normal and instrumented engine attempts failed in the new fixture before
+calling the resolver because its legacy TES3 Variant had no numeric type.
+The fixture now constructs an explicit float Variant; both original failure
+directories remain retained. Production logic did not change.
+
+The original path executes actor-state, actor-cell, cell-owner and Player-base
+getters. ExtraData owner storage/query and price queries remain declared
+boundaries. Inputs model the nonnull ExtraData list used by the verified
+broken-bow caller. Initial null-list fixture failures remain retained in
+oracle01/02; oracle03 used a declared cell predicate, refined in oracle04 to
+the actual cell-owner getter. No full inventory removal, reference creation,
+physics or normal-input acceptance is inferred from these instruction cases.
+
+Final incremental builds emit no warnings (0/0).
+Initial broader builds emitted22/21 warnings in unchanged inventory/actor-stat
+tests and existing Character template instantiations. Byte equality to
+checkpoint277 is recorded in normal02/unchanged-warning-sources.json.
+
+Evidence: S5/native-drop-extra-owner-normal-02,
+S5/native-drop-extra-owner-sanitized-02,
+S5/native-drop-owner-selection-oracle-04,
+S5/native-drop-owner-selection-oracle-03/winning-threshold-audit.json and
+S5/native-drop-owner-cross-comparison-{normal,sanitized}-01.
+Original executable SHA256:
+a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+Oracle source SHA256:
+b12196b8cbca437b24a8a0c417bdd0df9641c7f6b42e278ee2c40cd8600750c3.
+Tested fingerprint: d87bccd6c8d73fad2db86557402333a3c6b995ef5e21630c3b6253b3f964c923
+
+Native drop publication, full dropped-reference ownership, loose-body physics,
+pickup/restart, compound arrow publication and Character input remain open.
+S5 and full M15 remain in progress.

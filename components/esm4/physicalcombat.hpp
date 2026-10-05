@@ -780,6 +780,15 @@ namespace ESM4
     std::int32_t creatureNaturalDamage(std::uint16_t baseDamage, float fatigueRatio,
         const PhysicalCombatSettings& settings);
     void validatePhysicalCombatSettings(const PhysicalCombatSettings& settings);
+    enum class DropExtraOwnerSelection : std::uint8_t { KeepExisting, ClearExisting, PlayerBase };
+
+    // Original drop prelude only. This selects the item's ExtraOwnership
+    // update, not the complete dropped-reference ownership or publication.
+    // Actor state is the original uint32 actor+B0 slot, not a TES3 animation
+    // enum. Cell ownership is the result of its native ExtraOwnership query.
+    DropExtraOwnerSelection selectDropExtraOwner(std::uint32_t nativeActorState,
+        bool hasExistingOwner, bool cellHasOwner, std::int32_t basePrice, float threshold);
+
 }
 
 #endif

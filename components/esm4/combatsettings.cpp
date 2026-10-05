@@ -684,4 +684,14 @@ namespace ESM4
         validateDurabilitySettings(result);
         return result;
     }
+    float buildDropExtraOwnerThreshold(std::span<const GameSetting* const> settings)
+    {
+        // Original9EABC0 initializes B373C8; absent in installed official
+        // content. Finite negative overrides retain the native comparison.
+        const float value = Inputs(settings).number("fValueofItemForNoOwnership", 45.f);
+        if (!std::isfinite(value))
+            throw std::invalid_argument("nonfinite native drop ownership threshold");
+        return value;
+    }
+
 }
