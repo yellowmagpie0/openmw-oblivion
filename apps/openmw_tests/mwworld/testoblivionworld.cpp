@@ -10933,3 +10933,285 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
     right.setNativeOwnershipGlobal(ESM::RefId(ESM::FormId{0x971, 0}));
     EXPECT_FALSE(inventory.stacks(first.getPtr(), second.getPtr()));
 }
+
+    TEST(OblivionWorldTest, NativeRemovalPublishesAllStacksAndEquipmentBeforeObservers)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        const auto key = addEquipmentWeapon(fixture);
+        const auto player = world.getPlayerPtr();
+        ESM4::RuntimeInventoryItem a; a.mBase = key; a.mCount = 1; a.mCondition = 40;
+        a.mEquippedSlots = ESM4::InventorySlotWeapon;
+        auto b = a; b.mCount = 2; b.mCondition = 50; b.mEquippedSlots = 0;
+        installEquipmentInventory(fixture, player, {a, b});
+        auto& inventory = player.getClass().getInventoryStore(player);
+        struct Listener : MWWorld::ContainerStoreListener, MWWorld::InventoryStoreListener
+        {
+            MWWorld::World* mWorld;
+            MWWorld::InventoryStore* mInventory;
+            ESM::FormKey mKey;
+            int mCalls = 0, mEquipment = 0, mRemoved = 0;
+            void equipmentChanged() override
+            {
+                ++mEquipment;
+                EXPECT_EQ(mWorld->oblivionPlayerItemCount(mKey), 0);
+                EXPECT_EQ(mInventory->getSlot(MWWorld::InventoryStore::Slot_CarriedRight), mInventory->end());
+                EXPECT_EQ(mCalls, 0);
+            }
+            void itemRemoved(const MWWorld::ConstPtr&, int count) override
+            {
+                ++mCalls; mRemoved += count;
+                EXPECT_EQ(mEquipment, 1);
+                EXPECT_EQ(mWorld->oblivionPlayerItemCount(mKey), 0);
+            }
+        } listener;
+        listener.mWorld = &world; listener.mInventory = &inventory; listener.mKey = key;
+        inventory.setContListener(&listener); inventory.setInvListener(&listener);
+        EXPECT_EQ(world.oblivionChangePlayerInventory(key, -3), 3);
+        EXPECT_EQ(listener.mCalls, 2); EXPECT_EQ(listener.mRemoved, 3);
+        EXPECT_EQ(listener.mEquipment, 1);
+        inventory.setContListener(nullptr); inventory.setInvListener(nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeRemovalClearCallbackStopsRetiredNotificationsAndRefreshesCache)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        const auto key = addEquipmentWeapon(fixture);
+        const auto player = world.getPlayerPtr();
+        ESM4::RuntimeInventoryItem a; a.mBase = key; a.mCount = 1; a.mCondition = 40;
+        auto b = a; b.mCount = 2; b.mCondition = 50;
+        ESM4::RuntimeState cache;
+        cache.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        cache.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        cache.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+        cache.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+        cache.mPlayer.mInventory = {a, b};
+        readNativeSnapshot(fixture, cache);
+        installEquipmentInventory(fixture, player, {a, b});
+        auto& inventory = player.getClass().getInventoryStore(player);
+        struct Listener : MWWorld::ContainerStoreListener
+        {
+            MWWorld::InventoryStore* mInventory;
+            int mCalls = 0;
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++mCalls; mInventory->clear(); }
+        } listener;
+        listener.mInventory = &inventory; inventory.setContListener(&listener);
+        EXPECT_EQ(world.oblivionChangePlayerInventory(key, -3), 3);
+        EXPECT_EQ(listener.mCalls, 1);
+        EXPECT_TRUE(world.captureOblivionActorInventory(player).empty());
+        EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1));
+        inventory.setContListener(nullptr);
+    }
+
+    TEST(OblivionWorldTest, NativeRemovalObserverFailuresDoNotReplayAndCaptureFinalLiveCounts)
+    {
+        for (const bool restore : {false, true})
+        {
+            SCOPED_TRACE(restore);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            MWClass::Npc::registerSelf(); world.setupPlayer();
+            const auto key = addEquipmentWeapon(fixture);
+            const auto player = world.getPlayerPtr();
+            ESM4::RuntimeInventoryItem a; a.mBase = key; a.mCount = 1; a.mCondition = 40;
+            auto b = a; b.mCount = 2; b.mCondition = 50;
+            ESM4::RuntimeState cache;
+            cache.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            cache.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+            cache.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+            cache.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+            cache.mPlayer.mInventory = {a, b};
+            readNativeSnapshot(fixture, cache);
+            installEquipmentInventory(fixture, player, {a, b});
+            auto& inventory = player.getClass().getInventoryStore(player);
+            struct Listener : MWWorld::ContainerStoreListener
+            {
+                bool mRestore = false;
+                MWWorld::Ptr mRestorePtr;
+                int mCalls = 0;
+                void itemRemoved(const MWWorld::ConstPtr&, int) override
+                {
+                    ++mCalls;
+                    if (mRestore && mCalls == 2) mRestorePtr.getCellRef().setCount(5);
+                    throw std::runtime_error("removal observer failed");
+                }
+            } listener;
+            listener.mRestore = restore;
+            auto second = inventory.begin(); ++second; listener.mRestorePtr = *second;
+            inventory.setContListener(&listener);
+            try { world.oblivionChangePlayerInventory(key, -3); FAIL() << "observer failure was swallowed"; }
+            catch (const std::runtime_error& e) { EXPECT_STREQ(e.what(), "removal observer failed"); }
+            EXPECT_EQ(listener.mCalls, 2);
+            EXPECT_EQ(world.oblivionPlayerItemCount(key), restore ? 5 : 0);
+            EXPECT_EQ(world.oblivionSetPlayerHotkey(ESM::RefId(ESM::FormId{0x940, 0}), 1), restore);
+            inventory.setContListener(nullptr);
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedNativeRemovalSurvivesDestructionByEquipmentOrItemObserver)
+    {
+        for (const bool equipment : {false, true})
+        {
+            SCOPED_TRACE(equipment);
+            NativeWorldFixture fixture;
+            const auto key = addEquipmentWeapon(fixture);
+            ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = 1; item.mCondition = 40;
+            item.mEquippedSlots = ESM4::InventorySlotWeapon;
+            const auto sources = MWWorld::OblivionProfileServices::prepareActorInventory(
+                fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), {item});
+            auto owner = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+            struct Listener : MWWorld::ContainerStoreListener, MWWorld::InventoryStoreListener
+            {
+                std::unique_ptr<MWWorld::InventoryStore>* mOwner;
+                bool mEquipment;
+                int mCalls = 0;
+                void equipmentChanged() override { if (mEquipment) { ++mCalls; mOwner->reset(); } }
+                void itemRemoved(const MWWorld::ConstPtr&, int) override
+                { if (!mEquipment) { ++mCalls; mOwner->reset(); } }
+            } listener;
+            listener.mOwner = &owner; listener.mEquipment = equipment;
+            owner->setInvListener(&listener); owner->setContListener(&listener);
+            auto removal = owner->prepareItemRemoval(sources.front().mReference.getPtr().getCellRef().getRefId(), 1);
+            ASSERT_TRUE(removal->commit());
+            EXPECT_TRUE(removal->notify());
+            EXPECT_EQ(listener.mCalls, 1); EXPECT_EQ(owner, nullptr);
+            EXPECT_FALSE(removal->ownerIsCurrent());
+            EXPECT_FALSE(removal->isValid()); EXPECT_FALSE(removal->commit()); EXPECT_FALSE(removal->notify());
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedNativeRemovalRejectsStaleCountsSlotsAndStorage)
+    {
+        NativeWorldFixture fixture;
+        const auto key = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = 3; item.mCondition = 40;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        const auto sources = MWWorld::OblivionProfileServices::prepareActorInventory(
+            fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), {item});
+        const auto base = sources.front().mReference.getPtr().getCellRef().getRefId();
+        for (int invalidation = 0; invalidation < 8; ++invalidation)
+        {
+            SCOPED_TRACE(invalidation);
+            auto owner = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+            auto replacement = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+            auto removal = owner->prepareItemRemoval(base, 2);
+            ASSERT_TRUE(removal->isValid());
+            const auto held = *owner->getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (invalidation == 0) held.getCellRef().setCount(4);
+            if (invalidation == 1) owner->unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight, false);
+            if (invalidation == 2) owner->clear();
+            if (invalidation == 3) *owner = *replacement;
+            if (invalidation == 4) *owner = std::move(*replacement);
+            if (invalidation == 5) *replacement = std::move(*owner);
+            if (invalidation == 6) owner->swapPreparedContents(*replacement);
+            if (invalidation == 7)
+            {
+                MWWorld::ManualRef actor(fixture.mWorld.getStore(), ESM::RefId(ESM::FormId{0x940, 0}));
+                owner->setPtr(actor.getPtr());
+                EXPECT_FALSE(removal->isValid()); EXPECT_FALSE(removal->commit());
+                continue;
+            }
+            EXPECT_FALSE(removal->isValid()); EXPECT_FALSE(removal->commit()); EXPECT_FALSE(removal->notify());
+        }
+        auto owner = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+        const auto held = *owner->getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        { auto cancelled = owner->prepareItemRemoval(base, 2); EXPECT_TRUE(cancelled->isValid()); }
+        // Native restore splits a nonstackable equipped weapon out of its
+        // three-item source stack. Cancellation preserves both live stacks.
+        EXPECT_EQ(held.getCellRef().getCount(), 1);
+        EXPECT_EQ(owner->count(base), 3);
+        auto partial = owner->prepareItemRemoval(base, 2);
+        EXPECT_FALSE(partial->depletesEquipment()); ASSERT_TRUE(partial->commit());
+        EXPECT_EQ(held.getCellRef().getCount(), 1);
+        EXPECT_EQ(*owner->getSlot(MWWorld::InventoryStore::Slot_CarriedRight), held);
+        EXPECT_FALSE(partial->commit());
+    }
+
+    TEST(OblivionWorldTest, NativeRemovalWorldClearDoesNotCaptureRetiredActor)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        const auto key = addEquipmentWeapon(fixture);
+        const auto player = world.getPlayerPtr();
+        ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = 2; item.mCondition = 40;
+        installEquipmentInventory(fixture, player, {item});
+        struct Listener : MWWorld::ContainerStoreListener
+        {
+            MWWorld::World* mWorld; int mCalls = 0;
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++mCalls; mWorld->clear(); }
+        } listener;
+        listener.mWorld = &world;
+        player.getClass().getInventoryStore(player).setContListener(&listener);
+        EXPECT_EQ(world.oblivionChangePlayerInventory(key, -2), 2);
+        EXPECT_EQ(listener.mCalls, 1);
+        EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
+    }
+
+    TEST(OblivionWorldTest, PreparedNativeRemovalPreservesSignedStackAndWrappedCountRules)
+    {
+        NativeWorldFixture fixture;
+        const auto key = addEquipmentWeapon(fixture);
+        ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = 7; item.mCondition = 40;
+        const auto sources = MWWorld::OblivionProfileServices::prepareActorInventory(
+            fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), {item});
+        const auto base = sources.front().mReference.getPtr().getCellRef().getRefId();
+        auto owner = MWWorld::OblivionProfileServices::stageActorInventory(sources);
+        const auto held = *owner->begin(); held.getCellRef().setCount(-7);
+        auto negative = owner->prepareItemRemoval(base, 3);
+        EXPECT_EQ(negative->getCount(), 3); ASSERT_TRUE(negative->commit());
+        EXPECT_EQ(held.getCellRef().getCount(false), -4);
+        held.getCellRef().setCount(1);
+        auto second = item; second.mCondition = 50; second.mCount = std::numeric_limits<int>::max();
+        const auto projected = MWWorld::OblivionProfileServices::prepareActorInventory(
+            fixture.mWorld.getStore(), ESM::FormKeyResolver({"headless.esm"}), {second});
+        auto addition = owner->prepareItemAddition(projected.front().mReference.getPtr(), second.mCount);
+        ASSERT_FALSE(addition->commit().isEmpty());
+        auto wrapped = owner->prepareItemRemoval(base, 4);
+        EXPECT_EQ(wrapped->getCount(), 0); ASSERT_TRUE(wrapped->commit());
+        EXPECT_EQ(held.getCellRef().getCount(), 1);
+        held.getCellRef().setCount(std::numeric_limits<int>::max());
+        auto wrappedMagnitude = owner->prepareItemRemoval(base, 4);
+        EXPECT_EQ(wrappedMagnitude->getCount(), 2);
+        ASSERT_TRUE(wrappedMagnitude->commit());
+        EXPECT_EQ(held.getCellRef().getCount(), std::numeric_limits<int>::max() - 2);
+    }
+
+TEST(OblivionWorldTest, NativeRemovalPartialNpcAmmunitionPreservesInstanceUntilDepletion)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = installPreparedDebitAmmunition(fixture, 3);
+    world.getWorldModel().registerPtr(actor);
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto ammunition = *inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    const auto key = ESM::FormKey::content("headless.esm", 0x941);
+    struct Listener : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+    {
+        MWWorld::InventoryStore* mInventory;
+        int mEquipment = 0, mCalls = 0, mRemoved = 0;
+        void equipmentChanged() override
+        {
+            ++mEquipment;
+            EXPECT_EQ(mInventory->getSlot(MWWorld::InventoryStore::Slot_Ammunition), mInventory->end());
+        }
+        void itemRemoved(const MWWorld::ConstPtr&, int count) override
+        { ++mCalls; mRemoved += count; }
+    } listener;
+    listener.mInventory = &inventory;
+    inventory.setInvListener(&listener); inventory.setContListener(&listener);
+    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 1), 1);
+    EXPECT_EQ(ammunition.getCellRef().getCount(), 2);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), ammunition);
+    EXPECT_EQ(listener.mEquipment, 0); EXPECT_EQ(listener.mCalls, 1); EXPECT_EQ(listener.mRemoved, 1);
+    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 9), 2);
+    EXPECT_EQ(ammunition.getCellRef().getCount(), 0);
+    EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition), inventory.end());
+    EXPECT_EQ(listener.mEquipment, 1); EXPECT_EQ(listener.mCalls, 2); EXPECT_EQ(listener.mRemoved, 3);
+    EXPECT_EQ(world.oblivionRemoveActorItem(actor, key, 1), 0);
+    EXPECT_EQ(listener.mCalls, 2);
+    inventory.setInvListener(nullptr); inventory.setContListener(nullptr);
+}

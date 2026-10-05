@@ -1,6 +1,9 @@
 #include "inventorystore.hpp"
 
 #include <algorithm>
+#include <array>
+#include <bit>
+#include <exception>
 #include <iterator>
 #include <stdexcept>
 
@@ -799,6 +802,148 @@ bool MWWorld::InventoryStore::isFirstEquip()
     bool first = mFirstAutoEquip;
     mFirstAutoEquip = false;
     return first;
+}
+
+struct MWWorld::InventoryStore::PreparedItemRemoval::Impl
+{
+    struct Stack { Ptr mItem; std::int32_t mBefore; std::int32_t mAfter; int mRemoved = 0; };
+    InventoryStore* mOwner = nullptr;
+    std::weak_ptr<const char> mIdentity;
+    ESM::RefId mBase;
+    std::vector<Stack> mStacks;
+    std::array<Ptr, Slots> mSlots;
+    int mCount = 0;
+    bool mEquipmentChanged = false;
+    bool mCommitted = false;
+    bool mNotified = false;
+};
+
+MWWorld::InventoryStore::PreparedItemRemoval::PreparedItemRemoval(std::unique_ptr<Impl> impl)
+    : mImpl(std::move(impl)) {}
+MWWorld::InventoryStore::PreparedItemRemoval::~PreparedItemRemoval() = default;
+int MWWorld::InventoryStore::PreparedItemRemoval::getCount() const noexcept { return mImpl->mCount; }
+bool MWWorld::InventoryStore::PreparedItemRemoval::depletesEquipment() const noexcept
+{ return mImpl->mEquipmentChanged; }
+bool MWWorld::InventoryStore::PreparedItemRemoval::ownerIsCurrent() const noexcept
+{ return !mImpl->mIdentity.expired(); }
+
+std::unique_ptr<MWWorld::InventoryStore::PreparedItemRemoval>
+MWWorld::InventoryStore::prepareItemRemoval(const ESM::RefId& base, int count)
+{
+    if (base.empty() || count <= 0)
+        throw std::invalid_argument("prepared native removal requires a base and positive count");
+    auto value = std::make_unique<PreparedItemRemoval::Impl>();
+    value->mOwner = this;
+    value->mBase = base;
+    value->mIdentity = prepareStorageIdentity();
+    std::uint32_t available = 0;
+    for (auto it = begin(); it != end(); ++it)
+    {
+        if (it->getCellRef().getRefId() != base) continue;
+        const auto* ref = std::get_if<ESM::CellRef>(&it->getCellRef().mCellRef.mVariant);
+        if (!ref || it->getContainerStore() != this)
+            throw std::invalid_argument("native removal requires projected inventory instances");
+        const auto raw = static_cast<std::uint32_t>(ref->mCount);
+        available += ref->mCount < 0 ? 0u - raw : raw;
+        value->mStacks.push_back({*it, ref->mCount, ref->mCount});
+    }
+    // Preserve the audited native signed-int32 count composition. INT_MIN's
+    // magnitude remains negative, so RemoveItem must do nothing.
+    constexpr auto sign = std::uint32_t(1) << 31;
+    const auto magnitude = available >= sign ? 0u - available : available;
+    int remaining = available == sign ? 0 : std::min(count, static_cast<int>(magnitude));
+    value->mCount = remaining;
+    for (auto& stack : value->mStacks)
+    {
+        const auto raw = static_cast<std::uint32_t>(stack.mBefore);
+        const auto size = stack.mBefore < 0 ? 0u - raw : raw;
+        stack.mRemoved = static_cast<int>(std::min(size, static_cast<std::uint32_t>(remaining)));
+        const auto after = size - static_cast<std::uint32_t>(stack.mRemoved);
+        stack.mAfter = std::bit_cast<std::int32_t>(stack.mBefore < 0 ? 0u - after : after);
+        remaining -= stack.mRemoved;
+    }
+    for (int slot = 0; slot < Slots; ++slot)
+    {
+        if (mSlots[slot] == end()) continue;
+        value->mSlots[slot] = *mSlots[slot];
+        for (const auto& stack : value->mStacks)
+            if (stack.mItem == value->mSlots[slot] && stack.mRemoved && stack.mAfter == 0)
+                value->mEquipmentChanged = true;
+    }
+    return std::unique_ptr<PreparedItemRemoval>(new PreparedItemRemoval(std::move(value)));
+}
+
+bool MWWorld::InventoryStore::PreparedItemRemoval::isValid() const
+{
+    if (!ownerIsCurrent() || mImpl->mCommitted) return false;
+    auto& owner = *mImpl->mOwner;
+    std::size_t matched = 0;
+    for (auto it = owner.begin(); it != owner.end(); ++it)
+    {
+        if (it->getCellRef().getRefId() != mImpl->mBase) continue;
+        if (matched == mImpl->mStacks.size()) return false;
+        const auto& stack = mImpl->mStacks[matched++];
+        if (*it != stack.mItem || it->getCellRef().getCount(false) != stack.mBefore) return false;
+    }
+    if (matched != mImpl->mStacks.size()) return false;
+    for (int slot = 0; slot < Slots; ++slot)
+    {
+        const Ptr current = owner.mSlots[slot] == owner.end() ? Ptr{} : *owner.mSlots[slot];
+        if (current != mImpl->mSlots[slot]) return false;
+    }
+    return true;
+}
+
+bool MWWorld::InventoryStore::PreparedItemRemoval::commit()
+{
+    if (!isValid()) return false;
+    auto& owner = *mImpl->mOwner;
+    for (const auto& stack : mImpl->mStacks)
+    {
+        if (!stack.mRemoved) continue;
+        auto& cell = stack.mItem.getCellRef();
+        // Do not invoke setCount(0)'s script cleanup until the entire batch and
+        // equipment changes are visible. These projected fields allocate nothing.
+        std::get<ESM::CellRef>(cell.mCellRef.mVariant).mCount = stack.mAfter;
+        cell.mChanged = true;
+        if (stack.mAfter != 0) continue;
+        if (owner.mSelectedEnchantItem != owner.end() && *owner.mSelectedEnchantItem == stack.mItem)
+            owner.mSelectedEnchantItem = owner.end();
+        for (auto& slot : owner.mSlots)
+            if (slot != owner.end() && *slot == stack.mItem) slot = owner.end();
+    }
+    if (mImpl->mCount) owner.ContainerStore::flagAsModified();
+    mImpl->mCommitted = true;
+    return true;
+}
+
+bool MWWorld::InventoryStore::PreparedItemRemoval::notify()
+{
+    if (!ownerIsCurrent() || !mImpl->mCommitted || mImpl->mNotified) return false;
+    mImpl->mNotified = true; // A callback cannot replay this batch.
+    std::exception_ptr failure;
+    const auto observe = [&](auto&& callback) {
+        try { callback(); }
+        catch (...) { if (!failure) failure = std::current_exception(); }
+    };
+    for (const auto& stack : mImpl->mStacks)
+    {
+        if (!ownerIsCurrent()) break;
+        if (stack.mRemoved && !stack.mAfter)
+            observe([&] { MWBase::Environment::get().getWorld()->removeRefScript(&stack.mItem.getCellRef()); });
+    }
+    if (ownerIsCurrent() && mImpl->mEquipmentChanged)
+        observe([&] { mImpl->mOwner->fireEquipmentChangedEvent(); });
+    for (const auto& stack : mImpl->mStacks)
+    {
+        if (!ownerIsCurrent()) break;
+        if (stack.mRemoved)
+            if (auto* listener = mImpl->mOwner->mListener)
+                observe([&] { listener->itemRemoved(stack.mItem, stack.mRemoved); });
+    }
+    // No retained item or owner is dereferenced after its lifetime guard expires.
+    if (failure) std::rethrow_exception(failure);
+    return true;
 }
 
 struct MWWorld::InventoryStore::PreparedAmmunitionDebit::Impl

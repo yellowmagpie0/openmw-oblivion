@@ -263,6 +263,9 @@ namespace MWWorld
         }
 
     protected:
+        // Expires when storage is cleared, replaced, moved, rebound or destroyed.
+        // Prepared mutations never keep their owner alive through this guard.
+        std::weak_ptr<const char> prepareStorageIdentity();
         ContainerStoreListener* mListener = nullptr;
 
         // Used in clone() to unset refnums of copies.

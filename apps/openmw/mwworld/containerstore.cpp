@@ -457,6 +457,12 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(const ESM::RefId& i
 }
 
 
+std::weak_ptr<const char> MWWorld::ContainerStore::prepareStorageIdentity()
+{
+    if (!mPreparedAdditionIdentity) mPreparedAdditionIdentity = std::make_shared<const char>(0);
+    return mPreparedAdditionIdentity;
+}
+
 struct MWWorld::ContainerStore::PreparedItemAddition::Impl
 {
     ContainerStore* mOwner = nullptr;
@@ -550,8 +556,7 @@ MWWorld::ContainerStore::prepareItemAddition(const ConstPtr& source, int count)
         value->mExistingCount = previous;
         break;
     }
-    if (!mPreparedAdditionIdentity) mPreparedAdditionIdentity = std::make_shared<const char>(0);
-    value->mIdentity = mPreparedAdditionIdentity;
+    value->mIdentity = prepareStorageIdentity();
     return std::unique_ptr<PreparedItemAddition>(new PreparedItemAddition(std::move(value)));
 }
 

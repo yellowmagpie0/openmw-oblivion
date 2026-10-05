@@ -88,6 +88,27 @@ namespace MWWorld
         ContainerStoreIterator findSlot(int slot) const;
 
     public:
+        // Native RemoveItem: publish the entire bounded request before any
+        // equipment/item observer. The standalone token survives owner removal.
+        class PreparedItemRemoval
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedItemRemoval(std::unique_ptr<Impl> impl);
+            friend class InventoryStore;
+        public:
+            ~PreparedItemRemoval();
+            PreparedItemRemoval(const PreparedItemRemoval&) = delete;
+            PreparedItemRemoval& operator=(const PreparedItemRemoval&) = delete;
+            int getCount() const noexcept;
+            bool depletesEquipment() const noexcept;
+            bool ownerIsCurrent() const noexcept;
+            bool isValid() const;
+            bool commit();
+            bool notify();
+        };
+        std::unique_ptr<PreparedItemRemoval> prepareItemRemoval(const ESM::RefId& item, int count);
+
         class PreparedAmmunitionDebit
         {
             struct Impl;

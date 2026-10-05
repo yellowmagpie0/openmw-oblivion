@@ -21733,3 +21733,74 @@ loose-item metadata capture; container transfer and other interaction callbacks
 also need their cached-reference audit. Complete bow/drop/arrow publication,
 frame/save recreation and normal-input ranged/restart courses remain open.
 S5 and full M15 remain in progress; no gameplay acceptance gate is closed here.
+
+
+### S5 checkpoint296: commit native removal batches before observers
+
+Public native RemoveItem now prepares all matching projected inventory stacks,
+the audited wrapped-count clamp, exact count changes and equipment slots before
+publication. The bounded request commits every selected stack and depleted slot
+without allocating or invoking callbacks. Partial removals preserve equipped
+instances and signed stack counts. Existing unrelated instances remain intact.
+Changed counts, matching stack membership, equipment or storage identity reject
+an uncommitted preparation. Storage guards expire on clear, assignment, move,
+swap, actor rebinding and destruction.
+
+The standalone removal token defers script cleanup, equipment notification and
+itemRemoved until the whole request is committed. It consumes notification
+before invoking observers, checks a weak owner guard between them, and preserves
+the first observer exception while notifying the remaining surviving items.
+A callback may clear or destroy inventory without subsequent use of its retired
+owner or item pointers. Normal native World presentation receives one refresh
+after the committed batch. The same public path works without a presentation
+service in headless integration fixtures. Before cache capture, the World
+adapter checks its epoch and current actor registry binding. It reacquires the
+current live actor inventory and refreshes Player or native-reference state
+before propagating a notification failure. The former Player wrapper no longer
+captures a retained Player pointer after callbacks.
+
+Eight new real engine cases cover complete counts/equipment before the first
+observer, inventory clear with stale-hotkey rejection, both throwing-observer
+branches with final live count changes, owner destruction from equipment and
+item observers, cancellation/partial depletion and eight stale count/slot/
+storage cases, World clear, negative physical counts, INT_MIN wrapped-total
+no-op and negative wrapped-total magnitude, and public NPC partial ammunition
+removal retaining its equipped instance until depletion. These are service/world
+tests, not
+normal-input gameplay acceptance.
+
+The first baseline helper attempt rejected the checkpoint295 post-test doc
+fingerprint before compiling or running a case and is retained in
+S5/native-inventory-removal-baseline-01. The corrected baseline verifies the
+completed checkpoint295 engine binary hash, freezes the current checkout and
+library hashes, and runs the real public removal fixture. Expected normal exit0
+instead terminates with SIGSEGV11. Fixture SHA256: 906a09922ce030c84f2e8e608b0ddb39a6ae3c1480058b4f2c93e153edbf1084.
+Baseline binary SHA256: e509ad349bcb6198c1b32721617b3faf6d1a31a4e64ec1369e1c405468f7499c.
+Evidence: S5/native-inventory-removal-baseline-02.
+
+The initial syntax check in S5/native-inventory-removal-syntax-01 passes all
+three implementation translation units but rejects a test insertion placed
+inside the preceding test body. The corrected insertion and const-observer
+fixture pass all four translation-unit syntax checks in
+S5/native-inventory-removal-syntax-02. Syntax checks do not execute GoogleTests.
+Initial normal and sanitizer engine runs retain the same fixture assertion
+failure: restoring three nonstackable weapons splits one equipped instance
+from its unequipped stack, so the equipped count is one, not three. The corrected
+fixture checks both that exact identity/count and total count three after
+cancellation. Both initial runs execute 1103 cases and fail that assertion
+only, with no observed ASan/UBSan diagnostic. A private public NPC ammunition
+probe against completed normal-01 libraries passes its single declared case
+before permanent insertion (S5/native-inventory-removal-npc-ammo-probe-01).
+Final normal and ASan/UBSan engine runs each execute 1104 cases with exact
+unfiltered inventories, no failures or skips.
+Evidence: S5/native-inventory-removal-normal-02 and
+S5/native-inventory-removal-sanitized-02. The failed -01 runs are retained.
+ASan leak checking is disabled.
+Tested source fingerprint: 523e5a9b4eb7a154fc3dd9c83a108c8ac5a00ff8cbf4ca397f0ada2482f1f3a4
+
+This closes the actual native inventory-removal batch and observer chunk.
+Native Take still needs complete prepared source/render/physics/navigation/Lua
+removal and exact loose-item metadata. Container loot, remaining interaction
+callbacks, compound bow/drop/arrow admission, native flight/impact/recovery,
+frame/save reconstruction and normal-input ranged/restart acceptance remain
+open. S5 and full M15 remain in progress.
