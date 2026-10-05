@@ -127,6 +127,9 @@ namespace MWPhysics
             std::span<const NifBullet::RagdollBodyState> states,
             std::span<const NifBullet::RagdollNativePackedVelocityState> velocities);
         void removeLooseObject(const MWWorld::Ptr& ptr);
+        void updateLooseObjectPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
+        btCollisionObject* looseObjectCollisionObject(const MWWorld::ConstPtr& ptr);
+
 
         // Main-thread ownership operations wait for the previous worker frame.
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,

@@ -107,6 +107,18 @@ namespace MWPhysics
         PreparedProjectile& operator=(const PreparedProjectile&) = delete;
     };
 
+    class PreparedLooseObject
+    {
+        struct Data;
+        std::unique_ptr<Data> mData;
+        explicit PreparedLooseObject(std::unique_ptr<Data> data);
+        friend class PhysicsSystem;
+    public:
+        ~PreparedLooseObject();
+        PreparedLooseObject(const PreparedLooseObject&) = delete;
+        PreparedLooseObject& operator=(const PreparedLooseObject&) = delete;
+    };
+
     struct NativeRagdollSnapshotGroup;
     class PreparedNativeRagdollSnapshotRestore
     {
@@ -245,6 +257,23 @@ namespace MWPhysics
         void addObject(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation,
             int collisionType = CollisionType_World, bool respectVisualCollisionType = true);
         void addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh);
+
+        // Detached native body admission. Caller owns reference lifetime and
+        // selects the profile/model; ordinary static collision stays separate.
+        std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+        bool validatePreparedLooseObject(const PreparedLooseObject& prepared);
+        bool commitLooseObject(PreparedLooseObject& prepared);
+        bool hasLooseObject(const MWWorld::Ptr& ptr);
+        std::vector<MWWorld::Ptr> looseObjectOwners();
+        std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
+        std::vector<NifBullet::RagdollNativePackedVelocityState> captureLooseObjectPackedVelocities(
+            const MWWorld::Ptr& ptr);
+        void restoreLooseObject(const MWWorld::Ptr& ptr,
+            std::span<const NifBullet::RagdollBodyState> states,
+            std::span<const NifBullet::RagdollNativePackedVelocityState> velocities);
+        void removeLooseObject(const MWWorld::Ptr& ptr);
 
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask,
@@ -514,6 +543,7 @@ namespace MWPhysics
         // Tokens retain identity without retaining or dereferencing the owner.
         // A new PhysicsSystem at the same address must not accept old tokens.
         std::shared_ptr<const char> mProjectilePreparationOwner = std::make_shared<const char>(0);
+        std::shared_ptr<const char> mLoosePreparationOwner = std::make_shared<const char>(0);
 
         using HeightFieldMap = std::map<std::pair<int, int>, std::unique_ptr<HeightField>>;
         HeightFieldMap mHeightFields;

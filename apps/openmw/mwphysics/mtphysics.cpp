@@ -624,6 +624,37 @@ namespace MWPhysics
         mLooseObjects.erase(found);
     }
 
+    void PhysicsTaskScheduler::updateLooseObjectPtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(old.mRef);
+        if (found == mLooseObjects.end()) return;
+        if (updated.isEmpty() || updated.getClass().isActor() || updated.getContainerStore()
+            || updated.getCellRef().getCount() <= 0 || mActorRagdolls.contains(updated.mRef)
+            || (old.mRef != updated.mRef && mLooseObjects.contains(updated.mRef)))
+            throw std::invalid_argument("invalid or conflicting updated loose physics owner");
+        if (old.mRef != updated.mRef)
+        {
+            auto node = mLooseObjects.extract(found);
+            node.key() = updated.mRef;
+            node.mapped()->updatePtr(updated);
+            mLooseObjects.insert(std::move(node)); // Existing node, no allocation.
+        }
+        else found->second->updatePtr(updated);
+        // Pending private bodies must not admit the old reference after its
+        // registered physical owner has moved to another live cell node.
+        mLoosePreparationIdentity.reset();
+    }
+
+    btCollisionObject* PhysicsTaskScheduler::looseObjectCollisionObject(const MWWorld::ConstPtr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        return found == mLooseObjects.end() ? nullptr : found->second->mPhysics.collisionObjects()[0];
+    }
+
     void PhysicsTaskScheduler::clearLooseObjects()
     {
         for (const auto& [_, object] : mLooseObjects)

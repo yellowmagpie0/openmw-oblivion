@@ -1,3 +1,7 @@
+#include <apps/openmw/mwphysics/physicssystem.hpp>
+#include <components/resource/resourcesystem.hpp>
+#include <components/vfs/manager.hpp>
+#include <osg/Group>
 #include <apps/openmw/mwphysics/mtphysics.hpp>
 #include <apps/openmw/mwphysics/ptrholder.hpp>
 #include <apps/openmw/mwphysics/oblivionragdoll.hpp>
@@ -1476,5 +1480,110 @@ namespace
         retired.reset();
         EXPECT_EQ(world.getNumCollisionObjects(), 0);
         scheduler->~Scheduler();
+    }
+}
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, LooseOwnerTransferKeepsBodyAndRetiresPendingOldReferenceAdmission)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        MWWorld::LiveCellRef<ESM::Static> newRef(mReference, &mBase), occupiedRef(mReference, &mBase);
+        const MWWorld::Ptr updated(&newRef), occupied(&occupiedRef);
+        auto first = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto stale = scheduler.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*first));
+        auto other = scheduler.prepareLooseObject(occupied, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*other));
+        auto* body = scheduler.looseObjectCollisionObject(mPtr);
+        const auto saved = scheduler.captureLooseObject(mPtr)[0];
+        EXPECT_THROW(scheduler.updateLooseObjectPtr(mPtr, {}), std::invalid_argument);
+        EXPECT_THROW(scheduler.updateLooseObjectPtr(mPtr, occupied), std::invalid_argument);
+        EXPECT_TRUE(scheduler.hasLooseObject(mPtr));
+        EXPECT_EQ(scheduler.looseObjectCollisionObject(mPtr), body);
+        scheduler.updateLooseObjectPtr(mPtr, updated);
+        EXPECT_FALSE(scheduler.hasLooseObject(mPtr));
+        EXPECT_TRUE(scheduler.hasLooseObject(updated));
+        EXPECT_EQ(scheduler.looseObjectCollisionObject(updated), body);
+        EXPECT_EQ(static_cast<MWPhysics::PtrHolder*>(scheduler.getUserPointer(body))->getPtr(), updated);
+        EXPECT_EQ(scheduler.captureLooseObject(updated)[0].mPose, saved.mPose);
+        EXPECT_EQ(scheduler.captureLooseObject(updated)[0].mLinearVelocity, saved.mLinearVelocity);
+        mLive.reset();
+        EXPECT_FALSE(scheduler.validatePreparedLooseObject(*stale));
+        EXPECT_FALSE(scheduler.commitLooseObject(*stale));
+        stale.reset();
+        scheduler.removeLooseObject(updated);
+        scheduler.removeLooseObject(occupied);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_EQ(scheduler.getUserPointer(body), nullptr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemOwnsLooseAdmissionRayRoutingTransferAndRemoval)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        MWPhysics::PhysicsSystem foreign(&resources, new osg::Group);
+        const osg::Vec3f from(-2, 0, 2), to(2, 0, 2);
+        {
+            auto cancelled = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+            EXPECT_TRUE(physics.validatePreparedLooseObject(*cancelled));
+            EXPECT_FALSE(foreign.commitLooseObject(*cancelled));
+            EXPECT_FALSE(physics.castRay(from, to).mHit);
+            EXPECT_THROW(physics.captureLooseObject(mPtr), std::invalid_argument);
+        }
+        auto prepared = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*prepared));
+        EXPECT_FALSE(physics.commitLooseObject(*prepared));
+        const VFS::Path::Normalized missingModel("does-not-exist.nif");
+        EXPECT_THROW(physics.addObject(mPtr, missingModel, osg::Quat(), 1), std::invalid_argument);
+        EXPECT_THROW(physics.addActor(mPtr, missingModel), std::invalid_argument);
+        const auto hit = physics.castRay(from, to);
+        ASSERT_TRUE(hit.mHit);
+        EXPECT_EQ(hit.mHitObject, mPtr);
+        EXPECT_NEAR(hit.mHitPos.x(), -.5, 1e-6);
+        EXPECT_FALSE(physics.castRay(from, to, {mPtr}).mHit);
+        EXPECT_EQ(physics.getObject(mPtr), nullptr);
+        EXPECT_EQ(physics.looseObjectOwners(), std::vector<MWWorld::Ptr>{mPtr});
+        const auto saved = physics.captureLooseObject(mPtr);
+        const auto packed = physics.captureLooseObjectPackedVelocities(mPtr);
+        auto wrong = packed;
+        wrong[0].mRecord += 1;
+        EXPECT_THROW(physics.restoreLooseObject(mPtr, saved, wrong), std::invalid_argument);
+        physics.restoreLooseObject(mPtr, saved, packed);
+        MWWorld::LiveCellRef<ESM::Static> newRef(mReference, &mBase);
+        const MWWorld::Ptr updated(&newRef);
+        physics.updatePtr(mPtr, updated);
+        EXPECT_FALSE(physics.hasLooseObject(mPtr));
+        EXPECT_TRUE(physics.hasLooseObject(updated));
+        mLive.reset();
+        EXPECT_EQ(physics.castRay(from, to).mHitObject, updated);
+        EXPECT_FALSE(physics.castRay(from, to, {updated}).mHit);
+        EXPECT_EQ(physics.captureLooseObject(updated)[0].mPose, saved[0].mPose);
+        physics.remove(updated);
+        EXPECT_FALSE(physics.hasLooseObject(updated));
+        EXPECT_TRUE(physics.looseObjectOwners().empty());
+        EXPECT_FALSE(physics.castRay(from, to).mHit);
+        EXPECT_THROW(physics.captureLooseObject(updated), std::invalid_argument);
+        physics.remove(updated);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemRetiredLooseTokenRejectsReusedOwnerBeforeDeletedReference)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        using Physics = MWPhysics::PhysicsSystem;
+        alignas(Physics) std::byte storage[sizeof(Physics)];
+        auto* physics = new (storage) Physics(&resources, new osg::Group);
+        auto retired = physics->prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        physics->~Physics();
+        mLive.reset();
+        physics = new (storage) Physics(&resources, new osg::Group);
+        EXPECT_FALSE(physics->validatePreparedLooseObject(*retired));
+        EXPECT_FALSE(physics->commitLooseObject(*retired));
+        retired.reset();
+        EXPECT_TRUE(physics->looseObjectOwners().empty());
+        physics->~Physics();
     }
 }

@@ -13309,3 +13309,46 @@ The continuation case is an in-process physical test, not process restart or
 normal-input acceptance. Compound projectile/drop publication, Character bow
 input, native flight/impact/recovery and all required M15 campaigns remain open.
 S5 and full M15 remain in progress.
+
+
+### S5 checkpoint281: loose-body PhysicsSystem lifecycle and collision queries
+
+PhysicsSystem now exposes detached loose-body preparation, validation,
+publication, whole-state snapshot restoration and removal through its native
+scheduler. A unique system identity rejects foreign and replaced-owner tokens
+before their borrowed reference is accessed. Existing static, trigger and
+movement-actor collision rejects preparation/publication; ordinary static and
+actor admission also rejects a reference that already owns loose physics.
+
+The ordinary removal path clears ignored collision pairs before removing the
+loose body. Reference transfer reuses the existing physical body, shape,
+velocity and collision identity while updating its PtrHolder and owner-map
+key without allocation. Invalid or occupied destinations preserve the prior
+owner. Transfer retires pending scheduler preparations so an old reference
+cannot subsequently gain a second body; stale handles reject even after that
+reference is deleted. Collision rays report the transferred reference and can
+explicitly ignore loose bodies.
+
+Three new parameterized cases run with zero, one and two workers. They exercise
+actual PhysicsSystem admission/cancellation and foreign/repeated publication,
+ray hit/ignore routing, validated snapshot restoration, body-preserving reference
+transfer, deleted old references, ordinary removal and duplicate static/actor
+admission. A placement-new system replacement rejects an old preparation after
+its borrowed reference has been deleted. These use abstract live Static
+references and real collision bodies; they do not create a native dropped WEAP.
+
+Both normal and ASan/UBSan builds pass1034 full engine tests with exact
+inventories, no failures/skips and no compiler warnings. Leak checks remain
+disabled. Component/Python/schema40 and native arithmetic sources are unchanged.
+
+Evidence: S5/native-loose-body-physicssystem-normal-01 and
+S5/native-loose-body-physicssystem-sanitized-01.
+Tested fingerprint: a610a0020825f712aa5b70c2b04a6bcb5385b12e28be1d0c6f8b2b5f1f937504
+
+The caller still owns reference/cell lifetime, profile/model selection and
+rendered pose publication. The adapter does not yet connect Character bow input,
+create a dropped reference, transfer source inventory, recreate dynamic items
+on load or complete pickup. Reversible rendering admission is the next bounded
+prerequisite for compound projectile/drop publication. Native flight/impact,
+normal-input/restart campaigns and full M15 acceptance remain open.
+S5 remains in progress.

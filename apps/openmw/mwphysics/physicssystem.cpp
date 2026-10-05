@@ -258,6 +258,8 @@ namespace MWPhysics
                     const Object* object = getObject(ptr);
                     if (object)
                         ignoreList.push_back(object->getCollisionObject());
+                    else if (auto* loose = mTaskScheduler->looseObjectCollisionObject(ptr))
+                        ignoreList.push_back(loose);
                 }
             }
         }
@@ -466,6 +468,8 @@ namespace MWPhysics
         const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation, int collisionType,
         bool respectVisualCollisionType)
     {
+        if (mTaskScheduler->hasLooseObject(ptr))
+            throw std::invalid_argument("reference already has loose physics");
         if (ptr.mRef->mData.mPhysicsPostponed)
             return;
 
@@ -517,6 +521,7 @@ namespace MWPhysics
     void PhysicsSystem::remove(const MWWorld::Ptr& ptr)
     {
         mTaskScheduler->removeActorRagdoll(ptr);
+        removeLooseObject(ptr);
         mTriggers.erase(ptr.mRef);
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
         {
@@ -540,6 +545,9 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
     {
+        if (mTaskScheduler->hasLooseObject(old) &&
+            (mObjects.contains(updated.mRef) || mActors.contains(updated.mRef) || mTriggers.contains(updated.mRef)))
+            throw std::invalid_argument("updated loose physics reference has static or actor collision");
         const bool hasActor = mActors.contains(old.mRef);
         if (hasActor && updated.isEmpty())
             throw std::invalid_argument("empty updated movement actor owner");
@@ -555,6 +563,7 @@ namespace MWPhysics
             // Allocate the capsule destination before moving physical ownership.
             // A failed scheduler rebind rolls back the empty destination slot.
             mTaskScheduler->updateActorRagdollPtr(old, updated);
+            mTaskScheduler->updateLooseObjectPtr(old, updated);
         }
         catch (...)
         {
@@ -736,6 +745,8 @@ namespace MWPhysics
 
     void PhysicsSystem::addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh)
     {
+        if (mTaskScheduler->hasLooseObject(ptr))
+            throw std::invalid_argument("reference already has loose physics");
         const VFS::Path::Normalized animationMesh
             = Misc::ResourceHelpers::correctActorModelPath(mesh, mResourceSystem->getVFS());
         osg::ref_ptr<const Resource::BulletShape> shape = mShapeManager->getShape(animationMesh);
@@ -762,6 +773,63 @@ namespace MWPhysics
                 ? Settings::game().mDefaultActorPathfindHalfExtents : osg::Vec3f{});
 
         mActors.emplace(ptr.mRef, std::move(actor));
+    }
+
+    struct PreparedLooseObject::Data
+    {
+        PhysicsSystem* mOwner = nullptr;
+        std::shared_ptr<const char> mIdentity;
+        MWWorld::Ptr mPtr;
+        std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> mPhysical;
+    };
+    PreparedLooseObject::PreparedLooseObject(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    PreparedLooseObject::~PreparedLooseObject() = default;
+
+    std::unique_ptr<PreparedLooseObject> PhysicsSystem::prepareLooseObject(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int group, int mask)
+    {
+        if (mObjects.contains(ptr.mRef) || mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
+            throw std::invalid_argument("loose physics reference already has static or actor collision");
+        auto data = std::make_unique<PreparedLooseObject::Data>();
+        data->mOwner = this;
+        data->mIdentity = mLoosePreparationOwner;
+        data->mPtr = ptr;
+        data->mPhysical = mTaskScheduler->prepareLooseObject(ptr, definition, lengthScale, poses, group, mask);
+        return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(data)));
+    }
+
+    bool PhysicsSystem::validatePreparedLooseObject(const PreparedLooseObject& prepared)
+    {
+        const auto* data = prepared.mData.get();
+        return data && data->mOwner == this && data->mIdentity == mLoosePreparationOwner
+            && data->mPhysical && !mObjects.contains(data->mPtr.mRef) && !mActors.contains(data->mPtr.mRef)
+            && !mTriggers.contains(data->mPtr.mRef)
+            && mTaskScheduler->validatePreparedLooseObject(*data->mPhysical);
+    }
+
+    bool PhysicsSystem::commitLooseObject(PreparedLooseObject& prepared)
+    {
+        if (!validatePreparedLooseObject(prepared)) return false;
+        return mTaskScheduler->commitLooseObject(*prepared.mData->mPhysical);
+    }
+
+    bool PhysicsSystem::hasLooseObject(const MWWorld::Ptr& ptr) { return mTaskScheduler->hasLooseObject(ptr); }
+    std::vector<MWWorld::Ptr> PhysicsSystem::looseObjectOwners() { return mTaskScheduler->looseObjectOwners(); }
+    std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureLooseObject(const MWWorld::Ptr& ptr)
+    { return mTaskScheduler->captureLooseObject(ptr); }
+    std::vector<NifBullet::RagdollNativePackedVelocityState>
+    PhysicsSystem::captureLooseObjectPackedVelocities(const MWWorld::Ptr& ptr)
+    { return mTaskScheduler->captureLooseObjectPackedVelocities(ptr); }
+    void PhysicsSystem::restoreLooseObject(const MWWorld::Ptr& ptr,
+        std::span<const NifBullet::RagdollBodyState> states,
+        std::span<const NifBullet::RagdollNativePackedVelocityState> velocities)
+    { mTaskScheduler->restoreLooseObject(ptr, states, velocities); }
+    void PhysicsSystem::removeLooseObject(const MWWorld::Ptr& ptr)
+    {
+        if (auto* body = mTaskScheduler->looseObjectCollisionObject(ptr))
+            clearIgnoredCollisionPairs(body);
+        mTaskScheduler->removeLooseObject(ptr);
     }
 
     void PhysicsSystem::addActorRagdoll(const MWWorld::Ptr& ptr,
