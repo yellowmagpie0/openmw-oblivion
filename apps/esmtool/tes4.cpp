@@ -448,6 +448,16 @@ namespace EsmTool
                 else
                     std::cout << "absent";
             }
+            if constexpr (std::is_same_v<T, ESM4::Reference>)
+            {
+                std::cout << "\n  Ownership key: " << reader.getFormKeyFromHeader().serialize()
+                          << "\n  Ownership rank: ";
+                if (value.mFactionRank)
+                    std::cout << *value.mFactionRank;
+                else
+                    std::cout << "absent";
+                std::cout << "\n  Ownership global: " << value.mGlobal;
+            }
             if constexpr (requires { value.mIsLocked; value.mLockLevel; value.mKey; })
             {
                 std::cout << "\n  Lock: " << (value.mIsLocked ? "locked" : "unlocked") << ' '

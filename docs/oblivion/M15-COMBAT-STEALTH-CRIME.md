@@ -21523,3 +21523,64 @@ Native-to-OSG rotation and scale binding, the stock model/body source-hash check
 complete native ownership metadata, actual drop factory and compound release,
 pickup/frame/save/recreation and normal-input/fresh-process acceptance remain
 open. S5 and M15 remain in progress.
+
+
+### S5 checkpoint293: preserve native REFR ownership field presence
+
+The typed REFR record now owns an optional signed XRNK rather than a sentinel
+integer. Absence is distinct from explicit-1, -2, zero and every other signed
+value. The compatibility CellRef getter maps absence to-1; its native getter
+retains presence. The compatibility setter can now create an explicit-1 extra
+on a native reference. Owner, global and rank extras are cleared when a record
+object is reused to load an override. TES4 .8/1 records reject duplicate
+XOWN/XGLB/XRNK fields and any length other than four bytes. Existing later-game
+XOWN layouts remain gated separately. esmtool exposes native rank presence and
+the global field without altering the older CELL ownership dump.
+
+Four component cases cover28 signed-boundary/version/compression combinations,
+missing rank,36 malformed field lengths,54 duplicate combinations including
+zero/-1, and reused-record replacement. An actual CellRef case verifies native
+presence and compatibility setters while retaining TES3 rank behavior. The
+first normal and sanitizer builds failed on duplicate GoogleTest trace variable
+names in the fixture (multiple SCOPED_TRACE macros on one line); those failures
+remain in native-reference-ownership-{normal,sanitized}-01. The fixture was
+corrected before separate complete-02 runs.
+
+Both full normal and ASan/UBSan checks pass2493 component and1083 engine cases,
+exact inventories, no failures or skips. Leak checking remains disabled.
+Evidence: S5/native-reference-ownership-normal-02 and
+S5/native-reference-ownership-sanitized-02.
+Tested fingerprint: ca780b552d6c902d1bc4f8aec7b496132d73fb252d2b794bb774f83555ea4828
+
+The independent, hash-pinned raw audit02 decodes1,044,109 physical REFR records
+across the eleven official plugins, including nonempty deletion payloads, and
+resolves1,041,833 live winning reference keys. It finds115 physical explicit
+ranks and111 winning explicit ranks. Winning references include2666 owner
+fields and3 global fields. The rebuilt actual typed esmtool matches every
+physical rank presence/value, owner/global local index and winning reference
+rank against that audit. Its standalone owner/global indices do not establish
+target master remapping; header stable-key comparisons are separate.
+Raw evidence: S5/native-reference-ownership-raw-audit-02.
+Raw probe SHA256: 41d7c99d4285c4788d4917c754a28e863a30626050bdf13239f6c7632355c1cb
+Typed evidence: S5/native-reference-ownership-typed-normal-01.
+Typed comparator SHA256: aa2797f9913e708d44841106a662270d9eb6627820dbe44aec8db53eec78b391
+Typed binary SHA256: 6d0a0a3c2fa71f682170745fe018f777e17b29a10ae9aa4efd70796d44f2ca2d
+The sanitizer-built actual esmtool also matches the entire same physical/winning
+inventory with ASan/UBSan halting on errors and leak checking disabled.
+Sanitizer typed evidence: S5/native-reference-ownership-typed-sanitized-01.
+Sanitizer typed binary SHA256: 4e0e2bf80e22a07a3c4708900e279d639a7868a8faefa602cc52e3cbb43043df
+
+Raw audit01 is retained; it skipped deletion payloads and obtained the same rank
+counts. The full raw/generated corpora and proprietary content stay outside Git.
+
+Existing GCC warnings in Sol bindings, regular-expression templates, character
+animation restore and actor-stat fixtures were inspected. Their unchanged
+source hashes relative to checkpoint292 are retained in normal-02/
+unchanged-warning-sources.json. No Python/schema implementation changed; no
+new full Python-suite result is claimed.
+
+Projected inventory rank/global storage and runtime envelope capture/restore,
+callback-safe pickup, complete stock loose-weapon factory, compound arrow
+release, native scene orientation, physical frame/save/recreation and actual
+normal-input ranged/fresh-process courses remain open. S5 and M15 remain in
+progress; this parser/metadata checkpoint does not close a gameplay gate.

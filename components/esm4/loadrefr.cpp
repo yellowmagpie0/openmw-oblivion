@@ -40,6 +40,16 @@ void ESM4::Reference::load(ESM4::Reader& reader)
     mParent = reader.currCell();
     mParentKey = reader.currCellFormKey();
 
+    // Loading an override into a reused record must not retain earlier extras.
+    mOwner = {};
+    mGlobal = {};
+    mFactionRank.reset();
+    bool seenOwner = false;
+    bool seenGlobal = false;
+    const auto version = reader.esmVersion();
+    const bool isTES4 = (version == ESM::VER_080 || version == ESM::VER_100)
+        && !reader.hasFormVersion();
+
     ESM::FormId mid;
     ESM::FormId sid;
 
@@ -74,6 +84,9 @@ void ESM4::Reference::load(ESM4::Reader& reader)
                 break;
             case ESM::fourCC("XOWN"):
             {
+                if (isTES4 && (subHdr.dataSize != 4 || seenOwner))
+                    reader.fail("REFR XOWN requires one four-byte owner");
+                seenOwner = true;
                 switch (subHdr.dataSize)
                 {
                     case 4:
@@ -94,11 +107,20 @@ void ESM4::Reference::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("XGLB"):
+                if (isTES4 && (subHdr.dataSize != 4 || seenGlobal))
+                    reader.fail("REFR XGLB requires one four-byte global");
+                seenGlobal = true;
                 reader.getFormId(mGlobal);
                 break;
             case ESM::fourCC("XRNK"):
-                reader.get(mFactionRank);
+            {
+                if (isTES4 && (subHdr.dataSize != 4 || mFactionRank))
+                    reader.fail("REFR XRNK requires one signed four-byte rank");
+                std::int32_t rank = 0;
+                reader.get(rank);
+                mFactionRank = rank;
                 break;
+            }
             case ESM::fourCC("XESP"):
             {
                 reader.getFormId(mEsp.parent);

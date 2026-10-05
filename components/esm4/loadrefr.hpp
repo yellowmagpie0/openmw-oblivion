@@ -28,6 +28,7 @@
 #define ESM4_REFR_H
 
 #include <cstdint>
+#include <optional>
 
 #include "reference.hpp" // EnableParent
 
@@ -98,7 +99,8 @@ namespace ESM4
         float mScale = 1.0f;
         ESM::FormId mOwner;
         ESM::FormId mGlobal;
-        std::int32_t mFactionRank = -1;
+        // Preserve a missing XRNK independently of an explicit signed rank.
+        std::optional<std::int32_t> mFactionRank;
 
         bool mIsMapMarker = false;
         std::uint8_t mMapMarkerFlags = 0;

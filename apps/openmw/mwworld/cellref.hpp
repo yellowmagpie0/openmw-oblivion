@@ -238,10 +238,19 @@ namespace MWWorld
             struct Visitor
             {
                 int operator()(const ESM::CellRef& ref) { return ref.mFactionRank; }
-                int operator()(const ESM4::Reference& ref) { return ref.mFactionRank; }
+                int operator()(const ESM4::Reference& ref) { return ref.mFactionRank.value_or(-1); }
                 int operator()(const ESM4::ActorCharacter&) { return 0; }
             };
             return std::visit(Visitor(), mCellRef.mVariant);
+        }
+
+        // Native REFR extra presence; compatibility getFactionRank maps absence to -1.
+        std::optional<std::int32_t> getNativeOwnershipRank() const
+        {
+            return std::visit(ESM::VisitOverload{
+                [](const ESM4::Reference& ref) { return ref.mFactionRank; },
+                [](const auto&) { return std::optional<std::int32_t>{}; }
+            }, mCellRef.mVariant);
         }
 
         // Lock level for doors and containers

@@ -347,7 +347,11 @@ namespace MWWorld
 
     void CellRef::setFactionRank(int factionRank)
     {
-        if (factionRank != getFactionRank())
+        const bool missingNativeRank = std::visit(ESM::VisitOverload{
+            [](const ESM4::Reference& ref) { return !ref.mFactionRank; },
+            [](const auto&) { return false; }
+        }, mCellRef.mVariant);
+        if (factionRank != getFactionRank() || missingNativeRank)
         {
             mChanged = true;
             std::visit(ESM::VisitOverload{

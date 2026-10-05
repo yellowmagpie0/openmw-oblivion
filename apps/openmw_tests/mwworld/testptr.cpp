@@ -227,6 +227,31 @@ namespace MWWorld
             EXPECT_TRUE(CellRef(legacy).getFormKey().isNull());
         }
 
+        TEST(MWWorldPtrTest, cellRefPreservesNativeRankPresenceThroughCompatibilitySetter)
+        {
+            ESM4::Reference native{};
+            CellRef ref(native);
+            EXPECT_EQ(ref.getFactionRank(), -1);
+            EXPECT_FALSE(ref.getNativeOwnershipRank());
+            ref.setFactionRank(-1);
+            EXPECT_EQ(ref.getNativeOwnershipRank(), -1);
+            for (int rank : {std::numeric_limits<int>::min(), -2, 0, 7,
+                             std::numeric_limits<int>::max()})
+            {
+                ref.setFactionRank(rank);
+                EXPECT_EQ(ref.getFactionRank(), rank);
+                EXPECT_EQ(ref.getNativeOwnershipRank(), rank);
+            }
+            EXPECT_FALSE(native.mFactionRank);
+            ESM::CellRef legacy;
+            legacy.blank();
+            CellRef tes3(legacy);
+            EXPECT_FALSE(tes3.getNativeOwnershipRank());
+            tes3.setFactionRank(-1);
+            EXPECT_EQ(tes3.getFactionRank(), -1);
+            EXPECT_FALSE(tes3.getNativeOwnershipRank());
+        }
+
         TEST(MWWorldPtrTest, cellRefExposesSavedNpcAndCreatureRagdollPoses)
         {
             ESM4::ActorCharacter actor;
