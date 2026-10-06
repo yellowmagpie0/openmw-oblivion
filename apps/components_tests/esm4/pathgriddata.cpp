@@ -389,3 +389,33 @@ TEST(ESM4PathgridData, PreparedOverlayRestoreRejectsWholeReplacementBeforeAnyNod
         EXPECT_EQ(service.generation(key(1)), generation);
     }
 }
+
+TEST(ESM4PathgridData, PreparedOverlayRestoreSurvivesInterveningContentResetWithMixedMasks)
+{
+    ESM4::PathgridService service;
+    for (int id = 1; id <= 3; ++id)
+        service.registerPathgrid(makeGrid(id, {point(0), point(10)}, {{0, 1}}), key(100 + id));
+    ASSERT_TRUE(service.setNodeEnabled({key(1), 1}, false));
+    ASSERT_TRUE(service.setNodeEnabled({key(2), 1}, false));
+    const auto* navigator = service.navigatorPathgrid(key(1));
+    const std::array incoming{
+        std::pair{ESM4::PathgridNodeKey{key(1), 1}, false}, // Same outgoing mask.
+        std::pair{ESM4::PathgridNodeKey{key(3), 1}, false}}; // New incoming mask.
+    auto prepared = service.prepareOverlayRestore(incoming, true);
+    EXPECT_FALSE(service.isNodeEnabled({key(1), 1}));
+    EXPECT_FALSE(service.isNodeEnabled({key(2), 1}));
+    EXPECT_TRUE(service.isNodeEnabled({key(3), 1}));
+    ASSERT_TRUE(service.prepareOverlayRestore({}).commit());
+    EXPECT_TRUE(service.disabledNodes().empty());
+    ASSERT_TRUE(prepared.commit());
+    EXPECT_FALSE(prepared.commit());
+    EXPECT_EQ(service.navigatorPathgrid(key(1)), navigator);
+    for (int id = 1; id <= 3; ++id)
+    {
+        SCOPED_TRACE(id);
+        const bool enabled = id == 2;
+        EXPECT_EQ(service.isNodeEnabled({key(id), 1}), enabled);
+        EXPECT_EQ(bool(service.route({key(id), 0}, {key(id), 1})), enabled);
+        EXPECT_EQ(service.navigatorPathgrid(key(id))->mEdges.empty(), !enabled);
+    }
+}

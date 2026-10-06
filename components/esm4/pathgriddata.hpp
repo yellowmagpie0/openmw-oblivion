@@ -244,7 +244,9 @@ namespace ESM4
         };
         // Complete replacement: omitted nodes return to enabled. The handle
         // borrows this service/graph registration until synchronous commit.
-        PreparedOverlayRestore prepareOverlayRestore(std::span<const std::pair<PathgridNodeKey, bool>> overlays);
+        // afterReset prepares against content defaults, for a commit after World::clear().
+        PreparedOverlayRestore prepareOverlayRestore(
+            std::span<const std::pair<PathgridNodeKey, bool>> overlays, bool afterReset = false);
 
     private:
         std::map<ESM::FormKey, PathgridGraph> mGraphs;

@@ -13330,3 +13330,129 @@ TEST(OblivionWorldTest, PreparedCellMovesRejectReferenceAddressReuseAndChangedBa
         }
     }
 }
+
+namespace
+{
+    void restorePreparedSaveActorFixture(PopulatedMigrationFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        // The headless fixture authors its placed actor directly in a CellStore.
+        // Supply that shared-cell binding again after clear, before native apply,
+        // just as StateManager restores CSTA before saveLoaded in the real engine.
+        prepareNativeSnapshotPlayer(fixture, state);
+        auto& world = fixture.mWorld;
+        const auto& actor = state.mReferences.front();
+        const ESM::FormKeyResolver resolver({"headless.esm"});
+        auto& cell = world.getWorldModel().getCell(ESM::RefId(*resolver.toFormId(actor.mCell)));
+        const auto* reference = world.getStore().search<ESM4::ActorCharacter>(actor.mKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(*reference, world.getStore().search<ESM4::Npc>(actor.mBase));
+        fixture.mActor = MWWorld::Ptr(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(fixture.mActor);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedNativeSaveDiscardsAndInstallsAfterExactlyOneClearWithoutEarlyPublication)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.getOblivionScriptManager()->dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    auto saved = populatedAiRestore(fixture);
+    ESM4::AIPackage second = *world.getStore().search<ESM4::AIPackage>(saved.mPendingPackageDone.front().mPackage);
+    second.mId = {0xa31, 0};
+    second.mFormKey = ESM::FormKey::content("headless.esm", 0xa31);
+    world.getStore().getWritable<ESM4::AIPackage>().insertStatic(second, second.mFormKey);
+    saved.mPendingPackageDone.insert(saved.mPendingPackageDone.begin() + 1,
+        {saved.mPendingPackageDone.front().mActor, second.mFormKey});
+    ASSERT_TRUE(world.activateOblivionActor(fixture.mActor));
+    saved.mNativeActorValues = world.captureOblivionRuntimeState().mNativeActorValues;
+    // The incoming disabled mask deliberately equals the outgoing mask.
+    world.getOblivionAiService()->restore(saved);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    auto dynamicKey = world.prepareOblivionDynamicReferenceKey();
+    {
+        auto discarded = world.prepareOblivionSaveState(saved);
+        EXPECT_FALSE(discarded->install());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        EXPECT_TRUE(dynamicKey->isValid());
+    }
+    auto prepared = world.prepareOblivionSaveState(saved);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    world.clear();
+    EXPECT_FALSE(dynamicKey->isValid());
+    EXPECT_TRUE(world.getStore().getOblivionPathgridService().disabledNodes().empty());
+    ASSERT_TRUE(prepared->install());
+    EXPECT_FALSE(prepared->install());
+    ESM4::RuntimeState unpublished;
+    world.getOblivionAiService()->capture(unpublished);
+    EXPECT_TRUE(unpublished.mPathPoints.empty());
+    EXPECT_TRUE(unpublished.mPendingPackageDone.empty());
+    ESM4::RuntimeState unpublishedCombat;
+    world.getOblivionCombatService()->capture(unpublishedCombat);
+    EXPECT_TRUE(unpublishedCombat.mNativeActorValues.empty());
+    restorePreparedSaveActorFixture(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto restored = world.captureOblivionRuntimeState();
+    EXPECT_EQ(restored.mPathPoints, saved.mPathPoints);
+    EXPECT_EQ(restored.mPendingPackageDone, saved.mPendingPackageDone);
+    EXPECT_EQ(restored.mDetectionVectors, saved.mDetectionVectors);
+    EXPECT_EQ(restored.mActorAi, saved.mActorAi);
+    EXPECT_EQ(restored.mScriptInstances, saved.mScriptInstances);
+    EXPECT_EQ(restored.mScriptEventSequence, saved.mScriptEventSequence);
+    EXPECT_EQ(restored.mNativeActorValues, saved.mNativeActorValues);
+    const auto accepted = restored.serializeBinary();
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), accepted);
+}
+
+TEST(OblivionWorldTest, PreparedNativeSaveRejectsStaleClearAndDestroyedWorldAndConflictingPendingState)
+{
+    std::unique_ptr<MWBase::World::PreparedOblivionSaveState> orphan;
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto saved = world.captureOblivionRuntimeState();
+        auto stale = world.prepareOblivionSaveState(saved);
+        world.clear();
+        world.clear();
+        EXPECT_FALSE(stale->install());
+        auto first = world.prepareOblivionSaveState(saved);
+        auto second = world.prepareOblivionSaveState(saved);
+        world.clear();
+        ASSERT_TRUE(first->install());
+        EXPECT_FALSE(second->install());
+        orphan = world.prepareOblivionSaveState(saved);
+    }
+    EXPECT_FALSE(orphan->install());
+}
+
+TEST(OblivionWorldTest, PreparedNativeSaveRejectsBadBindingsBeforeClearAndDirectReadSupersedesPlans)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.getOblivionScriptManager()->dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    const auto saved = populatedAiRestore(fixture);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    for (int fault = 0; fault < 3; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        auto candidate = saved;
+        if (fault == 0) candidate.mScriptInstances.front().mUnit = "missing-program";
+        if (fault == 1) candidate.mPathPoints.front().mNode = 99;
+        if (fault == 2) candidate.mNativeDeathCounts[ESM::FormKey::content("headless.esm", 0x940)] = 1;
+        EXPECT_ANY_THROW(world.prepareOblivionSaveState(candidate));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    }
+    auto prepared = world.prepareOblivionSaveState(saved);
+    world.clear();
+    ASSERT_TRUE(prepared->install());
+    auto replacement = saved;
+    replacement.mPathPoints.clear();
+    replacement.mPendingPackageDone.clear();
+    replacement.mScriptInstances.front().mLocals.front() = std::int64_t{9};
+    restorePreparedSaveActorFixture(fixture, replacement);
+    readNativeSnapshot(fixture, replacement);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto captured = world.captureOblivionRuntimeState();
+    EXPECT_TRUE(captured.mPathPoints.empty());
+    EXPECT_TRUE(captured.mPendingPackageDone.empty());
+    EXPECT_EQ(captured.mScriptInstances, replacement.mScriptInstances);
+}

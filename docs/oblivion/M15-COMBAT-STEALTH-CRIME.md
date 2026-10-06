@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,90 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 retained native admission plans checkpoint — 2026-10-06
+
+StateManager now retains the admitted native DTO and detached combat, script,
+and AI restore plans through cleanup, instead of discarding the plans and
+allocating them again during native apply. A handle borrows its originating
+World through a weak lifetime identity and installs once after exactly the
+next completed World clear. Discard, premature installation, a second clear,
+a destroyed World, and conflicting pending/accepted snapshots do not publish
+its state. Initial-menu native loads perform the same single clear as in-game
+loads. Saves without T4ST retain the existing shared-only lifecycle.
+
+Installation publishes pending data only. Native apply consumes the retained
+plans after native Lua owner validation. Direct T4ST readers discard old plans
+and retain the synchronous preparation path, which also supports a retry if a
+later detached preparation fails. Script locals/quests, combat values/events,
+and AI actors/detection/FIFO package completions remain unpublished until
+apply. AI plans prepared for a clear do not borrow outgoing actor/door collision
+Ptrs: World clear retires those exceptions. Static script definitions, graph
+registrations, and service objects survive that clear.
+
+Pathgrid plans prepared for reset retain every incoming nonempty mask, even
+when it equals the outgoing mask. Their detached coarse index uses the incoming
+masks for all graphs, including outgoing masks omitted by the incoming save.
+Commit restores graph masks and navigator geometry at their stable addresses.
+
+The valid F9 runtime course independently exposed a pre-existing World teardown
+deadlock: Scene unload holds the navigator update guard, then ordinary pathgrid
+removal tries to acquire it again. Cell unload now retires pathgrid-owned
+connections through the existing guard-aware object removal path, for both
+TES3 and TES4 pathgrids. The failed course's GDB backtrace is retained.
+
+Two new component cases cover mixed masks across a reset and repeated guarded
+pathgrid connection retirement without removing another navigation owner.
+Three World cases cover detached discard, hidden pending services, clear and
+World lifetime, install once, populated combat/script/AI state with ordered
+package events, early binding rejection, and direct-reader replacement. The
+headless fixture explicitly supplies its authored shared actor binding after
+clear; real runtime courses restore actual CSTA records.
+
+`S3/retained-service-plans-engine-02` and `retained-service-plans-sanitize-02`
+each pass all 2,573 component and 1,178 engine cases, unfiltered, with exact
+inventories and no failures/skips. Tested parent:
+`e53410bdc6c6ddf2b532fedcf69c239cf98dba69`; source fingerprint:
+`571c2a242966978823ec9bb71c5840be2fa97529b87f7b35dc351b25a80fd1a3`.
+ASan leak detection is disabled; UBSan halts with stack traces. Final builds
+have no changed-source warning; the sanitizer rebuild reports an existing
+range-loop copy warning in unchanged actor-stats tests. Broad first-build
+warnings in unchanged dependencies/callers remain in the original logs.
+
+Actual normal and ASan/UBSan courses are
+`S3/retained-service-plans-restart-02` and
+`retained-service-plans-sanitized-restart-03`. Each runs load/F5/F9/F5/clean quit,
+then repeats in a fresh process using the first process's actual final save.
+All 37 normalized native fields and complete reference lists match at all four
+load boundaries per executable. Counts are 34,399, 34,549, 34,603 and 34,771;
+all four boundaries retain disabled node151 of pathgrid0150c6. Existing script
+instances, reference inventories and quests remain preserved through saves.
+Live dynamic-weapon scale1.25 and positive target/negative source-cell queries
+pass once per process; its 14 stable saved metadata fields agree independently.
+All four post-quickload captures were directly inspected: Imperial Prison
+renders with full resource bars. Audio is off. Normal executable SHA256:
+`437343ad9f0ee286998d851322392e4c995df64d10965efee128d9858db980dc`;
+sanitizer executable:
+`248fd0028bd405b712e5ad3c1f1e64ef4d1967e64636c3b6c444ee74f927197b`.
+
+First engine tests exposed two incomplete fixture bindings; corrected -02
+passes. Sanitizer build -01 was cancelled after the confirmed teardown defect
+and is not accepted engine evidence. Runtime -01 retains the diagnosed deadlock.
+Sanitized runtime -02 completed F9, then the kernel OOM killer terminated the
+owned game while compilation/linking ran with full swap. Its kernel log and
+failure remain; unchanged final -03 ran after all checks finished. Aggregate
+source/fixture/binary/course hashes, inventories, captures, failure explanations
+and preserved-field proofs are in `S3/retained-service-plans-report.json`.
+
+This closes retained service preparation and the demonstrated valid-quickload
+teardown defect. It does not make the complete StateManager load failure-atomic:
+shared World reconstruction, cache and scene reconciliation and other native
+allocations still occur after cleanup. Remaining populated migrations, active
+physical-action continuation and the full S3 requirement audit remain open.
+All checkpoint-owned build/runtime/debugger processes are terminal. The next
+smallest action is retaining the remaining detached inventory/world plans
+before teardown, with shared dynamic definitions and cache lifetime accounted
+for. S3 remains in progress; no later-stage gate is changed.
 
 ## S3 prepared native cell movement checkpoint — 2026-10-06
 

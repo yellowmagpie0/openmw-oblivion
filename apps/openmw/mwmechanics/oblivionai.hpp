@@ -113,7 +113,8 @@ namespace MWMechanics
             std::unique_ptr<Impl> mImpl;
         };
         // Borrows this service and synchronous graph/physics registrations.
-        PreparedRestore prepareRestore(const ESM4::RuntimeState& state);
+        // afterWorldClear omits outgoing physics handles and prepares overlays for reset graphs.
+        PreparedRestore prepareRestore(const ESM4::RuntimeState& state, bool afterWorldClear = false);
         void restore(const ESM4::RuntimeState& state);
 
     private:

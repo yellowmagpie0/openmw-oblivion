@@ -127,6 +127,13 @@ namespace MWWorld
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
         std::unique_ptr<ESM4::RuntimeState> mPendingOblivionRuntimeState;
+        struct PreparedOblivionServices;
+        class PreparedOblivionSaveStateImpl;
+        std::unique_ptr<PreparedOblivionServices> mPendingOblivionServices;
+        const std::shared_ptr<const char> mOblivionRestoreIdentity = std::make_shared<const char>();
+        std::uint64_t mOblivionClearGeneration = 0;
+        void validateOblivionSaveStateImpl(
+            const ESM4::RuntimeState& state, PreparedOblivionServices* prepared) const;
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::shared_ptr<const char> mOblivionDynamicReferenceIdentity;
@@ -245,6 +252,8 @@ namespace MWWorld
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
         void validateOblivionSaveState(const ESM4::RuntimeState& state) const override;
+        std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
+            const ESM4::RuntimeState& state) override;
         ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
         void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;

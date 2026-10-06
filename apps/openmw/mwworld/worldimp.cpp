@@ -151,6 +151,47 @@
 
 namespace MWWorld
 {
+    struct World::PreparedOblivionServices
+    {
+        std::optional<MWMechanics::OblivionCombatService> mCombat;
+        std::optional<OblivionScriptManager::PreparedRestore> mScripts;
+        std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
+    };
+
+    class World::PreparedOblivionSaveStateImpl final : public MWBase::World::PreparedOblivionSaveState
+    {
+        World* mWorld;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mClearGeneration;
+        std::unique_ptr<ESM4::RuntimeState> mState;
+        std::unique_ptr<PreparedOblivionServices> mServices;
+
+    public:
+        PreparedOblivionSaveStateImpl(World& world, const ESM4::RuntimeState& state)
+            : mWorld(&world)
+            , mIdentity(world.mOblivionRestoreIdentity)
+            , mClearGeneration(world.mOblivionClearGeneration + 1)
+            , mState(std::make_unique<ESM4::RuntimeState>(state))
+            , mServices(std::make_unique<PreparedOblivionServices>())
+        {
+            world.validateOblivionSaveStateImpl(*mState, mServices.get());
+        }
+
+        bool install() noexcept override
+        {
+            if (!mState || mIdentity.expired())
+                return false;
+            auto& world = *mWorld;
+            if (world.mOblivionClearGeneration != mClearGeneration
+                || world.mPendingOblivionRuntimeState || world.mOblivionRuntimeState
+                || world.mGameProfile != ESM::GameProfile::Oblivion)
+                return false;
+            world.mPendingOblivionRuntimeState = std::move(mState);
+            world.mPendingOblivionServices = std::move(mServices);
+            return true;
+        }
+    };
+
     namespace
     {
         using LegacyDeathMarker = decltype(ESM4::RuntimeReferenceState::mCustomState)::iterator;
@@ -843,6 +884,7 @@ namespace MWWorld
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
         mPendingOblivionRuntimeState.reset();
+        mPendingOblivionServices.reset();
         if (preparedPathgrids)
             preparedPathgrids->commit();
         if (mOblivionCombat)
@@ -855,6 +897,7 @@ namespace MWWorld
             mOblivionScriptManager->clear();
 
         fillGlobalVariables();
+        ++mOblivionClearGeneration;
     }
 
     size_t World::countSavedGameRecords() const
@@ -2231,22 +2274,36 @@ namespace MWWorld
             throw std::runtime_error("TES4 runtime-state apply requires ready Player data");
         // Native actor bindings and service allocation must fail before any
         // globals, inventories, serials or projected player stats are changed.
+        MWBase::Environment::get().getLuaManager()->validateNativeState(state);
         std::optional<MWMechanics::OblivionCombatService> preparedCombat;
-        if (mOblivionCombat)
+        std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
+        std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
+        if (mPendingOblivionServices)
         {
-            preparedCombat.emplace();
-            preparedCombat->restore(state, mStore);
-            preparedCombat->validateRestoredPlayerBinding();
+            // Admission prepared these allocations against immutable content.
+            // Consume them only now; pending state was never a live authority.
+            preparedCombat = std::move(mPendingOblivionServices->mCombat);
+            preparedScripts = std::move(mPendingOblivionServices->mScripts);
+            preparedAi = std::move(mPendingOblivionServices->mAi);
+            mPendingOblivionServices.reset();
         }
         else
-            state.validate();
-        MWBase::Environment::get().getLuaManager()->validateNativeState(state);
-        std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
-        if (mOblivionScriptManager)
-            preparedScripts.emplace(mOblivionScriptManager->prepareRestore(state));
-        std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
-        if (mOblivionAi)
-            preparedAi.emplace(mOblivionAi->prepareRestore(state));
+        {
+            // Direct record readers and retries after a later preparation
+            // failure still use the synchronous detached preparation path.
+            if (mOblivionCombat)
+            {
+                preparedCombat.emplace();
+                preparedCombat->restore(state, mStore);
+                preparedCombat->validateRestoredPlayerBinding();
+            }
+            else
+                state.validate();
+            if (mOblivionScriptManager)
+                preparedScripts.emplace(mOblivionScriptManager->prepareRestore(state));
+            if (mOblivionAi)
+                preparedAi.emplace(mOblivionAi->prepareRestore(state));
+        }
         const bool nativePlayerValues = preparedCombat
             && preparedCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
         static constexpr std::array attributeNames{ "strength", "intelligence", "willpower", "agility", "speed",
@@ -3013,7 +3070,21 @@ namespace MWWorld
         }
     }
 
+    std::unique_ptr<MWBase::World::PreparedOblivionSaveState> World::prepareOblivionSaveState(
+        const ESM4::RuntimeState& state)
+    {
+        if (mOblivionClearGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("TES4 restore clear generation exhausted");
+        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, state);
+    }
+
     void World::validateOblivionSaveState(const ESM4::RuntimeState& state) const
+    {
+        validateOblivionSaveStateImpl(state, nullptr);
+    }
+
+    void World::validateOblivionSaveStateImpl(
+        const ESM4::RuntimeState& state, PreparedOblivionServices* prepared) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
@@ -3151,8 +3222,9 @@ namespace MWWorld
             if ((npc || creature) && reference.mOwnershipRank)
                 throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
         }
-        // Exercise the same detached preparations used by restore, then discard
-        // them. No service, cache, graph, registry or event publication occurs.
+        // Exercise the same detached preparations used by restore. Admission
+        // retains these plans; validation-only callers discard them. Neither
+        // path publishes services, graphs, registry entries or queued events.
         MWMechanics::OblivionCombatService combat;
         combat.restore(state, mStore);
         combat.validateRestoredPlayerBinding();
@@ -3191,10 +3263,20 @@ namespace MWWorld
             if (std::holds_alternative<std::string>(value))
                 throw std::runtime_error("TES4 runtime-state numeric global has a string value");
         }
+        if (prepared && mOblivionCombat)
+            prepared->mCombat.emplace(std::move(combat));
         if (mOblivionScriptManager)
-            static_cast<void>(mOblivionScriptManager->prepareRestore(state));
+        {
+            auto scripts = mOblivionScriptManager->prepareRestore(state);
+            if (prepared)
+                prepared->mScripts.emplace(std::move(scripts));
+        }
         if (mOblivionAi)
-            static_cast<void>(mOblivionAi->prepareRestore(state));
+        {
+            auto ai = mOblivionAi->prepareRestore(state, prepared != nullptr);
+            if (prepared)
+                prepared->mAi.emplace(std::move(ai));
+        }
     }
 
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)
@@ -3223,6 +3305,7 @@ namespace MWWorld
                 // Shared records are still being restored here. Admission already
                 // checked immutable bindings; direct readers retain schema/content validation.
                 validateOblivionSnapshotContent(*state, mOblivionContentIdentities);
+                mPendingOblivionServices.reset();
                 mPendingOblivionRuntimeState = std::move(state);
             }
             break;

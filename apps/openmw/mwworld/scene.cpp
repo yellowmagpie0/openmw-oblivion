@@ -419,10 +419,13 @@ namespace MWWorld
         if (cell->getCell()->hasWater())
             mNavigator.removeWater(osg::Vec2i(cellX, cellY), navigatorUpdateGuard);
 
+        // Pathgrids own off-mesh connections under their address ObjectId.
+        // Use the guard-aware removal path: unloadCell already holds the
+        // navigator update lock, so removePathgrid would reacquire that lock.
         ESM::visit(ESM::VisitOverload{
                        [&](const ESM::Cell& c) {
                            if (const auto pathgrid = mWorld.getStore().get<ESM::Pathgrid>().search(c))
-                               mNavigator.removePathgrid(*pathgrid);
+                               mNavigator.removeObject(DetourNavigator::ObjectId(pathgrid), navigatorUpdateGuard);
                        },
                        [&](const ESM4::Cell& c) {
                            if (c.mFormKey.isNull())
@@ -432,7 +435,7 @@ namespace MWWorld
                                ESM4::PathgridService& service = mWorld.getStore().getOblivionPathgridService();
                                if (const ESM4::PathgridGraph* graph = service.graphForCell(c.mFormKey))
                                    if (const ESM::Pathgrid* pathgrid = service.navigatorPathgrid(graph->pathgridKey()))
-                                       mNavigator.removePathgrid(*pathgrid);
+                                       mNavigator.removeObject(DetourNavigator::ObjectId(pathgrid), navigatorUpdateGuard);
                                service.cellUnloaded(c.mFormKey);
                            }
                        },

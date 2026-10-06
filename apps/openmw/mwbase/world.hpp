@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <deque>
 #include <optional>
+#include <memory>
 #include <utility>
 #include <set>
 #include <span>
@@ -139,6 +140,16 @@ namespace MWBase
         virtual void setRandomSeed(uint32_t seed) = 0;
         virtual ESM::GameProfile getGameProfile() const = 0;
         virtual void validateOblivionSaveState(const ESM4::RuntimeState& state) const = 0;
+        class PreparedOblivionSaveState
+        {
+        public:
+            virtual ~PreparedOblivionSaveState() = default;
+            // Install exactly once, after the next successful World::clear().
+            // Discarding the handle never publishes state or events.
+            virtual bool install() noexcept = 0;
+        };
+        virtual std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
+            const ESM4::RuntimeState& state) = 0;
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }

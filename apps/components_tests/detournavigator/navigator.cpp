@@ -8,6 +8,8 @@
 #include <components/detournavigator/navigatorutils.hpp>
 #include <components/detournavigator/navmeshdb.hpp>
 #include <components/esm3/loadland.hpp>
+#include <components/esm3/loadcell.hpp>
+#include <components/esm3/loadpgrd.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/misc/rng.hpp>
 #include <components/resource/bulletshape.hpp>
@@ -1606,4 +1608,38 @@ namespace
         EXPECT_TRUE(plan->commit());
         EXPECT_FALSE(plan->commit());
     }
+}
+
+
+TEST(M15PreparedNavigationRemoval, PathgridConnectionsCanBeRetiredUnderBorrowedCellUnloadGuard)
+{
+    using namespace DetourNavigator;
+    auto settings = Tests::makeSettings();
+    NavigatorImpl navigator(settings, nullptr);
+    osg::ref_ptr<Resource::BulletShape> shape = new Resource::BulletShape;
+    shape->mCollisionShape.reset(new btBoxShape(btVector3(20, 20, 100)));
+    osg::ref_ptr<Resource::BulletShapeInstance> instance = new Resource::BulletShapeInstance(shape);
+    const ObjectTransform placement{ESM::Position{{0, 0, 0}, {0, 0, 0}}, 0};
+    const ObjectId unrelated(instance->mCollisionShape.get());
+    navigator.addObject(unrelated, DoorShapes(instance, placement, osg::Vec3f(0, 0, 0), osg::Vec3f(500, 500, 0)),
+        btTransform::getIdentity(), nullptr);
+    ESM::Cell cell{};
+    cell.blank();
+    cell.mData.mFlags = ESM::Cell::Interior;
+    ESM::Pathgrid pathgrid{};
+    pathgrid.mPoints = {ESM::Pathgrid::Point(0, 0, 0), ESM::Pathgrid::Point(500, 500, 0)};
+    pathgrid.mEdges = {{0, 1}, {1, 0}};
+    for (int cycle = 0; cycle != 2; ++cycle)
+    {
+        navigator.addPathgrid(cell, pathgrid);
+        {
+            auto guard = navigator.makeUpdateGuard();
+            // Same address identity and borrowed guard used by Scene::unloadCell.
+            EXPECT_NO_THROW(navigator.removeObject(ObjectId(&pathgrid), guard.get()));
+            EXPECT_NO_THROW(navigator.removeObject(ObjectId(&pathgrid), guard.get()));
+        }
+        EXPECT_EQ(navigator.getStats().mRecast.mObjects, 1);
+    }
+    navigator.removeObject(unrelated, nullptr);
+    EXPECT_EQ(navigator.getStats().mRecast.mObjects, 0);
 }

@@ -6313,7 +6313,7 @@ namespace MWMechanics
         return true;
     }
 
-    OblivionAiService::PreparedRestore OblivionAiService::prepareRestore(const ESM4::RuntimeState& state)
+    OblivionAiService::PreparedRestore OblivionAiService::prepareRestore(const ESM4::RuntimeState& state, bool afterWorldClear)
     {
         state.validate();
         auto plan = std::make_unique<PreparedRestore::Impl>();
@@ -6461,9 +6461,10 @@ namespace MWMechanics
         overlays.reserve(state.mPathPoints.size());
         for (const auto& point : state.mPathPoints)
             overlays.push_back({{point.mPathgrid, point.mNode}, point.mEnabled});
-        plan->mPathgrids.emplace(mWorld.mStore.getOblivionPathgridService().prepareOverlayRestore(overlays));
-        // Retire old door-collision exceptions without retaining route handles.
-        if (mWorld.mPhysics)
+        plan->mPathgrids.emplace(mWorld.mStore.getOblivionPathgridService().prepareOverlayRestore(overlays, afterWorldClear));
+        // World::clear() retires outgoing exceptions and destroys their cells.
+        // A plan retained across that clear must not borrow their Ptrs.
+        if (!afterWorldClear && mWorld.mPhysics)
             for (const auto& [_, live] : mActors)
                 if (!live.mIgnoredPhysicalDoor.isNull())
                 {

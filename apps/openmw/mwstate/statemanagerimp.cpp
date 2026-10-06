@@ -478,11 +478,13 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         else if (version < ESM::MinSupportedSaveGameFormatVersion)
             throw SaveVersionTooOldError(version);
 
-        const auto& world = *MWBase::Environment::get().getWorld();
+        auto& world = *MWBase::Environment::get().getWorld();
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
+        std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(),
-            [&](const ESM4::RuntimeState& native) { world.validateOblivionSaveState(native); }, &world.getStore());
+            [&](const ESM4::RuntimeState& native) { preparedNative = world.prepareOblivionSaveState(native); },
+            &world.getStore());
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
             return;
@@ -491,7 +493,11 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         // leave the outgoing game intact. Later record restoration still owns
         // the cleanup-on-failure boundary until full staging is implemented.
         restorationStarted = true;
-        cleanup();
+        // Native plans require the same single reset for an initial menu load
+        // and an in-game load. Shared-only legacy loads keep their old lifecycle.
+        cleanup(preparedNative != nullptr);
+        if (preparedNative && !preparedNative->install())
+            throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
 
         MWBase::Environment::get().getLuaManager()->setContentFileMapping(contentFileMap);
 
@@ -574,8 +580,14 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_DOOR:
                 case ESM::REC_PROB:
                 case ESM::REC_INGR:
-                case ESM::REC_T4ST:
                     MWBase::Environment::get().getWorld()->readRecord(reader, n.toInt());
+                    break;
+
+                case ESM::REC_T4ST:
+                    if (preparedNative)
+                        reader.skipRecord(); // The admitted DTO and service plans are already pending.
+                    else
+                        world.readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_CAM_:

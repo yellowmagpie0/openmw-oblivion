@@ -978,7 +978,7 @@ namespace ESM4
     }
 
     PathgridService::PreparedOverlayRestore PathgridService::prepareOverlayRestore(
-        std::span<const std::pair<PathgridNodeKey, bool>> overlays)
+        std::span<const std::pair<PathgridNodeKey, bool>> overlays, bool afterReset)
     {
         auto plan = std::make_unique<PreparedOverlayRestore::Impl>();
         plan->mTarget = this;
@@ -998,15 +998,18 @@ namespace ESM4
         for (auto& [key, graphValue] : mGraphs)
         {
             auto& next = disabled[key];
-            if (graphValue.mDisabledNodes == next)
+            if (graphValue.mDisabledNodes != next)
+                changed.emplace(key, next);
+            // The coarse index is built from incoming masks even when the
+            // intervening reset will already supply an empty mask. Conversely,
+            // identical nonempty masks still need geometry after that reset.
+            if (afterReset ? next.empty() : graphValue.mDisabledNodes == next)
                 continue;
-            // Only changed graphs need a temporary geometry copy. The full
-            // static graph corpus and existing navigator registrations stay live.
+            // Static graph and navigator addresses survive World::clear().
             auto preparedGraph = graphValue;
             preparedGraph.mDisabledNodes = next;
             plan->mBindings.push_back({&graphValue, &mNavigatorPathgrids.at(key),
                 next, makeNavigatorPathgrid(preparedGraph)});
-            changed.emplace(key, std::move(next));
         }
         buildCoarseGraphIndex(changed, plan->mAdjacency, plan->mComponents);
         return PreparedOverlayRestore(std::move(plan));
