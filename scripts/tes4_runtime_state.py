@@ -2335,7 +2335,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
     return writer.finish()
 
 
-def _find_runtime_record(data: bytes) -> tuple[int, int, int, bytes]:
+def _save_records(data: bytes):
+    """Walk all record/subrecord bounds, including opaque non-native bodies."""
     offset = 0
     while offset < len(data):
         if offset + 16 > len(data):
@@ -2345,33 +2346,71 @@ def _find_runtime_record(data: bytes) -> tuple[int, int, int, bytes]:
         end = offset + 16 + size
         if end > len(data):
             raise RuntimeStateError(f"Truncated OpenMW save record {name!r}")
-        if name == b"T4ST":
+        sub = offset + 16
+        subrecords = []
+        while sub < end:
+            if sub + 8 > end:
+                raise RuntimeStateError(f"Truncated OpenMW save subrecord header in {name!r}")
+            sub_name = data[sub : sub + 4]
+            sub_size = struct.unpack_from("<I", data, sub + 4)[0]
+            sub_end = sub + 8 + sub_size
+            if sub_end > end:
+                raise RuntimeStateError(f"OpenMW save subrecord exceeds record bounds in {name!r}")
+            subrecords.append((sub_name, sub, sub_end))
+            sub = sub_end
+        yield offset, end, name, subrecords
+        offset = end
+
+
+def _find_runtime_record(data: bytes) -> tuple[int, int, int, bytes]:
+    found = None
+    native_version = None
+    profile = None
+    for offset, end, name, subrecords in _save_records(data):
+        if name == b"SAVE":
+            if profile is not None:
+                raise RuntimeStateError("Duplicate OpenMW SAVE profile record")
+            profile = {}
+            for sub_name, sub, sub_end in subrecords:
+                if sub_name in (b"GPRO", b"T4VR"):
+                    if sub_name in profile:
+                        raise RuntimeStateError(f"Duplicate SAVE profile tag {sub_name!r}")
+                    profile[sub_name] = data[sub + 8 : sub_end]
+        elif name == b"T4ST":
+            if found is not None:
+                raise RuntimeStateError("Duplicate OpenMW T4ST record")
             payload = bytearray()
-            sub = offset + 16
-            version: int | None = None
-            while sub < end:
-                if sub + 8 > end:
-                    raise RuntimeStateError("Truncated T4ST subrecord header")
-                sub_name = data[sub : sub + 4]
-                sub_size = struct.unpack_from("<I", data, sub + 4)[0]
-                sub_end = sub + 8 + sub_size
-                if sub_end > end:
-                    raise RuntimeStateError("Truncated T4ST subrecord")
+            version = None
+            for index, (sub_name, sub, sub_end) in enumerate(subrecords):
                 value = data[sub + 8 : sub_end]
-                if sub_name == b"VERS":
-                    if sub_size != 4:
-                        raise RuntimeStateError("Invalid T4ST VERS subrecord")
+                if index == 0 and sub_name == b"VERS" and len(value) == 4:
                     version = struct.unpack("<I", value)[0]
-                elif sub_name == b"DATA":
+                elif index > 0 and sub_name == b"DATA":
+                    if len(value) > MAX_PAYLOAD - len(payload):
+                        raise RuntimeStateError("TES4 runtime-state payload exceeds the size limit")
                     payload.extend(value)
                 else:
-                    raise RuntimeStateError(f"Unknown T4ST subrecord {sub_name!r}")
-                sub = sub_end
+                    raise RuntimeStateError(f"Invalid or out-of-order T4ST subrecord {sub_name!r}")
             if version not in SUPPORTED_VERSIONS:
                 raise RuntimeStateError(f"Unsupported T4ST record version {version}")
-            return offset, end, size, bytes(payload)
-        offset = end
-    raise RuntimeStateError("OpenMW save has no T4ST record")
+            if len(payload) < len(MAGIC) + 4:
+                raise RuntimeStateError("Truncated TES4 runtime-state payload")
+            if struct.unpack_from("<I", payload, len(MAGIC))[0] != version:
+                raise RuntimeStateError("T4ST record version does not match its payload")
+            native_version = version
+            found = offset, end, end - offset - 16, bytes(payload)
+    if found is None:
+        raise RuntimeStateError("OpenMW save has no T4ST record")
+    # Envelope-only fixtures remain supported. A real SAVE profile, when
+    # present, must declare the same native ownership and schema as the engine.
+    if profile is not None:
+        game_profile = profile.get(b"GPRO", b"morrowind").split(b"\0", 1)[0].lower()
+        if game_profile not in (b"oblivion", b"tes4"):
+            raise RuntimeStateError("T4ST record has a foreign SAVE game profile")
+        version_tag = profile.get(b"T4VR", b"")
+        if len(version_tag) != 4 or struct.unpack("<I", version_tag)[0] != native_version:
+            raise RuntimeStateError("SAVE profile runtime-state version does not match T4ST")
+    return found
 
 
 def load_save(path: Path) -> dict[str, Any]:
@@ -2494,8 +2533,16 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
         chunk = payload[offset : offset + CHUNK_SIZE]
         record_body += struct.pack("<4sI", b"DATA", len(chunk)) + chunk
     header = data[start : start + 4] + struct.pack("<I", len(record_body)) + data[start + 8 : start + 16]
+    # SAVE's native version tag is part of the promoted state, while all
+    # unrelated record/subrecord bytes retain their original values.
+    promoted = bytearray(data)
+    for _, _, name, subrecords in _save_records(data):
+        if name == b"SAVE":
+            for sub_name, sub, _ in subrecords:
+                if sub_name == b"T4VR":
+                    struct.pack_into("<I", promoted, sub + 8, CURRENT_VERSION)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(data[:start] + header + record_body + data[end:])
+    destination.write_bytes(promoted[:start] + header + record_body + promoted[end:])
 
 
 def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:

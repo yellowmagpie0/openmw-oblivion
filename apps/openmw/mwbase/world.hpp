@@ -43,6 +43,7 @@ namespace Loading
 namespace ESM4
 {
     class ObservationStream;
+    struct RuntimeState;
 }
 
 namespace ESM
@@ -137,6 +138,7 @@ namespace MWBase
 
         virtual void setRandomSeed(uint32_t seed) = 0;
         virtual ESM::GameProfile getGameProfile() const = 0;
+        virtual void validateOblivionSaveState(const ESM4::RuntimeState& state) const = 0;
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }

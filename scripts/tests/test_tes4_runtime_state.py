@@ -387,7 +387,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         payload = state_io.encode_payload(state)
         body = struct.pack("<4sII", b"VERS", 4, 37) + struct.pack("<4sI", b"DATA", len(payload)) + payload
         record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
-        tail = struct.pack("<4sIII", b"TEST", 4, 0, 0) + b"keep"
+        tail = struct.pack("<4sIII", b"TEST", 12, 0, 0) + struct.pack("<4sI", b"DATA", 4) + b"keep"
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory)/"source.omwsave"; target = Path(directory)/"target.omwsave"
             source.write_bytes(record + tail)
@@ -1630,7 +1630,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "old.omwsave"
             target = Path(directory) / "new.omwsave"
-            untouched = struct.pack("<4sIII", b"TEST", 4, 0, 0) + b"keep"
+            untouched = struct.pack("<4sIII", b"TEST", 12, 0, 0) + struct.pack("<4sI", b"DATA", 4) + b"keep"
             source.write_bytes(untouched + struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
             state_io.write_save(source, target, state_io.load_save(source))
             saved = state_io.load_save(target)
@@ -2350,6 +2350,84 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         del state["native_physical_blend_time_cache"]
         state_io.encode_payload(state)
+
+
+class SaveEnvelopeAdmissionTests(unittest.TestCase):
+    @staticmethod
+    def record(name, body):
+        return struct.pack("<4sIII", name, len(body), 0, 0) + body
+
+    @staticmethod
+    def subrecord(name, value):
+        return struct.pack("<4sI", name, len(value)) + value
+
+    def envelope(self, version=4, with_profile=True):
+        state = make_state()
+        state["schema_version"] = version
+        payload = state_io.encode_payload(state)
+        native = self.record(b"T4ST", self.subrecord(b"VERS", struct.pack("<I", version))
+                             + self.subrecord(b"DATA", payload))
+        profile = self.record(b"SAVE", self.subrecord(b"GPRO", b"Oblivion\0")
+                              + self.subrecord(b"T4VR", struct.pack("<I", version)))
+        opaque = self.record(b"TEST", self.subrecord(b"DATA", b"keep"))
+        return (profile if with_profile else b"") + native + opaque
+
+    def test_complete_scan_rejects_duplicate_records_and_corrupt_opaque_tail(self):
+        valid = self.envelope()
+        records = list(state_io._save_records(valid))
+        profile = valid[records[0][0]:records[0][1]]
+        native = valid[records[1][0]:records[1][1]]
+        corrupt = bytearray(valid)
+        struct.pack_into("<I", corrupt, records[2][0] + 20, 5)
+        for bad in (valid + native, valid + profile, valid + b"x", valid[:-1], bytes(corrupt),
+                    valid + self.record(b"JUNK", b"short")):
+            with self.subTest(bad=bad[-32:]), self.assertRaises(state_io.RuntimeStateError):
+                state_io._find_runtime_record(bad)
+        self.assertEqual(state_io._find_runtime_record(valid)[3], state_io.encode_payload(make_state()))
+
+    def test_versions_profiles_and_subrecord_order_must_match(self):
+        valid = self.envelope()
+        faults = []
+        for tag in (b"T4VR", b"VERS"):
+            bad = bytearray(valid)
+            struct.pack_into("<I", bad, valid.index(tag) + 8, 3)
+            faults.append(bytes(bad))
+        faults.append(valid.replace(b"Oblivion\0", b"Morrowind", 1))
+        payload = state_io.encode_payload(make_state())
+        for body in (
+            self.subrecord(b"DATA", payload) + self.subrecord(b"VERS", struct.pack("<I", 4)),
+            self.subrecord(b"VERS", struct.pack("<I", 4)) * 2 + self.subrecord(b"DATA", payload),
+            self.subrecord(b"VERS", struct.pack("<I", 4)) + self.subrecord(b"DATA", payload)
+                + self.subrecord(b"EXTR", b"x")):
+            faults.append(self.record(b"T4ST", body))
+        for bad in faults:
+            with self.subTest(bad=bad[:32]), self.assertRaises(state_io.RuntimeStateError):
+                state_io._find_runtime_record(bad)
+
+    def test_promotion_updates_native_profile_tag_and_preserves_unrelated_bytes(self):
+        for with_profile in (False, True):
+            with tempfile.TemporaryDirectory() as directory:
+                source = Path(directory) / "source.omwsave"
+                target = Path(directory) / "target.omwsave"
+                source.write_bytes(self.envelope(with_profile=with_profile))
+                state = state_io.load_save(source)
+                state_io.write_save(source, target, state)
+                self.assertEqual(state_io.load_save(target)["schema_version"], state_io.CURRENT_VERSION)
+                records = list(state_io._save_records(target.read_bytes()))
+                opaque = records[-1]
+                self.assertEqual(target.read_bytes()[opaque[0]:opaque[1]],
+                                 self.record(b"TEST", self.subrecord(b"DATA", b"keep")))
+                if with_profile:
+                    tag = target.read_bytes().index(b"T4VR")
+                    self.assertEqual(struct.unpack_from("<I", target.read_bytes(), tag + 8)[0], state_io.CURRENT_VERSION)
+                self.assertEqual(source.read_bytes(), self.envelope(with_profile=with_profile))
+
+    def test_profile_name_uses_same_first_nul_termination_as_cpp(self):
+        profile = self.record(b"SAVE", self.subrecord(b"GPRO", b"oblivion\0padding")
+                              + self.subrecord(b"T4VR", struct.pack("<I", 4)))
+        native = self.envelope(with_profile=False)
+        self.assertEqual(state_io._find_runtime_record(profile + native)[3],
+                         state_io.encode_payload(make_state()))
 
 
 if __name__ == "__main__":

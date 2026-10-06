@@ -25,7 +25,8 @@ namespace MWState
     private:
         void cleanup(bool force = false);
 
-        void printSavegameFormatError(const std::string& exceptionText, const std::string& messageBoxText);
+        void printSavegameFormatError(
+            const std::string& exceptionText, const std::string& messageBoxText, bool restorationStarted);
 
         bool confirmLoading(const std::vector<std::string_view>& missingFiles) const;
 

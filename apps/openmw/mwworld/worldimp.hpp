@@ -243,6 +243,7 @@ namespace MWWorld
             const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
+        void validateOblivionSaveState(const ESM4::RuntimeState& state) const override;
         ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
         void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;

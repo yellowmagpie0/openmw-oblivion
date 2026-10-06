@@ -108,7 +108,7 @@ add_openmw_dir (mwmechanics
     )
 
 add_openmw_dir (mwstate
-    statemanagerimp charactermanager character quicksavemanager
+    statemanagerimp charactermanager character quicksavemanager saveadmission
     )
 
 add_openmw_dir (mwbase

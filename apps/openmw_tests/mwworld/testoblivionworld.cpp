@@ -84,6 +84,7 @@
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwworld/timestamp.hpp"
+#include "apps/openmw/mwstate/saveadmission.hpp"
 
 namespace
 {
@@ -12376,4 +12377,48 @@ TEST(OblivionWorldTest, NativeAiRestoreMigratesPopulatedQueuesOverlaysAndDetecti
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), migrated.serializeBinary());
     }
+}
+
+TEST(OblivionWorldTest, NativeSaveAdmissionRejectsContentBeforeTouchingLiveWorldOrPendingIdentity)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    const auto admit = [&](const ESM4::RuntimeState& state) {
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        auto stream = std::make_unique<std::stringstream>();
+        writer.save(*stream);
+        ESM::SavedGame profile{};
+        profile.mGameProfile = ESM::GameProfile::Oblivion;
+        profile.mRuntimeStateVersion = state.mVersion;
+        writer.startRecord(ESM::REC_SAVE);
+        profile.save(writer);
+        writer.endRecord(ESM::REC_SAVE);
+        writer.startRecord(ESM::REC_T4ST);
+        state.save(writer);
+        writer.endRecord(ESM::REC_T4ST);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "world-save-admission");
+        return MWState::admitSave(reader, world.getGameProfile(),
+            [&](const auto& native) { world.validateOblivionSaveState(native); });
+    };
+    ASSERT_FALSE(before.mContent.empty());
+    for (const bool missing : {false, true})
+    {
+        auto invalid = before;
+        if (missing)
+            invalid.mContent.front().mPlugin = "missing.esm";
+        else
+            invalid.mContent.front().mFingerprint = "sha256:" + std::string(64, '0');
+        EXPECT_THROW(admit(invalid), std::runtime_error);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(pending->isValid());
+    }
+    EXPECT_NO_THROW(admit(before));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    EXPECT_TRUE(pending->isValid());
+    MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+    EXPECT_THROW(legacy.validateOblivionSaveState(before), std::runtime_error);
 }

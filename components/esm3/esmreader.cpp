@@ -43,6 +43,9 @@ namespace ESM
         mCtx = rc;
 
         // Make sure we seek to the right place
+        // A rejected record can have attempted to read past EOF. Context
+        // restoration must retire that stream failure before seeking back.
+        mEsm->clear();
         mEsm->seekg(mCtx.filePos);
     }
 

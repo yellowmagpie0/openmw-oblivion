@@ -50,6 +50,7 @@
 #include "../mwscript/globalscripts.hpp"
 
 #include "quicksavemanager.hpp"
+#include "saveadmission.hpp"
 
 void MWState::StateManager::cleanup(bool force)
 {
@@ -463,10 +464,9 @@ struct SaveVersionTooNewError : SaveFormatVersionError
 
 void MWState::StateManager::loadGame(const Character* character, const std::filesystem::path& filepath)
 {
+    bool restorationStarted = false;
     try
     {
-        cleanup();
-
         Log(Debug::Info) << "Reading save file " << filepath.filename();
 
         ESM::ESMReader reader;
@@ -477,6 +477,19 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             throw SaveVersionTooNewError(version);
         else if (version < ESM::MinSupportedSaveGameFormatVersion)
             throw SaveVersionTooOldError(version);
+
+        const auto& world = *MWBase::Environment::get().getWorld();
+        const auto admittedProfile = admitSave(reader, world.getGameProfile(),
+            [&](const ESM4::RuntimeState& native) { world.validateOblivionSaveState(native); });
+        const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
+        if (!missingFiles.empty() && !confirmLoading(missingFiles))
+            return;
+
+        // Errors in opening, framing, profile, native schema or content identity
+        // leave the outgoing game intact. Later record restoration still owns
+        // the cleanup-on-failure boundary until full staging is implemented.
+        restorationStarted = true;
+        cleanup();
 
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
@@ -514,14 +527,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                         throw std::runtime_error("Saved game profile '" + std::string(ESM::toString(profile.mGameProfile))
                             + "' cannot be loaded by active profile '" + std::string(ESM::toString(activeProfile))
                             + "'");
-                    const auto& selectedContentFiles = MWBase::Environment::get().getWorld()->getContentFiles();
-                    auto missingFiles = profile.getMissingContentFiles(selectedContentFiles);
-                    if (!missingFiles.empty() && !confirmLoading(missingFiles))
-                    {
-                        cleanup(true);
-                        MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_MainMenu);
-                        return;
-                    }
                     mTimePlayed = profile.mTimePlayed;
                     Log(Debug::Info) << "Loading saved game '" << profile.mDescription << "' for character '"
                                      << profile.mPlayerName << "'";
@@ -685,7 +690,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
     catch (const SaveVersionTooNewError& e)
     {
         std::string error = "#{OMWEngine:LoadingRequiresNewVersionError}";
-        printSavegameFormatError(e.what(), error);
+        printSavegameFormatError(e.what(), error, restorationStarted);
     }
     catch (const SaveVersionTooOldError& e)
     {
@@ -701,23 +706,24 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         }
         auto l10n = MWBase::Environment::get().getL10nManager()->getContext("OMWEngine");
         std::string error = l10n->formatMessage("LoadingRequiresOldVersionError", { "version" }, { release });
-        printSavegameFormatError(e.what(), error);
+        printSavegameFormatError(e.what(), error, restorationStarted);
     }
     catch (const std::exception& e)
     {
         std::string error = "#{OMWEngine:LoadingFailed}: " + std::string(e.what());
-        printSavegameFormatError(e.what(), error);
+        printSavegameFormatError(e.what(), error, restorationStarted);
     }
 }
 
 void MWState::StateManager::printSavegameFormatError(
-    const std::string& exceptionText, const std::string& messageBoxText)
+    const std::string& exceptionText, const std::string& messageBoxText, bool restorationStarted)
 {
     Log(Debug::Error) << "Failed to load saved game: " << exceptionText;
 
-    cleanup(true);
-
-    MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_MainMenu);
+    if (restorationStarted)
+        cleanup(true);
+    if (restorationStarted || mState == State_NoGame)
+        MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_MainMenu);
 
     std::vector<std::string> buttons;
     buttons.emplace_back("#{Interface:OK}");

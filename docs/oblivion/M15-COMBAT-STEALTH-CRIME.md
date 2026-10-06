@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, populated migration and restart evidence below | Complete outer load/cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, read-only outer admission, populated migration and restart evidence below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,86 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 read-only save admission checkpoint — 2026-10-05
+
+StateManager now opens and checks save versions, all outer record/subrecord
+bounds, the SAVE profile, T4ST schema/envelope versions and native content
+identity before clearing the running game. Duplicate SAVE/T4ST records,
+unexpected profile/native trailing data, unsupported declared native versions,
+foreign profiles and missing/changed native content reject before teardown.
+The same open reader is rewound for restoration; malformed metadata reaching
+EOF no longer leaves its stream failure set after context restoration.
+Declining a missing-content prompt also preserves the outgoing game.
+
+Early errors retain the current character, last-save path, play time, World
+and running state; the error dialog overlays the existing scene. Errors after
+record restoration starts retain the existing cleanup boundary. World exposes
+a read-only schema/content admission validator shared with T4ST reading.
+Legacy native saves without T4ST remain deliberately admitted; this pass does
+not prove manager-specific records are present or semantically restorable.
+
+The independent Python native-envelope reader now checks the complete file,
+including opaque record/subrecord bounds after T4ST, duplicate SAVE/T4ST records,
+ordered VERS/DATA and envelope/payload/profile version agreement. Schema
+promotion updates the native SAVE T4VR tag and preserves unrelated bytes.
+Envelope-only fixtures remain supported. GPRO uses the shared reader's first-
+NUL string behavior, verified by paired C++/Python cases.
+
+Eight admission tests cover every supported native version **1–41**, deliberate
+no-T4ST/TES3 admission, all mid-record truncation points, metadata/framing faults,
+content rejection with corrected retry, EOF recovery and NUL padding. An actual
+World fixture proves content admission leaves complete captured state and a
+pending reference identity untouched. Four new Python cases independently
+exercise complete framing, metadata/version/order rejection, promotion and
+string compatibility. Two existing opaque-record fixtures now use real
+subrecord framing while retaining byte-for-byte preservation checks.
+
+Final checks bind parent `7057ce967a333720bc719ad23a88d58da2c78124` and source
+fingerprint `3c5f80f7bc414bd70407637fe687b551326cff7bfd129bf1e11cdf9155ac08de`.
+
+- `S3/save-admission-final-engine-python-01`: all **1,143** engine and **269**
+  Python tests pass. Exact engine inventory, zero failures/skips, unchanged source.
+- `S3/save-admission-final-engine-sanitize-01`: all **1,143** engine tests pass
+  under ASan/UBSan with the same source fingerprint and exact inventory. Leak
+  checks are disabled; UBSan halts with stack traces. Both final runs build
+  `openmw`, `openmw-tests` and `esmtool`.
+- `S3/save-admission-full-01`: all **2,568** components passed before repair of
+  five newly constructed engine fixtures that omitted required Player data.
+  Component production source is unchanged afterward. The failed engine result
+  is retained; corrected fixtures pass the final runs. Both earlier stopped
+  builds and all intermediate verification attempts remain in their directories.
+- `S3/save-admission-runtime-04` and `save-admission-sanitized-runtime-01`:
+  real stock load/F5/private fingerprint fault/F9 rejection/Return/F5/clean quit.
+  Each process has exactly **one** load-complete and **two** actual save-complete
+  boundaries. Independent decoding preserves complete Player/action/native
+  actor vectors, **130** script instances, **390** quests and all **34,398**
+  pre-rejection reference inventories. Normal/instrumented runs add **204/150**
+  cached references, explicitly counted. All seven AI fields, including all
+  **3,663** actors, match the input at load-complete tick0; ordinary clocks and
+  AI advance between later saves. Final captures were inspected: the same
+  prison scene and full bars. Audio is disabled; SDL courses are diagnostic
+  idle input/runtime coverage. The exact preexisting `menu_icon_equip.dds`
+  missing-texture error and expected fingerprint rejection are explicitly
+  reviewed; no other errors or sanitizer findings remain. Attempts01–03 retain
+  the prelaunch action rejection and texture-log declaration/escaping failures.
+- `S3/save-admission-morrowind-01`: actual TES3 load/F5 resave/quit passes.
+  Independent inspection of all **102** records and their subrecords confirms
+  no GPRO/T4VR/T4ST/native-state markers. The inspected terrain-facing idle
+  capture establishes profile isolation, not broader Morrowind gameplay.
+
+Aggregate evidence is `S3/save-admission-report.json`, including all fourteen
+verified source hashes, binaries, manifests, private input/output saves and
+receipt-coordinated fault-worker identities. Documentation follows completed
+checks. The unrelated implementation-tour HTML remains untouched.
+
+**S3 remains in progress.** Admission now protects opening/framing/profile/
+schema/content failures, but full shared-record semantics and native winning-
+record bindings must still be staged before cleanup. World apply also loads
+cell caches and moves references after preparation/publication; accepted versus
+pending native snapshots and cache/placement reconciliation remain open.
+Remaining populated migrations, active-action continuation and the final S3
+requirement-by-requirement gate remain required. No S4–S14 mechanics are added.
 
 ## S3 World reset and legacy-overlay checkpoint — 2026-10-05
 

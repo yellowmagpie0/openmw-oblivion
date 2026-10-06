@@ -2928,6 +2928,18 @@ namespace MWWorld
         writer.endRecord(ESM::REC_CAM_);
     }
 
+    void World::validateOblivionSaveState(const ESM4::RuntimeState& state) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
+        state.validate();
+        std::vector<ESM4::RuntimeContentIdentity> content;
+        content.reserve(mOblivionContentIdentities.size());
+        for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
+            content.push_back({ plugin, fingerprint });
+        state.validateContent(content);
+    }
+
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         switch (type)
@@ -2951,11 +2963,7 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
                 auto state = std::make_unique<ESM4::RuntimeState>();
                 state->load(reader);
-                std::vector<ESM4::RuntimeContentIdentity> content;
-                content.reserve(mOblivionContentIdentities.size());
-                for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
-                    content.push_back({ plugin, fingerprint });
-                state->validateContent(content);
+                validateOblivionSaveState(*state);
                 mOblivionRuntimeState = std::move(state);
             }
             break;
