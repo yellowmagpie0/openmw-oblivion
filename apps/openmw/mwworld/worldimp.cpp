@@ -3181,6 +3181,76 @@ namespace MWWorld
                 throw std::runtime_error("TES4 runtime-state cell is not present: " + key.serialize());
         };
         validateCell(state.mPlayer.mCell);
+        if (!state.mNativeCrime.mIncidents.empty() || !state.mNativeCrime.mArrests.empty()
+            || !state.mNativeCrime.mJails.empty())
+        {
+            std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> references;
+            for (const auto& reference : state.mReferences) references.emplace(reference.mKey, &reference);
+            const auto actor = [&](const ESM::FormKey& key) {
+                if (key.isNull() || key == state.mPlayer.mReference || key == ESM::FormKey::dynamic("player", 1))
+                    return;
+                if (mStore.get<ESM4::ActorCharacter>().search(key) || mStore.get<ESM4::ActorCreature>().search(key))
+                    return;
+                if (const auto found = references.find(key); found != references.end())
+                {
+                    const auto base = resolver.toFormId(found->second->mBase);
+                    if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
+                        || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+                        return;
+                }
+                throw std::runtime_error("Native crime actor has no winning actor binding: " + key.serialize());
+            };
+            const auto reference = [&](const ESM::FormKey& key) {
+                if (key.isNull()) return;
+                if (!references.contains(key) && !mStore.get<ESM4::Reference>().search(key)
+                    && !mStore.get<ESM4::ActorCharacter>().search(key) && !mStore.get<ESM4::ActorCreature>().search(key))
+                    throw std::runtime_error("Native crime reference has no winning binding: " + key.serialize());
+            };
+            const auto owner = [&](const ESM::FormKey& key) {
+                if (key.isNull()) return;
+                const auto id = resolver.toFormId(key);
+                if (!id || (!mStore.get<ESM4::Npc>().search(ESM::RefId(*id))
+                    && !mStore.get<ESM4::Faction>().search(ESM::RefId(*id))))
+                    throw std::runtime_error("Native crime owner has no winning NPC/faction: " + key.serialize());
+            };
+            for (const auto& incident : state.mNativeCrime.mIncidents)
+            {
+                actor(incident.mRequest.mPerpetrator);
+                actor(incident.mRequest.mVictim);
+                reference(incident.mRequest.mAffectedReference);
+                validateCell(incident.mRequest.mCell);
+                owner(incident.mRequest.mOwnership.mOwner);
+                OblivionProfileServices::resolveOwnershipGlobal(mStore, resolver, incident.mRequest.mOwnership.mGlobal);
+                for (const auto& witness : incident.mOutcome.mWitnesses) actor(witness.mWitness);
+                for (const auto& delta : incident.mOutcome.mFactionDeltas)
+                    if (!mStore.get<ESM4::Faction>().search(delta.mFaction))
+                        throw std::runtime_error("Native crime faction delta has no winning faction");
+            }
+            for (const auto& arrest : state.mNativeCrime.mArrests)
+            {
+                actor(arrest.mActor);
+                actor(arrest.mAuthority);
+                if (!arrest.mDestination.isNull()) validateCell(arrest.mDestination);
+            }
+            for (const auto& jail : state.mNativeCrime.mJails)
+            {
+                actor(jail.mActor);
+                for (const auto& key : {jail.mPrison, jail.mEvidence, jail.mBelongings, jail.mRelease}) reference(key);
+                for (const auto& item : jail.mProperty)
+                {
+                    // Instance/owner metadata describes original property; an
+                    // instance may no longer exist after a committed transfer.
+                    ESM4::RuntimeInventoryItem metadata;
+                    metadata.mBase = item.mBase;
+                    metadata.mCount = item.mCount;
+                    metadata.mCondition = item.mCondition.value_or(-1.f);
+                    metadata.mCharge = item.mCharge.value_or(-1.f);
+                    (void)OblivionProfileServices::prepareActorInventory(mStore, resolver, {metadata}, incoming);
+                    owner(item.mOriginalOwner);
+                    OblivionProfileServices::resolveOwnershipGlobal(mStore, resolver, item.mOriginalOwnershipGlobal);
+                }
+            }
+        }
         for (const auto& reference : state.mReferences)
         {
             validateCell(reference.mCell);
@@ -6701,6 +6771,13 @@ namespace MWWorld
 
     bool World::isPlayerInJail() const
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion && mOblivionCombat)
+            return std::any_of(mOblivionCombat->crimeContracts().mJails.begin(),
+                mOblivionCombat->crimeContracts().mJails.end(), [&](const auto& jail) {
+                    return jail.mPhase == ESM4::JailPhase::Serving
+                        && (jail.mActor == ESM::FormKey::dynamic("player", 1)
+                            || (mOblivionRuntimeState && jail.mActor == mOblivionRuntimeState->mPlayer.mReference));
+                });
         return mPlayerInJail;
     }
 

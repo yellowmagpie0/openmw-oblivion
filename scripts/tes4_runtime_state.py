@@ -17,9 +17,14 @@ import struct
 from pathlib import Path
 from typing import Any
 
+try:
+    from . import tes4_crime_contracts as crime_io
+except ImportError:
+    import tes4_crime_contracts as crime_io
+
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 41
+CURRENT_VERSION = 42
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -569,6 +574,23 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     this deliberately mirrors the C++ RuntimeState::validate checks instead
     of relying on a successful struct.pack as validation.
     """
+
+    crime = state.get("native_crime", crime_io.empty_state())
+    try:
+        crime_io.validate(crime)
+        actions = state.get("physical_actions", {"next": 1, "pending": []})
+        if crime["action_retention_floor"] > actions["next"]:
+            raise ValueError("Crime retention floor exceeds the issued action domain")
+        for incident in crime["incidents"]:
+            action = incident["request"]["action"]
+            if action >= actions["next"]:
+                raise ValueError("Crime incident has an unissued causal action")
+            if incident["outcome"]["consequences_committed"] and action in actions["pending"]:
+                raise ValueError("Committed crime retains a pending causal action")
+        if state.get("schema_version", 0) < 42 and crime != crime_io.empty_state():
+            raise ValueError("Native crime contracts require runtime schema42")
+    except (ValueError, TypeError, KeyError, OverflowError) as error:
+        raise RuntimeStateError(str(error)) from error
 
     version = state.get("schema_version")
     if version not in SUPPORTED_VERSIONS or state.get("profile") != "oblivion":
@@ -1917,6 +1939,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     raise RuntimeStateError("Invalid native Player bow hold latch")
                 bow["player_hold_latched"] = bool(latch)
             result["native_bow_states"].append(bow)
+    if version >= 42:
+        try:
+            result["native_crime"] = crime_io.read(reader)
+        except (ValueError, TypeError, KeyError, OverflowError) as error:
+            raise RuntimeStateError(str(error)) from error
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -2332,6 +2359,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for time in bow["key_times"]: writer.pack("<f", time)
             writer.pack("<h", bow["action"]); writer.pack("<B", int(bow["release_committed"]))
             if version >= 39: writer.pack("<B", int(bow["player_hold_latched"]))
+    if version >= 42:
+        crime_io.write(writer, state.get("native_crime", crime_io.empty_state()))
     return writer.finish()
 
 
@@ -2498,6 +2527,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     player.setdefault("female", False)
     player.setdefault("character_generation_flags", 0)
     state["schema_version"] = CURRENT_VERSION
+    state.setdefault("native_crime", crime_io.empty_state())
     state.setdefault("script_event_sequence", 0)
     state.setdefault("script_instances", [])
     state.setdefault("quests", [])
@@ -2557,6 +2587,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_actor_knockback(result)
     _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION
+    result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)
     result.setdefault("script_instances", [])
     result.setdefault("quests", [])

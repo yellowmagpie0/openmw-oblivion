@@ -18,6 +18,7 @@
 
 #include "aiphase.hpp"
 #include "actionledger.hpp"
+#include "crimecontracts.hpp"
 #include "actorvalues.hpp"
 #include "physicalcombat.hpp"
 #include "projectilerules.hpp"
@@ -33,7 +34,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 41;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 42;
 
     struct RuntimeContentIdentity
     {
@@ -572,6 +573,8 @@ namespace ESM4
         // An absent actor timestamp denotes an uninitialized clock, not time0.
         float mNativeActorManagerTime = 0;
         std::map<ESM::FormKey, float> mNativeActorUpdateTimes;
+        // v42: validated crime/custody contracts; older saves invent no incidents.
+        CrimeStateContracts mNativeCrime;
 
         void validate() const;
         std::vector<std::uint8_t> serializeBinary() const;

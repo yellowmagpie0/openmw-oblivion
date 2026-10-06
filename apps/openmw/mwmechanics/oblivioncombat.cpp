@@ -663,6 +663,7 @@ namespace MWMechanics
         mPreparedReleaseIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
+        mCrimeContracts = {};
         mActionOwners.clear();
         mMeleeStates.clear();
         mAnimationClocks.clear();
@@ -3751,6 +3752,9 @@ namespace MWMechanics
 
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
+        if (state.mVersion < 42 && mCrimeContracts != ESM4::CrimeStateContracts{})
+            throw std::invalid_argument("native crime contracts require an Oblivion v42+ save");
+        auto crime = mCrimeContracts;
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)
             throw std::invalid_argument("native physical actions require an Oblivion v8+ save");
@@ -3846,6 +3850,7 @@ namespace MWMechanics
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
         state.mPhysicalActions = std::move(actions);
+        state.mNativeCrime = std::move(crime);
         state.mPhysicalActionOwners.swap(actionOwners);
         state.mNativeMeleeStates.swap(meleeStates);
         state.mNativeBowStates.swap(bowStates);
@@ -4012,6 +4017,7 @@ namespace MWMechanics
     void OblivionCombatService::restore(const ESM4::RuntimeState& state)
     {
         state.validate();
+        auto crime = state.mNativeCrime;
         ESM4::ActionLedger actions;
         actions.restore(state.mPhysicalActions);
         auto actionOwners = state.mPhysicalActionOwners;
@@ -4058,6 +4064,7 @@ namespace MWMechanics
         mPreparedReleaseIdentity.mValue.reset();
         mActions = std::move(actions);
         mCombatRngState = state.mCombatRngState;
+        std::swap(mCrimeContracts, crime);
         mActionOwners.swap(actionOwners);
         mMeleeStates.swap(meleeStates);
         mBowStates.swap(bowStates);

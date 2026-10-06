@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, schema42 crime/custody contracts and public jail query, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,63 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 schema42 crime/custody persistence checkpoint — 2026-10-06
+
+Runtime schema42 appends the validated crime incident, arrest and jail contracts
+in binary and canonical JSON. The independent Python reader/writer uses the same
+explicit wire domains. Versions1–41 retain their original layout and restore
+empty contracts; attempts to encode nonempty contracts in an older envelope
+fail. Incident causes must have been issued, remain above the retention floor,
+and cannot retain a pending action after their consequences commit. Readers
+reject noncanonical identities, invalid boolean/presence bytes, excessive
+collections, truncation and trailing bytes. The populated editable JSON fixture
+and independently packed golden wire fixture agree with both C++ and Python.
+
+The Oblivion combat service owns the live contracts. Capture, validated detached
+restore, retained save admission and clear preserve/reset that authority. World
+admission checks actor, reference, CELL, NPC/FACT owner, faction-delta, ownership
+GLOB and property-base bindings before cleanup. Original property instance
+identities can describe already transferred items; their bases must still bind
+to incoming item definitions. This also accepts generated shared item bases.
+World and ObScript `isplayerinjail` read the live jail phase through the public
+query. No crime evaluation, arrest/fine producer, confiscation, sentence penalty,
+prison transition or release gameplay is added.
+
+Final checks have exact inventories, zero failures and zero skips:
+
+- `S3/crime-schema-normal-02`: **2,581 component cases**, filter `*`. This mode
+  passed before its subsequent engine build reached the compiler temporary-file
+  quota; the overall report is deliberately retained as failed.
+- `crime-schema-normal-03`: **1,203 engine cases**, filter `*`, and **273 Python
+  cases**, all passed with unchanged source.
+- `crime-schema-sanitized-03`: **1,203 engine cases**, filter `*`, and **702 ESM4
+  component cases**, filter `ESM4*`, passed under ASan/UBSan. Leak checking is
+  disabled; both sanitizers halt on error.
+
+Earlier 01 checks caught two historical test assumptions: the actor-clock
+corruption fixture omitted the new36-byte suffix, and an ownership integration
+case asserted current schema41. Both were corrected without weakening their
+semantic assertions. The 02 engine builds failed writing compiler assembly to
+quota-limited `/tmp`; 03 used an ignored temporary directory on the workspace
+disk. Failed evidence remains intact. Existing initializer/range-copy and
+animation debug warnings remain in the earlier rebuild logs.
+Tested parent: `a9438a48b92c2447443a9a818fc684ff79d4c930`; fingerprint:
+`bce68932a48d4f39ca249f1a4803029f2317bd6281ad3aeb97989ca936b5ac70`.
+
+`crime-schema-restart-01` and `crime-schema-restart-sanitized-01` each complete
+actual F5/F9/F5/quit and a fresh-process continuation. All **38 native fields**
+match the input at all four load boundaries per course. Populated incident,
+resolving arrest and prepared jail/property metadata survive every save.
+The prepared phase answers `isplayerinjail=0`; the engine integration test also
+proves Serving answers true and clear answers false. Five independent raw-save
+controls per course preserve generated gear, generated class, moved-reference
+state and finite cell water. All four captures were reviewed. These are idle
+contract/restart checks, without a gameplay consequence producer.
+Source, executable, input/output, check and capture hashes are recorded in
+`S3/crime-schema-report.json`. This completes the schema/service persistence
+chunk. Whole-S3 authority, lifecycle, semantic staging and migration audits
+remain open; S3 and later-stage gameplay acceptance are not claimed.
 
 ## S3 crime interface/state contract checkpoint — 2026-10-06
 

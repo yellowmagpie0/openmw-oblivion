@@ -1999,7 +1999,7 @@ namespace MWWorld
                 && oblivionAi()->isRidingHorse(actor));
         }
         if (name == "isplayerinjail")
-            return std::int64_t(mWorld.mPlayerInJail);
+            return std::int64_t(mWorld.isPlayerInJail());
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
         {
             if (!mWorld.mOblivionRuntimeState)

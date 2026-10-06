@@ -1,0 +1,93 @@
+{
+  "next_incident": 3,
+  "next_transaction": 3,
+  "action_retention_floor": 1,
+  "incidents": [
+    {
+      "request": {
+        "action": 9,
+        "perpetrator": "dynamic:player:0000000000000001",
+        "victim": "content:oblivion.esm:000001",
+        "affected_reference": "content:oblivion.esm:000002",
+        "cell": "content:oblivion.esm:000003",
+        "ownership": {
+          "owner": "content:oblivion.esm:00000c",
+          "rank": -2,
+          "global": "content:oblivion.esm:00000d"
+        },
+        "offense": 0,
+        "item_value": 17,
+        "count": 3,
+        "lawful_combat": false,
+        "owner_has_claim": true
+      },
+      "outcome": {
+        "incident": 1,
+        "report_phase": 2,
+        "witnesses": [
+          {
+            "witness": "content:oblivion.esm:000004",
+            "observed": true,
+            "will_report": true
+          }
+        ],
+        "bounty_delta": 25,
+        "infamy_delta": 1,
+        "faction_deltas": [
+          {
+            "faction": "content:oblivion.esm:000005",
+            "delta": -2
+          }
+        ],
+        "lawful_combat_exception": false,
+        "guard_response_requested": true,
+        "consequences_committed": true
+      }
+    }
+  ],
+  "arrests": [
+    {
+      "transaction": 1,
+      "incident": 1,
+      "actor": "dynamic:player:0000000000000001",
+      "authority": "content:oblivion.esm:000004",
+      "destination": "content:oblivion.esm:000006",
+      "resolution": 2,
+      "phase": 3,
+      "assessed_fine": 25,
+      "fine_committed": false,
+      "confiscation_committed": true,
+      "transition_committed": true
+    }
+  ],
+  "jails": [
+    {
+      "transaction": 1,
+      "actor": "dynamic:player:0000000000000001",
+      "prison": "content:oblivion.esm:000010",
+      "evidence": "content:oblivion.esm:000007",
+      "belongings": "content:oblivion.esm:000008",
+      "release": "content:oblivion.esm:000009",
+      "phase": 1,
+      "sentence_start": 11.25,
+      "remaining_hours": 3.5,
+      "property": [
+        {
+          "instance": "content:oblivion.esm:00000a",
+          "base": "content:oblivion.esm:00000b",
+          "count": 3,
+          "original_owner": "content:oblivion.esm:00000c",
+          "original_ownership_rank": -2,
+          "original_ownership_global": "content:oblivion.esm:00000d",
+          "condition": 37.125,
+          "charge": 9.25,
+          "quest_item": true
+        }
+      ],
+      "property_committed": true,
+      "skill_penalty_committed": false,
+      "time_penalty_committed": false,
+      "release_committed": false
+    }
+  ]
+}

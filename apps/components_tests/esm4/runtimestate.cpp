@@ -1,3 +1,5 @@
+#include "crimefixture.hpp"
+
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/runtimestate.hpp>
 
@@ -1567,7 +1569,8 @@ namespace
             const unsigned suffix = (version >= 20 ? 4 : 0) + (version >= 21 ? 4 : 0)
                 + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
-                + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0);
+                + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
+                + (version >= 42 ? 36 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -3225,4 +3228,62 @@ TEST(ESM4RuntimeState, OwnershipExtras41RejectExplicitZeroGlobalIdentityInBinary
             found + static_cast<std::ptrdiff_t>(encoded.size()), '0');
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(payload), std::runtime_error);
     }
+}
+
+
+TEST(ESM4RuntimeState, Crime42PopulatedRoundTripAndOriginalLayoutsRemainDeliberate)
+{
+    auto state = makeState();
+    state.mPhysicalActions.mNext = 10;
+    state.mNativeCrime = Testing::crimeFixture();
+    const auto bytes = state.serializeBinary();
+    ASSERT_GE(bytes.size(), Testing::CrimeWireFixture.size());
+    EXPECT_TRUE(std::equal(Testing::CrimeWireFixture.rbegin(), Testing::CrimeWireFixture.rend(), bytes.rbegin()));
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored, state);
+    EXPECT_NE(restored.canonicalJson().find("\"native_crime\":{\"next_incident\":3"), std::string::npos);
+    for (std::uint32_t version = 1; version < 42; ++version)
+    {
+        SCOPED_TRACE(version);
+        ESM4::RuntimeState old;
+        old.mVersion = version;
+        old.mPlayer.mReference = state.mPlayer.mReference;
+        old.mPlayer.mCell = state.mPlayer.mCell;
+        if (version >= 3) { old.mPlayer.mRace = state.mPlayer.mRace; old.mPlayer.mClass = state.mPlayer.mClass; }
+        const auto migrated = ESM4::RuntimeState::deserializeBinary(old.serializeBinary());
+        EXPECT_EQ(migrated.mNativeCrime, ESM4::CrimeStateContracts{});
+        EXPECT_EQ(migrated.serializeBinary(), old.serializeBinary());
+        old.mNativeCrime = state.mNativeCrime;
+        EXPECT_THROW(old.serializeBinary(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, Crime42RejectsUnissuedOrPendingCommittedCausesAndMalformedSuffix)
+{
+    auto state = makeState();
+    state.mPhysicalActions.mNext = 10;
+    state.mNativeCrime = Testing::crimeFixture();
+    auto bad = state;
+    bad.mPhysicalActions.mNext = 9;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = state; bad.mPhysicalActions.mPending = {9};
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    const auto bytes = state.serializeBinary();
+    for (std::size_t remove = 1; remove <= 36; ++remove)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({bytes.begin(), bytes.end() - remove}), std::runtime_error);
+    // Each trailing quest/property/penalty/release flag must be exactly 0 or 1.
+    for (std::size_t offset = 1; offset <= 5; ++offset)
+    {
+        auto corruptFlag = bytes; corruptFlag[corruptFlag.size() - offset] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corruptFlag), std::runtime_error);
+    }
+    auto extra = bytes; extra.push_back(0);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(extra), std::runtime_error);
+    auto empty = makeState();
+    auto corrupt = empty.serializeBinary();
+    // The empty suffix is three u64 counters followed by three u32 counts.
+    corrupt[corrupt.size() - 12] = 0x41;
+    corrupt[corrupt.size() - 11] = 0x42;
+    corrupt[corrupt.size() - 10] = 0x0f; // 1,000,001 incidents
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
 }

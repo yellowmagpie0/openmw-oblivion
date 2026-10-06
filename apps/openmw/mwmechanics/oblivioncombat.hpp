@@ -245,6 +245,7 @@ namespace MWMechanics
         } mPreparedReleaseIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
+        ESM4::CrimeStateContracts mCrimeContracts;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
         std::map<ESM::FormKey, float> mAnimationClocks;
@@ -340,6 +341,7 @@ namespace MWMechanics
         // actors survive; stale input or invalid later updates leave all unchanged.
         bool syncActorRagdolls(const PhysicalPoseUpdates& updates);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
+        const ESM4::CrimeStateContracts& crimeContracts() const noexcept { return mCrimeContracts; }
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.
         OblivionCombatRandomTransition prepareCombatRandom(unsigned draws) const;

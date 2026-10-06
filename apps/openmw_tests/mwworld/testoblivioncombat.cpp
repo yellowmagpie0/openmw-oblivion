@@ -1,3 +1,5 @@
+#include <apps/components_tests/esm4/crimefixture.hpp>
+
 #include <apps/openmw/mwclass/esm4npc.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
 #include <components/esm4/projectilerules.hpp>
@@ -1074,4 +1076,27 @@ TEST(OblivionCombatService, PlayerBowInputFrameRejectsAtomicallyAndCancellationR
     service.capture(state); EXPECT_TRUE(state.mNativeBowStates.empty());
     const auto next = service.beginBowDraw(actor, preparedBow());
     EXPECT_GT(next, id); EXPECT_TRUE(service.findBowState(actor)->mPlayerHoldLatched);
+}
+
+
+TEST(OblivionCombatService, CrimeContractsRestoreCaptureClearAndRejectWithoutPartialPublication)
+{
+    auto state = savedState();
+    state.mPhysicalActions.mNext = 10;
+    state.mNativeCrime = Testing::crimeFixture();
+    MWMechanics::OblivionCombatService service;
+    service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    EXPECT_EQ(service.crimeContracts(), state.mNativeCrime);
+    auto captured = savedState(); service.capture(captured);
+    EXPECT_EQ(captured.mNativeCrime, state.mNativeCrime);
+    auto corrupt = state; corrupt.mNativeCrime.mArrests.front().mIncident = 2;
+    EXPECT_THROW(service.restore(corrupt), std::exception);
+    EXPECT_EQ(service.crimeContracts(), state.mNativeCrime);
+    captured.mVersion = 41;
+    EXPECT_THROW(service.capture(captured), std::invalid_argument);
+    service.clear();
+    EXPECT_EQ(service.crimeContracts(), ESM4::CrimeStateContracts{});
+    state.mVersion = 41; state.mNativeCrime = {};
+    service.restore(state);
+    EXPECT_EQ(service.crimeContracts(), ESM4::CrimeStateContracts{});
 }

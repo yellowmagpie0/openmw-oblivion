@@ -1,6 +1,7 @@
 #include "runtimestate.hpp"
 
 #include "ability.hpp"
+#include "crimecontractsio.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -792,6 +793,23 @@ namespace ESM4
 
     void RuntimeState::validate() const
     {
+        try { mNativeCrime.validate(); }
+        catch (const std::invalid_argument& error)
+        { throw std::runtime_error(std::string("Invalid native crime contracts: ") + error.what()); }
+        if (mVersion < 42 && mNativeCrime != CrimeStateContracts{})
+            throw std::runtime_error("Native crime contracts require runtime schema42");
+        if (mNativeCrime.mActionRetentionFloor > mPhysicalActions.mNext)
+            throw std::runtime_error("Crime retention floor exceeds the issued action domain");
+        for (const auto& incident : mNativeCrime.mIncidents)
+        {
+            const auto action = incident.mRequest.mAction;
+            if (action >= mPhysicalActions.mNext)
+                throw std::runtime_error("Crime incident has an unissued causal action");
+            if (incident.mOutcome.mConsequencesCommitted
+                && std::find(mPhysicalActions.mPending.begin(), mPhysicalActions.mPending.end(), action)
+                    != mPhysicalActions.mPending.end())
+                throw std::runtime_error("Committed crime retains a pending causal action");
+        }
         if (mVersion < 1 || mVersion > CurrentRuntimeStateVersion)
             throw std::runtime_error("Unsupported TES4 runtime-state version " + std::to_string(mVersion));
         if (mProfile != ESM::GameProfile::Oblivion)
@@ -2025,6 +2043,8 @@ namespace ESM4
                 if (mVersion >= 39) writer.integer<std::uint8_t>(bow.mPlayerHoldLatched);
             }
         }
+        if (mVersion >= 42)
+            Detail::CrimeBinaryWriter<BinaryWriter>{writer}.write(mNativeCrime);
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2877,6 +2897,8 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 bow actor");
             }
         }
+        if (result.mVersion >= 42)
+            Detail::CrimeBinaryReader<BinaryReader>{reader}.read(result.mNativeCrime);
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -3754,6 +3776,12 @@ namespace ESM4
                 stream << '}';
             }
             stream << ']';
+        }
+        if (mVersion >= 42)
+        {
+            stream << ",\"native_crime\":";
+            const auto quote = [](std::string_view value) { return '"' + escapeJson(value) + '"'; };
+            Detail::CrimeJsonWriter<decltype(quote)>{stream, quote}.write(mNativeCrime);
         }
         stream << "}";
         return stream.str();
