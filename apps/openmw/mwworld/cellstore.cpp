@@ -88,6 +88,7 @@
 #include "class.hpp"
 #include "containerstore.hpp"
 #include "esmstore.hpp"
+#include "savedreference.hpp"
 #include "inventorystore.hpp"
 #include "ptr.hpp"
 #include "worldmodel.hpp"
@@ -346,6 +347,23 @@ namespace
 
 namespace MWWorld
 {
+    std::unique_ptr<ESM::ObjectState> readSavedReferenceState(
+        ESM::ESMReader& reader, const ESM::CellRef& reference, std::uint32_t type)
+    {
+        std::unique_ptr<ESM::ObjectState> result;
+        CellStoreTuple types;
+        Misc::tupleForEach(types, [&]<class T>(CellRefList<T>&) {
+            if (T::sRecordId != type)
+                return;
+            result = std::make_unique<typename RecordToState<T>::StateType>();
+            result->mRef = reference;
+            result->load(reader);
+        });
+        if (!result)
+            throw std::runtime_error("unknown type in cell reference section");
+        return result;
+    }
+
     namespace
     {
         template <class T>

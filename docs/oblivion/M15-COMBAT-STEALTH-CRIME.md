@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,65 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 detached shared-world decoding checkpoint — 2026-10-05
+
+Oblivion admission now decodes shared PLAY and CSTA records into local state
+before cleanup. Cell headers, fog, object/reference state and moved-reference
+tags are parsed without loading live cells, constructing class views, moving
+references or changing registries. A detached reference decoder shares
+CellStore's existing record-to-state mapping, including the five specialized
+TES3 states and generic native object states. Winning base types determine
+reference parsing; the historical OBJE type marker remains unused.
+
+The incoming content-file mapping is now installed on the local reader before
+admission. Lua's live mapping still changes only after teardown. Shared dynamic
+definitions are indexed before reference decoding; immutable content supplies
+the fallback, so outgoing dynamic definitions cannot satisfy reference lookup.
+Missing-object reference sections follow CellStore's deliberate skip path.
+Duplicate PLAY/CSTA records, malformed known reference data, invalid trailing
+data, nonfinite effective positions/cell values and undersized fog textures
+reject before native validation or world teardown.
+
+Three new regressions cover nine valid/faulted cell cases with plugin-index
+remapping, four valid/faulted Player cases and seven reference state round trips
+covering all five specialized states plus native NPC/weapon states. They verify
+reader recovery and no content-store changes. The initial normal test attempt
+is preserved in `S3/shared-world-decoding-engine-01`: its new synthetic content
+fixture lacked the immutable ID index and therefore exercised the missing-object
+skip path. The corrected fixture uses normal store setup and asserts the winning
+native weapon type before testing semantic rejection. All preexisting tests and
+the other two new regressions passed in that initial attempt.
+
+Evidence under `build/oblivion-compat/m15/`:
+
+- `S3/shared-world-decoding-engine-02` and
+  `shared-world-decoding-sanitize-01`: all **1,161** engine tests pass with
+  exact inventories and zero failures/skips, unchanged tested fingerprint
+  `86e35a372a11fbc2b45c6eed2ef795bea1d0dc43e9c800522aa9aa52f134703e`
+  on parent `796432021b831925f91efc33926091c0a0e634a0`.
+  ASan leak detection is disabled; UBSan halts on errors.
+- `S3/shared-world-decoding-runtime-01` and
+  `shared-world-decoding-sanitized-runtime-01`: actual stock load/F5, append
+  one byte-for-byte duplicate CSTA record, F9 rejection, Return/F5 and clean
+  quit. Each course has one successful load, two actual saves and one process/
+  epoch. The rejected input equals the preceding save plus exactly the duplicate
+  record; complete decoded native state is unchanged. Player/actor authority,
+  all 34,398 prior reference inventories, 130 script instances and 390 quests
+  survive rejection and resave.
+- Both complete-load reports compare all **37** native fields and **33,376**
+  references exactly at initial tick zero, using the retained
+  `S3/shared-reconciliation-full-load.py` verifier. Runtime executable hashes
+  match the final builds. Both rejection screenshots were inspected; the same
+  prison and status bars remain visible. Only the expected rejection and
+  reviewed existing equip-icon error occur, with no unreviewed errors or
+  sanitizer diagnostics.
+
+Aggregate source, executable, save and report hashes are retained in
+`S3/shared-world-decoding-report.json`. This closes detached shared-world
+record decoding. Complete live cell/reference reconstruction, Lua reconciliation,
+allocation/placement publication, remaining migrations and active-action
+continuation remain required; S3 stays open.
 
 ## S3 incoming class/global reconciliation checkpoint — 2026-10-05
 

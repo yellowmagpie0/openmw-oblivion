@@ -11,11 +11,19 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
+#include <components/esm3/player.hpp>
+#include <components/esm3/cellstate.hpp>
+#include <components/esm3/containerstate.hpp>
+#include <components/esm3/creaturestate.hpp>
+#include <components/esm3/creaturelevliststate.hpp>
+#include <components/esm3/doorstate.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadweap.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include "apps/openmw/mwstate/saveadmission.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwworld/savedreference.hpp"
 
 namespace
 {
@@ -120,6 +128,18 @@ namespace
             reader.skipRecord();
         }
         throw std::logic_error("fixture has no native state");
+    }
+
+    std::string worldRecords(const std::function<void(ESM::ESMWriter&)>& write)
+    {
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        std::stringstream stream;
+        writer.save(stream);
+        write(writer);
+        ESM::ESMReader reader;
+        openBytes(reader, stream.str());
+        return stream.str().substr(reader.getFileOffset());
     }
 }
 
@@ -489,5 +509,152 @@ TEST(SaveAdmissionTest, DeletedSharedAuthorityRecordsRejectBeforeNativeValidatio
             [&](const auto&) { ++calls; }), std::runtime_error);
         EXPECT_EQ(calls, 0);
         EXPECT_EQ(reader.getFileOffset(), start);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedCellDecodingRejectsBeforeNativeValidationAndPreservesContent)
+{
+    MWWorld::ESMStore content;
+    ESM4::Weapon weapon{};
+    weapon.mId = {0x940, 1};
+    content.getWritable<ESM4::Weapon>().insertStatic(weapon);
+    content.setUp();
+    ASSERT_EQ(content.findStatic(ESM::RefId(weapon.mId)), ESM::REC_WEAP4);
+    const std::map<int, int> mapping{{0, 1}};
+    for (int fault = 0; fault != 9; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            for (int copy = 0; copy != (fault == 6 ? 2 : 1); ++copy)
+            {
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+                ESM::CellState cell{};
+                cell.mIsInterior = true;
+                cell.mWaterLevel = fault == 1 ? std::numeric_limits<float>::quiet_NaN() : 2.f;
+                cell.mHasFogOfWar = fault == 8;
+                cell.save(writer);
+                if (fault == 8)
+                    writer.writeHNT("FTEX", std::uint32_t{1});
+                if (fault == 3)
+                    writer.writeHNT("OBJE", std::uint16_t{0});
+                else
+                    writer.writeHNT("OBJE", std::uint32_t(ESM::REC_NPC_)); // unused, winning base type wins
+                ESM::ObjectState object;
+                object.blank();
+                object.mRef.mRefID = ESM::RefId(ESM::FormId{0x940, 0});
+                object.mRef.mRefNum = {0x942, 0};
+                object.mPosition.pos[0] = fault == 2 ? std::numeric_limits<float>::infinity() : 7.f;
+                object.mHasCustomState = false;
+                object.save(writer);
+                if (fault == 4)
+                    writer.writeHNT("LUAS", std::uint8_t{1});
+                if (fault == 5)
+                    writer.writeFormId(ESM::FormId{0x942, 0}, true, "MVRF");
+                if (fault == 7)
+                    writer.writeHNT("EXTR", std::uint32_t{1});
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        reader.setContentFileMapping(&mapping);
+        const auto start = reader.getFileOffset();
+        int calls = 0;
+        const auto validate = [&](const auto&) { ++calls; };
+        if (!fault)
+        {
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content));
+            EXPECT_EQ(calls, 1);
+        }
+        else
+        {
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content), std::exception);
+            EXPECT_EQ(calls, 0);
+        }
+        EXPECT_EQ(reader.getFileOffset(), start);
+        EXPECT_EQ(content.get<ESM4::Weapon>().searchStatic(ESM::RefId(weapon.mId)),
+            content.get<ESM4::Weapon>().search(ESM::RefId(weapon.mId)));
+        EXPECT_EQ(content.get<ESM4::Weapon>().getDynamicSize(), 0u);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedPlayerDecodingRejectsMalformedAndDuplicateRecords)
+{
+    ESM::Player player{};
+    player.mObject.blank();
+    player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+    player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+    for (int fault = 0; fault != 4; ++fault)
+    {
+        auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_PLAY);
+            player.save(writer);
+            if (fault == 3) writer.writeHNT("EXTR", std::uint32_t{1});
+            writer.endRecord(ESM::REC_PLAY);
+        });
+        if (fault == 1)
+        {
+            const auto sign = records.find("SIGN");
+            ASSERT_NE(sign, std::string::npos);
+            records.replace(sign, 4, "TEST");
+        }
+        if (fault == 2) records += records;
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        const auto start = reader.getFileOffset();
+        int calls = 0;
+        const auto validate = [&](const auto&) { ++calls; };
+        if (!fault)
+        {
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate));
+            EXPECT_EQ(calls, 1);
+        }
+        else
+        {
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate), std::exception);
+            EXPECT_EQ(calls, 0);
+        }
+        EXPECT_EQ(reader.getFileOffset(), start);
+    }
+}
+
+TEST(SaveAdmissionTest, DetachedReferenceDecoderUsesAllCellStoreStateSpecializations)
+{
+    std::vector<std::pair<std::uint32_t, std::unique_ptr<ESM::ObjectState>>> states;
+    states.emplace_back(ESM::REC_NPC_, std::make_unique<ESM::NpcState>());
+    states.emplace_back(ESM::REC_CREA, std::make_unique<ESM::CreatureState>());
+    states.emplace_back(ESM::REC_CONT, std::make_unique<ESM::ContainerState>());
+    states.emplace_back(ESM::REC_DOOR, std::make_unique<ESM::DoorState>());
+    states.emplace_back(ESM::REC_LEVC, std::make_unique<ESM::CreatureLevListState>());
+    states.emplace_back(ESM::REC_NPC_4, std::make_unique<ESM::ObjectState>());
+    states.emplace_back(ESM::REC_WEAP4, std::make_unique<ESM::ObjectState>());
+    for (auto& [type, state] : states)
+    {
+        SCOPED_TRACE(type);
+        state->blank();
+        state->mRef.mRefID = ESM::RefId::stringRefId("saved-reference");
+        state->mRef.mRefNum = {17, -1};
+        state->mPosition.pos[0] = 7.5;
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_CSTA);
+            state->save(writer);
+            writer.endRecord(ESM::REC_CSTA);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        while (reader.hasMoreRecs())
+        {
+            const auto record = reader.getRecName();
+            reader.getRecHeader();
+            if (record != ESM::REC_CSTA) { reader.skipRecord(); continue; }
+            ESM::CellRef reference;
+            reference.loadId(reader, true);
+            const auto decoded = MWWorld::readSavedReferenceState(reader, reference, type);
+            EXPECT_EQ(typeid(*decoded), typeid(*state));
+            EXPECT_EQ(decoded->mPosition, state->mPosition);
+            EXPECT_EQ(decoded->mRef.mRefID, state->mRef.mRefID);
+            EXPECT_FALSE(reader.hasMoreSubs());
+        }
     }
 }

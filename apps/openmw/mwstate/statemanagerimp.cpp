@@ -479,6 +479,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             throw SaveVersionTooOldError(version);
 
         const auto& world = *MWBase::Environment::get().getWorld();
+        std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
+        reader.setContentFileMapping(&contentFileMap);
         const auto admittedProfile = admitSave(reader, world.getGameProfile(),
             [&](const ESM4::RuntimeState& native) { world.validateOblivionSaveState(native); }, &world.getStore());
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
@@ -491,8 +493,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         restorationStarted = true;
         cleanup();
 
-        std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
-        reader.setContentFileMapping(&contentFileMap);
         MWBase::Environment::get().getLuaManager()->setContentFileMapping(contentFileMap);
 
         ESM::ActorIdConverter actorIdConverter;

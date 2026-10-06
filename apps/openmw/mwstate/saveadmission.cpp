@@ -5,16 +5,21 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <set>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadclas.hpp>
+#include <components/esm3/cellstate.hpp>
+#include <components/esm3/fogstate.hpp>
+#include <components/esm3/player.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/misc/strings/algorithm.hpp>
 
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/savedreference.hpp"
 
 namespace MWState
 {
@@ -57,6 +62,9 @@ namespace MWState
                     reader.getSubHeader();
                     if (reader.getContext().leftRec < 0)
                         throw std::runtime_error("Saved game subrecord exceeds its record bounds");
+                    if (type == ESM::REC_CSTA && reader.retSubName() == ESM::NAME("FTEX")
+                        && reader.getSubSize() < sizeof(std::int32_t) * 2)
+                        throw std::runtime_error("Saved game fog texture is missing its coordinates");
                     reader.skip(reader.getSubSize());
                 }
             }
@@ -75,6 +83,7 @@ namespace MWState
                 throw std::runtime_error("Saved game declares an unsupported TES4 runtime-state version");
             std::unique_ptr<MWWorld::ESMStore> shared;
             std::map<ESM::RefId, ESM::Global> globals;
+            std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -88,6 +97,8 @@ namespace MWState
                 {
                     const auto type = reader.getRecName();
                     reader.getRecHeader();
+                    if (type == ESM::REC_PLAY || type == ESM::REC_CSTA)
+                        worldRecords.emplace_back(type.toInt(), reader.getContext());
                     bool decoded = false;
                     if (type == ESM::REC_GLOB)
                     {
@@ -125,6 +136,74 @@ namespace MWState
                         reader.skipRecord();
                     else if (reader.hasMoreSubs())
                         throw std::runtime_error("Saved game shared record contains unexpected trailing data");
+                }
+                shared->rebuildIdsIndex();
+                std::set<ESM::RefId> cells;
+                bool hasPlayer = false;
+                const auto validatePosition = [](const ESM::Position& position) {
+                    for (int axis = 0; axis != 3; ++axis)
+                        if (!std::isfinite(position.pos[axis]) || !std::isfinite(position.rot[axis]))
+                            throw std::runtime_error("Saved game shared reference has a nonfinite position");
+                };
+                for (const auto& [type, context] : worldRecords)
+                {
+                    reader.restoreContext(context);
+                    if (type == ESM::REC_PLAY)
+                    {
+                        if (hasPlayer)
+                            throw std::runtime_error("Saved game contains duplicate PLAY records");
+                        hasPlayer = true;
+                        ESM::Player player{};
+                        player.load(reader);
+                        validatePosition(player.mObject.mPosition);
+                    }
+                    else
+                    {
+                        ESM::CellState cell{};
+                        cell.mId = reader.getCellId();
+                        if (!cells.insert(cell.mId).second)
+                            throw std::runtime_error("Saved game contains duplicate CSTA records");
+                        cell.load(reader);
+                        if (!std::isfinite(cell.mWaterLevel) || !std::isfinite(cell.mLastRespawn.mHour))
+                            throw std::runtime_error("Saved game shared cell has a nonfinite value");
+                        if (cell.mHasFogOfWar)
+                        {
+                            ESM::FogState fog{};
+                            fog.load(reader);
+                        }
+                        while (reader.isNextSub("OBJE"))
+                        {
+                            std::uint32_t unused;
+                            reader.getHT(unused);
+                            ESM::CellRef reference;
+                            reference.loadId(reader, true);
+                            auto referenceType = shared->find(reference.mRefID);
+                            if (!referenceType && content)
+                                referenceType = content->findStatic(reference.mRefID);
+                            if (referenceType)
+                            {
+                                const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
+                                validatePosition(state->mPosition);
+                            }
+                            else
+                                // Match CellStore's deliberate missing-object
+                                // compatibility path, without loading a cell.
+                                while (reader.hasMoreSubs() && !reader.peekNextSub("OBJE")
+                                    && !reader.peekNextSub("MVRF"))
+                                {
+                                    reader.getSubName();
+                                    reader.skipHSub();
+                                }
+                        }
+                        while (reader.isNextSub("MVRF"))
+                        {
+                            reader.cacheSubName();
+                            static_cast<void>(reader.getFormId(true, "MVRF"));
+                            static_cast<void>(reader.getCellId());
+                        }
+                    }
+                    if (reader.hasMoreSubs())
+                        throw std::runtime_error("Saved game shared world record contains unexpected trailing data");
                 }
             }
             if (nativeRecord)
