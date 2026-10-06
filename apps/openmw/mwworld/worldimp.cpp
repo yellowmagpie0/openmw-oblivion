@@ -2928,16 +2928,50 @@ namespace MWWorld
         writer.endRecord(ESM::REC_CAM_);
     }
 
+    namespace
+    {
+        void validateOblivionSnapshotContent(const ESM4::RuntimeState& state,
+            const std::vector<std::pair<std::string, std::string>>& identities)
+        {
+            state.validate();
+            std::vector<ESM4::RuntimeContentIdentity> content;
+            content.reserve(identities.size());
+            for (const auto& [plugin, fingerprint] : identities)
+                content.push_back({ plugin, fingerprint });
+            state.validateContent(content);
+        }
+    }
+
     void World::validateOblivionSaveState(const ESM4::RuntimeState& state) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
-        state.validate();
-        std::vector<ESM4::RuntimeContentIdentity> content;
-        content.reserve(mOblivionContentIdentities.size());
-        for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
-            content.push_back({ plugin, fingerprint });
-        state.validateContent(content);
+        validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        const auto validateCell = [&](const ESM::FormKey& key) {
+            if (!mStore.get<ESM4::Cell>().search(key))
+                throw std::runtime_error("TES4 runtime-state cell is not present: " + key.serialize());
+        };
+        validateCell(state.mPlayer.mCell);
+        for (const auto& reference : state.mReferences)
+        {
+            validateCell(reference.mCell);
+            if (reference.mKey.isDynamic())
+                continue; // Dynamic references are reconstructed from shared save records.
+            const auto* npc = mStore.get<ESM4::ActorCharacter>().search(reference.mKey);
+            const auto* creature = mStore.get<ESM4::ActorCreature>().search(reference.mKey);
+            const auto* object = mStore.get<ESM4::Reference>().search(reference.mKey);
+            const auto* base = npc ? &npc->mBaseKey : creature ? &creature->mBaseKey
+                : object ? &object->mBaseKey : nullptr;
+            if (!base)
+                throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
+            if (*base != reference.mBase)
+                throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
+            if ((npc && !mStore.get<ESM4::Npc>().search(*base))
+                || (creature && !mStore.get<ESM4::Creature>().search(*base)))
+                throw std::runtime_error("TES4 runtime-state actor base is not present: " + base->serialize());
+            if (reference.mActorDrawState && !npc && !creature)
+                throw std::runtime_error("TES4 runtime-state actor draw state requires an actor reference");
+        }
     }
 
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)
@@ -2963,7 +2997,9 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
                 auto state = std::make_unique<ESM4::RuntimeState>();
                 state->load(reader);
-                validateOblivionSaveState(*state);
+                // Shared records are still being restored here. Admission already
+                // checked immutable bindings; direct readers retain schema/content validation.
+                validateOblivionSnapshotContent(*state, mOblivionContentIdentities);
                 mOblivionRuntimeState = std::move(state);
             }
             break;

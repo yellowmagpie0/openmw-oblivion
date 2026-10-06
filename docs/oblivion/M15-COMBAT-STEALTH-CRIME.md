@@ -29,6 +29,57 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
 
+## S3 read-only reference binding admission checkpoint — 2026-10-05
+
+The pre-teardown World admission callback now checks saved Player/reference
+cells against native content, resolves static ACHR/ACRE/REFR identities and
+compares their saved bases with the content records. Missing actor bases and
+actor draw state on an object reference reject before the running game is
+cleared. These lookups do not load cells or construct actor caches. Dynamic
+reference reconstruction remains owned by shared-record restoration; admission
+checks its destination cell but does not claim to validate its shared records.
+Direct T4ST readers retain their existing schema/content validation while
+StateManager's admission callback performs these additional binding checks.
+
+Three new World tests cover missing Player/reference cells, missing static
+references, NPC/object/creature base mismatches, absent creature bases and a
+schema-valid draw-state owner bound to an object. Positive cases cover an
+unloaded destination, retained dynamic state and corrected retry. Failed
+admission preserves full captured World state, loaded-cell count and a pending
+dynamic identity.
+
+Final checks bind parent `b278055b4441066eaef41f88ef86eccafaaf4e43` and dirty
+source fingerprint `9bfc4ee9a0554075923e1b69e82cfafa1d415cdd936cd7a9959a57ab18be4b11`.
+
+- `S3/binding-admission-engine-02` and `binding-admission-sanitize-02`: all
+  **1,146** engine tests pass with exact inventory, zero failures/skips and
+  unchanged source. Both build `openmw`, `openmw-tests` and `esmtool`; the latter
+  uses ASan/UBSan with leak checks disabled and UBSan configured to halt.
+- `S3/binding-admission-runtime-01` and
+  `binding-admission-sanitized-runtime-01`: stock load/F5/private saved-base
+  fault/F9 rejection/Return/F5/clean quit. Each has exactly one successful load
+  and two actual save completions. Independent decoding preserves complete
+  Player/action/lifecycle vectors, **130** scripts, **390** quests and all
+  **34,398** existing reference inventories; **204/150** newly cached references
+  are counted separately. Seven AI fields, including all **3,663** actors,
+  match the pristine input at the initial load boundary. Ordinary clocks and
+  AI advance later. The rejected input differs from its pre-fault save only in
+  one reference base. Inspected captures show the rejection over the prison
+  scene and a restored full-bar view after resaving. The known missing equip
+  icon and intended binding rejection are explicitly reviewed; no unreviewed
+  errors or sanitizer findings remain. This is diagnostic idle runtime input
+  coverage, not an active-action restart gate.
+- Attempts `binding-admission-engine-01` and `binding-admission-sanitize-01`
+  retain one failed new fixture: it supplied draw state without the required
+  native value/lifecycle owners. The corrected object fixture explicitly passes
+  schema validation before exercising native binding rejection. Runtime courses
+  used the same unchanged production binaries as the final checks.
+
+Aggregate evidence, source hashes and runtime binary/input/output hashes are in
+`S3/binding-admission-report.json`. Pending-versus-accepted cache isolation,
+shared-record semantic staging and remaining migration/continuation gates are
+still outstanding; this checkpoint does not close S3.
+
 ## S3 read-only save admission checkpoint — 2026-10-05
 
 StateManager now opens and checks save versions, all outer record/subrecord

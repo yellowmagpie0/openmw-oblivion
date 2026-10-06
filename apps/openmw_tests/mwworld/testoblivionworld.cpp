@@ -12422,3 +12422,117 @@ TEST(OblivionWorldTest, NativeSaveAdmissionRejectsContentBeforeTouchingLiveWorld
     MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
     EXPECT_THROW(legacy.validateOblivionSaveState(before), std::runtime_error);
 }
+
+TEST(OblivionWorldTest, NativeSaveAdmissionChecksImmutableBindingsWithoutLoadingCells)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    auto pending = world.prepareOblivionDynamicReferenceKey();
+    const auto loadedCells = [&] {
+        std::size_t count = 0;
+        world.getWorldModel().forEachLoadedCellStore([&](auto&) { ++count; });
+        return count;
+    };
+    const auto beforeCells = loadedCells();
+    ASSERT_EQ(before.mReferences.size(), 1u);
+    const auto unchanged = [&] {
+        EXPECT_EQ(loadedCells(), beforeCells);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(pending->isValid());
+    };
+    for (int fault = 0; fault != 4; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        auto invalid = before;
+        const auto missing = ESM::FormKey::content("headless.esm", 0xdead);
+        switch (fault)
+        {
+            case 0: invalid.mPlayer.mCell = missing; break;
+            case 1: invalid.mReferences.front().mCell = missing; break;
+            case 2: invalid.mReferences.front().mKey = missing; break;
+            case 3: invalid.mReferences.front().mBase = ESM::FormKey::content("headless.esm", 0x940); break;
+        }
+        EXPECT_THROW(world.validateOblivionSaveState(invalid), std::runtime_error);
+        unchanged();
+    }
+    // A valid destination is checked in the immutable store, never materialized.
+    ESM4::Cell destination{};
+    destination.mId = ESM::RefId(ESM::FormId{2, 0});
+    destination.mFormKey = ESM::FormKey::content("headless.esm", 2);
+    destination.mCellFlags = ESM4::CELL_Interior;
+    destination.mEditorId = "UnloadedAdmissionDestination";
+    world.getStore().getWritable<ESM4::Cell>().insertStatic(destination, destination.mFormKey);
+    auto relocated = before;
+    relocated.mPlayer.mCell = destination.mFormKey;
+    relocated.mReferences.front().mCell = destination.mFormKey;
+    EXPECT_NO_THROW(world.validateOblivionSaveState(relocated));
+    unchanged();
+    auto dynamic = relocated;
+    dynamic.mReferences.front().mKey = ESM::FormKey::dynamic("admission", 1);
+    dynamic.mNextDynamicSerial = 2;
+    EXPECT_NO_THROW(world.validateOblivionSaveState(dynamic));
+    unchanged();
+    EXPECT_NO_THROW(world.validateOblivionSaveState(before));
+    unchanged();
+}
+
+TEST(OblivionWorldTest, NativeSaveAdmissionRejectsActorStateOnAnObjectReference)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    ESM4::Reference object{};
+    object.mId = {0x901, 0};
+    object.mFormKey = ESM::FormKey::content("headless.esm", 0x901);
+    object.mBaseObj = {0x940, 0};
+    object.mBaseKey = ESM::FormKey::content("headless.esm", 0x940);
+    world.getStore().getWritable<ESM4::Reference>().insertStatic(object, object.mFormKey);
+    auto candidate = before;
+    auto& saved = candidate.mReferences.front();
+    saved.mKey = object.mFormKey;
+    saved.mBase = object.mBaseKey;
+    EXPECT_NO_THROW(world.validateOblivionSaveState(candidate));
+    saved.mActorDrawState = ESM4::ActorDrawState::Weapon;
+    ESM4::RuntimeActorValues values{};
+    values.mActor = saved.mKey;
+    values.mBase = saved.mBase;
+    candidate.mNativeActorValues = {values};
+    ESM4::RuntimeActorLife life{};
+    life.mActor = saved.mKey;
+    life.mBase = saved.mBase;
+    candidate.mNativeActorLife = {life};
+    ASSERT_NO_THROW(candidate.validate());
+    EXPECT_THROW(world.validateOblivionSaveState(candidate), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    saved.mActorDrawState.reset();
+    candidate.mNativeActorValues.clear();
+    candidate.mNativeActorLife.clear();
+    saved.mBase = ESM::FormKey::content("headless.esm", 0x800);
+    EXPECT_THROW(world.validateOblivionSaveState(candidate), std::runtime_error);
+}
+
+TEST(OblivionWorldTest, NativeSaveAdmissionRequiresTheWinningCreatureBase)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    ESM4::ActorCreature creature{};
+    creature.mId = {0x902, 0};
+    creature.mFormKey = ESM::FormKey::content("headless.esm", 0x902);
+    creature.mBaseObj = {0x820, 0};
+    creature.mBaseKey = ESM::FormKey::content("headless.esm", 0x820);
+    world.getStore().getWritable<ESM4::ActorCreature>().insertStatic(creature, creature.mFormKey);
+    auto candidate = before;
+    auto& saved = candidate.mReferences.front();
+    saved.mKey = creature.mFormKey;
+    saved.mBase = creature.mBaseKey;
+    EXPECT_THROW(world.validateOblivionSaveState(candidate), std::runtime_error);
+    ESM4::Creature base{};
+    base.mId = creature.mBaseObj;
+    world.getStore().getWritable<ESM4::Creature>().insertStatic(base, creature.mBaseKey);
+    EXPECT_NO_THROW(world.validateOblivionSaveState(candidate));
+    saved.mBase = ESM::FormKey::content("headless.esm", 0x800);
+    EXPECT_THROW(world.validateOblivionSaveState(candidate), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+}
