@@ -29,7 +29,8 @@ namespace MWState
 {
     ESM::SavedGame admitSave(ESM::ESMReader& reader, ESM::GameProfile activeProfile,
         const std::function<void(const ESM4::RuntimeState&)>& validateNative,
-        const MWWorld::ESMStore* content)
+        const MWWorld::ESMStore* content,
+        const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative)
     {
         const auto start = reader.getContext();
         try
@@ -122,7 +123,7 @@ namespace MWState
                         npc.load(reader, deleted);
                         if (npc.mId == "Player" && deleted)
                             throw std::runtime_error("Saved game deletes its shared Player record");
-                        shared->getWritable<ESM::NPC>().insertStatic(npc);
+                        shared->getWritable<ESM::NPC>().insert(npc);
                         decoded = true;
                     }
                     else if (type == ESM::REC_CLAS)
@@ -132,11 +133,11 @@ namespace MWState
                         characterClass.load(reader, deleted);
                         if (deleted)
                             throw std::runtime_error("Saved game contains a deleted shared class");
-                        shared->getWritable<ESM::Class>().insertStatic(characterClass);
+                        shared->getWritable<ESM::Class>().insert(characterClass);
                         decoded = true;
                     }
                     else
-                        decoded = shared->readRecord(reader, type.toInt());
+                        decoded = shared->readRecord(reader, type.toInt(), false);
                     if (!decoded)
                         reader.skipRecord();
                     else if (reader.hasMoreSubs())
@@ -309,7 +310,10 @@ namespace MWState
                             throw std::runtime_error("TES4 runtime-state global exceeds the integer conversion domain");
                     }
                 }
-                validateNative(native);
+                if (prepareNative)
+                    prepareNative(native, std::move(shared));
+                else
+                    validateNative(native);
             }
             else if (!nativeScripts.empty())
                 throw std::runtime_error("Native local Lua state requires T4ST");

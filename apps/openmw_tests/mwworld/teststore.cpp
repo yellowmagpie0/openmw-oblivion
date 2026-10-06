@@ -6,6 +6,7 @@
 #include <fstream>
 #include <span>
 #include <optional>
+#include <sstream>
 #include <type_traits>
 
 #include <boost/program_options/options_description.hpp>
@@ -1361,4 +1362,184 @@ TEST(MWWorldStoreTest, tes4CellOwnershipRankUsesWinningOverridesAndMasterRemappi
     load("patch.esp", patchMasters, 0x01000800, std::nullopt, true);
     EXPECT_EQ(store.search<ESM4::Cell>(base), nullptr);
     EXPECT_NE(store.search<ESM4::Cell>(other), nullptr);
+}
+
+namespace
+{
+    void populateSharedDefinitionContent(MWWorld::ESMStore& store)
+    {
+        ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+        player.mName = "Static Player";
+        store.insertStatic(player);
+        ESM::NPC actor = player; actor.mId = ESM::RefId::stringRefId("AllowedNpc");
+        store.insertStatic(actor);
+        ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId(ESM::FormId{0x940, 0});
+        weapon.mData.mHealth = 100;
+        store.insertStatic(weapon);
+        ESM4::Weapon native{}; native.mId = {0x940, 0}; native.mData.health = 100;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, ESM::FormKey::content("headless.esm", 0x940));
+        ESM::Light light{}; light.blank(); light.mId = ESM::RefId::stringRefId("SharedLight");
+        store.insertStatic(light);
+    }
+
+    std::unique_ptr<MWWorld::ESMStore> incomingSharedDefinitions(bool counterFault = false, bool duplicate = false)
+    {
+        auto store = std::make_unique<MWWorld::ESMStore>();
+        for (int count = 0; count != (counterFault ? 18 : 128); ++count) store->generateId();
+        ESM::Class characterClass{}; characterClass.blank(); characterClass.mId = ESM::RefId::generated(42);
+        characterClass.mName = "Incoming class";
+        store->getWritable<ESM::Class>().insert(characterClass);
+        ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+        player.mName = "Incoming Player"; player.mClass = characterClass.mId;
+        store->getWritable<ESM::NPC>().insert(player);
+        ESM::NPC actor = player; actor.mId = ESM::RefId::stringRefId("AllowedNpc");
+        actor.mName = "Incoming override";
+        store->getWritable<ESM::NPC>().insert(actor);
+        actor.mId = ESM::RefId::stringRefId("UnknownNpc");
+        store->getWritable<ESM::NPC>().insert(actor);
+        actor.mId = ESM::RefId::generated(45);
+        store->getWritable<ESM::NPC>().insert(actor);
+        ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId(ESM::FormId{0x940, 0});
+        weapon.mData.mHealth = 777;
+        store->getWritable<ESM::Weapon>().insert(weapon);
+        weapon.mId = ESM::RefId::generated(duplicate ? 42 : 44); weapon.mData.mHealth = 333;
+        store->getWritable<ESM::Weapon>().insert(weapon);
+        ESM::Light light{}; light.blank(); light.mId = ESM::RefId::stringRefId("SharedLight");
+        light.mData.mTime = 17;
+        store->getWritable<ESM::Light>().insert(light);
+        return store;
+    }
+
+    std::string writeSharedDefinitions(const MWWorld::ESMStore& store)
+    {
+        std::ostringstream bytes;
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(bytes);
+        Loading::Listener progress;
+        store.write(writer, progress);
+        return bytes.str();
+    }
+}
+
+namespace
+{
+    auto canonicalSharedDefinitions(const MWWorld::ESMStore& store)
+    {
+        const auto bytes = writeSharedDefinitions(store);
+        ESM::ESMReader reader;
+        reader.open(std::make_unique<std::istringstream>(bytes), "canonical-shared-definition-records");
+        std::vector<std::pair<std::uint32_t, std::string>> records;
+        while (reader.hasMoreRecs())
+        {
+            const auto type = reader.getRecName(); reader.getRecHeader();
+            records.emplace_back(type.toInt(), bytes.substr(reader.getFileOffset(), reader.getContext().leftRec));
+            reader.skipRecord();
+        }
+        std::sort(records.begin(), records.end());
+        return records;
+    }
+}
+
+TEST(MWWorldStoreTest, PreparedSharedDefinitionsMatchOrdinaryRestoreAndRetainIncomingAddresses)
+{
+    MWWorld::ESMStore store, ordinary;
+    populateSharedDefinitionContent(store);
+    populateSharedDefinitionContent(ordinary);
+    auto incoming = incomingSharedDefinitions();
+    const auto input = writeSharedDefinitions(*incoming);
+    const auto* weapon = incoming->get<ESM::Weapon>().find(ESM::RefId::generated(44));
+    const auto* player = incoming->get<ESM::NPC>().find(ESM::RefId::stringRefId("Player"));
+    const auto* staticWeapon = store.get<ESM::Weapon>().searchStatic(ESM::RefId(ESM::FormId{0x940, 0}));
+    auto plan = store.prepareDynamicRecords(std::move(incoming));
+    EXPECT_FALSE(plan.isValid());
+    EXPECT_EQ(plan.commit(), nullptr);
+    EXPECT_EQ(store.get<ESM::Weapon>().getDynamicSize(), 0);
+    store.clearDynamic();
+    ordinary.clearDynamic();
+    ESM::ESMReader reader;
+    reader.open(std::make_unique<std::istringstream>(input), "ordinary-shared-definition-restore");
+    while (reader.hasMoreRecs())
+    {
+        const auto type = reader.getRecName(); reader.getRecHeader();
+        ASSERT_TRUE(ordinary.readRecord(reader, type.toInt()));
+    }
+    ordinary.rebuildIdsIndex();
+    ASSERT_TRUE(plan.isValid());
+    EXPECT_EQ(plan.commit(), player);
+    EXPECT_FALSE(plan.isValid());
+    EXPECT_EQ(plan.commit(), nullptr);
+    EXPECT_EQ(store.get<ESM::Weapon>().find(ESM::RefId::generated(44)), weapon);
+    EXPECT_EQ(store.get<ESM::Weapon>().searchStatic(staticWeapon->mId), staticWeapon);
+    EXPECT_EQ(store.get<ESM::Weapon>().find(staticWeapon->mId)->mData.mHealth, 777);
+    EXPECT_EQ(store.get<ESM::NPC>().find(player->mId)->mClass, ESM::RefId::generated(42));
+    EXPECT_EQ(store.get<ESM::NPC>().search(ESM::RefId::stringRefId("UnknownNpc")), nullptr);
+    EXPECT_NE(store.get<ESM::NPC>().search(ESM::RefId::generated(45)), nullptr);
+    for (const auto id : {player->mId, staticWeapon->mId, ESM::RefId::generated(44), ESM::RefId::generated(45)})
+        EXPECT_EQ(store.find(id), ordinary.find(id));
+    EXPECT_EQ(canonicalSharedDefinitions(store), canonicalSharedDefinitions(ordinary));
+    EXPECT_EQ(store.generateId(), ESM::RefId::generated(128));
+    EXPECT_EQ(ordinary.generateId(), ESM::RefId::generated(128));
+    EXPECT_EQ(store.generateId(), ordinary.generateId());
+}
+
+TEST(MWWorldStoreTest, PreparedSharedDefinitionsDiscardRejectStaleClearAndDestroyedStore)
+{
+    std::optional<MWWorld::ESMStore::PreparedDynamicRecords> orphan;
+    {
+        MWWorld::ESMStore store;
+        populateSharedDefinitionContent(store);
+        const auto before = writeSharedDefinitions(store);
+        { auto discarded = store.prepareDynamicRecords(incomingSharedDefinitions()); }
+        EXPECT_EQ(writeSharedDefinitions(store), before);
+        auto stale = store.prepareDynamicRecords(incomingSharedDefinitions());
+        store.clearDynamic(); store.clearDynamic();
+        EXPECT_FALSE(stale.isValid());
+        EXPECT_EQ(stale.commit(), nullptr);
+        auto mutated = store.prepareDynamicRecords(incomingSharedDefinitions());
+        store.clearDynamic();
+        ESM::Weapon changed{}; changed.blank(); changed.mId = ESM::RefId::generated(3);
+        store.getWritable<ESM::Weapon>().insert(changed);
+        EXPECT_FALSE(mutated.isValid());
+        EXPECT_EQ(mutated.commit(), nullptr);
+        orphan.emplace(store.prepareDynamicRecords(incomingSharedDefinitions()));
+    }
+    EXPECT_FALSE(orphan->isValid());
+    EXPECT_EQ(orphan->commit(), nullptr);
+}
+
+TEST(MWWorldStoreTest, PreparedSharedDefinitionsRejectIdentityReuseAndUseStaticPlayerFallback)
+{
+    MWWorld::ESMStore store;
+    populateSharedDefinitionContent(store);
+    EXPECT_THROW(store.prepareDynamicRecords(incomingSharedDefinitions(true)), std::invalid_argument);
+    EXPECT_THROW(store.prepareDynamicRecords(incomingSharedDefinitions(false, true)), std::invalid_argument);
+    auto incoming = std::make_unique<MWWorld::ESMStore>();
+    auto plan = store.prepareDynamicRecords(std::move(incoming));
+    store.clearDynamic();
+    const auto* restored = plan.commit();
+    ASSERT_NE(restored, nullptr);
+    EXPECT_EQ(restored->mName, "Static Player");
+    EXPECT_EQ(store.get<ESM::NPC>().getDynamicSize(), 1);
+    EXPECT_EQ(store.generateId(), ESM::RefId::generated(0));
+}
+
+TEST(MWWorldStoreTest, PreparedSharedDefinitionsInvalidateSiblingEvenWhenOnlyDefaultPlayerIsPublished)
+{
+    MWWorld::ESMStore store;
+    populateSharedDefinitionContent(store);
+    auto first = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    auto sibling = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    store.clearDynamic();
+    ASSERT_TRUE(first.isValid());
+    ASSERT_TRUE(sibling.isValid());
+    const auto* player = first.commit();
+    ASSERT_NE(player, nullptr);
+    EXPECT_FALSE(sibling.isValid());
+    EXPECT_EQ(sibling.commit(), nullptr);
+    EXPECT_EQ(store.get<ESM::NPC>().find(player->mId), player);
+    auto next = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    store.clearDynamic();
+    EXPECT_TRUE(next.isValid());
+    EXPECT_NE(next.commit(), nullptr);
 }

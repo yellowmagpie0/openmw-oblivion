@@ -482,9 +482,10 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
-        const auto admittedProfile = admitSave(reader, world.getGameProfile(),
-            [&](const ESM4::RuntimeState& native) { preparedNative = world.prepareOblivionSaveState(native); },
-            &world.getStore());
+        const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
+            [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
+                preparedNative = world.prepareOblivionSaveState(native, std::move(definitions));
+            });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
             return;

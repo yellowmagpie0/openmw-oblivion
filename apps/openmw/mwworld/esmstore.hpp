@@ -230,6 +230,8 @@ namespace MWWorld
 
         uint64_t mDynamicCount;
         bool mPlayerRecordPrepared = false;
+        const std::shared_ptr<const char> mDynamicRestoreIdentity = std::make_shared<const char>();
+        std::uint64_t mDynamicClearGeneration = 0;
 
         mutable std::unordered_map<ESM::RefId, std::weak_ptr<MWMechanics::SpellList>> mSpellListCache;
 
@@ -274,6 +276,26 @@ namespace MWWorld
 
         void clearDynamic();
         void rebuildIdsIndex();
+        class PreparedDynamicRecords
+        {
+            friend class ESMStore;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedDynamicRecords(std::unique_ptr<Impl> impl);
+
+        public:
+            ~PreparedDynamicRecords();
+            PreparedDynamicRecords(PreparedDynamicRecords&&) noexcept;
+            PreparedDynamicRecords& operator=(PreparedDynamicRecords&&) noexcept;
+            bool isValid() const noexcept;
+            const ESM::NPC* commit() noexcept;
+        };
+        // Own decoded incoming shared definitions. Commit once after exactly
+        // the next clearDynamic(); static definitions and incoming addresses
+        // remain stable. No registry callbacks or record parsing at commit.
+        PreparedDynamicRecords prepareDynamicRecords(std::unique_ptr<ESMStore> incoming);
+        static bool isSavedDynamicRecord(std::uint32_t type);
+
         ESM::RefId generateId() { return ESM::RefId::generated(mDynamicCount++); }
 
         class PreparedPlayerRecord
@@ -394,7 +416,7 @@ namespace MWWorld
 
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const;
 
-        bool readRecord(ESM::ESMReader& reader, uint32_t typeId);
+        bool readRecord(ESM::ESMReader& reader, uint32_t typeId, bool contentOverridesOnly = true);
         ///< \return Known type?
 
         // To be called when we are done with dynamic record loading

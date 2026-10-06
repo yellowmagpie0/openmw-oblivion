@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,116 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 owned shared definition publication checkpoint — 2026-10-06
+
+Admission now hands its owned incoming shared definition store to World
+preparation after framing, shared-world/Lua/native checks. Shared NPC and class
+records remain dynamic records in that detached store. Other override-only
+families are decoded without dropping records merely because the isolated
+store lacks the live content corpus; preparation then applies the same content
+and generated-record acceptance rules as ordinary restoration.
+
+ESMStore prepares accepted incoming dynamic maps, static-then-dynamic iteration
+vectors, the complete type index and saved generation counter before cleanup.
+Static facades installed after initial content setup are included, outgoing
+dynamic definitions are excluded, and index precedence matches ordinary
+rebuildIdsIndex. Incoming node addresses survive publication by map swaps;
+static content addresses remain unchanged. A missing incoming Player uses a
+copy of the immutable static Player. Generation counters that would reuse a
+saved generated ID, and generated IDs duplicated across definition families,
+are rejected before World clear.
+
+The plan checks weak store lifetime, the next clear generation, cleared dynamic
+maps and a publication generation. A successful publication invalidates sibling
+plans, including empty candidates containing only the default Player. Commit
+swaps maps/vectors/index and restores the counter without callbacks or parsing.
+World rebinds its Player base immediately, then installs pending native state
+and services. The main record loop skips definitions already published;
+ordinary direct readers and shared-only/Morrowind loads retain their existing
+restoration path. Record suppression ends at native apply/saveLoaded or a
+superseding direct T4ST read.
+
+Four store regressions cover cancellation, exact canonical record agreement
+with ordinary restoration, stable incoming/static pointers, Player/class
+binding, index precedence, generated/unknown overrides, counter preservation,
+invalid identities, repeated clear, destroyed/mutated stores and empty sibling
+publication. One World regression covers Player rebinding and detects accidental
+second decoding with a different definition payload. The standalone sibling
+baseline exits4 because both candidates can publish. The corrected actual
+normal-library probe exits0 with all C++ new allocations rejected during commit;
+this is isolated API coverage, not universal allocator or graphical coverage.
+
+`S3/prepared-shared-definitions-engine-02` and
+`prepared-shared-definitions-sanitize-02` each pass all 1,183 engine tests,
+unfiltered, exact inventories, no failures/skips. Tested parent:
+`6e49390d4d197f669c34b67e70a48e85da5b6890`; fingerprint:
+`17ea3439c3da44e552854b25f9a34fad012bdfc27550ada7eb30cc90a61a0434`.
+Final incremental builds report no warnings. Broad first builds retain existing
+sol3/caller/test warnings; both initial suites passed 1,182 cases before the
+independent sibling probe justified the publication guard and added regression.
+ASan leaks are disabled; UBSan halts with stack traces. Components/Python are
+unchanged and were not newly run for this checkpoint.
+
+The editable fixture generator independently reads winning stock class0230e6
+and reproduces its projected class data as generated class42. It changes the
+shared Player CNAM, native class alias and saved counter128, appends the class
+record after Player records, and increments the current-format header count.
+Every other native field remains exact. Input SHA256:
+`f406493f31cc390ceea81c0ce2d75f9ae738b3acf119214f629ac8968d15f324`.
+The prior pinned executable rejects this valid ordering after restoration
+begins: Class Generated:0x2a not found. The independently verified baseline is
+`S3/prepared-shared-definitions-late-class-baseline-05`, including an inspected
+error capture, no native application, unchanged input and clean quit.
+
+Normal and sanitizer acceptance courses are
+`S3/prepared-shared-definitions-restart-02` and
+`prepared-shared-definitions-sanitized-restart-02`. Each performs actual
+load/F5/F9/F5/clean quit, then repeats in a fresh process using the actual first
+output. All 37 normalized native fields and complete reference lists agree at
+all four boundaries: 34,399, 34,549, 34,603 and 34,771 refs. Separate save-byte
+checks prove exact class data/name, shared Player class42, native class alias,
+counter128 and no duplication in all six source/output saves per executable.
+Live item scale and positive/negative cell queries and its 14 saved metadata
+fields also pass. All four post-quickload captures were directly inspected;
+prison rendering and full resource bars agree. Audio is off.
+Normal executable SHA256:
+`b1c3eb7473ef6138bcf7475e4f4c038d36c51362fec71c74bd21ee5d63a5c714`;
+sanitizer:
+`c911d1e0e6c762b03e6bcddc9f3e081829f49255cb15a58ca94ffa8b5fcadd6e`.
+
+`S3/prepared-shared-definitions-counter-reject-01` and
+`prepared-shared-definitions-counter-reject-sanitized-01` mutate only one byte
+of an actual first F5, changing DYNA COUN128 to41 beneath class42. F9 rejects
+before cleanup, Return dismisses the dialog, and F5 resaves the running game.
+Each has one load and two actual saves, 37 native fields exact at initial load,
+preserved native Player/actor authority/actions/quests, 130 existing script
+instances and 34,549 reference inventories, and exact shared class/counter128
+before/after rejection. All four rejection/resave captures were inspected;
+the error overlays the continuing prison scene and resave retains full bars.
+No runtime sanitizer diagnostics or unreviewed errors occur.
+
+Earlier fixture setup assumed a legacy300-byte header instead of current20;
+that pre-runtime failure remains. Baseline attempts01–03 lacked local default
+files/configuration and aborted before save loading. Attempt04 observed the
+expected class rejection but failed harness review because the pinned binary
+embeds parent e534 while current resources embed6e493. Attempt05 uses identical
+resource assets with only the generated version marker reconstructed for the
+pinned binary; resource source diffs between revisions and in the working tree
+are empty. It passes without waiving the warning. All attempts, binary/config/
+resource provenance, source hashes, exact test results, generated fixture,
+class/item/negative verifiers and inspected image hashes are recorded in
+`S3/prepared-shared-definitions-report.json`.
+
+This closes ownership/publication of admitted shared definitions and the
+shown valid late-class failure. Full load failure-atomicity remains open:
+detached inventories and shared-world reconstruction, cache/scene reconciliation
+and other allocations still follow cleanup. Remaining populated migrations,
+active physical-action continuation and the full S3 requirement audit are open.
+All checkpoint-owned processes are terminal. Next, retain inventory/world
+preparations using this owned incoming definition source, without borrowing
+outgoing dynamic definitions. S3 stays in progress; later-stage gates are
+unchanged.
 
 ## S3 retained native admission plans checkpoint — 2026-10-06
 

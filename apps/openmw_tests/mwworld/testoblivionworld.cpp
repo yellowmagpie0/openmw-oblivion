@@ -13456,3 +13456,49 @@ TEST(OblivionWorldTest, PreparedNativeSaveRejectsBadBindingsBeforeClearAndDirect
     EXPECT_TRUE(captured.mPendingPackageDone.empty());
     EXPECT_EQ(captured.mScriptInstances, replacement.mScriptInstances);
 }
+
+TEST(OblivionWorldTest, PreparedIncomingDefinitionsRebindPlayerAndKeepWinningItemAddressesWithoutRecordReplay)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto* oldPlayer = world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    auto definitions = std::make_unique<MWWorld::ESMStore>();
+    for (int count = 0; count != 64; ++count) definitions->generateId();
+    ESM::Class characterClass{}; characterClass.blank(); characterClass.mId = ESM::RefId::generated(42);
+    characterClass.mName = "Incoming prepared class";
+    definitions->getWritable<ESM::Class>().insert(characterClass);
+    ESM::NPC player = *oldPlayer; player.mClass = characterClass.mId;
+    const auto* incomingPlayer = definitions->getWritable<ESM::NPC>().insert(player);
+    const auto id = ESM::RefId(ESM::FormId{0x940, 0});
+    ESM::Weapon weapon = *world.getStore().get<ESM::Weapon>().searchStatic(id);
+    weapon.mName = "Incoming prepared weapon";
+    const auto* incomingWeapon = definitions->getWritable<ESM::Weapon>().insert(weapon);
+    auto prepared = world.prepareOblivionSaveState(saved, std::move(definitions));
+    EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, oldPlayer);
+    EXPECT_NE(world.getStore().get<ESM::Weapon>().find(id), incomingWeapon);
+    world.clear();
+    ASSERT_TRUE(prepared->install());
+    EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, incomingPlayer);
+    EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase->mClass, characterClass.mId);
+    EXPECT_EQ(world.getStore().get<ESM::Weapon>().find(id), incomingWeapon);
+    EXPECT_EQ(world.getStore().generateId(), ESM::RefId::generated(64));
+    // The main record scan must skip the already published definition. A
+    // deliberately different payload detects accidental second restoration.
+    auto stream = std::make_unique<std::stringstream>();
+    ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+    weapon.mName = "Unexpected second decode";
+    writer.startRecord(ESM::REC_WEAP); weapon.save(writer); writer.endRecord(ESM::REC_WEAP);
+    ESM::ESMReader reader; reader.open(std::move(stream), "already-prepared-shared-definition");
+    ASSERT_EQ(reader.getRecName(), ESM::REC_WEAP); reader.getRecHeader();
+    world.readRecord(reader, ESM::REC_WEAP);
+    EXPECT_EQ(world.getStore().get<ESM::Weapon>().find(id), incomingWeapon);
+    EXPECT_EQ(incomingWeapon->mName, "Incoming prepared weapon");
+    restorePreparedSaveActorFixture(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase->mClass, characterClass.mId);
+    EXPECT_EQ(world.getStore().get<ESM::Weapon>().find(id), incomingWeapon);
+    const auto accepted = world.captureOblivionRuntimeState().serializeBinary();
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), accepted);
+}

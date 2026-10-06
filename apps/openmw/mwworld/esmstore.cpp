@@ -249,6 +249,7 @@ namespace MWWorld
         // maps the id name to the record type.
         IDMap mIds;
         IDMap mStaticIds;
+        std::uint64_t mDynamicPublicationGeneration = 0;
         std::vector<std::uint32_t> mEsm4ContentIndices;
 
         template <typename T>
@@ -555,9 +556,10 @@ namespace MWWorld
         mStoreImp->mIds = mStoreImp->mStaticIds;
 
         movePlayerRecord();
+        ++mDynamicClearGeneration;
     }
 
-    static bool isCacheableRecord(int id)
+    static constexpr bool isCacheableRecord(int id)
     {
         switch (id)
         {
@@ -614,6 +616,199 @@ namespace MWWorld
                 break;
         }
         return false;
+    }
+
+    struct ESMStore::PreparedDynamicRecords::Impl
+    {
+        struct Binding
+        {
+            virtual ~Binding() = default;
+            virtual bool isCleared() const noexcept = 0;
+            virtual void commit() noexcept = 0;
+        };
+        template <class T>
+        struct TypedBinding final : Binding
+        {
+            TypedDynamicStore<T>* mTarget;
+            TypedDynamicStore<T>* mIncoming;
+            ESM::RefId mPlayerId;
+            bool isCleared() const noexcept override
+            {
+                if constexpr (std::is_same_v<T, ESM::NPC>)
+                    return mTarget->mDynamic.size() == 1
+                        && mTarget->mDynamic.contains(mPlayerId);
+                else
+                    return mTarget->mDynamic.empty();
+            }
+            void commit() noexcept override
+            {
+                mTarget->mDynamic.swap(mIncoming->mDynamic);
+                mTarget->mDynamicFormKeys.swap(mIncoming->mDynamicFormKeys);
+                mTarget->mDynamicIdsToFormKeys.swap(mIncoming->mDynamicIdsToFormKeys);
+                mTarget->mShared.swap(mIncoming->mShared);
+            }
+        };
+        ESMStore* mTarget;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mClearGeneration;
+        std::uint64_t mPublicationGeneration;
+        std::unique_ptr<ESMStore> mIncoming;
+        std::vector<std::unique_ptr<Binding>> mBindings;
+        IDMap mIds;
+        const ESM::NPC* mPlayer = nullptr;
+    };
+
+    ESMStore::PreparedDynamicRecords::PreparedDynamicRecords(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    ESMStore::PreparedDynamicRecords::~PreparedDynamicRecords() = default;
+    ESMStore::PreparedDynamicRecords::PreparedDynamicRecords(PreparedDynamicRecords&&) noexcept = default;
+    ESMStore::PreparedDynamicRecords& ESMStore::PreparedDynamicRecords::operator=(PreparedDynamicRecords&&) noexcept = default;
+
+    bool ESMStore::PreparedDynamicRecords::isValid() const noexcept
+    {
+        return mImpl && !mImpl->mIdentity.expired()
+            && mImpl->mTarget->mDynamicClearGeneration == mImpl->mClearGeneration
+            && mImpl->mTarget->mStoreImp->mDynamicPublicationGeneration == mImpl->mPublicationGeneration
+            && !mImpl->mTarget->mPlayerRecordPrepared
+            && std::ranges::all_of(mImpl->mBindings, [](const auto& binding) { return binding->isCleared(); });
+    }
+
+    const ESM::NPC* ESMStore::PreparedDynamicRecords::commit() noexcept
+    {
+        if (!isValid())
+            return nullptr;
+        auto& target = *mImpl->mTarget;
+        for (auto& binding : mImpl->mBindings)
+            binding->commit();
+        target.mStoreImp->mIds.swap(mImpl->mIds);
+        target.mDynamicCount = mImpl->mIncoming->mDynamicCount;
+        ++target.mStoreImp->mDynamicPublicationGeneration;
+        const auto* player = mImpl->mPlayer;
+        mImpl.reset();
+        return player;
+    }
+
+    ESMStore::PreparedDynamicRecords ESMStore::prepareDynamicRecords(std::unique_ptr<ESMStore> incoming)
+    {
+        if (!incoming || mDynamicClearGeneration == std::numeric_limits<std::uint64_t>::max()
+            || mStoreImp->mDynamicPublicationGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::invalid_argument("Invalid incoming shared definition store");
+        auto plan = std::make_unique<PreparedDynamicRecords::Impl>();
+        plan->mTarget = this;
+        plan->mIdentity = mDynamicRestoreIdentity;
+        plan->mClearGeneration = mDynamicClearGeneration + 1;
+        plan->mPublicationGeneration = mStoreImp->mDynamicPublicationGeneration;
+        plan->mIncoming = std::move(incoming);
+        // Include immutable facades installed after initial content setup,
+        // and reproduce rebuildIdsIndex's signature precedence without ever
+        // including outgoing dynamic records.
+        const auto indexStatic = [&]<class T>(const Store<T>& typed) {
+            if constexpr (requires { typed.mStatic; T::sRecordId; })
+            {
+                if constexpr (isCacheableRecord(T::sRecordId))
+                    for (const auto& [id, record] : typed.mStatic)
+                    {
+                        auto [entry, inserted] = plan->mIds.emplace(id, T::sRecordId);
+                        if (!inserted && static_cast<ESM::RecNameInts>(entry->second) < T::sRecordId)
+                            entry->second = T::sRecordId;
+                    }
+            }
+        };
+        std::apply([&](const auto&... store) { (indexStatic(store), ...); }, mStoreImp->mStores);
+        auto& source = *plan->mIncoming;
+        auto& npcs = source.getWritable<ESM::NPC>();
+        const auto playerId = ESM::RefId::stringRefId("Player");
+        if (!npcs.search(playerId))
+        {
+            const auto* player = get<ESM::NPC>().searchStatic(playerId);
+            if (!player)
+                throw std::runtime_error("Shared definition restoration requires a static Player");
+            npcs.insert(*player);
+        }
+        std::set<ESM::RefId> generatedIds;
+        const auto prepare = [&]<class T>(bool overridesOnly) {
+            auto& target = getWritable<T>();
+            auto& saved = source.getWritable<T>();
+            if (!saved.mStatic.empty())
+                throw std::invalid_argument("Incoming shared definition store contains static records");
+            // Preserve static order, followed by accepted incoming order, just
+            // like ordinary clearDynamic()/readRecord(). Outgoing dynamic
+            // records never supply missing incoming definitions.
+            std::vector<T*> shared(target.mShared.begin(), target.mShared.begin() + target.mStatic.size());
+            std::vector<ESM::RefId> ignored;
+            for (T* record : saved.mShared)
+            {
+                const auto& id = record->mId;
+                if (overridesOnly && !id.template is<ESM::GeneratedRefId>() && !target.mStatic.contains(id))
+                {
+                    ignored.push_back(id);
+                    continue;
+                }
+                if (const auto* generated = id.template getIf<ESM::GeneratedRefId>())
+                {
+                    if (generated->getValue() >= source.mDynamicCount)
+                        throw std::invalid_argument("Shared definition counter would reuse a saved generated identity");
+                    if (!generatedIds.insert(id).second)
+                        throw std::invalid_argument("Duplicate generated identity across shared definition types");
+                }
+                shared.push_back(record);
+                if (isCacheableRecord(T::sRecordId))
+                {
+                    auto [entry, inserted] = plan->mIds.emplace(id, T::sRecordId);
+                    // rebuildIdsIndex enumerates record families in signature
+                    // order. Preserve winning native types for projected IDs.
+                    if (!inserted && static_cast<ESM::RecNameInts>(entry->second) < T::sRecordId)
+                        entry->second = T::sRecordId;
+                }
+            }
+            for (const auto& id : ignored)
+                saved.mDynamic.erase(id);
+            saved.mShared.swap(shared);
+            auto binding = std::make_unique<PreparedDynamicRecords::Impl::TypedBinding<T>>();
+            binding->mTarget = &target;
+            binding->mIncoming = &saved;
+            if constexpr (std::is_same_v<T, ESM::NPC>)
+                binding->mPlayerId = playerId;
+            plan->mBindings.push_back(std::move(binding));
+        };
+        prepare.template operator()<ESM::Potion>(false);
+        prepare.template operator()<ESM::Armor>(false);
+        prepare.template operator()<ESM::Book>(false);
+        prepare.template operator()<ESM::Class>(false);
+        prepare.template operator()<ESM::Clothing>(false);
+        prepare.template operator()<ESM::Enchantment>(false);
+        prepare.template operator()<ESM::Spell>(false);
+        prepare.template operator()<ESM::Weapon>(false);
+        prepare.template operator()<ESM::NPC>(true);
+        prepare.template operator()<ESM::Creature>(true);
+        prepare.template operator()<ESM::Container>(true);
+        prepare.template operator()<ESM::Miscellaneous>(true);
+        prepare.template operator()<ESM::Activator>(true);
+        prepare.template operator()<ESM::ItemLevList>(true);
+        prepare.template operator()<ESM::CreatureLevList>(true);
+        prepare.template operator()<ESM::Light>(true);
+        prepare.template operator()<ESM::Static>(true);
+        prepare.template operator()<ESM::Door>(true);
+        prepare.template operator()<ESM::Probe>(true);
+        prepare.template operator()<ESM::Ingredient>(true);
+        plan->mPlayer = source.get<ESM::NPC>().find(playerId);
+        return PreparedDynamicRecords(std::move(plan));
+    }
+
+    bool ESMStore::isSavedDynamicRecord(std::uint32_t type)
+    {
+        switch (type)
+        {
+            case ESM::REC_ALCH: case ESM::REC_ARMO: case ESM::REC_BOOK: case ESM::REC_CLAS:
+            case ESM::REC_CLOT: case ESM::REC_ENCH: case ESM::REC_SPEL: case ESM::REC_WEAP:
+            case ESM::REC_NPC_: case ESM::REC_CREA: case ESM::REC_CONT: case ESM::REC_MISC:
+            case ESM::REC_ACTI: case ESM::REC_LEVI: case ESM::REC_LEVC: case ESM::REC_LIGH:
+            case ESM::REC_STAT: case ESM::REC_DOOR: case ESM::REC_PROB: case ESM::REC_INGR:
+            case ESM::REC_DYNA:
+                return true;
+            default:
+                return false;
+        }
     }
 
     void ESMStore::load(ESM::ESMReader& esm, Loading::Listener* listener, ESM::Dialogue*& dialogue)
@@ -1064,7 +1259,7 @@ namespace MWWorld
         get<ESM::Ingredient>().write(writer, progress);
     }
 
-    bool ESMStore::readRecord(ESM::ESMReader& reader, uint32_t typeId)
+    bool ESMStore::readRecord(ESM::ESMReader& reader, uint32_t typeId, bool contentOverridesOnly)
     {
         ESM::RecNameInts type = static_cast<ESM::RecNameInts>(typeId);
         switch (type)
@@ -1091,7 +1286,7 @@ namespace MWWorld
             case ESM::REC_DOOR:
             case ESM::REC_PROB:
             case ESM::REC_INGR:
-                mStoreImp->mRecNameToStore[type]->read(reader, true);
+                mStoreImp->mRecNameToStore[type]->read(reader, contentOverridesOnly);
                 return true;
 
             case ESM::REC_DYNA:

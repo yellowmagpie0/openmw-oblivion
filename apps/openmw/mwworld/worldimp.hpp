@@ -130,6 +130,7 @@ namespace MWWorld
         struct PreparedOblivionServices;
         class PreparedOblivionSaveStateImpl;
         std::unique_ptr<PreparedOblivionServices> mPendingOblivionServices;
+        bool mSharedDefinitionsPrepared = false;
         const std::shared_ptr<const char> mOblivionRestoreIdentity = std::make_shared<const char>();
         std::uint64_t mOblivionClearGeneration = 0;
         void validateOblivionSaveStateImpl(
@@ -253,7 +254,7 @@ namespace MWWorld
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
         void validateOblivionSaveState(const ESM4::RuntimeState& state) const override;
         std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
-            const ESM4::RuntimeState& state) override;
+            const ESM4::RuntimeState& state, std::unique_ptr<ESMStore> definitions = {}) override;
         ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
         void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;

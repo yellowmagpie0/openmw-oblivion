@@ -156,6 +156,7 @@ namespace MWWorld
         std::optional<MWMechanics::OblivionCombatService> mCombat;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
+        std::optional<ESMStore::PreparedDynamicRecords> mDefinitions;
     };
 
     class World::PreparedOblivionSaveStateImpl final : public MWBase::World::PreparedOblivionSaveState
@@ -167,7 +168,8 @@ namespace MWWorld
         std::unique_ptr<PreparedOblivionServices> mServices;
 
     public:
-        PreparedOblivionSaveStateImpl(World& world, const ESM4::RuntimeState& state)
+        PreparedOblivionSaveStateImpl(World& world, const ESM4::RuntimeState& state,
+            std::unique_ptr<ESMStore> definitions)
             : mWorld(&world)
             , mIdentity(world.mOblivionRestoreIdentity)
             , mClearGeneration(world.mOblivionClearGeneration + 1)
@@ -175,6 +177,8 @@ namespace MWWorld
             , mServices(std::make_unique<PreparedOblivionServices>())
         {
             world.validateOblivionSaveStateImpl(*mState, mServices.get());
+            if (definitions)
+                mServices->mDefinitions.emplace(world.mStore.prepareDynamicRecords(std::move(definitions)));
         }
 
         bool install() noexcept override
@@ -186,6 +190,16 @@ namespace MWWorld
                 || world.mPendingOblivionRuntimeState || world.mOblivionRuntimeState
                 || world.mGameProfile != ESM::GameProfile::Oblivion)
                 return false;
+            if (mServices->mDefinitions)
+            {
+                const auto* player = mServices->mDefinitions->commit();
+                if (!player)
+                    return false;
+                if (world.mPlayer)
+                    world.mPlayer->set(player);
+                world.mSharedDefinitionsPrepared = true;
+                mServices->mDefinitions.reset();
+            }
             world.mPendingOblivionRuntimeState = std::move(mState);
             world.mPendingOblivionServices = std::move(mServices);
             return true;
@@ -885,6 +899,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mPendingOblivionRuntimeState.reset();
         mPendingOblivionServices.reset();
+        mSharedDefinitionsPrepared = false;
         if (preparedPathgrids)
             preparedPathgrids->commit();
         if (mOblivionCombat)
@@ -2250,6 +2265,7 @@ namespace MWWorld
 
     void World::applyOblivionRuntimeState()
     {
+        mSharedDefinitionsPrepared = false;
         if (!mPendingOblivionRuntimeState)
         {
             if (mOblivionRuntimeState)
@@ -3071,11 +3087,11 @@ namespace MWWorld
     }
 
     std::unique_ptr<MWBase::World::PreparedOblivionSaveState> World::prepareOblivionSaveState(
-        const ESM4::RuntimeState& state)
+        const ESM4::RuntimeState& state, std::unique_ptr<ESMStore> definitions)
     {
         if (mOblivionClearGeneration == std::numeric_limits<std::uint64_t>::max())
             throw std::overflow_error("TES4 restore clear generation exhausted");
-        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, state);
+        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, state, std::move(definitions));
     }
 
     void World::validateOblivionSaveState(const ESM4::RuntimeState& state) const
@@ -3281,6 +3297,11 @@ namespace MWWorld
 
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        if (mSharedDefinitionsPrepared && ESMStore::isSavedDynamicRecord(type))
+        {
+            reader.skipRecord();
+            return;
+        }
         switch (type)
         {
             case ESM::REC_ACTC:
@@ -3306,6 +3327,7 @@ namespace MWWorld
                 // checked immutable bindings; direct readers retain schema/content validation.
                 validateOblivionSnapshotContent(*state, mOblivionContentIdentities);
                 mPendingOblivionServices.reset();
+                mSharedDefinitionsPrepared = false;
                 mPendingOblivionRuntimeState = std::move(state);
             }
             break;
@@ -5150,6 +5172,7 @@ namespace MWWorld
 
     void World::saveLoaded(const ESM::ESMReader& reader)
     {
+        mSharedDefinitionsPrepared = false;
         mStore.rebuildIdsIndex();
         mStore.validateDynamic();
         mTimeManager->setup(mGlobalVariables);
