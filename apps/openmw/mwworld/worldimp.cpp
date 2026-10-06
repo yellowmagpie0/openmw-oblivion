@@ -1218,7 +1218,7 @@ namespace MWWorld
 
         const ESM::EpochTimeStamp epoch = mTimeManager->getEpochTimeStamp();
         state.mClock = { epoch.mYear, epoch.mMonth, epoch.mDay, epoch.mGameHour,
-            mGlobalVariables[Globals::sTimeScale].getFloat() };
+            mTimeManager->getGameTimeScale() };
 
         const ESM::FormKeyResolver resolver(mContentFiles);
         state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
@@ -2721,6 +2721,10 @@ namespace MWWorld
         mGlobalVariables[Globals::sGameHour].setFloat(static_cast<float>(state.mClock.mHour));
         mGlobalVariables[Globals::sTimeScale].setFloat(static_cast<float>(state.mClock.mTimeScale));
         mTimeManager->setup(mGlobalVariables);
+        // Typed script globals may intentionally project these floats as integers.
+        // Restore the clock owner directly instead of recovering it from that projection.
+        mTimeManager->setHour(state.mClock.mHour);
+        mTimeManager->updateGlobalFloat(Globals::sTimeScale, static_cast<float>(state.mClock.mTimeScale));
         synchronizeOblivionCalendarGlobals(mGlobalVariables);
 
         if (preparedPlayerRecord)

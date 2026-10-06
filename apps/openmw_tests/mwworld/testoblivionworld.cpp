@@ -40,6 +40,7 @@
 #include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadbsgn.hpp>
 #include "apps/openmw/mwworld/player.hpp"
+#include "apps/openmw/mwworld/datetimemanager.hpp"
 #include <gtest/gtest.h>
 
 #include <array>
@@ -12663,4 +12664,96 @@ TEST(OblivionWorldTest, NativeWorldClearDiscardsPendingAndAcceptedSnapshots)
     readNativeSnapshot(fixture, state);
     world.clear();
     EXPECT_NO_THROW(world.applyOblivionRuntimeState());
+}
+
+TEST(OblivionWorldTest, NativeClockRestorePreservesFractionalHourAndScaleForEverySchema)
+{
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const char type : {'s', 'l', 'f'})
+    for (const bool signedZero : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(type);
+        SCOPED_TRACE(signedZero);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto state = world.captureOblivionRuntimeState();
+        state.mVersion = version;
+        if (version < 3)
+        {
+            state.mPlayer.mName.clear();
+            state.mPlayer.mRace = {};
+            state.mPlayer.mClass = {};
+            state.mPlayer.mBirthSign = {};
+        }
+        state.mClock.mHour = signedZero ? -0. : 1.0216666460037231;
+        state.mClock.mTimeScale = signedZero ? -.125 : 2.125;
+        // Exercise the declared script type independently of the clock owner.
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        auto stream = std::make_unique<std::stringstream>();
+        writer.save(*stream);
+        for (const auto name : {MWWorld::Globals::sGameHour, MWWorld::Globals::sTimeScale})
+        {
+            ESM::Global global{};
+            global.mId = ESM::RefId::stringRefId(name.getValue());
+            global.mValue.setType(type == 's' ? ESM::VT_Short : type == 'l' ? ESM::VT_Long : ESM::VT_Float);
+            global.mValue.setInteger(1);
+            writer.startRecord(ESM::REC_GLOB);
+            global.save(writer);
+            writer.endRecord(ESM::REC_GLOB);
+        }
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "legacy-integer-clock-globals");
+        while (reader.hasMoreRecs())
+        {
+            ASSERT_EQ(reader.getRecName(), ESM::REC_GLOB);
+            reader.getRecHeader();
+            world.readRecord(reader, ESM::REC_GLOB);
+        }
+        ASSERT_EQ(world.getGlobalVariableType(MWWorld::Globals::sGameHour), type);
+        ASSERT_EQ(world.getGlobalVariableType(MWWorld::Globals::sTimeScale), type);
+        readNativeSnapshot(fixture, state);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto restored = world.captureOblivionRuntimeState();
+        EXPECT_EQ(restored.mClock.mHour, state.mClock.mHour);
+        EXPECT_EQ(restored.mClock.mTimeScale, state.mClock.mTimeScale);
+        EXPECT_EQ(std::bit_cast<std::uint64_t>(restored.mClock.mHour), std::bit_cast<std::uint64_t>(state.mClock.mHour));
+        EXPECT_EQ(std::bit_cast<std::uint64_t>(restored.mClock.mTimeScale),
+            std::bit_cast<std::uint64_t>(state.mClock.mTimeScale));
+        EXPECT_EQ(world.getGlobalVariableType(MWWorld::Globals::sGameHour), type);
+        EXPECT_EQ(world.getGlobalVariableType(MWWorld::Globals::sTimeScale), type);
+        EXPECT_EQ(world.getGlobalFloat(MWWorld::GlobalVariableName(std::string_view("gamehour"))),
+            type == 'f' ? static_cast<float>(state.mClock.mHour) : signedZero ? 0.f : 1.f);
+        EXPECT_EQ(world.getGlobalFloat(MWWorld::GlobalVariableName(std::string_view("timescale"))),
+            type == 'f' ? static_cast<float>(state.mClock.mTimeScale) : signedZero ? 0.f : 2.f);
+        readNativeSnapshot(fixture, restored);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().mClock.mHour, state.mClock.mHour);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mClock.mTimeScale, state.mClock.mTimeScale);
+    }
+}
+
+TEST(OblivionWorldTest, NativeClockCaptureUsesOwnedFractionsBeforeSaveAndAfterClear)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    for (int pass = 0; pass != 2; ++pass)
+    {
+        EXPECT_EQ(world.getGlobalVariableType(MWWorld::Globals::sGameHour), 'f');
+        EXPECT_EQ(world.getGlobalVariableType(MWWorld::Globals::sTimeScale), 'f');
+        world.setGlobalFloat(MWWorld::GlobalVariableName(std::string_view("gamehour")), 1.25f);
+        world.setGlobalFloat(MWWorld::GlobalVariableName(std::string_view("timescale")), .125f);
+        EXPECT_EQ(world.getTimeStamp().getHour(), 1.25);
+        EXPECT_EQ(world.getGlobalFloat(MWWorld::Globals::sGameHour), 1.25f);
+        EXPECT_EQ(world.getTimeManager()->getGameTimeScale(), .125f);
+        if (pass == 0)
+        {
+            const auto snapshot = world.captureOblivionRuntimeState();
+            EXPECT_EQ(snapshot.mClock.mHour, 1.25);
+            EXPECT_EQ(snapshot.mClock.mTimeScale, .125);
+        }
+        EXPECT_EQ(world.getGlobalFloat(MWWorld::Globals::sTimeScale), .125f);
+        world.clear();
+    }
 }

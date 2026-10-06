@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, read-only outer admission, populated migration and restart evidence below | Repair fractional clock restoration; complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, read-only outer admission, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,63 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 owned fractional clock checkpoint — 2026-10-05
+
+Native restore now restores hour and timescale directly to DateTimeManager
+after rebuilding calendar/shared global state. Capture reads timescale from
+that clock owner. Integer script-global projections no longer truncate the
+owned clock across restart; their declared types and conversions remain
+unchanged. This uses the existing float clock setters and precision, without
+changing shared date arithmetic or the Morrowind restore path.
+
+An independent installed-content walk identifies stock GameHour `000038` and
+TimeScale `00003a` as **short** globals. Source SHA256 is
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+per-record hashes and the audit source are retained in
+`S3/fractional-clock-native-globals.{py,json}`. This evidence ruled out changing
+the script-global types to repair clock persistence.
+
+Two new tests cover all schemas **1–41** with short, long and float shared
+GLOB records, fractional hour/timescale, signed-zero hour and negative
+fractional timescale (**246** combinations), bitwise clock preservation and
+repeated restore. A separate fixture covers owned-clock capture before the
+first save and after clear. Typed global projections are checked separately.
+
+Final checks bind parent `1ab7a494bb7cc422f4e90e76607a8e4edb718c97` and source
+fingerprint `02227d4eb1567a7653234838f78393a448e94853149519d58d81a4c2b53ff5fa`.
+
+- `S3/fractional-clock-engine-03` and `fractional-clock-sanitize-03`: all
+  **1,150** engine tests pass with exact inventory, zero failures/skips and
+  unchanged source. Both build `openmw`, `openmw-tests` and `esmtool`; the latter
+  uses ASan/UBSan with leak checks disabled and UBSan configured to halt.
+- `S3/fractional-clock-restart-01` and
+  `fractional-clock-sanitized-restart-01`: actual stock load/F5/quit, then a
+  distinct process loading the first output/F5/quit. Every normalized native
+  field now matches at load-complete tick0 **including the complete clock**,
+  all **33,376/34,398** reference states, AI/events/scripts, actor/action/physical
+  vectors and **130** scripts. Initial hour **1.0216666460037231** and fresh
+  input hour **1.03166663646698** both restore exactly in both builds. Each
+  phase has one actual save completion, with existing reference inventories
+  preserved through resave. Inspected normal/instrumented fresh captures show
+  the same prison and full bars. The preexisting equip-icon error is explicitly
+  reviewed; no unreviewed errors or sanitizer findings remain. These are
+  diagnostic idle restart courses with audio disabled.
+- `S3/fractional-clock-negative-control.json`: immutable pre-fix runtime
+  evidence fails the new complete-state equality gate specifically on clock;
+  every other native field matches. The old lost-fraction evidence is retained.
+- Attempts `fractional-clock-{engine,sanitize}-01` were deliberately stopped
+  before tests when the native-content audit contradicted type promotion.
+  Attempts02 retain one new fixture expectation failure: the synthetic
+  headless profile supplies a float fallback, unlike the stock short global.
+  That expectation was corrected; all 246 restore combinations already passed.
+  Final checks use the same unchanged production binaries as the runtime courses.
+
+Aggregate source/binary/save hashes and reports are in
+`S3/fractional-clock-report.json`. The previously recorded clock finding is
+resolved. Semantic/shared-record staging before teardown, remaining cache and
+placement publication work, populated migrations and continuation gates still
+require completion; S3 remains open.
 
 ## S3 pending snapshot isolation checkpoint — 2026-10-05
 
