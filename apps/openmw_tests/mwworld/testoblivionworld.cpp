@@ -12912,3 +12912,153 @@ TEST(OblivionWorldTest, NativeSemanticAdmissionRetainsWinningContainerLeveledTem
     EXPECT_ANY_THROW(admitNativeSnapshot(fixture, state));
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
 }
+
+TEST(OblivionWorldTest, NativeDynamicReferencesReconstructAfterClearAndRetainExactLooseExtras)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    MWClass::ESM4Takeable<ESM4::Weapon>::registerSelf();
+    auto saved = world.captureOblivionRuntimeState();
+    saved.mReferences.clear();
+    saved.mNextDynamicSerial = 3;
+    for (std::uint64_t serial = 1; serial != 3; ++serial)
+    {
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = ESM::FormKey::dynamic("native-reference", serial);
+        reference.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        reference.mCell = saved.mPlayer.mCell;
+        reference.mPosition.pos[0] = 13.25f * serial;
+        reference.mEnabled = serial == 1;
+        reference.mDeleted = serial == 2;
+        reference.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        reference.mOwnershipRank = -7;
+        reference.mItemCondition = serial == 1 ? 43.125f : -0.f;
+        reference.mItemCharge = serial == 1 ? 7.25f : 0.f;
+        reference.mCustomState["count"] = std::int64_t{3};
+        reference.mCustomState["scale"] = 1.25;
+        saved.mReferences.push_back(reference);
+    }
+    world.clear();
+    acceptNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    const auto find = [&](const ESM::FormKey& key) {
+        MWWorld::Ptr found;
+        world.getWorldModel().forEachLoadedCellStore([&](MWWorld::CellStore& cell) {
+            cell.forEach([&](const MWWorld::Ptr& ptr) {
+                if (ptr.getCellRef().getFormKey() == key) found = ptr;
+                return true;
+            }, true);
+        });
+        return found;
+    };
+    for (const auto& reference : saved.mReferences)
+    {
+        const auto ptr = find(reference.mKey);
+        ASSERT_FALSE(ptr.isEmpty());
+        EXPECT_EQ(world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()), ptr);
+        EXPECT_EQ(world.getWorldModel().getDynamicNativePtr(reference.mKey), ptr);
+        EXPECT_EQ(world.getOblivionAiService()->resolveReference(reference.mKey), ptr);
+        EXPECT_EQ(ptr.getRefData().getPosition(), reference.mPosition);
+        EXPECT_EQ(ptr.getRefData().isEnabled(), reference.mEnabled);
+        EXPECT_EQ(ptr.mRef->isDeleted(), reference.mDeleted);
+        EXPECT_EQ(ptr.getCellRef().getNativeOwnershipRank(), reference.mOwnershipRank);
+        EXPECT_EQ(ptr.getCellRef().getNativeItemCondition(), reference.mItemCondition);
+        EXPECT_EQ(std::signbit(*ptr.getCellRef().getNativeItemCondition()), std::signbit(*reference.mItemCondition));
+        EXPECT_EQ(ptr.getCellRef().getEnchantmentCharge(), *reference.mItemCharge);
+        EXPECT_EQ(ptr.getCellRef().getScale(), 1.25f);
+    }
+    const auto captured = world.captureOblivionRuntimeState();
+    EXPECT_EQ(captured.mNextDynamicSerial, 3u);
+    EXPECT_EQ(captured.mReferences.size(), 2u);
+    const auto first = find(saved.mReferences.front().mKey);
+    const auto id = first.getCellRef().getRefNum();
+    readNativeSnapshot(fixture, captured);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(find(saved.mReferences.front().mKey), first);
+    EXPECT_EQ(first.getCellRef().getRefNum(), id);
+    world.clear();
+    acceptNativeSnapshot(fixture, captured);
+    EXPECT_FALSE(find(saved.mReferences.front().mKey).isEmpty());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mReferences, captured.mReferences);
+    const auto restored = find(saved.mReferences.front().mKey);
+    world.getWorldModel().deregisterLiveCellRef(*restored.mRef);
+    EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(saved.mReferences.front().mKey).isEmpty());
+    world.getWorldModel().registerPtr(restored);
+    EXPECT_EQ(world.getWorldModel().getDynamicNativePtr(saved.mReferences.front().mKey), restored);
+}
+
+TEST(OblivionWorldTest, NativeDynamicActorReconstructsAuthorityInventoryAndDrawViewAfterClear)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    auto saved = world.captureOblivionRuntimeState();
+    const auto key = ESM::FormKey::dynamic("native-reference", 1);
+    saved.mNextDynamicSerial = 2;
+    saved.mReferences.front().mKey = key;
+    saved.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Weapon;
+    saved.mNativeActorValues.front().mActor = key;
+    saved.mNativeActorLife.front().mActor = key;
+    if (!saved.mNativeActorBreath.empty())
+    {
+        const auto breath = saved.mNativeActorBreath.begin()->second;
+        saved.mNativeActorBreath.clear();
+        saved.mNativeActorBreath.emplace(key, breath);
+    }
+    saved.mNativeActorValues.front().mValues[8].mModifiers[2] = -9;
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1;
+    item.mCondition = 43.125f;
+    item.mCharge = 7.25f;
+    item.mEquippedSlots = ESM4::InventorySlotWeapon;
+    saved.mReferences.front().mInventory = {item};
+    ASSERT_NO_THROW(saved.validate());
+    world.clear();
+    world.getStore().rebuildIdsIndex(); // Shared record restoration rebuilds the projected item index.
+    acceptNativeSnapshot(fixture, saved);
+    MWWorld::Ptr actor;
+    world.getWorldModel().forEachLoadedCellStore([&](MWWorld::CellStore& cell) {
+        cell.forEach([&](const MWWorld::Ptr& ptr) {
+            if (ptr.getCellRef().getFormKey() == key) actor = ptr;
+            return true;
+        }, true);
+    });
+    ASSERT_FALSE(actor.isEmpty());
+    EXPECT_EQ(actor.getType(), ESM::REC_NPC_4);
+    EXPECT_EQ(world.captureOblivionActorInventory(actor), saved.mReferences.front().mInventory);
+    EXPECT_EQ(world.getOblivionCombatService()->findActorValues(key)->mValues[8].mModifiers[2], -9);
+    EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
+    EXPECT_EQ(world.getWorldModel().getPtr(actor.getCellRef().getRefNum()), actor);
+    EXPECT_EQ(world.getOblivionAiService()->resolveReference(key), actor);
+}
+
+TEST(OblivionWorldTest, NativeDynamicReconstructionDiscardsNodesOnLateFailureBeforePublication)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    MWClass::ESM4Takeable<ESM4::Weapon>::registerSelf();
+    const auto before = world.captureOblivionRuntimeState();
+    const auto serial = world.getWorldModel().getLastGeneratedRefNum();
+    auto candidate = before;
+    candidate.mNextDynamicSerial = 2;
+    auto reference = candidate.mReferences.front();
+    reference.mKey = ESM::FormKey::dynamic("native-reference", 1);
+    reference.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    reference.mActorDrawState.reset();
+    candidate.mReferences.push_back(reference);
+    candidate.mPlayer.mInventory.push_back({});
+    candidate.mPlayer.mInventory.back().mBase = ESM::FormKey::content("headless.esm", 0xdead);
+    candidate.mPlayer.mInventory.back().mCount = 1;
+    for (int retry = 0; retry != 2; ++retry)
+    {
+        readNativeSnapshot(fixture, candidate);
+        EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), serial);
+        EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(reference.mKey).isEmpty());
+    }
+    candidate.mPlayer.mInventory.clear();
+    readNativeSnapshot(fixture, candidate);
+    EXPECT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mReferences.size(), before.mReferences.size() + 1);
+}

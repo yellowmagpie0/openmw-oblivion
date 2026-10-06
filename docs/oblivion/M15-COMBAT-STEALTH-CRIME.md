@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,74 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 dynamic native reference reconstruction checkpoint — 2026-10-05
+
+World-owned `native-reference` keys now reconstruct detached live references
+from winning native placeable bases after clear/load. Their nodes use prepared
+CellStore insertions and join the existing prepared registry replacement. No
+cell nodes or registered identities publish until preparation succeeds. Native
+NPC/creature bases use actor reference variants; ordinary objects use REFR.
+Other, unprojected future namespaces keep their existing deferred behavior.
+Missing/ambiguous placeable bases and actor rank extras reject during admission.
+
+Registry insertion now advances the generated-ID high-water mark for already
+assigned generated IDs, including a retained Player registered after clear.
+Prepared item metadata copies retain the IDs assigned by registry preparation.
+These repairs prevent generated-reference collisions and metadata swaps that
+would invalidate registry lookup. A dynamic native-key index participates in
+registry copies, swaps, clear and removal, rejects duplicate live owners, and
+lets AI/script lookup resolve reconstructed references without scanning cells.
+Index removal allocates nothing; insertion prepares the native map node before
+changing the RefNum index.
+
+Three new World regressions cover loose reference reconstruction after clear,
+exact fractional/negative-zero condition and charge, ownership rank, count,
+scale, disabled/deleted nodes, repeat-load identity and clear/reload; dynamic
+NPC authority/inventory/draw projection after clear; repeated late inventory
+failure with no published nodes, serial changes or dynamic lookup entries,
+followed by corrected retry. Live registry/AI lookups and deregistration are
+checked explicitly.
+
+Evidence under `build/oblivion-compat/m15/`:
+
+- `S3/dynamic-reconstruction-engine-05` and
+  `dynamic-reconstruction-sanitize-02`: all **1,164** engine tests pass with
+  exact inventories and zero failures/skips, unchanged tested fingerprint
+  `f640c2cd12156bdc0f372409cb2b1cc6fbb8acf3f4f7d9e11a833c60a585fdb2`
+  on parent `b95971a98f429441d050bf42e3ef61cd10d053d8`.
+  ASan leak detection is disabled; UBSan halts on errors. Rebuilding the registry
+  callers also reports the unchanged CharacterController optional-loop-count
+  warning and old contact-test range-loop-copy warning; this chunk changes
+  neither file.
+- `S3/dynamic-reconstruction-restart-03` and
+  `dynamic-reconstruction-sanitized-restart-01`: actual native weapon save
+  load/F5/quit, then a distinct process loading that first output/F5/quit.
+  Both processes query the live `native-reference:1` weapon and return scale
+  **1.25**. All **37** native fields, including clock and all **34,399** then
+  **34,549** references, match at load tick zero. Separate checks preserve all
+  fourteen stable weapon fields through every actual save, including condition
+  **23.125**, count1 and serial high-water2. Ordinary position updates remain
+  permitted. Runtime executable hashes match the final builds. Both fresh
+  screenshots were inspected; clean exit, 130 retained script instances and
+  no unreviewed errors/sanitizer diagnostics are verified. The existing equip
+  icon error is explicitly reviewed. These diagnostic courses disable audio.
+- Failed/cancelled attempts remain intact. Engine01 was stopped to correct
+  two test compile errors; engine02 exposed the generated-ID collision and
+  an actor fixture missing normal shared index reconstruction. Engine03 passed
+  all1,164 tests before indexed lookup was added. Sanitizer01 was stopped after
+  runtime01 proved the absent live dynamic lookup (`getscale=0`); its owned
+  engine/scenario were stopped after the confirmed failure. Engine04 was
+  stopped before tests to keep index removal allocation-free. Runtime02 proved
+  live lookup/save but failed strict comparison because the synthetic seed
+  omitted capture's `record_type` field. The final courses use that actual
+  F5 output as their canonical input, retaining the failed comparison.
+
+Aggregate source, binary, save, course and extra-field proofs are retained in
+`S3/dynamic-reconstruction-report.json`. This closes World-owned dynamic native
+reference reconstruction and indexed lookup. Complete shared/Lua restore staging,
+cache and placement publication, remaining migrations and active-action
+continuation remain required; S3 stays open.
 
 ## S3 detached shared-world decoding checkpoint — 2026-10-05
 

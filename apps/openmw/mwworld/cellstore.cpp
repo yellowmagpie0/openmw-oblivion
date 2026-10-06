@@ -347,6 +347,74 @@ namespace
 
 namespace MWWorld
 {
+    namespace
+    {
+        template<class T>
+        class SavedNativeInsertion final : public PreparedSavedNativeReference
+        {
+            CellStore& mCell;
+            std::unique_ptr<CellStore::PreparedInsertion<T>> mInsertion;
+            Ptr mPtr;
+        public:
+            SavedNativeInsertion(CellStore& cell, const ESM4::Reference& reference, const T* base)
+                : mCell(cell)
+            {
+                if constexpr (std::is_same_v<T, ESM4::Npc> || std::is_same_v<T, ESM4::Creature>)
+                {
+                    ESM4::ActorCharacter actor{};
+                    actor.mFormKey = reference.mFormKey;
+                    actor.mParent = reference.mParent;
+                    actor.mParentKey = reference.mParentKey;
+                    actor.mBaseObj = reference.mBaseObj;
+                    actor.mBaseKey = reference.mBaseKey;
+                    actor.mPos = reference.mPos;
+                    actor.mScale = reference.mScale;
+                    actor.mFlags = reference.mFlags;
+                    mInsertion = cell.prepareInsertion(LiveCellRef<T>(actor, base));
+                }
+                else
+                    mInsertion = cell.prepareInsertion(LiveCellRef<T>(reference, base));
+                mPtr = Ptr(mInsertion->get(), &cell);
+            }
+            Ptr get() const override { return mPtr; }
+            bool isValid() const noexcept override { return mCell.validatePreparedInsertion(*mInsertion); }
+            void commit() noexcept override { (void)mCell.commitPreparedInsertion(*mInsertion); }
+        };
+    }
+
+    std::uint32_t savedNativeReferenceType(const ESMStore& store, const ESM::RefId& base)
+    {
+        std::uint32_t result = 0;
+        CellStoreTuple types;
+        Misc::tupleForEach(types, [&]<class T>(CellRefList<T>&) {
+            if constexpr (ESM::isESM4Rec(T::sRecordId))
+                if (store.get<T>().searchStatic(base))
+                {
+                    if (result)
+                        throw std::invalid_argument("ambiguous native saved reference base");
+                    result = T::sRecordId;
+                }
+        });
+        if (!result)
+            throw std::invalid_argument("native saved reference has no winning placeable base");
+        return result;
+    }
+
+    std::unique_ptr<PreparedSavedNativeReference> prepareSavedNativeReference(
+        const ESMStore& store, CellStore& cell, const ESM4::Reference& reference)
+    {
+        const auto type = savedNativeReferenceType(store, ESM::RefId(reference.mBaseObj));
+        std::unique_ptr<PreparedSavedNativeReference> result;
+        CellStoreTuple types;
+        Misc::tupleForEach(types, [&]<class T>(CellRefList<T>&) {
+            if constexpr (ESM::isESM4Rec(T::sRecordId))
+                if (T::sRecordId == type)
+                    result = std::make_unique<SavedNativeInsertion<T>>(
+                        cell, reference, store.get<T>().searchStatic(ESM::RefId(reference.mBaseObj)));
+        });
+        return result;
+    }
+
     std::unique_ptr<ESM::ObjectState> readSavedReferenceState(
         ESM::ESMReader& reader, const ESM::CellRef& reference, std::uint32_t type)
     {

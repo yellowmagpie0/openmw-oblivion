@@ -414,6 +414,9 @@ namespace MWMechanics
         if (ESM4::runtimeReferenceKey(key) == ESM::FormKey::dynamic("player", 1))
             return mWorld.getPlayerPtr();
 
+        if (key.isDynamic())
+            return mWorld.mWorldModel.getDynamicNativePtr(key);
+
         // Native actor records carry the same RefNum that the world model
         // registers for resident references. Resolve those through the
         // registry first; scanning every resident cell for every actor would

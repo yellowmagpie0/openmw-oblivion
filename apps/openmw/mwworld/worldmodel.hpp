@@ -146,6 +146,7 @@ namespace MWWorld
         Ptr getPtrByRefId(const ESM::RefId& name);
 
         Ptr getPtr(ESM::RefNum refNum) const { return mPtrRegistry.getOrEmpty(refNum); }
+        Ptr getDynamicNativePtr(const ESM::FormKey& key) const { return mPtrRegistry.getDynamicNativePtr(key); }
 
         // Also finds inactive/disabled references in already loaded cells.
         // Does not load cells or register references. Deleted references are

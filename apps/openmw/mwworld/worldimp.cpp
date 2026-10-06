@@ -1,4 +1,5 @@
 #include "worldimp.hpp"
+#include "savedreference.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
 
 #include <array>
@@ -2401,10 +2402,29 @@ namespace MWWorld
             std::optional<CellRef> mItemCellRef;
         };
         std::vector<PreparedReferenceBinding> preparedReferences;
+        std::vector<std::unique_ptr<PreparedSavedNativeReference>> reconstructed;
         preparedReferences.reserve(state.mReferences.size());
         for (const auto& reference : state.mReferences)
         {
-            const auto found = references.find(reference.mKey);
+            auto found = references.find(reference.mKey);
+            if (found == references.end() && reference.mKey.isDynamic()
+                && reference.mKey.mNamespace == "native-reference")
+            {
+                const auto base = resolver.toFormId(reference.mBase);
+                if (!base)
+                    throw std::invalid_argument("native saved reference base cannot be resolved");
+                const auto cellId = resolver.toFormId(reference.mCell);
+                CellStore& cell = mWorldModel.getCell(ESM::RefId(*cellId));
+                ESM4::Reference placed{};
+                placed.mFormKey = reference.mKey;
+                placed.mParent = ESM::RefId(*cellId);
+                placed.mParentKey = reference.mCell;
+                placed.mBaseObj = *base;
+                placed.mBaseKey = reference.mBase;
+                placed.mPos = reference.mPosition;
+                reconstructed.push_back(prepareSavedNativeReference(mStore, cell, placed));
+                found = references.emplace(reference.mKey, reconstructed.back()->get()).first;
+            }
             if (found == references.end())
             {
                 if (reference.mKey.isDynamic())
@@ -2703,13 +2723,26 @@ namespace MWWorld
         }
         // Prepare one registry replacement after all class/view construction.
         // Incoming item Ptrs already name their final live inventory owner.
+        for (const auto& reference : reconstructed)
+        {
+            if (!reference->isValid())
+                throw std::invalid_argument("stale native reference reconstruction");
+            insertedItems.push_back(reference->get());
+        }
         auto preparedRegistry = mWorldModel.preparePtrReplacement(removedItems, insertedItems);
+        // Registry preparation assigns IDs to reconstructed references. Their
+        // prepared metadata copies must carry those same IDs through the swap.
+        for (auto& binding : preparedReferences)
+            if (binding.mItemCellRef)
+                binding.mItemCellRef->setRefNum(binding.mReference.getCellRef().getRefNum());
         // Character, inventory, registry and native-view preparation completes
         // before any global changes. No acquisition/equipment callbacks run.
         // Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         preparedRegistry.commit();
+        for (auto& reference : reconstructed)
+            reference->commit();
         for (auto& inventory : inventories)
             inventory.mTarget->swapPreparedContents(*inventory.mContents);
         mOblivionDynamicReferenceIdentity.reset();
@@ -3018,6 +3051,14 @@ namespace MWWorld
                 && reference.mKey.mValue >= state.mNextDynamicSerial)
                 throw std::invalid_argument("native reference serial would reuse a saved identity");
             const auto baseId = resolver.toFormId(reference.mBase);
+            if (reference.mKey.isDynamic() && reference.mKey.mNamespace == "native-reference")
+            {
+                if (!baseId)
+                    throw std::invalid_argument("native saved reference base cannot be resolved");
+                const auto type = savedNativeReferenceType(mStore, ESM::RefId(*baseId));
+                if ((type == ESM::REC_NPC_4 || type == ESM::REC_CREA4) && reference.mOwnershipRank)
+                    throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
+            }
             const bool actor = baseId && (mStore.get<ESM4::Npc>().search(ESM::RefId(*baseId))
                 || mStore.get<ESM4::Creature>().search(ESM::RefId(*baseId)));
             if (actor)
