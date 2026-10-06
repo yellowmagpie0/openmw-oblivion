@@ -14,6 +14,9 @@
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/player.hpp>
+#include <components/esm3/containerstate.hpp>
+#include <components/esm3/creaturestate.hpp>
+#include <components/lua/configuration.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/misc/strings/algorithm.hpp>
@@ -143,6 +146,43 @@ namespace MWState
                 std::set<ESM::RefId> cells;
                 bool hasPlayer = false;
                 bool hasLua = false;
+                LuaUtil::ScriptsConfiguration luaConfiguration;
+                const auto scripts = content ? content->getLuaScriptsCfg() : ESM::LuaScriptsCfg{};
+                luaConfiguration.init(scripts, false);
+                struct RestoreConfiguration
+                {
+                    ESM::ESMReader& mReader;
+                    const LuaUtil::ScriptsConfiguration* mPrevious;
+                    ~RestoreConfiguration() { mReader.mScriptsConfiguration = mPrevious; }
+                } restore{reader, reader.mScriptsConfiguration};
+                // Local states may precede LUAM in the file. Resolve their IDs
+                // against the saved configuration, never the outgoing game.
+                for (const auto& [type, context] : worldRecords)
+                {
+                    if (type != ESM::REC_LUAM)
+                        continue;
+                    if (hasLua)
+                        throw std::runtime_error("Saved game contains duplicate LUAM records");
+                    hasLua = true;
+                    reader.restoreContext(context);
+                    nativeScripts = MWLua::validateSavedLuaRecord(reader, scripts, &luaConfiguration);
+                    if (content)
+                        ESM4::validateLocalLuaScriptContent(nativeScripts, content->getFormKeyIndex());
+                }
+                reader.mScriptsConfiguration = &luaConfiguration;
+                std::vector<ESM::LuaScripts> localScripts;
+                const auto collectScripts = [&](ESM::ObjectState& object) {
+                    if (!object.mLuaScripts.mScripts.empty())
+                        localScripts.push_back(std::move(object.mLuaScripts));
+                    ESM::InventoryState* inventory = nullptr;
+                    if (auto* npc = dynamic_cast<ESM::NpcState*>(&object)) inventory = &npc->mInventory;
+                    else if (auto* creature = dynamic_cast<ESM::CreatureState*>(&object)) inventory = &creature->mInventory;
+                    else if (auto* container = dynamic_cast<ESM::ContainerState*>(&object)) inventory = &container->mInventory;
+                    if (inventory)
+                        for (auto& item : inventory->mItems)
+                            if (!item.mLuaScripts.mScripts.empty())
+                                localScripts.push_back(std::move(item.mLuaScripts));
+                };
                 const auto validatePosition = [](const ESM::Position& position) {
                     for (int axis = 0; axis != 3; ++axis)
                         if (!std::isfinite(position.pos[axis]) || !std::isfinite(position.rot[axis]))
@@ -150,18 +190,10 @@ namespace MWState
                 };
                 for (const auto& [type, context] : worldRecords)
                 {
-                    reader.restoreContext(context);
                     if (type == ESM::REC_LUAM)
-                    {
-                        if (hasLua)
-                            throw std::runtime_error("Saved game contains duplicate LUAM records");
-                        hasLua = true;
-                        nativeScripts = MWLua::validateSavedLuaRecord(
-                            reader, content ? content->getLuaScriptsCfg() : ESM::LuaScriptsCfg{});
-                        if (content)
-                            ESM4::validateLocalLuaScriptContent(nativeScripts, content->getFormKeyIndex());
-                    }
-                    else if (type == ESM::REC_PLAY)
+                        continue;
+                    reader.restoreContext(context);
+                    if (type == ESM::REC_PLAY)
                     {
                         if (hasPlayer)
                             throw std::runtime_error("Saved game contains duplicate PLAY records");
@@ -169,6 +201,7 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        collectScripts(player.mObject);
                     }
                     else
                     {
@@ -197,6 +230,7 @@ namespace MWState
                             {
                                 const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
+                                collectScripts(*state);
                             }
                             else
                                 // Match CellStore's deliberate missing-object
@@ -218,6 +252,7 @@ namespace MWState
                     if (reader.hasMoreSubs())
                         throw std::runtime_error("Saved game shared world record contains unexpected trailing data");
                 }
+                MWLua::validateSavedLocalLuaScripts(localScripts, luaConfiguration, reader.getFormatVersion());
             }
             if (nativeRecord)
             {

@@ -118,7 +118,46 @@ namespace MWLua
         return std::make_unique<Serializer>(local, contentFileMapping);
     }
 
-    ESM4::LocalLuaScripts validateSavedLuaRecord(ESM::ESMReader& reader, const ESM::LuaScriptsCfg& scripts)
+    namespace
+    {
+        void validateScripts(LuaUtil::LuaView& view, const ESM::LuaScripts& data,
+            const LuaUtil::ScriptsConfiguration& configuration, std::uint32_t formatVersion,
+            const LuaUtil::UserdataSerializer* serializer)
+        {
+            std::set<int> ids;
+            for (const auto& script : data.mScripts)
+            {
+                if (script.mScriptId == -1 && formatVersion <= ESM::MaxLuaScriptPathFormatVersion)
+                    continue; // Legacy path-based saves may name removed scripts.
+                if (!configuration.isValidSavedId(script.mScriptId) || !ids.insert(script.mScriptId).second)
+                    throw std::runtime_error("Invalid or duplicate saved Lua script ID");
+                for (const auto& timer : script.mTimers)
+                    if (!std::isfinite(timer.mTime))
+                        throw std::runtime_error("Invalid saved Lua timer time");
+                if (!configuration.mapId(script.mScriptId))
+                    continue; // Deliberately removed scripts are not restored.
+                static_cast<void>(LuaUtil::deserialize(view.sol(), script.mData, serializer));
+                for (const auto& timer : script.mTimers)
+                    static_cast<void>(LuaUtil::deserialize(view.sol(), timer.mCallbackArgument, serializer));
+            }
+        }
+    }
+
+    void validateSavedLocalLuaScripts(const std::vector<ESM::LuaScripts>& scripts,
+        const LuaUtil::ScriptsConfiguration& configuration, std::uint32_t formatVersion)
+    {
+        if (scripts.empty())
+            return;
+        sol::state lua;
+        const auto serializer = createUserdataSerializer(true);
+        LuaUtil::protectedCall(lua.lua_state(), [&](LuaUtil::LuaView& view) {
+            for (const auto& data : scripts)
+                validateScripts(view, data, configuration, formatVersion, serializer.get());
+        });
+    }
+
+    ESM4::LocalLuaScripts validateSavedLuaRecord(ESM::ESMReader& reader, const ESM::LuaScriptsCfg& scripts,
+        LuaUtil::ScriptsConfiguration* savedConfiguration)
     {
         double simulationTime;
         reader.getHNT(simulationTime, "LUAW");
@@ -127,7 +166,8 @@ namespace MWLua
         if (reader.getFormId(true).hasContentFile())
             throw std::runtime_error("Last generated RefNum is invalid");
 
-        LuaUtil::ScriptsConfiguration configuration;
+        LuaUtil::ScriptsConfiguration temporaryConfiguration;
+        auto& configuration = savedConfiguration ? *savedConfiguration : temporaryConfiguration;
         configuration.init(scripts, false);
         struct RestoreConfiguration
         {
@@ -143,25 +183,7 @@ namespace MWLua
         const auto localSerializer = createUserdataSerializer(true);
         ESM4::LocalLuaScripts native;
         LuaUtil::protectedCall(lua.lua_state(), [&](LuaUtil::LuaView& view) {
-            const auto validateScripts = [&](const ESM::LuaScripts& data, const LuaUtil::UserdataSerializer* serializer) {
-                std::set<int> ids;
-                for (const auto& script : data.mScripts)
-                {
-                    if (script.mScriptId == -1 && reader.getFormatVersion() <= ESM::MaxLuaScriptPathFormatVersion)
-                        continue; // Legacy path-based saves may name removed scripts.
-                    if (!configuration.isValidSavedId(script.mScriptId) || !ids.insert(script.mScriptId).second)
-                        throw std::runtime_error("Invalid or duplicate saved Lua script ID");
-                    for (const auto& timer : script.mTimers)
-                        if (!std::isfinite(timer.mTime))
-                            throw std::runtime_error("Invalid saved Lua timer time");
-                    if (!configuration.mapId(script.mScriptId))
-                        continue; // Deliberately removed scripts are not restored.
-                    static_cast<void>(LuaUtil::deserialize(view.sol(), script.mData, serializer));
-                    for (const auto& timer : script.mTimers)
-                        static_cast<void>(LuaUtil::deserialize(view.sol(), timer.mCallbackArgument, serializer));
-                }
-            };
-            validateScripts(globals, globalSerializer.get());
+            validateScripts(view, globals, configuration, reader.getFormatVersion(), globalSerializer.get());
             while (reader.isNextSub("LUAE"))
             {
                 static_cast<void>(reader.getHString());
@@ -170,7 +192,7 @@ namespace MWLua
             }
             native = ESM4::loadLocalLuaScripts(reader);
             for (const auto& [key, data] : native)
-                validateScripts(data, localSerializer.get());
+                validateScripts(view, data, configuration, reader.getFormatVersion(), localSerializer.get());
         });
         return native;
     }

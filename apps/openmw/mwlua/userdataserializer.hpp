@@ -8,6 +8,7 @@
 namespace LuaUtil
 {
     class UserdataSerializer;
+    class ScriptsConfiguration;
 }
 
 namespace MWLua
@@ -22,7 +23,10 @@ namespace MWLua
 
     // Decode saved Lua state in an isolated VM, without running scripts or
     // touching the live manager. The caller validates the returned owners.
-    ESM4::LocalLuaScripts validateSavedLuaRecord(ESM::ESMReader& reader, const ESM::LuaScriptsCfg& scripts);
+    ESM4::LocalLuaScripts validateSavedLuaRecord(ESM::ESMReader& reader, const ESM::LuaScriptsCfg& scripts,
+        LuaUtil::ScriptsConfiguration* savedConfiguration = nullptr);
+    void validateSavedLocalLuaScripts(const std::vector<ESM::LuaScripts>& scripts,
+        const LuaUtil::ScriptsConfiguration& configuration, std::uint32_t formatVersion);
 }
 
 #endif // MWLUA_USERDATASERIALIZER_H

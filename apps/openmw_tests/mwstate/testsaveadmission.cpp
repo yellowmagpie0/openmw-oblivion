@@ -11,6 +11,7 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
+#include <components/esm3/loadcrea.hpp>
 #include <components/esm3/player.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/containerstate.hpp>
@@ -787,4 +788,164 @@ TEST(SaveAdmissionTest, IsolatedLuaDecodeAcceptsObjectListsAndDeliberatelyRemove
     EXPECT_EQ(decoded.at(key).mScripts.front().mData, data.mScripts.front().mData);
     EXPECT_FALSE(reader.hasMoreSubs());
     EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
+}
+
+namespace
+{
+    void installAdmissionLuaConfiguration(MWWorld::ESMStore& content)
+    {
+        ESM::LuaScriptsCfg configuration;
+        ESM::LuaScriptCfg script{};
+        script.mScriptPath = VFS::Path::Normalized("kept.lua");
+        script.mFlags = ESM::LuaScriptCfg::sCustom;
+        configuration.mScripts.push_back(script);
+        ESM::ESMWriter writer;
+        std::stringstream stream;
+        writer.save(stream);
+        writer.startRecord(ESM::REC_LUAL);
+        configuration.save(writer);
+        writer.endRecord(ESM::REC_LUAL);
+        ESM::ESMReader reader;
+        openBytes(reader, stream.str());
+        ESM::Dialogue* dialogue = nullptr;
+        content.load(reader, nullptr, dialogue);
+    }
+
+    void writeAdmissionLuaMapping(ESM::ESMWriter& writer)
+    {
+        writer.startRecord(ESM::REC_LUAM);
+        writer.writeHNT("LUAW", 0.0);
+        writer.writeFormId(ESM::RefNum{}, true);
+        writer.writeHNString("LUAP", "removed.lua");
+        writer.writeHNString("LUAP", "kept.lua");
+        ESM4::saveLocalLuaScripts(writer, {});
+        writer.endRecord(ESM::REC_LUAM);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedPlayerAndInventoryLuaUseIncomingMappingInEitherRecordOrder)
+{
+    MWWorld::ESMStore content;
+    installAdmissionLuaConfiguration(content);
+    content.setUp();
+    sol::state lua;
+    const auto valid = LuaUtil::serialize(sol::make_object(lua, 42));
+    for (bool luaFirst : {false, true})
+    for (bool inInventory : {false, true})
+    for (int fault = 0; fault != 6; ++fault)
+    {
+        SCOPED_TRACE(luaFirst);
+        SCOPED_TRACE(inInventory);
+        SCOPED_TRACE(fault);
+        ESM::Player player{};
+        player.mObject.blank();
+        player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+        player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+        ESM::ObjectState* owner = &player.mObject;
+        if (inInventory)
+        {
+            auto& item = player.mObject.mInventory.mItems.emplace_back();
+            item.blank();
+            item.mRef.mRefID = ESM::RefId::stringRefId("item");
+            owner = &item;
+        }
+        owner->mLuaScripts.mScripts.push_back({fault == 3 ? 2 : (fault == 5 ? 0 : 1),
+            fault == 1 || fault == 5 ? "bad payload" : valid,
+            {{ESM::LuaTimer::Type::GAME_TIME, fault == 2 ? std::numeric_limits<double>::infinity() : -1,
+                "must-not-run", valid}}});
+        if (fault == 4)
+            owner->mLuaScripts.mScripts.push_back(owner->mLuaScripts.mScripts.front());
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            if (luaFirst) writeAdmissionLuaMapping(writer);
+            writer.startRecord(ESM::REC_PLAY);
+            player.save(writer);
+            writer.endRecord(ESM::REC_PLAY);
+            if (!luaFirst) writeAdmissionLuaMapping(writer);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        LuaUtil::ScriptsConfiguration outgoing;
+        reader.mScriptsConfiguration = &outgoing;
+        const auto offset = reader.getFileOffset();
+        bool validated = false;
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+            [&](const auto&) { validated = true; }, &content); };
+        if (fault == 0 || fault == 5)
+        {
+            EXPECT_NO_THROW(admit());
+            EXPECT_TRUE(validated);
+        }
+        else
+        {
+            EXPECT_THROW(admit(), std::exception);
+            EXPECT_FALSE(validated);
+        }
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.mScriptsConfiguration, &outgoing);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedCellLuaChecksObjectsAndAllInventoryStateOwners)
+{
+    MWWorld::ESMStore content;
+    installAdmissionLuaConfiguration(content);
+    const auto id = ESM::RefId::stringRefId("lua-owner");
+    ESM::NPC npc{}; npc.mId = id;
+    ESM::Creature creature{}; creature.mId = ESM::RefId::stringRefId("lua-creature");
+    ESM::Container container{}; container.mId = ESM::RefId::stringRefId("lua-container");
+    ESM4::Weapon weapon{}; weapon.mId = {0x940, 0};
+    content.getWritable<ESM::NPC>().insertStatic(npc);
+    content.getWritable<ESM::Creature>().insertStatic(creature);
+    content.getWritable<ESM::Container>().insertStatic(container);
+    content.getWritable<ESM4::Weapon>().insertStatic(weapon);
+    content.setUp();
+    for (int type = 0; type != 4; ++type)
+    for (bool inventory : {false, true})
+    {
+        if (type == 3 && inventory) continue;
+        SCOPED_TRACE(type);
+        SCOPED_TRACE(inventory);
+        std::unique_ptr<ESM::ObjectState> object;
+        ESM::InventoryState* items = nullptr;
+        ESM::RefId base;
+        if (type == 0) { auto p = std::make_unique<ESM::NpcState>(); items = &p->mInventory; object = std::move(p); base = id; }
+        else if (type == 1) { auto p = std::make_unique<ESM::CreatureState>(); items = &p->mInventory; object = std::move(p); base = creature.mId; }
+        else if (type == 2) { auto p = std::make_unique<ESM::ContainerState>(); items = &p->mInventory; object = std::move(p); base = container.mId; }
+        else { object = std::make_unique<ESM::ObjectState>(); base = ESM::RefId(weapon.mId); }
+        object->blank();
+        object->mRef.mRefID = base;
+        object->mRef.mRefNum = {1, -1};
+        ESM::ObjectState* owner = object.get();
+        if (inventory)
+        {
+            owner = &items->mItems.emplace_back();
+            owner->blank();
+            owner->mRef.mRefID = ESM::RefId(weapon.mId);
+        }
+        owner->mLuaScripts.mScripts.push_back({1, "malformed local state", {}});
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_CSTA);
+            writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+            ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+            writer.writeHNT("OBJE", std::uint32_t{0});
+            object->save(writer);
+            writer.endRecord(ESM::REC_CSTA);
+            writeAdmissionLuaMapping(writer);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        bool validated = false;
+        try
+        {
+            MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+                [&](const auto&) { validated = true; }, &content);
+            FAIL() << "malformed local data admitted";
+        }
+        catch (const std::exception& error)
+        {
+            EXPECT_NE(std::string(error.what()).find("Lua serialization format"), std::string::npos);
+        }
+        EXPECT_FALSE(validated);
+        EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
+    }
 }

@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated Lua-record admission, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,52 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 shared local Lua admission checkpoint — 2026-10-06
+
+Detached admission now retains the incoming Lua script configuration and reads
+LUAM before decoding shared PLAY/CSTA states, regardless of file record order.
+It collects local Lua state from Player, cell objects, and NPC/Creature/Container
+inventory items, then uses the same isolated payload/ID/timer validator as the
+global/native Lua companion. No live scripts or callbacks run. Reader position
+and the previous configuration pointer are restored on success and rejection.
+Removed scripts retain their deliberate skip behavior; saved ordinals are mapped
+against the incoming paths rather than the outgoing game's configuration.
+
+Two new regression tests cover 24 Player/inventory/order/fault combinations and
+seven cell-owner cases: NPC, Creature, Container, native weapon, and the three
+inventory-bearing shared state types. They prove valid mapping and expired
+timers, removed-script compatibility, malformed data, nonfinite deadlines,
+out-of-range IDs, duplicates, reader restoration and rejection before native
+publication. `S3/shared-local-lua-engine-02` and
+`S3/shared-local-lua-sanitize-02` both pass all **1,169** engine tests with exact
+inventories, no failures/skips, and source fingerprint
+`ee952e4073b1619e8cfd227ba057a43ac1803335103daa37df69c14087135fef`
+on parent `0f3c3ec8398a4447b6cd285f90344f32ebc88bab`. ASan leaks are disabled;
+UBSan halts. Both first build attempts are retained: the new Creature fixture
+needed an explicit loadcrea header; implementation compilation succeeded.
+
+`S3/shared-local-lua-runtime-01` and `shared-local-lua-sanitized-runtime-01`
+load the stock save/F5, corrupt exactly one byte in an existing PLAY/LUAD payload,
+reject F9 before cleanup, dismiss the dialog, F5 again and quit cleanly. Exact
+raw-byte fault checks prove every other byte and the complete native state are
+unchanged. Both preserve Player, physical actions, native actor values/bases/
+life/breath/death, 390 quests, 130 native script instances and 34,398 reference
+inventories across rejection. Initial loads match all 37 native fields and
+33,376 references at tick zero. Each process has one successful load and two
+actual saves; ordinary clocks and AI may advance. Both rejection dialogs and
+post-rejection screenshots were inspected. No unreviewed errors or sanitizer
+diagnostics occur; audio is disabled and the existing equip icon error is
+explicitly reviewed.
+
+Runtime executable hashes are
+`5ebbd3750fe7698cf086f0e12143e9ef0ca91f323eef8d786d6f9325c96ccc05` (normal) and
+`d1b490ed8f5bc567696a9aaf19621fa302b9630c876a2875a5d3441286f12256` (sanitized).
+Aggregate source, binary, save, fault and verifier hashes are in
+`S3/shared-local-lua-report.json`. All check/runtime processes are finished.
+Strict remaining record domains/bounds, whole-restore preparation/publication,
+cache/move reconciliation, remaining populated migrations and active-action
+continuation remain required. This checkpoint does not close S3.
 
 ## S3 isolated Lua-record admission checkpoint — 2026-10-06
 
