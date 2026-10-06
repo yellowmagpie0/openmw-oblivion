@@ -840,6 +840,7 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        mPendingOblivionRuntimeState.reset();
         if (preparedPathgrids)
             preparedPathgrids->commit();
         if (mOblivionCombat)
@@ -938,23 +939,34 @@ namespace MWWorld
         throw std::invalid_argument("native actor draw capture has an invalid view state");
     }
 
+    namespace
+    {
+        std::optional<ESM4::ActorDrawState> savedActorDrawState(
+            const ESMStore& store, const Ptr& actor, const ESM4::RuntimeState& state)
+        {
+            if (actor.isEmpty())
+                return std::nullopt;
+            const auto key = actor.getCellRef().getFormKey();
+            const auto saved = std::find_if(state.mReferences.begin(),
+                state.mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
+            if (saved == state.mReferences.end() || !saved->mActorDrawState)
+                return std::nullopt;
+            const auto base = nativeActorBase(actor);
+            const auto* npc = store.search<ESM4::Npc>(saved->mBase);
+            const auto* creature = store.search<ESM4::Creature>(saved->mBase);
+            if (base.isNull() || base != saved->mBase || (npc != nullptr) == (creature != nullptr)
+                || (npc && (!npc->mIsTES4 || actor.getType() != ESM::REC_NPC_4))
+                || (creature && (!creature->mAttackReach || actor.getType() != ESM::REC_CREA4)))
+                throw std::invalid_argument("native actor draw restore has an invalid class/base binding");
+            return saved->mActorDrawState;
+        }
+    }
+
     std::optional<ESM4::ActorDrawState> World::oblivionSavedActorDrawState(const Ptr& actor) const
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState || actor.isEmpty())
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState)
             return std::nullopt;
-        const auto key = actor.getCellRef().getFormKey();
-        const auto saved = std::find_if(mOblivionRuntimeState->mReferences.begin(),
-            mOblivionRuntimeState->mReferences.end(), [&](const auto& reference) { return reference.mKey == key; });
-        if (saved == mOblivionRuntimeState->mReferences.end() || !saved->mActorDrawState)
-            return std::nullopt;
-        const auto base = nativeActorBase(actor);
-        const auto* npc = mStore.search<ESM4::Npc>(saved->mBase);
-        const auto* creature = mStore.search<ESM4::Creature>(saved->mBase);
-        if (base.isNull() || base != saved->mBase || (npc != nullptr) == (creature != nullptr)
-            || (npc && (!npc->mIsTES4 || actor.getType() != ESM::REC_NPC_4))
-            || (creature && (!creature->mAttackReach || actor.getType() != ESM::REC_CREA4)))
-            throw std::invalid_argument("native actor draw restore has an invalid class/base binding");
-        return saved->mActorDrawState;
+        return savedActorDrawState(mStore, actor, *mOblivionRuntimeState);
     }
 
     bool World::restoreOblivionActorDrawState(const Ptr& actor) const
@@ -2193,14 +2205,20 @@ namespace MWWorld
 
     void World::applyOblivionRuntimeState()
     {
-        if (!mOblivionRuntimeState)
+        if (!mPendingOblivionRuntimeState)
         {
+            if (mOblivionRuntimeState)
+                return; // An accepted snapshot must never be replayed by a second apply.
             // A legacy save may omit T4ST, but cannot then declare owners in
             // the native Lua companion. Do not silently orphan those scripts.
             MWBase::Environment::get().getLuaManager()->validateNativeState({});
             return;
         }
-        const ESM4::RuntimeState& state = *mOblivionRuntimeState;
+        const ESM4::RuntimeState& state = *mPendingOblivionRuntimeState;
+        for (const auto& reference : state.mReferences)
+            if (const auto marker = reference.mCustomState.find("obscript.dead");
+                marker != reference.mCustomState.end() && !std::holds_alternative<bool>(marker->second))
+                throw std::invalid_argument("invalid legacy native death marker");
         // This namespace is allocated exclusively by the native World. A
         // restored high-water mark must not reuse a live or deleted identity.
         for (const auto& reference : state.mReferences)
@@ -2398,7 +2416,7 @@ namespace MWWorld
             if (!baseId || actualBase == nullptr || *baseId != *actualBase)
                 throw std::runtime_error("TES4 runtime-state reference base mismatch: " + reference.mKey.serialize());
             if (reference.mActorDrawState)
-                oblivionSavedActorDrawState(found->second); // Class/winning-kind preflight, before publication.
+                savedActorDrawState(mStore, found->second, state); // Validate incoming state, not the accepted cache.
             std::optional<CellRef> itemCellRef;
             const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge;
             const auto& itemClass = found->second.getClass();
@@ -2689,6 +2707,7 @@ namespace MWWorld
         // before any global changes. No acquisition/equipment callbacks run.
         // Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
+        mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         preparedRegistry.commit();
         for (auto& inventory : inventories)
             inventory.mTarget->swapPreparedContents(*inventory.mContents);
@@ -3000,7 +3019,7 @@ namespace MWWorld
                 // Shared records are still being restored here. Admission already
                 // checked immutable bindings; direct readers retain schema/content validation.
                 validateOblivionSnapshotContent(*state, mOblivionContentIdentities);
-                mOblivionRuntimeState = std::move(state);
+                mPendingOblivionRuntimeState = std::move(state);
             }
             break;
             case ESM::REC_PLAY:

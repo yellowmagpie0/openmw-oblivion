@@ -126,6 +126,7 @@ namespace MWWorld
         ESM::GameProfile mRequestedGameProfile;
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
+        std::unique_ptr<ESM4::RuntimeState> mPendingOblivionRuntimeState;
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::shared_ptr<const char> mOblivionDynamicReferenceIdentity;

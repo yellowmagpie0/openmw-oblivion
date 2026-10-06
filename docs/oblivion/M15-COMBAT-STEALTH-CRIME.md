@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, read-only outer admission, populated migration and restart evidence below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, read-only outer admission, populated migration and restart evidence below | Repair fractional clock restoration; complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,69 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 pending snapshot isolation checkpoint — 2026-10-05
+
+Reading T4ST now stores a pending snapshot without replacing accepted native
+metadata. Native preparation reads that incoming snapshot explicitly, including
+draw-state class/base validation. The accepted pointer changes at the existing
+publication boundary after character, inventory, registry, actor-view, script,
+AI and physical preparation. Preparation failure retains the accepted pointer;
+hotkeys, retained-reference metadata, lazy inventories/draw state, legacy death
+markers, dynamic identity reservations and physics initialization cannot consume
+pending data. Clear discards both snapshots. Applying with no pending snapshot
+does not replay previously accepted inventory over subsequent live edits.
+Malformed legacy death markers reject during preparation before publication.
+
+Two new World regressions cover pending hotkeys, inventory, retained custom
+metadata and blend-cache isolation through repeated late preparation failures,
+corrected retry, repeated apply and clear. Existing lazy cache and historical
+death-marker fixtures now explicitly accept their snapshots through World
+restore, with cold-cache reconstruction after acceptance where appropriate.
+They retain NPC/creature metadata, pre-v4 gear migration, fractional condition,
+Player resource/breath adoption and failed-initialization marker coverage.
+No test-only API bypasses acceptance.
+
+Final evidence binds parent `fab9e75c201d53e7b6243e04f3230af2f6e94dab` and source
+fingerprint `3706d8383a6ac7af721af1351d7108dc8f20de4682d42da1d4e6c5d3276dbe35`.
+
+- `S3/pending-snapshot-engine-03` and `pending-snapshot-sanitize-01`: all
+  **1,148** engine tests pass with exact inventory, zero failures/skips and
+  unchanged source. Both build `openmw`, `openmw-tests` and `esmtool`. The latter
+  uses ASan/UBSan with leak checks disabled and UBSan configured to halt.
+- `S3/pending-snapshot-restart-01` and
+  `pending-snapshot-sanitized-restart-01`: actual stock load/F5/quit followed by
+  a distinct process loading the first output/F5/quit. Every normalized native
+  field except the separately recorded clock defect matches its input at
+  load-complete tick0, including complete **33,376/34,398** reference states,
+  all AI/event/script/action/actor/physical vectors and **130** scripts. Each
+  phase has one actual save completion, and existing inventories remain exact
+  through the resave. Native JSON is independently normalized through the
+  Python binary codec before comparison. Inspected normal/instrumented fresh
+  captures retain the prison scene and full bars. The existing missing equip
+  icon is explicitly reviewed; no unreviewed errors or sanitizer findings
+  remain. Audio is disabled; these are diagnostic idle restart courses.
+- `pending-snapshot-engine-01` retains ten old fixture failures caused by
+  pre-acceptance cache use or incomplete live binding setup. Attempt02 retains
+  one script-equipment fixture without a resident/accepted reference. Fixtures
+  were corrected to exercise explicit acceptance and preserve their original
+  state/metadata assertions; the final full runs pass. The broader normal
+  rebuild also reports the existing GCC maybe-uninitialized warning in the
+  unchanged `character.cpp` animation queue entry.
+
+Aggregate evidence and source/binary/save hashes are in
+`S3/pending-snapshot-report.json`. This closes pending-cache visibility during
+preparation, not allocation-free cell placement after publication or complete
+shared-record admission before teardown. S3 remains open.
+
+The stronger restart comparison also exposes a preexisting clock defect:
+saved hour **1.0216666460037231** becomes **1** at load tick0 in both builds;
+each fresh continuation loses its fraction again. Every other native field
+matches. The courses explicitly report `clock_restoration_passed: false`.
+`S3/pending-snapshot-clock-finding.json` independently confirms the same defect
+in the previous binding-admission binary. Repairing fractional clock/global
+projection is the next S3 task; this checkpoint does not count clock restoration
+as passed.
 
 ## S3 read-only reference binding admission checkpoint — 2026-10-05
 

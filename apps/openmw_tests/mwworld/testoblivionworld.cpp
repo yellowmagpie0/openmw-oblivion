@@ -246,6 +246,51 @@ namespace
         reader.getRecHeader();
         fixture.mWorld.readRecord(reader, ESM::REC_T4ST);
     }
+
+    void prepareNativeSnapshotPlayer(NativeWorldFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        if (world.getPlayerPtr().isEmpty())
+            world.setupPlayer();
+        auto& store = world.getStore();
+        ESM::Race race{};
+        race.blank();
+        race.mId = ESM::RefId(ESM::FormId{0x810, 0});
+        if (!store.get<ESM::Race>().search(race.mId))
+            store.getWritable<ESM::Race>().insertStatic(race);
+        if (!world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace.getIf<ESM::FormId>())
+        {
+            auto player = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            player.mRace = race.mId;
+            auto metadata = store.preparePlayerRecord(player);
+            world.getPlayer().set(metadata.commit());
+        }
+        const ESM::FormKeyResolver resolver({"headless.esm"});
+        const auto prepareCell = [&](const ESM::FormKey& key) {
+            if (store.get<ESM4::Cell>().search(key))
+                return;
+            const auto id = resolver.toFormId(key);
+            if (!id)
+                throw std::runtime_error("snapshot fixture requires a native cell");
+            ESM4::Cell cell{};
+            cell.mId = ESM::RefId(*id);
+            cell.mFormKey = key;
+            cell.mCellFlags = ESM4::CELL_Interior;
+            cell.mEditorId = "AcceptedSnapshotFixture";
+            store.getWritable<ESM4::Cell>().insertStatic(cell, key);
+        };
+        prepareCell(state.mPlayer.mCell);
+        for (const auto& reference : state.mReferences)
+            prepareCell(reference.mCell);
+    }
+
+    void acceptNativeSnapshot(NativeWorldFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        prepareNativeSnapshotPlayer(fixture, state);
+        readNativeSnapshot(fixture, state);
+        fixture.mWorld.applyOblivionRuntimeState();
+    }
     class NativePhysicalPoseTestAnimation : public MWRender::Animation
     {
     public:
@@ -1127,7 +1172,8 @@ namespace
         other.mEquippedSlots = 0; other.mOwner = {};
         auto saved = captureNativeActorState(fixture, actor);
         saved.mReferences.front().mInventory = {equipped, other};
-        readNativeSnapshot(fixture, saved);
+        acceptNativeSnapshot(fixture, saved);
+        actor.getRefData().setCustomData(nullptr);
         ASSERT_EQ(actor.getRefData().getCustomData(), nullptr);
         const auto authority = captureNativeActorState(fixture, actor).serializeBinary();
         auto& inventory = actor.getClass().getInventoryStore(actor);
@@ -1190,7 +1236,8 @@ namespace
             }
             auto saved = captureNativeActorState(fixture, actor);
             ASSERT_TRUE(saved.mReferences.front().mInventory.empty());
-            readNativeSnapshot(fixture, saved);
+            acceptNativeSnapshot(fixture, saved);
+            actor.getRefData().setCustomData(nullptr);
             const auto before = saved.serializeBinary();
             auto prepared = world.prepareOblivionSavedActorInventory(actor);
             ASSERT_NE(prepared, nullptr);
@@ -1213,11 +1260,13 @@ namespace
             const auto actor = creature ? other : npc;
             auto saved = captureNativeActorState(fixture, actor);
             saved.mReferences.front().mBase = ESM::FormKey::content("headless.esm", creature ? 0x800 : 0x820);
+            prepareNativeSnapshotPlayer(fixture, saved);
             readNativeSnapshot(fixture, saved);
+            EXPECT_EQ(fixture.mWorld.prepareOblivionSavedActorInventory(actor), nullptr);
             const auto before = captureNativeActorState(fixture, actor).serializeBinary();
             for (int attempt = 0; attempt < 2; ++attempt)
             {
-                EXPECT_THROW(actor.getClass().getInventoryStore(actor), std::invalid_argument);
+                EXPECT_THROW(fixture.mWorld.applyOblivionRuntimeState(), std::runtime_error);
                 EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
                 EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
             }
@@ -1238,11 +1287,13 @@ namespace
             auto invalid = first;
             invalid.mBase = ESM::FormKey::content("headless.esm", 0x999);
             saved.mReferences.front().mInventory = {first, invalid};
+            prepareNativeSnapshotPlayer(fixture, saved);
             readNativeSnapshot(fixture, saved);
+            EXPECT_EQ(fixture.mWorld.prepareOblivionSavedActorInventory(actor), nullptr);
             const auto before = captureNativeActorState(fixture, actor).serializeBinary();
             for (int attempt = 0; attempt < 2; ++attempt)
             {
-                EXPECT_THROW(actor.getClass().getInventoryStore(actor), std::runtime_error);
+                EXPECT_THROW(fixture.mWorld.applyOblivionRuntimeState(), std::runtime_error);
                 EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
                 EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
             }
@@ -1289,7 +1340,7 @@ namespace
                 ESM4::RuntimeInventoryItem item;
                 item.mBase = weapon; item.mCount = 3;
                 saved.mReferences.front().mInventory = {item};
-                readNativeSnapshot(fixture, saved);
+                acceptNativeSnapshot(fixture, saved);
                 const auto inventory = world.captureOblivionActorInventory(actor);
                 // Existing legacy equip migration splits one equipped weapon
                 // from the two remaining unequipped items; it conserves three.
@@ -1354,7 +1405,7 @@ namespace
         auto other = equipped; other.mCount = 2; other.mCondition = 43.125f;
         other.mOwner = {}; other.mEquippedSlots = 0; other.mHotkey = -1;
         saved.mPlayer.mInventory = {equipped, other};
-        readNativeSnapshot(fixture, saved);
+        acceptNativeSnapshot(fixture, saved);
         const auto player = world.getPlayerPtr();
         installEquipmentInventory(fixture, player, saved.mPlayer.mInventory);
         const auto before = captureNativeActorState(fixture, actor).serializeBinary();
@@ -2390,7 +2441,7 @@ namespace
             saved.mNativePhysicalBlendTimeCache = expected;
             readNativeSnapshot(fixture, saved);
             auto& physics = world.initializePhysics(new osg::Group);
-            EXPECT_EQ(physics.captureNativeBlendTimeCache(), expected);
+            EXPECT_NE(physics.captureNativeBlendTimeCache(), expected);
             const ESM4::PhysicalBlendTimeCache prior{2, 4, 0, 1, 3};
             physics.restoreNativeBlendTimeCache(prior);
             ASSERT_NO_THROW(world.applyOblivionRuntimeState());
@@ -2469,6 +2520,8 @@ namespace
             EXPECT_FALSE(retainedState.mNativePhysicalBlendTimeCache);
             retainedState.mNativePhysicalBlendTimeCache = retainedCache;
             readNativeSnapshot(fixture, retainedState);
+            EXPECT_FALSE(world.captureOblivionRuntimeState().mNativePhysicalBlendTimeCache);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
             const auto withoutPhysics = world.captureOblivionRuntimeState();
             EXPECT_EQ(withoutPhysics.mNativePhysicalBlendTimeCache, retainedState.mNativePhysicalBlendTimeCache);
             auto* physics = &world.initializePhysics(new osg::Group);
@@ -2805,7 +2858,7 @@ namespace
         cache.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
         cache.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
         cache.mPlayer.mInventory = {item};
-        readNativeSnapshot(fixture, cache);
+        acceptNativeSnapshot(fixture, cache);
         installEquipmentInventory(fixture, player, {item});
         auto& inventory = player.getClass().getInventoryStore(player);
         struct Listener : MWWorld::ContainerStoreListener
@@ -2850,7 +2903,7 @@ namespace
                 cache.mPlayer.mInventory = {item};
                 installEquipmentInventory(fixture, player, {item});
             }
-            readNativeSnapshot(fixture, cache);
+            acceptNativeSnapshot(fixture, cache);
             struct Listener : MWWorld::ContainerStoreListener
             {
                 MWWorld::InventoryStore* mInventory = nullptr;
@@ -2889,11 +2942,12 @@ namespace
         item.mEquippedSlots = ESM4::InventorySlotWeapon;
         installEquipmentInventory(fixture, actor, {item});
         auto& inventory = actor.getClass().getInventoryStore(actor);
-        const auto original = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        auto original = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
         auto cached = captureNativeActorState(fixture, actor);
         cached.mReferences.front().mInventory = {item};
-        readNativeSnapshot(fixture, cached);
+        acceptNativeSnapshot(fixture, cached);
+        original = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
         ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
         const std::vector<ObScript::Value> args{ObScript::ReferenceValue{weapon, {}}};
@@ -3114,7 +3168,7 @@ namespace
             saved.mReferences.front().mActorDrawState = world.captureOblivionActorDrawState(actor);
             ASSERT_TRUE(saved.mReferences.front().mActorDrawState);
             EXPECT_EQ(static_cast<int>(*saved.mReferences.front().mActorDrawState), static_cast<int>(draw));
-            readNativeSnapshot(fixture, saved);
+            acceptNativeSnapshot(fixture, saved);
             const auto opposite = draw == MWMechanics::DrawState::Weapon
                 ? MWMechanics::DrawState::Nothing : MWMechanics::DrawState::Weapon;
             actor.getClass().getCreatureStats(actor).setDrawState(opposite);
@@ -3126,7 +3180,7 @@ namespace
         }
         auto legacy = captureNativeActorState(fixture, actor);
         legacy.mVersion = 28;
-        readNativeSnapshot(fixture, legacy);
+        acceptNativeSnapshot(fixture, legacy);
         actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Weapon);
         EXPECT_FALSE(world.restoreOblivionActorDrawState(actor));
         EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
@@ -3158,6 +3212,7 @@ namespace
         ESM4::ActorCreature reference{};
         reference.mId = {0x920, 0};
         reference.mFormKey = ESM::FormKey::content("headless.esm", 0x920);
+        reference.mBaseObj = creature.mId;
         reference.mBaseKey = creature.mFormKey;
         store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
         MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
@@ -3173,7 +3228,7 @@ namespace
             actor.getClass().getCreatureStats(actor).setDrawState(draw);
             auto saved = captureNativeActorState(fixture, actor);
             saved.mReferences.front().mActorDrawState = world.captureOblivionActorDrawState(actor);
-            readNativeSnapshot(fixture, saved);
+            acceptNativeSnapshot(fixture, saved);
             actor.getRefData().setCustomData(nullptr);
             EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), draw);
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
@@ -3190,7 +3245,7 @@ namespace
         const auto baseline = captureNativeActorState(fixture, actor).serializeBinary();
         auto saved = captureNativeActorState(fixture, actor);
         saved.mReferences.front().mActorDrawState = ESM4::ActorDrawState::Weapon;
-        readNativeSnapshot(fixture, saved);
+        acceptNativeSnapshot(fixture, saved);
         auto otherBase = *store.search<ESM4::Npc>(saved.mReferences.front().mBase);
         otherBase.mId = {0x821, 0};
         otherBase.mFormKey = ESM::FormKey::content("headless.esm", 0x821);
@@ -3209,7 +3264,7 @@ namespace
         store.getWritable<ESM4::Creature>().insertStatic(conflicting, conflicting.mFormKey);
         EXPECT_THROW(world.oblivionSavedActorDrawState(actor), std::invalid_argument);
         EXPECT_THROW(world.captureOblivionActorDrawState(actor), std::invalid_argument);
-        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Nothing);
+        EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
     }
 
@@ -3267,7 +3322,7 @@ namespace
         std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
         state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
         state.mReferences[0].mCustomState["obscript.dead"]=true;
-        readNativeSnapshot(fixture, state);
+        acceptNativeSnapshot(fixture, state);
         ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active));
         ASSERT_NE(service.findActorLife(key), nullptr);
         EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
@@ -3284,12 +3339,12 @@ namespace
         EXPECT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
         readNativeSnapshot(fixture, state);
         const auto original = *service.findActorValues(key);
-        EXPECT_THROW(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low), std::invalid_argument);
+        EXPECT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
         EXPECT_EQ(*service.findActorValues(key), original);
         EXPECT_EQ(*service.findActorLife(key), alive);
         service.clear();
         ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
-        EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Alive);
         for (const auto av : {9, 10})
             EXPECT_EQ(service.findActorValues(key)->mValues[av].mModifiers,
                 (ESM4::ActorValueModifiers{std::nullopt, 0.f, 0.f}));
@@ -3299,10 +3354,10 @@ namespace
         state.mReferences[0].mCustomState["obscript.dead"]=std::int64_t{42};
         readNativeSnapshot(fixture, state);
         service.clear();
-        EXPECT_THROW(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low), std::invalid_argument);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_EQ(service.findActorValues(key), nullptr);
         EXPECT_EQ(service.findActorLife(key), nullptr);
-        EXPECT_THROW(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Active), std::invalid_argument);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_FALSE(service.takeNextDeathEvent());
     }
 
@@ -3324,7 +3379,8 @@ namespace
                 auto state = empty;
                 state.mVersion = version;
                 state.mReferences[0].mCustomState["obscript.dead"] = dead;
-                ASSERT_NO_FATAL_FAILURE(readNativeSnapshot(fixture, state));
+                ptr.getRefData().setCustomData(nullptr);
+                ASSERT_NO_FATAL_FAILURE(acceptNativeSnapshot(fixture, state));
                 ASSERT_TRUE(world.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low));
                 ASSERT_NE(service.findActorLife(key), nullptr);
                 EXPECT_EQ(service.findActorLife(key)->mPhase,
@@ -3850,10 +3906,18 @@ namespace
         // Live authority may already exist when its marker is later adopted.
         const auto before = *service.findActorValues(actor);
         readNativeSnapshot(fixture, state);
-        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_TRUE(world.initializeOblivionPlayerActor()); // Incoming marker is still pending.
         EXPECT_EQ(*service.findActorValues(actor), before);
         EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Alive);
         service.clear();
+        world.getPlayerPtr().getRefData().setCustomData(nullptr);
+        acceptNativeSnapshot(fixture, state);
+        native.mIsTES4 = false;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_EQ(service.findActorValues(actor), nullptr);
+        native.mIsTES4 = true;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
         ASSERT_TRUE(world.initializeOblivionPlayerActor());
         EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Dead);
         EXPECT_TRUE(world.getPlayerPtr().getClass().getCreatureStats(world.getPlayerPtr()).isDead());
@@ -3866,7 +3930,7 @@ namespace
         state.mReferences[0].mCustomState["obscript.dead"] = std::int64_t{42};
         readNativeSnapshot(fixture, state);
         service.clear();
-        EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_EQ(service.findActorValues(actor), nullptr);
         EXPECT_EQ(service.findActorLife(actor), nullptr);
         EXPECT_FALSE(service.takeNextDeathEvent());
@@ -4861,7 +4925,7 @@ namespace
             reference.mCustomState["obscript.dead"] = dead; state.mReferences.push_back(reference);
             std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
             state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
-            readNativeSnapshot(fixture, state);
+            acceptNativeSnapshot(fixture, state);
             auto& service = *world.getOblivionCombatService();
             ASSERT_TRUE(world.initializeOblivionPlayerActor());
             ASSERT_NE(service.findActorValues(actor), nullptr);
@@ -4918,7 +4982,7 @@ namespace
         reference.mCustomState["obscript.dead"] = true; state.mReferences.push_back(reference);
         std::ifstream content(fixture.mDirectory / "headless.esm", std::ios::binary);
         state.mContent.push_back({"headless.esm", "sha256:" + Files::getSha256("headless.esm", content)});
-        readNativeSnapshot(fixture, state);
+        acceptNativeSnapshot(fixture, state);
         auto& service = *world.getOblivionCombatService();
         EXPECT_THROW(world.initializeOblivionPlayerActor(), std::invalid_argument);
         EXPECT_EQ(service.findActorValues(actor), nullptr);
@@ -4993,15 +5057,16 @@ namespace
         const auto key = ptr.getCellRef().getFormKey();
         auto saved = captureNativeActorState(fixture, ptr);
         saved.mReferences[0].mCustomState["obscript.dead"] = std::string("invalid");
+        prepareNativeSnapshotPlayer(fixture, saved);
         ASSERT_NO_FATAL_FAILURE(readNativeSnapshot(fixture, saved));
         MWMechanics::Actors actors;
-        EXPECT_THROW(actors.addActor(ptr), std::invalid_argument);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_EQ(service.findActorValues(key), nullptr);
         EXPECT_EQ(service.findActorLife(key), nullptr);
         EXPECT_EQ(actors.size(), 0);
-        EXPECT_THROW(actors.addActor(ptr), std::invalid_argument);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         saved.mReferences[0].mCustomState["obscript.dead"] = true;
-        ASSERT_NO_FATAL_FAILURE(readNativeSnapshot(fixture, saved));
+        ASSERT_NO_FATAL_FAILURE(acceptNativeSnapshot(fixture, saved));
         ASSERT_NO_THROW(actors.addActor(ptr));
         ASSERT_NE(service.findActorLife(key), nullptr);
         EXPECT_EQ(service.findActorLife(key)->mPhase, ESM4::ActorLifePhase::Dead);
@@ -10339,7 +10404,7 @@ TEST(OblivionWorldTest, NativeReferenceKeyRejectsSavedHighWaterCollisionsAndExha
     EXPECT_EQ(world.getTimeStamp(), time);
     EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, 1u);
     EXPECT_TRUE(pending->isValid());
-    EXPECT_THROW(world.prepareOblivionDynamicReferenceKey(), std::invalid_argument);
+    EXPECT_NO_THROW(world.prepareOblivionDynamicReferenceKey()); // Pending identities are invisible.
     auto exhausted = before;
     exhausted.mNextDynamicSerial = std::numeric_limits<std::uint64_t>::max();
     readNativeSnapshot(fixture, exhausted);
@@ -10993,7 +11058,7 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
         cache.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
         cache.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
         cache.mPlayer.mInventory = {a, b};
-        readNativeSnapshot(fixture, cache);
+        acceptNativeSnapshot(fixture, cache);
         installEquipmentInventory(fixture, player, {a, b});
         auto& inventory = player.getClass().getInventoryStore(player);
         struct Listener : MWWorld::ContainerStoreListener
@@ -11028,7 +11093,7 @@ TEST(OblivionWorldTest, ActualInventoryStackingDistinguishesNativeRankPresenceAn
             cache.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
             cache.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
             cache.mPlayer.mInventory = {a, b};
-            readNativeSnapshot(fixture, cache);
+            acceptNativeSnapshot(fixture, cache);
             installEquipmentInventory(fixture, player, {a, b});
             auto& inventory = player.getClass().getInventoryStore(player);
             struct Listener : MWWorld::ContainerStoreListener
@@ -12535,4 +12600,67 @@ TEST(OblivionWorldTest, NativeSaveAdmissionRequiresTheWinningCreatureBase)
     saved.mBase = ESM::FormKey::content("headless.esm", 0x800);
     EXPECT_THROW(world.validateOblivionSaveState(candidate), std::runtime_error);
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+}
+
+TEST(OblivionWorldTest, PendingNativeSnapshotCannotReplaceAcceptedCachesOnPreparationFailure)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1;
+    item.mCondition = 43.125f;
+    item.mCharge = 7.25f;
+    installEquipmentInventory(fixture, fixture.mActor, {item});
+    installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
+    auto accepted = world.captureOblivionRuntimeState();
+    accepted.mPlayer.mInventory.front().mHotkey = 2;
+    accepted.mNativePhysicalBlendTimeCache = ESM4::PhysicalBlendTimeCache{3, -2, -4, -0.f, .75f};
+    auto retained = accepted.mReferences.front();
+    retained.mKey = ESM::FormKey::dynamic("retained-cache", 1);
+    retained.mCustomState["cache-marker"] = std::int64_t(91);
+    accepted.mReferences.push_back(retained);
+    readNativeSnapshot(fixture, accepted);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto before = world.captureOblivionRuntimeState();
+    auto pending = before;
+    pending.mClock.mHour = 9;
+    pending.mPlayer.mInventory.front().mHotkey = 7;
+    pending.mNativePhysicalBlendTimeCache->mKeyTime = .5f;
+    pending.mReferences.back().mCustomState["cache-marker"] = std::int64_t(92);
+    auto invalid = item;
+    invalid.mBase = ESM::FormKey::content("headless.esm", 0xdead);
+    pending.mReferences.front().mInventory.push_back(invalid);
+    ASSERT_NO_THROW(pending.validate());
+    readNativeSnapshot(fixture, pending);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    // Rebuilding a cold class view reads only the previously accepted inventory.
+    fixture.mActor.getRefData().setCustomData(nullptr);
+    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), std::vector{item});
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), before.mPlayer.mInventory);
+    for (int attempt = 0; attempt != 2; ++attempt)
+    {
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    }
+    readNativeSnapshot(fixture, before);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    // No pending state means no replay of accepted inventory or cached metadata.
+    fixture.mActor.getClass().getInventoryStore(fixture.mActor).begin()->getCellRef().setNativeItemCondition(25.125f);
+    const auto changed = world.captureOblivionRuntimeState().serializeBinary();
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), changed);
+}
+
+TEST(OblivionWorldTest, NativeWorldClearDiscardsPendingAndAcceptedSnapshots)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto state = world.captureOblivionRuntimeState();
+    readNativeSnapshot(fixture, state);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    state.mClock.mHour = 9;
+    readNativeSnapshot(fixture, state);
+    world.clear();
+    EXPECT_NO_THROW(world.applyOblivionRuntimeState());
 }
