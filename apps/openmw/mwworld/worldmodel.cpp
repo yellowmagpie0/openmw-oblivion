@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -349,7 +350,7 @@ namespace MWWorld
     }
 
     WorldModel::PreparedPtrReplacement::PreparedPtrReplacement(WorldModel& world,
-        std::span<const Ptr> removed, std::span<const Ptr> inserted)
+        std::span<const Ptr> removed, std::span<const Ptr> inserted, std::span<const Ptr> relocated)
         : mWorld(&world)
         , mRevision(world.getPtrRegistryRevision())
         , mLastGenerated(world.getLastGeneratedRefNum())
@@ -368,6 +369,23 @@ namespace MWWorld
         for (const Ptr& ptr : mInserted)
             if (ptr.isEmpty() || ptr.mRef->mWorldModel != nullptr)
                 throw std::invalid_argument("pointer replacement requires detached inserted references");
+        std::set<LiveCellRefBase*> relocatedBases;
+        mRelocated.reserve(relocated.size());
+        for (const Ptr& ptr : relocated)
+        {
+            if (ptr.isEmpty() || !ptr.isInCell()
+                || (ptr.mRef->mWorldModel && ptr.mRef->mWorldModel != &world)
+                || !ptr.getCellRef().getRefNum().isSet()
+                || !relocatedBases.insert(ptr.getBase()).second)
+                throw std::invalid_argument("pointer relocation requires unique registered references");
+            const auto* expected = ptr.mRef->mWorldModel ? ptr.mRef : nullptr;
+            if (world.getPtr(ptr.getCellRef().getRefNum()).mRef != expected
+                || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()).mRef != expected)
+                throw std::invalid_argument("pointer relocation conflicts with registered identity");
+            mRelocated.emplace_back(ptr, ptr.mRef->mWorldModel);
+            mRegistry.remove(*ptr.mRef);
+            mRegistry.insert(ptr);
+        }
         for (const Ptr& ptr : mInserted)
         {
             auto last = mRegistry.getLastGenerated();
@@ -399,6 +417,7 @@ namespace MWWorld
         , mLastGenerated(other.mLastGenerated)
         , mRegistry(std::move(other.mRegistry))
         , mInserted(std::move(other.mInserted))
+        , mRelocated(std::move(other.mRelocated))
     {
     }
 
@@ -412,6 +431,9 @@ namespace MWWorld
         for (const Ptr& ptr : mInserted)
             if (ptr.mRef->mWorldModel != nullptr || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()) != ptr)
                 return false;
+        for (const auto& [ptr, owner] : mRelocated)
+            if (ptr.mRef->mWorldModel != owner || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()) != ptr)
+                return false;
         return true;
     }
 
@@ -422,13 +444,15 @@ namespace MWWorld
         mWorld->mPtrRegistry.swap(mRegistry);
         for (const Ptr& ptr : mInserted)
             ptr.mRef->mWorldModel = mWorld;
+        for (const auto& [ptr, owner] : mRelocated)
+            ptr.mRef->mWorldModel = mWorld;
         mWorld = nullptr;
     }
 
     WorldModel::PreparedPtrReplacement WorldModel::preparePtrReplacement(
-        std::span<const Ptr> removed, std::span<const Ptr> inserted)
+        std::span<const Ptr> removed, std::span<const Ptr> inserted, std::span<const Ptr> relocated)
     {
-        return PreparedPtrReplacement(*this, removed, inserted);
+        return PreparedPtrReplacement(*this, removed, inserted, relocated);
     }
 
     void WorldModel::registerPtr(const Ptr& ptr)

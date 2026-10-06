@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -133,6 +134,24 @@ namespace MWWorld
         /// @note throws exception if cellToMoveTo == this
         /// @return updated MWWorld::Ptr with the new CellStore pointer set.
         MWWorld::Ptr moveTo(const MWWorld::Ptr& object, MWWorld::CellStore* cellToMoveTo);
+
+        // Prepare all tracking maps without changing cells or registering Ptrs.
+        // Registry relocation belongs to the caller's compound publication.
+        class PreparedMoves
+        {
+            friend class CellStore;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedMoves(std::unique_ptr<Impl> impl);
+
+        public:
+            ~PreparedMoves();
+            PreparedMoves(PreparedMoves&&) noexcept;
+            PreparedMoves& operator=(PreparedMoves&&) noexcept;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        static PreparedMoves prepareMoves(std::span<const std::pair<Ptr, CellStore*>> moves);
 
         void rest(double hours);
         void recharge(float duration);
@@ -464,6 +483,7 @@ namespace MWWorld
         // References owned by this cell that have been moved to another cell.
         // <reference, cell the reference was moved to>
         MovedRefTracker mMovedToAnotherCell;
+        std::shared_ptr<const char> mPreparedMoveIdentity;
 
         // Merged list of ref's currently in this cell - i.e. with added refs from mMovedHere, removed refs from
         // mMovedToAnotherCell

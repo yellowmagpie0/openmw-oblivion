@@ -2552,6 +2552,18 @@ namespace MWWorld
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
         // leave an earlier inventory cleared or only partly reconstructed.
+        std::vector<std::pair<Ptr, CellStore*>> cellMoves;
+        std::vector<Ptr> relocatedReferences;
+        std::set<LiveCellRefBase*> relocatedBases;
+        for (auto& binding : preparedReferences)
+            if (binding.mReference.getCell() != binding.mCell)
+            {
+                cellMoves.emplace_back(binding.mReference, binding.mCell);
+                binding.mReference = Ptr(binding.mReference.getBase(), binding.mCell);
+                relocatedReferences.push_back(binding.mReference);
+                relocatedBases.insert(binding.mReference.getBase());
+            }
+        auto preparedCellMoves = CellStore::prepareMoves(cellMoves);
         const auto preparedPlayerInventory = OblivionProfileServices::prepareActorInventory(
             mStore, resolver, state.mPlayer.mInventory);
         std::map<ESM::FormKey, std::vector<PreparedOblivionInventoryItem>> preparedActorInventories;
@@ -2716,6 +2728,7 @@ namespace MWWorld
         if (preparedCombat)
         {
             auto residents = mWorldModel.getResidentPtrs();
+            std::erase_if(residents, [&](const Ptr& ptr) { return relocatedBases.contains(ptr.mRef); });
             for (const auto& binding : preparedReferences)
                 residents.push_back(binding.mReference);
             preparedActorState.emplace(mOblivionCombat->prepareRestoredActorState(
@@ -2729,7 +2742,7 @@ namespace MWWorld
                 throw std::invalid_argument("stale native reference reconstruction");
             insertedItems.push_back(reference->get());
         }
-        auto preparedRegistry = mWorldModel.preparePtrReplacement(removedItems, insertedItems);
+        auto preparedRegistry = mWorldModel.preparePtrReplacement(removedItems, insertedItems, relocatedReferences);
         // Registry preparation assigns IDs to reconstructed references. Their
         // prepared metadata copies must carry those same IDs through the swap.
         for (auto& binding : preparedReferences)
@@ -2739,6 +2752,10 @@ namespace MWWorld
         // before any global changes. No acquisition/equipment callbacks run.
         // Preserve FormKey ordering even for editor-ID aliases.
         static_assert(std::is_nothrow_move_assignable_v<ESM::Variant>);
+        if (!preparedRegistry.isValid() || !preparedCellMoves.isValid())
+            throw std::logic_error("native reference publication preparation is stale");
+        if (!preparedCellMoves.commit())
+            throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         preparedRegistry.commit();
         for (auto& reference : reconstructed)
@@ -2827,9 +2844,6 @@ namespace MWWorld
         {
             const auto& reference = *binding.mState;
             Ptr ptr = binding.mReference;
-            CellStore& targetCell = *binding.mCell;
-            if (ptr.getCell() != &targetCell)
-                ptr = ptr.getCell()->moveTo(ptr, &targetCell);
             if (binding.mItemCellRef)
             {
                 static_assert(std::is_nothrow_swappable_v<CellRef>);

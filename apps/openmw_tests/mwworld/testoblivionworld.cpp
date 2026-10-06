@@ -13062,3 +13062,271 @@ TEST(OblivionWorldTest, NativeDynamicReconstructionDiscardsNodesOnLateFailureBef
     EXPECT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().mReferences.size(), before.mReferences.size() + 1);
 }
+
+namespace
+{
+    MWWorld::CellStore& nativeMoveTestCell(NativeWorldFixture& fixture, std::uint32_t id)
+    {
+        ESM4::Cell cell{};
+        cell.mId = ESM::RefId(ESM::FormId{id, 0});
+        cell.mFormKey = ESM::FormKey::content("headless.esm", id);
+        cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "NativePreparedMoveCell";
+        fixture.mWorld.getStore().getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        return fixture.mWorld.getWorldModel().getCell(cell.mId);
+    }
+
+    std::map<ESM::RefNum, ESM::RefId> savedMovedReferenceTags(const MWWorld::CellStore& cell)
+    {
+        auto stream = std::make_unique<std::stringstream>();
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(*stream);
+        writer.startRecord(ESM::REC_CSTA);
+        cell.writeReferences(writer);
+        writer.endRecord(ESM::REC_CSTA);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "prepared-cell-move-tags");
+        reader.getRecName();
+        reader.getRecHeader();
+        std::map<ESM::RefNum, ESM::RefId> result;
+        while (reader.hasMoreSubs())
+        {
+            if (reader.isNextSub("MVRF"))
+            {
+                reader.cacheSubName();
+                const auto id = reader.getFormId(true, "MVRF");
+                result.emplace(id, reader.getCellId());
+            }
+            else
+            {
+                reader.getSubName();
+                reader.skipHSub();
+            }
+        }
+        return result;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCellMovesPreserveOriginalOwnershipAcrossTwoDestinationsAndReturn)
+{
+    NativeWorldFixture fixture;
+    auto ptr = installNativeLooseItemCapture(fixture);
+    auto& origin = *ptr.getCell();
+    auto& second = nativeMoveTestCell(fixture, 2);
+    auto& third = nativeMoveTestCell(fixture, 3);
+    auto& model = fixture.mWorld.getWorldModel();
+    const auto id = ptr.getCellRef().getRefNum();
+    const auto serial = model.getLastGeneratedRefNum();
+    const auto originalCount = origin.count();
+    const auto secondHasState = second.hasState();
+    const auto thirdHasState = third.hasState();
+    for (auto* target : {&second, &third, &origin})
+    {
+        SCOPED_TRACE(target->getCell()->getId().toDebugString());
+        const auto old = ptr;
+        const auto before = savedMovedReferenceTags(origin);
+        const std::array changes{std::pair{ptr, target}};
+        {
+            auto abandoned = MWWorld::CellStore::prepareMoves(changes);
+            EXPECT_TRUE(abandoned.isValid());
+            EXPECT_EQ(savedMovedReferenceTags(origin), before);
+            EXPECT_EQ(model.getPtr(id), old);
+            EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+            if (target == &second)
+            {
+                EXPECT_EQ(second.hasState(), secondHasState);
+                EXPECT_EQ(third.hasState(), thirdHasState);
+            }
+        }
+        EXPECT_EQ(model.getPtr(id), old);
+        auto cells = MWWorld::CellStore::prepareMoves(changes);
+        const std::array relocated{MWWorld::Ptr(ptr.getBase(), target)};
+        auto registry = model.preparePtrReplacement({}, {}, relocated);
+        EXPECT_TRUE(cells.isValid());
+        EXPECT_TRUE(registry.isValid());
+        EXPECT_TRUE(cells.commit());
+        EXPECT_FALSE(cells.commit());
+        registry.commit();
+        ptr = relocated.front();
+        EXPECT_EQ(model.getPtr(id), ptr);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+        EXPECT_EQ(origin.count(), target == &origin ? originalCount : originalCount - 1);
+        EXPECT_EQ(second.count(), target == &second ? 1u : 0u);
+        EXPECT_EQ(third.count(), target == &third ? 1u : 0u);
+        const auto tags = savedMovedReferenceTags(origin);
+        if (target == &origin)
+            EXPECT_TRUE(tags.empty());
+        else
+        {
+            ASSERT_EQ(tags.size(), 1);
+            EXPECT_EQ(tags.at(id), target->getCell()->getId());
+        }
+        EXPECT_TRUE(savedMovedReferenceTags(second).empty());
+        EXPECT_TRUE(savedMovedReferenceTags(third).empty());
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCellMovesRejectStaleForeignDuplicateAndDestroyedOwners)
+{
+    NativeWorldFixture fixture;
+    const auto ptr = installNativeLooseItemCapture(fixture);
+    auto& target = nativeMoveTestCell(fixture, 2);
+    const std::array changes{std::pair{ptr, &target}};
+    auto stale = MWWorld::CellStore::prepareMoves(changes);
+    const auto moved = ptr.getCell()->moveTo(ptr, &target);
+    EXPECT_FALSE(stale.isValid());
+    EXPECT_FALSE(stale.commit());
+    EXPECT_EQ(fixture.mWorld.getWorldModel().getPtr(ptr.getCellRef().getRefNum()), moved);
+    EXPECT_THROW(MWWorld::CellStore::prepareMoves(changes), std::invalid_argument);
+    const std::array duplicate{std::pair{moved, ptr.getCell()}, std::pair{moved, ptr.getCell()}};
+    EXPECT_THROW(MWWorld::CellStore::prepareMoves(duplicate), std::invalid_argument);
+    const std::array same{std::pair{moved, &target}};
+    EXPECT_THROW(MWWorld::CellStore::prepareMoves(same), std::invalid_argument);
+    ESM::ReadersCache readers;
+    ESM::Cell record{}; record.blank(); record.mId = ESM::RefId::stringRefId("PreparedMoveLifetime");
+    alignas(MWWorld::CellStore) std::array<std::byte, sizeof(MWWorld::CellStore)> storage{};
+    auto* other = std::construct_at(reinterpret_cast<MWWorld::CellStore*>(storage.data()),
+        MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+    const std::array unloaded{std::pair{moved, other}};
+    EXPECT_THROW(MWWorld::CellStore::prepareMoves(unloaded), std::invalid_argument);
+    other->load();
+    auto lifetime = MWWorld::CellStore::prepareMoves(unloaded);
+    std::destroy_at(other);
+    EXPECT_FALSE(lifetime.isValid());
+    EXPECT_FALSE(lifetime.commit());
+    other = std::construct_at(reinterpret_cast<MWWorld::CellStore*>(storage.data()),
+        MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+    other->load();
+    EXPECT_FALSE(lifetime.isValid());
+    EXPECT_FALSE(lifetime.commit());
+    EXPECT_EQ(other->count(), 0u);
+    std::destroy_at(other);
+}
+
+TEST(OblivionWorldTest, NativeActorCellRestorePreparesTrackingAndRegistryBeforeLateFailure)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = fixture.mActor;
+    const auto actorId = actor.getCellRef().getRefNum();
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto owner = inventory.getPtr();
+    auto& target = nativeMoveTestCell(fixture, 2);
+    const auto before = world.captureOblivionRuntimeState();
+    const auto revision = world.getWorldModel().getPtrRegistryRevision();
+    const auto serial = world.getWorldModel().getLastGeneratedRefNum();
+    auto incoming = before;
+    ASSERT_EQ(incoming.mReferences.size(), 1);
+    incoming.mReferences.front().mCell = ESM::FormKey::content("headless.esm", 2);
+    incoming.mPlayer.mInventory.push_back({});
+    incoming.mPlayer.mInventory.back().mBase = ESM::FormKey::content("headless.esm", 0xdead);
+    incoming.mPlayer.mInventory.back().mCount = 1;
+    for (int retry = 0; retry != 2; ++retry)
+    {
+        readNativeSnapshot(fixture, incoming);
+        EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_EQ(world.getWorldModel().getPtr(actorId), actor);
+        EXPECT_EQ(inventory.getPtr(), owner);
+        EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+        EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), serial);
+        EXPECT_EQ(target.count(), 0u);
+    }
+    incoming.mPlayer.mInventory.clear();
+    readNativeSnapshot(fixture, incoming);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto restored = world.getWorldModel().getPtr(actorId);
+    EXPECT_EQ(restored.getBase(), actor.getBase());
+    EXPECT_EQ(restored.getCell(), &target);
+    EXPECT_EQ(inventory.getPtr(), restored);
+    EXPECT_EQ(world.getOblivionAiService()->resolveReference(incoming.mReferences.front().mKey), restored);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mReferences.front().mCell, incoming.mReferences.front().mCell);
+    readNativeSnapshot(fixture, incoming);
+    EXPECT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getWorldModel().getPtr(actorId), restored);
+}
+
+TEST(OblivionWorldTest, PreparedCellRelocationRegistersColdReferencesAndUpdatesDynamicNativeIndex)
+{
+    NativeWorldFixture fixture;
+    const auto item = installNativeLooseItemCapture(fixture);
+    auto& origin = *item.getCell();
+    auto& target = nativeMoveTestCell(fixture, 2);
+    auto& model = fixture.mWorld.getWorldModel();
+    const auto key = ESM::FormKey::dynamic("native-reference", 1);
+    auto source = makeDetachedNativeLooseItem(item, key);
+    auto insertion = origin.prepareInsertion(source);
+    const auto ptr = MWWorld::Ptr(origin.commitPreparedInsertion(*insertion), &origin);
+    model.registerPtr(ptr);
+    const auto id = ptr.getCellRef().getRefNum();
+    const auto serial = model.getLastGeneratedRefNum();
+    for (bool cold : {false, true})
+    {
+        SCOPED_TRACE(cold);
+        const auto old = cold ? model.getPtr(id) : ptr;
+        auto* destination = cold ? &origin : &target;
+        if (cold)
+        {
+            model.deregisterLiveCellRef(*old.mRef);
+            EXPECT_TRUE(model.getPtr(id).isEmpty());
+            EXPECT_TRUE(model.getDynamicNativePtr(key).isEmpty());
+        }
+        const std::array moves{std::pair{old, destination}};
+        auto cells = MWWorld::CellStore::prepareMoves(moves);
+        const std::array relocated{MWWorld::Ptr(old.getBase(), destination)};
+        auto registry = model.preparePtrReplacement({}, {}, relocated);
+        EXPECT_EQ(old.mRef->mWorldModel, cold ? nullptr : &model);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+        EXPECT_TRUE(registry.isValid());
+        EXPECT_TRUE(cells.isValid());
+        static_assert(noexcept(cells.isValid()) && noexcept(cells.commit()));
+        ASSERT_TRUE(cells.commit());
+        registry.commit();
+        EXPECT_EQ(model.getPtr(id), relocated.front());
+        EXPECT_EQ(model.getDynamicNativePtr(key), relocated.front());
+        EXPECT_EQ(old.mRef->mWorldModel, &model);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+        EXPECT_THROW(model.preparePtrReplacement({}, {},
+            std::array{relocated.front(), relocated.front()}), std::invalid_argument);
+        EXPECT_EQ(model.getPtr(id), relocated.front());
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCellMovesRejectReferenceAddressReuseAndChangedBaseIdentity)
+{
+    for (bool changeBase : {false, true})
+    {
+        SCOPED_TRACE(changeBase);
+        NativeWorldFixture fixture;
+        const auto item = installNativeLooseItemCapture(fixture);
+        auto& target = nativeMoveTestCell(fixture, 2);
+        const std::array moves{std::pair{item, &target}};
+        auto prepared = MWWorld::CellStore::prepareMoves(moves);
+        ASSERT_TRUE(prepared.isValid());
+        auto* node = item.get<ESM4::Weapon>();
+        auto replacement = *node;
+        if (changeBase)
+        {
+            ESM4::Reference reference{};
+            reference.mId = node->mRef.getRefNum();
+            reference.mFormKey = node->mRef.getFormKey();
+            reference.mBaseObj = {0x941, 0};
+            reference.mBaseKey = ESM::FormKey::content("headless.esm", 0x941);
+            replacement.mRef = MWWorld::CellRef(reference);
+        }
+        else
+            replacement.mRef.setRefNum(ESM::RefNum{0x981, 0});
+        replacement.mWorldModel = nullptr;
+        std::destroy_at(node);
+        std::construct_at(node, replacement);
+        EXPECT_FALSE(prepared.isValid());
+        EXPECT_FALSE(prepared.commit());
+        EXPECT_EQ(target.count(), 0u);
+        if (!changeBase)
+        {
+            EXPECT_TRUE(savedMovedReferenceTags(*item.getCell()).empty());
+        }
+    }
+}

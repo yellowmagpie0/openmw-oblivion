@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,79 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 prepared native cell movement checkpoint — 2026-10-06
+
+Native restore now prepares all cross-cell tracking maps before publication.
+A batch retains each reference's original owning cell across intermediate moves
+and return-to-origin, checks resident ownership and tracking consistency, and
+publishes maps by swaps without registry callbacks or allocations. Weak cell
+lifetime identities and baseline tracking comparisons reject stale, destroyed
+or replaced owners; direct owned-list scans validate assigned IDs and base
+records as well as borrowed node addresses without
+rebuilding caches or marking cells changed. Registry replacement includes the
+final cell Ptrs for registered and cold, assigned references, preserving IDs
+and dynamic native-key lookup. Actor view preparation uses final resident Ptrs
+without treating an old-cell alias as a second live owner.
+
+The former post-publication moveTo path could register a Ptr, load a cell, and
+allocate moved-reference map nodes after globals/inventories had changed.
+Native restore now prepares that work first and validates both plans before
+committing tracking maps and the existing registry replacement. Ordinary
+moveTo gameplay is unchanged. This is data-cell publication; existing physical
+restore still requires scene readmission for incompatible active actor graphs.
+
+Five new regressions cover discarded preparation, original->second->third->
+original tracking/MVRF tags and counts, stale/foreign/duplicate/same-cell inputs,
+unloaded targets, destroyed/reused owner addresses, registered/cold dynamic
+lookup and IDs, and repeated late inventory failure before movement followed
+by corrected actor restore and idempotent retry. An additional address-reuse/
+base-change test proves a replacement at the same node address cannot satisfy an old preparation. Inventory owner and AI lookup
+Ptrs agree with the new cell after commit.
+
+`S3/prepared-cell-moves-engine-03` and `prepared-cell-moves-sanitize-03` pass
+all **1,175** engine tests with exact inventories and no failures/skips. Their
+source fingerprint is
+`0f223198d84cf17a3820a50c3a2f718ea95b4dfea7cd7a70b7bfa951db33da12`
+on parent `88f525a06b09f865db00fb69492cdca9c882c837`. ASan leaks are disabled;
+UBSan halts. Broad header recompilation reports warnings in unchanged
+CharacterController/contact-test code and GCC16 regex library headers; none
+is in the changed movement code.
+
+`S3/prepared-cell-moves-restart-02` and
+`prepared-cell-moves-sanitized-restart-02` use an actual F5-produced dynamic
+weapon save, changing only its native target cell to stock ImperialDungeon02
+while leaving shared placement in ImperialDungeon01. Each course loads/F5/quits,
+then a distinct process loads that actual output/F5/quits. All four processes
+query the live weapon: scale1.25, GetInCell(target)=1 and GetInCell(origin)=0.
+All 37 native fields and all 34,399 then 34,549 references match at load tick0;
+130 script instances and prior inventories survive saves. A separate verifier
+preserves all fourteen stable weapon fields, including target cell, condition
+23.125, scale1.25 and count1, through each actual save. Position advancement is
+allowed. Both final fresh screenshots were inspected: the Player remains in
+the prison scene with full bars; weapon location is proved by live queries,
+not visibility in these captures. Clean exits and no unreviewed errors or
+sanitizer diagnostics are verified. Audio is disabled; the existing equip
+icon error remains explicitly reviewed.
+
+Runtime binary hashes are
+`cd8ad5b457e4acb5f5bbbdd1c912111ca61b8ffd01d14f70af54bfc28c83f146` (normal) and
+`1a3cb14b25e812d3ce8fbd7427cc296f3767fa30695f978a0d4c2bae93a73ca7` (sanitized).
+The declared target comes from independent stock CELL record decoding; source
+Oblivion.esm SHA256 is
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+Aggregate proofs are in `S3/prepared-cell-moves-report.json` and the target
+audit in `S3/prepared-cell-moves-target-audit.json`.
+
+Intermediate engine/sanitizer01 passed 1,174 tests and both restart01 courses
+passed before final node-identity guards. A post-course weapon verifier typo
+(custom instead of custom_state) is retained with its explanation; the corrected
+verifier was rerun against those unchanged artifacts. Engine/sanitizer02 passed
+1,175 tests with the new reuse guard; 03 adds test braces to eliminate a new
+GoogleTest dangling-else warning. Final restart02 courses reverify the guarded
+implementation. All check/runtime handles are terminal. Complete pre-cleanup
+restore preparation, cell-cache/scene reconciliation, remaining migrations and
+active-action continuation still need completion; S3 remains open.
 
 ## S3 shared Lua timer wire validation checkpoint — 2026-10-06
 

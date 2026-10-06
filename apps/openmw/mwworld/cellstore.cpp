@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <set>
 
 #include <components/debug/debuglog.hpp>
 
@@ -623,6 +624,144 @@ namespace MWWorld
 
         requestMergedRefsUpdate();
         return MWWorld::Ptr(object.getBase(), cellToMoveTo);
+    }
+
+    struct CellStore::PreparedMoves::Impl
+    {
+        struct OwnedReference
+        {
+            LiveCellRefBase* mReference;
+            ESM::RefNum mIdentity;
+            ESM::RefId mBase;
+        };
+        struct CellState
+        {
+            CellStore* mCell;
+            std::weak_ptr<const char> mIdentity;
+            MovedRefTracker mBeforeHere;
+            MovedRefTracker mBeforeAway;
+            MovedRefTracker mHere;
+            MovedRefTracker mAway;
+            std::vector<OwnedReference> mOwned;
+        };
+        std::map<CellStore*, CellState> mCells;
+
+        CellState& cell(CellStore* owner)
+        {
+            if (!owner || owner->mState != State_Loaded)
+                throw std::invalid_argument("prepared cell moves require loaded cells");
+            if (const auto found = mCells.find(owner); found != mCells.end())
+                return found->second;
+            if (!owner->mPreparedMoveIdentity)
+                owner->mPreparedMoveIdentity = std::make_shared<const char>();
+            return mCells.emplace(owner, CellState{owner, owner->mPreparedMoveIdentity,
+                owner->mMovedHere, owner->mMovedToAnotherCell,
+                owner->mMovedHere, owner->mMovedToAnotherCell, {}}).first->second;
+        }
+
+        bool isValid() const noexcept
+        {
+            for (const auto& [owner, state] : mCells)
+            {
+                const auto identity = state.mIdentity.lock();
+                if (!identity || identity != owner->mPreparedMoveIdentity || owner->mState != State_Loaded
+                    || owner->mMovedHere != state.mBeforeHere || owner->mMovedToAnotherCell != state.mBeforeAway)
+                    return false;
+                // Scan owned lists directly: no cache rebuild, state flag
+                // changes or dereference of borrowed, potentially removed nodes.
+                std::size_t found = 0;
+                auto visitor = [&](const Ptr& ptr) {
+                    const auto expected = std::lower_bound(state.mOwned.begin(), state.mOwned.end(), ptr.mRef,
+                        [](const OwnedReference& ref, LiveCellRefBase* base) {
+                            return std::less<LiveCellRefBase*>{}(ref.mReference, base);
+                        });
+                    if (expected != state.mOwned.end() && expected->mReference == ptr.mRef)
+                    {
+                        if (expected->mIdentity != ptr.getCellRef().getRefNum()
+                            || expected->mBase != ptr.getCellRef().getRefId())
+                            return false;
+                        ++found;
+                    }
+                    return found != state.mOwned.size();
+                };
+                if (!state.mOwned.empty())
+                    CellStoreImp::forEachInternal(visitor, *owner, true);
+                if (found != state.mOwned.size())
+                    return false;
+            }
+            return true;
+        }
+    };
+
+    CellStore::PreparedMoves::PreparedMoves(std::unique_ptr<Impl> impl) : mImpl(std::move(impl)) {}
+    CellStore::PreparedMoves::~PreparedMoves() = default;
+    CellStore::PreparedMoves::PreparedMoves(PreparedMoves&&) noexcept = default;
+    CellStore::PreparedMoves& CellStore::PreparedMoves::operator=(PreparedMoves&&) noexcept = default;
+
+    bool CellStore::PreparedMoves::isValid() const noexcept
+    {
+        return mImpl && mImpl->isValid();
+    }
+
+    bool CellStore::PreparedMoves::commit() noexcept
+    {
+        if (!isValid())
+            return false;
+        for (auto& [owner, state] : mImpl->mCells)
+        {
+            owner->mMovedHere.swap(state.mHere);
+            owner->mMovedToAnotherCell.swap(state.mAway);
+            owner->mHasState = true;
+            owner->requestMergedRefsUpdate();
+        }
+        mImpl.reset();
+        return true;
+    }
+
+    CellStore::PreparedMoves CellStore::prepareMoves(std::span<const std::pair<Ptr, CellStore*>> moves)
+    {
+        auto result = std::make_unique<PreparedMoves::Impl>();
+        std::set<LiveCellRefBase*> seen;
+        for (const auto& [ptr, target] : moves)
+        {
+            if (ptr.isEmpty() || !ptr.isInCell() || !ptr.getCellRef().getRefNum().isSet()
+                || ptr.getCell() == target || !seen.insert(ptr.mRef).second)
+                throw std::invalid_argument("prepared cell moves require unique references and different cells");
+            auto* source = ptr.getCell();
+            auto& from = result->cell(source);
+            auto& to = result->cell(target);
+            const auto moved = from.mHere.find(ptr.mRef);
+            CellStore* origin = moved == from.mHere.end() ? source : moved->second;
+            auto& original = result->cell(origin);
+            original.mOwned.push_back({ptr.mRef, ptr.getCellRef().getRefNum(), ptr.getCellRef().getRefId()});
+            if (source == origin)
+            {
+                if (original.mAway.contains(ptr.mRef))
+                    throw std::invalid_argument("prepared move source does not own its resident reference");
+            }
+            else
+            {
+                const auto away = original.mAway.find(ptr.mRef);
+                if (away == original.mAway.end() || away->second != source)
+                    throw std::invalid_argument("prepared move tracking graph is inconsistent");
+                from.mHere.erase(ptr.mRef);
+                original.mAway.erase(away);
+            }
+            if (target != origin)
+            {
+                if (to.mHere.contains(ptr.mRef) || to.mAway.contains(ptr.mRef))
+                    throw std::invalid_argument("prepared move destination already tracks the reference");
+                original.mAway.emplace(ptr.mRef, target);
+                to.mHere.emplace(ptr.mRef, origin);
+            }
+        }
+        for (auto& [owner, state] : result->mCells)
+            std::sort(state.mOwned.begin(), state.mOwned.end(), [](const auto& left, const auto& right) {
+                return std::less<LiveCellRefBase*>{}(left.mReference, right.mReference);
+            });
+        if (!result->isValid())
+            throw std::invalid_argument("prepared cell move source is no longer owned by its cell");
+        return PreparedMoves(std::move(result));
     }
 
     struct MergeVisitor

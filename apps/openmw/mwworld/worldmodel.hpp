@@ -54,6 +54,8 @@ namespace MWWorld
         // Batch publication for detached prepared references. Preparation may
         // assign their RefNums, but leaves the live registry and serial alone.
         // The references must outlive the preparation and its commit.
+        // Relocated references retain assigned IDs and receive their final
+        // cell pointers in the same replacement, including cold cell nodes.
         class PreparedPtrReplacement
         {
             friend class WorldModel;
@@ -63,9 +65,10 @@ namespace MWWorld
             ESM::RefNum mLastGenerated;
             PtrRegistry mRegistry;
             std::vector<Ptr> mInserted;
+            std::vector<std::pair<Ptr, WorldModel*>> mRelocated;
 
             PreparedPtrReplacement(WorldModel& world, std::span<const Ptr> removed,
-                std::span<const Ptr> inserted);
+                std::span<const Ptr> inserted, std::span<const Ptr> relocated);
 
         public:
             PreparedPtrReplacement(const PreparedPtrReplacement&) = delete;
@@ -80,7 +83,7 @@ namespace MWWorld
         };
 
         PreparedPtrReplacement preparePtrReplacement(std::span<const Ptr> removed,
-            std::span<const Ptr> inserted);
+            std::span<const Ptr> inserted, std::span<const Ptr> relocated = {});
 
         struct LooseWeaponPublicationHooks
         {
