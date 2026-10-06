@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, populated migration and restart evidence below | Complete clear/legacy-overlay reset and outer load/cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, populated migration and restart evidence below | Complete outer load/cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,38 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 World reset and legacy-overlay checkpoint — 2026-10-05
+
+World clear now prepares a complete pathgrid-overlay reset before teardown and
+commits content defaults before clearing native services. Static graph and
+navigator addresses remain stable; only changed overlays advance graph
+generations. New-game/load cleanup and legacy admission without T4ST therefore
+cannot inherit disabled nodes from the preceding World. This is scoped to the
+Oblivion profile. Empty package-event restore clears existing deque storage
+without replacement allocation, retains the dispatch guard and invalidates the
+outgoing callback batch.
+
+Two new tests cover repeated actual World clear cycles, restored navigator
+edges, stable registrations, empty completion/detection state, reset evaluation
+counter, accepted no-T4ST admission, unchanged generations on a second clear,
+and queue clear during a callback followed by deferred fresh-event dispatch.
+
+Verification binds parent `081a4effbed90a1f7693c1a86de8aac8ef1e4771` and dirty
+source fingerprint `4ba15c9497dec8250acf06024cc3738a173b0feb86ea7baa3886843c1ed90b52`.
+`S3/clear-overlay-engine-02` and `S3/clear-overlay-engine-sanitize-01` each build
+`openmw`, `openmw-tests` and `esmtool`, then pass all **1,134** engine tests with
+exact inventories, zero failures/skips and unchanged source fingerprints.
+Instrumented checks use ASan/UBSan, leak checks disabled and halting UBSan with
+stack traces. `clear-overlay-engine-01` is retained: its build was deliberately
+stopped before tests to correct the navigator expectation (disabled nodes keep
+points, while edges are removed). Aggregate evidence and the four tested source
+hashes are in `S3/clear-overlay-report.json`.
+
+This checkpoint establishes World/service reset behavior through engine
+fixtures; it adds no normal-input runtime course. **S3 remains in progress.**
+Outer load/cache reconciliation, remaining populated migrations, active-action
+continuation and final requirement-by-requirement acceptance remain open.
 
 ## S3 prepared AI/event/pathgrid restore checkpoint — 2026-10-05
 

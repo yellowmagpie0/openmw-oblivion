@@ -58,6 +58,14 @@ namespace MWMechanics
 
         void restore(std::span<const ESM4::RuntimePackageDoneEvent> events)
         {
+            if (events.empty())
+            {
+                // Teardown needs no replacement allocation. Keep the dispatch
+                // guard and retire any callback batch currently in progress.
+                mPending.clear();
+                ++mEpoch;
+                return;
+            }
             std::deque<ESM4::RuntimePackageDoneEvent> prepared(events.begin(), events.end());
             installPrepared(prepared);
         }

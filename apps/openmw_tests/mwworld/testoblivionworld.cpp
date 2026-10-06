@@ -12187,6 +12187,49 @@ TEST(OblivionWorldTest, NativeAiRestorePreparationDiscardsAndCommitsActorsEvents
     EXPECT_TRUE(world.captureOblivionRuntimeState().mPendingPackageDone.empty());
 }
 
+TEST(OblivionWorldTest, NativeWorldClearResetsOverlaysAndEventsBeforeLegacyStateAdmission)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    const auto saved = populatedAiRestore(fixture);
+    auto& pathgrids = world.getStore().getOblivionPathgridService();
+    const auto pathgrid = saved.mPathPoints.front().mPathgrid;
+    const ESM4::PathgridNodeKey node{pathgrid, 1};
+    const auto* graph = pathgrids.graph(pathgrid);
+    const auto* navigator = pathgrids.navigatorPathgrid(pathgrid);
+    ASSERT_NE(graph, nullptr);
+    ASSERT_NE(navigator, nullptr);
+    for (int cycle = 0; cycle < 2; ++cycle)
+    {
+        SCOPED_TRACE(cycle);
+        ASSERT_NO_THROW(ai.restore(saved));
+        ASSERT_FALSE(pathgrids.isNodeEnabled(node));
+        ASSERT_EQ(navigator->mPoints.size(), 2u);
+        ASSERT_TRUE(navigator->mEdges.empty());
+        const auto generation = pathgrids.generation(pathgrid);
+        ASSERT_NO_THROW(world.clear());
+        EXPECT_EQ(world.getOblivionAiService(), &ai);
+        EXPECT_EQ(pathgrids.graph(pathgrid), graph);
+        EXPECT_EQ(pathgrids.navigatorPathgrid(pathgrid), navigator);
+        EXPECT_TRUE(pathgrids.isNodeEnabled(node));
+        EXPECT_EQ(navigator->mPoints.size(), 2u);
+        EXPECT_FALSE(navigator->mEdges.empty());
+        EXPECT_EQ(pathgrids.generation(pathgrid), generation + 1);
+        ESM4::RuntimeState cleared;
+        ai.capture(cleared);
+        EXPECT_TRUE(cleared.mPathPoints.empty());
+        EXPECT_TRUE(cleared.mPendingPackageDone.empty());
+        EXPECT_TRUE(cleared.mDetectionVectors.empty());
+        EXPECT_EQ(cleared.mAiRngState, 1u);
+        // The accepted legacy branch has no native record to replace overlays.
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_TRUE(pathgrids.isNodeEnabled(node));
+        ASSERT_NO_THROW(world.clear());
+        EXPECT_EQ(pathgrids.generation(pathgrid), generation + 1);
+    }
+}
+
 TEST(OblivionWorldTest, NativeAiRestoreRejectsBindingsAndConversionsBeforeWorldPublication)
 {
     PopulatedMigrationFixture fixture;

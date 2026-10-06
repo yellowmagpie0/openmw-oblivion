@@ -677,3 +677,26 @@ TEST(OblivionAiTest, PreparedPackageQueueReplacementInvalidatesCallbackBatchAndK
     EXPECT_EQ(delivered, (std::vector<ESM4::RuntimePackageDoneEvent>{{key(3), key(30)}, {key(4), key(40)}}));
     EXPECT_TRUE(queue.capture().empty());
 }
+
+TEST(OblivionAiTest, EmptyPackageQueueRestoreRetiresCallbackBatchAndAllowsFreshEvents)
+{
+    MWMechanics::OblivionPackageDoneQueue queue;
+    queue.record(ESM4::PackagePhase::Act, ESM4::PackagePhase::Complete, key(1), key(10));
+    queue.record(ESM4::PackagePhase::Act, ESM4::PackagePhase::Complete, key(2), key(20));
+    int calls = 0;
+    queue.dispatch([&](const auto& event) {
+        ++calls;
+        EXPECT_EQ(event.mActor, key(1));
+        queue.restore({});
+        queue.record(ESM4::PackagePhase::Act, ESM4::PackagePhase::Complete, key(3), key(30));
+        queue.dispatch([](const auto&) { ADD_FAILURE() << "recursive dispatch crossed cleared queue epoch"; });
+    });
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(queue.capture(), (std::vector<ESM4::RuntimePackageDoneEvent>{{key(3), key(30)}}));
+    queue.dispatch([&](const auto& event) {
+        ++calls;
+        EXPECT_EQ(event.mActor, key(3));
+    });
+    EXPECT_EQ(calls, 2);
+    EXPECT_TRUE(queue.capture().empty());
+}

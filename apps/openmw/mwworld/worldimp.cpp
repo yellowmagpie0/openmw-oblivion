@@ -803,6 +803,13 @@ namespace MWWorld
 
     void World::clear()
     {
+        // Static graph registrations outlive a game. Prepare their content
+        // defaults before teardown so a new game or a save without T4ST cannot
+        // inherit disabled nodes from the outgoing native world.
+        std::optional<ESM4::PathgridService::PreparedOverlayRestore> preparedPathgrids;
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            preparedPathgrids.emplace(mStore.getOblivionPathgridService().prepareOverlayRestore({}));
+
         mOblivionDynamicReferenceIdentity.reset();
         if (mWeatherManager)
             mWeatherManager->clear();
@@ -833,6 +840,8 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        if (preparedPathgrids)
+            preparedPathgrids->commit();
         if (mOblivionCombat)
             mOblivionCombat->clear();
         if (mOblivionAi)
