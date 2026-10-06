@@ -3,20 +3,26 @@
 #include <cstring>
 #include <set>
 #include <sstream>
+#include <limits>
+#include <type_traits>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadglob.hpp>
+#include <components/esm3/loadnpc.hpp>
+#include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include "apps/openmw/mwstate/saveadmission.hpp"
+#include "apps/openmw/mwworld/esmstore.hpp"
 
 namespace
 {
     std::string saveBytes(ESM::GameProfile profile = ESM::GameProfile::Oblivion,
         std::uint32_t version = ESM4::CurrentRuntimeStateVersion,
-        int profiles = 1, int nativeRecords = 1, bool trailingProfile = false, bool trailingNative = false)
+        int profiles = 1, int nativeRecords = 1, bool trailingProfile = false, bool trailingNative = false,
+        const ESM4::RuntimeState* replacement = nullptr)
     {
         ESM::ESMWriter writer;
         writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
@@ -48,6 +54,8 @@ namespace
             state.mPlayer.mClass = ESM::FormKey::content("headless.esm", 3);
         }
         state.mContent = {{"headless.esm", "sha256:" + std::string(64, 'a')}};
+        if (replacement)
+            state = *replacement;
         for (int i = 0; i < nativeRecords; ++i)
         {
             writer.startRecord(ESM::REC_T4ST);
@@ -71,6 +79,47 @@ namespace
     {
         ASSERT_LE(offset + sizeof(value), bytes.size());
         std::memcpy(bytes.data() + offset, &value, sizeof(value));
+    }
+
+    std::string sharedRecords(const ESM::NPC* player, const ESM::Class* characterClass, const ESM::Global* global,
+        bool deleted = false)
+    {
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        std::stringstream stream;
+        writer.save(stream);
+        const auto write = [&](const auto* record) {
+            if (!record) return;
+            using Record = std::remove_cv_t<std::remove_pointer_t<decltype(record)>>;
+            writer.startRecord(Record::sRecordId);
+            record->save(writer, deleted);
+            writer.endRecord(Record::sRecordId);
+        };
+        write(player);
+        write(characterClass);
+        write(global);
+        ESM::ESMReader reader;
+        openBytes(reader, stream.str());
+        return stream.str().substr(reader.getFileOffset());
+    }
+
+    ESM4::RuntimeState nativeState()
+    {
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes());
+        while (reader.hasMoreRecs())
+        {
+            const auto type = reader.getRecName();
+            reader.getRecHeader();
+            if (type == ESM::REC_T4ST)
+            {
+                ESM4::RuntimeState state;
+                state.load(reader);
+                return state;
+            }
+            reader.skipRecord();
+        }
+        throw std::logic_error("fixture has no native state");
     }
 }
 
@@ -317,4 +366,128 @@ TEST(SaveAdmissionTest, ValidSharedClassGlobalAndDynamicCounterRemainReadable)
     EXPECT_EQ(calls, 1);
     EXPECT_EQ(reader.getFileOffset(), start);
     EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+}
+
+TEST(SaveAdmissionTest, IncomingPlayerClassCannotBorrowAnOutgoingDynamicDefinition)
+{
+    MWWorld::ESMStore content;
+    ESM::Class fallback{};
+    fallback.blank();
+    fallback.mId = ESM::RefId::stringRefId("fallback-class");
+    content.getWritable<ESM::Class>().insertStatic(fallback);
+    ESM::NPC player{};
+    player.blank();
+    player.mId = ESM::RefId::stringRefId("Player");
+    player.mClass = fallback.mId;
+    content.getWritable<ESM::NPC>().insertStatic(player);
+    ESM::Class custom = fallback;
+    custom.mId = ESM::RefId::generated(17);
+    content.getWritable<ESM::Class>().insert(custom);
+    auto outgoing = player;
+    outgoing.mClass = custom.mId;
+    content.getWritable<ESM::NPC>().insert(outgoing);
+    auto state = nativeState();
+    state.mPlayer.mClass = ESM::FormKey::dynamic("player-class", 1);
+    const auto bytes = saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state);
+    for (int attempt = 0; attempt != 4; ++attempt)
+    {
+        SCOPED_TRACE(attempt);
+        ESM::ESMReader reader;
+        openBytes(reader, bytes + sharedRecords(attempt == 0 ? nullptr : &outgoing,
+            attempt == 2 ? &custom : nullptr, nullptr));
+        const auto start = reader.getFileOffset();
+        int calls = 0;
+        const auto validate = [&](const auto&) { ++calls; };
+        if (attempt == 1 || attempt == 3)
+        {
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content), std::runtime_error);
+            EXPECT_EQ(calls, 0);
+        }
+        else
+        {
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content));
+            EXPECT_EQ(calls, 1);
+        }
+        EXPECT_EQ(reader.getFileOffset(), start);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::NPC>().search(player.mId)->mClass, custom.mId);
+        EXPECT_EQ(content.get<ESM::NPC>().searchStatic(player.mId)->mClass, fallback.mId);
+    }
+}
+
+TEST(SaveAdmissionTest, NativeGlobalConversionsUseIncomingTypesAndImmutableFallbacks)
+{
+    MWWorld::ESMStore content;
+    const auto key = ESM::FormKey::content("headless.esm", 4);
+    ESM4::GlobalVariable definition{};
+    definition.mId = {4, 0};
+    definition.mEditorId = "GameDaysPassed";
+    content.getWritable<ESM4::GlobalVariable>().insertStatic(definition, key);
+    ESM::Global global{};
+    global.mId = ESM::RefId::stringRefId("dayspassed");
+    global.mValue.setType(ESM::VT_Long);
+    global.mValue.setInteger(5);
+    content.getWritable<ESM::Global>().insertStatic(global);
+    auto outgoing = global;
+    outgoing.mValue.setType(ESM::VT_Float);
+    content.getWritable<ESM::Global>().insert(outgoing);
+    for (const auto type : {ESM::VT_Short, ESM::VT_Long, ESM::VT_Float})
+        for (const double value : {1e30, 1e300, -0x1p63, 0x1p63, 3.75})
+            for (const bool savedType : {false, true})
+            {
+                SCOPED_TRACE(type);
+                SCOPED_TRACE(value);
+                SCOPED_TRACE(savedType);
+                auto incoming = global;
+                incoming.mValue.setType(type);
+                auto state = nativeState();
+                state.mGlobals[key] = value;
+                ESM::ESMReader reader;
+                openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state)
+                    + sharedRecords(nullptr, nullptr, savedType ? &incoming : nullptr));
+                const auto start = reader.getFileOffset();
+                int calls = 0;
+                const auto validate = [&](const auto&) { ++calls; };
+                const bool floating = savedType && type == ESM::VT_Float;
+                const bool valid = floating ? value >= -std::numeric_limits<float>::max()
+                        && value <= std::numeric_limits<float>::max()
+                    : value >= -0x1p63 && value < 0x1p63;
+                if (valid)
+                {
+                    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content));
+                    EXPECT_EQ(calls, 1);
+                }
+                else
+                {
+                    EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content), std::runtime_error);
+                    EXPECT_EQ(calls, 0);
+                }
+                EXPECT_EQ(reader.getFileOffset(), start);
+                EXPECT_EQ(content.get<ESM::Global>().search(global.mId)->mValue.getType(), ESM::VT_Float);
+                EXPECT_EQ(content.get<ESM::Global>().searchStatic(global.mId)->mValue.getInteger(), 5);
+            }
+}
+
+TEST(SaveAdmissionTest, DeletedSharedAuthorityRecordsRejectBeforeNativeValidation)
+{
+    ESM::NPC player{};
+    player.blank();
+    player.mId = ESM::RefId::stringRefId("Player");
+    ESM::Class characterClass{};
+    characterClass.blank();
+    characterClass.mId = ESM::RefId::generated(17);
+    ESM::Global global{};
+    global.mId = ESM::RefId::stringRefId("gamehour");
+    for (int record = 0; record != 3; ++record)
+    {
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + sharedRecords(record == 0 ? &player : nullptr,
+            record == 1 ? &characterClass : nullptr, record == 2 ? &global : nullptr, true));
+        const auto start = reader.getFileOffset();
+        int calls = 0;
+        EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+            [&](const auto&) { ++calls; }), std::runtime_error);
+        EXPECT_EQ(calls, 0);
+        EXPECT_EQ(reader.getFileOffset(), start);
+    }
 }

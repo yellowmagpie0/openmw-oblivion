@@ -313,7 +313,8 @@ namespace
         ESM::ESMReader reader;
         reader.open(std::move(stream), "native-semantic-admission");
         static_cast<void>(MWState::admitSave(reader, fixture.mWorld.getGameProfile(),
-            [&](const auto& incoming) { fixture.mWorld.validateOblivionSaveState(incoming); }));
+            [&](const auto& incoming) { fixture.mWorld.validateOblivionSaveState(incoming); },
+            &fixture.mWorld.getStore()));
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
     class NativePhysicalPoseTestAnimation : public MWRender::Animation

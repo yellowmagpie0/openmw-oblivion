@@ -8,6 +8,7 @@
 
 namespace ESM { class ESMReader; }
 namespace ESM4 { struct RuntimeState; }
+namespace MWWorld { class ESMStore; }
 
 namespace MWState
 {
@@ -15,7 +16,8 @@ namespace MWState
     // framing and native/profile metadata, then restores the same open reader
     // to its starting position. Record-specific restoration still follows.
     ESM::SavedGame admitSave(ESM::ESMReader& reader, ESM::GameProfile activeProfile,
-        const std::function<void(const ESM4::RuntimeState&)>& validateNative);
+        const std::function<void(const ESM4::RuntimeState&)>& validateNative,
+        const MWWorld::ESMStore* content = nullptr);
 }
 
 #endif

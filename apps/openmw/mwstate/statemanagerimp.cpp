@@ -480,7 +480,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
 
         const auto& world = *MWBase::Environment::get().getWorld();
         const auto admittedProfile = admitSave(reader, world.getGameProfile(),
-            [&](const ESM4::RuntimeState& native) { world.validateOblivionSaveState(native); });
+            [&](const ESM4::RuntimeState& native) { world.validateOblivionSaveState(native); }, &world.getStore());
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
             return;

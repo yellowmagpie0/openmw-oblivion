@@ -2,17 +2,25 @@
 
 #include <optional>
 #include <stdexcept>
+#include <cmath>
+#include <limits>
+#include <map>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/loadglob.hpp>
+#include <components/esm3/loadnpc.hpp>
+#include <components/esm3/loadclas.hpp>
+#include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/misc/strings/algorithm.hpp>
 
 #include "../mwworld/esmstore.hpp"
 
 namespace MWState
 {
     ESM::SavedGame admitSave(ESM::ESMReader& reader, ESM::GameProfile activeProfile,
-        const std::function<void(const ESM4::RuntimeState&)>& validateNative)
+        const std::function<void(const ESM4::RuntimeState&)>& validateNative,
+        const MWWorld::ESMStore* content)
     {
         const auto start = reader.getContext();
         try
@@ -65,6 +73,8 @@ namespace MWState
             if (profile.mGameProfile == ESM::GameProfile::Oblivion
                 && profile.mRuntimeStateVersion > ESM4::CurrentRuntimeStateVersion)
                 throw std::runtime_error("Saved game declares an unsupported TES4 runtime-state version");
+            std::unique_ptr<MWWorld::ESMStore> shared;
+            std::map<ESM::RefId, ESM::Global> globals;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -72,7 +82,7 @@ namespace MWState
                 // store before any outgoing world is cleared. Do not set up
                 // or publish this store: content-dependent reconciliation is
                 // a separate preparation step.
-                MWWorld::ESMStore shared;
+                shared = std::make_unique<MWWorld::ESMStore>();
                 reader.restoreContext(start);
                 while (reader.hasMoreRecs())
                 {
@@ -84,10 +94,33 @@ namespace MWState
                         ESM::Global global;
                         bool deleted = false;
                         global.load(reader, deleted);
+                        if (deleted)
+                            throw std::runtime_error("Saved game contains a deleted shared global");
+                        globals.insert_or_assign(global.mId, std::move(global));
+                        decoded = true;
+                    }
+                    else if (type == ESM::REC_NPC_)
+                    {
+                        ESM::NPC npc{};
+                        bool deleted = false;
+                        npc.load(reader, deleted);
+                        if (npc.mId == "Player" && deleted)
+                            throw std::runtime_error("Saved game deletes its shared Player record");
+                        shared->getWritable<ESM::NPC>().insertStatic(npc);
+                        decoded = true;
+                    }
+                    else if (type == ESM::REC_CLAS)
+                    {
+                        ESM::Class characterClass{};
+                        bool deleted = false;
+                        characterClass.load(reader, deleted);
+                        if (deleted)
+                            throw std::runtime_error("Saved game contains a deleted shared class");
+                        shared->getWritable<ESM::Class>().insertStatic(characterClass);
                         decoded = true;
                     }
                     else
-                        decoded = shared.readRecord(reader, type.toInt());
+                        decoded = shared->readRecord(reader, type.toInt());
                     if (!decoded)
                         reader.skipRecord();
                     else if (reader.hasMoreSubs())
@@ -105,6 +138,49 @@ namespace MWState
                     throw std::runtime_error("TES4 runtime-state record contains unexpected trailing data");
                 if (profile.mRuntimeStateVersion != native.mVersion)
                     throw std::runtime_error("Saved game profile runtime-state version does not match T4ST");
+                if (content)
+                {
+                    if (native.mVersion >= 3 && native.mPlayer.mClass.isDynamic())
+                    {
+                        const auto playerId = ESM::RefId::stringRefId("Player");
+                        const auto* player = shared->get<ESM::NPC>().search(playerId);
+                        if (!player)
+                            player = content->get<ESM::NPC>().searchStatic(playerId);
+                        if (!player || (!shared->get<ESM::Class>().search(player->mClass)
+                            && !content->get<ESM::Class>().searchStatic(player->mClass)))
+                            throw std::runtime_error("TES4 runtime-state shared Player class cannot be resolved");
+                    }
+                    for (const auto& [key, value] : native.mGlobals)
+                    {
+                        const auto* definition = content->get<ESM4::GlobalVariable>().searchStatic(key);
+                        if (!definition || definition->mEditorId.empty())
+                            throw std::runtime_error("TES4 runtime-state global is not present: " + key.serialize());
+                        std::string name = definition->mEditorId;
+                        if (Misc::StringUtils::ciEqual(name, "GameDaysPassed")) name = "dayspassed";
+                        else if (Misc::StringUtils::ciEqual(name, "GameDay")) name = "day";
+                        else if (Misc::StringUtils::ciEqual(name, "GameMonth")) name = "month";
+                        else if (Misc::StringUtils::ciEqual(name, "GameYear")) name = "year";
+                        const auto id = ESM::RefId::stringRefId(name);
+                        const auto saved = globals.find(id);
+                        const auto* target = saved != globals.end() ? &saved->second
+                            : content->get<ESM::Global>().searchStatic(id);
+                        if (!target)
+                            throw std::runtime_error("TES4 runtime-state shared global cannot be resolved: " + name);
+                        const auto* number = std::get_if<double>(&value);
+                        if (target->mValue.getType() == ESM::VT_Float)
+                        {
+                            const double projected = std::visit([](const auto& item) -> double {
+                                if constexpr (std::is_same_v<std::decay_t<decltype(item)>, std::string>)
+                                    throw std::runtime_error("TES4 runtime-state numeric global has a string value");
+                                else return static_cast<double>(item);
+                            }, value);
+                            if (!std::isfinite(projected) || std::abs(projected) > std::numeric_limits<float>::max())
+                                throw std::runtime_error("TES4 runtime-state global exceeds the finite float domain");
+                        }
+                        else if (number && (std::trunc(*number) < -0x1p63 || std::trunc(*number) >= 0x1p63))
+                            throw std::runtime_error("TES4 runtime-state global exceeds the integer conversion domain");
+                    }
+                }
                 validateNative(native);
             }
             reader.restoreContext(start);

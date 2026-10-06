@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,56 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 incoming class/global reconciliation checkpoint — 2026-10-05
+
+StateManager now supplies the content store to read-only admission. Incoming
+shared NPC/class/global definitions remain detached through native validation.
+A dynamic native Player class resolves through the saved Player facade and
+saved class definitions, with immutable content as the fallback. An outgoing
+dynamic class or Player facade cannot accidentally satisfy a missing incoming
+definition. Deleted shared Player/class/global authority records reject early.
+
+Native global conversion checks use incoming saved global types or immutable
+content defaults, including calendar-name aliases. They preserve restore's
+float domain and signed 64-bit conversion boundary before its existing int32
+clamp. An outgoing dynamic global's type cannot change admission. These checks
+occur before cleanup and publish no store records or global values.
+
+Three new regressions cover static fallback, missing incoming class, valid
+saved class and repeated rejection/retry while outgoing definitions remain
+unchanged; **30** saved/default type and numeric-boundary combinations; and
+all three deleted shared authority record categories. Existing World semantic
+admission tests now exercise the content-aware production path.
+
+Evidence under `build/oblivion-compat/m15/`:
+
+- `S3/shared-reconciliation-engine-01` and
+  `shared-reconciliation-sanitize-01`: all **1,158** engine tests pass with
+  exact inventories, zero failures/skips and unchanged tested fingerprint
+  `a2f062f85a630cb1c8edeec55c12adf66cc53d8955d35eb8fd65960864922b3b`
+  on parent `9bddff99bcb9f06eee91f64851e3907bbfa971ac`.
+  ASan leak detection is disabled; UBSan halts on errors.
+- `S3/shared-reconciliation-runtime-01` and
+  `shared-reconciliation-sanitized-runtime-01`: actual stock load/F5, change
+  only native TimeScale global `00003a` to schema-valid `1e30`, F9 rejection,
+  Return/F5 and clean quit. The incoming shared short type rejects before
+  teardown. Each course retains one successful load and two actual saves in
+  one process/epoch. Complete decoded comparison proves that only the intended
+  global changed in the rejected input. Player/actor authority, all 34,398 prior
+  reference inventories, 130 script instances and 390 quests survive rejection.
+- Both full-load reports compare all **37** native fields and **33,376**
+  references exactly at initial tick zero. Reproducible full-load comparison is
+  retained in `S3/shared-reconciliation-full-load.py`. Runtime executable hashes
+  match the final builds. Both rejection screenshots were inspected; the same
+  prison and status bars remain visible. Only the expected rejection and
+  reviewed existing equip-icon error occur; no unreviewed errors or sanitizer
+  diagnostics remain.
+
+Aggregate hashes and reports are in `S3/shared-reconciliation-report.json`.
+This closes incoming Player-class and native-global conversion reconciliation.
+Complete shared cell/reference/Lua preparation, allocation/placement publication,
+remaining migrations and active-action continuation remain open S3 work.
 
 ## S3 detached shared-record admission checkpoint — 2026-10-05
 
