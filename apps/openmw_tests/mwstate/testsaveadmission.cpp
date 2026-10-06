@@ -12,6 +12,7 @@
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
+#include <components/esm3/loadweap.hpp>
 #include <components/esm3/player.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/containerstate.hpp>
@@ -20,10 +21,13 @@
 #include <components/esm3/doorstate.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include "apps/openmw/mwstate/saveadmission.hpp"
+#include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
 #include "apps/openmw/mwlua/userdataserializer.hpp"
 #include "apps/openmw/mwlua/object.hpp"
@@ -1028,5 +1032,139 @@ TEST(SaveAdmissionTest, InvalidSharedTimerWireValuesRejectBeforeNativePublicatio
         EXPECT_FALSE(validated);
         EXPECT_EQ(reader.getFileOffset(), offset);
         EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
+    }
+}
+
+namespace
+{
+    std::string legacyGeneratedRecords(std::uint32_t version, int fault = -1, bool creature = false)
+    {
+        return worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId::generated(0);
+            weapon.mData.mType = ESM::Weapon::LongBladeOneHand; weapon.mData.mHealth = 100;
+            if (fault != 0)
+            {
+                writer.startRecord(ESM::REC_WEAP); weapon.save(writer); writer.endRecord(ESM::REC_WEAP);
+            }
+            writer.startRecord(ESM::REC_DYNA); writer.writeHNT("COUN", std::uint64_t{1}); writer.endRecord(ESM::REC_DYNA);
+            ESM::InventoryState inventory;
+            auto& item = inventory.mItems.emplace_back(); item.blank(); item.mRef.mRefID = weapon.mId;
+            item.mRef.mCount = 1;
+            item.mRef.mNativeItemCondition = version < 24 ? 37.f : 37.125f;
+            item.mRef.mEnchantmentCharge = 9.25f;
+            item.mRef.mOwner = ESM::RefId(ESM::FormId{5, 0});
+            if (version >= 41)
+            {
+                item.mRef.mNativeOwnershipRank = -2;
+                item.mRef.mNativeOwnershipGlobal = ESM::RefId(ESM::FormId{6, 0});
+            }
+            inventory.mEquipmentSlots[0] = fault == 1 ? 99 : MWWorld::InventoryStore::Slot_CarriedRight;
+            ESM::Player player{}; player.mObject.blank(); player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0}); player.mObject.mInventory = inventory;
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            const auto base = ESM::RefId(ESM::FormId{4, 0});
+            if (creature)
+            {
+                ESM::Creature definition{}; definition.blank(); definition.mId = base;
+                writer.startRecord(ESM::REC_CREA); definition.save(writer); writer.endRecord(ESM::REC_CREA);
+            }
+            else
+            {
+                ESM::NPC definition{}; definition.blank(); definition.mId = base;
+                writer.startRecord(ESM::REC_NPC_); definition.save(writer); writer.endRecord(ESM::REC_NPC_);
+            }
+            std::unique_ptr<ESM::ObjectState> actor = creature
+                ? std::unique_ptr<ESM::ObjectState>(std::make_unique<ESM::CreatureState>())
+                : std::unique_ptr<ESM::ObjectState>(std::make_unique<ESM::NpcState>());
+            actor->blank(); actor->mRef.mRefID = base; actor->mRef.mRefNum = {0x900, 0};
+            if (creature) actor->asCreatureState().mInventory = inventory;
+            else actor->asNpcState().mInventory = inventory;
+            writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+            ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+            writer.writeHNT("OBJE", std::uint32_t{0}); actor->save(writer); writer.endRecord(ESM::REC_CSTA);
+        });
+    }
+
+    ESM4::RuntimeState legacyGeneratedNative(std::uint32_t version)
+    {
+        auto state = nativeState(); state.mVersion = version;
+        if (version < 3)
+        {
+            state.mPlayer.mName.clear(); state.mPlayer.mRace = {}; state.mPlayer.mClass = {};
+        }
+        ESM4::RuntimeReferenceState actor;
+        actor.mKey = ESM::FormKey::content("headless.esm", 0x900);
+        actor.mBase = ESM::FormKey::content("headless.esm", 4);
+        actor.mCell = state.mPlayer.mCell;
+        state.mReferences.push_back(actor);
+        return state;
+    }
+}
+
+TEST(SaveAdmissionTest, LegacyGeneratedPlayerNpcAndCreatureGearMigratesEverySupportedVersion)
+{
+    MWClass::Weapon::registerSelf();
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (bool creature : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(creature);
+        const auto state = legacyGeneratedNative(version);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, version, 1, 1, false, false, &state)
+            + legacyGeneratedRecords(version, -1, creature));
+        const std::map<int, int> mapping{{0, 2}};
+        reader.setContentFileMapping(&mapping);
+        const auto start = reader.getContext(); bool called = false;
+        MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto& restored) {
+            called = true;
+            ASSERT_EQ(restored.mPlayer.mInventory.size(), 1);
+            ASSERT_EQ(restored.mReferences.front().mInventory.size(), 1);
+            const auto& item = restored.mPlayer.mInventory.front();
+            EXPECT_EQ(item.mBase, ESM::FormKey::dynamic("shared-item", 1)); EXPECT_EQ(item.mCount, 1);
+            EXPECT_EQ(item.mCondition, version < 4 ? -1 : version < 24 ? 37 : 37.125);
+            EXPECT_EQ(item.mCharge, version < 4 ? -1 : 9.25);
+            EXPECT_EQ(item.mEquippedSlots, version < 4 ? 0 : ESM4::InventorySlotWeapon);
+            // The shared inventory writer deliberately omits ANAM ownership.
+            EXPECT_EQ(item.mOwner, ESM::FormKey{});
+            EXPECT_EQ(item.mOwnershipRank, version < 41 ? std::nullopt : std::optional<std::int32_t>(-2));
+            EXPECT_EQ(item.mOwnershipGlobal,
+                version < 41 ? ESM::FormKey{} : ESM::FormKey::content("headless.esm", 6));
+            EXPECT_EQ(restored.mReferences.front().mInventory, restored.mPlayer.mInventory);
+            EXPECT_EQ(restored.mVersion, version); EXPECT_NO_THROW(restored.validate());
+        });
+        EXPECT_TRUE(called); EXPECT_EQ(reader.getContext().filePos, start.filePos);
+    }
+}
+
+TEST(SaveAdmissionTest, ExplicitNativeGeneratedInventoryWinsWithoutSharedDuplication)
+{
+    MWClass::Weapon::registerSelf();
+    auto state = legacyGeneratedNative(ESM4::CurrentRuntimeStateVersion);
+    ESM4::RuntimeInventoryItem explicitItem;
+    explicitItem.mBase = ESM::FormKey::dynamic("shared-item", 1); explicitItem.mCount = 2;
+    explicitItem.mCondition = 11.25; explicitItem.mCharge = 3.5f;
+    state.mPlayer.mInventory = {explicitItem}; state.mReferences.front().mInventory = {explicitItem};
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state)
+        + legacyGeneratedRecords(state.mVersion));
+    MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto& restored) {
+        EXPECT_EQ(restored.serializeBinary(), state.serializeBinary());
+    });
+}
+
+TEST(SaveAdmissionTest, LegacyGeneratedRecoveryRejectsMissingDefinitionsBadSlotsAndActorBaseConflicts)
+{
+    MWClass::Weapon::registerSelf();
+    for (int fault = 0; fault != 3; ++fault)
+    {
+        auto state = legacyGeneratedNative(ESM4::CurrentRuntimeStateVersion);
+        if (fault == 2) state.mReferences.front().mBase = ESM::FormKey::content("headless.esm", 6);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state)
+            + legacyGeneratedRecords(state.mVersion, fault));
+        const auto start = reader.getContext(); bool called = false;
+        EXPECT_ANY_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { called = true; }));
+        EXPECT_FALSE(called); EXPECT_EQ(reader.getContext().filePos, start.filePos);
     }
 }

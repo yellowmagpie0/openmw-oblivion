@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,101 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 legacy generated inventory migration checkpoint — 2026-10-06
+
+Older accepted native snapshots could omit generated gear while the shared
+PLAY inventory still contained it. Admission now recovers absent generated
+bases from detached shared inventories before preparing the native restore.
+Existing native entries remain authoritative for all stacks of their base;
+shared copies cannot replace them or conceal invalid native entries. Recovery
+uses admitted incoming definitions and the existing shared item classes,
+then validates the repaired native state before the preparation callback.
+Missing definitions, non-items, incompatible equipment and conflicting actor
+bases fail before World teardown. The binary layout and version are unchanged.
+
+Player recovery reads PLAY. Matching shared NPC/creature CSTA inventories use
+the saved reference identity and canonical actor base. Owner/global RefIds
+already remapped by ESMReader are translated back to canonical plugin names;
+outer CSTA reference numbers retain saved-order indexes. Recovery is limited
+to shared actor data that exists and matches a native reference. Current
+CellStore writing skips ESM4 actor references, so synthetic matching CSTA
+coverage does not establish a new native NPC/creature writer path.
+
+Schemas 1–3 recover quantity only; schemas 4–40 recover their supported item
+extras, and schema 41 additionally retains ownership rank/global. Unsupported
+old-schema metadata is deliberately omitted. The shared inventory writer
+omits ordinary ANAM ownership; native-only hotkeys cannot be recovered from
+an omitted native entry. No combat/weapon rules or new save fields were added.
+
+Three added admission cases exercise Player/NPC/creature recovery across every
+supported schema (1–41), reordered content mapping, exact explicit-native
+precedence, missing definitions, bad equipment slots and conflicting actor
+bases. `S3/legacy-generated-engine-04` and
+`S3/legacy-generated-sanitize-04` passed all **1,196 engine tests**, with exact
+unfiltered inventories and zero failures/skips. Tested parent:
+`1f6eaf92c14ef977bb8eb83d7c8790a29b2eede8`; dirty source fingerprint:
+`87bb1f69cca95f6ad26ef30d39a8767a534cab2374b8770a7fe7b06cbdedd6bf`.
+Both builds emitted zero warnings. ASan leak checks are disabled and UBSan
+halts on errors. Components/Python implementation sources were unchanged.
+
+Editable runtime fixtures and evidence are under
+`S3/legacy-generated-restart-02` and
+`S3/legacy-generated-sanitized-restart-02`. Their `prepare.py` preserves an
+actual preceding F5 save, removes only the two generated native Player
+inventory bases, and verifies every shared record is byte-identical. The
+independent expected migration restores blade count 1/condition 37.125/
+charge 9.25/weapon slot and 17 arrows/ammunition slot, with native-only hotkey
+unset. Encumbrance remains 10.375. This reproduces the old capture omission;
+it does not author a successful recovered state into the input.
+
+The first sanitizer restart course exposed a pre-existing writer defect:
+CellStore::saveState left the water level uninitialized for dry interiors,
+although CellState::save always writes their WLVL. A later actual F5 therefore
+produced NaNs and strict admission rejected its F9. CellStore now writes zero
+for dry cells and the current level for wet interiors. An added actual native
+CellStore regression poisons the destination water field with NaN, verifies
+dry/wet paths, and checks a changed wet level. Admission's nonfinite checks
+remain strict. This is shared save-state initialization, not a water-rule change.
+
+Both final runtime courses completed load/F5/F9/F5/quit and repeated from
+the produced save in a distinct fresh process. All 37 normalized native fields
+matched the independently authored expected migration on first load and the
+actual saved input on the next three loads, including full references and
+clock. Reference counts were 34,603/34,771/34,880/35,397 in both builds. Raw
+reinspection confirmed blade/arrow definitions and actual shared Player gear,
+class/counter, moved weapon/mask, and finite WLVL in every produced save.
+Normal saves contained 157/159/160/161 interior WLVL fields, with dry fields
+zero. All four final screenshots were inspected: prison scene, full status
+bars, generated blade HUD name and icon. Ammunition persistence is established
+by raw records, not inferred from the screenshot. Audio was disabled.
+
+Legacy input SHA256:
+`5ad83dab3afe911a897ef887df09a4321de4ef52b73089fdd4dd5b189ebfa909`.
+Normal binary SHA256:
+`7158ffbb772cb46423e80b51449d5a21144b02d196624c333aec2114f2155a19`.
+Sanitizer binary SHA256:
+`92597393db5b1d8366344e96bc89f7fe628b765782f4e282eaa8439d87cdd976`.
+Normal process IDs: 1397075/1397151; sanitizer: 1397278/1397537.
+The machine-readable `S3/legacy-generated-report.json` links code hashes,
+build/test inventories, course manifests, expected migration, raw checks and
+failed attempts. No final course had an unreviewed error or sanitizer finding.
+
+Failed attempts remain in their original evidence directories. Both 01 builds
+caught missing test includes and a duplicate SCOPED_TRACE declaration; both
+02 test runs caught an incorrect owner expectation because shared inventory
+serialization omits ANAM. Both corrected 03 checks passed all 1,195 cases,
+including canonical global identity under reordered content mapping, before the runtime water defect
+required the fourth regression and final 04 rebuilds. The failed sanitizer 01
+fresh process recorded the exact nonfinite shared-cell rejection and reached
+its shutdown timeout while the error remained open; it is not acceptance
+evidence. Debugger attempts and the malformed actual F5 save are retained.
+The initial normal class verifier invocation omitted its directory argument; `raw-class-02.log` records the
+corrected successful invocation. These are retained failures, not passes.
+
+This closes the generated-inventory omission migration slice. S3's wider
+restore-staging and continuation gates remain open; this checkpoint does not
+claim complete M15 acceptance.
 
 ## S3 generated shared actor inventory checkpoint — 2026-10-06
 

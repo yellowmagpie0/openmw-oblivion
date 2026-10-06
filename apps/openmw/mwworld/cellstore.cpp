@@ -1235,8 +1235,8 @@ namespace MWWorld
     {
         state.mId = mCellVariant.getId();
 
-        if (!mCellVariant.isExterior() && mCellVariant.hasWater())
-            state.mWaterLevel = mWaterLevel;
+        // Interior CSTA records always serialize WLVL, including dry cells.
+        state.mWaterLevel = !mCellVariant.isExterior() && mCellVariant.hasWater() ? mWaterLevel : 0.f;
         state.mIsInterior = !mCellVariant.isExterior();
         state.mHasFogOfWar = (mFogState.get() ? 1 : 0);
         state.mLastRespawn = mLastRespawn.toEsm();

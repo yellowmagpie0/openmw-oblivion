@@ -4,6 +4,7 @@
 #include "apps/openmw/mwphysics/collisiontype.hpp"
 #include <components/esm3/inventorystate.hpp>
 #include <components/esm3/objectstate.hpp>
+#include <components/esm3/cellstate.hpp>
 #include <bit>
 #include <cstddef>
 #include <new>
@@ -13691,4 +13692,29 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     readNativeSnapshot(fixture, captured);
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
+}
+
+TEST(OblivionWorldTest, SavedDryInteriorWaterIsInitializedAndWetInteriorLevelIsPreserved)
+{
+    NativeWorldFixture fixture;
+    ESM::ReadersCache readers;
+    for (bool hasWater : {false, true})
+    {
+        SCOPED_TRACE(hasWater);
+        ESM4::Cell record{};
+        record.mId = ESM::RefId(ESM::FormId{0xaaaa, 0});
+        record.mCellFlags = ESM4::CELL_Interior | (hasWater ? ESM4::CELL_HasWater : 0);
+        record.mWaterHeight = 64.f;
+        MWWorld::CellStore cell(MWWorld::Cell(record), fixture.mWorld.getStore(), readers);
+        ESM::CellState saved{};
+        // Reproduce poisoned stack storage without reading uninitialized memory.
+        saved.mWaterLevel = std::numeric_limits<float>::quiet_NaN();
+        cell.saveState(saved);
+        EXPECT_EQ(saved.mWaterLevel, hasWater ? 64.f : 0.f);
+        EXPECT_TRUE(saved.mIsInterior);
+        EXPECT_EQ(saved.mId, record.mId);
+        cell.setWaterLevel(12.5f);
+        cell.saveState(saved);
+        EXPECT_EQ(saved.mWaterLevel, hasWater ? 12.5f : 0.f);
+    }
 }

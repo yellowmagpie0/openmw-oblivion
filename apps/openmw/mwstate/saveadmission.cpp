@@ -1,5 +1,6 @@
 #include "saveadmission.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <stdexcept>
 #include <cmath>
@@ -23,7 +24,103 @@
 
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/savedreference.hpp"
+#include "../mwworld/manualref.hpp"
+#include "../mwworld/class.hpp"
+#include "../mwworld/oblivioninventoryidentity.hpp"
 #include "../mwlua/userdataserializer.hpp"
+
+namespace
+{
+    struct LegacyGeneratedItem
+    {
+        ESM::CellRef mReference;
+        std::optional<int> mSlot;
+    };
+
+    std::vector<LegacyGeneratedItem> generatedItems(const ESM::InventoryState& inventory)
+    {
+        std::vector<LegacyGeneratedItem> result;
+        for (std::size_t i = 0; i != inventory.mItems.size(); ++i)
+        {
+            const auto& item = inventory.mItems[i];
+            if (!item.mRef.mRefID.getIf<ESM::GeneratedRefId>())
+                continue;
+            const auto slot = inventory.mEquipmentSlots.find(static_cast<int>(i));
+            result.push_back({item.mRef, slot == inventory.mEquipmentSlots.end()
+                ? std::nullopt : std::optional<int>(slot->second)});
+        }
+        return result;
+    }
+
+    ESM::FormKey sharedOwnerKey(const ESM::RefId& id, ESM::ESMReader& reader,
+        const ESM::SavedGame& profile)
+    {
+        if (id.empty()) return {};
+        const auto* form = id.getIf<ESM::FormId>();
+        if (!form)
+            throw std::runtime_error("Legacy generated inventory owner is not a native FormId");
+        if (!form->hasContentFile())
+            return ESM::FormKeyResolver(profile.mContentFiles).toFormKey(*form);
+        // getRefId remaps owners to the current order. Recover their canonical
+        // plugin identity using the reader's saved-to-current mapping.
+        for (std::size_t i = 0; i != profile.mContentFiles.size(); ++i)
+        {
+            ESM::FormId mapped{1, static_cast<std::int32_t>(i)};
+            if (reader.applyContentFileMapping(mapped) && mapped.mContentFile == form->mContentFile)
+                return ESM::FormKey::content(profile.mContentFiles[i], form->mIndex);
+        }
+        throw std::runtime_error("Legacy generated inventory owner has no saved content identity");
+    }
+
+    void recoverGeneratedItems(std::vector<ESM4::RuntimeInventoryItem>& target,
+        const std::vector<LegacyGeneratedItem>& saved, const MWWorld::ESMStore& definitions,
+        ESM::ESMReader& reader, const ESM::SavedGame& profile, std::uint32_t version)
+    {
+        std::set<ESM::FormKey> nativeBases;
+        for (const auto& item : target) nativeBases.insert(item.mBase);
+        for (const auto& item : saved)
+        {
+            const auto key = *MWWorld::OblivionInventory::sharedKey(item.mReference.mRefID);
+            // A native base describes all its stacks. Never duplicate, replace
+            // or conceal a bad explicit native entry using its shared copy.
+            if (nativeBases.contains(key)) continue;
+            const auto count = std::abs(static_cast<std::int64_t>(item.mReference.mCount));
+            if (count == 0 || count > std::numeric_limits<std::int32_t>::max())
+                throw std::runtime_error("Legacy generated inventory quantity cannot be represented");
+            MWWorld::ManualRef source(definitions, item.mReference.mRefID, static_cast<int>(count));
+            const auto ptr = source.getPtr();
+            MWWorld::ContainerStore::getType(ptr);
+            ptr.getCellRef() = MWWorld::CellRef(item.mReference);
+            ESM4::RuntimeInventoryItem recovered;
+            recovered.mBase = key;
+            recovered.mCount = static_cast<std::int32_t>(count);
+            if (version >= 4)
+            {
+                const auto& itemClass = ptr.getClass();
+                recovered.mCondition = itemClass.hasItemHealth(ptr)
+                    ? ptr.getCellRef().getItemCondition(static_cast<float>(itemClass.getItemMaxHealth(ptr))) : -1.f;
+                recovered.mCharge = ptr.getCellRef().getEnchantmentCharge();
+                recovered.mRemainingUsageTime = itemClass.getRemainingUsageTime(ptr);
+                recovered.mOwner = sharedOwnerKey(item.mReference.mOwner, reader, profile);
+                if (version >= 41)
+                {
+                    recovered.mOwnershipRank = item.mReference.mNativeOwnershipRank;
+                    recovered.mOwnershipGlobal = sharedOwnerKey(item.mReference.mNativeOwnershipGlobal, reader, profile);
+                }
+                if (item.mSlot)
+                {
+                    const auto equipment = itemClass.getEquipmentSlots(ptr);
+                    if (std::find(equipment.first.begin(), equipment.first.end(), *item.mSlot) == equipment.first.end()
+                        || (count != 1 && !equipment.second))
+                        throw std::runtime_error("Legacy generated inventory equipment disagrees with its definition");
+                    recovered.mEquippedSlots = MWWorld::OblivionInventory::slotMask(
+                        *item.mSlot, ptr.getType() == ESM::REC_LIGH);
+                }
+            }
+            ESM4::addInventoryItem(target, std::move(recovered));
+        }
+    }
+}
 
 namespace MWState
 {
@@ -90,6 +187,9 @@ namespace MWState
             std::map<ESM::RefId, ESM::Global> globals;
             std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
             ESM4::LocalLuaScripts nativeScripts;
+            std::vector<LegacyGeneratedItem> legacyPlayerItems;
+            struct ActorInventory { ESM::FormKey mBase; std::vector<LegacyGeneratedItem> mItems; };
+            std::map<ESM::FormKey, ActorInventory> legacyActorItems;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -202,6 +302,7 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
                     }
                     else
@@ -231,6 +332,27 @@ namespace MWState
                             {
                                 const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
+                                // CSTA reference numbers retain their saved load-order
+                                // index; base IDs have already been remapped by getRefId.
+                                const ESM::InventoryState* inventory = nullptr;
+                                if (const auto* npc = dynamic_cast<const ESM::NpcState*>(state.get()))
+                                    inventory = &npc->mInventory;
+                                else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(state.get()))
+                                    inventory = &creature->mInventory;
+                                if (inventory && state->mRef.mRefNum.hasContentFile()
+                                    && state->mRef.mRefID.getIf<ESM::FormId>())
+                                {
+                                    auto items = generatedItems(*inventory);
+                                    if (!items.empty())
+                                    {
+                                        const auto key = ESM::FormKeyResolver(profile.mContentFiles).toFormKey(
+                                            state->mRef.mRefNum);
+                                        const bool inserted = legacyActorItems.emplace(key, ActorInventory{
+                                            sharedOwnerKey(state->mRef.mRefID, reader, profile), std::move(items)}).second;
+                                        if (!inserted)
+                                            throw std::runtime_error("Duplicate shared actor generated inventory");
+                                    }
+                                }
                                 collectScripts(*state);
                             }
                             else
@@ -266,6 +388,17 @@ namespace MWState
                     throw std::runtime_error("TES4 runtime-state record contains unexpected trailing data");
                 if (profile.mRuntimeStateVersion != native.mVersion)
                     throw std::runtime_error("Saved game profile runtime-state version does not match T4ST");
+                recoverGeneratedItems(native.mPlayer.mInventory, legacyPlayerItems, *shared, reader, profile,
+                    native.mVersion);
+                for (auto& reference : native.mReferences)
+                    if (const auto found = legacyActorItems.find(reference.mKey); found != legacyActorItems.end())
+                    {
+                        if (found->second.mBase != reference.mBase)
+                            throw std::runtime_error("Legacy generated inventory actor base disagrees with native state");
+                        recoverGeneratedItems(reference.mInventory, found->second.mItems, *shared, reader, profile,
+                            native.mVersion);
+                    }
+                native.validate();
                 ESM4::validateLocalLuaScriptOwners(nativeScripts, native);
                 if (content)
                 {
