@@ -664,6 +664,13 @@ namespace MWWorld
     ESMStore::PreparedDynamicRecords::PreparedDynamicRecords(PreparedDynamicRecords&&) noexcept = default;
     ESMStore::PreparedDynamicRecords& ESMStore::PreparedDynamicRecords::operator=(PreparedDynamicRecords&&) noexcept = default;
 
+    const ESMStore& ESMStore::PreparedDynamicRecords::definitions() const
+    {
+        if (!mImpl || mImpl->mIdentity.expired())
+            throw std::logic_error("Prepared shared definitions no longer exist");
+        return *mImpl->mIncoming;
+    }
+
     bool ESMStore::PreparedDynamicRecords::isValid() const noexcept
     {
         return mImpl && !mImpl->mIdentity.expired()

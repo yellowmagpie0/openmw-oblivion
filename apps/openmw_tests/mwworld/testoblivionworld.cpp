@@ -13502,3 +13502,140 @@ TEST(OblivionWorldTest, PreparedIncomingDefinitionsRebindPlayerAndKeepWinningIte
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), accepted);
 }
+
+TEST(OblivionWorldTest, PreparedActorInventoriesSurviveOutgoingOverridesAndPreserveEquipmentExtras)
+{
+    for (const bool incomingOverride : {false, true})
+    {
+        SCOPED_TRACE(incomingOverride);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto id = ESM::RefId(ESM::FormId{0x940, 0});
+        const auto* immutable = world.getStore().get<ESM::Weapon>().searchStatic(id);
+        ESM::Weapon outgoing = *immutable; outgoing.mName = "Deleted outgoing weapon";
+        world.getStore().getWritable<ESM::Weapon>().insert(outgoing);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = 1; item.mCondition = 43.125f; item.mCharge = 7.25f;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        installEquipmentInventory(fixture, fixture.mActor, {item});
+        installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
+        const auto saved = world.captureOblivionRuntimeState();
+        auto definitions = std::make_unique<MWWorld::ESMStore>();
+        const ESM::Weapon* accepted = immutable;
+        if (incomingOverride)
+        {
+            auto weapon = *immutable; weapon.mName = "Retained incoming weapon";
+            accepted = definitions->getWritable<ESM::Weapon>().insert(weapon);
+        }
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        auto plan = world.prepareOblivionSaveState(saved, std::move(definitions));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        world.clear();
+        ASSERT_TRUE(plan->install());
+        restorePreparedSaveActorFixture(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        for (const auto actor : {world.getPlayerPtr(), fixture.mActor})
+        {
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto held = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            ASSERT_NE(held, inventory.end());
+            const MWWorld::Ptr ptr = *held;
+            EXPECT_EQ(ptr.get<ESM::Weapon>()->mBase, accepted);
+            EXPECT_EQ(ptr.getCellRef().getNativeItemCondition(), item.mCondition);
+            EXPECT_EQ(ptr.getCellRef().getEnchantmentCharge(), item.mCharge);
+            EXPECT_EQ(ptr.getCellRef().getOwner(), ESM::RefId(ESM::FormId{0x800, 0}));
+            EXPECT_EQ(ptr.getContainerStore(), &inventory);
+            EXPECT_EQ(world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()), ptr);
+        }
+        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), saved.mReferences.front().mInventory);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInventoriesMatchDirectMigrationForEveryAcceptedVersion)
+{
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto legacy = world.captureOblivionRuntimeState();
+        legacy.mVersion = version;
+        if (version < 3)
+        {
+            legacy.mPlayer.mName.clear(); legacy.mPlayer.mRace = {}; legacy.mPlayer.mClass = {};
+            legacy.mPlayer.mBirthSign = {}; legacy.mPlayer.mFemale = false;
+            legacy.mPlayer.mCharacterGenerationFlags = 0;
+        }
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = version < 4 ? 3 : 1;
+        if (version >= 4)
+        {
+            item.mCondition = version < 24 ? 43.f : 43.125f;
+            item.mCharge = 7.25f; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+            item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        }
+        legacy.mPlayer.mInventory = {item};
+        legacy.mReferences.front().mInventory = {item};
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+        readNativeSnapshot(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto expectedPlayer = world.captureOblivionActorInventory(world.getPlayerPtr());
+        const auto expectedNpc = world.captureOblivionActorInventory(fixture.mActor);
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        auto invalid = decoded;
+        invalid.mReferences.front().mInventory.front().mBase = ESM::FormKey::content("headless.esm", 0xdead);
+        EXPECT_ANY_THROW(world.prepareOblivionSaveState(invalid));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        auto plan = world.prepareOblivionSaveState(decoded);
+        world.clear();
+        ASSERT_TRUE(plan->install());
+        restorePreparedSaveActorFixture(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expectedPlayer);
+        EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), expectedNpc);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCreatureInventorySurvivesClearAndDynamicReconstruction)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto id = ESM::RefId(ESM::FormId{0x940, 0});
+    auto creature = addEquipmentCreature(fixture);
+    creature = creature.getCell()->moveTo(creature, fixture.mActor.getCell());
+    world.getWorldModel().registerPtr(creature);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1; item.mCondition = 23.125f; item.mCharge = 4.25f;
+    item.mEquippedSlots = ESM4::InventorySlotWeapon;
+    installEquipmentInventory(fixture, creature, {item});
+    auto saved = world.captureOblivionRuntimeState();
+    ASSERT_EQ(saved.mReferences.size(), 2u);
+    if (saved.mReferences.front().mBase == ESM::FormKey::content("headless.esm", 0x820))
+        std::swap(saved.mReferences.front(), saved.mReferences.back());
+    auto& reference = saved.mReferences.back();
+    reference.mKey = ESM::FormKey::dynamic("native-reference", 1);
+    saved.mNextDynamicSerial = 2;
+    auto definitions = std::make_unique<MWWorld::ESMStore>();
+    auto weapon = *world.getStore().get<ESM::Weapon>().searchStatic(id);
+    weapon.mName = "Retained creature weapon";
+    const auto* accepted = definitions->getWritable<ESM::Weapon>().insert(weapon);
+    auto plan = world.prepareOblivionSaveState(saved, std::move(definitions));
+    world.clear();
+    ASSERT_TRUE(plan->install());
+    restorePreparedSaveActorFixture(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto restored = world.getWorldModel().getDynamicNativePtr(reference.mKey);
+    ASSERT_FALSE(restored.isEmpty());
+    ASSERT_EQ(restored.getType(), ESM::REC_CREA4);
+    auto& inventory = restored.getClass().getInventoryStore(restored);
+    const auto held = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    ASSERT_NE(held, inventory.end());
+    EXPECT_EQ((*held).get<ESM::Weapon>()->mBase, accepted);
+    EXPECT_EQ(world.captureOblivionActorInventory(restored), reference.mInventory);
+    EXPECT_EQ(world.getWorldModel().getPtr((*held).getCellRef().getRefNum()), *held);
+}

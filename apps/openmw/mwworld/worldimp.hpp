@@ -134,7 +134,8 @@ namespace MWWorld
         const std::shared_ptr<const char> mOblivionRestoreIdentity = std::make_shared<const char>();
         std::uint64_t mOblivionClearGeneration = 0;
         void validateOblivionSaveStateImpl(
-            const ESM4::RuntimeState& state, PreparedOblivionServices* prepared) const;
+            const ESM4::RuntimeState& state, PreparedOblivionServices* prepared,
+            const ESMStore* incoming = nullptr) const;
         std::vector<std::pair<std::string, std::string>> mOblivionContentIdentities;
         std::uint64_t mNextOblivionDynamicSerial = 1;
         std::shared_ptr<const char> mOblivionDynamicReferenceIdentity;

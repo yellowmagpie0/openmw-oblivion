@@ -764,7 +764,7 @@ namespace MWWorld
 
     std::vector<PreparedOblivionInventoryItem> OblivionProfileServices::prepareActorInventory(
         const ESMStore& store, const ESM::FormKeyResolver& resolver,
-        const std::vector<ESM4::RuntimeInventoryItem>& items)
+        const std::vector<ESM4::RuntimeInventoryItem>& items, const ESMStore* incoming)
     {
         std::vector<PreparedOblivionInventoryItem> result;
         result.reserve(items.size());
@@ -777,7 +777,7 @@ namespace MWWorld
             if (!itemId || !itemDefinition(store, ESM::RefId(*itemId)))
                 throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
                     + item.mBase.serialize());
-            ManualRef source(store, sharedItemId(store, ESM::RefId(*itemId)), item.mCount);
+            ManualRef source(store, sharedItemId(store, ESM::RefId(*itemId)), item.mCount, incoming);
             const Ptr ptr = source.getPtr();
             if (item.mCondition >= 0)
                 ptr.getCellRef().setNativeItemCondition(static_cast<float>(item.mCondition));

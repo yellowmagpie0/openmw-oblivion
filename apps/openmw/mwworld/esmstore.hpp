@@ -288,6 +288,8 @@ namespace MWWorld
             PreparedDynamicRecords(PreparedDynamicRecords&&) noexcept;
             PreparedDynamicRecords& operator=(PreparedDynamicRecords&&) noexcept;
             bool isValid() const noexcept;
+            // Borrowed until commit/destruction; incoming record addresses survive commit.
+            const ESMStore& definitions() const;
             const ESM::NPC* commit() noexcept;
         };
         // Own decoded incoming shared definitions. Commit once after exactly

@@ -31,6 +31,7 @@
 #include <components/testing/util.hpp>
 
 #include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwworld/manualref.hpp"
 
 static Loading::Listener dummyListener;
 
@@ -1542,4 +1543,40 @@ TEST(MWWorldStoreTest, PreparedSharedDefinitionsInvalidateSiblingEvenWhenOnlyDef
     store.clearDynamic();
     EXPECT_TRUE(next.isValid());
     EXPECT_NE(next.commit(), nullptr);
+}
+
+TEST(MWWorldStoreTest, PreparedInventoryReferencesUseIncomingOrStaticDefinitionsAcrossClear)
+{
+    MWWorld::ESMStore store;
+    populateSharedDefinitionContent(store);
+    const auto id = ESM::RefId(ESM::FormId{0x940, 0});
+    const auto* immutable = store.get<ESM::Weapon>().searchStatic(id);
+    ESM::Weapon outgoing = *immutable;
+    outgoing.mName = "Outgoing override";
+    store.getWritable<ESM::Weapon>().insert(outgoing);
+    MWWorld::ESMStore empty;
+    MWWorld::ManualRef fallback(store, id, 3, &empty);
+    EXPECT_EQ(fallback.getPtr().get<ESM::Weapon>()->mBase, immutable);
+    auto incoming = incomingSharedDefinitions();
+    const auto* accepted = incoming->get<ESM::Weapon>().find(id);
+    auto definitions = store.prepareDynamicRecords(std::move(incoming));
+    MWWorld::ManualRef replacement(store, id, 2, &definitions.definitions());
+    EXPECT_EQ(replacement.getPtr().get<ESM::Weapon>()->mBase, accepted);
+    store.clearDynamic();
+    ASSERT_NE(definitions.commit(), nullptr);
+    EXPECT_EQ(fallback.getPtr().get<ESM::Weapon>()->mBase->mData.mHealth, 100);
+    EXPECT_EQ(replacement.getPtr().get<ESM::Weapon>()->mBase, store.get<ESM::Weapon>().find(id));
+    EXPECT_EQ(replacement.getPtr().get<ESM::Weapon>()->mBase->mData.mHealth, 777);
+    EXPECT_EQ(replacement.getPtr().getCellRef().getCount(false), 2);
+    EXPECT_THROW(definitions.definitions(), std::logic_error);
+}
+
+TEST(MWWorldStoreTest, PreparedInventoryReferencesRejectOutgoingOnlyDefinitions)
+{
+    MWWorld::ESMStore store, empty;
+    populateSharedDefinitionContent(store);
+    ESM::Weapon outgoing{}; outgoing.blank(); outgoing.mId = store.generateId();
+    store.getWritable<ESM::Weapon>().insert(outgoing);
+    store.rebuildIdsIndex();
+    EXPECT_THROW(MWWorld::ManualRef(store, outgoing.mId, 1, &empty), std::logic_error);
 }

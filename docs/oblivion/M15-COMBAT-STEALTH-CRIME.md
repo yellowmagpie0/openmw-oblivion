@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,97 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 retained detached actor inventory checkpoint — 2026-10-06
+
+Native admission now retains fully staged, detached InventoryStores for the
+Player and saved native NPC/creature references. It previously constructed
+item references only to discard them during validation, then reconstructed
+stacks and equipment after cleanup. Apply now consumes the admitted stores;
+direct T4ST readers and retries retain synchronous preparation. Resident
+actor binding, old/new item registry lists and publication remain in apply.
+Unloaded actor inventories remain in the accepted native snapshot.
+
+ManualRef can resolve an incoming shared definition first and otherwise use
+immutable static content. It deliberately excludes outgoing dynamic overrides
+which clearDynamic deletes. The prepared definition owner exposes a borrowed
+view until commit/destruction; its incoming record objects transfer into the
+live store without changing addresses. Inventory plan destruction precedes
+its definition owner. The ordinary ManualRef path keeps its existing lookup.
+Admission without a shared definition payload uses an empty incoming view,
+so it also cannot borrow outgoing overrides. Existing condition, charge,
+quantity, ownership, equipment and legacy migration rules are reused.
+
+Five new engine cases cover incoming/static selection across clear, rejection
+of outgoing-only identities, populated Player/NPC equipment and item extras,
+all accepted versions 1–41 through retained admission versus direct migration,
+and a dynamically reconstructed native creature with equipped incoming gear.
+The version matrix also rejects an invalid actor inventory before teardown
+and compares the outgoing snapshot for every version. Tests check actual
+InventoryStore slots/base pointers, item registry and captured native state.
+Existing stale/discard/clear/destroyed-owner and direct-reader cases remain.
+
+`S3/retained-inventories-engine-02` and
+`S3/retained-inventories-sanitize-02` both passed all **1,188 engine tests**, with
+exact inventories, zero failures/skips and no filter. Tested parent:
+`69ebf0f415a742103c45e54f4f564d3167e7d5e5`; dirty source fingerprint:
+`29ff26fbe50278ac5d34827b2e20d4708712763c9e8904290b2a96746ab22995`.
+The earlier01 runs also passed all 1,186 cases before the explicit retained
+migration/creature cases were added. Those broad rebuilds emitted 10 normal
+and 11 sanitizer warnings in existing sol3/standard-regex, Character and
+actor-stats test code; final 02 incremental builds emitted none. ASan leak
+checks are disabled; UBSan halts on error. Components and Python sources did
+not change and their suites were not repeated for this checkpoint.
+
+Actual graphical courses `S3/retained-inventories-restart-01` and
+`S3/retained-inventories-sanitized-restart-02` each performed load/F5/F9/F5/quit,
+then repeated in a fresh process loading the first process's produced save.
+All 37 normalized native fields, including complete references and the owned
+clock, matched at all four load boundaries. Reference counts were 34,399,
+34,549,34,603 and34,771; script locals, quests and reference inventories were
+preserved through resaves. Independent raw record inspection verified the
+late generated class 42, shared Player class link, counter 128 and moved loose
+weapon's condition 23.125/scale 1.25/target-cell binding. The disabled PGRD mask
+also persisted. Editable runners/manifests and pristine input copies remain
+with evidence; the fixture source is the preceding checkpoint's generator.
+
+Normal binary SHA256:
+`c7fe43d39e1fb9d2a7c4075503c729d7372b7c7f5e4b5ef99f5306ace67ed174`.
+Sanitizer binary SHA256:
+`e7e26dab9742ac0fa96a714012397adc473629f173266920325dfc44a7908ddf`.
+Normal process IDs 1372611/1372686 and sanitizer 1373062/1373446 were distinct.
+The first sanitizer attempt retained at
+`S3/retained-inventories-sanitized-restart-01` failed before startup: copying
+the normal manifest omitted the libasan preload required before SDL injection.
+Its waiting scenario was interrupted after the game terminated. A new run
+using the established sanitizer manifest passed; no source change or error
+waiver was involved.
+
+`S3/retained-inventories-counter-reject-01` and
+`S3/retained-inventories-counter-reject-sanitized-01` each loaded the valid
+fixture, actually saved, privately changed one DYNA counter byte 128→41, and
+rejected F9 with the exact generated-identity-reuse error. Dismissing the error
+and saving again preserved Player/native authority, inventories, scripts,
+quests, generated class and counter 128. All 37 fields and 34,399 complete
+references matched at initial load; ordinary clocks/AI could advance afterward.
+Both courses exited cleanly. No runtime sanitizer diagnostics or unreviewed
+errors remained. I inspected all four post-quickload captures and all four
+rejection/resave captures: expected prison scene and full HUD bars, exact
+error on rejection, continuing gameplay after dismissal. Sound was disabled;
+this is not audio coverage.
+
+Combined source hashes, exact command lines/configurations, test inventories,
+verification hashes, runtime results, capture hashes and failure disposition:
+`S3/retained-inventories-report.json`. All checkpoint processes are terminal.
+
+S3 remains in progress. Shared-world reconstruction, cell/registry binding,
+cache/scene reconciliation and other allocations still occur after cleanup;
+this is not whole-load failure atomicity. Generated shared-only item capture
+and persistence need a separate audit. Remaining populated runtime migrations,
+active physical-action continuation and the requirement-by-requirement S3
+audit remain open. Next, retain shared-world reconstruction and reconcile
+its bindings with these owned definitions/inventories before teardown.
+No later-stage mechanics or acceptance gates changed.
 
 ## S3 owned shared definition publication checkpoint — 2026-10-06
 

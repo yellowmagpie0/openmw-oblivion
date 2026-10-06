@@ -56,7 +56,8 @@ namespace MWWorld
         // a live inventory. These references are detached and unregistered.
         // Publication/registration and equipment callbacks remain caller-owned.
         static std::vector<PreparedOblivionInventoryItem> prepareActorInventory(const ESMStore& store,
-            const ESM::FormKeyResolver& resolver, const std::vector<ESM4::RuntimeInventoryItem>& items);
+            const ESM::FormKeyResolver& resolver, const std::vector<ESM4::RuntimeInventoryItem>& items,
+            const ESMStore* incoming = nullptr);
         static std::unique_ptr<InventoryStore> stageActorInventory(
             const std::vector<PreparedOblivionInventoryItem>& items);
 

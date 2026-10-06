@@ -1,4 +1,6 @@
 #include "manualref.hpp"
+
+#include <type_traits>
 #include <components/esm/records.hpp>
 #include <components/esm4/loadstat.hpp>
 
@@ -8,9 +10,10 @@ namespace
 {
 
     template <typename T>
-    void create(const MWWorld::Store<T>& store, const ESM::RefId& name, std::any& refValue, MWWorld::Ptr& ptrValue)
+    void create(const T* base, const ESM::RefId& name, std::any& refValue, MWWorld::Ptr& ptrValue)
     {
-        const T* base = store.find(name);
+        if (!base)
+            throw std::logic_error("Missing prepared inventory definition: " + name.toDebugString());
 
         ESM::CellRef cellRef;
         cellRef.blank();
@@ -124,9 +127,16 @@ namespace
     }
 }
 
-MWWorld::ManualRef::ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& name, const int count)
+MWWorld::ManualRef::ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& name, const int count,
+    const MWWorld::ESMStore* incoming)
 {
-    auto cb = [&](const auto& typedStore) { create(typedStore, name, mRef, mPtr); };
+    auto cb = [&](const auto& typedStore) {
+        using T = std::remove_cv_t<std::remove_pointer_t<decltype(typedStore.search(name))>>;
+        const T* base = incoming ? incoming->get<T>().search(name) : typedStore.find(name);
+        if (incoming && !base)
+            base = typedStore.searchStatic(name);
+        create(base, name, mRef, mPtr);
+    };
     visitRefStore(store, name, cb);
 
     mPtr.getCellRef().setCount(count);

@@ -157,6 +157,8 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
         std::optional<ESMStore::PreparedDynamicRecords> mDefinitions;
+        std::unique_ptr<InventoryStore> mPlayerInventory;
+        std::map<ESM::FormKey, std::unique_ptr<InventoryStore>> mActorInventories;
     };
 
     class World::PreparedOblivionSaveStateImpl final : public MWBase::World::PreparedOblivionSaveState
@@ -176,9 +178,13 @@ namespace MWWorld
             , mState(std::make_unique<ESM4::RuntimeState>(state))
             , mServices(std::make_unique<PreparedOblivionServices>())
         {
-            world.validateOblivionSaveStateImpl(*mState, mServices.get());
             if (definitions)
                 mServices->mDefinitions.emplace(world.mStore.prepareDynamicRecords(std::move(definitions)));
+            // Even a caller without shared records must not borrow outgoing overrides.
+            const ESMStore emptyDefinitions;
+            const auto& incoming = mServices->mDefinitions
+                ? mServices->mDefinitions->definitions() : emptyDefinitions;
+            world.validateOblivionSaveStateImpl(*mState, mServices.get(), &incoming);
         }
 
         bool install() noexcept override
@@ -2294,14 +2300,14 @@ namespace MWWorld
         std::optional<MWMechanics::OblivionCombatService> preparedCombat;
         std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
-        if (mPendingOblivionServices)
+        auto retained = std::move(mPendingOblivionServices);
+        if (retained)
         {
             // Admission prepared these allocations against immutable content.
             // Consume them only now; pending state was never a live authority.
-            preparedCombat = std::move(mPendingOblivionServices->mCombat);
-            preparedScripts = std::move(mPendingOblivionServices->mScripts);
-            preparedAi = std::move(mPendingOblivionServices->mAi);
-            mPendingOblivionServices.reset();
+            preparedCombat = std::move(retained->mCombat);
+            preparedScripts = std::move(retained->mScripts);
+            preparedAi = std::move(retained->mAi);
         }
         else
         {
@@ -2637,22 +2643,26 @@ namespace MWWorld
                 relocatedBases.insert(binding.mReference.getBase());
             }
         auto preparedCellMoves = CellStore::prepareMoves(cellMoves);
-        const auto preparedPlayerInventory = OblivionProfileServices::prepareActorInventory(
-            mStore, resolver, state.mPlayer.mInventory);
-        std::map<ESM::FormKey, std::vector<PreparedOblivionInventoryItem>> preparedActorInventories;
-        for (const auto& reference : state.mReferences)
-        {
-            const auto base = resolver.toFormId(reference.mBase);
-            if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
-                || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+        auto playerInventory = retained ? std::move(retained->mPlayerInventory)
+            : OblivionProfileServices::stageActorInventory(OblivionProfileServices::prepareActorInventory(
+                mStore, resolver, state.mPlayer.mInventory));
+        std::map<ESM::FormKey, std::unique_ptr<InventoryStore>> actorInventories;
+        if (retained)
+            actorInventories = std::move(retained->mActorInventories);
+        else
+            for (const auto& reference : state.mReferences)
             {
-                auto inventory = reference.mInventory;
-                if (state.mVersion < 4)
-                    migrateLegacyActorEquipment(inventory, mStore, resolver);
-                preparedActorInventories.emplace(reference.mKey,
-                    OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
+                const auto base = resolver.toFormId(reference.mBase);
+                if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
+                    || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+                {
+                    auto inventory = reference.mInventory;
+                    if (state.mVersion < 4)
+                        migrateLegacyActorEquipment(inventory, mStore, resolver);
+                    actorInventories.emplace(reference.mKey, OblivionProfileServices::stageActorInventory(
+                        OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory)));
+                }
             }
-        }
         struct PreparedInventoryBinding
         {
             InventoryStore* mTarget;
@@ -2661,9 +2671,8 @@ namespace MWWorld
         std::vector<PreparedInventoryBinding> inventories;
         inventories.reserve(preparedReferences.size() + 1);
         std::vector<Ptr> removedItems, insertedItems;
-        const auto stageInventory = [&](const Ptr& actor, const std::vector<PreparedOblivionInventoryItem>& items) {
+        const auto stageInventory = [&](const Ptr& actor, std::unique_ptr<InventoryStore> contents) {
             auto& target = actor.getClass().getInventoryStore(actor);
-            auto contents = OblivionProfileServices::stageActorInventory(items);
             for (auto item = target.begin(); item != target.end(); ++item)
             {
                 const Ptr ptr = *item;
@@ -2678,10 +2687,10 @@ namespace MWWorld
             }
             inventories.push_back({&target, std::move(contents)});
         };
-        stageInventory(getPlayerPtr(), preparedPlayerInventory);
+        stageInventory(getPlayerPtr(), std::move(playerInventory));
         for (const auto& binding : preparedReferences)
             if (binding.mReference.getType() == ESM::REC_NPC_4 || binding.mReference.getType() == ESM::REC_CREA4)
-                stageInventory(binding.mReference, preparedActorInventories.at(binding.mState->mKey));
+                stageInventory(binding.mReference, std::move(actorInventories.at(binding.mState->mKey)));
 
         const auto runtimeGlobalName = [](std::string_view nativeName) -> std::string_view {
             if (Misc::StringUtils::ciEqual(nativeName, "GameDaysPassed"))
@@ -3100,7 +3109,7 @@ namespace MWWorld
     }
 
     void World::validateOblivionSaveStateImpl(
-        const ESM4::RuntimeState& state, PreparedOblivionServices* prepared) const
+        const ESM4::RuntimeState& state, PreparedOblivionServices* prepared, const ESMStore* incoming) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
@@ -3129,17 +3138,21 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
             }
         }
-        const auto validateInventory = [&](const auto& items, bool actor) {
+        const auto validateInventory = [&](const auto& items, bool actor, const ESM::FormKey& key) {
+            auto migrated = items;
             if (actor && state.mVersion < 4)
-            {
-                auto migrated = items;
                 migrateLegacyActorEquipment(migrated, mStore, resolver);
-                static_cast<void>(OblivionProfileServices::prepareActorInventory(mStore, resolver, migrated));
+            auto refs = OblivionProfileServices::prepareActorInventory(mStore, resolver, migrated, incoming);
+            if (prepared)
+            {
+                auto contents = OblivionProfileServices::stageActorInventory(refs);
+                if (actor)
+                    prepared->mActorInventories.emplace(key, std::move(contents));
+                else
+                    prepared->mPlayerInventory = std::move(contents);
             }
-            else
-                static_cast<void>(OblivionProfileServices::prepareActorInventory(mStore, resolver, items));
         };
-        validateInventory(state.mPlayer.mInventory, false);
+        validateInventory(state.mPlayer.mInventory, false, {});
         const auto validateCell = [&](const ESM::FormKey& key) {
             if (!mStore.get<ESM4::Cell>().search(key))
                 throw std::runtime_error("TES4 runtime-state cell is not present: " + key.serialize());
@@ -3163,7 +3176,7 @@ namespace MWWorld
             const bool actor = baseId && (mStore.get<ESM4::Npc>().search(ESM::RefId(*baseId))
                 || mStore.get<ESM4::Creature>().search(ESM::RefId(*baseId)));
             if (actor)
-                validateInventory(reference.mInventory, true);
+                validateInventory(reference.mInventory, true, reference.mKey);
             else
                 for (const auto& item : reference.mInventory)
                 {

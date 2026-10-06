@@ -16,7 +16,10 @@ namespace MWWorld
         Ptr mPtr;
 
     public:
-        explicit ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& name, const int count = 1);
+        // With incoming definitions, use their record or immutable content,
+        // never an outgoing dynamic record that clearDynamic() will delete.
+        explicit ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& name, const int count = 1,
+            const MWWorld::ESMStore* incoming = nullptr);
         explicit ManualRef(const MWWorld::ESMStore& store, const MWWorld::Ptr& templatePtr, const int count = 1);
 
         ManualRef(const ManualRef&) = delete;
