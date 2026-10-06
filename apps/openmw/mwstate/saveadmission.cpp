@@ -20,6 +20,7 @@
 
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/savedreference.hpp"
+#include "../mwlua/userdataserializer.hpp"
 
 namespace MWState
 {
@@ -84,6 +85,7 @@ namespace MWState
             std::unique_ptr<MWWorld::ESMStore> shared;
             std::map<ESM::RefId, ESM::Global> globals;
             std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
+            ESM4::LocalLuaScripts nativeScripts;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -97,7 +99,7 @@ namespace MWState
                 {
                     const auto type = reader.getRecName();
                     reader.getRecHeader();
-                    if (type == ESM::REC_PLAY || type == ESM::REC_CSTA)
+                    if (type == ESM::REC_PLAY || type == ESM::REC_CSTA || type == ESM::REC_LUAM)
                         worldRecords.emplace_back(type.toInt(), reader.getContext());
                     bool decoded = false;
                     if (type == ESM::REC_GLOB)
@@ -140,6 +142,7 @@ namespace MWState
                 shared->rebuildIdsIndex();
                 std::set<ESM::RefId> cells;
                 bool hasPlayer = false;
+                bool hasLua = false;
                 const auto validatePosition = [](const ESM::Position& position) {
                     for (int axis = 0; axis != 3; ++axis)
                         if (!std::isfinite(position.pos[axis]) || !std::isfinite(position.rot[axis]))
@@ -148,7 +151,17 @@ namespace MWState
                 for (const auto& [type, context] : worldRecords)
                 {
                     reader.restoreContext(context);
-                    if (type == ESM::REC_PLAY)
+                    if (type == ESM::REC_LUAM)
+                    {
+                        if (hasLua)
+                            throw std::runtime_error("Saved game contains duplicate LUAM records");
+                        hasLua = true;
+                        nativeScripts = MWLua::validateSavedLuaRecord(
+                            reader, content ? content->getLuaScriptsCfg() : ESM::LuaScriptsCfg{});
+                        if (content)
+                            ESM4::validateLocalLuaScriptContent(nativeScripts, content->getFormKeyIndex());
+                    }
+                    else if (type == ESM::REC_PLAY)
                     {
                         if (hasPlayer)
                             throw std::runtime_error("Saved game contains duplicate PLAY records");
@@ -217,6 +230,7 @@ namespace MWState
                     throw std::runtime_error("TES4 runtime-state record contains unexpected trailing data");
                 if (profile.mRuntimeStateVersion != native.mVersion)
                     throw std::runtime_error("Saved game profile runtime-state version does not match T4ST");
+                ESM4::validateLocalLuaScriptOwners(nativeScripts, native);
                 if (content)
                 {
                     if (native.mVersion >= 3 && native.mPlayer.mClass.isDynamic())
@@ -262,6 +276,8 @@ namespace MWState
                 }
                 validateNative(native);
             }
+            else if (!nativeScripts.empty())
+                throw std::runtime_error("Native local Lua state requires T4ST");
             reader.restoreContext(start);
             return profile;
         }

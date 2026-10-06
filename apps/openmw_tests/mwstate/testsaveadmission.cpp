@@ -24,6 +24,10 @@
 #include "apps/openmw/mwstate/saveadmission.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
+#include "apps/openmw/mwlua/userdataserializer.hpp"
+#include "apps/openmw/mwlua/object.hpp"
+#include <components/lua/configuration.hpp>
+#include <components/lua/serialization.hpp>
 
 namespace
 {
@@ -657,4 +661,130 @@ TEST(SaveAdmissionTest, DetachedReferenceDecoderUsesAllCellStoreStateSpecializat
             EXPECT_FALSE(reader.hasMoreSubs());
         }
     }
+}
+
+TEST(SaveAdmissionTest, LuaFailuresAreRejectedBeforeNativeValidationAndRewind)
+{
+    for (int failure = 0; failure != 6; ++failure)
+    {
+        SCOPED_TRACE(failure);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            for (int i = 0; i != (failure == 3 ? 2 : 1); ++i)
+            {
+                writer.startRecord(ESM::REC_LUAM);
+                writer.writeHNT("LUAW", failure == 0 ? std::numeric_limits<double>::infinity() : 1.25);
+                writer.writeFormId(ESM::RefNum{1, failure == 1 ? 0 : -1}, true);
+                if (failure == 2)
+                {
+                    writer.writeHNString("LUAE", "bad-event");
+                    writer.writeFormId(ESM::RefNum{}, true);
+                    ESM::saveLuaBinaryData(writer, "invalid serialized payload");
+                }
+                ESM4::LocalLuaScripts scripts;
+                if (failure == 4 || failure == 5)
+                    scripts.emplace(ESM::FormKey::dynamic("native-reference", 19), ESM::LuaScripts{});
+                ESM4::saveLocalLuaScripts(writer, scripts);
+                writer.endRecord(ESM::REC_LUAM);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion,
+            1, failure == 5 ? 0 : 1) + records);
+        LuaUtil::ScriptsConfiguration previous;
+        reader.mScriptsConfiguration = &previous;
+        const auto start = reader.getFileOffset();
+        bool validated = false;
+        EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+            [&](const auto&) { validated = true; }), std::exception);
+        EXPECT_FALSE(validated);
+        EXPECT_EQ(reader.getFileOffset(), start);
+        EXPECT_EQ(reader.mScriptsConfiguration, &previous);
+    }
+}
+
+TEST(SaveAdmissionTest, IsolatedLuaDecodeChecksPayloadsTimersAndIdsWithoutCallbacks)
+{
+    sol::state lua;
+    const auto valid = LuaUtil::serialize(sol::make_object(lua, 7.25));
+    ESM::LuaScriptsCfg configuration;
+    ESM::LuaScriptCfg script{};
+    script.mScriptPath = VFS::Path::Normalized("test.lua");
+    configuration.mScripts.push_back(script);
+    for (int failure = -1; failure != 5; ++failure)
+    {
+        SCOPED_TRACE(failure);
+        ESM::LuaScripts globals;
+        globals.mScripts.push_back({failure == 3 ? 1 : 0, failure == 0 ? "bad" : valid,
+            {{ESM::LuaTimer::Type::SIMULATION_TIME,
+                failure == 2 ? std::numeric_limits<double>::quiet_NaN() : -2,
+                "callback-must-not-run", failure == 1 ? "bad" : valid}}});
+        if (failure == 4)
+            globals.mScripts.push_back(globals.mScripts.front());
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        std::stringstream stream;
+        writer.save(stream);
+        writer.startRecord(ESM::REC_LUAM);
+        writer.writeHNT("LUAW", 1.25);
+        writer.writeFormId(ESM::RefNum{1, -1}, true);
+        writer.writeHNString("LUAP", "test.lua");
+        globals.save(writer);
+        ESM4::saveLocalLuaScripts(writer, {});
+        writer.endRecord(ESM::REC_LUAM);
+        ESM::ESMReader reader;
+        openBytes(reader, stream.str());
+        reader.getRecName();
+        reader.getRecHeader();
+        LuaUtil::ScriptsConfiguration previous;
+        reader.mScriptsConfiguration = &previous;
+        if (failure == -1)
+            EXPECT_TRUE(MWLua::validateSavedLuaRecord(reader, configuration).empty());
+        else
+            EXPECT_THROW(MWLua::validateSavedLuaRecord(reader, configuration), std::exception);
+        EXPECT_EQ(reader.mScriptsConfiguration, &previous);
+    }
+}
+
+TEST(SaveAdmissionTest, IsolatedLuaDecodeAcceptsObjectListsAndDeliberatelyRemovedScripts)
+{
+    sol::state lua;
+    auto serializer = MWLua::createUserdataSerializer(false);
+    auto ids = std::make_shared<std::vector<ESM::RefNum>>();
+    ids->push_back({12, 0});
+    ids->push_back({15, -1});
+    auto table = lua.create_table();
+    table["object"] = MWLua::GObject(ESM::RefNum{12, 0});
+    table["objects"] = MWLua::GObjectList{ids};
+    ESM::LuaScripts data;
+    data.mScripts.push_back({0, LuaUtil::serialize(table, serializer.get()), {}});
+    data.mScripts.push_back({1, "malformed data of a removed script", {}});
+    ESM::LuaScriptsCfg configuration;
+    ESM::LuaScriptCfg script{};
+    script.mScriptPath = VFS::Path::Normalized("kept.lua");
+    configuration.mScripts.push_back(script);
+    ESM::ESMWriter writer;
+    writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+    std::stringstream stream;
+    writer.save(stream);
+    writer.startRecord(ESM::REC_LUAM);
+    writer.writeHNT("LUAW", 0.0);
+    writer.writeFormId(ESM::RefNum{}, true);
+    writer.writeHNString("LUAP", "kept.lua");
+    writer.writeHNString("LUAP", "removed.lua");
+    data.save(writer);
+    writer.writeHNString("LUAE", "saved-event");
+    writer.writeFormId(ESM::RefNum{15, -1}, true);
+    ESM::saveLuaBinaryData(writer, data.mScripts.front().mData);
+    const auto key = ESM::FormKey::dynamic("native-reference", 19);
+    ESM4::saveLocalLuaScripts(writer, {{key, data}});
+    writer.endRecord(ESM::REC_LUAM);
+    ESM::ESMReader reader;
+    openBytes(reader, stream.str());
+    reader.getRecName();
+    reader.getRecHeader();
+    const auto decoded = MWLua::validateSavedLuaRecord(reader, configuration);
+    ASSERT_EQ(decoded.size(), 1);
+    EXPECT_EQ(decoded.at(key).mScripts.front().mData, data.mScripts.front().mData);
+    EXPECT_FALSE(reader.hasMoreSubs());
+    EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
 }

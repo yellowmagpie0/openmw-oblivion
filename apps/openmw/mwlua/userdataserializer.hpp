@@ -3,6 +3,7 @@
 
 #include <map>
 #include <memory>
+#include <components/esm4/localluascripts.hpp>
 
 namespace LuaUtil
 {
@@ -18,6 +19,10 @@ namespace MWLua
     // of content files was changed.
     std::unique_ptr<LuaUtil::UserdataSerializer> createUserdataSerializer(
         bool local, std::map<int, int>* contentFileMapping = nullptr);
+
+    // Decode saved Lua state in an isolated VM, without running scripts or
+    // touching the live manager. The caller validates the returned owners.
+    ESM4::LocalLuaScripts validateSavedLuaRecord(ESM::ESMReader& reader, const ESM::LuaScriptsCfg& scripts);
 }
 
 #endif // MWLUA_USERDATASERIALIZER_H

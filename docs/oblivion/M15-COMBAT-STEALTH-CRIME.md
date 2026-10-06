@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated Lua-record admission, dynamic native reference reconstruction/indexing, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,58 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 isolated Lua-record admission checkpoint — 2026-10-06
+
+Oblivion save admission now decodes LUAM before clearing the running game.
+A detached script configuration and isolated Lua VM validate simulation time,
+generated reference identity, global/native script IDs and duplicate IDs,
+finite timer deadlines, serialized script/timer data, and queued event payloads.
+No scripts or callbacks run and no live manager, registry, clock or event queue
+is changed. The reader's previous script-configuration pointer is restored on
+success and failure. Removed scripts retain their compatibility path, including
+legacy path-based saves. Object references and object-list userdata use the
+production serializers without resolving live objects.
+
+Duplicate LUAM records reject. Native local-script owners must resolve against
+winning placed-reference content and the incoming T4ST reference set; a nonempty
+native companion without T4ST rejects before cleanup. Morrowind's Lua admission
+path is unchanged.
+
+Three new tests exercise eleven rejection cases, reader rewind/configuration
+restoration, valid primitive data and expired timers, object/list userdata in
+both global and local contexts, queued data, and deliberately removed scripts.
+`S3/lua-admission-engine-02` and `S3/lua-admission-sanitize-01` both pass all
+**1,167** engine tests, with zero failures/skips and exact inventory verification.
+Their tested source fingerprint is
+`dd9be53b1db8fec15209a965616d47d8cf64433dbf49687de14195f4a4c11324`
+on parent `724f9c5beab91fd629f093de12aec66cd948f719`. ASan leak detection is
+disabled; UBSan halts. Engine01 passed the earlier two-test implementation;
+engine02 adds object/list and removed-script coverage.
+
+`S3/lua-admission-runtime-01` and `lua-admission-sanitized-runtime-02`
+perform actual stock load/F5/malformed-event mutation/F9 rejection/Return/F5/quit.
+Both preserve Player, physical actions, all native actor value/base/life/breath
+and death fields, 390 quests, 130 script instances and 34,398 reference
+inventories across rejection. Each process has one successful load and two
+actual saves; normal clock and AI advancement remains allowed. Initial load
+matches all 37 native fields and all 33,376 references at tick zero. Runtime
+binary hashes are `cbc803872b2b48da28fcfc04f3cf6121c1cf52efac87adb4fc83797924e62753`
+(normal) and `e0b92bae6f47b4e5ad47a86d9ca10db728bd31bb7d0917a48d51437354db1276`
+(sanitized). Both post-rejection screenshots were inspected, as was the
+sanitized rejection dialog. Clean exits and no unreviewed errors or sanitizer
+diagnostics are verified; audio is disabled and the existing missing equip
+icon remains explicitly reviewed.
+
+The first sanitizer runtime exited before loading because its manifest omitted
+the established ASan preload setting. That failed course and its explanation
+remain in `lua-admission-sanitized-runtime-01`; only its owned harness and
+mutation waiter were stopped. The corrected course uses the existing sanitizer
+manifest environment. Aggregate hashes and proofs are in
+`S3/lua-admission-report.json`. All build/test/runtime processes are finished.
+Shared Player/cell Lua payload staging, whole-restore publication and cache/move
+reconciliation, remaining migrations and active-action continuation remain open;
+this checkpoint does not close S3.
 
 ## S3 dynamic native reference reconstruction checkpoint — 2026-10-05
 
