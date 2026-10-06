@@ -32,6 +32,7 @@
 #include <components/esm3/loadregn.hpp>
 #include <components/esm3/loadstat.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadlvli.hpp>
 #include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadalch.hpp>
 #include <components/esm4/loadarmo.hpp>
@@ -2970,6 +2971,41 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const auto validateFloat = [](double value, std::string_view name) {
+            if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()
+                || value > std::numeric_limits<float>::max())
+                throw std::runtime_error("TES4 runtime-state " + std::string(name)
+                    + " exceeds the finite float domain");
+        };
+        validateFloat(state.mClock.mTimeScale, "time scale");
+        if (state.mVersion >= 3)
+        {
+            const auto race = resolver.toFormId(state.mPlayer.mRace);
+            const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
+            if (!race || !mStore.get<ESM::Race>().search(ESM::RefId(*race))
+                || (characterClass && !mStore.get<ESM::Class>().search(ESM::RefId(*characterClass)))
+                || (!characterClass && !state.mPlayer.mClass.isDynamic()))
+                throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+            // Dynamic class records are supplied by shared save restoration.
+            if (!state.mPlayer.mBirthSign.isNull())
+            {
+                const auto sign = resolver.toFormId(state.mPlayer.mBirthSign);
+                if (!sign || !mStore.get<ESM::BirthSign>().search(ESM::RefId(*sign)))
+                    throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
+            }
+        }
+        const auto validateInventory = [&](const auto& items, bool actor) {
+            if (actor && state.mVersion < 4)
+            {
+                auto migrated = items;
+                migrateLegacyActorEquipment(migrated, mStore, resolver);
+                static_cast<void>(OblivionProfileServices::prepareActorInventory(mStore, resolver, migrated));
+            }
+            else
+                static_cast<void>(OblivionProfileServices::prepareActorInventory(mStore, resolver, items));
+        };
+        validateInventory(state.mPlayer.mInventory, false);
         const auto validateCell = [&](const ESM::FormKey& key) {
             if (!mStore.get<ESM4::Cell>().search(key))
                 throw std::runtime_error("TES4 runtime-state cell is not present: " + key.serialize());
@@ -2978,6 +3014,69 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             validateCell(reference.mCell);
+            if (reference.mKey.isDynamic() && reference.mKey.mNamespace == "native-reference"
+                && reference.mKey.mValue >= state.mNextDynamicSerial)
+                throw std::invalid_argument("native reference serial would reuse a saved identity");
+            const auto baseId = resolver.toFormId(reference.mBase);
+            const bool actor = baseId && (mStore.get<ESM4::Npc>().search(ESM::RefId(*baseId))
+                || mStore.get<ESM4::Creature>().search(ESM::RefId(*baseId)));
+            if (actor)
+                validateInventory(reference.mInventory, true);
+            else
+                for (const auto& item : reference.mInventory)
+                {
+                    // Retained container contents can still be leveled templates.
+                    // Their expansion belongs to the shared inventory authority.
+                    if (item.mBase.isDynamic())
+                        continue; // Requires incoming shared dynamic records.
+                    const auto id = resolver.toFormId(item.mBase);
+                    if (!id || (!OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id))
+                        && !mStore.get<ESM4::LevelledItem>().search(ESM::RefId(*id))))
+                        throw std::runtime_error("TES4 retained inventory item has no winning item/list: "
+                            + item.mBase.serialize());
+                    OblivionProfileServices::resolveOwnershipGlobal(mStore, resolver, item.mOwnershipGlobal);
+                }
+            OblivionProfileServices::resolveOwnershipGlobal(mStore, resolver, reference.mOwnershipGlobal);
+            if (reference.mOwner)
+            {
+                const auto owner = resolver.toFormId(*reference.mOwner);
+                if (!owner || !owner->hasContentFile())
+                    throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
+                        + reference.mOwner->serialize());
+            }
+            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted"})
+                if (const auto value = reference.mCustomState.find(name); value != reference.mCustomState.end()
+                    && !std::holds_alternative<bool>(value->second))
+                    throw std::invalid_argument("TES4 runtime-state " + std::string(name) + " is not boolean");
+            if (const auto scale = reference.mCustomState.find("scale"); scale != reference.mCustomState.end())
+                if (const auto* value = std::get_if<double>(&scale->second))
+                    validateFloat(*value, "reference scale");
+            const auto progress = reference.mCustomState.find("obscript.animation_progress");
+            if (progress != reference.mCustomState.end() && !std::holds_alternative<double>(progress->second))
+                throw std::runtime_error("TES4 runtime-state animation value has the wrong type: "
+                    + reference.mKey.serialize());
+            const auto group = reference.mCustomState.find("obscript.animation_group");
+            const auto scripted = reference.mCustomState.find("obscript.animation_scripted");
+            const auto playing = reference.mCustomState.find("obscript.animation_playing");
+            const bool hasProgress = progress != reference.mCustomState.end()
+                || (playing != reference.mCustomState.end() && std::get_if<bool>(&playing->second)
+                    && std::get<bool>(playing->second));
+            if (group != reference.mCustomState.end() && hasProgress
+                && (scripted == reference.mCustomState.end() || std::get<bool>(scripted->second)))
+            {
+                const auto* name = std::get_if<std::string>(&group->second);
+                if (!name || name->empty())
+                    throw std::runtime_error("TES4 runtime-state animation group has the wrong type: "
+                        + reference.mKey.serialize());
+            }
+            if (reference.mItemCondition || reference.mItemCharge)
+            {
+                const auto item = baseId ? OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*baseId))
+                                         : std::nullopt;
+                if (!item || (reference.mItemCondition && item->mMaxCondition < 0)
+                    || (reference.mItemCharge && item->mMaxCharge < 0.f))
+                    throw std::invalid_argument("TES4 loose item extras disagree with the winning item category");
+            }
             if (reference.mKey.isDynamic())
                 continue; // Dynamic references are reconstructed from shared save records.
             const auto* npc = mStore.get<ESM4::ActorCharacter>().search(reference.mKey);
@@ -2994,7 +3093,53 @@ namespace MWWorld
                 throw std::runtime_error("TES4 runtime-state actor base is not present: " + base->serialize());
             if (reference.mActorDrawState && !npc && !creature)
                 throw std::runtime_error("TES4 runtime-state actor draw state requires an actor reference");
+            if ((npc || creature) && reference.mOwnershipRank)
+                throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
         }
+        // Exercise the same detached preparations used by restore, then discard
+        // them. No service, cache, graph, registry or event publication occurs.
+        MWMechanics::OblivionCombatService combat;
+        combat.restore(state, mStore);
+        combat.validateRestoredPlayerBinding();
+        const auto validatePlayerFloat = [&](std::string_view name) {
+            if (const auto value = state.mPlayer.mActorValues.find(name); value != state.mPlayer.mActorValues.end())
+                validateFloat(value->second, name);
+        };
+        validatePlayerFloat("breath_time.current");
+        if (const auto level = state.mPlayer.mActorValues.find("level"); level != state.mPlayer.mActorValues.end())
+            if (std::trunc(level->second) < std::numeric_limits<int>::min()
+                || std::trunc(level->second) > std::numeric_limits<int>::max())
+                throw std::runtime_error("TES4 runtime-state level exceeds the integer conversion domain");
+        if (!combat.findActorValues(ESM::FormKey::dynamic("player", 1)))
+        {
+            for (const auto name : {"health", "magicka", "fatigue"})
+            {
+                const std::string prefix(name);
+                validatePlayerFloat(prefix + ".base");
+                validatePlayerFloat(prefix + ".current");
+                validatePlayerFloat(prefix + (state.mPlayer.mActorValues.contains(prefix + ".modifier")
+                    ? ".modifier" : ".modified"));
+            }
+            for (const auto name : {"strength", "intelligence", "willpower", "agility", "speed", "endurance",
+                     "personality", "luck", "armorer", "athletics", "blade", "block", "blunt", "handtohand",
+                     "heavyarmor", "alchemy", "alteration", "conjuration", "destruction", "illusion", "mysticism",
+                     "restoration", "acrobatics", "lightarmor", "marksman", "mercantile", "security", "sneak",
+                     "speechcraft"})
+                for (const auto suffix : {".base", ".modifier"})
+                    validatePlayerFloat(std::string(name) + suffix);
+        }
+        for (const auto& [key, value] : state.mGlobals)
+        {
+            const auto id = resolver.toFormId(key);
+            if (!id || !mStore.get<ESM4::GlobalVariable>().search(ESM::RefId(*id)))
+                throw std::runtime_error("TES4 runtime-state global is not present: " + key.serialize());
+            if (std::holds_alternative<std::string>(value))
+                throw std::runtime_error("TES4 runtime-state numeric global has a string value");
+        }
+        if (mOblivionScriptManager)
+            static_cast<void>(mOblivionScriptManager->prepareRestore(state));
+        if (mOblivionAi)
+            static_cast<void>(mOblivionAi->prepareRestore(state));
     }
 
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)

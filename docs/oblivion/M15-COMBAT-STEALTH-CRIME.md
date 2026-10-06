@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, read-only outer admission, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,59 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 early native semantic admission checkpoint — 2026-10-05
+
+Save admission now checks native semantic dependencies before StateManager
+clears the running game. It prepares and discards detached inventory, combat,
+script and AI restore state, and checks Player race/class/birthsign bindings,
+reference ownership and extras, legacy marker types, numeric conversion domains,
+native global bindings and dynamic-reference serial reuse. These checks publish
+no native service, registry, graph, event or cache changes. Dynamic class and
+retained dynamic-item records still require incoming shared-record staging.
+
+Retained nonactor inventories accept winning leveled-item templates without
+expanding them or drawing RNG. Player and actor inventories require actual
+item stacks. The initial stock runtime attempt exposed this distinction:
+`S3/semantic-admission-runtime-01` retains the failed admission of valid stock
+container list `0efb7f`; the implementation was corrected and the final test
+uses genuine native Container/REFR/LVLI records.
+
+Three new World regressions cover 21 schema-valid inventory/metadata/conversion
+faults, detached native actor authority and container templates. Existing script
+and AI failure matrices now exercise actual outer save admission as well as
+restore preparation. Rejections preserve complete captured state, cache identity,
+registry serial and outstanding reference reservations; valid retries succeed.
+
+Evidence under `build/oblivion-compat/m15/`:
+
+- `S3/semantic-admission-engine-03` and `semantic-admission-sanitize-01`:
+  all **1,153** engine tests pass with exact inventories, zero failures/skips
+  and identical tested source fingerprint
+  `4ff464e90b3f8bc6cf57acacf2833086049b9c0f8b8ceb6bfb3c1de28eca3f8c`
+  on parent `86b480cdf3f60f2119a16f28b71a65f086fd52ed`.
+  ASan leak detection is disabled; UBSan halts on errors.
+- `S3/semantic-admission-runtime-02` and
+  `semantic-admission-sanitized-runtime-01`: actual stock load/F5, one private
+  missing-item mutation, F9 rejection, Return/F5 and clean quit. Each course
+  has one successful load and two actual saves in the same process/epoch.
+  All 34,398 prior reference inventories, 130 script instances, 390 quests,
+  Player and native actor authority survive rejection. Ordinary clock/AI
+  updates and newly cached references remain permitted between saves.
+- Both `full-load-state-verification.json` reports compare all **37** native
+  fields, including clock and all **33,376** references, against the pristine
+  input at the initial load's tick zero. The rejected input differs from its
+  preceding actual save by exactly the deliberately appended missing item.
+  Runtime binary hashes match the final builds. The rejection screenshot was
+  inspected in both builds; the original prison and status bars remain visible.
+  Only the expected rejection and reviewed preexisting equip-icon error occur;
+  there are no unreviewed errors or sanitizer diagnostics.
+
+Aggregate source, executable, save and report hashes are retained in
+`S3/semantic-admission-report.json`. This closes the bounded early native
+semantic admission chunk. Shared dynamic-record preparation, allocation/placement
+publication after teardown, remaining migrations and active-action continuation
+still require work; S3 remains open.
 
 ## S3 owned fractional clock checkpoint — 2026-10-05
 

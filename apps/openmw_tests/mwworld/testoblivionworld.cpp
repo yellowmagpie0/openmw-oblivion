@@ -55,6 +55,8 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadlvli.hpp>
+#include <components/esm4/loadcont.hpp>
 #include <components/files/hash.hpp>
 #include <components/files/collections.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
@@ -291,6 +293,28 @@ namespace
         prepareNativeSnapshotPlayer(fixture, state);
         readNativeSnapshot(fixture, state);
         fixture.mWorld.applyOblivionRuntimeState();
+    }
+
+    void admitNativeSnapshot(NativeWorldFixture& fixture, const ESM4::RuntimeState& state)
+    {
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        auto stream = std::make_unique<std::stringstream>();
+        writer.save(*stream);
+        ESM::SavedGame profile{};
+        profile.mGameProfile = ESM::GameProfile::Oblivion;
+        profile.mRuntimeStateVersion = state.mVersion;
+        writer.startRecord(ESM::REC_SAVE);
+        profile.save(writer);
+        writer.endRecord(ESM::REC_SAVE);
+        writer.startRecord(ESM::REC_T4ST);
+        state.save(writer);
+        writer.endRecord(ESM::REC_T4ST);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "native-semantic-admission");
+        static_cast<void>(MWState::admitSave(reader, fixture.mWorld.getGameProfile(),
+            [&](const auto& incoming) { fixture.mWorld.validateOblivionSaveState(incoming); }));
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
     class NativePhysicalPoseTestAnimation : public MWRender::Animation
     {
@@ -12133,6 +12157,9 @@ TEST(OblivionWorldTest, NativeScriptBindingsRejectBeforeInventoryClockIdentityAn
             candidate.mQuests.push_back(quest);
         }
         ASSERT_NO_THROW(candidate.validate());
+        EXPECT_ANY_THROW(admitNativeSnapshot(fixture, candidate));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(pending->isValid());
         readNativeSnapshot(fixture, candidate);
         EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
         EXPECT_EQ(world.getTimeStamp(), clock);
@@ -12337,6 +12364,9 @@ TEST(OblivionWorldTest, NativeAiRestoreRejectsBindingsAndConversionsBeforeWorldP
         if (invalid == 7) candidate.mDetectionVectors.front().mObserver = ESM::FormKey::content("headless.esm", 0xdead);
         if (invalid == 8) candidate.mPendingPackageDone.front().mActor = ESM::FormKey::content("headless.esm", 0xdead);
         ASSERT_NO_THROW(candidate.validate());
+        EXPECT_ANY_THROW(admitNativeSnapshot(fixture, candidate));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_TRUE(pending->isValid());
         readNativeSnapshot(fixture, candidate);
         EXPECT_ANY_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(world.getTimeStamp(), clock);
@@ -12756,4 +12786,128 @@ TEST(OblivionWorldTest, NativeClockCaptureUsesOwnedFractionsBeforeSaveAndAfterCl
         EXPECT_EQ(world.getGlobalFloat(MWWorld::Globals::sTimeScale), .125f);
         world.clear();
     }
+}
+
+TEST(OblivionWorldTest, NativeSemanticAdmissionRejectsLateInventoryAndMetadataWithoutPublication)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+    item.mCount = 1;
+    item.mCondition = 43.125f;
+    item.mCharge = 7.25f;
+    installEquipmentInventory(fixture, fixture.mActor, {item});
+    installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
+    const auto before = world.captureOblivionRuntimeState();
+    const auto* cache = fixture.mActor.getRefData().getCustomData();
+    const auto registrySerial = world.getWorldModel().getLastGeneratedRefNum();
+    auto reservation = world.prepareOblivionDynamicReferenceKey();
+    for (int fault = 0; fault != 21; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        auto candidate = before;
+        candidate.mClock.mHour = 9;
+        candidate.mNextDynamicSerial += 10;
+        auto& reference = candidate.mReferences.front();
+        auto badItem = item;
+        switch (fault)
+        {
+            case 0: badItem.mBase = ESM::FormKey::content("headless.esm", 0xdead);
+                candidate.mPlayer.mInventory.push_back(badItem); break;
+            case 1: badItem.mBase = ESM::FormKey::content("headless.esm", 0xdead);
+                reference.mInventory.push_back(badItem); break;
+            case 2: badItem.mOwner = ESM::FormKey::content("missing.esm", 0x800);
+                reference.mInventory.push_back(badItem); break;
+            case 3: badItem.mOwnershipGlobal = item.mBase;
+                reference.mInventory.push_back(badItem); break;
+            case 4: reference.mOwnershipGlobal = item.mBase; break;
+            case 5: reference.mCustomState["obscript.dead"] = std::int64_t{42}; break;
+            case 6: reference.mCustomState["locked"] = std::string("invalid"); break;
+            case 7: reference.mCustomState["scale"] = 1e300; break;
+            case 8: reference.mCustomState["obscript.animation_scripted"] = std::string("invalid"); break;
+            case 9: reference.mCustomState["obscript.animation_progress"] = std::string("invalid"); break;
+            case 10: reference.mCustomState["obscript.animation_progress"] = .5;
+                reference.mCustomState["obscript.animation_group"] = std::int64_t{1}; break;
+            case 11: reference.mOwnershipRank = -1; break;
+            case 12: reference.mItemCondition = 1.f; break;
+            case 13: reference.mOwner = ESM::FormKey::dynamic("invalid-owner", 1); break;
+            case 14: candidate.mPlayer.mRace = item.mBase; break;
+            case 15: candidate.mPlayer.mBirthSign = item.mBase; break;
+            case 16: candidate.mClock.mTimeScale = 1e300; break;
+            case 17: candidate.mPlayer.mActorValues["health.current"] = 1e300; break;
+            case 18: candidate.mPlayer.mActorValues["level"] = 1e300; break;
+            case 19: reference.mKey = ESM::FormKey::dynamic("native-reference", candidate.mNextDynamicSerial); break;
+            case 20: candidate.mGlobals[item.mBase] = std::int64_t{1}; break;
+        }
+        ASSERT_NO_THROW(candidate.validate());
+        EXPECT_ANY_THROW(admitNativeSnapshot(fixture, candidate));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        EXPECT_EQ(fixture.mActor.getRefData().getCustomData(), cache);
+        EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), registrySerial);
+        EXPECT_TRUE(reservation->isValid());
+    }
+    EXPECT_NO_THROW(admitNativeSnapshot(fixture, before));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    EXPECT_TRUE(reservation->isValid());
+}
+
+TEST(OblivionWorldTest, NativeSemanticAdmissionValidatesDetachedActorAuthority)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.activateOblivionActor(fixture.mActor));
+    const auto before = world.captureOblivionRuntimeState();
+    ASSERT_EQ(before.mNativeActorValues.size(), 1u);
+    auto candidate = before;
+    candidate.mNativeActorValues.front().mValues[33].mModifiers[1] = 1e32f;
+    ASSERT_NO_THROW(candidate.validate());
+    EXPECT_ANY_THROW(admitNativeSnapshot(fixture, candidate));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    candidate = before;
+    candidate.mNativeDeathCounts[ESM::FormKey::content("headless.esm", 0x940)] = 1;
+    ASSERT_NO_THROW(candidate.validate());
+    EXPECT_ANY_THROW(admitNativeSnapshot(fixture, candidate));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    EXPECT_NO_THROW(admitNativeSnapshot(fixture, before));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+}
+
+TEST(OblivionWorldTest, NativeSemanticAdmissionRetainsWinningContainerLeveledTemplates)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState();
+    ESM4::LevelledItem list{};
+    list.mId = {0x980, 0};
+    const auto listKey = ESM::FormKey::content("headless.esm", 0x980);
+    world.getStore().getWritable<ESM4::LevelledItem>().insertStatic(list, listKey);
+    ESM4::Container container{};
+    container.mId = {0x982, 0};
+    const auto containerKey = ESM::FormKey::content("headless.esm", 0x982);
+    world.getStore().getWritable<ESM4::Container>().insertStatic(container, containerKey);
+    ESM4::Reference object{};
+    object.mId = {0x981, 0};
+    object.mFormKey = ESM::FormKey::content("headless.esm", 0x981);
+    object.mBaseObj = container.mId;
+    object.mBaseKey = containerKey;
+    world.getStore().getWritable<ESM4::Reference>().insertStatic(object, object.mFormKey);
+    auto state = before;
+    auto reference = state.mReferences.front();
+    reference.mKey = object.mFormKey;
+    reference.mBase = object.mBaseKey;
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = listKey;
+    item.mCount = 2;
+    reference.mInventory = {item};
+    state.mReferences.push_back(reference);
+    ASSERT_NO_THROW(state.validate());
+    EXPECT_NO_THROW(admitNativeSnapshot(fixture, state));
+    state.mReferences.back().mInventory.front().mBase = ESM::FormKey::content("headless.esm", 0xdead);
+    EXPECT_ANY_THROW(admitNativeSnapshot(fixture, state));
+    state.mReferences.back().mInventory.front().mBase = listKey;
+    state.mPlayer.mInventory = state.mReferences.back().mInventory;
+    // Actor/Player snapshots contain actual stacks, not unexpanded templates.
+    EXPECT_ANY_THROW(admitNativeSnapshot(fixture, state));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
 }
