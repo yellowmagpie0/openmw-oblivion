@@ -29,6 +29,54 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
 
+## S3 shared Lua timer wire validation checkpoint — 2026-10-06
+
+The shared Lua timer reader now reads an unsigned byte before constructing its
+bool-backed enum. Only simulation/game values 0/1 are accepted; unknown bytes
+cannot create an invalid enum representation before admission. LUAT must be
+exactly nine bytes and its deadline must be finite. Expired negative deadlines,
+negative zero and the finite double range remain accepted. Valid timer encoding
+is unchanged, including legacy path-based scripts; native companion validation
+continues to use its existing strict reader.
+
+Three component tests exercise every raw byte in legacy/current formats, all
+sizes 0–18, nonfinite deadlines and valid expired/signed-zero/range round trips.
+One engine test rejects seven faults in each of Player/global contexts before
+native validation, checking rewind and configuration restoration. These are
+**600** wire/admission combinations. `S3/lua-timer-wire-engine-01` and
+`S3/lua-timer-wire-sanitize-01` both pass all **2,571** component and **1,170**
+engine tests with exact inventories and no failures/skips. Source fingerprint
+`b102b82677d09e017ee94ff59a8ade8ef3c50bf588a3c825c9430aea721017c1`
+is on parent `cd253e11c790ea13c760e639ec625f5365d1dd52`. Both modes use the
+instrumented configuration in the sanitizer course; leak detection is disabled
+and UBSan halts.
+
+`S3/lua-timer-wire-runtime-02` and `lua-timer-wire-sanitized-runtime-01`
+load the stock save/F5, inject a type2 LUAT into existing Player script state,
+reject F9 before cleanup, dismiss the dialog, F5 again and quit cleanly.
+Independent raw-byte checks require exactly the declared insertion and enclosing
+record-size change, with complete native state unchanged by the fault. The
+rejection's file, PLAY/LUAT context and exact fault offset are checked. Both
+preserve Player, physical actions, native actor values/bases/life/breath/death,
+390 quests, 130 native script instances and 34,398 reference inventories.
+Initial loads match all 37 native fields and 33,376 references at tick zero.
+Each process has one successful load and two actual saves; clocks/AI may
+advance normally. Both rejection and post-resave screenshots were inspected.
+No unreviewed errors or sanitizer diagnostics occur; audio is disabled and the
+existing equip icon error is explicitly reviewed.
+
+The first normal runtime completed rejection/resave/quit but failed harness
+review because the four expected ESM error context lines were undeclared. That
+failed course is retained with its explanation; the final manifests narrowly
+review those lines, and independent verification checks the actual fault offset.
+Runtime binary hashes are
+`6d233ef7e7daddac2a13cbc796d5d8c0cfdd184cb7f320af57f0505eec7999f9` (normal) and
+`a00045793809a022bcc747cf9f442316ca0c08d2e582c3af8d98fef0bc3ffcd2` (sanitized).
+Aggregate proofs are in `S3/lua-timer-wire-report.json`. All processes are
+finished. Remaining bounds/domains, whole-restore staging and cache/move
+publication, populated migrations and active-action continuation still require
+implementation/evidence. S3 remains open.
+
 ## S3 shared local Lua admission checkpoint — 2026-10-06
 
 Detached admission now retains the incoming Lua script configuration and reads

@@ -949,3 +949,84 @@ TEST(SaveAdmissionTest, SharedCellLuaChecksObjectsAndAllInventoryStateOwners)
         EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
     }
 }
+
+TEST(SaveAdmissionTest, InvalidSharedTimerWireValuesRejectBeforeNativePublication)
+{
+    for (bool playerContext : {false, true})
+    for (int fault = 0; fault != 7; ++fault)
+    {
+        SCOPED_TRACE(playerContext);
+        SCOPED_TRACE(fault);
+        ESM::LuaScripts scripts;
+        scripts.mScripts.push_back({0, {}, {{ESM::LuaTimer::Type::SIMULATION_TIME, 1.25, "never-run", {}}}});
+        auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            if (playerContext)
+            {
+                ESM::Player player{};
+                player.mObject.blank();
+                player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+                player.mObject.mLuaScripts = scripts;
+                player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+                writer.startRecord(ESM::REC_PLAY);
+                player.save(writer);
+                writer.endRecord(ESM::REC_PLAY);
+            }
+            else
+            {
+                writer.startRecord(ESM::REC_LUAM);
+                writer.writeHNT("LUAW", 0.0);
+                writer.writeFormId(ESM::RefNum{}, true);
+                writer.writeHNString("LUAP", "removed.lua");
+                scripts.save(writer);
+                ESM4::saveLocalLuaScripts(writer, {});
+                writer.endRecord(ESM::REC_LUAM);
+            }
+        });
+        const auto timer = records.find("LUAT");
+        ASSERT_NE(timer, std::string::npos);
+        if (fault < 2)
+            records[timer + 8] = fault == 0 ? 2 : static_cast<char>(255);
+        else if (fault < 4)
+        {
+            std::uint32_t recordSize;
+            std::memcpy(&recordSize, records.data() + 4, sizeof(recordSize));
+            if (fault == 2)
+            {
+                records.erase(timer + 16, 1);
+                replaceUint(records, timer + 4, 8);
+                replaceUint(records, 4, recordSize - 1);
+            }
+            else
+            {
+                records.insert(timer + 17, 1, '\0');
+                replaceUint(records, timer + 4, 10);
+                replaceUint(records, 4, recordSize + 1);
+            }
+        }
+        else
+        {
+            const double deadline = fault == 4 ? std::numeric_limits<double>::quiet_NaN()
+                : (fault == 5 ? std::numeric_limits<double>::infinity() : -std::numeric_limits<double>::infinity());
+            std::memcpy(records.data() + timer + 9, &deadline, sizeof(deadline));
+        }
+        if (playerContext)
+            records += worldRecords(writeAdmissionLuaMapping);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records);
+        const auto offset = reader.getFileOffset();
+        bool validated = false;
+        try
+        {
+            MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+                [&](const auto&) { validated = true; });
+            FAIL() << "invalid timer admitted";
+        }
+        catch (const std::exception& error)
+        {
+            EXPECT_NE(std::string(error.what()).find("Invalid Lua timer"), std::string::npos);
+        }
+        EXPECT_FALSE(validated);
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
+    }
+}

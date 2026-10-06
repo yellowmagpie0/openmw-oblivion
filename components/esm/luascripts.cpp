@@ -1,5 +1,7 @@
 #include "luascripts.hpp"
 
+#include <cmath>
+
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 
@@ -179,9 +181,19 @@ void ESM::LuaScripts::load(ESMReader& esm)
         while (esm.isNextSub("LUAT"))
         {
             esm.getSubHeader();
+            if (esm.getSubSize() != sizeof(std::uint8_t) + sizeof(double))
+                esm.fail("Invalid Lua timer size");
+            // Do not read untrusted bytes into the bool-backed enum: an
+            // invalid representation can trigger UB before admission checks.
+            std::uint8_t type;
+            esm.getT(type);
+            if (type > 1)
+                esm.fail("Invalid Lua timer type");
             LuaTimer timer;
-            esm.getT(timer.mType);
+            timer.mType = type == 0 ? LuaTimer::Type::SIMULATION_TIME : LuaTimer::Type::GAME_TIME;
             esm.getT(timer.mTime);
+            if (!std::isfinite(timer.mTime))
+                esm.fail("Invalid Lua timer deadline");
             timer.mCallbackName = esm.getHNString("LUAC");
             timer.mCallbackArgument = loadLuaBinaryData(esm);
             timers.push_back(std::move(timer));

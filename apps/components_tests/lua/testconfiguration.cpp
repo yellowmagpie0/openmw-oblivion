@@ -3,6 +3,9 @@
 
 #include <fstream>
 #include <sstream>
+#include <cmath>
+#include <cstring>
+#include <limits>
 
 #include <components/esm/records.hpp>
 #include <components/esm3/esmreader.hpp>
@@ -320,6 +323,98 @@ namespace
             ESM::RefNum adjustedRef = data["fargoth"].get<ESM::RefNum>();
             EXPECT_EQ(adjustedRef.mIndex, 128964u);
             EXPECT_EQ(adjustedRef.mContentFile, 2);
+        }
+    }
+}
+
+namespace
+{
+    ESM::LuaScripts readSharedLuaTimer(std::uint8_t type, double deadline, std::size_t size,
+        ESM::FormatVersion version)
+    {
+        auto stream = std::make_unique<std::stringstream>();
+        ESM::ESMWriter writer;
+        writer.setFormatVersion(version);
+        writer.save(*stream);
+        writer.startRecord(ESM::REC_LUAM);
+        if (version <= ESM::MaxLuaScriptPathFormatVersion)
+            writer.writeHNString("LUAS", "timer.lua");
+        else
+            writer.writeHNT("LUAS", std::int32_t{0});
+        std::string data(sizeof(type) + sizeof(deadline), '\0');
+        data[0] = static_cast<char>(type);
+        std::memcpy(data.data() + sizeof(type), &deadline, sizeof(deadline));
+        data.resize(size);
+        writer.startSubRecord("LUAT");
+        writer.write(data.data(), data.size());
+        writer.endRecord("LUAT");
+        writer.writeHNString("LUAC", "timerCallback");
+        writer.endRecord(ESM::REC_LUAM);
+        ESM::ESMReader reader;
+        reader.open(std::move(stream), "shared-lua-timer");
+        reader.getRecName();
+        reader.getRecHeader();
+        ESM::LuaScripts result;
+        result.load(reader);
+        if (reader.hasMoreSubs())
+            throw std::runtime_error("Unexpected timer fixture data");
+        return result;
+    }
+
+    TEST(LuaSavedTimerTest, ChecksEveryRawTypeBeforeConstructingBoolBackedEnum)
+    {
+        for (auto version : {ESM::MaxLuaScriptPathFormatVersion, ESM::CurrentSaveGameFormatVersion})
+        for (int type = 0; type != 256; ++type)
+        {
+            SCOPED_TRACE(version);
+            SCOPED_TRACE(type);
+            if (type <= 1)
+            {
+                const auto scripts = readSharedLuaTimer(type, 7.25, 9, version);
+                ASSERT_EQ(scripts.mScripts.size(), 1);
+                ASSERT_EQ(scripts.mScripts.front().mTimers.size(), 1);
+                const auto& timer = scripts.mScripts.front().mTimers.front();
+                EXPECT_EQ(timer.mType, type == 0 ? ESM::LuaTimer::Type::SIMULATION_TIME : ESM::LuaTimer::Type::GAME_TIME);
+                EXPECT_EQ(timer.mTime, 7.25);
+                EXPECT_EQ(timer.mCallbackName, "timerCallback");
+            }
+            else
+                EXPECT_THROW(readSharedLuaTimer(type, 7.25, 9, version), std::runtime_error);
+        }
+    }
+
+    TEST(LuaSavedTimerTest, RequiresExactSizeForLegacyAndCurrentFormats)
+    {
+        for (auto version : {ESM::MaxLuaScriptPathFormatVersion, ESM::CurrentSaveGameFormatVersion})
+        for (std::size_t size = 0; size != 19; ++size)
+        {
+            SCOPED_TRACE(version);
+            SCOPED_TRACE(size);
+            if (size == 9)
+                EXPECT_NO_THROW(readSharedLuaTimer(0, 7.25, size, version));
+            else
+                EXPECT_THROW(readSharedLuaTimer(0, 7.25, size, version), std::runtime_error);
+        }
+    }
+
+    TEST(LuaSavedTimerTest, RejectsNonfiniteDeadlinesAndPreservesExpiredAndSignedZeroTimers)
+    {
+        for (auto version : {ESM::MaxLuaScriptPathFormatVersion, ESM::CurrentSaveGameFormatVersion})
+        for (std::uint8_t type : {0, 1})
+        {
+            SCOPED_TRACE(version);
+            SCOPED_TRACE(type);
+            for (double invalid : {std::numeric_limits<double>::quiet_NaN(),
+                     std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()})
+                EXPECT_THROW(readSharedLuaTimer(type, invalid, 9, version), std::runtime_error);
+            for (double valid : {-0.0, 0.0, -10.0, 12.5,
+                     std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()})
+            {
+                const auto scripts = readSharedLuaTimer(type, valid, 9, version);
+                const auto restored = scripts.mScripts.front().mTimers.front().mTime;
+                EXPECT_EQ(restored, valid);
+                EXPECT_EQ(std::signbit(restored), std::signbit(valid));
+            }
         }
     }
 }
