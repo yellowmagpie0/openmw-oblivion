@@ -7,6 +7,7 @@
 #include <limits>
 #include <map>
 #include <set>
+#include <sstream>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/loadglob.hpp>
@@ -17,10 +18,22 @@
 #include <components/esm3/player.hpp>
 #include <components/esm3/containerstate.hpp>
 #include <components/esm3/creaturestate.hpp>
+#include <components/esm3/controlsstate.hpp>
+#include <components/esm3/custommarkerstate.hpp>
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/globalmap.hpp>
+#include <components/esm3/globalscript.hpp>
+#include <components/esm3/journalentry.hpp>
+#include <components/esm3/projectilestate.hpp>
+#include <components/esm3/queststate.hpp>
+#include <components/esm3/quickkeys.hpp>
+#include <components/esm3/stolenitems.hpp>
+#include <components/esm3/weatherstate.hpp>
 #include <components/lua/configuration.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/misc/strings/algorithm.hpp>
+#include <components/misc/rng.hpp>
 
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/savedreference.hpp"
@@ -31,6 +44,169 @@
 
 namespace
 {
+    template <class T>
+    T readSharedState(ESM::ESMReader& reader)
+    {
+        T state{};
+        state.load(reader);
+        return state;
+    }
+
+    bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
+        std::set<std::uint32_t>& singletons)
+    {
+        const auto singleton = [&] {
+            if (!singletons.insert(type).second)
+                throw std::runtime_error("Saved game contains duplicate auxiliary singleton records");
+        };
+        const auto finite = [](float value) {
+            if (!std::isfinite(value))
+                throw std::runtime_error("Saved game auxiliary record has a nonfinite value");
+        };
+        const auto projectile = [&](const ESM::BaseProjectileState& state) {
+            for (const float value : state.mPosition.mValues) finite(value);
+            for (const float value : state.mOrientation.mValues) finite(value);
+        };
+        switch (type)
+        {
+            case ESM::REC_INPU:
+                singleton();
+                readSharedState<ESM::ControlsState>(reader);
+                break;
+            case ESM::REC_CAM_:
+            {
+                singleton();
+                bool firstPerson;
+                reader.getHNT(firstPerson, "FIRS");
+                break;
+            }
+            case ESM::REC_ENAB:
+            {
+                singleton();
+                bool teleport, levitation;
+                reader.getHNT(teleport, "TELE");
+                reader.getHNT(levitation, "LEVT");
+                break;
+            }
+            case ESM::REC_RAND:
+            {
+                singleton();
+                std::istringstream stream(reader.getHNOString("RAND"));
+                Misc::Rng::Generator random;
+                if (!(stream >> random) || !(stream >> std::ws).eof())
+                    throw std::runtime_error("Saved game shared random state is invalid");
+                break;
+            }
+            case ESM::REC_DIAS:
+                singleton();
+                readSharedState<ESM::DialogueState>(reader);
+                break;
+            case ESM::REC_JOUR:
+            {
+                const auto state = readSharedState<ESM::JournalEntry>(reader);
+                if (state.mType < ESM::JournalEntry::Type_Journal || state.mType > ESM::JournalEntry::Type_Quest)
+                    throw std::runtime_error("Saved game journal entry has an invalid type");
+                break;
+            }
+            case ESM::REC_QUES:
+                readSharedState<ESM::QuestState>(reader);
+                break;
+            case ESM::REC_GSCR:
+                readSharedState<ESM::GlobalScript>(reader);
+                break;
+            case ESM::REC_KEYS:
+            {
+                singleton();
+                const auto state = readSharedState<ESM::QuickKeys>(reader);
+                if (state.mKeys.size() > 10)
+                    throw std::runtime_error("Saved game contains too many quickkeys");
+                for (const auto& key : state.mKeys)
+                    if (key.mType > ESM::QuickKeys::Type::HandToHand)
+                        throw std::runtime_error("Saved game quickkey has an invalid type");
+                break;
+            }
+            case ESM::REC_ASPL:
+                singleton();
+                reader.getHNRefId("ID__");
+                break;
+            case ESM::REC_MARK:
+            {
+                const auto state = readSharedState<ESM::CustomMarker>(reader);
+                finite(state.mWorldX);
+                finite(state.mWorldY);
+                break;
+            }
+            case ESM::REC_GMAP:
+            {
+                singleton();
+                const auto state = readSharedState<ESM::GlobalMap>(reader);
+                // The renderer subtracts these in signed int arithmetic. Keep
+                // its empty/inverted-map convention, but reject overflow.
+                for (const auto& [low, high] : {std::pair{state.mBounds.mMinX, state.mBounds.mMaxX},
+                         std::pair{state.mBounds.mMinY, state.mBounds.mMaxY}})
+                {
+                    const auto difference = static_cast<std::int64_t>(high) - low;
+                    if (difference < std::numeric_limits<int>::min()
+                        || difference >= std::numeric_limits<int>::max())
+                        throw std::runtime_error("Saved game global map bounds exceed the renderer domain");
+                }
+                break;
+            }
+            case ESM::REC_STLN:
+            {
+                singleton();
+                const auto state = readSharedState<ESM::StolenItems>(reader);
+                for (const auto& [id, owners] : state.mStolenItems)
+                    for (const auto& [owner, count] : owners)
+                        if (count < 0)
+                            throw std::runtime_error("Saved game stolen item count is negative");
+                break;
+            }
+            case ESM::REC_DCOU:
+            {
+                singleton();
+                std::set<ESM::RefId> actors;
+                while (reader.isNextSub("ID__"))
+                {
+                    const auto id = reader.getRefId();
+                    int count;
+                    reader.getHNT(count, "COUN");
+                    if (count < 0 || !actors.insert(id).second)
+                        throw std::runtime_error("Saved game death count is negative or duplicated");
+                }
+                break;
+            }
+            case ESM::REC_WTHR:
+            {
+                singleton();
+                const auto state = readSharedState<ESM::WeatherState>(reader);
+                finite(state.mTimePassed);
+                finite(state.mWeatherUpdateTime);
+                finite(state.mTransitionFactor);
+                break;
+            }
+            case ESM::REC_PROJ:
+            {
+                const auto state = readSharedState<ESM::ProjectileState>(reader);
+                projectile(state);
+                for (const float value : state.mVelocity.mValues) finite(value);
+                finite(state.mAttackStrength);
+                finite(state.mAttackWindUp);
+                break;
+            }
+            case ESM::REC_MPRJ:
+            {
+                const auto state = readSharedState<ESM::MagicBoltState>(reader);
+                projectile(state);
+                finite(state.mSpeed);
+                break;
+            }
+            default:
+                return false;
+        }
+        return true;
+    }
+
     struct LegacyGeneratedItem
     {
         ESM::CellRef mReference;
@@ -198,6 +374,7 @@ namespace MWState
                 // or publish this store: content-dependent reconciliation is
                 // a separate preparation step.
                 shared = std::make_unique<MWWorld::ESMStore>();
+                std::set<std::uint32_t> auxiliarySingletons;
                 reader.restoreContext(start);
                 while (reader.hasMoreRecs())
                 {
@@ -236,6 +413,8 @@ namespace MWState
                         shared->getWritable<ESM::Class>().insert(characterClass);
                         decoded = true;
                     }
+                    else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons))
+                        decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
                     if (!decoded)

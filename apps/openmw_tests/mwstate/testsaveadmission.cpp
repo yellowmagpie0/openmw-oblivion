@@ -1,11 +1,24 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <array>
 #include <set>
 #include <sstream>
 #include <limits>
 #include <type_traits>
 
+#include <components/esm3/controlsstate.hpp>
+#include <components/esm3/custommarkerstate.hpp>
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/globalmap.hpp>
+#include <components/esm3/globalscript.hpp>
+#include <components/esm3/journalentry.hpp>
+#include <components/esm3/projectilestate.hpp>
+#include <components/esm3/queststate.hpp>
+#include <components/esm3/quickkeys.hpp>
+#include <components/esm3/stolenitems.hpp>
+#include <components/esm3/weatherstate.hpp>
+#include <components/misc/rng.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadclas.hpp>
@@ -1166,5 +1179,213 @@ TEST(SaveAdmissionTest, LegacyGeneratedRecoveryRejectsMissingDefinitionsBadSlots
         const auto start = reader.getContext(); bool called = false;
         EXPECT_ANY_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { called = true; }));
         EXPECT_FALSE(called); EXPECT_EQ(reader.getContext().filePos, start.filePos);
+    }
+}
+
+namespace
+{
+    constexpr std::array auxiliaryTypes{ESM::REC_INPU, ESM::REC_CAM_, ESM::REC_ENAB, ESM::REC_RAND,
+        ESM::REC_DIAS, ESM::REC_JOUR, ESM::REC_QUES, ESM::REC_GSCR, ESM::REC_KEYS, ESM::REC_ASPL,
+        ESM::REC_MARK, ESM::REC_GMAP, ESM::REC_STLN, ESM::REC_DCOU, ESM::REC_WTHR, ESM::REC_PROJ, ESM::REC_MPRJ};
+
+    std::string auxiliaryRecord(std::uint32_t type, int fault = 0)
+    {
+        return worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(type);
+            if (fault == 1)
+                writer.writeHNT("BAD_", std::uint8_t{1});
+            else
+                switch (type)
+                {
+                    case ESM::REC_INPU:
+                        ESM::ControlsState{}.save(writer);
+                        break;
+                    case ESM::REC_CAM_:
+                        writer.writeHNT("FIRS", true);
+                        break;
+                    case ESM::REC_ENAB:
+                        writer.writeHNT("TELE", true);
+                        writer.writeHNT("LEVT", false);
+                        break;
+                    case ESM::REC_RAND:
+                        writer.writeHNString("RAND", fault == 3 ? "bad-random" : Misc::Rng::serialize(Misc::Rng::Generator{}));
+                        break;
+                    case ESM::REC_DIAS:
+                        ESM::DialogueState{}.save(writer);
+                        break;
+                    case ESM::REC_JOUR:
+                    {
+                        ESM::JournalEntry entry{};
+                        entry.mType = fault == 3 ? 99 : ESM::JournalEntry::Type_Quest;
+                        entry.mTopic = ESM::RefId::stringRefId("quest");
+                        entry.mInfo = ESM::RefId::stringRefId("info");
+                        entry.save(writer);
+                        break;
+                    }
+                    case ESM::REC_QUES:
+                    {
+                        ESM::QuestState quest{};
+                        quest.mTopic = ESM::RefId::stringRefId("quest");
+                        quest.save(writer);
+                        break;
+                    }
+                    case ESM::REC_GSCR:
+                    {
+                        ESM::GlobalScript script{};
+                        script.mId = ESM::RefId::stringRefId("script");
+                        script.save(writer);
+                        break;
+                    }
+                    case ESM::REC_KEYS:
+                    {
+                        ESM::QuickKeys keys;
+                        keys.mKeys.push_back({fault == 3 ? static_cast<ESM::QuickKeys::Type>(99)
+                            : ESM::QuickKeys::Type::Unassigned, {}});
+                        keys.save(writer);
+                        break;
+                    }
+                    case ESM::REC_ASPL:
+                        writer.writeHNRefId("ID__", ESM::RefId::stringRefId("spell"));
+                        break;
+                    case ESM::REC_MARK:
+                    {
+                        ESM::CustomMarker marker{};
+                        marker.mCell = ESM::RefId(ESM::FormId{1, 0});
+                        marker.mWorldX = fault == 3 ? std::numeric_limits<float>::infinity() : 3.f;
+                        marker.save(writer);
+                        break;
+                    }
+                    case ESM::REC_GMAP:
+                    {
+                        ESM::GlobalMap map{};
+                        if (fault == 3)
+                            map.mBounds = {std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 0, 0};
+                        map.save(writer);
+                        break;
+                    }
+                    case ESM::REC_STLN:
+                    {
+                        ESM::StolenItems stolen;
+                        stolen.mStolenItems[ESM::RefId::stringRefId("item")][{ESM::RefId::stringRefId("owner"), false}]
+                            = fault == 3 ? -1 : 2;
+                        stolen.write(writer);
+                        break;
+                    }
+                    case ESM::REC_DCOU:
+                        writer.writeHNRefId("ID__", ESM::RefId::stringRefId("actor"));
+                        writer.writeHNT("COUN", fault == 3 ? -1 : 2);
+                        break;
+                    case ESM::REC_WTHR:
+                    {
+                        ESM::WeatherState weather{};
+                        weather.mNextWeather = weather.mQueuedWeather = -1;
+                        weather.mTimePassed = fault == 3 ? std::numeric_limits<float>::quiet_NaN() : 0.f;
+                        weather.save(writer);
+                        break;
+                    }
+                    case ESM::REC_PROJ:
+                    {
+                        ESM::ProjectileState projectile{};
+                        projectile.mId = ESM::RefId::stringRefId("arrow");
+                        projectile.mBowId = ESM::RefId::stringRefId("bow");
+                        projectile.mOrientation = osg::Quat{};
+                        projectile.mAttackStrength = fault == 3 ? std::numeric_limits<float>::infinity() : 1.f;
+                        projectile.mAttackWindUp = -1.f;
+                        projectile.save(writer);
+                        break;
+                    }
+                    case ESM::REC_MPRJ:
+                    {
+                        ESM::MagicBoltState bolt{};
+                        bolt.mId = ESM::RefId::stringRefId("bolt");
+                        bolt.mSpellId = ESM::RefId::stringRefId("spell");
+                        bolt.mOrientation = osg::Quat{};
+                        bolt.mSpeed = fault == 3 ? std::numeric_limits<float>::quiet_NaN() : 1.f;
+                        bolt.save(writer);
+                        break;
+                    }
+                }
+            if (fault == 2)
+                writer.writeHNT("EXTR", std::uint8_t{1});
+            writer.endRecord(type);
+        });
+    }
+}
+
+TEST(SaveAdmissionTest, AllAuxiliaryRecordFamiliesDecodeBeforeNativePreparationAndRewind)
+{
+    std::string records;
+    for (const auto type : auxiliaryTypes) records += auxiliaryRecord(type);
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes() + records);
+    const auto start = reader.getContext();
+    int calls = 0;
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { ++calls; }));
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(reader.getContext().filePos, start.filePos);
+}
+
+TEST(SaveAdmissionTest, AuxiliaryMalformedPayloadsAndTrailingFieldsRejectBeforeNativePreparation)
+{
+    for (const auto type : auxiliaryTypes)
+        for (const int fault : {1, 2})
+        {
+            SCOPED_TRACE(type);
+            SCOPED_TRACE(fault);
+            ESM::ESMReader reader;
+            openBytes(reader, saveBytes() + auxiliaryRecord(type, fault));
+            const auto start = reader.getContext();
+            bool called = false;
+            EXPECT_ANY_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { called = true; }));
+            EXPECT_FALSE(called);
+            EXPECT_EQ(reader.getContext().filePos, start.filePos);
+        }
+}
+
+TEST(SaveAdmissionTest, AuxiliarySingletonsRejectDuplicatesButRepeatableRecordsRemainAccepted)
+{
+    for (const auto type : auxiliaryTypes)
+    {
+        SCOPED_TRACE(type);
+        const bool repeatable = type == ESM::REC_JOUR || type == ESM::REC_QUES || type == ESM::REC_GSCR
+            || type == ESM::REC_MARK || type == ESM::REC_PROJ || type == ESM::REC_MPRJ;
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + auxiliaryRecord(type) + auxiliaryRecord(type));
+        bool called = false;
+        const auto admit = [&] {
+            MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { called = true; });
+        };
+        if (repeatable) EXPECT_NO_THROW(admit());
+        else EXPECT_ANY_THROW(admit());
+        EXPECT_EQ(called, repeatable);
+    }
+}
+
+TEST(SaveAdmissionTest, AuxiliaryInvalidDomainsRejectBeforeNativePreparation)
+{
+    for (const auto type : {ESM::REC_RAND, ESM::REC_JOUR, ESM::REC_KEYS, ESM::REC_MARK, ESM::REC_GMAP,
+             ESM::REC_STLN, ESM::REC_DCOU, ESM::REC_WTHR, ESM::REC_PROJ, ESM::REC_MPRJ})
+    {
+        SCOPED_TRACE(type);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + auxiliaryRecord(type, 3));
+        bool called = false;
+        EXPECT_ANY_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { called = true; }));
+        EXPECT_FALSE(called);
+    }
+}
+
+TEST(SaveAdmissionTest, AuxiliaryAdmissionDoesNotChangeMorrowindOrUnknownRecordCompatibility)
+{
+    for (const auto profile : {ESM::GameProfile::Morrowind, ESM::GameProfile::Oblivion})
+    {
+        ESM::ESMReader reader;
+        const auto records = profile == ESM::GameProfile::Morrowind ? auxiliaryRecord(ESM::REC_INPU, 1)
+            : worldRecords([](auto& writer) {
+                writer.startRecord("ZZZZ"); writer.writeHNT("BAD_", std::uint8_t{1}); writer.endRecord("ZZZZ");
+            });
+        openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
+            profile == ESM::GameProfile::Oblivion ? 1 : 0) + records);
+        EXPECT_NO_THROW(MWState::admitSave(reader, profile, [](const auto&) {}));
     }
 }

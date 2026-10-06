@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,92 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 auxiliary shared-record admission checkpoint — 2026-10-06
+
+StateManager still decoded auxiliary shared save records after cleanup, even
+though native state and shared definitions/World/Lua had detached admission.
+A malformed input, journal or UI payload could therefore clear the outgoing
+World before its parser rejected the save. Oblivion admission now decodes
+17 additional record families using their production ESM DTO readers, or the
+same primitive fields as their restoration reader: INPU, CAM_, ENAB, RAND,
+DIAS, JOUR, QUES, GSCR, KEYS, ASPL, MARK, GMAP, STLN, DCOU, WTHR, PROJ and MPRJ.
+These objects are detached and do not call live managers or publish UI,
+controls, scripts, projectiles or mechanics state.
+
+Recognized auxiliary records must consume their full payload. Eleven singleton
+families reject duplicate records; journal, quest, global-script, marker and
+projectile families remain repeatable according to their existing readers.
+Checks reject unknown quickkey types/overlong key lists, invalid journal types,
+negative stolen/death counts, duplicate death-count actors, nonfinite marker/
+weather/projectile fields, invalid serialized shared RNG and global-map bound
+subtractions that exceed signed renderer arithmetic. Empty/inverted map
+conventions are retained. This does not decode PNG image resources or stage
+actual renderer/projectile allocation. Morrowind admission and unknown-record
+compatibility retain their existing paths. No binary layout/version or native
+mechanics rule changed.
+
+Five new engine cases cover all 17 valid families in one admission, 34 malformed
+payload/trailing-field combinations, all singleton-versus-repeatable families,
+10 invalid-domain fixtures and Morrowind/unknown-record compatibility. Both
+`S3/auxiliary-admission-engine-03` and `auxiliary-admission-sanitize-03` passed
+all **1,201 engine tests**, with exact unfiltered inventories and zero failures/
+skips/warnings. Tested parent: `2e64d4dfb98da773c7200b50d787eb435423ab9f`;
+dirty source fingerprint:
+`26afa80421ffb1e24a0cc266a52f9af6789e524fc16d7c44b25c0fc7c60a415c`.
+ASan leak detection is disabled; UBSan halts on error. Component/Python
+implementation sources were unchanged, so their suites were not repeated.
+
+`S3/auxiliary-admission-restart-01` passed actual load/F5/F9/F5/quit and the
+same sequence in a fresh process. All 37 normalized native fields matched the
+independent expected generated-gear migration on first load and the actual
+input save on the next three boundaries. Reference counts remained
+34,603/34,771/34,880/35,397. Independent raw checks passed for generated blade/
+arrows, actual shared Player inventory, class/counter, moved weapon/mask and
+finite interior water fields. Both captures were inspected: continuing prison
+scene, full status bars, generated blade HUD name/icon. Audio was disabled.
+
+`S3/auxiliary-admission-reject-02` and
+`S3/auxiliary-admission-reject-sanitized-02` each loaded a valid actual save,
+performed F5, changed exactly one INPU tag byte (CFLG→XFLG), and rejected F9
+with `Expected subrecord CFLG but got XFLG`. All native state and all record/
+subrecord lengths in the rejected input were unchanged. Dismissing the error
+and F5-resaving preserved Player/native authority, physical actions/lifecycle,
+130 script instances, quests and 35,397 existing reference inventories. Actual
+INPU, ENAB, CAM_ and KEYS payloads remained identical before/after rejection.
+Each course had one accepted load and two actual saves, with contiguous event
+sequence/epoch and clean quit. Full initial-load comparison covered all 37
+native fields and 34,880 references; generated blade/ammunition/class/counter
+raw checks passed on input, first F5 and continuing-game resave. Both rejection
+and resave captures in each build were inspected. No sanitizer diagnostic or
+unreviewed error remained in either final scenario.
+
+Normal binary SHA256:
+`637e5cbfea6ec93affb56f82d63e77846cdc6ea28973bb5379cc6809d3e2185b`.
+Sanitizer binary SHA256:
+`346016624e91ef06d119d1f3f4b9a06d85df5c3f8d28b9a98a03dac94f8ad67c`.
+Positive process IDs: 1404555/1404625. Negative IDs: normal 1404899,
+sanitizer 1405037. `S3/auxiliary-admission-report.json` links source hashes,
+commands/configuration/inventories, valid/rejected inputs, mutations, raw checks,
+reviewed captures, failed attempts and the scope audit. All processes are terminal.
+
+Retained failures: both 01 builds caught a missing test callback argument; both
+02 test runs caught an empty validator in the compatibility fixture. Corrected
+03 checks passed all cases. The first normal rejection scenario delivered all
+actions, rejected the intended payload and resaved cleanly, but failed its
+unreviewed-error gate because ESMReader emits four diagnostic continuation
+lines. The final manifests review only the expected private file path, INPU,
+XFLG and offset lines; verifiers also require the exact fault offset. The failed
+scenario remains under `auxiliary-admission-reject-01` and is not acceptance.
+
+The requirement audit at `S3/requirements-audit-01.json` maps S3's five numbered
+changes, named test categories and three gates to current sources. It leaves
+completion unproven. Besides remaining shared semantic/resource staging and
+adapter/migration evidence, the current runtime/service headers lack the
+persistent crime incident, arrest and jail transaction contracts required by
+section 3. Adding those state/interface skeletons belongs to S3; implementing
+witnesses, arrests and jail gameplay remains in later stages. This checkpoint
+closes auxiliary detached decoding, not all S3 or M15 requirements.
 
 ## S3 legacy generated inventory migration checkpoint — 2026-10-06
 
