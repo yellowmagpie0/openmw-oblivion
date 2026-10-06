@@ -6,6 +6,8 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm3/loadclas.hpp>
+#include <components/esm3/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include "apps/openmw/mwstate/saveadmission.hpp"
@@ -253,5 +255,66 @@ TEST(SaveAdmissionTest, ProfileNameUsesFirstNulTerminationLikeTheSharedReader)
     openBytes(reader, bytes);
     const auto admitted = MWState::admitSave(reader, ESM::GameProfile::Oblivion, [](const auto&) {});
     EXPECT_EQ(admitted.mGameProfile, ESM::GameProfile::Oblivion);
+    EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+}
+
+TEST(SaveAdmissionTest, MalformedSharedDynamicRecordsRejectBeforeNativeValidation)
+{
+    for (const auto type : {ESM::REC_ALCH, ESM::REC_ARMO, ESM::REC_BOOK, ESM::REC_CLAS,
+             ESM::REC_CLOT, ESM::REC_ENCH, ESM::REC_SPEL, ESM::REC_WEAP, ESM::REC_NPC_,
+             ESM::REC_CREA, ESM::REC_CONT, ESM::REC_MISC, ESM::REC_ACTI, ESM::REC_LEVI,
+             ESM::REC_LEVC, ESM::REC_LIGH, ESM::REC_STAT, ESM::REC_DOOR, ESM::REC_PROB,
+             ESM::REC_INGR, ESM::REC_DYNA, ESM::REC_GLOB})
+    {
+        SCOPED_TRACE(type);
+        auto bytes = saveBytes();
+        const auto record = bytes.rfind("JUNK");
+        ASSERT_NE(record, std::string::npos);
+        replaceUint(bytes, record, type);
+        ESM::ESMReader reader;
+        openBytes(reader, bytes);
+        const auto start = reader.getFileOffset();
+        int nativeCalls = 0;
+        EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+            [&](const auto&) { ++nativeCalls; }), std::exception);
+        EXPECT_EQ(nativeCalls, 0);
+        EXPECT_EQ(reader.getFileOffset(), start);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}
+
+TEST(SaveAdmissionTest, ValidSharedClassGlobalAndDynamicCounterRemainReadable)
+{
+    ESM::ESMWriter writer;
+    writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+    std::stringstream stream;
+    writer.save(stream);
+    ESM::Class custom{};
+    custom.blank();
+    custom.mId = ESM::RefId::stringRefId("custom-class");
+    writer.startRecord(ESM::REC_CLAS);
+    custom.save(writer);
+    writer.endRecord(ESM::REC_CLAS);
+    ESM::Global global{};
+    global.mId = ESM::RefId::stringRefId("gamehour");
+    global.mValue.setType(ESM::VT_Short);
+    global.mValue.setInteger(5);
+    writer.startRecord(ESM::REC_GLOB);
+    global.save(writer);
+    writer.endRecord(ESM::REC_GLOB);
+    writer.startRecord(ESM::REC_DYNA);
+    writer.writeHNT("COUN", std::uint64_t{17});
+    writer.endRecord(ESM::REC_DYNA);
+    ESM::ESMReader shared;
+    openBytes(shared, stream.str());
+    const auto records = stream.str().substr(shared.getFileOffset());
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes() + records);
+    const auto start = reader.getFileOffset();
+    int calls = 0;
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion,
+        [&](const auto&) { ++calls; }));
+    EXPECT_EQ(calls, 1);
+    EXPECT_EQ(reader.getFileOffset(), start);
     EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
 }

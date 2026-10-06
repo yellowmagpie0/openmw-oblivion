@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,50 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 detached shared-record admission checkpoint — 2026-10-05
+
+Oblivion save admission now decodes shared dynamic definitions into an isolated
+ESMStore using the production record readers, and parses saved globals into
+local values. This occurs after outer framing/profile checks and before native
+validation or StateManager teardown. Malformed shared definitions and trailing
+shared data reject with the reader rewound and the outgoing game intact. The
+detached store is discarded without setup or publication. Content-dependent
+reconciliation and complete restore staging remain outstanding.
+
+Two new regressions cover structurally framed but malformed records for all
+**22** handled shared types (including class, NPC, creature, inventory definitions,
+global and dynamic counter), verify rejection before the native callback and
+reader recovery, and admit valid custom class/global/counter records. Existing
+Morrowind admission behavior remains unchanged.
+
+Evidence under `build/oblivion-compat/m15/`:
+
+- `S3/shared-record-admission-engine-01` and
+  `shared-record-admission-sanitize-01`: all **1,155** engine tests pass,
+  exact inventories, zero failures/skips, unchanged source fingerprint
+  `7da3aff4b07070b6a1139464e7ba299c98892f1b2ce72c3648b04e10cd3cf3f9`
+  on parent `8ec471b3952b6cb7754b9d39a1f214cb65879277`.
+  ASan leak detection is disabled; UBSan halts on errors.
+- `S3/shared-record-admission-runtime-01` and
+  `shared-record-admission-sanitized-runtime-01`: actual stock load/F5,
+  append one framed DYNA record with a valid counter and invalid trailing data,
+  F9 rejection, Return/F5 and clean quit. Each process has one successful load,
+  two actual saves and one epoch. The rejected input equals the preceding save
+  byte-for-byte plus the explicit fault; its entire decoded native state is
+  unchanged. After rejection, Player/actor authority, all 34,398 prior reference
+  inventories, 130 script instances and 390 quests remain preserved.
+- Both complete-load reports independently compare all **37** native fields
+  and **33,376** references at initial tick zero. Runtime executable hashes
+  match the final builds. Both rejection screenshots show the same prison and
+  status bars. Only the expected rejection and reviewed existing equip-icon
+  error occur; no unreviewed errors or sanitizer diagnostics remain.
+
+Aggregate source, binary, input/output and report hashes are retained in
+`S3/shared-record-admission-report.json`. This is shared-definition decoding
+coverage, not complete shared-world reconstruction or active-action restart
+acceptance. S3 remains open for content reconciliation, the full preparation
+and publication boundary, remaining migrations and continuation gates.
 
 ## S3 early native semantic admission checkpoint — 2026-10-05
 

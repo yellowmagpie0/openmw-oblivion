@@ -4,7 +4,10 @@
 #include <stdexcept>
 
 #include <components/esm3/esmreader.hpp>
+#include <components/esm3/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
+
+#include "../mwworld/esmstore.hpp"
 
 namespace MWState
 {
@@ -62,6 +65,35 @@ namespace MWState
             if (profile.mGameProfile == ESM::GameProfile::Oblivion
                 && profile.mRuntimeStateVersion > ESM4::CurrentRuntimeStateVersion)
                 throw std::runtime_error("Saved game declares an unsupported TES4 runtime-state version");
+            if (activeProfile == ESM::GameProfile::Oblivion)
+            {
+                // Framing alone does not prove that shared dynamic records can
+                // be decoded. Use the production store reader on a detached
+                // store before any outgoing world is cleared. Do not set up
+                // or publish this store: content-dependent reconciliation is
+                // a separate preparation step.
+                MWWorld::ESMStore shared;
+                reader.restoreContext(start);
+                while (reader.hasMoreRecs())
+                {
+                    const auto type = reader.getRecName();
+                    reader.getRecHeader();
+                    bool decoded = false;
+                    if (type == ESM::REC_GLOB)
+                    {
+                        ESM::Global global;
+                        bool deleted = false;
+                        global.load(reader, deleted);
+                        decoded = true;
+                    }
+                    else
+                        decoded = shared.readRecord(reader, type.toInt());
+                    if (!decoded)
+                        reader.skipRecord();
+                    else if (reader.hasMoreSubs())
+                        throw std::runtime_error("Saved game shared record contains unexpected trailing data");
+                }
+            }
             if (nativeRecord)
             {
                 if (activeProfile != ESM::GameProfile::Oblivion)
