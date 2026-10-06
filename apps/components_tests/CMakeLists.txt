@@ -99,6 +99,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/masteryrules.cpp
     esm4/stealthrules.cpp
     esm4/crimerules.cpp
+    esm4/crimecontracts.cpp
     esm4/combatairules.cpp
     esm4/combatsettings.cpp
     esm4/ability.cpp

@@ -29,6 +29,51 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
 
+## S3 crime interface/state contract checkpoint — 2026-10-06
+
+The required crime request/outcome and arrest/jail interfaces from plan section
+3.1 were absent. `components/esm4/crimecontracts.*` now defines stable-key
+requests, witness/report outcomes, faction/bounty/infamy deltas, monotonic
+incident/transaction identities, causal-offense deduplication, arrest choices
+and consequence commit flags, and jail sentence/property/release metadata.
+Offenses reuse the reviewed `CrimeOffense` domain; these contracts do not
+compute fines, decide legality, discover witnesses, transfer property, alter
+stats, arrest actors, enter jail or dispatch callbacks.
+
+Validation checks canonical identities, nonzero/high-water counters, bounded
+collections, duplicate/dangling graph links, actor consistency, retired causes,
+finite/nonnegative times and item extras, and enum/commit-flag consistency.
+A selected arrest can persist its explicit Resolving phase and individual
+consequence flags. It cannot precede committed crime consequences. Active/
+completed jail requires committed property and a committed arrest transition;
+cancelled state cannot contain committed consequences. Original item owner,
+signed optional ownership rank/global, fractional condition/charge, quantity
+and quest-item metadata are retained without replacing the M13 inventory
+authority. Retention is explicitly bounded; service-side advancement must
+prove older unresolved incidents are not discarded.
+
+Six component cases exercise empty/populated contracts without mutation,
+causal duplicate versus distinct-victim identity, duplicate/dangling/reused
+graph keys, invalid values and commit flags, capacity rejection before walking
+an oversized witness array, and fine/resist/serving/released/escaped boundary
+states. `S3/crime-contracts-components-02` passed all **2,579 component tests**;
+`crime-contracts-sanitize-02` passed **700 ESM4 component tests** with filter
+`ESM4*` under ASan/UBSan. Both inventories match exactly, with zero failures,
+skips or warnings. ASan leak detection is disabled; UBSan halts on error.
+Tested parent: `09cc924373b0e003fad036198ba8336a80c247f2`; fingerprint:
+`a499ff445954be0d94cba79ed93b2d0373b94fbed47c3e081604b3b51b959fc5`.
+Earlier 01 checks also passed before review added the Resolving phase and
+explicit parent-consequence ordering; they are not final candidate evidence.
+Source hashes and complete checks are in `S3/crime-contracts-report.json`.
+
+This is the interface/validation part of S3. Runtime schema/codecs, profile
+service ownership, live adapters, capture/restore and migrations for these
+contracts remain to be implemented and tested. The runtime schema is still
+41; no contract-only data is claimed to persist in a game save or exist as a
+live authority. No engine/gameplay acceptance is claimed for this new module.
+S3 completion remains unproven, and later-stage crime/arrest/jail gameplay is
+excluded from this work.
+
 ## S3 auxiliary shared-record admission checkpoint — 2026-10-06
 
 StateManager still decoded auxiliary shared save records after cleanup, even
