@@ -798,6 +798,9 @@ namespace MWWorld
         prepare.template operator()<ESM::Door>(true);
         prepare.template operator()<ESM::Probe>(true);
         prepare.template operator()<ESM::Ingredient>(true);
+        // Inventory preparation dispatches generated IDs through this owned
+        // view, including callers that supplied records without an ID index.
+        source.rebuildIdsIndex();
         plan->mPlayer = source.get<ESM::NPC>().find(playerId);
         return PreparedDynamicRecords(std::move(plan));
     }

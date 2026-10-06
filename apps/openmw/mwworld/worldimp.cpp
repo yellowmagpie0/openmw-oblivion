@@ -141,6 +141,7 @@
 #include "inventorystore.hpp"
 #include "manualref.hpp"
 #include "oblivionprofileservices.hpp"
+#include "oblivioninventoryidentity.hpp"
 #include "oblivionscriptmanager.hpp"
 #include "player.hpp"
 #include "projectilemanager.hpp"
@@ -1115,10 +1116,11 @@ namespace MWWorld
                 const ESM::RefId nativeId
                     = OblivionProfileServices::nativeItemId(mStore, itemPtr.getCellRef().getRefId());
                 const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
-                if (formId == nullptr || itemPtr.getCellRef().getCount() <= 0)
+                const auto generatedKey = OblivionInventory::sharedKey(nativeId);
+                if ((!formId && !generatedKey) || itemPtr.getCellRef().getCount() <= 0)
                     continue;
                 ESM4::RuntimeInventoryItem item;
-                item.mBase = inventoryResolver.toFormKey(*formId);
+                item.mBase = generatedKey ? *generatedKey : inventoryResolver.toFormKey(*formId);
                 item.mCount = itemPtr.getCellRef().getCount();
                 if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
                 {
@@ -1139,6 +1141,27 @@ namespace MWWorld
                     }
                     if (inventory.isEquipped(itemPtr))
                         item.mEquippedSlots = getNativeEquippedSlots(inventory, itemPtr, *definition);
+                }
+                if (generatedKey)
+                {
+                    const auto& itemClass = itemPtr.getClass();
+                    ContainerStore::getType(itemPtr);
+                    item.mCondition = itemClass.hasItemHealth(itemPtr)
+                        ? itemPtr.getCellRef().getItemCondition(static_cast<float>(itemClass.getItemMaxHealth(itemPtr)))
+                        : -1.f;
+                    item.mCharge = itemPtr.getCellRef().getEnchantmentCharge();
+                    item.mRemainingUsageTime = itemClass.getRemainingUsageTime(itemPtr);
+                    if (inventory.isEquipped(itemPtr))
+                        for (int slot = 0; slot != InventoryStore::Slots; ++slot)
+                        {
+                            const auto equipped = inventory.getSlot(slot);
+                            if (equipped != inventory.end() && *equipped == itemPtr)
+                            {
+                                item.mEquippedSlots = OblivionInventory::slotMask(
+                                    slot, itemPtr.getType() == ESM::REC_LIGH);
+                                break;
+                            }
+                        }
                 }
                 const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
                 if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())

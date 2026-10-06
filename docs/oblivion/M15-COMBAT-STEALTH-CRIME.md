@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities and valid quickload teardown, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,115 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 generated shared actor inventory checkpoint — 2026-10-06
+
+Native actor inventory capture previously skipped GeneratedRefId items because
+it required a FormId. Applying the native snapshot could therefore erase
+custom shared gear even though ordinary shared save records retained it.
+Capture now writes a stable `dynamic:shared-item` base for generated items;
+the serial is GeneratedRefId value plus one, so generated ID zero is valid.
+This namespace is separate from native-reference allocations. The existing
+inventory layout/version is unchanged. Unrepresentable generated identities
+fail explicitly rather than wrapping.
+
+Restore resolves those bases against admitted incoming definitions, with
+ordinary shared classes supplying the persistent item properties. Incoming
+store indexes are rebuilt after filtering so an item does not need to exist
+in the outgoing index. Retained ManualRefs use the incoming dispatch for
+generated IDs and keep the definition addresses across clear/publication.
+Non-item records, missing definitions and incompatible equipment fail during
+admission. Shared slots map to the existing TES4 save-slot domain; left/right
+ring selection is retained. Equipment counts use the class's existing stacking
+flag, allowing an equipped ammunition stack while non-stackable gear requires
+one item. Unsupported shared slots without a TES4 save representation fail
+explicitly. No native weapon/armor/combat rule derivation was added.
+
+Generated item capture retains quantity, fractional condition, raw enchantment
+charge, remaining usage time, ownership extras and the existing Player hotkey
+join. These items remain actual shared InventoryStore contents, not only
+native snapshot entries. Four added engine cases cover generated ID zero in
+an incoming store without an outgoing identity/index; a right-hand weapon
+and right ring; missing/non-item/incompatible/count faults; an equipped stack
+of 17 arrows; and actual Player/native NPC capture, incoming definition
+rebinding, teardown, restore and repeated direct-reader application. Player
+hotkey and item registry checks accompany the native snapshot comparisons.
+
+`S3/generated-inventory-engine-02` and
+`S3/generated-inventory-sanitize-02` passed all **1,192 engine tests**, with
+exact unfiltered inventories and zero failures/skips. Tested parent:
+`07a9d7ded1d761d82caad6540ad705c73c7c6106`; final dirty source fingerprint:
+`384f16026778e30a6e8baedbd7ad95b6abe948f6d98cc5ad7f9307eb380f80c3`.
+Both builds emitted zero warnings. The earlier 01 checks passed 1,191 cases
+before the explicit ammunition-stack case/guard correction. ASan leak checks
+are disabled; UBSan halts on error. Components and Python implementation
+sources did not change, so their suites were not repeated.
+
+The editable `S3/generated-inventory-fixture-07/generate.py` preserves the
+preceding actual save, its generated class 42, four equipped Player apparel
+items, moved loose weapon and disabled PGRD mask. It adds generated blade 43
+and arrow 44 definitions after the save's earlier records, along with native
+inventory entries: blade count 1/condition 37.125/charge 9.25/weapon slot/hotkey 3
+and arrows count 17/ammunition slot. Declared weights 4.25 and 0.125 yield
+encumbrance 10.375 from the original 4.0. Winning stock model/icon sources are
+recorded independently; arrows use `Arrow1Iron` at native 0x17829. This is an
+inventory persistence fixture, not native damage/arrow-rule evidence.
+Prepared input SHA256:
+`96350094ed2dc05b60acecb413c02bd9261aed32a8ab032474fc2275a88549be`.
+
+Actual courses `S3/generated-inventory-restart-07` and
+`S3/generated-inventory-sanitized-restart-07` each completed load/F5/F9/F5/quit,
+then repeated from the produced save in a fresh process. All 37 normalized
+native fields matched at four load boundaries, including clock, complete
+references, generated gear and derived encumbrance. Reference counts remained
+34,399/34,549/34,603/34,771. Independent raw reinspection verified each shared
+WEAP identity/name/data/model/icon, actual shared PLAY inventory entries,
+blade slot 16/condition 37.125/charge 9.25/count 1 and ammunition slot 18/count 17
+in all four produced saves. Class 42/counter 128, original script locals,
+quests, reference inventories, moved weapon and mask also persisted.
+
+Normal binary SHA256:
+`a5078ebd542e28b84bfd082e4a7da3215a65038f0efdd1c6732b55e88c70b404`.
+Sanitizer binary SHA256:
+`dd9018a92594e1cf6cccb8a9ebda880c672110435892acda5db0cbdbf19fd7bb`.
+Normal process IDs 1383747/1383828 and sanitizer 1383975/1384278 were distinct.
+
+`S3/generated-inventory-dangling-reject-03` and
+`S3/generated-inventory-dangling-reject-sanitized-03` each actually saved,
+changed exactly one native inventory identity byte (generated 43→107), and
+rejected F9 before teardown with the exact unknown Generated 0x6b error.
+Dismissing the error and resaving preserved the running Player/native
+services, class/counter, script/quest/reference state and both generated
+blade and 17-arrow equipment. Full native initial-load comparison and raw
+shared before/after-rejection inspection passed. Both courses exited cleanly;
+no runtime sanitizer diagnostics or unreviewed errors remained. I inspected
+all four final restart captures and all four final rejection/resave captures:
+expected prison scene/full HUD bars, generated blade name/stock icon, exact
+rejection error and continuing gameplay. Ammunition equipment was proved by
+actual shared save data rather than inferred from these images. Sound was
+disabled; no audio coverage is claimed.
+
+Failed attempts are retained: fixture 01 wrongly assumed an empty inventory;
+restart 02 omitted the blade icon; restart 03 omitted the independently derived
+encumbrance delta; dangling-reject 01 retained an obsolete nested wait-log
+pattern; restart 05 selected an unavailable Shivering Isles ammunition icon;
+fixture 06 used the wrong exact iron-arrow editor ID. The original raw blade
+verifier also discarded target fields when a following ammunition NAME was
+encountered; its log/source remain, with corrected `verify-generated-v2.py`
+retaining each target's metadata through the equipment table. No expected
+state comparison or error gate was waived. Passed single-blade 04 and
+rejection 02 courses remain historical evidence on the pre-stack source;
+final acceptance here uses the expanded final-source courses above.
+
+Source hashes, exact command lines/configurations, case inventories, fixture/
+verifier hashes, runtime results, captures and failure dispositions:
+`S3/generated-inventory-report.json`. All checkpoint processes are terminal.
+
+S3 remains in progress. Next, deliberately reconcile older saves whose native
+inventories omitted generated gear while shared PLAY/CSTA retained it; the
+new identity path alone does not repair that historical omission. Shared-world
+staging, cache/scene reconciliation, remaining compatibility evidence and the
+full requirement audit are still open. Later-stage gates are unchanged.
 
 ## S3 retained detached actor inventory checkpoint — 2026-10-06
 

@@ -13639,3 +13639,56 @@ TEST(OblivionWorldTest, PreparedCreatureInventorySurvivesClearAndDynamicReconstr
     EXPECT_EQ(world.captureOblivionActorInventory(restored), reference.mInventory);
     EXPECT_EQ(world.getWorldModel().getPtr((*held).getCellRef().getRefNum()), *held);
 }
+
+TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClearAndRestore)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto nativeId = ESM::RefId(ESM::FormId{0x940, 0});
+    ESM::Weapon weapon = *world.getStore().get<ESM::Weapon>().searchStatic(nativeId);
+    weapon.mId = world.getStore().generateId(); weapon.mName = "Generated persistent weapon";
+    const auto generatedId = weapon.mId.getIf<ESM::GeneratedRefId>()->getValue();
+    world.getStore().getWritable<ESM::Weapon>().insert(weapon);
+    world.getStore().rebuildIdsIndex();
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::dynamic("shared-item", generatedId + 1);
+    item.mCount = 1; item.mCondition = 37.125; item.mCharge = 9.25f;
+    item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+    item.mOwnershipRank = -2;
+    item.mEquippedSlots = ESM4::InventorySlotWeapon;
+    installEquipmentInventory(fixture, world.getPlayerPtr(), {item});
+    installEquipmentInventory(fixture, fixture.mActor, {item});
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), (std::vector{item}));
+    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{item}));
+    auto saved = world.captureOblivionRuntimeState();
+    saved.mPlayer.mInventory.front().mHotkey = 3;
+    saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    // Outgoing definitions cannot satisfy an incoming generated identity.
+    EXPECT_ANY_THROW(world.prepareOblivionSaveState(saved, std::make_unique<MWWorld::ESMStore>()));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    auto incoming = std::make_unique<MWWorld::ESMStore>();
+    for (std::uint64_t i = 0; i <= generatedId; ++i) incoming->generateId();
+    weapon.mName = "Incoming persistent weapon";
+    const auto* accepted = incoming->getWritable<ESM::Weapon>().insert(weapon);
+    auto plan = world.prepareOblivionSaveState(saved, std::move(incoming));
+    world.clear();
+    ASSERT_TRUE(plan->install());
+    restorePreparedSaveActorFixture(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    for (const auto actor : {world.getPlayerPtr(), fixture.mActor})
+    {
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const auto held = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        ASSERT_NE(held, inventory.end());
+        EXPECT_EQ((*held).get<ESM::Weapon>()->mBase, accepted);
+        EXPECT_EQ(world.getWorldModel().getPtr((*held).getCellRef().getRefNum()), *held);
+    }
+    const auto captured = world.captureOblivionRuntimeState();
+    EXPECT_EQ(captured.mPlayer.mInventory, saved.mPlayer.mInventory);
+    EXPECT_EQ(captured.mReferences.front().mInventory, saved.mReferences.front().mInventory);
+    // Direct readers and repeated publication preserve the same generated item.
+    readNativeSnapshot(fixture, captured);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
+}

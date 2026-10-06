@@ -4,6 +4,7 @@
 #include <components/esm3/readerscache.hpp>
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/clothing.hpp"
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
@@ -545,4 +546,84 @@ namespace
         ASSERT_EQ(adaptedSign->mPowers.mList.size(), 1u);
         EXPECT_EQ(adaptedSign->mPowers.mList.front(), ESM::RefId(birthSign.mSpells.front()));
     }
+}
+
+TEST(OblivionProfileServicesTest, GeneratedIncomingInventoryResolvesWithoutOutgoingIdentityOrIndex)
+{
+    MWClass::Weapon::registerSelf();
+    MWClass::Clothing::registerSelf();
+    MWWorld::ESMStore store;
+    ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+    store.insertStatic(player);
+    auto incoming = std::make_unique<MWWorld::ESMStore>();
+    ESM::Weapon weapon{}; weapon.blank(); weapon.mId = incoming->generateId();
+    weapon.mData.mType = ESM::Weapon::LongBladeOneHand; weapon.mData.mHealth = 100;
+    const auto* accepted = incoming->getWritable<ESM::Weapon>().insert(weapon);
+    ESM::Clothing ring{}; ring.blank(); ring.mId = incoming->generateId(); ring.mData.mType = ESM::Clothing::Ring;
+    const auto* acceptedRing = incoming->getWritable<ESM::Clothing>().insert(ring);
+    auto plan = store.prepareDynamicRecords(std::move(incoming));
+    ESM4::RuntimeInventoryItem held;
+    held.mBase = ESM::FormKey::dynamic("shared-item", 1); held.mCount = 1;
+    held.mCondition = 43.125; held.mCharge = 7.25f; held.mEquippedSlots = ESM4::InventorySlotWeapon;
+    ESM4::RuntimeInventoryItem worn;
+    worn.mBase = ESM::FormKey::dynamic("shared-item", 2); worn.mCount = 1;
+    worn.mEquippedSlots = ESM4::Armor::TES4_RightRing;
+    const ESM::FormKeyResolver resolver({"items.esm"});
+    auto refs = MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {held, worn}, &plan.definitions());
+    auto inventory = MWWorld::OblivionProfileServices::stageActorInventory(refs);
+    store.clearDynamic();
+    ASSERT_NE(plan.commit(), nullptr);
+    const auto equipped = inventory->getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    ASSERT_NE(equipped, inventory->end());
+    EXPECT_EQ((*equipped).get<ESM::Weapon>()->mBase, accepted);
+    EXPECT_EQ((*equipped).getCellRef().getNativeItemCondition(), 43.125f);
+    EXPECT_EQ((*equipped).getCellRef().getEnchantmentCharge(), 7.25f);
+    const auto rightRing = inventory->getSlot(MWWorld::InventoryStore::Slot_RightRing);
+    ASSERT_NE(rightRing, inventory->end());
+    EXPECT_EQ((*rightRing).get<ESM::Clothing>()->mBase, acceptedRing);
+    EXPECT_EQ(inventory->getSlot(MWWorld::InventoryStore::Slot_LeftRing), inventory->end());
+}
+
+TEST(OblivionProfileServicesTest, GeneratedInventoryRejectsMissingWrongKindAndInvalidEquipment)
+{
+    MWClass::Weapon::registerSelf();
+    MWClass::Npc::registerSelf();
+    MWWorld::ESMStore store;
+    ESM::NPC actor{}; actor.blank(); actor.mId = store.generateId();
+    store.getWritable<ESM::NPC>().insert(actor);
+    ESM::Weapon weapon{}; weapon.blank(); weapon.mId = store.generateId();
+    weapon.mData.mType = ESM::Weapon::LongBladeOneHand;
+    store.getWritable<ESM::Weapon>().insert(weapon);
+    store.rebuildIdsIndex();
+    ESM4::RuntimeInventoryItem item; item.mCount = 1;
+    const ESM::FormKeyResolver resolver({"items.esm"});
+    for (int fault = 0; fault != 4; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        item.mBase = ESM::FormKey::dynamic("shared-item", fault == 0 ? 99 : fault == 1 ? 1 : 2);
+        item.mEquippedSlots = fault == 2 ? ESM4::Armor::TES4_LeftRing : ESM4::InventorySlotWeapon;
+        item.mCount = fault == 3 ? 2 : 1;
+        EXPECT_ANY_THROW(MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {item}));
+    }
+}
+
+TEST(OblivionProfileServicesTest, GeneratedAmmunitionPreservesAnEquippedStack)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store;
+    ESM::Weapon ammunition{}; ammunition.blank(); ammunition.mId = store.generateId();
+    ammunition.mData.mType = ESM::Weapon::Arrow;
+    const auto* definition = store.getWritable<ESM::Weapon>().insert(ammunition);
+    store.rebuildIdsIndex();
+    ESM4::RuntimeInventoryItem saved;
+    saved.mBase = ESM::FormKey::dynamic("shared-item", 1);
+    saved.mCount = 17; saved.mEquippedSlots = ESM4::InventorySlotAmmunition;
+    const ESM::FormKeyResolver resolver({"items.esm"});
+    auto inventory = MWWorld::OblivionProfileServices::stageActorInventory(
+        MWWorld::OblivionProfileServices::prepareActorInventory(store, resolver, {saved}));
+    const auto equipped = inventory->getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    ASSERT_NE(equipped, inventory->end());
+    EXPECT_EQ((*equipped).getCellRef().getCount(false), 17);
+    EXPECT_EQ((*equipped).get<ESM::Weapon>()->mBase, definition);
+    EXPECT_EQ(inventory->count(ammunition.mId), 17);
 }

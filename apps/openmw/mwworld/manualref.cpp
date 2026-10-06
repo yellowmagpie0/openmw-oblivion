@@ -137,7 +137,8 @@ MWWorld::ManualRef::ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& 
             base = typedStore.searchStatic(name);
         create(base, name, mRef, mPtr);
     };
-    visitRefStore(store, name, cb);
+    // A generated incoming item need not exist in the outgoing ID index.
+    visitRefStore(incoming && name.getIf<ESM::GeneratedRefId>() ? *incoming : store, name, cb);
 
     mPtr.getCellRef().setCount(count);
 }

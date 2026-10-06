@@ -29,6 +29,7 @@
 #include "containerstore.hpp"
 #include "globals.hpp"
 #include "inventorystore.hpp"
+#include "oblivioninventoryidentity.hpp"
 
 namespace
 {
@@ -773,12 +774,18 @@ namespace MWWorld
             if (!std::isfinite(item.mCondition) || (item.mCondition < 0 && item.mCondition != -1)
                 || item.mCondition > std::numeric_limits<float>::max())
                 throw std::invalid_argument("Invalid native inventory condition");
+            const auto generatedId = OblivionInventory::sharedId(item.mBase);
             const auto itemId = resolver.toFormId(item.mBase);
-            if (!itemId || !itemDefinition(store, ESM::RefId(*itemId)))
+            if (!generatedId && (!itemId || !itemDefinition(store, ESM::RefId(*itemId))))
                 throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
                     + item.mBase.serialize());
-            ManualRef source(store, sharedItemId(store, ESM::RefId(*itemId)), item.mCount, incoming);
+            ManualRef source(store, generatedId ? *generatedId : sharedItemId(store, ESM::RefId(*itemId)),
+                item.mCount, incoming);
             const Ptr ptr = source.getPtr();
+            // Generated classes, actors, leveled lists and other definitions
+            // are not actual inventory stacks, even when their ID resolves.
+            if (generatedId)
+                ContainerStore::getType(ptr);
             if (item.mCondition >= 0)
                 ptr.getCellRef().setNativeItemCondition(static_cast<float>(item.mCondition));
             if (item.mCharge >= 0.f)
@@ -798,8 +805,21 @@ namespace MWWorld
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {
-                const auto slots = ptr.getClass().getEquipmentSlots(ptr).first;
-                if (!slots.empty())
+                const auto equipment = ptr.getClass().getEquipmentSlots(ptr);
+                const auto& slots = equipment.first;
+                if (generatedId)
+                {
+                    for (const int candidate : slots)
+                        if (OblivionInventory::slotMask(candidate, ptr.getType() == ESM::REC_LIGH)
+                            == item.mEquippedSlots)
+                        {
+                            slot = candidate;
+                            break;
+                        }
+                    if (!slot || (item.mCount != 1 && !equipment.second))
+                        throw std::invalid_argument("Generated inventory equipment disagrees with its definition");
+                }
+                else if (!slots.empty())
                 {
                     slot = slots.front();
                     if ((item.mEquippedSlots & ESM4::Armor::TES4_LeftRing) != 0
