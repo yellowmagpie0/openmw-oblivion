@@ -239,6 +239,7 @@ namespace ESM4
     {
         float mNormal = 0;
         float mShiveringIsles = 0; // Player-only alternate storage; native permits negative values here.
+        friend bool operator==(const CrimeBountyState&, const CrimeBountyState&) = default;
     };
     struct CrimeBountyChange
     {

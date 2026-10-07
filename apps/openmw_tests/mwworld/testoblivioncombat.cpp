@@ -1114,3 +1114,37 @@ TEST(OblivionCombatService, FractionalBounty43CaptureRejectsLegacyEnvelopeBefore
     service.capture(state);
     EXPECT_DOUBLE_EQ(state.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta, .5);
 }
+
+TEST(OblivionCombatService, OwnedBounty44RetainsSnapshotsAndRejectsBeforePublication)
+{
+    auto state = savedState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};
+    actor.mPlayerInShiveringIsles = true;
+    state.mNativeActorValues = {actor};
+    MWMechanics::OblivionCombatService service;
+    service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    auto captured = savedState(); service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorValues, state.mNativeActorValues);
+    const auto before = captured;
+    auto invalid = state; invalid.mNativeActorValues.front().mValues[37].mBase = 1.f;
+    EXPECT_THROW(service.restore(invalid), std::exception);
+    service.capture(captured); EXPECT_EQ(captured, before);
+    for (std::uint32_t version = 9; version < 44; ++version)
+    {
+        auto legacy = savedState(version); const auto original = legacy;
+        EXPECT_THROW(service.capture(legacy), std::invalid_argument);
+        EXPECT_EQ(legacy, original);
+    }
+    service.clear(); service.capture(captured);
+    EXPECT_TRUE(captured.mNativeActorValues.empty());
+    auto legacy = state; legacy.mVersion = 43;
+    legacy.mNativeActorValues.front().mBounty.reset();
+    legacy.mNativeActorValues.front().mPlayerInShiveringIsles = false;
+    legacy.mNativeActorValues.front().mValues[37].mBase = .5f;
+    service.restore(legacy); service.capture(captured);
+    EXPECT_EQ(captured.mNativeActorValues, legacy.mNativeActorValues);
+}

@@ -34,7 +34,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 43;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 44;
 
     struct RuntimeContentIdentity
     {
@@ -293,6 +293,10 @@ namespace ESM4
         // TES4 AV0..71. Preserve each modifier's presence independently from
         // its value. Bases are resolved native values, never shared UI views.
         std::array<ActorValueState, 72> mValues{};
+        // v44: reference-owned crime gold; AV37 has no base-form field.
+        // Absence preserves legacy scalar storage; readers never infer a realm.
+        std::optional<CrimeBountyState> mBounty;
+        bool mPlayerInShiveringIsles = false;
         // v10: raw integer base-form contributions for player AV8..11.
         // Never infer these from the resolved dynamic bases above. Absence
         // denotes legacy/uninitialized player authority, not four zeroes.

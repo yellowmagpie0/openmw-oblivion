@@ -514,6 +514,19 @@ namespace ESM4
 
     void RuntimeActorValues::validate() const
     {
+        if (mBounty)
+        {
+            if (!std::isfinite(mBounty->mNormal) || mBounty->mNormal < 0
+                || !std::isfinite(mBounty->mShiveringIsles))
+                throw std::runtime_error("Invalid TES4 crime gold storage");
+            if (mOwner != ActorValueOwner::Player && (mPlayerInShiveringIsles || mBounty->mShiveringIsles != 0))
+                throw std::runtime_error("Nonplayer crime gold cannot own alternate Player storage");
+            if (mValues[37].mBase != 0 || std::any_of(mValues[37].mModifiers.begin(), mValues[37].mModifiers.end(),
+                    [](const auto& value) { return value.value_or(0.f) != 0; }))
+                throw std::runtime_error("Crime gold has duplicate scalar AV37 authority");
+        }
+        else if (mPlayerInShiveringIsles)
+            throw std::runtime_error("Player realm flag requires owned crime gold");
         if (mActor.isNull() || mBase.isNull())
             throw std::runtime_error("Invalid TES4 native actor-value identity");
         if (mProcessAction && mProcess != ActorValueProcess::Active)
@@ -886,6 +899,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 44 && (actor.mBounty || actor.mPlayerInShiveringIsles))
+                throw std::runtime_error("Owned crime gold requires schema44");
             if (mVersion < 26 && actor.mProcessAction)
                 throw std::runtime_error("TES4 native action code requires runtime-state version 26");
             if (mVersion < 25 && actor.mProcessKnockedState)
@@ -1719,6 +1734,16 @@ namespace ESM4
                     if (actor.mProcessAction)
                         writer.integer<std::int16_t>(*actor.mProcessAction);
                 }
+                if (mVersion >= 44)
+                {
+                    writer.integer<std::uint8_t>(actor.mBounty.has_value());
+                    if (actor.mBounty)
+                    {
+                        writer.floating(actor.mBounty->mNormal);
+                        writer.floating(actor.mBounty->mShiveringIsles);
+                        writer.integer<std::uint8_t>(actor.mPlayerInShiveringIsles);
+                    }
+                }
                 if (mVersion >= 10)
                 {
                     writer.integer<std::uint8_t>(actor.mPlayerFormValues.has_value());
@@ -2421,6 +2446,20 @@ namespace ESM4
                         throw std::runtime_error("Invalid TES4 native action-code presence");
                     if (present)
                         actor.mProcessAction = reader.integer<std::int16_t>();
+                }
+                if (result.mVersion >= 44)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid crime gold presence");
+                    if (present)
+                    {
+                        actor.mBounty = CrimeBountyState{reader.float32(), reader.float32()};
+                        const auto realm = reader.integer<std::uint8_t>();
+                        if (realm > 1)
+                            throw std::runtime_error("Invalid Player crime realm flag");
+                        actor.mPlayerInShiveringIsles = realm != 0;
+                    }
                 }
                 if (result.mVersion >= 10)
                 {
@@ -3321,6 +3360,27 @@ namespace ESM4
                     stream << ",\"process_action\":";
                     if (actor.mProcessAction)
                         stream << *actor.mProcessAction;
+                    else
+                        stream << "null";
+                }
+                if (mVersion >= 44)
+                {
+                    stream << ",\"bounty\":";
+                    if (actor.mBounty)
+                    {
+                        const auto number = [&](float value) {
+                            if (value == 0 && std::signbit(value))
+                                stream << "-0.0";
+                            else
+                                stream << std::setprecision(17) << value;
+                        };
+                        stream << "{\"normal\":";
+                        number(actor.mBounty->mNormal);
+                        stream << ",\"shivering_isles\":";
+                        number(actor.mBounty->mShiveringIsles);
+                        stream << ",\"player_in_shivering_isles\":"
+                            << (actor.mPlayerInShiveringIsles ? "true" : "false") << '}';
+                    }
                     else
                         stream << "null";
                 }

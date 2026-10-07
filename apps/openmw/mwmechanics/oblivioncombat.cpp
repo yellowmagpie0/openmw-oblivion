@@ -3763,6 +3763,9 @@ namespace MWMechanics
                     || delta > std::numeric_limits<std::int32_t>::max())
                     throw std::invalid_argument("fractional crime bounty delta requires an Oblivion v43+ save");
             }
+        if (state.mVersion < 44 && std::any_of(mActorValues.begin(), mActorValues.end(),
+                [](const auto& entry) { return entry.second.mBounty.has_value(); }))
+            throw std::invalid_argument("owned crime gold requires an Oblivion v44+ save");
         auto crime = mCrimeContracts;
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)

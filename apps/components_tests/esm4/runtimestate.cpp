@@ -3323,3 +3323,104 @@ TEST(ESM4RuntimeState, FractionalBounty43PreservesNativeAmountsAndEveryLegacyInt
         EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 }
+
+TEST(ESM4RuntimeState, OwnedBounty44PreservesRawBucketsAndMatchesIndependentWire)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("bounty-wire.esm", 9);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};
+    actor.mPlayerInShiveringIsles = true;
+    state.mNativeActorValues = {actor};
+    const auto bytes = state.serializeBinary();
+    const auto base = actor.mBase.serialize();
+    const auto found = std::search(bytes.begin(), bytes.end(), base.begin(), base.end());
+    ASSERT_NE(found, bytes.end());
+    // Owner/process, 72 zero bases with absent modifiers, then two absent
+    // process-state flags precede the independently specified v44 field.
+    const auto offset = std::distance(bytes.begin(), found) + base.size() + 2 + 72 * 5 + 2;
+    const std::array<std::uint8_t, 10> expected{1, 0, 0, 128, 62, 0, 0, 96, 192, 1};
+    ASSERT_GE(bytes.size(), offset + expected.size());
+    EXPECT_TRUE(std::equal(expected.begin(), expected.end(), bytes.begin() + offset));
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes), state);
+    EXPECT_NE(state.canonicalJson().find(
+        "\"bounty\":{\"normal\":0.25,\"shivering_isles\":-3.5,\"player_in_shivering_isles\":true}"),
+        std::string::npos);
+    for (const auto flag : {offset, offset + 9})
+    {
+        auto bad = bytes; bad[flag] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    }
+    for (float amount : {-0.f, std::numeric_limits<float>::denorm_min(), std::numeric_limits<float>::max()})
+    {
+        state.mNativeActorValues.front().mBounty = ESM4::CrimeBountyState{amount, -amount};
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        const auto& bounty = *restored.mNativeActorValues.front().mBounty;
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(bounty.mNormal), std::bit_cast<std::uint32_t>(amount));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(bounty.mShiveringIsles), std::bit_cast<std::uint32_t>(-amount));
+    }
+}
+
+TEST(ESM4RuntimeState, OwnedBounty44RejectsDuplicateAuthorityAndForeignRealmStorage)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mReferences.front().mKey;
+    actor.mBase = state.mReferences.front().mBase;
+    actor.mBounty = ESM4::CrimeBountyState{.25f, 0.f};
+    state.mNativeActorValues = {actor};
+    EXPECT_NO_THROW(state.validate());
+    const auto reject = [&](const ESM4::RuntimeActorValues& bad) {
+        state.mNativeActorValues = {bad};
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+    };
+    for (float value : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto bad = actor; bad.mBounty->mNormal = value; reject(bad);
+    }
+    auto bad = actor; bad.mBounty->mShiveringIsles = -1.f; reject(bad);
+    bad = actor; bad.mPlayerInShiveringIsles = true; reject(bad);
+    bad = actor; bad.mBounty.reset(); bad.mPlayerInShiveringIsles = true; reject(bad);
+    bad = actor; bad.mValues[37].mBase = .25f; reject(bad);
+    for (auto channel : {0, 1, 2})
+    {
+        bad = actor; bad.mValues[37].mModifiers[channel] = .25f; reject(bad);
+    }
+    bad = actor; bad.mValues[37].mModifiers[1] = 0.f;
+    state.mNativeActorValues = {bad};
+    EXPECT_NO_THROW(state.validate()); // Present zero is not a second amount.
+    for (std::uint32_t version = 9; version < 44; ++version)
+    {
+        state.mVersion = version;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, OwnedBounty44PreservesEveryLegacyScalarWithoutGuessingRealm)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mValues[37] = {.25f, {1.f, {}, -0.f}};
+    state.mNativeActorValues = {actor};
+    for (std::uint32_t version = 9; version < 44; ++version)
+    {
+        SCOPED_TRACE(version);
+        state.mVersion = version;
+        const auto bytes = state.serializeBinary();
+        auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_FALSE(restored.mNativeActorValues.front().mBounty);
+        EXPECT_FALSE(restored.mNativeActorValues.front().mPlayerInShiveringIsles);
+        restored.mVersion = 44;
+        const auto promoted = ESM4::RuntimeState::deserializeBinary(restored.serializeBinary());
+        EXPECT_EQ(promoted.mNativeActorValues.front().mValues[37], actor.mValues[37]);
+        EXPECT_FALSE(promoted.mNativeActorValues.front().mBounty);
+        EXPECT_NE(promoted.canonicalJson().find("\"bounty\":null"), std::string::npos);
+    }
+}

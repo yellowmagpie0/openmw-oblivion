@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 43
+CURRENT_VERSION = 44
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -857,6 +857,24 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         values = actor.get("values")
         if not isinstance(values, list) or len(values) != 72:
             raise RuntimeStateError("TES4 native actor values require 72 entries")
+        bounty = actor.get("bounty")
+        if bounty is not None:
+            if version < 44:
+                raise RuntimeStateError("Owned crime gold requires schema44")
+            if not isinstance(bounty, dict) or set(bounty) != {
+                "normal", "shivering_isles", "player_in_shivering_isles"
+            }:
+                raise RuntimeStateError("Invalid TES4 crime gold storage")
+            normal = native_float(bounty["normal"])
+            alternate = native_float(bounty["shivering_isles"])
+            realm = bounty["player_in_shivering_isles"]
+            if normal < 0 or type(realm) is not bool:
+                raise RuntimeStateError("Invalid TES4 crime gold bucket or realm flag")
+            if owner != 0 and (realm or alternate != 0):
+                raise RuntimeStateError("Nonplayer crime gold cannot own alternate Player storage")
+            if (not isinstance(values[37], list) or len(values[37]) != 4
+                    or any(value is not None and native_float(value) != 0 for value in values[37])):
+                raise RuntimeStateError("Crime gold has duplicate scalar AV37 authority")
         form_health = actor.get("nonplayer_form_health")
         if form_health is not None:
             if version < 17 or owner != 1 or type(form_health) is not int or not -(1 << 31) <= form_health < (1 << 31):
@@ -1734,6 +1752,17 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid TES4 native action-code presence")
                 actor["process_action"] = reader.unpack("<h") if present else None
+            if version >= 44:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid crime gold presence")
+                actor["bounty"] = None
+                if present:
+                    normal, alternate, realm = reader.unpack("<f"), reader.unpack("<f"), reader.unpack("<B")
+                    if realm > 1:
+                        raise RuntimeStateError("Invalid Player crime realm flag")
+                    actor["bounty"] = {"normal": normal, "shivering_isles": alternate,
+                                       "player_in_shivering_isles": bool(realm)}
             if version >= 10:
                 present = reader.unpack("<B")
                 if present > 1:
@@ -2146,6 +2175,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", action is not None)
                 if action is not None:
                     writer.pack("<h", action)
+            if version >= 44:
+                bounty = actor.get("bounty")
+                writer.pack("<B", bounty is not None)
+                if bounty is not None:
+                    writer.pack("<f", bounty["normal"])
+                    writer.pack("<f", bounty["shivering_isles"])
+                    writer.pack("<B", bounty["player_in_shivering_isles"])
             if version >= 10:
                 form_values = actor.get("player_form_values")
                 writer.pack("<B", form_values is not None)

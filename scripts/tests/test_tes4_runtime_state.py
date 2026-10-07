@@ -981,6 +981,89 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
 
+    def owned_bounty_state(self) -> dict:
+        state = make_state()
+        state["schema_version"] = 44
+        state["ai_rng_state"] = 1
+        state["native_actor_values"] = [{
+            "actor": state["player"]["reference"], "base": "content:bounty-wire.esm:000009",
+            "owner": 0, "process": 0, "values": [[0.0, None, None, None] for _ in range(72)],
+            "bounty": {"normal": .25, "shivering_isles": -3.5, "player_in_shivering_isles": True},
+        }]
+        return state
+
+    def test_owned_bounty44_matches_independent_wire_and_preserves_raw_float_bits(self) -> None:
+        state = self.owned_bounty_state()
+        payload = state_io.encode_payload(state)
+        actor = state["native_actor_values"][0]
+        base = actor["base"].encode()
+        offset = payload.index(base) + len(base) + 2 + 72 * 5 + 2
+        self.assertEqual(payload[offset:offset + 10], bytes.fromhex("01 0000803e 000060c0 01"))
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded["native_actor_values"][0]["bounty"], actor["bounty"])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        for flag in (offset, offset + 9):
+            bad = bytearray(payload)
+            bad[flag] = 2
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(bad))
+        for value in (-0.0, 2 ** -149, struct.unpack("<f", bytes.fromhex("ffff7f7f"))[0]):
+            actor["bounty"].update(normal=value, shivering_isles=-value)
+            bounty = state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0]["bounty"]
+            self.assertEqual(struct.pack("<ff", bounty["normal"], bounty["shivering_isles"]),
+                             struct.pack("<ff", value, -value))
+
+    def test_owned_bounty44_rejects_malformed_storage_duplicate_authority_and_downgrades(self) -> None:
+        state = self.owned_bounty_state()
+        # Bind each value now rather than sharing a late-bound loop variable.
+        changes = [lambda a, x=x: a["bounty"].update(normal=x)
+                   for x in (-1, math.inf, math.nan, True, 1e100)]
+        changes += [lambda a: a["bounty"].update(shivering_isles=math.inf),
+                    lambda a: a["bounty"].update(player_in_shivering_isles=1),
+                    lambda a: a["bounty"].update(unknown=0),
+                    lambda a: a["bounty"].pop("normal")]
+        changes += [lambda a, channel=channel: a["values"][37].__setitem__(channel, .25)
+                    for channel in range(4)]
+        for change in changes:
+            bad = copy.deepcopy(state)
+            change(bad["native_actor_values"][0])
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        for version in range(9, 44):
+            bad = copy.deepcopy(state)
+            bad["schema_version"] = version
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        state["references"] = [{
+            "key": "content:oblivion.esm:000001", "base": "content:oblivion.esm:000002",
+            "cell": state["player"]["cell"], "position": [0.0] * 6, "enabled": True,
+            "deleted": False, "owner": None, "lock_level": 0, "inventory": [], "custom_state": {},
+        }]
+        actor = state["native_actor_values"][0]
+        actor.update(owner=1, actor=state["references"][0]["key"], base=state["references"][0]["base"])
+        for alternate, realm in [(-1, False), (0, True)]:
+            actor["bounty"].update(shivering_isles=alternate, player_in_shivering_isles=realm)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        actor["bounty"].update(shivering_isles=0, player_in_shivering_isles=False)
+        state_io.encode_payload(state)
+
+    def test_owned_bounty44_preserves_all_legacy_scalars_without_guessing_realm(self) -> None:
+        for version in range(9, 44):
+            state = self.owned_bounty_state()
+            state["schema_version"] = version
+            actor = state["native_actor_values"][0]
+            del actor["bounty"]
+            actor["values"][37] = [.25, 1.0, None, -0.0]
+            payload = state_io.encode_payload(state)
+            decoded = state_io.decode_payload(payload)
+            self.assertNotIn("bounty", decoded["native_actor_values"][0])
+            self.assertEqual(state_io.encode_payload(decoded), payload)
+            decoded["schema_version"] = 44
+            promoted = state_io.decode_payload(state_io.encode_payload(decoded))["native_actor_values"][0]
+            self.assertIsNone(promoted["bounty"])
+            self.assertEqual(promoted["values"][37], actor["values"][37])
+
     def test_player_form_values_match_cpp_version_ten_wire_and_preserve_legacy_absence(self) -> None:
         state = make_state()
         state["schema_version"] = 10
