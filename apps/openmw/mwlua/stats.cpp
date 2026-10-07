@@ -633,6 +633,13 @@ namespace MWLua
             {
                 MWMechanics::NpcStats& stats = ptr.getClass().getNpcStats(ptr);
                 int intValue = LuaUtil::cast<int>(value);
+                auto world = MWBase::Environment::get().getWorld();
+                if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+                {
+                    if (!world->requestOblivionReputation(ptr, intValue))
+                        throw std::runtime_error("Native Fame is not ready");
+                    return;
+                }
                 stats.setReputation(intValue);
             }
         };

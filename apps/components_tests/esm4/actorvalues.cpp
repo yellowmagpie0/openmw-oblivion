@@ -612,3 +612,39 @@ TEST(ESM4ActorValues, LegacyPlayerFormReencodingRejectsAmbiguousOrUnrepresentabl
     auto zero = valid; zero[0] = -.0f;
     EXPECT_THROW(ESM4::legacyPlayerFormValues(zero, attributes, settings), std::invalid_argument);
 }
+
+TEST(ESM4ActorValues, PlayerReferenceCountersMatchOriginalExactIntegerAndFloatStoreOrder)
+{
+    struct Case { std::int32_t mRaw; ESM4::ActorValueModifiers mModifiers; float mFloat; std::int32_t mInteger; };
+    const Case cases[] = {
+#include "reference_counters_expected.inc"
+    };
+    for (const auto& test : cases)
+    {
+        SCOPED_TRACE(test.mRaw);
+        EXPECT_EQ(ESM4::composePlayerReferenceCounter(test.mRaw, test.mModifiers), test.mFloat);
+        EXPECT_EQ(ESM4::composePlayerReferenceCounterInteger(test.mRaw, test.mModifiers), test.mInteger);
+    }
+    EXPECT_THROW(ESM4::composePlayerReferenceCounter(0, {std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(), 0.f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::composePlayerReferenceCounterInteger(0,
+        {std::numeric_limits<float>::quiet_NaN(), {}, {}}), std::invalid_argument);
+}
+
+TEST(ESM4ActorValues, ModPCInfamyMatchesOriginalWrappingAndAccumulatorReset)
+{
+    struct Case { std::int32_t mRaw, mDelta, mAccumulated, mExpected; };
+    const Case cases[] = {
+#include "reference_infamy_mutations_expected.inc"
+    };
+    for (const auto& test : cases)
+    {
+        SCOPED_TRACE(test.mRaw);
+        ESM4::PlayerReputationState before{73, test.mRaw, test.mAccumulated};
+        const auto after = ESM4::modifyPlayerInfamy(before, test.mDelta);
+        EXPECT_EQ(after, (ESM4::PlayerReputationState{73, test.mExpected, 0}));
+        EXPECT_EQ(before.mBountyAccumulator, test.mAccumulated);
+    }
+    EXPECT_EQ(ESM4::modifyPlayerInfamy({73, -1, std::nullopt}, 0),
+        (ESM4::PlayerReputationState{73, -1, 0}));
+}

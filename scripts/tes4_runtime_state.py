@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 45  # Same native payload as v44; engine admission checks owned shared bounty views.
+CURRENT_VERSION = 46
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -858,6 +858,20 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if not isinstance(values, list) or len(values) != 72:
             raise RuntimeStateError("TES4 native actor values require 72 entries")
         bounty = actor.get("bounty")
+        reputation = actor.get("reputation")
+        if reputation is not None:
+            if version < 46 or owner != 0 or "infamy" in state["player"]["actor_values"]:
+                raise RuntimeStateError("Owned Player reputation requires schema46 and no legacy Infamy authority")
+            if not isinstance(reputation, dict) or set(reputation) != {"fame", "infamy", "bounty_accumulator"}:
+                raise RuntimeStateError("Invalid Player reputation storage")
+            for name, amount in reputation.items():
+                if name == "bounty_accumulator" and amount is None:
+                    continue
+                if type(amount) is not int or not -(1 << 31) <= amount < (1 << 31):
+                    raise RuntimeStateError("Player reputation requires signed int32 counters")
+            if any(not isinstance(values[av], list) or len(values[av]) != 4
+                   or native_float(values[av][0]) != 0 for av in (38, 39)):
+                raise RuntimeStateError("Player reputation has duplicate AV38/39 base authority")
         if bounty is not None:
             if version < 44:
                 raise RuntimeStateError("Owned crime gold requires schema44")
@@ -929,6 +943,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if bounty is not None and owner == 0:
             native_float(native_float(bounty["normal"]) + sum(
                 0.0 if modifier is None else native_float(modifier) for modifier in values[37][1:]))
+        if reputation is not None:
+            for av, name in ((38, "fame"), (39, "infamy")):
+                native_float(reputation[name] + sum(
+                    0.0 if modifier is None else native_float(modifier) for modifier in values[av][1:]))
 
     manager_time = native_float(state.get("native_actor_manager_time", 0))
     update_times = check_collection(state.get("native_actor_update_times", []), "native actor update time list")
@@ -1767,6 +1785,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         raise RuntimeStateError("Invalid Player crime realm flag")
                     actor["bounty"] = {"normal": normal, "shivering_isles": alternate,
                                        "player_in_shivering_isles": bool(realm)}
+            if version >= 46:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid Player reputation presence")
+                actor["reputation"] = None
+                if present:
+                    fame, infamy = reader.unpack("<i"), reader.unpack("<i")
+                    accumulated = reader.unpack("<B")
+                    if accumulated > 1:
+                        raise RuntimeStateError("Invalid Player reputation accumulator presence")
+                    actor["reputation"] = {"fame": fame, "infamy": infamy,
+                                           "bounty_accumulator": reader.unpack("<i") if accumulated else None}
             if version >= 10:
                 present = reader.unpack("<B")
                 if present > 1:
@@ -2186,6 +2216,16 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", bounty["normal"])
                     writer.pack("<f", bounty["shivering_isles"])
                     writer.pack("<B", bounty["player_in_shivering_isles"])
+            if version >= 46:
+                reputation = actor.get("reputation")
+                writer.pack("<B", reputation is not None)
+                if reputation is not None:
+                    writer.pack("<i", reputation["fame"])
+                    writer.pack("<i", reputation["infamy"])
+                    accumulated = reputation["bounty_accumulator"]
+                    writer.pack("<B", accumulated is not None)
+                    if accumulated is not None:
+                        writer.pack("<i", accumulated)
             if version >= 10:
                 form_values = actor.get("player_form_values")
                 writer.pack("<B", form_values is not None)

@@ -514,6 +514,9 @@ namespace ESM4
 
     void RuntimeActorValues::validate() const
     {
+        if (mReputation && (mOwner != ActorValueOwner::Player
+                || mValues[38].mBase != 0 || mValues[39].mBase != 0))
+            throw std::runtime_error("Player reputation has foreign ownership or duplicate AV38/39 base authority");
         if (mBounty)
         {
             if (!std::isfinite(mBounty->mNormal) || mBounty->mNormal < 0
@@ -558,6 +561,11 @@ namespace ESM4
                 auto current = mValues[37];
                 current.mBase = mBounty->mNormal;
                 composeActorValue(current, mOwner, mProcess);
+            }
+            if (mReputation)
+            {
+                composePlayerReferenceCounter(mReputation->mFame, mValues[38].mModifiers);
+                composePlayerReferenceCounter(mReputation->mInfamy, mValues[39].mModifiers);
             }
         }
         catch (const std::invalid_argument& error)
@@ -904,6 +912,8 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (actor.mReputation && (mVersion < 46 || mPlayer.mActorValues.contains("infamy")))
+                throw std::runtime_error("Owned Player reputation requires schema46 and no legacy Infamy authority");
             if (mVersion < 44 && (actor.mBounty || actor.mPlayerInShiveringIsles))
                 throw std::runtime_error("Owned crime gold requires schema44");
             if (mVersion < 26 && actor.mProcessAction)
@@ -1749,6 +1759,18 @@ namespace ESM4
                         writer.integer<std::uint8_t>(actor.mPlayerInShiveringIsles);
                     }
                 }
+                if (mVersion >= 46)
+                {
+                    writer.integer<std::uint8_t>(actor.mReputation.has_value());
+                    if (actor.mReputation)
+                    {
+                        writer.integer(actor.mReputation->mFame);
+                        writer.integer(actor.mReputation->mInfamy);
+                        writer.integer<std::uint8_t>(actor.mReputation->mBountyAccumulator.has_value());
+                        if (actor.mReputation->mBountyAccumulator)
+                            writer.integer(*actor.mReputation->mBountyAccumulator);
+                    }
+                }
                 if (mVersion >= 10)
                 {
                     writer.integer<std::uint8_t>(actor.mPlayerFormValues.has_value());
@@ -2464,6 +2486,23 @@ namespace ESM4
                         if (realm > 1)
                             throw std::runtime_error("Invalid Player crime realm flag");
                         actor.mPlayerInShiveringIsles = realm != 0;
+                    }
+                }
+                if (result.mVersion >= 46)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid Player reputation presence");
+                    if (present)
+                    {
+                        actor.mReputation.emplace();
+                        actor.mReputation->mFame = reader.integer<std::int32_t>();
+                        actor.mReputation->mInfamy = reader.integer<std::int32_t>();
+                        const auto accumulated = reader.integer<std::uint8_t>();
+                        if (accumulated > 1)
+                            throw std::runtime_error("Invalid Player reputation accumulator presence");
+                        actor.mReputation->mBountyAccumulator = accumulated
+                            ? std::optional(reader.integer<std::int32_t>()) : std::nullopt;
                     }
                 }
                 if (result.mVersion >= 10)
@@ -3385,6 +3424,23 @@ namespace ESM4
                         number(actor.mBounty->mShiveringIsles);
                         stream << ",\"player_in_shivering_isles\":"
                             << (actor.mPlayerInShiveringIsles ? "true" : "false") << '}';
+                    }
+                    else
+                        stream << "null";
+                }
+                if (mVersion >= 46)
+                {
+                    stream << ",\"reputation\":";
+                    if (actor.mReputation)
+                    {
+                        stream << "{\"fame\":" << actor.mReputation->mFame
+                               << ",\"infamy\":" << actor.mReputation->mInfamy
+                               << ",\"bounty_accumulator\":";
+                        if (actor.mReputation->mBountyAccumulator)
+                            stream << *actor.mReputation->mBountyAccumulator;
+                        else
+                            stream << "null";
+                        stream << '}';
                     }
                     else
                         stream << "null";

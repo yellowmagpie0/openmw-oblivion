@@ -78,6 +78,8 @@ namespace MWMechanics
         // it untouched; null means a legacy snapshot with no native buckets.
         bool mOwnsBounty = false;
         std::optional<float> mBounty;
+        bool mOwnsReputation = false;
+        std::optional<int> mReputation;
     };
 
     // A synchronous transaction: the target must outlive this object. Prepare
@@ -96,6 +98,8 @@ namespace MWMechanics
         NpcStats* mNpcTarget = nullptr;
         bool mOwnsBounty = false;
         std::optional<int> mBounty;
+        bool mOwnsReputation = false;
+        std::optional<int> mReputation;
         bool mCommitted = false;
 
         static void replaceAttribute(AttributeValue& target, const AttributeValue& value) noexcept;
@@ -352,6 +356,9 @@ namespace MWMechanics
         // Legal bounty differs from AV37: realm routing and sub-one minimum,
         // without generic AV modifiers. Absence denotes legacy unowned storage.
         std::optional<float> crimeBounty(const ESM::FormKey& actor) const;
+        std::optional<ESM4::PlayerReputationState> playerReputation() const;
+        void publishPlayerReputation(MWWorld::Player& player, ESM4::PlayerReputationState reputation,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         // Integer Lua adapter explicitly replaces the selected raw bucket;
         // it preserves generic AV37 modifiers and publishes its shared view.
         void setPlayerCrimeLevel(MWWorld::Player& player, int amount,

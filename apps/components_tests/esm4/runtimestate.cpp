@@ -3446,3 +3446,48 @@ TEST(ESM4RuntimeState, Bounty45Preserves44NativePayloadLayout)
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorValues,
         ESM4::RuntimeState::deserializeBinary(expected).mNativeActorValues);
 }
+
+TEST(ESM4RuntimeState, Reputation46OwnsExactSignedCountersAndIndependentAccumulatorPresence)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("reputation-wire.esm", 9);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mReputation = ESM4::PlayerReputationState{16777217, -3, 777};
+    actor.mValues[38].mModifiers = {.5f, .75f, -.25f};
+    state.mNativeActorValues = {actor};
+    const auto bytes = state.serializeBinary();
+    const auto name = actor.mBase.serialize();
+    const auto found = std::search(bytes.begin(), bytes.end(), name.begin(), name.end());
+    ASSERT_NE(found, bytes.end());
+    // Three present AV38 modifiers add twelve bytes to the zero/absent array.
+    const auto offset = std::distance(bytes.begin(), found) + name.size() + 2 + 72 * 5 + 12 + 3;
+    const std::vector<std::uint8_t> expected{1, 1, 0, 0, 1, 253, 255, 255, 255, 1, 9, 3, 0, 0};
+    ASSERT_GE(bytes.size(), offset + expected.size());
+    EXPECT_TRUE(std::equal(expected.begin(), expected.end(), bytes.begin() + offset));
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeActorValues, state.mNativeActorValues);
+    for (const auto flag : {offset, offset + 9})
+    {
+        auto invalid = bytes; invalid[flag] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+    }
+    for (const auto accumulated : {std::optional<std::int32_t>{}, std::optional<std::int32_t>{0},
+             std::optional<std::int32_t>{std::numeric_limits<std::int32_t>::min()}})
+    {
+        state.mNativeActorValues.front().mReputation->mBountyAccumulator = accumulated;
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues,
+            state.mNativeActorValues);
+    }
+    state.mVersion = 45;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mVersion = 46;
+    state.mPlayer.mActorValues["infamy"] = -3;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mPlayer.mActorValues.clear();
+    state.mNativeActorValues.front().mValues[39].mBase = 1;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeActorValues.front().mValues[39].mBase = 0;
+    state.mNativeActorValues.front().mOwner = ESM4::ActorValueOwner::NonPlayer;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}

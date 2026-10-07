@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scope": "Explicit owned schema46 counter fixture; does not assert automatic legacy adoption",
+  "source": {
+    "path": "build/oblivion-compat/m15/S3/bounty-admission-restart-01/first/first-produced.omwsave",
+    "sha256": "ba83e180a8afcc6241244982a0f551bbfe1ce3e0ddbbe38af4e1f7250ed04add"
+  },
+  "runtime_schema_version": 46,
+  "player_reputation": {
+    "fame": 16777217,
+    "infamy": -3,
+    "bounty_accumulator": 777
+  },
+  "player_actor_values": {
+    "38": [
+      0,
+      0.5,
+      0.75,
+      -0.25
+    ],
+    "39": [
+      0,
+      0,
+      1,
+      0
+    ]
+  },
+  "other_actor_reputation": null,
+  "lua_configuration": {
+    "plugin": "m15-bounty.omwscripts",
+    "content": "GLOBAL: scripts/m15-bounty.lua\nPLAYER: scripts/m15-reputation.lua\n"
+  },
+  "shared_player_insert": {
+    "record": "PLAY",
+    "after_subrecord": "BOUN",
+    "new_subrecord": "REPU",
+    "signed_int32": 16777217,
+    "update_outer_record_size": true
+  },
+  "expected_saved_reputation": {
+    "fame": 16777219,
+    "infamy": -3,
+    "bounty_accumulator": 0
+  },
+  "live_rejection_fault": {
+    "record": "PLAY",
+    "subrecord": "REPU",
+    "before": 16777219,
+    "after": 16777218,
+    "native_payload_unchanged": true
+  },
+  "preparation_reference": "build/oblivion-compat/m15/S3/prepare-reputation.py",
+  "worker_reference": "build/oblivion-compat/m15/S3/reputation-restart-02/wait-save.py"
+}

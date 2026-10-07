@@ -4,6 +4,7 @@
 #include "apps/openmw/mwphysics/collisiontype.hpp"
 #include <components/esm3/inventorystate.hpp>
 #include <components/esm3/objectstate.hpp>
+#include <components/esm3/npcstate.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <bit>
 #include <cstddef>
@@ -13980,4 +13981,117 @@ TEST(OblivionWorldTest, BountyNpcAndCreatureQueriesKeepReferenceBaseAndProcessMo
         readNativeSnapshot(fixture, saved); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
         EXPECT_EQ(service.crimeBounty(values.mActor), 10.5f);
     }
+}
+
+TEST(OblivionWorldTest, PlayerReputationOwnsRawCountersSharedFameAndExistingInfamyCommand)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Npc native{};
+    native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("oblivion.esm", 7);
+    native.mIsTES4 = true; native.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto& service = *world.getOblivionCombatService();
+    const auto player = world.getPlayerPtr();
+    auto& stats = player.getClass().getNpcStats(player);
+    EXPECT_EQ(stats.getReputation(), 0);
+    EXPECT_THROW(stats.setReputation(17), std::logic_error);
+    auto values = *service.findActorValues(ESM::FormKey::dynamic("player", 1));
+    values.mReputation = ESM4::PlayerReputationState{16777217, -3, 777};
+    values.mValues[38].mModifiers = {.5f, .75f, -.25f};
+    values.mValues[39].mModifiers = {0.f, 1.f, 0.f};
+    service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    EXPECT_EQ(stats.getReputation(), 16777217); // Raw Fame, independently of AV modifiers and rounding.
+    EXPECT_EQ(service.getPlayerBaseValue(38), 16777216);
+    EXPECT_EQ(service.getPlayerValue(38), 16777218.f);
+    EXPECT_EQ(service.getPlayerIntegerValue(38), 16777217);
+    EXPECT_EQ(service.getPlayerValue(39), -2.f);
+    MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+    EXPECT_EQ(ObScript::asInteger(host.call("GetPCInfamy", {}, {}, {}, {})), -3);
+    EXPECT_EQ(ObScript::asInteger(host.call("ModPCInfamy", {}, {std::int64_t{0}}, {}, {})), 0);
+    EXPECT_EQ(service.playerReputation()->mBountyAccumulator, 0);
+    EXPECT_EQ(service.playerReputation()->mInfamy, -3);
+    ASSERT_TRUE(world.requestOblivionReputation(player, -20));
+    EXPECT_EQ(stats.getReputation(), -20); // Native signed counter, not TES3's 0..255 facade clamp.
+    EXPECT_EQ(service.playerReputation()->mInfamy, -3);
+    EXPECT_EQ(service.getPlayerValue(38), -19.f);
+    LuaUtil::ScriptsConfiguration config;
+    LuaUtil::LuaState luaState(&fixture.mVfs, &config);
+    InspectableScripts scripts(&luaState, MWLua::LObject(player));
+    MWLua::Context context{MWLua::Context::Local};
+    context.mLuaManager = fixture.mLuaManager.get(); context.mLua = &luaState;
+    sol::state_view lua = luaState.unsafeState();
+    sol::table actor(lua, sol::create), npcType(lua, sol::create);
+    MWLua::addActorStatsBindings(actor, context);
+    npcType["baseType"] = actor;
+    MWLua::addNpcStatsBindings(npcType, context);
+    lua["NPC"] = npcType;
+    lua.new_usertype<MWLua::SelfObject>("SelfObject", sol::no_constructor);
+    lua["target"] = &scripts.self();
+    auto result = lua.safe_script("NPC.stats.reputation(target).current = 16777219", sol::script_pass_on_error);
+    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    EXPECT_EQ(stats.getReputation(), -20); // Deferred request does not publish early.
+    ASSERT_NO_THROW(scripts.applyStatsCache());
+    EXPECT_EQ(stats.getReputation(), 16777219);
+    ASSERT_TRUE(world.requestOblivionReputation(player, -20));
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_THROW(host.call("ModPCInfamy", {}, {std::numeric_limits<std::int64_t>::max()}, {}, {}), ObScript::RuntimeError);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorValues, before.mNativeActorValues);
+    auto saved = ESM4::RuntimeState::deserializeBinary(before.serializeBinary());
+    EXPECT_FALSE(saved.mPlayer.mActorValues.contains("infamy"));
+    ESM::NpcState shared{}; shared.blank(); player.getClass().writeAdditionalState(player, shared);
+    EXPECT_EQ(shared.mNpcStats.mReputation, -20);
+    prepareNativeSnapshotPlayer(fixture, saved);
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(service.playerReputation(), (std::optional<ESM4::PlayerReputationState>{{-20, -3, 0}}));
+}
+
+TEST(OblivionWorldTest, ExplicitReputationWriteAdoptsLegacyInfamyWithoutGuessingAccumulator)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Npc native{};
+    native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("oblivion.esm", 7);
+    native.mIsTES4 = true; native.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto& service = *world.getOblivionCombatService();
+    auto saved = world.captureOblivionRuntimeState();
+    auto& values = *std::find_if(saved.mNativeActorValues.begin(), saved.mNativeActorValues.end(),
+        [](const auto& actor) { return actor.mOwner == ESM4::ActorValueOwner::Player; });
+    values.mReputation.reset();
+    saved.mPlayer.mActorValues["infamy"] = 100.75;
+    prepareNativeSnapshotPlayer(fixture, saved);
+    readNativeSnapshot(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(service.playerReputation());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mActorValues.at("infamy"), 100.75);
+    const auto player = world.getPlayerPtr();
+    ASSERT_TRUE(world.requestOblivionReputation(player, 16777217));
+    EXPECT_EQ(service.playerReputation()->mFame, 16777217);
+    EXPECT_EQ(service.playerReputation()->mInfamy, 100);
+    EXPECT_FALSE(service.playerReputation()->mBountyAccumulator);
+    auto adopted = world.captureOblivionRuntimeState();
+    EXPECT_FALSE(adopted.mPlayer.mActorValues.contains("infamy"));
+    EXPECT_EQ(adopted.mPlayer.mActorValues.at("legacy.infamy"), 100.75);
+    ASSERT_TRUE(world.modifyOblivionPlayerInfamy(0));
+    EXPECT_EQ(service.playerReputation()->mBountyAccumulator, 0);
+    EXPECT_EQ(service.playerReputation()->mInfamy, 100);
+    adopted = world.captureOblivionRuntimeState();
+    auto legacy = saved;
+    legacy.mPlayer.mActorValues["infamy"] = 0x1p40;
+    readNativeSnapshot(fixture, legacy);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_THROW(world.modifyOblivionPlayerInfamy(0), std::invalid_argument);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    auto downgrade = adopted;
+    service.restore(adopted, world.getStore());
+    downgrade.mVersion = 45;
+    for (auto& actor : downgrade.mNativeActorValues) actor.mReputation.reset();
+    const auto original = downgrade.serializeBinary();
+    EXPECT_THROW(service.capture(downgrade), std::invalid_argument);
+    EXPECT_EQ(downgrade.serializeBinary(), original);
 }

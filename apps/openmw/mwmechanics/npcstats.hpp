@@ -29,6 +29,7 @@ namespace MWMechanics
         std::map<ESM::RefId, SkillValue> mSkills; // SkillValue.mProgress used by the player only
 
         int mReputation;
+        std::optional<int> mNativeReputation;
         int mCrimeId;
 
         // ----- used by the player only, maybe should be moved at some point -------

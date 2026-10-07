@@ -54,8 +54,8 @@ def prepare(course: Path) -> None:
     if struct.unpack_from("<i", raw, offset)[0] != -4:
         raise RuntimeError("The fixture must first publish shared bounty -4")
     state = load_save(slot)
-    if state["schema_version"] != 45:
-        raise RuntimeError("The fixture must first resave at schema45")
+    if state["schema_version"] < 45:
+        raise RuntimeError("The fixture must first resave at schema45 or later")
     changed = bytearray(raw)
     struct.pack_into("<i", changed, offset, -3)
     if [i for i, (a, b) in enumerate(zip(raw, changed)) if a != b] != [offset]:

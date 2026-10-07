@@ -2002,6 +2002,9 @@ namespace MWWorld
             return std::int64_t(mWorld.isPlayerInJail());
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
         {
+            if (name == "getpcinfamy")
+                if (const auto infamy = mWorld.getOblivionPlayerInfamy())
+                    return std::int64_t(*infamy);
             if (!mWorld.mOblivionRuntimeState)
                 return std::int64_t(0);
             const std::string valueName = name == "getpcinfamy" ? "infamy"
@@ -2012,10 +2015,11 @@ namespace MWWorld
         }
         if (name == "modpcinfamy")
         {
-            if (!mWorld.mOblivionRuntimeState)
-                mWorld.mOblivionRuntimeState
-                    = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
-            mWorld.mOblivionRuntimeState->mPlayer.mActorValues["infamy"] += ObScript::asNumber(argument(0));
+            const auto delta = ObScript::asInteger(argument(0));
+            if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "ModPCInfamy requires an int32 delta", name);
+            if (!mWorld.modifyOblivionPlayerInfamy(static_cast<std::int32_t>(delta)))
+                throw ObScript::RuntimeError("OBSV117", "Native Player Infamy is not ready", name);
             return std::int64_t(0);
         }
         if (name == "getlevel")

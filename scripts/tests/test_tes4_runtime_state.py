@@ -992,6 +992,45 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         }]
         return state
 
+    def test_reputation46_matches_independent_signed_wire_and_presence(self) -> None:
+        state = self.owned_bounty_state()
+        state["schema_version"] = 45
+        actor = state["native_actor_values"][0]
+        actor["values"][38] = [0., .5, .75, -.25]
+        legacy = state_io.encode_payload(state)
+        base = actor["base"].encode()
+        offset = legacy.index(base) + len(base) + 2 + 72 * 5 + 12 + 2 + 10
+        state["schema_version"] = 46
+        actor["reputation"] = {"fame": 16777217, "infamy": -3, "bounty_accumulator": 777}
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(b"OMW4STATE"), 46)
+        expected = expected[:offset] + bytes.fromhex("0101000001fdffffff0109030000") + expected[offset:]
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        self.assertEqual(state_io.decode_payload(payload)["native_actor_values"][0]["reputation"], actor["reputation"])
+        for flag in (offset, offset + 9):
+            bad = bytearray(payload)
+            bad[flag] = 2
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(bad))
+        for value in (None, 0, -(1 << 31), (1 << 31) - 1):
+            actor["reputation"]["bounty_accumulator"] = value
+            encoded = state_io.encode_payload(state)
+            self.assertEqual(state_io.decode_payload(encoded)["native_actor_values"][0]["reputation"], actor["reputation"])
+        for field in ("fame", "infamy", "bounty_accumulator"):
+            for value in (True, 1.5, 1 << 31, -(1 << 31) - 1):
+                bad = copy.deepcopy(state)
+                bad["native_actor_values"][0]["reputation"][field] = value
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(bad)
+        for version in (45, 46):
+            bad = copy.deepcopy(state)
+            bad["schema_version"] = version
+            if version == 46:
+                bad["player"]["actor_values"]["infamy"] = -3
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+
     def test_bounty45_preserves44_payload_layout(self) -> None:
         state = self.owned_bounty_state()
         legacy = state_io.encode_payload(state)

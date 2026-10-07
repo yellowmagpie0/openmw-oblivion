@@ -310,6 +310,9 @@ namespace MWWorld
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         bool setOblivionPlayerCrimeLevel(int amount) override;
+        bool requestOblivionReputation(const Ptr& actor, int amount) override;
+        std::optional<std::int32_t> getOblivionPlayerInfamy() const;
+        bool modifyOblivionPlayerInfamy(std::int32_t delta);
         // False only for actors not yet registered with native value authority.
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
         std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;

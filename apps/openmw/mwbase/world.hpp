@@ -199,6 +199,7 @@ namespace MWBase
         virtual MWWorld::Player& getPlayer() = 0;
         // Integer Lua crime-level adapter; native storage and view publish together.
         virtual bool setOblivionPlayerCrimeLevel(int) { return false; }
+        virtual bool requestOblivionReputation(const MWWorld::Ptr&, int) { return false; }
 
         // Native physical intent/contact publication boundary. The controller
         // owns motion, geometry and resolved deltas; zero/false means this

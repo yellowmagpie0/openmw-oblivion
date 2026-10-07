@@ -318,11 +318,13 @@ void MWMechanics::NpcStats::setBounty(int bounty)
 
 int MWMechanics::NpcStats::getReputation() const
 {
-    return mReputation;
+    return mNativeReputation.value_or(mReputation);
 }
 
 void MWMechanics::NpcStats::setReputation(int reputation)
 {
+    if (mNativeReputation)
+        throw std::logic_error("native Fame must be changed through its service authority");
     // Reputation is capped in original engine
     mReputation = std::clamp(reputation, 0, 255);
 }
@@ -443,7 +445,7 @@ void MWMechanics::NpcStats::writeState(ESM::NpcStats& state) const
     for (auto iter(mFactionReputation.begin()); iter != mFactionReputation.end(); ++iter)
         state.mFactions[iter->first].mReputation = iter->second;
 
-    state.mReputation = mReputation;
+    state.mReputation = getReputation();
     state.mWerewolfKills = mWerewolfKills;
     state.mLevelProgress = mLevelProgress;
 
@@ -490,6 +492,7 @@ void MWMechanics::NpcStats::readState(const ESM::NpcStats& state)
     mBounty = state.mBounty;
     mNativeBounty.reset();
     mReputation = state.mReputation;
+    mNativeReputation.reset();
     mWerewolfKills = state.mWerewolfKills;
     mLevelProgress = state.mLevelProgress;
 

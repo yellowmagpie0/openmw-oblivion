@@ -332,6 +332,7 @@ namespace MWWorld
         // A legacy shared bounty is not evidence of zero native crime gold.
         // Keep its authority unresolved until deliberate legacy admission.
         result.mBounty.reset();
+        result.mReputation.reset();
         const auto ptr = player.getPlayer();
         const auto& stats = ptr.getClass().getNpcStats(ptr);
         const auto copyStat = [&](std::uint8_t av, const MWMechanics::AttributeValue& value) {
@@ -401,6 +402,7 @@ namespace MWWorld
         result.mOwner = ESM4::ActorValueOwner::Player;
         result.mProcess = ESM4::ActorValueProcess::Active;
         result.mBounty.emplace();
+        result.mReputation.emplace();
         result.mProcessKnockedState = 0;
         result.mProcessAction = -1;
         const auto a = attributes(npc->mData.attribs);

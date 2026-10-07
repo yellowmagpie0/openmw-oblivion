@@ -48,6 +48,21 @@ namespace ESM4
     std::int32_t composeIntegerActorValue(std::int32_t base, const ActorValueModifiers& modifiers,
         ActorValueOwner owner, ActorValueProcess process);
 
+    struct PlayerReputationState
+    {
+        std::int32_t mFame = 0;
+        std::int32_t mInfamy = 0;
+        // Unknown legacy accumulation is distinct from a fresh zero counter.
+        std::optional<std::int32_t> mBountyAccumulator = 0;
+        friend bool operator==(const PlayerReputationState&, const PlayerReputationState&) = default;
+    };
+
+    // Reference counters leave their exact int32 in x87 until current float
+    // composition. Integer queries first round the base through float32.
+    float composePlayerReferenceCounter(std::int32_t base, const ActorValueModifiers& modifiers);
+    std::int32_t composePlayerReferenceCounterInteger(std::int32_t base, const ActorValueModifiers& modifiers);
+    PlayerReputationState modifyPlayerInfamy(const PlayerReputationState& state, std::int32_t delta);
+
     // Immutable storage update after the caller's eligibility/delta adjustment.
     // Actor-value identity is required: nonplayer Magicka/Fatigue slots retain
     // zero and start allocated, unlike the other nonplayer sparse modifiers.

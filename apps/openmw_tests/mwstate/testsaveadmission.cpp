@@ -1391,6 +1391,44 @@ TEST(SaveAdmissionTest, AuxiliaryAdmissionDoesNotChangeMorrowindOrUnknownRecordC
     }
 }
 
+TEST(SaveAdmissionTest, OwnedPlayerFameRejectsConflictingSharedViewBeforePreparation)
+{
+    for (const int fame : {0, -3, 16777217, std::numeric_limits<int>::max()})
+    for (const bool owned : {false, true})
+    for (const bool conflict : {false, true})
+    {
+        SCOPED_TRACE(fame);
+        SCOPED_TRACE(owned);
+        SCOPED_TRACE(conflict);
+        auto state = nativeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::dynamic("player-base", 1);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        actor.mProcess = ESM4::ActorValueProcess::Active;
+        actor.mPlayerFormValues = {{0, 0, 0, 0}};
+        if (owned) actor.mReputation = ESM4::PlayerReputationState{fame, -9, std::nullopt};
+        state.mNativeActorValues.push_back(actor);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            player.mObject.mNpcStats.mReputation = conflict ? (fame == 0 ? 1 : 0) : fame;
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state) + records);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        if (owned && conflict)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare));
+        EXPECT_EQ(calls, int(!(owned && conflict)));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
 TEST(SaveAdmissionTest, OwnedPlayerBountyRejectsConflictingSharedViewBeforePreparation)
 {
     for (const auto [normal, alternate, realm, expected] : {

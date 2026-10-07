@@ -386,6 +386,11 @@ namespace MWMechanics
             input.mOwner = values.mOwner;
             input.mProcess = values.mProcess;
             input.mOwnsBounty = true;
+            input.mOwnsReputation = true;
+            if (values.mOwner == ESM4::ActorValueOwner::NonPlayer)
+                input.mReputation = 0; // Native nonplayer reference Fame getter.
+            else if (values.mReputation)
+                input.mReputation = values.mReputation->mFame;
             if (values.mBounty)
                 input.mBounty = ESM4::queryCrimeBounty(*values.mBounty,
                     values.mOwner == ESM4::ActorValueOwner::Player, values.mPlayerInShiveringIsles);
@@ -513,6 +518,8 @@ namespace MWMechanics
         , mLife(input.mLife)
         , mNpcTarget(npc)
         , mOwnsBounty(input.mOwnsBounty)
+        , mOwnsReputation(input.mOwnsReputation)
+        , mReputation(input.mReputation)
     {
         // This pre-existing UI/Lua API returns int. Its compatibility view
         // truncates through the reviewed native SSE conversion; raw float
@@ -592,6 +599,8 @@ namespace MWMechanics
         }
         if (mOwnsBounty && mNpcTarget)
             mNpcTarget->mNativeBounty = mBounty;
+        if (mOwnsReputation && mNpcTarget)
+            mNpcTarget->mNativeReputation = mReputation;
         mCommitted = true;
         return true;
     }
@@ -2405,6 +2414,9 @@ namespace MWMechanics
         if (value >= 72)
             throw std::invalid_argument("invalid native base actor-value query");
         const auto& values = playerValues();
+        if (values.mReputation && (value == 38 || value == 39))
+            return ESM4::convertActorBaseFloat(static_cast<float>(value == 38
+                    ? values.mReputation->mFame : values.mReputation->mInfamy), ESM4::ActorValueConversionMode::Sse);
         const float base = value == 37 && values.mBounty ? values.mBounty->mNormal : values.mValues[value].mBase;
         return value == 37 && values.mBounty
             ? ESM4::convertActorBaseFloat(std::floor(base), ESM4::ActorValueConversionMode::Sse)
@@ -3070,6 +3082,9 @@ namespace MWMechanics
     {
         validatePlayerQuery(value);
         const auto& values = playerValues();
+        if (values.mReputation && (value == 38 || value == 39))
+            return ESM4::composePlayerReferenceCounter(value == 38
+                    ? values.mReputation->mFame : values.mReputation->mInfamy, values.mValues[value].mModifiers);
         auto state = values.mValues[value];
         if (value == 37 && values.mBounty)
             state.mBase = values.mBounty->mNormal;
@@ -3080,10 +3095,27 @@ namespace MWMechanics
     {
         validatePlayerQuery(value);
         const auto& values = playerValues();
+        if (values.mReputation && (value == 38 || value == 39))
+            return ESM4::composePlayerReferenceCounterInteger(value == 38
+                    ? values.mReputation->mFame : values.mReputation->mInfamy, values.mValues[value].mModifiers);
         const auto& state = values.mValues[value];
         return ESM4::composeIntegerActorValue(
             value == 37 && values.mBounty ? getPlayerBaseValue(value) : ESM4::combatBaseValue(state.mBase),
             state.mModifiers, values.mOwner, values.mProcess);
+    }
+
+    std::optional<ESM4::PlayerReputationState> OblivionCombatService::playerReputation() const
+    {
+        const auto* values = findActorValues(ESM::FormKey::dynamic("player", 1));
+        return values ? values->mReputation : std::nullopt;
+    }
+
+    void OblivionCombatService::publishPlayerReputation(MWWorld::Player& player,
+        ESM4::PlayerReputationState reputation, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        auto values = playerValues();
+        values.mReputation = reputation;
+        publishPlayerValues(player, std::move(values), settings);
     }
 
     void OblivionCombatService::setPlayerCrimeLevel(MWWorld::Player& player, int amount,
@@ -3799,6 +3831,10 @@ namespace MWMechanics
 
     void OblivionCombatService::capture(ESM4::RuntimeState& state) const
     {
+        const bool reputation = std::any_of(mActorValues.begin(), mActorValues.end(),
+            [](const auto& entry) { return entry.second.mReputation.has_value(); });
+        if (reputation && (state.mVersion < 46 || state.mPlayer.mActorValues.contains("infamy")))
+            throw std::invalid_argument("owned Player reputation requires v46 without legacy Infamy authority");
         if (state.mVersion < 42 && mCrimeContracts != ESM4::CrimeStateContracts{})
             throw std::invalid_argument("native crime contracts require an Oblivion v42+ save");
         if (state.mVersion == 42)

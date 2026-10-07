@@ -1,4 +1,6 @@
 #include "actorvalues.hpp"
+
+#include <bit>
 #include "actorstats.hpp"
 
 #include <cmath>
@@ -174,6 +176,35 @@ namespace ESM4
             return truncated(double(base) + maximum + script + damage);
         const auto low = truncated(double(base) + script + damage);
         return process == ActorValueProcess::Low ? low : truncated(double(low) + maximum);
+    }
+
+    float composePlayerReferenceCounter(std::int32_t base, const ActorValueModifiers& modifiers)
+    {
+        validateActorValueState({0, modifiers});
+        return stored(double(base) + modifiers[0].value_or(0.f)
+            + modifiers[1].value_or(0.f) + modifiers[2].value_or(0.f));
+    }
+
+    std::int32_t composePlayerReferenceCounterInteger(std::int32_t base, const ActorValueModifiers& modifiers)
+    {
+        validateActorValueState({0, modifiers});
+        const auto rounded = convertActorBaseFloat(static_cast<float>(base), ActorValueConversionMode::Sse);
+        const double result = std::trunc(double(rounded) + modifiers[0].value_or(0.f)
+            + modifiers[1].value_or(0.f) + modifiers[2].value_or(0.f));
+        // The reviewed modern CRT branch returns this sentinel on overflow.
+        if (result < std::numeric_limits<std::int32_t>::min()
+            || result > std::numeric_limits<std::int32_t>::max())
+            return std::numeric_limits<std::int32_t>::min();
+        return static_cast<std::int32_t>(result);
+    }
+
+    PlayerReputationState modifyPlayerInfamy(const PlayerReputationState& state, std::int32_t delta)
+    {
+        auto result = state;
+        result.mInfamy = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(state.mInfamy)
+            + static_cast<std::uint32_t>(delta));
+        result.mBountyAccumulator = 0; // Original ModPCInfamy, including delta zero.
+        return result;
     }
 
     std::int32_t actorBaseValueInteger(const ActorBaseValueSet& value)

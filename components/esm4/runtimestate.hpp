@@ -36,7 +36,8 @@ namespace ESM4
 {
     // v45 retains v44's payload layout and requires owned shared bounty views
     // to agree at whole-save admission. Earlier v44 saves may have stale views.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 45;
+    // v46 adds exact Player reference Fame/Infamy and optional accumulation.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 46;
 
     struct RuntimeContentIdentity
     {
@@ -299,6 +300,8 @@ namespace ESM4
         // Absence preserves legacy scalar storage; readers never infer a realm.
         std::optional<CrimeBountyState> mBounty;
         bool mPlayerInShiveringIsles = false;
+        // v46: raw Player reference counters, separate from AV38/39 modifiers.
+        std::optional<PlayerReputationState> mReputation;
         // v10: raw integer base-form contributions for player AV8..11.
         // Never infer these from the resolved dynamic bases above. Absence
         // denotes legacy/uninitialized player authority, not four zeroes.

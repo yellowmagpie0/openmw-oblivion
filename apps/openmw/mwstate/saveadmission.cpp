@@ -370,6 +370,7 @@ namespace MWState
             std::map<ESM::FormKey, ActorInventory> legacyActorItems;
             struct SharedBounty { ESM::FormKey mBase; int mAmount; };
             std::map<ESM::FormKey, SharedBounty> sharedBounties;
+            std::optional<int> sharedPlayerFame;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -486,8 +487,11 @@ namespace MWState
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
                         if (player.mObject.mHasCustomState)
+                        {
                             sharedBounties.emplace(ESM::FormKey::dynamic("player", 1),
                                 SharedBounty{{}, player.mObject.mNpcStats.mBounty});
+                            sharedPlayerFame = player.mObject.mNpcStats.mReputation;
+                        }
                         legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
                     }
@@ -597,6 +601,9 @@ namespace MWState
                             native.mVersion);
                     }
                 native.validate();
+                for (const auto& actor : native.mNativeActorValues)
+                    if (actor.mReputation && sharedPlayerFame && actor.mReputation->mFame != *sharedPlayerFame)
+                        throw std::runtime_error("Shared Player Fame view disagrees with native reputation");
                 // Owned crime gold is authoritative. Reject a conflicting
                 // persisted compatibility view before outgoing-world teardown.
                 // Legacy absence remains unresolved rather than assuming zero.

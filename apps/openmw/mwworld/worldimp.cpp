@@ -1648,8 +1648,15 @@ namespace MWWorld
             mOblivionScriptManager->capture(state);
         if (mOblivionAi)
             mOblivionAi->capture(state);
+        if (mOblivionRuntimeState)
+            for (const auto& [name, value] : mOblivionRuntimeState->mPlayer.mActorValues)
+                state.mPlayer.mActorValues.try_emplace(name, value);
         if (mOblivionCombat)
+        {
+            if (mOblivionCombat->playerReputation())
+                state.mPlayer.mActorValues.erase("infamy");
             mOblivionCombat->capture(state);
+        }
         captureOblivionPhysicalState(state, player);
         const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
             for (ESM4::RuntimeInventoryItem& item : inventory)
@@ -1664,6 +1671,78 @@ namespace MWWorld
             normalizeNativeInventory(reference.mInventory);
         state.validate();
         return state;
+    }
+
+    namespace
+    {
+        ESM4::PlayerReputationState legacyPlayerReputation(const Ptr& player, const ESM4::RuntimeState* state)
+        {
+            ESM4::PlayerReputationState result;
+            result.mFame = player.getClass().getNpcStats(player).getReputation();
+            result.mBountyAccumulator.reset(); // Legacy saves did not own this field.
+            if (state)
+                if (const auto found = state->mPlayer.mActorValues.find("infamy");
+                    found != state->mPlayer.mActorValues.end())
+                {
+                    const double integer = std::trunc(found->second);
+                    if (!std::isfinite(integer) || integer < std::numeric_limits<std::int32_t>::min()
+                        || integer > std::numeric_limits<std::int32_t>::max())
+                        throw std::invalid_argument("legacy Infamy cannot fit native int32 storage");
+                    result.mInfamy = static_cast<std::int32_t>(integer);
+                }
+            return result;
+        }
+    }
+
+    std::optional<std::int32_t> World::getOblivionPlayerInfamy() const
+    {
+        if (mOblivionCombat)
+            if (const auto reputation = mOblivionCombat->playerReputation())
+                return reputation->mInfamy;
+        return std::nullopt;
+    }
+
+    bool World::modifyOblivionPlayerInfamy(std::int32_t delta)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPlayer || getPlayerPtr().isEmpty()
+            || !mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+            return false;
+        const auto owned = mOblivionCombat->playerReputation();
+        const auto reputation = owned ? *owned : legacyPlayerReputation(getPlayerPtr(), mOblivionRuntimeState.get());
+        auto legacy = mOblivionRuntimeState ? mOblivionRuntimeState->mPlayer.mActorValues : decltype(ESM4::RuntimePlayerState::mActorValues){};
+        if (const auto found = legacy.find("infamy"); found != legacy.end())
+        {
+            legacy.try_emplace("legacy.infamy", found->second);
+            legacy.erase(found);
+        }
+        mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerInfamy(reputation, delta),
+            resolveOblivionPlayerDynamicBaseSettings(mStore));
+        if (mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        return true;
+    }
+
+    bool World::requestOblivionReputation(const Ptr& actor, int amount)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPlayer
+            || actor.isEmpty() || !mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+            return false;
+        if (actor != getPlayerPtr())
+            throw std::invalid_argument("native nonplayer Fame has no writable reference counter");
+        const auto owned = mOblivionCombat->playerReputation();
+        auto reputation = owned ? *owned : legacyPlayerReputation(actor, mOblivionRuntimeState.get());
+        reputation.mFame = amount; // Explicit absolute Lua adapter, not ModPCFame.
+        auto legacy = mOblivionRuntimeState ? mOblivionRuntimeState->mPlayer.mActorValues : decltype(ESM4::RuntimePlayerState::mActorValues){};
+        if (const auto found = legacy.find("infamy"); found != legacy.end())
+        {
+            legacy.try_emplace("legacy.infamy", found->second);
+            legacy.erase(found);
+        }
+        mOblivionCombat->publishPlayerReputation(*mPlayer, reputation,
+            resolveOblivionPlayerDynamicBaseSettings(mStore));
+        if (mOblivionRuntimeState)
+            mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        return true;
     }
 
     bool World::setOblivionPlayerCrimeLevel(int amount)
