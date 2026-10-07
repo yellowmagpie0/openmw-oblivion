@@ -1,4 +1,4 @@
-"""Schema42 crime/custody wire contract; no crime rule evaluation or gameplay."""
+"""Schema42/43 crime/custody wire contract; no crime rule evaluation or gameplay."""
 from __future__ import annotations
 
 import math
@@ -12,7 +12,7 @@ SCHEMAS = {
                 ("cell", "key"), ("ownership", "ownership"), ("offense", "B"), ("item_value", "i"),
                 ("count", "i"), ("lawful_combat", "bool"), ("owner_has_claim", "bool")],
     "ownership": [("owner", "key"), ("rank", "i"), ("global", "key")],
-    "outcome": [("incident", "Q"), ("report_phase", "B"), ("witnesses", "*witness"), ("bounty_delta", "i"),
+    "outcome": [("incident", "Q"), ("report_phase", "B"), ("witnesses", "*witness"), ("bounty_delta", "d"),
                 ("infamy_delta", "i"), ("faction_deltas", "*faction"), ("lawful_combat_exception", "bool"),
                 ("guard_response_requested", "bool"), ("consequences_committed", "bool")],
     "witness": [("witness", "key"), ("observed", "bool"), ("will_report", "bool")],
@@ -98,6 +98,7 @@ def validate(state):
             key(request[name], False)
         require(request["action"] >= state["action_retention_floor"] and request["offense"] <= 6
                 and request["item_value"] >= 0 and request["count"] >= 0, "Invalid crime request")
+        require(abs(outcome["bounty_delta"]) <= 3.4028234663852886e38, "Bounty delta outside native float domain")
         ident = outcome["incident"]
         require(0 < ident < state["next_incident"] and ident not in incidents, "Duplicate/reused crime incident")
         incidents[ident] = entry
@@ -157,11 +158,11 @@ def validate(state):
             require(all(item[x] is None or item[x] >= 0 for x in ("condition", "charge")), "Negative property extras")
 
 
-def read(reader, kind="state"):
+def read(reader, kind="state", version=43):
     if kind.startswith("*"):
-        return [read(reader, kind[1:]) for _ in range(reader.count())]
+        return [read(reader, kind[1:], version) for _ in range(reader.count())]
     if kind.startswith("?"):
-        return read(reader, kind[1:]) if read(reader, "bool") else None
+        return read(reader, kind[1:], version) if read(reader, "bool", version) else None
     if kind == "key":
         value = reader.string()
         key(value)
@@ -172,18 +173,19 @@ def read(reader, kind="state"):
         return bool(value)
     if kind in ("Q", "B", "i", "f", "d"):
         return reader.unpack("<" + kind)
-    return {name: read(reader, field_kind) for name, field_kind in SCHEMAS[kind]}
+    return {name: read(reader, "i" if name == "bounty_delta" and version == 42 else field_kind, version)
+            for name, field_kind in SCHEMAS[kind]}
 
 
-def write(writer, value, kind="state"):
+def write(writer, value, kind="state", version=43):
     if kind.startswith("*"):
         writer.pack("<I", len(value))
         for item in value:
-            write(writer, item, kind[1:])
+            write(writer, item, kind[1:], version)
     elif kind.startswith("?"):
         writer.pack("<B", int(value is not None))
         if value is not None:
-            write(writer, value, kind[1:])
+            write(writer, value, kind[1:], version)
     elif kind == "key":
         writer.string(value)
     elif kind == "bool":
@@ -192,4 +194,7 @@ def write(writer, value, kind="state"):
         writer.pack("<" + kind, value)
     else:
         for name, field_kind in SCHEMAS[kind]:
-            write(writer, value[name], field_kind)
+            if name == "bounty_delta" and version == 42:
+                writer.pack("<i", int(value[name]))
+            else:
+                write(writer, value[name], field_kind, version)

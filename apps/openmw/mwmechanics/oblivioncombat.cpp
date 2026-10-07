@@ -3754,6 +3754,15 @@ namespace MWMechanics
     {
         if (state.mVersion < 42 && mCrimeContracts != ESM4::CrimeStateContracts{})
             throw std::invalid_argument("native crime contracts require an Oblivion v42+ save");
+        if (state.mVersion == 42)
+            for (const auto& incident : mCrimeContracts.mIncidents)
+            {
+                const double delta = incident.mOutcome.mBountyDelta;
+                if (std::trunc(delta) != delta || (delta == 0 && std::signbit(delta))
+                    || delta < std::numeric_limits<std::int32_t>::min()
+                    || delta > std::numeric_limits<std::int32_t>::max())
+                    throw std::invalid_argument("fractional crime bounty delta requires an Oblivion v43+ save");
+            }
         auto crime = mCrimeContracts;
         if (state.mProfile != ESM::GameProfile::Oblivion || state.mVersion < 8
             || state.mVersion > ESM4::CurrentRuntimeStateVersion)

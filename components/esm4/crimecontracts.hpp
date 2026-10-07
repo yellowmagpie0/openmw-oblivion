@@ -61,7 +61,9 @@ namespace ESM4
         std::uint64_t mIncident = 0;
         CrimeReportPhase mReportPhase = CrimeReportPhase::Unreported;
         std::vector<CrimeWitnessDecision> mWitnesses;
-        std::int32_t mBountyDelta = 0;
+        // Native fines are float amounts. Double also preserves every integer
+        // accepted by the original v42 contract during migration.
+        double mBountyDelta = 0;
         std::int32_t mInfamyDelta = 0;
         std::vector<CrimeFactionDelta> mFactionDeltas;
         bool mLawfulCombatException = false;

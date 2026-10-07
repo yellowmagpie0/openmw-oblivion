@@ -13,7 +13,7 @@
 
 namespace ESM4::Detail
 {
-    // Field order is the v42 binary contract. Names are its canonical JSON keys.
+    // Field order is the v42/v43 binary contract; v43 widens bounty_delta. Names are its canonical JSON keys.
     template <class Archive, class T>
     void crimeFields(Archive& archive, T& value)
     {
@@ -82,7 +82,17 @@ namespace ESM4::Detail
     struct CrimeBinaryWriter
     {
         Writer& mWriter;
-        template <class T> void operator()(std::string_view, const T& value) { write(value); }
+        std::uint32_t mVersion;
+        template <class T> void operator()(std::string_view name, const T& value)
+        {
+            if constexpr (std::is_same_v<T, double>)
+                if (name == "bounty_delta" && mVersion == 42)
+                {
+                    mWriter.template integer<std::int32_t>(static_cast<std::int32_t>(value));
+                    return;
+                }
+            write(value);
+        }
         template <class T> void write(const T& value)
         {
             if constexpr (std::is_same_v<T, ESM::FormKey>) mWriter.string(value.serialize());
@@ -108,13 +118,23 @@ namespace ESM4::Detail
     struct CrimeBinaryReader
     {
         Reader& mReader;
+        std::uint32_t mVersion;
         bool boolean()
         {
             const auto value = mReader.template integer<std::uint8_t>();
             if (value > 1) throw std::runtime_error("Invalid crime contract boolean or presence flag");
             return value != 0;
         }
-        template <class T> void operator()(std::string_view, T& value) { read(value); }
+        template <class T> void operator()(std::string_view name, T& value)
+        {
+            if constexpr (std::is_same_v<T, double>)
+                if (name == "bounty_delta" && mVersion == 42)
+                {
+                    value = mReader.template integer<std::int32_t>();
+                    return;
+                }
+            read(value);
+        }
         template <class T> void read(T& value)
         {
             if constexpr (std::is_same_v<T, ESM::FormKey>)

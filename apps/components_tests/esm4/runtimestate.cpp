@@ -3234,6 +3234,7 @@ TEST(ESM4RuntimeState, OwnershipExtras41RejectExplicitZeroGlobalIdentityInBinary
 TEST(ESM4RuntimeState, Crime42PopulatedRoundTripAndOriginalLayoutsRemainDeliberate)
 {
     auto state = makeState();
+    state.mVersion = 42;
     state.mPhysicalActions.mNext = 10;
     state.mNativeCrime = Testing::crimeFixture();
     const auto bytes = state.serializeBinary();
@@ -3286,4 +3287,39 @@ TEST(ESM4RuntimeState, Crime42RejectsUnissuedOrPendingCommittedCausesAndMalforme
     corrupt[corrupt.size() - 11] = 0x42;
     corrupt[corrupt.size() - 10] = 0x0f; // 1,000,001 incidents
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, FractionalBounty43PreservesNativeAmountsAndEveryLegacyInt32Exactly)
+{
+    auto state = makeState(); state.mPhysicalActions.mNext = 10;
+    state.mNativeCrime = Testing::crimeFixture();
+    for (double amount : {0.5, 0.25, -0.25, -0.0, 16777217.0, 2147483647.0, -2147483648.0})
+    {
+        SCOPED_TRACE(amount);
+        state.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta = amount;
+        const auto bytes = state.serializeBinary();
+        if (amount == .5)
+            EXPECT_TRUE(std::equal(Testing::FractionalCrimeWireFixture.rbegin(),
+                Testing::FractionalCrimeWireFixture.rend(), bytes.rbegin()));
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored, state);
+        EXPECT_EQ(std::bit_cast<std::uint64_t>(restored.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta),
+            std::bit_cast<std::uint64_t>(amount));
+        auto legacy = state; legacy.mVersion = 42;
+        if (std::trunc(amount) != amount || (amount == 0 && std::signbit(amount)))
+            EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
+        else
+        {
+            const auto oldBytes = legacy.serializeBinary();
+            const auto migrated = ESM4::RuntimeState::deserializeBinary(oldBytes);
+            EXPECT_EQ(migrated.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta, amount);
+            EXPECT_EQ(migrated.serializeBinary(), oldBytes);
+        }
+    }
+    for (double bad : {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN(),
+             1e100, -1e100})
+    {
+        state.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta = bad;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
 }

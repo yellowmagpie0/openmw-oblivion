@@ -798,6 +798,15 @@ namespace ESM4
         { throw std::runtime_error(std::string("Invalid native crime contracts: ") + error.what()); }
         if (mVersion < 42 && mNativeCrime != CrimeStateContracts{})
             throw std::runtime_error("Native crime contracts require runtime schema42");
+        if (mVersion == 42)
+            for (const auto& incident : mNativeCrime.mIncidents)
+            {
+                const double delta = incident.mOutcome.mBountyDelta;
+                if (std::trunc(delta) != delta || (delta == 0 && std::signbit(delta))
+                    || delta < std::numeric_limits<std::int32_t>::min()
+                    || delta > std::numeric_limits<std::int32_t>::max())
+                    throw std::runtime_error("Fractional or unrepresentable crime bounty delta requires schema43");
+            }
         if (mNativeCrime.mActionRetentionFloor > mPhysicalActions.mNext)
             throw std::runtime_error("Crime retention floor exceeds the issued action domain");
         for (const auto& incident : mNativeCrime.mIncidents)
@@ -2044,7 +2053,7 @@ namespace ESM4
             }
         }
         if (mVersion >= 42)
-            Detail::CrimeBinaryWriter<BinaryWriter>{writer}.write(mNativeCrime);
+            Detail::CrimeBinaryWriter<BinaryWriter>{writer, mVersion}.write(mNativeCrime);
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -2898,7 +2907,7 @@ namespace ESM4
             }
         }
         if (result.mVersion >= 42)
-            Detail::CrimeBinaryReader<BinaryReader>{reader}.read(result.mNativeCrime);
+            Detail::CrimeBinaryReader<BinaryReader>{reader, result.mVersion}.read(result.mNativeCrime);
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();

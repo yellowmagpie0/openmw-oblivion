@@ -1100,3 +1100,17 @@ TEST(OblivionCombatService, CrimeContractsRestoreCaptureClearAndRejectWithoutPar
     service.restore(state);
     EXPECT_EQ(service.crimeContracts(), ESM4::CrimeStateContracts{});
 }
+
+TEST(OblivionCombatService, FractionalBounty43CaptureRejectsLegacyEnvelopeBeforeMutatingCaller)
+{
+    auto state = savedState(); state.mPhysicalActions.mNext = 10;
+    state.mNativeCrime = Testing::crimeFixture();
+    state.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta = .5;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    auto legacy = savedState(); legacy.mVersion = 42;
+    const auto before = legacy;
+    EXPECT_THROW(service.capture(legacy), std::invalid_argument);
+    EXPECT_EQ(legacy, before);
+    service.capture(state);
+    EXPECT_DOUBLE_EQ(state.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta, .5);
+}

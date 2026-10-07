@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <map>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -45,6 +46,8 @@ namespace ESM4
     void CrimeOutcome::validate() const
     {
         require(mIncident != 0, "Crime outcome requires an incident identity");
+        require(std::isfinite(mBountyDelta) && std::abs(mBountyDelta) <= std::numeric_limits<float>::max(),
+            "Crime outcome has an invalid bounty delta");
         require(mReportPhase <= CrimeReportPhase::Resolved, "Crime outcome has an invalid report phase");
         size(mWitnesses.size());
         size(mFactionDeltas.size());

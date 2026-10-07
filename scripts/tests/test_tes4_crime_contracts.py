@@ -131,3 +131,26 @@ class CrimeContracts42Tests(unittest.TestCase):
         duplicate['request'].update(victim=alias, affected_reference=alias)
         crime['incidents'].append(duplicate)
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_fractional_bounty_43_and_lossless_legacy_int32_migration(self):
+        state = self.state(); state['schema_version'] = 43
+        for amount in [.5, .25, -.25, -0.0, 16777217, 2147483647, -2147483648]:
+            state['native_crime']['incidents'][0]['outcome']['bounty_delta'] = amount
+            payload = state_io.encode_payload(state)
+            if amount == .5:
+                golden = bytes.fromhex((Path(__file__).parent / "data/tes4-crime43-wire.hex").read_text())
+                self.assertEqual(payload[-len(golden):], golden)
+            decoded = state_io.decode_payload(payload)
+            self.assertEqual(struct.pack('<d', decoded['native_crime']['incidents'][0]['outcome']['bounty_delta']),
+                             struct.pack('<d', amount))
+            self.assertEqual(state_io.encode_payload(decoded), payload)
+            old = copy.deepcopy(state); old['schema_version'] = 42
+            if amount != int(amount) or (amount == 0 and struct.pack('<d', amount)[-1] == 128):
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(old)
+            else:
+                old_payload = state_io.encode_payload(old)
+                self.assertEqual(state_io.encode_payload(state_io.decode_payload(old_payload)), old_payload)
+                self.assertEqual(state_io.decode_payload(old_payload)['native_crime'], old['native_crime'])
+        for bad in [float('inf'), float('nan'), 1e100, -1e100]:
+            state['native_crime']['incidents'][0]['outcome']['bounty_delta'] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)

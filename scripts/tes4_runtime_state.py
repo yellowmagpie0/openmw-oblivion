@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 42
+CURRENT_VERSION = 43
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -579,6 +579,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     try:
         crime_io.validate(crime)
         actions = state.get("physical_actions", {"next": 1, "pending": []})
+        if state.get("schema_version") == 42:
+            for incident in crime["incidents"]:
+                delta = incident["outcome"]["bounty_delta"]
+                if (math.trunc(delta) != delta or (delta == 0 and math.copysign(1, delta) < 0)
+                        or not -2**31 <= delta <= 2**31 - 1):
+                    raise ValueError("Fractional or unrepresentable crime bounty delta requires schema43")
         if crime["action_retention_floor"] > actions["next"]:
             raise ValueError("Crime retention floor exceeds the issued action domain")
         for incident in crime["incidents"]:
@@ -1941,7 +1947,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             result["native_bow_states"].append(bow)
     if version >= 42:
         try:
-            result["native_crime"] = crime_io.read(reader)
+            result["native_crime"] = crime_io.read(reader, version=version)
         except (ValueError, TypeError, KeyError, OverflowError) as error:
             raise RuntimeStateError(str(error)) from error
     _validate_basic_state(result)
@@ -2360,7 +2366,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.pack("<h", bow["action"]); writer.pack("<B", int(bow["release_committed"]))
             if version >= 39: writer.pack("<B", int(bow["player_hold_latched"]))
     if version >= 42:
-        crime_io.write(writer, state.get("native_crime", crime_io.empty_state()))
+        crime_io.write(writer, state.get("native_crime", crime_io.empty_state()), version=version)
     return writer.finish()
 
 

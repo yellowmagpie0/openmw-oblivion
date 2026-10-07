@@ -34,7 +34,7 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 42;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 43;
 
     struct RuntimeContentIdentity
     {

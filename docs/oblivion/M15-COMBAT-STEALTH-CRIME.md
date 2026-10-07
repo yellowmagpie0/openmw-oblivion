@@ -16,7 +16,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, schema42 crime/custody contracts and public jail query, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, schema43 fractional crime/custody contracts and public jail query, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |
@@ -28,6 +28,57 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S12 scripts/prerequisites | pending | No implementation/evidence | Real dialogue/results and command/event coverage |
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
+
+## S3 fractional bounty outcome contract checkpoint — 2026-10-07
+
+The crime outcome skeleton used int32 bounty deltas even though reviewed native
+fines and bounty storage preserve fractions. Schema43 widens only that outcome
+field to binary64. Native float32 amounts are represented exactly, while every
+int32 value accepted in schema42 also remains exact. C++ and Python keep the
+original schema42 integer layout, and older empty layouts remain unchanged.
+Fractional, negative-zero or out-of-int32-range writes to schema42 fail instead
+of truncating. Legacy service capture rejects before changing caller state.
+Outcome validation rejects nonfinite amounts and values beyond the native
+float storage domain. Canonical JSON preserves the same numeric amount and
+signed zero. The editable half-gold JSON and independently packed wire fixture
+are checked by both codec implementations.
+
+The existing pinned original-executable probe was reverified: **512 mutation
+cases**, with before/after bounty queries, pass under both x87 precision modes.
+Image SHA256 is `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Extra lookup/removal and change notification are boundary stubs; arithmetic,
+realm routing, getter and the infamy helper execute original instructions.
+Evidence: `S3/bounty-storage-reverification-01.log` and the existing S2 source
+and oracle artifacts. This confirms fractional storage and the separate
+Shivering Isles bucket; it does not establish live gameplay acceptance.
+
+`S3/fractional-crime-normal-01` passes **2,583 component cases**, **1,205 engine
+cases** (both unfiltered) and **275 Python cases**. The corresponding
+`fractional-crime-sanitized-01` passes **1,205 engine cases**, filter `*`, and
+**704 ESM4 component cases**, filter `ESM4*`, under ASan/UBSan. Inventories match,
+with no failures or skips. Leak checking is disabled; sanitizers halt on error.
+Existing initializer/range-copy and animation warnings remain in rebuild logs.
+Tested parent: `6a47ecf2c76c04fe0dd2f9a8ec41b1c552f11715`; fingerprint:
+`bfa27da37f788afafc4a0c50facc0a072c1ef26e5a3bddce79f413f1323a1b62`.
+
+`fractional-crime-restart-01` and `fractional-crime-restart-sanitized-01` each
+complete actual F5/F9/F5/quit, then a fresh process repeating that sequence.
+The historical outcome's **0.5** survives all inputs and saves. The normal
+`fractional-crime-legacy42-01` keeps actual42 save metadata and layout and an
+**INT32_MAX** delta; it loads, resaves as43, and preserves that integer exactly
+through the fresh process. All **38 native fields** match at all four load
+boundaries per course, accounting explicitly for the old-version promotion.
+Five independent raw-save controls per course pass, and six captures were
+reviewed. These are idle historical-contract checks without applying a bounty
+mutation or replaying the outcome. Complete source/binary/save/capture hashes
+and selections are in `S3/fractional-crime-report.json`.
+
+Live bounty storage and adapters remain S3 work. The normal/alternate buckets
+and explicit Player realm flag require persistent authority; a generic AV37
+mirror would erase native fraction/query/routing semantics. Bounty/NpcStats/Lua
+and Infamy snapshot/native divergence remain recorded in
+`S3/authority-gaps-02.json`. No offense, reporting, fine or jail gameplay
+producer is added, and whole-S3 completion remains unproven.
 
 ## S3 crime identity and winning actor bindings checkpoint — 2026-10-06
 
