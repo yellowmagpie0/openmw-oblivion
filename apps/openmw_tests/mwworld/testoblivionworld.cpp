@@ -13092,6 +13092,9 @@ TEST(OblivionWorldTest, DynamicNativeActorBountyAndModifierViewsSurviveRepeatedC
         for (int restart = 0; restart != 2; ++restart)
         {
             SCOPED_TRACE(restart);
+            const bool loadedEnabled = restart == 0;
+            for (auto& reference : saved.mReferences)
+                if (reference.mKey == key) reference.mEnabled = loadedEnabled;
             saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
             world.clear();
             world.getStore().rebuildIdsIndex();
@@ -13121,7 +13124,17 @@ TEST(OblivionWorldTest, DynamicNativeActorBountyAndModifierViewsSurviveRepeatedC
             EXPECT_EQ(service.getNonPlayerValue(actor, 37), process == ESM4::ActorValueProcess::Low ? -3.5f : -3.f);
             EXPECT_EQ(service.getNonPlayerIntegerValue(actor, 37), process == ESM4::ActorValueProcess::Low ? -3 : -2);
             EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, true), 10);
-            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), process == ESM4::ActorValueProcess::Low ? -3.5 : -3.);
+            const double current = process == ESM4::ActorValueProcess::Low ? -3.5 : -3.;
+            EXPECT_EQ(actor.getRefData().isEnabled(), loadedEnabled);
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), loadedEnabled ? current : 0.);
+            actor.getRefData().enable();
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), current);
+            actor.getRefData().disable();
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), 0.);
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, true), 10);
+            EXPECT_EQ(service.crimeBounty(key), 10.5f);
+            actor.getRefData().enable();
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), current);
             EXPECT_EQ(world.getOblivionAiService()->resolveReference(key), actor);
             if (!creature)
             {

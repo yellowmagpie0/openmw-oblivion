@@ -1764,6 +1764,8 @@ namespace MWWorld
         Ptr resident;
         if (key == ESM::FormKey::dynamic("player", 1))
             resident = getPlayerPtr();
+        else if (key.isDynamic())
+            resident = mWorldModel.getDynamicNativePtr(key);
         else if (const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key))
             resident = mWorldModel.getPtr(*id);
         bool disabled = false;
