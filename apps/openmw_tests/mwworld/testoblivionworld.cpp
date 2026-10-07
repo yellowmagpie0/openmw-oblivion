@@ -13044,6 +13044,102 @@ TEST(OblivionWorldTest, NativeDynamicActorReconstructsAuthorityInventoryAndDrawV
     EXPECT_EQ(world.getOblivionAiService()->resolveReference(key), actor);
 }
 
+TEST(OblivionWorldTest, DynamicNativeActorBountyAndModifierViewsSurviveRepeatedClearAndReconstruction)
+{
+    for (const bool creature : {false, true})
+    for (const auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+    {
+        SCOPED_TRACE(creature);
+        SCOPED_TRACE(static_cast<int>(process));
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto source = fixture.mActor;
+        if (creature)
+        {
+            source = addEquipmentCreature(fixture);
+            source = source.getCell()->moveTo(source, fixture.mActor.getCell());
+            world.getWorldModel().registerPtr(source);
+        }
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(source, process));
+        const auto originalKey = source.getCellRef().getFormKey();
+        auto& service = *world.getOblivionCombatService();
+        auto values = *service.findActorValues(originalKey);
+        values.mBounty = ESM4::CrimeBountyState{10.5f, 0.f};
+        values.mValues[37].mModifiers = {.5f, -3.25f, -.25f};
+        service.publishNonPlayerValues(source, values);
+        auto saved = world.captureOblivionRuntimeState();
+        const auto key = ESM::FormKey::dynamic("native-reference", 1);
+        saved.mNextDynamicSerial = 2;
+        for (auto& reference : saved.mReferences)
+            if (reference.mKey == originalKey) reference.mKey = key;
+        for (auto& actor : saved.mNativeActorValues)
+            if (actor.mActor == originalKey) actor.mActor = key;
+        for (auto& life : saved.mNativeActorLife)
+            if (life.mActor == originalKey) life.mActor = key;
+        if (const auto found = saved.mNativeActorBreath.find(originalKey); found != saved.mNativeActorBreath.end())
+        {
+            const auto breath = found->second;
+            saved.mNativeActorBreath.erase(found);
+            saved.mNativeActorBreath.emplace(key, breath);
+        }
+        std::sort(saved.mReferences.begin(), saved.mReferences.end(),
+            [](const auto& a, const auto& b) { return a.mKey < b.mKey; });
+        std::sort(saved.mNativeActorValues.begin(), saved.mNativeActorValues.end(),
+            [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+        std::sort(saved.mNativeActorLife.begin(), saved.mNativeActorLife.end(),
+            [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+        values.mActor = key;
+        for (int restart = 0; restart != 2; ++restart)
+        {
+            SCOPED_TRACE(restart);
+            saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+            world.clear();
+            world.getStore().rebuildIdsIndex();
+            if (creature)
+            {
+                // The fixture's other NPC was placed manually, not through
+                // CELL content loading. Restore that content binding as the
+                // save loader does; the dynamic target must reconstruct itself.
+                prepareNativeSnapshotPlayer(fixture, saved);
+                const auto reference = std::find_if(saved.mReferences.begin(), saved.mReferences.end(),
+                    [](const auto& value) { return value.mKey == ESM::FormKey::content("headless.esm", 0x900); });
+                ASSERT_NE(reference, saved.mReferences.end());
+                const ESM::FormKeyResolver resolver({"headless.esm"});
+                auto& cell = world.getWorldModel().getCell(ESM::RefId(*resolver.toFormId(reference->mCell)));
+                const auto* placed = world.getStore().search<ESM4::ActorCharacter>(reference->mKey);
+                ASSERT_NE(placed, nullptr);
+                MWWorld::LiveCellRef<ESM4::Npc> live(*placed, world.getStore().search<ESM4::Npc>(reference->mBase));
+                fixture.mActor = MWWorld::Ptr(cell.insert(&live), &cell);
+                world.getWorldModel().registerPtr(fixture.mActor);
+            }
+            acceptNativeSnapshot(fixture, saved);
+            const auto actor = world.getWorldModel().getDynamicNativePtr(key);
+            ASSERT_FALSE(actor.isEmpty());
+            ASSERT_NE(service.findActorValues(key), nullptr);
+            EXPECT_EQ(*service.findActorValues(key), values); // All72 channels and owned fields.
+            EXPECT_EQ(service.crimeBounty(key), 10.5f);
+            EXPECT_EQ(service.getNonPlayerValue(actor, 37), process == ESM4::ActorValueProcess::Low ? -3.5f : -3.f);
+            EXPECT_EQ(service.getNonPlayerIntegerValue(actor, 37), process == ESM4::ActorValueProcess::Low ? -3 : -2);
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, true), 10);
+            EXPECT_EQ(world.getOblivionScriptActorValue(key, 37, false), process == ESM4::ActorValueProcess::Low ? -3.5 : -3.);
+            EXPECT_EQ(world.getOblivionAiService()->resolveReference(key), actor);
+            if (!creature)
+            {
+                auto& stats = actor.getClass().getNpcStats(actor);
+                EXPECT_EQ(stats.getBounty(), 10);
+                EXPECT_EQ(stats.getReputation(), 0);
+                EXPECT_THROW(stats.setBounty(99), std::logic_error);
+                EXPECT_THROW(stats.setReputation(99), std::logic_error);
+            }
+            saved = world.captureOblivionRuntimeState();
+            const auto captured = std::find_if(saved.mNativeActorValues.begin(), saved.mNativeActorValues.end(),
+                [&](const auto& value) { return value.mActor == key; });
+            ASSERT_NE(captured, saved.mNativeActorValues.end());
+            EXPECT_EQ(*captured, values);
+        }
+    }
+}
+
 TEST(OblivionWorldTest, NativeDynamicReconstructionDiscardsNodesOnLateFailureBeforePublication)
 {
     PopulatedMigrationFixture fixture;
