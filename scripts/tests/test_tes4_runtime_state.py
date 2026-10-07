@@ -992,6 +992,17 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         }]
         return state
 
+    def test_bounty45_preserves44_payload_layout(self) -> None:
+        state = self.owned_bounty_state()
+        legacy = state_io.encode_payload(state)
+        state["schema_version"] = 45
+        current = state_io.encode_payload(state)
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(b"OMW4STATE"), 45)
+        self.assertEqual(current, bytes(expected))
+        self.assertEqual(state_io.decode_payload(legacy)["native_actor_values"],
+                         state_io.decode_payload(current)["native_actor_values"])
+
     def test_owned_bounty44_matches_independent_wire_and_preserves_raw_float_bits(self) -> None:
         state = self.owned_bounty_state()
         payload = state_io.encode_payload(state)

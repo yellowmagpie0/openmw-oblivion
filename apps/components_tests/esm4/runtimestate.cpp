@@ -3426,3 +3426,23 @@ TEST(ESM4RuntimeState, OwnedBounty44PreservesEveryLegacyScalarWithoutGuessingRea
         EXPECT_NE(promoted.canonicalJson().find("\"bounty\":null"), std::string::npos);
     }
 }
+
+TEST(ESM4RuntimeState, Bounty45Preserves44NativePayloadLayout)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::dynamic("player-base", 1);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    actor.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};
+    actor.mPlayerInShiveringIsles = true;
+    state.mNativeActorValues = {actor};
+    state.mVersion = 44;
+    const auto legacy = state.serializeBinary();
+    state.mVersion = 45;
+    auto expected = legacy;
+    expected[9] = 45;
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorValues,
+        ESM4::RuntimeState::deserializeBinary(expected).mNativeActorValues);
+}

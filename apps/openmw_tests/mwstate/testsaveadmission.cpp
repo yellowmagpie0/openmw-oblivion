@@ -6,6 +6,7 @@
 #include <sstream>
 #include <limits>
 #include <type_traits>
+#include <tuple>
 
 #include <components/esm3/controlsstate.hpp>
 #include <components/esm3/custommarkerstate.hpp>
@@ -1387,5 +1388,95 @@ TEST(SaveAdmissionTest, AuxiliaryAdmissionDoesNotChangeMorrowindOrUnknownRecordC
         openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
             profile == ESM::GameProfile::Oblivion ? 1 : 0) + records);
         EXPECT_NO_THROW(MWState::admitSave(reader, profile, [](const auto&) {}));
+    }
+}
+
+TEST(SaveAdmissionTest, OwnedPlayerBountyRejectsConflictingSharedViewBeforePreparation)
+{
+    for (const auto [normal, alternate, realm, expected] : {
+             std::tuple{.25f, -3.5f, false, 1}, std::tuple{.25f, -3.5f, true, -3},
+             std::tuple{10.75f, .5f, false, 10}, std::tuple{10.75f, .5f, true, 1},
+             std::tuple{0x1p31f, 0.f, false, std::numeric_limits<int>::min()}})
+    for (std::uint32_t version : {44u, 45u})
+    for (bool owned : {false, true})
+    for (bool conflict : {false, true})
+    {
+        SCOPED_TRACE(normal);
+        SCOPED_TRACE(realm);
+        SCOPED_TRACE(owned);
+        SCOPED_TRACE(conflict);
+        SCOPED_TRACE(version);
+        auto state = nativeState();
+        state.mVersion = version;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::dynamic("player-base", 1);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        actor.mProcess = ESM4::ActorValueProcess::Active;
+        actor.mPlayerFormValues = {{0, 0, 0, 0}};
+        actor.mValues[37].mModifiers = {10.f, 20.f, -2.f}; // Independent of legal bounty.
+        if (owned)
+        {
+            actor.mBounty = ESM4::CrimeBountyState{normal, alternate};
+            actor.mPlayerInShiveringIsles = realm;
+        }
+        state.mNativeActorValues.push_back(actor);
+        auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            player.mObject.mNpcStats.mBounty = expected + int(conflict);
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state) + records);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        if (version >= 45 && owned && conflict)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare));
+        EXPECT_EQ(calls, int(!(version >= 45 && owned && conflict)));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
+TEST(SaveAdmissionTest, OwnedNpcBountyChecksStableReferenceBaseAndDuplicateSharedViews)
+{
+    for (int fault = 0; fault != 4; ++fault)
+    {
+        SCOPED_TRACE(fault);
+        auto state = legacyGeneratedNative(ESM4::CurrentRuntimeStateVersion);
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences.front().mKey;
+        actor.mBase = state.mReferences.front().mBase;
+        actor.mBounty = ESM4::CrimeBountyState{10.75f, 0.f};
+        state.mNativeActorValues.push_back(actor);
+        auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::NPC definition{}; definition.blank();
+            definition.mId = ESM::RefId(ESM::FormId{fault == 2 ? 5u : 4u, 0});
+            writer.startRecord(ESM::REC_NPC_); definition.save(writer); writer.endRecord(ESM::REC_NPC_);
+            ESM::NpcState npc{}; npc.blank(); npc.mRef.mRefID = definition.mId;
+            npc.mRef.mRefNum = {0x900, 0}; npc.mNpcStats.mBounty = fault == 1 ? 11 : 10;
+            writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+            ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+            for (int i = 0; i != (fault == 3 ? 2 : 1); ++i)
+            {
+                writer.writeHNT("OBJE", std::uint32_t{0}); npc.save(writer);
+            }
+            writer.endRecord(ESM::REC_CSTA);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, state.mVersion, 1, 1, false, false, &state) + records);
+        const std::map<int, int> mapping{{0, 2}};
+        reader.setContentFileMapping(&mapping); // Base ID is remapped; reference number retains saved index.
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        if (fault)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, prepare));
+        EXPECT_EQ(calls, int(fault == 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
     }
 }

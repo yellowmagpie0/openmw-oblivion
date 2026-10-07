@@ -34,7 +34,9 @@ namespace ESM
 
 namespace ESM4
 {
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 44;
+    // v45 retains v44's payload layout and requires owned shared bounty views
+    // to agree at whole-save admission. Earlier v44 saves may have stale views.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 45;
 
     struct RuntimeContentIdentity
     {

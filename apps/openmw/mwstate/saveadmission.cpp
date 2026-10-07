@@ -32,6 +32,8 @@
 #include <components/lua/configuration.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/actorvalues.hpp>
+#include <components/esm4/crimerules.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/misc/rng.hpp>
 
@@ -366,6 +368,8 @@ namespace MWState
             std::vector<LegacyGeneratedItem> legacyPlayerItems;
             struct ActorInventory { ESM::FormKey mBase; std::vector<LegacyGeneratedItem> mItems; };
             std::map<ESM::FormKey, ActorInventory> legacyActorItems;
+            struct SharedBounty { ESM::FormKey mBase; int mAmount; };
+            std::map<ESM::FormKey, SharedBounty> sharedBounties;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -481,6 +485,9 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        if (player.mObject.mHasCustomState)
+                            sharedBounties.emplace(ESM::FormKey::dynamic("player", 1),
+                                SharedBounty{{}, player.mObject.mNpcStats.mBounty});
                         legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
                     }
@@ -515,7 +522,19 @@ namespace MWState
                                 // index; base IDs have already been remapped by getRefId.
                                 const ESM::InventoryState* inventory = nullptr;
                                 if (const auto* npc = dynamic_cast<const ESM::NpcState*>(state.get()))
+                                {
                                     inventory = &npc->mInventory;
+                                    if (npc->mHasCustomState && npc->mRef.mRefNum.hasContentFile()
+                                        && npc->mRef.mRefID.getIf<ESM::FormId>())
+                                    {
+                                        const auto key = ESM::FormKeyResolver(profile.mContentFiles).toFormKey(
+                                            npc->mRef.mRefNum);
+                                        if (!sharedBounties.emplace(key, SharedBounty{
+                                                sharedOwnerKey(npc->mRef.mRefID, reader, profile),
+                                                npc->mNpcStats.mBounty}).second)
+                                            throw std::runtime_error("Duplicate shared actor bounty view");
+                                    }
+                                }
                                 else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(state.get()))
                                     inventory = &creature->mInventory;
                                 if (inventory && state->mRef.mRefNum.hasContentFile()
@@ -578,6 +597,24 @@ namespace MWState
                             native.mVersion);
                     }
                 native.validate();
+                // Owned crime gold is authoritative. Reject a conflicting
+                // persisted compatibility view before outgoing-world teardown.
+                // Legacy absence remains unresolved rather than assuming zero.
+                for (const auto& actor : native.mNativeActorValues)
+                    if (native.mVersion >= 45 && actor.mBounty)
+                        if (const auto sharedView = sharedBounties.find(actor.mActor);
+                            sharedView != sharedBounties.end())
+                        {
+                            const bool player = actor.mOwner == ESM4::ActorValueOwner::Player;
+                            if (!player && sharedView->second.mBase != actor.mBase)
+                                throw std::runtime_error("Shared bounty actor base disagrees with native state");
+                            const auto amount = ESM4::queryCrimeBounty(*actor.mBounty, player,
+                                actor.mPlayerInShiveringIsles);
+                            const auto projected = ESM4::convertActorBaseFloat(amount,
+                                ESM4::ActorValueConversionMode::Sse);
+                            if (projected != sharedView->second.mAmount)
+                                throw std::runtime_error("Shared bounty view disagrees with native crime gold");
+                        }
                 ESM4::validateLocalLuaScriptOwners(nativeScripts, native);
                 if (content)
                 {
