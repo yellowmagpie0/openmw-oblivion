@@ -2059,6 +2059,11 @@ namespace MWGui
         }
     }
 
+    std::function<void()> WindowManager::prepareGlobalMap(const ESM::GlobalMap& map)
+    {
+        return mMap->prepareGlobalMap(map);
+    }
+
     void WindowManager::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         if (type == ESM::REC_GMAP)

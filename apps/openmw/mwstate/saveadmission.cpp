@@ -45,6 +45,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/oblivioninventoryidentity.hpp"
 #include "../mwlua/userdataserializer.hpp"
+#include "../mwrender/globalmap.hpp"
 
 namespace
 {
@@ -93,7 +94,8 @@ namespace
     }
 
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
-        std::set<std::uint32_t>& singletons)
+        std::set<std::uint32_t>& singletons,
+        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -190,6 +192,10 @@ namespace
                         || difference >= std::numeric_limits<int>::max())
                         throw std::runtime_error("Saved game global map bounds exceed the renderer domain");
                 }
+                if (prepareGlobalMap)
+                    prepareGlobalMap(state);
+                else
+                    static_cast<void>(MWRender::GlobalMap::prepareRead(state));
                 break;
             }
             case ESM::REC_STLN:
@@ -343,7 +349,8 @@ namespace MWState
     ESM::SavedGame admitSave(ESM::ESMReader& reader, ESM::GameProfile activeProfile,
         const std::function<void(const ESM4::RuntimeState&)>& validateNative,
         const MWWorld::ESMStore* content,
-        const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative)
+        const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative,
+        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap)
     {
         const auto start = reader.getContext();
         try
@@ -456,7 +463,7 @@ namespace MWState
                         shared->getWritable<ESM::Class>().insert(characterClass);
                         decoded = true;
                     }
-                    else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons))
+                    else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons, prepareGlobalMap))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);

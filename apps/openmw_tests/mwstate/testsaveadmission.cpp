@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <osg/Image>
+#include <osgDB/Registry>
+
 #include <cstring>
 #include <cmath>
 #include <array>
@@ -47,6 +50,7 @@
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
 #include "apps/openmw/mwworld/timestamp.hpp"
+#include "apps/openmw/mwrender/globalmap.hpp"
 #include "apps/openmw/mwlua/userdataserializer.hpp"
 #include "apps/openmw/mwlua/object.hpp"
 #include <components/lua/configuration.hpp>
@@ -481,6 +485,111 @@ TEST(SaveAdmissionTest, ActiveEffectWithoutWorseningDecodesDeterministicTimestam
         EXPECT_EQ(effects->front().mNextWorsening.mDay, 0);
         EXPECT_NO_THROW(MWWorld::TimeStamp{effects->front().mNextWorsening});
     }
+}
+
+namespace
+{
+    std::vector<char> mapPng(int width, int height)
+    {
+        osg::ref_ptr<osg::Image> image = new osg::Image;
+        image->allocateImage(width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        std::memset(image->data(), 127, image->getTotalSizeInBytes());
+        auto* codec = osgDB::Registry::instance()->getReaderWriterForExtension("png");
+        if (!codec) throw std::runtime_error("Test requires the actual PNG codec");
+        std::ostringstream stream;
+        if (!codec->writeImage(*image, stream).success()) throw std::runtime_error("Test PNG write failed");
+        const auto bytes = stream.str();
+        return {bytes.begin(), bytes.end()};
+    }
+}
+
+TEST(SaveAdmissionTest, GlobalMapResourcePreparesBeforeNativeStateForEveryAcceptedVersion)
+{
+    const auto square = mapPng(2, 2);
+    const auto rectangle = mapPng(4, 2);
+    const auto remainder = mapPng(4, 5);
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int mode = 0; mode != 7; ++mode)
+    for (const bool retain : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(mode);
+        SCOPED_TRACE(retain);
+        ESM::GlobalMap map{};
+        map.mBounds = {0, 0, 0, 0};
+        map.mImageData = mode == 1 || mode == 2 ? rectangle : mode == 3 ? remainder : square;
+        if (mode == 2) map.mBounds = {0, 1, 0, 0};
+        if (mode == 3) map.mBounds = {0, 1, 0, 1}; // Preserve legacy integer cell-size division.
+        if (mode == 4) map.mImageData.clear();
+        if (mode == 5) { map.mBounds = {1, 0, 0, 0}; map.mImageData = {'b', 'a', 'd'}; }
+        if (mode == 6) map.mImageData = {'b', 'a', 'd'}; // Deliberate unreadable-image skip.
+        map.mMarkers.emplace(3, 7);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_GMAP); map.save(writer); writer.endRecord(ESM::REC_GMAP);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset();
+        int nativeCalls = 0, resourceCalls = 0;
+        osg::ref_ptr<osg::Image> retained;
+        std::function<void(const ESM::GlobalMap&)> prepare;
+        if (retain) prepare = [&](const ESM::GlobalMap& saved) {
+            ++resourceCalls;
+            EXPECT_EQ(saved.mMarkers, map.mMarkers);
+            retained = MWRender::GlobalMap::prepareRead(saved);
+        };
+        const auto native = [&](const auto&, auto) {
+            ++nativeCalls;
+            if (retain)
+            {
+                EXPECT_EQ(resourceCalls, 1);
+            }
+        };
+        if (mode == 1)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, prepare),
+                std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, prepare));
+        EXPECT_EQ(nativeCalls, int(mode != 1 && version != 0));
+        EXPECT_EQ(resourceCalls, int(retain));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(retained.valid(), retain && mode <= 3 && mode != 1);
+        if (retained)
+        {
+            // A retained decoder result survives destruction/replacement of
+            // the source PNG; restore does not decode mutable bytes again.
+            map.mImageData.clear();
+            EXPECT_EQ(retained->s(), mode == 0 ? 2 : 4);
+            EXPECT_EQ(retained->t(), mode == 3 ? 5 : 2);
+            EXPECT_EQ(retained->data()[0], 127);
+        }
+    }
+}
+
+TEST(SaveAdmissionTest, GlobalMapPreparationIsDiscardableAndMorrowindDoesNotUseAdmissionCallback)
+{
+    ESM::GlobalMap map{};
+    map.mBounds = {0, 0, 0, 0}; map.mImageData = mapPng(4, 2);
+    const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+        writer.startRecord(ESM::REC_GMAP); map.save(writer); writer.endRecord(ESM::REC_GMAP);
+    });
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + records);
+    int calls = 0;
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, nullptr, {},
+        [&](const auto&) { ++calls; }));
+    EXPECT_EQ(calls, 0);
+    map.mImageData = mapPng(2, 2);
+    auto first = MWRender::GlobalMap::prepareRead(map);
+    auto second = MWRender::GlobalMap::prepareRead(map);
+    ASSERT_TRUE(first); ASSERT_TRUE(second);
+    EXPECT_NE(first.get(), second.get()); // No global image cache or publication.
+    first = nullptr;
+    EXPECT_EQ(second->data()[0], 127);
+    map.mBounds = {std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 0, 0};
+    EXPECT_THROW(MWRender::GlobalMap::prepareRead(map), std::runtime_error);
 }
 
 TEST(SaveAdmissionTest, EverySupportedNativeVersionIsValidatedAndReaderIsRewound)

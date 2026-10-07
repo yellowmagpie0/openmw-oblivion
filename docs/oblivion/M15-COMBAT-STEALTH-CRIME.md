@@ -6,6 +6,62 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retained global-map resource preparation — 2026-10-07
+
+GMAP now decodes its PNG and validates the saved image/cell-size relationship
+before native preparation and outgoing-world teardown. The GUI retains the
+actual decoded image and detached map DTO; StateManager consumes that prepared
+restore once in place of rereading/redecoding the GMAP record after cleanup.
+Cancelling admission discards the preparation without publishing the overlay.
+The existing MapWindow survives GUI cleanup. Empty images, inverted bounds,
+unreadable images and integer cell-size division retain their deliberate
+compatibility behavior; overflowing bounds reject before signed arithmetic.
+Morrowind admission remains unchanged; its ordinary map reader uses the same
+safe decoder. No native schema or payload layout changes.
+
+The new matrix checks **658 cases** across schemas 1–46 and no-T4ST input,
+with retained and ordinary admission paths: matching/nonmatching PNG shapes,
+matching rectangular cell grids, legacy division remainders, empty/inverted/
+unreadable images, preparation ordering, callback suppression and reader rewind.
+Retained pixels survive replacement of source PNG bytes; independent preparation
+results have distinct image ownership. Separate checks cover overflow, discarded
+resources and Morrowind callback isolation.
+
+`S3/global-map-normal-04` and `global-map-sanitized-03` each passed all
+**1,225 engine tests**, with exact inventories/XML, zero failures/skips and stable
+source fingerprints. ASan/UBSan halt on errors; leak detection is disabled.
+Compiled parent: `934de269e4e6e7bb29c53317901376b02812c22e`; tested fingerprint:
+`a4c5d1b3339ca710c1d454f41a27d53ab6c875ed88456c589c98969a8fcdd991`.
+The fixture checkpoint passed all **280 Python tests**, and the published
+scenario passes production manifest validation. All 11 implementation/test
+hashes remain unchanged by subsequent fixture publication and documentation.
+
+Actual normal `global-map-reject-02` and instrumented
+`global-map-reject-sanitized-01` courses alter only GMAP/BNDS maximum X from
+69 to 70 in a real F5 output. Independent IHDR decoding identifies the unchanged
+2412×2322 PNG and the resulting unequal integer cell sizes. Every other byte,
+including the complete PNG and native state, is unchanged. F9 rejects before
+teardown; Return/F5 preserves native actor/Player/crime/action/quest fields and
+the original map bounds and image dimensions. Each course has one completed
+load and two saves in the same PID/epoch; the initial load matches all 38 native
+snapshot fields. All four rejection/resave captures were reviewed.
+
+Editable `oblivion_m15_global_map_{reject,fault}.json` sources are under
+`scripts/data/oblivion_compat/`; isolated preparation/workers/verifiers/private
+saves are in the named ignored courses. `S3/global-map-report.json` records
+source/check/capture hashes and layers. Interrupted include/resource-pressure
+builds, the `/tmp` quota failure, the passing pre-brace-warning check and the
+first course's stale escaped error patterns remain in their original directories.
+Compiler temporary files now use the workspace filesystem; the final broad
+checks passed with no source drift. The unrelated tutorial handoff is preserved.
+
+This closes the bounded GMAP resource chunk. Full shared restore staging remains
+open: the consumer audit found unchecked spell-effect dependencies in quickkey
+restore and later shared projectile model publication. Evidence and next actions
+are in `S3/shared-consumers-followup-20261007.json`; remaining migration, legacy,
+lifecycle/profile/adapter and queue/action gates still require their full S3 audit.
+S3 remains in progress.
+
 ## S3 shared timestamp admission — 2026-10-07
 
 Shared cell respawn and Player/NPC/creature restock/death timestamps now require

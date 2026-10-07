@@ -6,13 +6,13 @@
 #include <vector>
 
 #include <osg/ref_ptr>
+#include <osg/Image>
 
 #include <components/esm/refid.hpp>
 
 namespace osg
 {
     class Texture2D;
-    class Image;
     class Group;
     class Camera;
 }
@@ -69,6 +69,8 @@ namespace MWRender
 
         void write(ESM::GlobalMap& map);
         void read(ESM::GlobalMap& map);
+        static osg::ref_ptr<osg::Image> prepareRead(const ESM::GlobalMap& map);
+        void read(const ESM::GlobalMap& map, osg::ref_ptr<osg::Image> image);
 
         osg::ref_ptr<osg::Texture2D> getBaseTexture();
         osg::ref_ptr<osg::Texture2D> getOverlayTexture();

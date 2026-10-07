@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -41,6 +42,7 @@ namespace ESM
 {
     class ESMReader;
     class ESMWriter;
+    struct GlobalMap;
 }
 
 namespace MWMechanics
@@ -311,6 +313,7 @@ namespace MWBase
 
         virtual void write(ESM::ESMWriter& writer, Loading::Listener& progress) = 0;
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
+        virtual std::function<void()> prepareGlobalMap(const ESM::GlobalMap& map) = 0;
         virtual size_t countSavedGameRecords() const = 0;
 
         /// Does the current stack of GUI-windows permit saving?

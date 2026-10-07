@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <functional>
 
 #include <osg/Vec2f>
 
@@ -23,6 +24,7 @@ namespace ESM
 {
     class ESMReader;
     class ESMWriter;
+    struct GlobalMap;
 }
 
 namespace MWWorld
@@ -263,6 +265,7 @@ namespace MWGui
 
         void write(ESM::ESMWriter& writer, Loading::Listener& progress);
         void readRecord(ESM::ESMReader& reader, uint32_t type);
+        std::function<void()> prepareGlobalMap(const ESM::GlobalMap& map);
 
         void asyncPrepareSaveMap();
 

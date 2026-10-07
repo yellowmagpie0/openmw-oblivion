@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 global map resource mismatch; image and native bytes unchanged",
+  "record": "GMAP",
+  "subrecord": "BNDS",
+  "offset_within_payload": 4,
+  "change": "Increment signed32 maximum X cell bound by one; require independent PNG IHDR dimensions to produce unequal integer cell sizes",
+  "update_sizes": [],
+  "preserve": "Every other save byte, PNG payload, record sizes, and all native state",
+  "expected_error": "cell size must be quadratic",
+  "preparation_reference": "build/oblivion-compat/m15/S3/global-map-reject-02/mutate.py"
+}

@@ -1,5 +1,7 @@
 #include "globalmap.hpp"
 
+#include <limits>
+
 #include <osg/Geometry>
 #include <osg/Group>
 #include <osg/Image>
@@ -533,20 +535,22 @@ namespace MWRender
 
     void GlobalMap::read(ESM::GlobalMap& map)
     {
-        ensureLoaded();
+        read(map, prepareRead(map));
+    }
 
+    osg::ref_ptr<osg::Image> GlobalMap::prepareRead(const ESM::GlobalMap& map)
+    {
         const ESM::GlobalMap::Bounds& bounds = map.mBounds;
-
-        if (bounds.mMaxX - bounds.mMinX < 0)
-            return;
-        if (bounds.mMaxY - bounds.mMinY < 0)
-            return;
-
-        if (bounds.mMinX > bounds.mMaxX || bounds.mMinY > bounds.mMaxY)
-            throw std::runtime_error("invalid map bounds");
+        const auto xSpan = static_cast<std::int64_t>(bounds.mMaxX) - bounds.mMinX;
+        const auto ySpan = static_cast<std::int64_t>(bounds.mMaxY) - bounds.mMinY;
+        for (const auto span : {xSpan, ySpan})
+            if (span < std::numeric_limits<int>::min() || span >= std::numeric_limits<int>::max())
+                throw std::runtime_error("Saved game global map bounds exceed the renderer domain");
+        if (xSpan < 0 || ySpan < 0)
+            return {};
 
         if (map.mImageData.empty())
-            return;
+            return {};
 
         Files::IMemStream istream(map.mImageData.data(), map.mImageData.size());
 
@@ -554,14 +558,14 @@ namespace MWRender
         if (!readerwriter)
         {
             Log(Debug::Error) << "Error: Can't read map overlay: no png readerwriter found";
-            return;
+            return {};
         }
 
         osgDB::ReaderWriter::ReadResult result = readerwriter->readImage(istream);
         if (!result.success())
         {
             Log(Debug::Error) << "Error: Can't read map overlay: " << result.message() << " code " << result.status();
-            return;
+            return {};
         }
 
         osg::ref_ptr<osg::Image> image = result.getImage();
@@ -575,6 +579,19 @@ namespace MWRender
         int cellImageSizeSrc = imageWidth / xLength;
         if (int(imageHeight / yLength) != cellImageSizeSrc)
             throw std::runtime_error("cell size must be quadratic");
+
+        return image;
+    }
+
+    void GlobalMap::read(const ESM::GlobalMap& map, osg::ref_ptr<osg::Image> image)
+    {
+        ensureLoaded();
+        if (!image)
+            return;
+        const auto& bounds = map.mBounds;
+        const int imageWidth = image->s();
+        const int imageHeight = image->t();
+        const int cellImageSizeSrc = imageWidth / (bounds.mMaxX - bounds.mMinX + 1);
 
         // If cell bounds of the currently loaded content and the loaded savegame do not match,
         // we need to resize source/dest boxes to accommodate

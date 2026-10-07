@@ -482,9 +482,12 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
+        std::function<void()> preparedGlobalMap;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
                 preparedNative = world.prepareOblivionSaveState(native, std::move(definitions));
+            }, [&](const ESM::GlobalMap& map) {
+                preparedGlobalMap = MWBase::Environment::get().getWindowManager()->prepareGlobalMap(map);
             });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
@@ -601,6 +604,15 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     break;
 
                 case ESM::REC_GMAP:
+                    if (preparedGlobalMap)
+                    {
+                        reader.skipRecord();
+                        auto apply = std::move(preparedGlobalMap);
+                        apply();
+                        break;
+                    }
+                    MWBase::Environment::get().getWindowManager()->readRecord(reader, n.toInt());
+                    break;
                 case ESM::REC_KEYS:
                 case ESM::REC_ASPL:
                 case ESM::REC_MARK:

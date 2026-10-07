@@ -1448,6 +1448,21 @@ namespace MWGui
         writer.endRecord(ESM::REC_GMAP);
     }
 
+    std::function<void()> MapWindow::prepareGlobalMap(const ESM::GlobalMap& map)
+    {
+        auto image = MWRender::GlobalMap::prepareRead(map);
+        return [this, map, image] {
+            mGlobalMapRender->read(map, image);
+            for (const auto& cellId : map.mMarkers)
+            {
+                const auto* cell = MWBase::Environment::get().getESMStore()->get<ESM::Cell>().search(
+                    cellId.first, cellId.second);
+                if (cell && !cell->mName.empty())
+                    addVisitedLocation(cell->mName, cellId.first, cellId.second);
+            }
+        };
+    }
+
     void MapWindow::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         if (type == ESM::REC_GMAP)
@@ -1455,15 +1470,7 @@ namespace MWGui
             ESM::GlobalMap map;
             map.load(reader);
 
-            mGlobalMapRender->read(map);
-
-            for (const ESM::GlobalMap::CellId& cellId : map.mMarkers)
-            {
-                const ESM::Cell* cell
-                    = MWBase::Environment::get().getESMStore()->get<ESM::Cell>().search(cellId.first, cellId.second);
-                if (cell && !cell->mName.empty())
-                    addVisitedLocation(cell->mName, cellId.first, cellId.second);
-            }
+            prepareGlobalMap(map)();
         }
     }
 
