@@ -521,9 +521,8 @@ namespace ESM4
                 throw std::runtime_error("Invalid TES4 crime gold storage");
             if (mOwner != ActorValueOwner::Player && (mPlayerInShiveringIsles || mBounty->mShiveringIsles != 0))
                 throw std::runtime_error("Nonplayer crime gold cannot own alternate Player storage");
-            if (mValues[37].mBase != 0 || std::any_of(mValues[37].mModifiers.begin(), mValues[37].mModifiers.end(),
-                    [](const auto& value) { return value.value_or(0.f) != 0; }))
-                throw std::runtime_error("Crime gold has duplicate scalar AV37 authority");
+            if (mValues[37].mBase != 0)
+                throw std::runtime_error("Crime gold has duplicate scalar AV37 base authority");
         }
         else if (mPlayerInShiveringIsles)
             throw std::runtime_error("Player realm flag requires owned crime gold");
@@ -554,6 +553,12 @@ namespace ESM4
         {
             for (const auto& value : mValues)
                 composeActorValue(value, mOwner, mProcess);
+            if (mBounty && mOwner == ActorValueOwner::Player)
+            {
+                auto current = mValues[37];
+                current.mBase = mBounty->mNormal;
+                composeActorValue(current, mOwner, mProcess);
+            }
         }
         catch (const std::invalid_argument& error)
         {

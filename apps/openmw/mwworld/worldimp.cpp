@@ -1666,6 +1666,16 @@ namespace MWWorld
         return state;
     }
 
+    bool World::setOblivionPlayerCrimeLevel(int amount)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || getPlayerPtr().isEmpty()
+            || !mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1)))
+            return false;
+        mOblivionCombat->setPlayerCrimeLevel(getPlayer(), amount,
+            resolveOblivionPlayerDynamicBaseSettings(mStore));
+        return true;
+    }
+
     std::optional<double> World::getOblivionScriptActorValue(const ESM::FormKey& actor,
         std::uint8_t value, bool base)
     {
@@ -6752,6 +6762,8 @@ namespace MWWorld
 
     void World::goToJail()
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            throw std::logic_error("TES4 custody cannot use the TES3 jail transition");
         const MWWorld::Ptr player = getPlayerPtr();
         if (!mGoToJail)
         {

@@ -6,6 +6,7 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadskil.hpp>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -32,6 +33,8 @@ namespace MWMechanics
 
         // ----- used by the player only, maybe should be moved at some point -------
         int mBounty;
+        // Derived integer compatibility view, never the native float authority.
+        std::optional<int> mNativeBounty;
         int mWerewolfKills;
         /// Used only for the player and for NPC's with ranks, modified by scripts; other NPCs have maximum one faction
         /// defined in their NPC record

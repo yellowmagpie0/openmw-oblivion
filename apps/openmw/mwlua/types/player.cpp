@@ -1,5 +1,6 @@
 #include "types.hpp"
 
+#include <components/esm/gameprofile.hpp>
 #include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/loadfact.hpp>
 #include <components/lua/util.hpp>
@@ -282,6 +283,30 @@ namespace MWLua
         addJournalClassJournalEntryBindings(lua, journal);
     }
 
+    void addPlayerCrimeLevelBindings(sol::table player)
+    {
+        player["getCrimeLevel"] = [](const Object& o) -> int {
+            const MWWorld::Class& cls = o.ptr().getClass();
+            return cls.getNpcStats(o.ptr()).getBounty();
+        };
+        player["setCrimeLevel"] = [](const Object& o, int amount) {
+            verifyPlayer(o);
+            if (!o.isGObject())
+                throw std::runtime_error("Only global scripts can change crime level");
+            const MWWorld::Class& cls = o.ptr().getClass();
+            auto world = MWBase::Environment::get().getWorld();
+            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                if (!world->setOblivionPlayerCrimeLevel(amount))
+                    throw std::runtime_error("Native Player crime level is not ready");
+            }
+            else
+                cls.getNpcStats(o.ptr()).setBounty(amount);
+            if (amount == 0)
+                MWBase::Environment::get().getWorld()->getPlayer().recordCrimeId();
+        };
+    }
+
     void addPlayerBindings(sol::table player, const Context& context)
     {
         MWBase::Journal* const journal = MWBase::Environment::get().getJournal();
@@ -422,19 +447,7 @@ namespace MWLua
             context.mLuaEvents->addMenuEvent({ std::move(eventName), LuaUtil::serialize(eventData) });
         };
 
-        player["getCrimeLevel"] = [](const Object& o) -> int {
-            const MWWorld::Class& cls = o.ptr().getClass();
-            return cls.getNpcStats(o.ptr()).getBounty();
-        };
-        player["setCrimeLevel"] = [](const Object& o, int amount) {
-            verifyPlayer(o);
-            if (!o.isGObject())
-                throw std::runtime_error("Only global scripts can change crime level");
-            const MWWorld::Class& cls = o.ptr().getClass();
-            cls.getNpcStats(o.ptr()).setBounty(amount);
-            if (amount == 0)
-                MWBase::Environment::get().getWorld()->getPlayer().recordCrimeId();
-        };
+        addPlayerCrimeLevelBindings(player);
         player["isCharGenFinished"] = [](const Object&) -> bool {
             return MWBase::Environment::get().getWorld()->getGlobalFloat(MWWorld::Globals::sCharGenState) == -1;
         };

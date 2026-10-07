@@ -3387,7 +3387,9 @@ TEST(ESM4RuntimeState, OwnedBounty44RejectsDuplicateAuthorityAndForeignRealmStor
     bad = actor; bad.mValues[37].mBase = .25f; reject(bad);
     for (auto channel : {0, 1, 2})
     {
-        bad = actor; bad.mValues[37].mModifiers[channel] = .25f; reject(bad);
+        bad = actor; bad.mValues[37].mModifiers[channel] = .25f;
+        state.mNativeActorValues = {bad};
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorValues.front(), bad);
     }
     bad = actor; bad.mValues[37].mModifiers[1] = 0.f;
     state.mNativeActorValues = {bad};

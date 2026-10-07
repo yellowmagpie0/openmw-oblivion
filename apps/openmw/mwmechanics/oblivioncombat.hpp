@@ -74,6 +74,10 @@ namespace MWMechanics
         // Optional during staged native activation. Absence preserves the
         // target's existing lifecycle view; presence is authoritative.
         std::optional<ESM4::ActorLifePhase> mLife;
+        // A supplied view installs/clears ownership. Partial projections leave
+        // it untouched; null means a legacy snapshot with no native buckets.
+        bool mOwnsBounty = false;
+        std::optional<float> mBounty;
     };
 
     // A synchronous transaction: the target must outlive this object. Prepare
@@ -89,6 +93,9 @@ namespace MWMechanics
         std::array<DynamicStat<float>, 3> mDynamic;
         std::optional<std::array<Stat<int>, 4>> mAiSettings;
         std::optional<ESM4::ActorLifePhase> mLife;
+        NpcStats* mNpcTarget = nullptr;
+        bool mOwnsBounty = false;
+        std::optional<int> mBounty;
         bool mCommitted = false;
 
         static void replaceAttribute(AttributeValue& target, const AttributeValue& value) noexcept;
@@ -342,6 +349,13 @@ namespace MWMechanics
         bool syncActorRagdolls(const PhysicalPoseUpdates& updates);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         const ESM4::CrimeStateContracts& crimeContracts() const noexcept { return mCrimeContracts; }
+        // Legal bounty differs from AV37: realm routing and sub-one minimum,
+        // without generic AV modifiers. Absence denotes legacy unowned storage.
+        std::optional<float> crimeBounty(const ESM::FormKey& actor) const;
+        // Integer Lua adapter explicitly replaces the selected raw bucket;
+        // it preserves generic AV37 modifiers and publishes its shared view.
+        void setPlayerCrimeLevel(MWWorld::Player& player, int amount,
+            const ESM4::PlayerDynamicBaseSettings& settings);
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.
         OblivionCombatRandomTransition prepareCombatRandom(unsigned draws) const;

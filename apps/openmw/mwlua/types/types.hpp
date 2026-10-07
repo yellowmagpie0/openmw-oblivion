@@ -44,6 +44,7 @@ namespace MWLua
     void addWeaponBindings(sol::table weapon, const Context& context);
     void addNpcBindings(sol::table npc, const Context& context);
     void addPlayerBindings(sol::table player, const Context& context);
+    void addPlayerCrimeLevelBindings(sol::table player);
     void addCreatureBindings(sol::table creature, const Context& context);
     void addLockpickBindings(sol::table lockpick, const Context& context);
     ESM::Lockpick tableToLockpick(const sol::table& rec);

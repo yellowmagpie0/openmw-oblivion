@@ -1018,17 +1018,24 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         # Bind each value now rather than sharing a late-bound loop variable.
         changes = [lambda a, x=x: a["bounty"].update(normal=x)
                    for x in (-1, math.inf, math.nan, True, 1e100)]
+        max_float = (2 - 2 ** -23) * 2 ** 127
+        changes += [lambda a: (a["bounty"].update(normal=max_float), a["values"][37].__setitem__(1, max_float))]
         changes += [lambda a: a["bounty"].update(shivering_isles=math.inf),
                     lambda a: a["bounty"].update(player_in_shivering_isles=1),
                     lambda a: a["bounty"].update(unknown=0),
                     lambda a: a["bounty"].pop("normal")]
         changes += [lambda a, channel=channel: a["values"][37].__setitem__(channel, .25)
-                    for channel in range(4)]
+                    for channel in (0,)]
         for change in changes:
             bad = copy.deepcopy(state)
             change(bad["native_actor_values"][0])
             with self.assertRaises(state_io.RuntimeStateError):
                 state_io.encode_payload(bad)
+        for channel in (1, 2, 3):
+            valid = copy.deepcopy(state)
+            valid["native_actor_values"][0]["values"][37][channel] = .25
+            self.assertEqual(state_io.decode_payload(state_io.encode_payload(valid))["native_actor_values"][0]["values"][37],
+                             valid["native_actor_values"][0]["values"][37])
         for version in range(9, 44):
             bad = copy.deepcopy(state)
             bad["schema_version"] = version

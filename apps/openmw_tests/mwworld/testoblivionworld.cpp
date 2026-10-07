@@ -77,12 +77,14 @@
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include "apps/openmw/mwmechanics/actors.hpp"
+#include "apps/openmw/mwmechanics/mechanicsmanagerimp.hpp"
 #include "apps/openmw/mwlua/context.hpp"
 #include "apps/openmw/mwlua/localscripts.hpp"
 #include "apps/openmw/mwlua/globalscripts.hpp"
 #include "apps/openmw/mwlua/engineevents.hpp"
 #include "apps/openmw/mwlua/luamanagerimp.hpp"
 #include "apps/openmw/mwlua/stats.hpp"
+#include "apps/openmw/mwlua/types/types.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include "apps/openmw/mwworld/worldimp.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
@@ -13849,4 +13851,119 @@ TEST(OblivionWorldTest, CrimePlayerAliasRestoresLosslesslyAndPlacedActorsRequire
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_TRUE(world.isPlayerInJail());
     EXPECT_EQ(world.captureOblivionRuntimeState().mNativeCrime, saved.mNativeCrime);
+}
+
+TEST(OblivionWorldTest, BountyPlayerClassLuaAndGenericAVCommandsShareDistinctNativeStorage)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    EXPECT_FALSE(world.setOblivionPlayerCrimeLevel(9));
+    EXPECT_THROW(world.goToJail(), std::logic_error); // Before even requiring a ready Player view.
+    ESM4::Npc native{};
+    native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("oblivion.esm", 7);
+    native.mIsTES4 = true; native.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto player = world.getPlayerPtr();
+    auto& stats = player.getClass().getNpcStats(player);
+    stats.setBounty(9); // Unowned legacy facade still retains its old contract.
+    auto& service = *world.getOblivionCombatService();
+    auto values = (*service.findActorValues(ESM::FormKey::dynamic("player", 1)));
+    values.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};
+    service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    EXPECT_EQ(stats.getBounty(), 1);
+    EXPECT_EQ(service.crimeBounty(values.mActor), 1.f);
+    EXPECT_THROW(stats.setBounty(50), std::logic_error);
+    EXPECT_EQ(world.getOblivionScriptActorValue(values.mActor, 37, false), .25);
+    EXPECT_EQ(world.getOblivionScriptActorValue(values.mActor, 37, true), 0);
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 37, ESM4::ActorValueCommand::Mod,
+        ESM4::ActorValueCommandSource::Script, 2));
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 37, ESM4::ActorValueCommand::Force,
+        ESM4::ActorValueCommandSource::Console, 7));
+    EXPECT_EQ(service.getPlayerValue(37), 2.25f); // Positive Damage is clamped at zero.
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 37, ESM4::ActorValueCommand::Force,
+        ESM4::ActorValueCommandSource::Script, 7));
+    EXPECT_EQ(service.getPlayerValue(37), 7.f);
+    EXPECT_EQ(service.getPlayerIntegerValue(37), 6);
+    EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mNormal, .25f);
+    EXPECT_EQ(stats.getBounty(), 1);
+
+    LuaUtil::ScriptsConfiguration config;
+    LuaUtil::LuaState luaState(&fixture.mVfs, &config);
+    MWLua::Context context{MWLua::Context::Global};
+    context.mLuaManager = fixture.mLuaManager.get(); context.mLua = &luaState;
+    sol::state_view lua = luaState.unsafeState();
+    lua.new_usertype<MWLua::Object>("Object", sol::no_constructor);
+    lua.new_usertype<MWLua::GObject>("GObject", sol::no_constructor,
+        sol::base_classes, sol::bases<MWLua::Object>());
+    sol::table bindings(lua, sol::create);
+    MWLua::addPlayerCrimeLevelBindings(bindings);
+    lua["Player"] = bindings; lua["target"] = MWLua::GObject(player);
+    auto result = lua.safe_script("assert(Player.getCrimeLevel(target) == 1); Player.setCrimeLevel(target, 25); "
+        "assert(Player.getCrimeLevel(target) == 25)", sol::script_pass_on_error);
+    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mNormal, 25.f);
+    EXPECT_EQ(service.getPlayerValue(37), 31.75f);
+    values = (*service.findActorValues(ESM::FormKey::dynamic("player", 1))); values.mPlayerInShiveringIsles = true;
+    service.publishPlayerValues(world.getPlayer(), values, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    EXPECT_EQ(service.crimeBounty(values.mActor), -3.5f);
+    EXPECT_EQ(stats.getBounty(), -3);
+    result = lua.safe_script("Player.setCrimeLevel(target, -4); assert(Player.getCrimeLevel(target) == -4)",
+        sol::script_pass_on_error);
+    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mNormal, 25.f);
+    EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mShiveringIsles, -4.f);
+    EXPECT_EQ(service.getPlayerValue(37), 31.75f);
+    auto saved = world.captureOblivionRuntimeState();
+    MWMechanics::MechanicsManager mechanics;
+    EXPECT_FALSE(mechanics.commitCrime(player, fixture.mActor, MWBase::MechanicsManager::OT_Theft, {}, 25, true));
+    EXPECT_THROW(world.goToJail(), std::logic_error);
+    EXPECT_THROW(world.goToJail(), std::logic_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(service.crimeBounty(values.mActor), -4.f);
+    EXPECT_EQ(world.getPlayerPtr().getClass().getNpcStats(world.getPlayerPtr()).getBounty(), -4);
+    auto bad = (*service.findActorValues(ESM::FormKey::dynamic("player", 1)));
+    bad.mBounty->mNormal = std::numeric_limits<float>::max();
+    bad.mValues[37].mModifiers[0] = std::numeric_limits<float>::max();
+    EXPECT_THROW(service.publishPlayerValues(world.getPlayer(), bad,
+        MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore())), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    ASSERT_NO_THROW(world.clear());
+    EXPECT_FALSE(service.crimeBounty(values.mActor));
+    MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+    EXPECT_FALSE(legacy.setOblivionPlayerCrimeLevel(3));
+}
+
+TEST(OblivionWorldTest, BountyNpcAndCreatureQueriesKeepReferenceBaseAndProcessModifiersSeparate)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto creature = addEquipmentCreature(fixture);
+    creature = creature.getCell()->moveTo(creature, fixture.mActor.getCell());
+    world.getWorldModel().registerPtr(creature);
+    auto& service = *world.getOblivionCombatService();
+    for (const auto& actor : {fixture.mActor, creature})
+    {
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+        auto values = *service.findActorValues(actor.getCellRef().getFormKey());
+        values.mBounty = ESM4::CrimeBountyState{10.5f, 0.f};
+        values.mValues[37].mModifiers = {.5f, -3.25f, -.25f};
+        service.publishNonPlayerValues(actor, values);
+        EXPECT_EQ(service.crimeBounty(values.mActor), 10.5f);
+        EXPECT_EQ(service.getNonPlayerValue(actor, 37), -3.f);
+        EXPECT_EQ(service.getNonPlayerIntegerValue(actor, 37), -2);
+        EXPECT_EQ(world.getOblivionScriptActorValue(values.mActor, 37, true), 10);
+        EXPECT_EQ(world.getOblivionScriptActorValue(values.mActor, 37, false), -3);
+        if (actor.getType() == ESM::REC_NPC_4)
+        {
+            auto& stats = actor.getClass().getNpcStats(actor);
+            EXPECT_EQ(stats.getBounty(), 10);
+            EXPECT_THROW(stats.setBounty(99), std::logic_error);
+        }
+        auto saved = world.captureOblivionRuntimeState();
+        readNativeSnapshot(fixture, saved); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(service.crimeBounty(values.mActor), 10.5f);
+    }
 }

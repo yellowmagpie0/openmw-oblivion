@@ -9,6 +9,7 @@
 #include <components/esm4/loadgmst.hpp>
 
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/actorclock.hpp>
 
 #include <algorithm>
@@ -384,6 +385,10 @@ namespace MWMechanics
             }
             input.mOwner = values.mOwner;
             input.mProcess = values.mProcess;
+            input.mOwnsBounty = true;
+            if (values.mBounty)
+                input.mBounty = ESM4::queryCrimeBounty(*values.mBounty,
+                    values.mOwner == ESM4::ActorValueOwner::Player, values.mPlayerInShiveringIsles);
             std::copy_n(values.mValues.begin(), 8, input.mAttributes.begin());
             std::copy_n(values.mValues.begin() + 12, 21, input.mSkills.begin());
             input.mAiSettings.emplace();
@@ -506,7 +511,14 @@ namespace MWMechanics
         CreatureStats& target, NpcStats* npc, const OblivionActorProjectionInput& input)
         : mTarget(target)
         , mLife(input.mLife)
+        , mNpcTarget(npc)
+        , mOwnsBounty(input.mOwnsBounty)
     {
+        // This pre-existing UI/Lua API returns int. Its compatibility view
+        // truncates through the reviewed native SSE conversion; raw float
+        // buckets remain solely in the service and T4ST.
+        if (mOwnsBounty && input.mBounty)
+            mBounty = ESM4::convertActorBaseFloat(*input.mBounty, ESM4::ActorValueConversionMode::Sse);
         if (mLife && *mLife != ESM4::ActorLifePhase::Alive && *mLife != ESM4::ActorLifePhase::Dead
             && *mLife != ESM4::ActorLifePhase::EssentialUnconscious)
             throw std::invalid_argument("invalid native lifecycle projection");
@@ -578,6 +590,8 @@ namespace MWMechanics
             mTarget.mDead = dead;
             mTarget.mNativeEssentialUnconscious = essential;
         }
+        if (mOwnsBounty && mNpcTarget)
+            mNpcTarget->mNativeBounty = mBounty;
         mCommitted = true;
         return true;
     }
@@ -2379,6 +2393,8 @@ namespace MWMechanics
             throw std::invalid_argument("invalid native base actor-value query");
         const auto& values = nonPlayerValues(actor);
         nonPlayerContentIsCreature(values, store);
+        if (value == 37 && values.mBounty)
+            return ESM4::convertActorBaseFloat(std::floor(values.mBounty->mNormal), ESM4::ActorValueConversionMode::Sse);
         if (value == 8 && values.mNonPlayerFormHealth)
             return ESM4::convertActorBaseFloat(values.mValues[8].mBase, ESM4::ActorValueConversionMode::Sse);
         return ESM4::combatBaseValue(values.mValues[value].mBase);
@@ -2388,7 +2404,11 @@ namespace MWMechanics
     {
         if (value >= 72)
             throw std::invalid_argument("invalid native base actor-value query");
-        return ESM4::combatBaseValue(playerValues().mValues[value].mBase);
+        const auto& values = playerValues();
+        const float base = value == 37 && values.mBounty ? values.mBounty->mNormal : values.mValues[value].mBase;
+        return value == 37 && values.mBounty
+            ? ESM4::convertActorBaseFloat(std::floor(base), ESM4::ActorValueConversionMode::Sse)
+            : ESM4::combatBaseValue(base);
     }
 
     double OblivionCombatService::getScriptActorValue(const ESM::FormKey& actor, std::uint8_t value,
@@ -3050,7 +3070,10 @@ namespace MWMechanics
     {
         validatePlayerQuery(value);
         const auto& values = playerValues();
-        return ESM4::composeActorValue(values.mValues[value], values.mOwner, values.mProcess);
+        auto state = values.mValues[value];
+        if (value == 37 && values.mBounty)
+            state.mBase = values.mBounty->mNormal;
+        return ESM4::composeActorValue(state, values.mOwner, values.mProcess);
     }
 
     std::int32_t OblivionCombatService::getPlayerIntegerValue(std::uint8_t value) const
@@ -3059,7 +3082,31 @@ namespace MWMechanics
         const auto& values = playerValues();
         const auto& state = values.mValues[value];
         return ESM4::composeIntegerActorValue(
-            ESM4::combatBaseValue(state.mBase), state.mModifiers, values.mOwner, values.mProcess);
+            value == 37 && values.mBounty ? getPlayerBaseValue(value) : ESM4::combatBaseValue(state.mBase),
+            state.mModifiers, values.mOwner, values.mProcess);
+    }
+
+    void OblivionCombatService::setPlayerCrimeLevel(MWWorld::Player& player, int amount,
+        const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        auto values = playerValues();
+        if (!values.mBounty)
+            values.mBounty.emplace();
+        values.mValues[37].mBase = 0; // Explicit replacement of the legacy cached base only.
+        if (values.mPlayerInShiveringIsles)
+            values.mBounty->mShiveringIsles = static_cast<float>(amount);
+        else
+            values.mBounty->mNormal = std::max(0.f, static_cast<float>(amount));
+        publishPlayerValues(player, std::move(values), settings);
+    }
+
+    std::optional<float> OblivionCombatService::crimeBounty(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(ESM4::runtimeReferenceKey(actor));
+        if (!values || !values->mBounty)
+            return std::nullopt;
+        return ESM4::queryCrimeBounty(*values->mBounty, values->mOwner == ESM4::ActorValueOwner::Player,
+            values->mPlayerInShiveringIsles);
     }
 
     std::int16_t OblivionCombatService::getProcessAction(const ESM::FormKey& actor) const

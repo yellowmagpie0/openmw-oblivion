@@ -7,6 +7,7 @@
 #include <osg/Stats>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm/gameprofile.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm/refid.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -1224,6 +1225,10 @@ namespace MWMechanics
     bool MechanicsManager::commitCrime(const MWWorld::Ptr& player, const MWWorld::Ptr& victim, OffenseType type,
         const ESM::RefId& factionId, int arg, bool victimAware)
     {
+        // TES4 offense producers own their legal state. Do not run TES3
+        // witness/AI/disposition writes before encountering a native view guard.
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            return false;
         // NOTE: victim may be empty
 
         // Only player can commit crime

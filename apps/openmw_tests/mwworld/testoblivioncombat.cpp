@@ -1148,3 +1148,43 @@ TEST(OblivionCombatService, OwnedBounty44RetainsSnapshotsAndRejectsBeforePublica
     service.restore(legacy); service.capture(captured);
     EXPECT_EQ(captured.mNativeActorValues, legacy.mNativeActorValues);
 }
+
+TEST(OblivionCombatService, BountyAndPlayerAV37FollowIndependentOriginalDispatch)
+{
+    auto state = savedState();
+    ESM4::RuntimeActorValues values;
+    values.mActor = state.mPlayer.mReference;
+    values.mBase = ESM::FormKey::dynamic("player-base", 1);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    values.mPlayerFormValues = {{0, 0, 0, 0}};
+    values.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};
+    state.mNativeActorValues = {values};
+    MWMechanics::OblivionCombatService service;
+    MWWorld::ESMStore store;
+    for (bool realm : {false, true})
+    {
+        state.mNativeActorValues.front().mPlayerInShiveringIsles = realm;
+        service.restore(state);
+        EXPECT_EQ(service.crimeBounty(values.mActor), realm ? -3.5f : 1.f);
+        EXPECT_EQ(service.crimeBounty(ESM::FormKey::content("oblivion.esm", 0x14)), realm ? -3.5f : 1.f);
+        EXPECT_EQ(service.getPlayerValue(37), .25f);
+        EXPECT_EQ(service.getPlayerIntegerValue(37), 0);
+        EXPECT_EQ(service.getPlayerBaseValue(37), 0);
+        EXPECT_EQ(service.getScriptActorValue(values.mActor, 37, false, true, store), 0);
+        state.mNativeActorValues.front().mValues[37].mModifiers = {.75f, .5f, -.25f};
+        service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+        EXPECT_EQ(service.getPlayerValue(37), 1.25f);
+        EXPECT_EQ(service.getPlayerIntegerValue(37), 1);
+        EXPECT_EQ(service.getPlayerBaseValue(37), 0);
+        EXPECT_EQ(service.crimeBounty(values.mActor), realm ? -3.5f : 1.f);
+        state.mNativeActorValues.front().mValues[37].mModifiers = {};
+    }
+    auto legacy = state; legacy.mNativeActorValues.front().mBounty.reset();
+    legacy.mNativeActorValues.front().mPlayerInShiveringIsles = false;
+    legacy.mNativeActorValues.front().mValues[37].mBase = 9.25f;
+    service.restore(legacy);
+    EXPECT_FALSE(service.crimeBounty(values.mActor));
+    EXPECT_EQ(service.getPlayerValue(37), 9.25f);
+    service.clear();
+    EXPECT_FALSE(service.crimeBounty(values.mActor));
+}

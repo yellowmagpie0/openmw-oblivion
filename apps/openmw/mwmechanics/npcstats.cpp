@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadfact.hpp>
@@ -305,11 +306,13 @@ bool MWMechanics::NpcStats::hasBeenUsed(const ESM::RefId& id) const
 
 int MWMechanics::NpcStats::getBounty() const
 {
-    return mBounty;
+    return mNativeBounty.value_or(mBounty);
 }
 
 void MWMechanics::NpcStats::setBounty(int bounty)
 {
+    if (mNativeBounty)
+        throw std::logic_error("native bounty must be changed through its service authority");
     mBounty = bounty;
 }
 
@@ -432,7 +435,7 @@ void MWMechanics::NpcStats::writeState(ESM::NpcStats& state) const
 
     state.mCrimeId = mCrimeId;
 
-    state.mBounty = mBounty;
+    state.mBounty = getBounty();
 
     for (auto iter(mExpelled.begin()); iter != mExpelled.end(); ++iter)
         state.mFactions[*iter].mExpelled = true;
@@ -485,6 +488,7 @@ void MWMechanics::NpcStats::readState(const ESM::NpcStats& state)
 
     mCrimeId = state.mCrimeId;
     mBounty = state.mBounty;
+    mNativeBounty.reset();
     mReputation = state.mReputation;
     mWerewolfKills = state.mWerewolfKills;
     mLevelProgress = state.mLevelProgress;

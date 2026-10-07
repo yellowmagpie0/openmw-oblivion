@@ -873,8 +873,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if owner != 0 and (realm or alternate != 0):
                 raise RuntimeStateError("Nonplayer crime gold cannot own alternate Player storage")
             if (not isinstance(values[37], list) or len(values[37]) != 4
-                    or any(value is not None and native_float(value) != 0 for value in values[37])):
-                raise RuntimeStateError("Crime gold has duplicate scalar AV37 authority")
+                    or native_float(values[37][0]) != 0):
+                raise RuntimeStateError("Crime gold has duplicate scalar AV37 base authority")
         form_health = actor.get("nonplayer_form_health")
         if form_health is not None:
             if version < 17 or owner != 1 or type(form_health) is not int or not -(1 << 31) <= form_health < (1 << 31):
@@ -925,6 +925,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 low = native_float(base_value + script + damage)
                 if process == 1:
                     native_float(low + maximum)
+
+        if bounty is not None and owner == 0:
+            native_float(native_float(bounty["normal"]) + sum(
+                0.0 if modifier is None else native_float(modifier) for modifier in values[37][1:]))
 
     manager_time = native_float(state.get("native_actor_manager_time", 0))
     update_times = check_collection(state.get("native_actor_update_times", []), "native actor update time list")
