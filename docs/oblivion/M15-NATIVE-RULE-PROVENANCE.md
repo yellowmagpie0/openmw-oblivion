@@ -4,6 +4,51 @@ Status: **in progress**. Record decoding is not proof of runtime policy or
 physical/crime formulas. Original-game behavioral probes and independent rule
 expected values remain required before the S2 gate can close.
 
+## Player reference Fame/Infamy and existing Infamy mutation
+
+Original Oblivion1.2.0416 executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Player virtual byte offsets `+0x204`/`+0x208` resolve to `0066B090` / `0066B0A0`, reading
+signed dwords at Player `+0x6F4`/`+0x6F8`. Generic float counters cannot preserve this
+raw storage. The integer-base dispatcher `005F1910` performs a float store
+before conversion; current float `0065E110` starts with the exact integer and
+stores after modifiers; current integer `0065E030` starts with the rounded
+integer base before modifiers/truncation. For raw16777217 and modifier sum1,
+the raw/base/current-float/current-integer results are respectively
+16777217/16777216/16777218/16777217. The port explicitly uses the reviewed
+modern SSE conversion branch, including its int-min overflow sentinel.
+
+`S3/reference-counter-dispatch-04/{probe.py,report.json}` executes144
+configurations and576 original returns: distinct raw Fame/Infamy, six counter
+values, three modifier arrangements, x87 controls027F/037F, and both CPU
+conversion branches. Getters are original instructions; only the nonnull
+Player base resolver is a boundary stub. Eighteen independently derived SSE
+rows are retained in `reference_counters_expected.inc` for C++ comparison.
+
+Original command bodies ModPCFame `0050C980` and ModPCInfamy `0050CA90` perform
+wrapping dword addition without a nonnegative clamp. ModPCInfamy resets
+Player `+0x6FC` to0 even for delta0; ModPCFame preserves it. Failed argument
+extraction changes neither counter nor accumulator.
+`S3/reference-counter-mutation-01/{probe.py,report.json}` passed1,792 original
+cases over signed boundaries/deltas, four accumulator values, extraction
+success/failure and both x87 controls. The only boundary stub is argument
+extraction `004FAE80`; console printing is disabled.224 successful Infamy
+expectations are retained in `reference_infamy_mutations_expected.inc`.
+
+`S3/nonplayer-reputation-getters-01.json` additionally records four direct
+original calls: Character vtableA6FC9C and Creature vtableA710F4 both route
+the two counter slots to `006F7070`, returning0 despite distinct nonzero fake
+raw fields. This supports the derived nonplayer shared raw view, not a
+writable nonplayer counter.
+
+Schema46 carries owned signed counters and an optional accumulator; absent
+legacy ownership/accumulation is not guessed. Original-instruction evidence,
+codec/unit checks and actual engine acceptance are separate layers. The
+normal/instrumented restart and live conflicting-REPU rejection courses are
+listed in the reputation checkpoint in
+[the milestone ledger](M15-COMBAT-STEALTH-CRIME.md). No new S12 command set or
+S9 infamy producer is accepted by this bounded integration.
+
 ## Combat-style binary layout
 
 Target: original TES4/Oblivion, header versions 0.8 and 1.0, 20-byte record
@@ -14383,3 +14428,47 @@ Subsequent closure edits only correct the review index's armor/difficulty
 examples and record results in documentation; production source bytes remain
 unchanged. S2 native data and pure-rule review is passed. World integration,
 normal-input gameplay, media review and restart acceptance remain S3-S14.
+
+## S3 bounty versus actor-value dispatch — 2026-10-07
+
+Pinned Oblivion 1.2.0416 image SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Reference float base AV37 at `005EAD00` calls raw normal ExtraCrimeGold lookup
+`0041FC90`; integer base `005F1910` floors that stored float through the original
+CRT path. Player float current `0065E110` adds generic modifiers to raw normal;
+integer current `0065E030` composes them after the floored base. Legal getter
+`0060FBC0` instead selects the explicit Player realm bucket and maps stored
+amounts strictly between zero and one to one, without modifying storage or
+including generic modifiers. Attached NPC/creature process current AV37 uses
+form base zero plus modifiers; disabled current AV37 remains form zero.
+
+`S3/bounty-av-dispatch-03` passes 288 configurations and 1,152 return comparisons
+across x87 control words 027F/037F and both original CRT CPU branches. Boundary
+stubs provide ExtraCrimeGold lookup and nonnull Player base resolution only;
+original base/current/legal getters and conversion instructions execute. The
+first two harness failures are retained separately. Console ForceAV uses the
+Damage modifier and its clamp; Script ForceAV uses Script. Runtime adapter
+tests distinguish these paths rather than treating ForceAV contexts alike.
+The existing integer Lua/UI bounty view is a compatibility API conversion;
+this evidence does not establish the original game's UI integer conversion.
+
+## S3 reference Fame/Infamy getter investigation — 2026-10-07
+
+Pinned image SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Player virtual +204 resolves to `0066B090` and reads raw Fame +6F4; +208 resolves
+to `0066B0A0` and reads raw Infamy +6F8. Distinct configured counter values
+confirm that these authorities are separate. `S3/reference-counter-dispatch-04`
+verifies **144 configurations / 576 returns** across both x87 precision modes
+and both original CRT CPU branches. Raw-counter, reference base integer and
+Player current float/integer getters execute original instructions. Only the
+nonnull Player base resolver and inherited unused crime-extra boundaries are
+stubs; no counter getter is stubbed. Earlier setup failures are retained.
+
+For raw counter 16,777,217 and modifiers summing to one, base integer is
+16,777,216, current float is 16,777,218, current integer is 16,777,217, and the
+raw getter remains 16,777,217. Thus rounding the raw counter to float before
+current float composition is incorrect. Extreme CRT branch differences are
+also recorded. This establishes getter/storage provenance for the next S3
+reference-counter authority change. Production integration, legacy migration,
+mutator rules and gameplay acceptance are not established by this probe.

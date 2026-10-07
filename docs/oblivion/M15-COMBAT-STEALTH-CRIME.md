@@ -6,6 +6,199 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 committed recovery and continuation handoff — 2026-10-07
+
+The eight verified chunks previously blocked by the other session's read-only
+Git metadata are now committed locally on `master`. Their preserved patches
+were applied sequentially to the index without changing implementation,
+tests or fixtures in the working tree. Every staged source hash matched its
+chunk report; together the patches reproduce all36 changed source/test/fixture
+files exactly. The implementation tour in `be6b387e2d` is retained unchanged.
+
+| Commit | Recovered chunk | Existing evidence under `build/oblivion-compat/m15/S3/` |
+| --- | --- | --- |
+| `5181b419e6` | Native live bounty views and Lua mutations | `bounty-adapters-report.json` |
+| `a6476282a6` | Fresh actors own zero bounty; legacy absence retained | `fresh-bounty-report.json` |
+| `d960e46cf0` | Schema45 shared/native bounty admission | `bounty-admission-report.json` |
+| `9a92d905c5` | Schema46 exact Player Fame/Infamy ownership | `reputation-report.json` |
+| `63981886e6` | Checked legacy integer counter reads | `legacy-counter-read-report.json` |
+| `f03b41c61a` | Dynamic NPC/creature counter reconstruction matrix | `dynamic-counter-report.json` |
+| `ff3e8b9412` | Live dynamic enabled flags for script queries | `dynamic-query-report.json` |
+| `7d54e5b678` | Shared Player birthsign admission before teardown | `shared-birthsign-report.json` |
+
+Seventeen existing passing verification reports were reinspected, including
+source stability and independent GoogleTest inventory/XML agreement. The latest
+normal and instrumented engine reports each contain1,217 executed tests with
+zero failures/skips. These are the original dirty-source runs identified in
+the checkpoints below; committing does not turn them into fresh runs against
+the new commit IDs. No build, test execution, original-game probe or runtime
+course was rerun during recovery. Actual runtime acceptance remains limited
+to the courses and controls documented for each chunk.
+
+The recovery snapshot at `S3/commit-recovery-20261007T223459Z/` retains the
+original39 worktree files, original index/diff, all eight patches, reports and
+commit receipts. Generated plugins, proprietary data, private saves, captures
+and local evidence remain outside Git. Editable fixtures, their helper,
+counter expectation tables, implementation/tests and the three documentation
+files are retained in the recovered commit series. Historical read-only
+messages and tested-parent fingerprints below describe the earlier session;
+the local commit backlog recorded here is resolved.
+
+Continue against [the S3 contract](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md)
+and [the consolidated authority map](M15-S3-AUTHORITY.md). The dynamic counter
+matrix and authority document now exist; older ignored requirements audits may
+still list them as missing. Full shared semantic/resource restore staging,
+especially cleanup after a later restore failure, remains open. Deliberate
+legacy authority reconciliation, complete populated field-by-version migration
+coverage, lifecycle/profile and adapter audits, and queue/action continuation
+also require their remaining S3 gates. S3 is still in progress. Recovery adds
+no gameplay implementation and does not close any later M15 stage.
+
+## S3 shared Player birthsign admission — 2026-10-07
+
+Shared PLAY/SIGN dependencies now resolve against immutable incoming content
+before native preparation and outgoing-world cleanup. Birthsigns are not saved
+dynamic definitions; an outgoing transient sign cannot supply a missing incoming
+definition. This moves the existing Player reader's missing-sign failure ahead
+of teardown, preserving its diagnostic and leaving Morrowind admission unchanged.
+
+The new admission case exercises376 combinations: every native schema1–46 and
+no-T4ST input, ordinary/remapped IDs, empty/static/missing/outgoing-only signs.
+It checks preparation callback suppression, reader rewind and unchanged source
+definitions. `S3/shared-birthsign-normal-02` and `shared-birthsign-sanitized-01`
+passed all1,217 engine tests with exact inventories/XML and zero failures/skips.
+Sanitizers halt on errors; leak detection is disabled. The initial no-T4ST
+fixture's invalid zero profile version is retained in normal01.
+
+Actual `shared-birthsign-reject-01` and `shared-birthsign-reject-sanitized-01`
+courses save through F5, replace only PLAY/SIGN with a missing string RefId in a
+private output, and verify every other ordered record/native byte is unchanged.
+F9 rejects before teardown; Return/F5 preserves the native state and restores
+the original empty sign in the same PID/epoch. Each course has one completed
+load and two real saves; all four rejection/resave captures were reviewed.
+
+Editable `oblivion_m15_shared_birthsign_{reject,fault}.json` files are under
+`scripts/data/oblivion_compat/`. Isolated preparation/workers/verifiers are in
+the named ignored evidence directories. `S3/shared-birthsign-report.json` records
+fingerprints, source hashes and distinct `verified-bounty-chunk-sources/shared-birthsign.patch`;
+applying that patch reproduces all four preserved source/fixture hashes.
+Fixture copies/documentation follow compiled verification without changing
+implementation/tests. The complete shared semantic/resource restore boundary
+remains open; this checkpoint does not close S3.
+
+## S3 dynamic actor counter reconstruction and live query flags — 2026-10-07
+
+The new World matrix reconstructs dynamic NPCs and creatures in Low/Active
+process modes through two binary load/clear/apply/capture cycles each. It
+checks the complete72-channel actor DTO, raw bounty10.5, independent float
+and integer modifier results, script reference/base reads, stable AI lookup,
+and NPC shared bounty/reputation getters and write guards. The companion
+content NPC in the headless creature fixture is explicitly rebound after clear;
+the dynamic target is reconstructed solely by the native loader.
+
+That trace exposed a live query bug: World looked up resident content actors
+but used saved enabled flags for dynamic actors. It now uses the dynamic
+registry before falling back to retained state. The matrix additionally loads
+enabled and disabled snapshots, then toggles the live flag both ways and checks
+the script result while preserving bounty and complete actor values.
+
+The reconstruction-only `dynamic-counter-normal-02` / `dynamic-counter-sanitized-01`
+and subsequent fixed-query `dynamic-query-normal-01` / `dynamic-query-sanitized-01`
+each passed all1,216 engine tests with exact inventories/XML, zero failures/skips
+and halting ASan/UBSan (leak detection disabled). Reports and distinct source
+patches are under `S3/`; normal01 retains the original fixture binding failure.
+These are actual World unit checks; no new graphical acceptance is claimed.
+
+[The consolidated authority map](M15-S3-AUTHORITY.md) records Player, native
+NPC/creature, dynamic/unloaded reference, projected equipment, UI read and
+capture/restore paths. Full shared semantic/resource staging remains open,
+including the later restoration cleanup-on-failure boundary. S3 is not complete.
+
+## S3 checked legacy counter reads — 2026-10-07
+
+Legacy Player Infamy/faction-counter queries now check floating-point values
+before converting to int64. Representable values retain truncation toward zero;
+out-of-range values raise OBSV117 without clamping or replacing saved authority.
+The added actual World test loads30 cases through T4ST, covers both integer
+boundaries and fractions for all three getters, and compares the complete
+captured binary state before/after each successful or rejected query.
+
+`S3/legacy-counter-read-normal-02` and `legacy-counter-read-sanitized-02`
+passed all1,215 engine tests with exact inventories/XML and no failures/skips.
+ASan leak detection is disabled; ASan/UBSan halt on errors. Both runs use
+`be6b387e2d193c57b1e8e0099879ef9b2b6a69a3`; the tested fingerprint and two
+source hashes are in `S3/legacy-counter-read-report.json`. Sanitized01 passed
+tests but failed source-stability verification when the unrelated implementation
+tour was committed externally during that run; it is retained as invalid
+revision-linked evidence. No new graphical acceptance is claimed for this fix.
+
+The separate `verified-bounty-chunk-sources/legacy-counter-read.patch` and
+source snapshot preserve the fix after the verified reputation chunk.
+`S3/requirements-audit-02.json` replaces the stale missing-crime-contract finding:
+those contracts now persist through the real service and prepared World restore.
+The source trace also confirms native dynamic actors emit no shared CSTA records;
+they reconstruct from T4ST stable keys. Their nonzero bounty/class-view matrix,
+the consolidated authority map and remaining full S3 audits are still open.
+
+## S3 owned Player reputation checkpoint — 2026-10-07
+
+Schema46 persists exact signed32 Player Fame and Infamy separately from AV38/39
+modifiers, plus a separately optional crime accumulator. Fresh Player values
+own zero counters; legacy absence remains absent. The existing Lua reputation
+setter publishes raw Fame through the native transaction. Existing GetPCInfamy
+and ModPCInfamy use native storage; ModPCInfamy wraps signed32 addition and
+resets the accumulator even for delta zero. Shared Player REPU reads and saves
+the exact raw Fame. Native nonplayer raw reputation reads zero and has no
+writable counter. Morrowind retains its existing reputation contract.
+
+An explicit legacy write adopts supported shared Fame and the observable
+integer Infamy, archives the original Infamy double as `legacy.infamy`, and
+leaves the accumulator unknown until an operation establishes it. Unsupported
+ranges or duplicate cached AV base authority fail before publication. Capture
+now preserves legacy script-map entries rather than silently omitting Infamy.
+Owned counters cannot be downgraded to45. Admission rejects a conflicting
+shared Player REPU before World preparation/teardown.
+
+Original-executable evidence is recorded in the reputation section of
+[the provenance document](M15-NATIVE-RULE-PROVENANCE.md). Normal
+`S3/reputation-normal-05` passed **1,214 engine**, **2,590 component**, and
+**280 Python** tests. `S3/reputation-sanitized-01` passed **1,214 engine** and
+**711 ESM4 component** tests under ASan/UBSan. Inventories match XML, with zero
+failures/skips. Leak detection is disabled; sanitizers halt on errors. Both
+runs used parent `65d4819f7c9eccb0636c57d8e4e8c2e52c8f9045` and tested source
+fingerprint `54c6ab99c262c53a92d99e1b019e68ec1b0af60da195852fa00a3dfc1f516ae5`.
+Build warnings are retained in their logs.
+
+Actual runtime acceptance is under `S3/reputation-restart-02` and
+`S3/reputation-restart-sanitized-03`: F5/F9/F5/quit, then a fresh process doing
+the same. All38 snapshot fields match at all four load boundaries. Lua changes
+raw Fame16777217 to16777219; GetPCInfamy remains-3; ModPCInfamy0 resets777 to0.
+All four actual saves preserve both raw counters, independent AV modifiers,
+and exact shared REPU16777219. Existing generated item/ammunition/class,
+weapon/cell, water and bounty controls also pass. Normal and instrumented
+`S3/reputation-reject-02` / `S3/reputation-reject-sanitized-02` each alter only
+one PLAY/REPU byte (16777219 to16777218) in a private actual F5 output. F9
+rejects before teardown, and the same PID resaves the unchanged native state
+and correct shared Fame. All eight accepted captures were reviewed.
+
+Editable `oblivion_m15_reputation{,_reject,_input}.json` files are under
+`scripts/data/oblivion_compat/`. The input recipe describes the explicit owned
+fixture, fingerprint update and shared REPU insertion. Isolated preparation,
+receipt workers, run/verification sources and private saves remain in the
+named evidence directories. Declarative fixture copies and this documentation
+were saved after the compiled checks; compiled implementation/tests are
+unchanged. Retained failed attempts are normal01–04, restart01 (template
+escaping before launch), and sanitized restart02 (ASan preload ordering).
+
+`S3/reputation-report.json` records the layers and hashes. The preceding
+bounty chunks and this chunk have hash-verified source snapshots and separate
+patches under `S3/verified-bounty-chunk-sources/`; `reputation.patch` is the
+delta against the verified preceding source. Git metadata remains read-only,
+so staging/committing is unavailable and no commit or push is claimed. This
+closes the bounded owned-reputation chunk. Automatic legacy reconciliation,
+remaining shared/dynamic-reference audits and the full S3 requirements audit
+remain open.
+
 ## Stage ledger
 
 Evidence root: `build/oblivion-compat/m15/`. Generated proprietary content,
@@ -29,6 +222,130 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
 
+## S3 owned bounty shared-view admission checkpoint — 2026-10-07
+
+Schema45 retains schema44's native payload layout byte for byte apart from the
+version word. It marks the requirement that a decoded shared Player or
+content-backed NPC bounty view agree with owned native crime gold before load
+teardown. The check uses the legal realm query and the existing explicit SSE
+integer compatibility projection, independently of AV37 modifiers. NPC views
+also bind the saved stable reference and base identity; duplicates diagnose.
+Native absence remains unresolved. Schema44's early owned-bounty saves could
+have stale shared views, so they remain accepted and the engine reprojects them
+before resaving at45. This is deliberate compatibility, not a guessed realm
+or an automatic migration of absent legacy bounty authority.
+
+`S3/bounty-admission-normal-02` passes **1,211 engine**, **2,587 component** and
+**279 Python** cases. `bounty-admission-sanitized-01` passes **1,211 engine** and
+**708 ESM4 component** cases under ASan/UBSan. Exact inventories match without
+skips/failures; leak checks are disabled and sanitizers halt on error. Parent:
+`65d4819f7c9eccb0636c57d8e4e8c2e52c8f9045`; compiled/tested fingerprint:
+`0ec7bbc7411b5d275bbe4b2fd3697b0c63baa54ff592eb1dabf70a96c099a3bc`.
+The first compilation failure from duplicate SCOPED_TRACE line numbers is
+retained separately.
+
+Normal and sanitizer `bounty-admission-restart*-01` each load a legacy44 save,
+perform F5/F9/F5/quit, then repeat in a distinct fresh process with the45 output.
+All **38 fields** agree at all four load boundaries per course; six raw-save
+controls pass per course. Normal and sanitizer `bounty-admission-reject*-01`
+change exactly one byte in actual45 PLAY/BOUN, **-4 to -3**, leaving native T4ST
+identical. F9 rejects before replacing the live world. Return/F5 preserves the
+native state and restores shared BOUN **-4**; each course has one completed load
+and two completed saves in the same process. Blade/ammunition raw controls
+also pass. All eight restart/rejection/resave captures were reviewed.
+
+Editable rejection source:
+`scripts/data/oblivion_compat/oblivion_m15_bounty_view_reject.json` and
+`scripts/oblivion_m15_bounty_view_fault.py` (`prepare COURSE`, then
+`wait-resave COURSE` beside the scenario runner). The public helper independently
+reproduces both actual rejected inputs byte for byte in private copies and
+refuses a repeated mutation. Its check is in `S3/bounty-view-fault-helper-01`;
+it and the published manifest were added after compiled-source verification.
+The native Python codec remains a payload reader/writer; whole shared/native
+save consistency is checked by engine admission. Aggregate evidence:
+`S3/bounty-admission-report.json`. Earlier verified source snapshots and
+sequential patches are retained in `S3/verified-bounty-chunk-sources`.
+
+Whole S3 remains in progress. Absent legacy bounty reconciliation, reference
+Fame/Infamy integration, dynamic-reference view auditing and the full S3
+requirements audit remain open. No offense, arrest or custody producer is
+implemented or accepted by these courses. Git staging remains blocked by the
+session's read-only `.git` mount; no new commit or push is claimed.
+
+## S3 fresh actor bounty ownership checkpoint — 2026-10-07
+
+Fresh Player, NPC and creature construction now owns zero normal/alternate
+crime gold with an explicit false Player realm flag. This represents a fresh
+reference with no ExtraCrimeGold. Low and active process constructors retain
+their existing modifier layout. The derived NpcStats view is guarded even at
+zero, so fresh actors cannot silently retain a second shared bounty authority.
+Legacy Player reconstruction explicitly retains absent ownership; it does not
+replace legacy shared bounty with zero. Populated migration tests author
+absence before serializing versions9–43, and retain ownership in version44.
+Older-schema downgrade rejection remains strict.
+
+All **1,209 engine tests** pass in both `S3/fresh-bounty-normal-03` and
+`fresh-bounty-sanitized-01`, with exact inventories and no failures/skips.
+ASan leak detection is disabled; ASan/UBSan halt on error. Tested parent remains
+`65d4819f7c9eccb0636c57d8e4e8c2e52c8f9045`; source fingerprint:
+`efb0d0991df06358692ef268dbdd748b135dc17f6e9c4d1d5e869278552937fe`. The first two normal fixture failures are retained.
+Evidence and source hashes: `S3/fresh-bounty-report.json`. These are actual
+World/class construction, publication and persistence tests; no new rendered
+restart course is claimed for this constructor change. The preceding chunk's
+normal and sanitizer rendered courses bind their own earlier fingerprint.
+
+The two verified chunks remain uncommitted because this session mounts `.git`
+read-only and `git add` cannot create `index.lock`. Legacy split-view migration,
+Infamy reconciliation and the remaining S3 requirements audit are still open.
+
+## S3 live bounty adapter checkpoint — 2026-10-07
+
+The native service now exposes legal bounty separately from AV37. Independent
+original dispatch checks show that reference base AV37 reads raw normal crime
+gold; Player current AV37 adds generic modifiers to that normal amount, while
+legal bounty selects the explicit realm bucket, applies the sub-one minimum,
+and ignores those modifiers. NPC/creature process AV37 retains its form/process
+rules. Schema44 therefore rejects only a duplicate nonzero AV37 **base**;
+independent modifiers are valid. Player effective float overflow is rejected
+before publication by both codecs.
+
+NpcStats supplies a derived integer compatibility view, guards direct writes,
+and writes that view to shared BOUN. Its existing integer UI/Lua API explicitly
+truncates through the reviewed SSE conversion; the native float buckets remain
+authoritative. The actual Lua setter routes through World and the service's
+prepared Player publication. It updates only the selected bucket, retains
+modifiers, and clears an obsolete cached base. Legacy TES3 crime and jail paths
+are stopped before mutation for the Oblivion profile; this is isolation, not
+implementation of S9 offenses or S11 custody.
+
+Checks: **1,209 engine tests** in both `S3/bounty-adapters-normal-04` and
+`bounty-adapters-sanitized-05`; **707 ESM4** sanitizer component tests;
+**2,586 normal component** and **278 Python** tests in `bounty-adapters-normal-01`.
+The component/Python production and test sources are unchanged since that run.
+Final engine inventories match with no failures/skips; ASan leak checking is
+disabled and ASan/UBSan halt on error. Tested parent:
+`65d4819f7c9eccb0636c57d8e4e8c2e52c8f9045`; final source fingerprint:
+`fc9db27168449a929ba87e9b73c0d1bf033800e50f47ea669123c5ed11b3d258`.
+
+Normal and sanitizer `bounty-adapters-restart*-02` courses each complete actual
+F5/F9/F5/quit followed by a distinct fresh process. All **38 native fields**
+match at all four load boundaries per course. Actual Lua reads -3, sets -4,
+and reads -4; ObScript reads AV37 **1.25** and base **0**. Independent raw-save
+inspection confirms shared PLAY/BOUN **-4**, native alternate **-4**, normal
+**0.25**, and unchanged modifiers in all four produced saves per course.
+Six raw-save controls pass per course, and all four after-save captures were
+reviewed. The editable fixture is
+`scripts/data/oblivion_compat/oblivion_m15_bounty_adapters.json`; aggregate
+hashes/results are in `S3/bounty-adapters-report.json`. Original dispatch
+coverage is **288 configurations**, four return values each, across both x87
+precision modes and both CRT CPU branches. Failed/interrupted attempts remain
+in separate evidence directories.
+
+This closes the live owned-bounty adapter slice. Legacy split-view migration,
+new-actor ownership adoption, Infamy authority reconciliation, and the broader
+S3 requirements audit remain open. These courses do not establish offense,
+arrest, fine or jail gameplay acceptance; whole S3 remains in progress.
+
 ## S3 owned bounty save contract checkpoint — 2026-10-07
 
 Schema44 adds optional reference-owned bounty storage to each native actor-value
@@ -36,7 +353,7 @@ snapshot: raw float32 normal and Shivering Isles buckets plus an explicit Player
 realm flag. C++ and Python use the same presence/bucket/flag layout, preserve
 fractional amounts and signed zero, and reject malformed flags, nonfinite or
 negative normal storage, nonplayer alternate amounts, and a second nonzero
-AV37 scalar authority. A present zero modifier remains distinct from an absent
+AV37 base authority (the later adapter checkpoint permits independent modifiers). A present zero modifier remains distinct from an absent
 modifier. The buckets follow the already reviewed original storage rules in
 the prior checkpoint; this change introduces no new arithmetic formula.
 
