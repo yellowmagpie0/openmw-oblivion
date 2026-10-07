@@ -29,6 +29,67 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S13 official campaigns | pending | No implementation/evidence | E1–E6 normal gameplay and media review |
 | S14 universal acceptance | pending | No implementation/evidence | Full matrix, sanitizers, regression, performance, original-game probes |
 
+## S3 crime identity and winning actor bindings checkpoint — 2026-10-06
+
+Crime graph validation and World admission previously treated the original
+Player reference `content:oblivion.esm:000014` as distinct from
+`dynamic:player:0000000000000001`. A valid alias could be rejected on load;
+alias spelling could also bypass causal-offense and witness deduplication.
+The contracts and Python validator now compare through the existing runtime
+reference bridge. Incident/arrest/jail actor links, victim/affected-reference
+causes and witnesses share that identity without rewriting serialized keys.
+NPC base `000007` and another plugin's local `000014` remain distinct.
+World admits the Player in generic affected-reference roles, and the public
+jail query recognizes either Player spelling.
+
+A placed ACHR/ACRE crime actor must also have a unique winning actor reference
+and the matching supported NPC/CREA base. Merely finding the placed record no
+longer admits a dangling or wrong-type base. Dynamic snapshot actors require a
+unique supported actor base too. These checks run before cleanup, without
+loading an actor cell. The World case exercises unloaded NPC/creature records,
+missing and mismatched bases, foreign aliases, lossless mixed-alias restore,
+the jail query, and unchanged live snapshots through admission/rejection.
+The component and Python cases independently exercise graph/witness/causal
+alias comparisons, preserving keys and distinct base/plugin identities.
+
+Verified checks have exact inventories and no failures or skips:
+
+- `S3/crime-identity-normal-02` passed **2,582 component cases**, filter `*`;
+  its later engine mode failed in a fixture, so the overall report stays failed.
+  The component binary remains byte-identical after World-only corrections.
+- `crime-identity-normal-03` passed **274 Python cases** and its earlier engine
+  candidate. Python was unchanged by the final affected-reference adjustment.
+- `crime-identity-normal-04` and `crime-identity-sanitized-04` each pass all
+  **1,204 engine cases**, filter `*`, for the final candidate.
+- `crime-identity-sanitized-03` passed **703 ESM4 component cases**, filter
+  `ESM4*`; that component binary is unchanged by the final World-only change.
+  ASan/UBSan halt on error; leak checking is disabled.
+
+The retained 01 attempts caught a fixture using RefId instead of the native
+store's FormKey erase overload. The 02 attempts caught its live creature being
+placed in an unsaveable draft cell; the corrected test registers only unloaded
+records, strengthening the absence-of-publication assertion. The 03 runs and
+normal restart-01 passed before review added affected-Player reference coverage.
+Final engine parent: `cdeed98447727d6beedf7332870f8dd170dc7f76`; fingerprint:
+`66f079eb54c2599cae39ca49c6f5402df57141ff35d4a2101e6b3baa850e49bf`.
+
+`crime-identity-restart-02` and `crime-identity-restart-sanitized-02` each pass
+actual F5/F9/F5/quit and a fresh process repeating that sequence. All **38 native
+fields** match at four load boundaries per course, including the original
+Player spelling in incident/affected-reference/jail fields and the dynamic
+spelling in arrest. Five raw-save controls per course pass, and all four
+captures were reviewed. This is idle contract persistence; no offense, fine,
+confiscation or jail gameplay producer is added, and schema42 is unchanged.
+Hashes, selections, preserved failures and runtime evidence are recorded in
+`S3/crime-identity-report.json`.
+
+The wider S3 audit remains incomplete. In particular, native Bounty channel37
+and the shared NpcStats/Lua crime-level path have separate storage, while the
+existing Infamy commands use an accepted-snapshot map beside native channel39.
+Their read/write adapters need one live authority and immediate save/query
+agreement. Inspected paths and hashes are in `S3/authority-gaps-01.json`; these
+are S3 adapter requirements, separate from later offense consequence gameplay.
+
 ## S3 schema42 crime/custody persistence checkpoint — 2026-10-06
 
 Runtime schema42 appends the validated crime incident, arrest and jail contracts

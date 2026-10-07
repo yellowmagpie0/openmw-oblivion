@@ -13783,3 +13783,70 @@ TEST(OblivionWorldTest, CrimeContractsRejectMissingBindingsBeforeClearAndSurvive
     world.clear();
     EXPECT_FALSE(world.isPlayerInJail());
 }
+
+TEST(OblivionWorldTest, CrimePlayerAliasRestoresLosslesslyAndPlacedActorsRequireTheCorrectWinningBase)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto saved = world.captureOblivionRuntimeState();
+    saved.mPhysicalActions.mNext = 2;
+    saved.mNativeCrime.mNextIncident = saved.mNativeCrime.mNextTransaction = 2;
+    const auto alias = ESM::FormKey::content("oblivion.esm", 0x14);
+    ESM4::CrimeIncident incident;
+    incident.mRequest.mAction = 1; incident.mRequest.mPerpetrator = alias;
+    incident.mRequest.mAffectedReference = alias;
+    incident.mRequest.mCell = saved.mPlayer.mCell;
+    incident.mOutcome.mIncident = 1; incident.mOutcome.mConsequencesCommitted = true;
+    saved.mNativeCrime.mIncidents = {incident};
+    saved.mNativeCrime.mArrests = {{1, 1, saved.mPlayer.mReference, saved.mReferences.front().mKey,
+        saved.mPlayer.mCell, ESM4::ArrestResolution::Jail, ESM4::ArrestPhase::Committed, 0, false, true, true}};
+    ESM4::JailTransaction jail;
+    jail.mTransaction = 1; jail.mActor = alias;
+    jail.mPrison = jail.mEvidence = jail.mBelongings = jail.mRelease = saved.mReferences.front().mKey;
+    jail.mPhase = ESM4::JailPhase::Serving; jail.mPropertyCommitted = true;
+    saved.mNativeCrime.mJails = {jail};
+    auto& store = world.getStore();
+    const auto npcBase = ESM::FormKey::content("headless.esm", 0x800);
+    const auto creatureBase = ESM::FormKey::content("headless.esm", 0x820);
+    ESM4::Creature creature{};
+    creature.mId = {0x820, 0}; creature.mFormKey = creatureBase; creature.mAttackReach = 64;
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creatureBase);
+    const auto unchanged = world.captureOblivionRuntimeState().serializeBinary();
+    const auto external = ESM::FormKey::content("headless.esm", 0xaaa);
+    // The external actor is not in the saved snapshot, so admission must use
+    // its placed record and winning typed base, without loading a CellStore.
+    auto bad = saved; bad.mNativeCrime.mIncidents.front().mRequest.mVictim = external;
+    for (const auto& base : {ESM::FormKey::content("headless.esm", 0xfffffe), creatureBase, npcBase})
+    {
+        ESM4::ActorCharacter placed{};
+        placed.mId = {0xaaa, 0}; placed.mFormKey = external; placed.mBaseKey = base;
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(placed, external);
+        if (base == npcBase)
+            EXPECT_NO_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+        else
+            EXPECT_ANY_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), unchanged);
+    }
+    ASSERT_TRUE(store.getWritable<ESM4::ActorCharacter>().eraseStatic(external));
+    for (const auto& base : {ESM::FormKey::content("headless.esm", 0xfffffe), npcBase, creatureBase})
+    {
+        ESM4::ActorCreature placed{};
+        placed.mId = {0xaaa, 0}; placed.mFormKey = external; placed.mBaseKey = base;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(placed, external);
+        if (base == creatureBase)
+            EXPECT_NO_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+        else
+            EXPECT_ANY_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), unchanged);
+    }
+    // Unloaded actor checks must not publish or load new live actor state.
+    bad.mNativeCrime.mArrests.front().mAuthority = ESM::FormKey::content("other.esm", 0x14);
+    EXPECT_ANY_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), unchanged);
+    auto plan = world.prepareOblivionSaveState(saved, std::make_unique<MWWorld::ESMStore>());
+    world.clear(); ASSERT_TRUE(plan->install());
+    restorePreparedSaveActorFixture(fixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_TRUE(world.isPlayerInJail());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeCrime, saved.mNativeCrime);
+}

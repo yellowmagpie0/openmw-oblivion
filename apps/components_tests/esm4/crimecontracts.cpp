@@ -195,3 +195,38 @@ TEST(ESM4CrimeContracts, ExplicitResolutionAndReleaseBoundariesRemainValid)
     arrest.mResolution = ESM4::ArrestResolution::Resist;
     EXPECT_NO_THROW(state.validate());
 }
+
+TEST(ESM4CrimeContracts, PlayerReferenceAliasSharesGraphWitnessAndCausalIdentityWithoutRewritingKeys)
+{
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    const auto alias = ESM::FormKey::content("oblivion.esm", 0x14);
+    auto state = populated();
+    state.mArrests.front().mActor = alias;
+    const auto before = state;
+    EXPECT_NO_THROW(state.validate());
+    EXPECT_EQ(state, before);
+    state.mJails.front().mActor = alias;
+    EXPECT_NO_THROW(state.validate());
+    auto duplicate = state.mIncidents.front();
+    duplicate.mOutcome.mIncident = 2;
+    duplicate.mRequest.mPerpetrator = alias;
+    state.mIncidents.push_back(duplicate);
+    EXPECT_THROW(state.validate(), std::invalid_argument);
+    for (const auto& distinct : {ESM::FormKey::content("other.esm", 0x14),
+             ESM::FormKey::content("oblivion.esm", 7)})
+    {
+        state.mIncidents.back().mRequest.mPerpetrator = distinct;
+        EXPECT_NO_THROW(state.validate());
+    }
+    state.mIncidents.resize(1);
+    state.mIncidents.front().mOutcome.mWitnesses = {{player, true, false}, {alias, true, false}};
+    EXPECT_THROW(state.validate(), std::invalid_argument);
+    state.mIncidents.front().mOutcome.mWitnesses.back().mWitness = ESM::FormKey::content("other.esm", 0x14);
+    EXPECT_NO_THROW(state.validate());
+    state.mIncidents.front().mRequest.mVictim = player;
+    state.mIncidents.front().mRequest.mAffectedReference = player;
+    duplicate = state.mIncidents.front(); duplicate.mOutcome.mIncident = 2;
+    duplicate.mRequest.mVictim = duplicate.mRequest.mAffectedReference = alias;
+    state.mIncidents.push_back(duplicate);
+    EXPECT_THROW(state.validate(), std::invalid_argument);
+}

@@ -105,3 +105,29 @@ class CrimeContracts42Tests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         second['request']['victim'] = 'content:oblivion.esm:000099'
         self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))['native_crime'], state['native_crime'])
+
+    def test_player_reference_alias_comparison_preserves_wire_keys(self):
+        player = 'dynamic:player:0000000000000001'
+        alias = 'content:oblivion.esm:000014'
+        state = self.state(); crime = state['native_crime']
+        crime['arrests'][0]['actor'] = alias
+        crime['jails'][0]['actor'] = alias
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))['native_crime'], crime)
+        duplicate = copy.deepcopy(crime['incidents'][0]); duplicate['outcome']['incident'] = 2
+        duplicate['request']['perpetrator'] = alias; crime['incidents'].append(duplicate)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for distinct in ['content:other.esm:000014', 'content:oblivion.esm:000007']:
+            duplicate['request']['perpetrator'] = distinct
+            self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))['native_crime'], crime)
+        crime['incidents'].pop()
+        witnesses = [{'witness': player, 'observed': True, 'will_report': False},
+                     {'witness': alias, 'observed': True, 'will_report': False}]
+        crime['incidents'][0]['outcome']['witnesses'] = witnesses
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        witnesses[-1]['witness'] = 'content:other.esm:000014'
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))['native_crime'], crime)
+        crime['incidents'][0]['request'].update(victim=player, affected_reference=player)
+        duplicate = copy.deepcopy(crime['incidents'][0]); duplicate['outcome']['incident'] = 2
+        duplicate['request'].update(victim=alias, affected_reference=alias)
+        crime['incidents'].append(duplicate)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)

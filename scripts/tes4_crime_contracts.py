@@ -82,6 +82,12 @@ def validate_shape(value, kind="state"):
             validate_shape(value[name], field_kind)
 
 
+def runtime_key(value):
+    # Only the original Player reference aliases the runtime Player. NPC base7
+    # and another plugin's local14 remain distinct, as in the native bridge.
+    return "dynamic:player:0000000000000001" if value == "content:oblivion.esm:000014" else value
+
+
 def validate(state):
     validate_shape(state)
     require(all(state[x] > 0 for x in ("next_incident", "next_transaction", "action_retention_floor")), "Zero crime counter")
@@ -95,15 +101,15 @@ def validate(state):
         ident = outcome["incident"]
         require(0 < ident < state["next_incident"] and ident not in incidents, "Duplicate/reused crime incident")
         incidents[ident] = entry
-        cause = tuple(request[x] for x in ("action", "perpetrator", "victim", "affected_reference", "offense"))
+        cause = (request["action"], *(runtime_key(request[x]) for x in ("perpetrator", "victim", "affected_reference")), request["offense"])
         require(cause not in causes, "Duplicate causal offense")
         causes.add(cause)
         require(outcome["report_phase"] <= 3 and (outcome["report_phase"] != 3 or outcome["consequences_committed"]), "Invalid crime report/commit")
         witnesses, factions = set(), set()
         for witness in outcome["witnesses"]:
             key(witness["witness"], False)
-            require(witness["witness"] not in witnesses and (not witness["will_report"] or witness["observed"]), "Invalid/duplicate witness")
-            witnesses.add(witness["witness"])
+            require(runtime_key(witness["witness"]) not in witnesses and (not witness["will_report"] or witness["observed"]), "Invalid/duplicate witness")
+            witnesses.add(runtime_key(witness["witness"]))
         for delta in outcome["faction_deltas"]:
             key(delta["faction"], False)
             require(delta["faction"] not in factions, "Duplicate faction delta")
@@ -116,7 +122,7 @@ def validate(state):
             key(arrest[name], False)
         require(arrest["incident"] in incidents, "Dangling arrest incident")
         incident = incidents[arrest["incident"]]
-        require(incident["request"]["perpetrator"] == arrest["actor"] and incident["outcome"]["consequences_committed"], "Invalid arrest crime binding")
+        require(runtime_key(incident["request"]["perpetrator"]) == runtime_key(arrest["actor"]) and incident["outcome"]["consequences_committed"], "Invalid arrest crime binding")
         resolution, phase = arrest["resolution"], arrest["phase"]
         fine, confiscation, transition = (arrest[x] for x in ("fine_committed", "confiscation_committed", "transition_committed"))
         require(resolution <= 3 and phase <= 4 and arrest["assessed_fine"] >= 0, "Invalid arrest phase/fine")
@@ -136,7 +142,7 @@ def validate(state):
             key(jail[name], False)
         require(phase <= 4 and jail["sentence_start"] >= 0 and jail["remaining_hours"] >= 0, "Invalid jail phase/time")
         arrest = arrests[ident]
-        require(arrest["actor"] == jail["actor"] and arrest["resolution"] == 2, "Invalid jail arrest binding")
+        require(runtime_key(arrest["actor"]) == runtime_key(jail["actor"]) and arrest["resolution"] == 2, "Invalid jail arrest binding")
         require(phase != 4 or arrest["phase"] == 4, "Cancelled jail/arrest mismatch")
         require(phase in (0, 4) or arrest["transition_committed"], "Jail transition is uncommitted")
         require(phase in (0, 4) or jail["property_committed"], "Jail property is uncommitted")

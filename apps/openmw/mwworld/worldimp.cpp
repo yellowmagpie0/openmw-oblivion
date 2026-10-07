@@ -3186,22 +3186,39 @@ namespace MWWorld
         {
             std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> references;
             for (const auto& reference : state.mReferences) references.emplace(reference.mKey, &reference);
+            const auto playerReference = [&](const ESM::FormKey& key) {
+                const auto identity = ESM4::runtimeReferenceKey(key);
+                return identity == ESM4::runtimeReferenceKey(state.mPlayer.mReference)
+                    || identity == ESM::FormKey::dynamic("player", 1);
+            };
             const auto actor = [&](const ESM::FormKey& key) {
-                if (key.isNull() || key == state.mPlayer.mReference || key == ESM::FormKey::dynamic("player", 1))
+                const auto identity = ESM4::runtimeReferenceKey(key);
+                if (key.isNull() || playerReference(key))
                     return;
-                if (mStore.get<ESM4::ActorCharacter>().search(key) || mStore.get<ESM4::ActorCreature>().search(key))
-                    return;
-                if (const auto found = references.find(key); found != references.end())
+                const auto* character = mStore.search<ESM4::ActorCharacter>(identity);
+                const auto* creature = mStore.search<ESM4::ActorCreature>(identity);
+                const auto validBase = [&](const ESM::FormKey& base, std::optional<bool> expectedCreature) {
+                    const auto* npc = mStore.search<ESM4::Npc>(base);
+                    const auto* crea = mStore.search<ESM4::Creature>(base);
+                    return (npc != nullptr) != (crea != nullptr)
+                        && (!expectedCreature || *expectedCreature == (crea != nullptr))
+                        && (!npc || (npc->mIsTES4 && npc->mFormKey == base))
+                        && (!crea || (crea->mAttackReach && crea->mFormKey == base));
+                };
+                if (character || creature)
                 {
-                    const auto base = resolver.toFormId(found->second->mBase);
-                    if (base && (mStore.get<ESM4::Npc>().search(ESM::RefId(*base))
-                        || mStore.get<ESM4::Creature>().search(ESM::RefId(*base))))
+                    const auto* placed = character ? character : creature;
+                    if (!(character && creature) && placed->mFormKey == identity
+                        && validBase(placed->mBaseKey, creature != nullptr))
                         return;
                 }
+                else if (const auto found = references.find(identity); found != references.end()
+                    && validBase(found->second->mBase, std::nullopt))
+                    return;
                 throw std::runtime_error("Native crime actor has no winning actor binding: " + key.serialize());
             };
             const auto reference = [&](const ESM::FormKey& key) {
-                if (key.isNull()) return;
+                if (key.isNull() || playerReference(key)) return;
                 if (!references.contains(key) && !mStore.get<ESM4::Reference>().search(key)
                     && !mStore.get<ESM4::ActorCharacter>().search(key) && !mStore.get<ESM4::ActorCreature>().search(key))
                     throw std::runtime_error("Native crime reference has no winning binding: " + key.serialize());
@@ -6775,8 +6792,9 @@ namespace MWWorld
             return std::any_of(mOblivionCombat->crimeContracts().mJails.begin(),
                 mOblivionCombat->crimeContracts().mJails.end(), [&](const auto& jail) {
                     return jail.mPhase == ESM4::JailPhase::Serving
-                        && (jail.mActor == ESM::FormKey::dynamic("player", 1)
-                            || (mOblivionRuntimeState && jail.mActor == mOblivionRuntimeState->mPlayer.mReference));
+                        && (ESM4::runtimeReferenceKey(jail.mActor) == ESM::FormKey::dynamic("player", 1)
+                            || (mOblivionRuntimeState && ESM4::runtimeReferenceKey(jail.mActor)
+                                == ESM4::runtimeReferenceKey(mOblivionRuntimeState->mPlayer.mReference)));
                 });
         return mPlayerInJail;
     }

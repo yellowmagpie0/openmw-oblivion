@@ -1,4 +1,5 @@
 #include "crimecontracts.hpp"
+#include "runtimereferences.hpp"
 
 #include <cmath>
 #include <map>
@@ -51,7 +52,7 @@ namespace ESM4
         for (const auto& witness : mWitnesses)
         {
             key(witness.mWitness);
-            require(witnesses.insert(witness.mWitness).second, "Crime outcome repeats a witness");
+            require(witnesses.insert(runtimeReferenceKey(witness.mWitness)).second, "Crime outcome repeats a witness");
             require(!witness.mWillReport || witness.mObserved, "Unobserved crime cannot have a reporting witness");
         }
         for (const auto& delta : mFactionDeltas)
@@ -151,8 +152,8 @@ namespace ESM4
             require(incident.mOutcome.mIncident < mNextIncident
                     && incidents.emplace(incident.mOutcome.mIncident, &incident).second,
                 "Crime incident is duplicated or reuses the next identity");
-            require(causes.emplace(request.mAction, request.mPerpetrator, request.mVictim,
-                        request.mAffectedReference, request.mOffense).second,
+            require(causes.emplace(request.mAction, runtimeReferenceKey(request.mPerpetrator), runtimeReferenceKey(request.mVictim),
+                        runtimeReferenceKey(request.mAffectedReference), request.mOffense).second,
                 "Crime contract duplicates a causal offense");
         }
         std::map<std::uint64_t, const ArrestTransaction*> arrests;
@@ -165,7 +166,7 @@ namespace ESM4
             require(incident != incidents.end(), "Arrest transaction has a dangling incident");
             require(incident->second->mOutcome.mConsequencesCommitted,
                 "Arrest transaction has uncommitted crime consequences");
-            require(incident->second->mRequest.mPerpetrator == arrest.mActor,
+            require(runtimeReferenceKey(incident->second->mRequest.mPerpetrator) == runtimeReferenceKey(arrest.mActor),
                 "Arrest actor disagrees with the incident perpetrator");
         }
         std::set<std::uint64_t> jails;
@@ -175,7 +176,7 @@ namespace ESM4
             require(jails.insert(jail.mTransaction).second, "Jail transaction is duplicated");
             const auto arrest = arrests.find(jail.mTransaction);
             require(arrest != arrests.end(), "Jail transaction has a dangling arrest");
-            require(arrest->second->mActor == jail.mActor && arrest->second->mResolution == ArrestResolution::Jail,
+            require(runtimeReferenceKey(arrest->second->mActor) == runtimeReferenceKey(jail.mActor) && arrest->second->mResolution == ArrestResolution::Jail,
                 "Jail transaction disagrees with its arrest actor or resolution");
             require(jail.mPhase != JailPhase::Cancelled || arrest->second->mPhase == ArrestPhase::Cancelled,
                 "Cancelled jail disagrees with its arrest phase");
