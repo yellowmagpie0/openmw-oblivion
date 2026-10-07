@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 empty shared quickkey spell dependency; native state unchanged",
+  "records": [
+    "KEYS",
+    "SPEL"
+  ],
+  "key_slot": 0,
+  "key_type": 1,
+  "spell_id": "m15-empty-quickkey",
+  "spell_payload": "Typed string NAME; SPDT signed32 type/cost/flags all zero; no ENAM effects",
+  "encoding": "Subrecords have four-byte name and little-endian uint32 size; records have four-byte name and size/unused/flags uint32 words",
+  "preserve": "Every other ordered record, including all native bytes; remove rejected definition and restore original KEYS on resave",
+  "expected_error": "Saved game quickkey spell has no effects",
+  "preparation_reference": "build/oblivion-compat/m15/S3/quickkey-spells-reject-01/mutate.py"
+}

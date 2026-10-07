@@ -15,6 +15,7 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/loadspel.hpp>
+#include <components/esm3/loadmgef.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/player.hpp>
@@ -95,7 +96,8 @@ namespace
 
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
         std::set<std::uint32_t>& singletons,
-        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap)
+        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
+        std::vector<ESM::RefId>& quickkeySpells)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -162,9 +164,16 @@ namespace
                 const auto state = readSharedState<ESM::QuickKeys>(reader);
                 if (state.mKeys.size() > 10)
                     throw std::runtime_error("Saved game contains too many quickkeys");
-                for (const auto& key : state.mKeys)
+                for (std::size_t index = 0; index != state.mKeys.size(); ++index)
+                {
+                    const auto& key = state.mKeys[index];
                     if (key.mType > ESM::QuickKeys::Type::HandToHand)
                         throw std::runtime_error("Saved game quickkey has an invalid type");
+                    // The tenth slot is the fixed hand-to-hand shortcut and is
+                    // deliberately ignored by QuickKeysMenu::readRecord.
+                    if (index < 9 && key.mType == ESM::QuickKeys::Type::Magic)
+                        quickkeySpells.push_back(key.mId);
+                }
                 break;
             }
             case ESM::REC_ASPL:
@@ -425,6 +434,7 @@ namespace MWState
                 // a separate preparation step.
                 shared = std::make_unique<MWWorld::ESMStore>();
                 std::set<std::uint32_t> auxiliarySingletons;
+                std::vector<ESM::RefId> quickkeySpells;
                 reader.restoreContext(start);
                 while (reader.hasMoreRecs())
                 {
@@ -463,7 +473,8 @@ namespace MWState
                         shared->getWritable<ESM::Class>().insert(characterClass);
                         decoded = true;
                     }
-                    else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons, prepareGlobalMap))
+                    else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
+                                 prepareGlobalMap, quickkeySpells))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -473,6 +484,22 @@ namespace MWState
                         throw std::runtime_error("Saved game shared record contains unexpected trailing data");
                 }
                 shared->rebuildIdsIndex();
+                // Resolve only incoming definitions, after all saved records
+                // have been decoded. The UI skips removed spells, but an
+                // existing spell needs its first effect for icon restoration.
+                for (const auto& id : quickkeySpells)
+                {
+                    const auto* spell = shared->get<ESM::Spell>().search(id);
+                    if (!spell && content)
+                        spell = content->get<ESM::Spell>().searchStatic(id);
+                    if (!spell)
+                        continue;
+                    if (spell->mEffects.mList.empty())
+                        throw std::runtime_error("Saved game quickkey spell has no effects");
+                    const auto& effect = spell->mEffects.mList.front().mData.mEffectID;
+                    if (content && !content->get<ESM::MagicEffect>().searchStatic(effect))
+                        throw std::runtime_error("Saved game quickkey spell effect does not exist");
+                }
                 std::set<ESM::RefId> cells;
                 bool hasPlayer = false;
                 bool hasLua = false;

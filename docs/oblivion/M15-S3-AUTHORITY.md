@@ -43,8 +43,11 @@ Shared cell/actor timestamp hour domains are also admitted before preparation;
 removed used-power definitions retain their skip behavior, and omitted active
 effect worsening timestamps reconstruct as zero. GMAP PNG decoding and shape
 validation now run before native preparation; the GUI retains the decoded image
-and StateManager consumes its prepared restore once after cleanup. Later shared
-record/resource restoration still has a cleanup-on-failure boundary: that is an open S3 gap,
+and StateManager consumes its prepared restore once after cleanup. Shared spell
+quickkey dependencies now resolve against incoming saved/static definitions
+before native preparation; removed spells and the ignored tenth slot retain
+their compatibility paths. Later shared record/resource restoration still has a
+cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
 
 Current evidence includes actual World/T4ST/host tests for native stat adapters,

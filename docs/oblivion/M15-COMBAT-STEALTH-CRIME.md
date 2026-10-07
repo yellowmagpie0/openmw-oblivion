@@ -6,6 +6,51 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 shared spell quickkey dependency admission — 2026-10-07
+
+Oblivion save admission now resolves used spell quickkeys after every incoming
+shared definition has been decoded. Existing spells must have a first effect,
+and that effect must resolve in immutable incoming content when content is
+supplied. Empty spell lists would otherwise reach an unchecked `front()` in
+QuickKeysMenu after teardown; missing effect definitions would throw there.
+Saved spell overrides win over static definitions regardless of record order.
+Removed spells remain skipped, outgoing transient definitions cannot supply
+missing dependencies, and the tenth fixed hand-to-hand slot remains ignored.
+Morrowind admission retains its existing path. This implements shared restore
+validation, not native magic gameplay or TES4 authoring/MCP support.
+
+The new matrix checks **1,504 cases** across schemas 1–46 and no-T4ST input,
+ordinary/remapped IDs, either record order, removed/static/outgoing-only/saved
+spells, empty overrides, valid and missing/outgoing-only effects. Another
+**30 cases** cover slot 0/8/9, all five quickkey types and both profiles. Checks
+assert native preparation suppression, reader rewind and unchanged definition
+stores. Non-spell key target/resource semantics remain a separate audit.
+
+`S3/quickkey-spells-normal-01` and `quickkey-spells-sanitized-01` each passed all
+**1,227 engine tests**, with exact inventories/XML, zero failures/skips and
+stable source fingerprints. ASan/UBSan halt on errors; leak detection is disabled.
+Compiled parent: `d3a2d1f6b9b558ddac313889382fe14fe255b6a0`; tested fingerprint:
+`97769ce5aafc43d68fb41a95a2f83ecbfbcd1c5dc4ae3d815467ce1d736eac87`.
+The fixture checkpoint passed all **280 Python tests** and production scenario
+validation. Implementation/test hashes are unchanged by subsequent fixture
+publication and documentation.
+
+Actual normal/instrumented `quickkey-spells-reject{,-sanitized}-01` courses
+replace only KEYS with a slot-0 spell reference and append one empty SPEL
+`m15-empty-quickkey` definition to a private real F5 output. Every other ordered
+record and all native bytes are unchanged. F9 rejects before teardown;
+Return/F5 preserves native actor/Player/crime/action/quest fields, restores
+original KEYS and emits no rejected definition. Each course has one completed
+load and two saves in the same PID/epoch; the initial load matches all 38 native
+snapshot fields. All four rejection/resave captures were reviewed.
+
+Editable `oblivion_m15_quickkey_spells_{reject,fault}.json` sources are under
+`scripts/data/oblivion_compat/`; isolated preparation/workers/verifiers/private
+saves remain in the named ignored courses. `S3/quickkey-spells-report.json`
+records hashes and verification layers. The broader shared resource/semantic,
+legacy, populated migration, lifecycle/profile/adapter and queue/action gates
+remain open. S3 remains in progress.
+
 ## S3 retained global-map resource preparation — 2026-10-07
 
 GMAP now decodes its PNG and validates the saved image/cell-size relationship

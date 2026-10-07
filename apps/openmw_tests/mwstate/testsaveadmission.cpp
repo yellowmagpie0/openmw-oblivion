@@ -29,6 +29,7 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/loadspel.hpp>
+#include <components/esm3/loadmgef.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
@@ -590,6 +591,101 @@ TEST(SaveAdmissionTest, GlobalMapPreparationIsDiscardableAndMorrowindDoesNotUseA
     EXPECT_EQ(second->data()[0], 127);
     map.mBounds = {std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), 0, 0};
     EXPECT_THROW(MWRender::GlobalMap::prepareRead(map), std::runtime_error);
+}
+
+TEST(SaveAdmissionTest, QuickkeySpellDependenciesUseIncomingDefinitionsBeforePreparation)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const bool remapped : {false, true})
+    for (const bool definitionFirst : {false, true})
+    for (int mode = 0; mode != 8; ++mode)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(remapped);
+        SCOPED_TRACE(definitionFirst);
+        SCOPED_TRACE(mode);
+        const auto savedId = remapped ? ESM::RefId(ESM::FormId{0x901, 0})
+            : ESM::RefId::stringRefId("quickkey-spell");
+        const auto incomingId = remapped ? ESM::RefId(ESM::FormId{0x901, 2}) : savedId;
+        const auto effectId = ESM::MagicEffect::FortifyHealth;
+        MWWorld::ESMStore content;
+        ESM::Spell spell{}; spell.blank(); spell.mId = incomingId;
+        ESM::IndexedENAMstruct effect{}; effect.mData.mEffectID = effectId;
+        if (mode == 2 || mode == 3 || mode == 4 || mode == 7) spell.mEffects.mList.push_back(effect);
+        // 0 removed spell; 1 empty static spell; 2 valid static; 3 missing
+        // effect; 4 outgoing-only effect; 5 outgoing-only empty spell;
+        // 6 empty saved override of a valid static spell; 7 valid saved spell.
+        if (mode >= 1 && mode <= 4) content.getWritable<ESM::Spell>().insertStatic(spell);
+        if (mode == 5) content.getWritable<ESM::Spell>().insert(spell);
+        if (mode == 6)
+        {
+            auto valid = spell; valid.mEffects.mList.push_back(effect);
+            content.getWritable<ESM::Spell>().insertStatic(valid);
+        }
+        ESM::MagicEffect definition{}; definition.blank(); definition.mId = effectId;
+        if (mode == 2 || mode == 6 || mode == 7) content.getWritable<ESM::MagicEffect>().insertStatic(definition);
+        if (mode == 4) content.getWritable<ESM::MagicEffect>().insert(definition);
+        const auto keys = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::QuickKeys state{}; state.mKeys.push_back({ESM::QuickKeys::Type::Magic, savedId});
+            writer.startRecord(ESM::REC_KEYS); state.save(writer); writer.endRecord(ESM::REC_KEYS);
+        });
+        const auto records = (mode == 6 || mode == 7) ? worldRecords([&](ESM::ESMWriter& writer) {
+            spell.mId = savedId;
+            writer.startRecord(ESM::REC_SPEL); spell.save(writer); writer.endRecord(ESM::REC_SPEL);
+        }) : std::string{};
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + (definitionFirst ? records + keys : keys + records));
+        const std::map<int, int> mapping{{0, 2}};
+        if (remapped) reader.setContentFileMapping(&mapping);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool valid = mode == 0 || mode == 2 || mode == 5 || mode == 7;
+        if (valid)
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        else
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        EXPECT_EQ(calls, int(valid && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::Spell>().getDynamicSize(), std::size_t(mode == 5));
+        EXPECT_EQ(content.get<ESM::MagicEffect>().getDynamicSize(), std::size_t(mode == 4));
+    }
+}
+
+TEST(SaveAdmissionTest, QuickkeySpellDependencyChecksRespectIgnoredSlotAndMorrowindAdmission)
+{
+    MWWorld::ESMStore content;
+    ESM::Spell spell{}; spell.blank(); spell.mId = ESM::RefId::stringRefId("empty-quickkey-spell");
+    content.getWritable<ESM::Spell>().insertStatic(spell);
+    for (const auto type : {ESM::QuickKeys::Type::Item, ESM::QuickKeys::Type::Magic,
+             ESM::QuickKeys::Type::MagicItem, ESM::QuickKeys::Type::Unassigned, ESM::QuickKeys::Type::HandToHand})
+    for (const int slot : {0, 8, 9})
+    for (const auto profile : {ESM::GameProfile::Oblivion, ESM::GameProfile::Morrowind})
+    {
+        SCOPED_TRACE(slot);
+        SCOPED_TRACE(int(type));
+        SCOPED_TRACE(int(profile));
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::QuickKeys state{};
+            state.mKeys.resize(slot + 1, {ESM::QuickKeys::Type::Unassigned, {}});
+            state.mKeys[slot] = {type, spell.mId};
+            writer.startRecord(ESM::REC_KEYS); state.save(writer); writer.endRecord(ESM::REC_KEYS);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
+            profile == ESM::GameProfile::Oblivion ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool rejected = profile == ESM::GameProfile::Oblivion && type == ESM::QuickKeys::Type::Magic && slot < 9;
+        if (rejected)
+            EXPECT_THROW(MWState::admitSave(reader, profile, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, profile, {}, &content, prepare));
+        EXPECT_EQ(calls, int(!rejected && profile == ESM::GameProfile::Oblivion));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
 }
 
 TEST(SaveAdmissionTest, EverySupportedNativeVersionIsValidatedAndReaderIsRewound)
