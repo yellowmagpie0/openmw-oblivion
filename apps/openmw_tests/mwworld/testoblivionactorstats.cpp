@@ -264,6 +264,10 @@ namespace
         EXPECT_EQ(raw.mBase, ESM::FormKey::dynamic("player-base", 1));
         EXPECT_EQ(raw.mOwner, ESM4::ActorValueOwner::Player);
         EXPECT_EQ(raw.mProcess, ESM4::ActorValueProcess::Active);
+        ASSERT_TRUE(raw.mBounty);
+        EXPECT_EQ(raw.mBounty->mNormal, 0.f);
+        EXPECT_EQ(raw.mBounty->mShiveringIsles, 0.f);
+        EXPECT_FALSE(raw.mPlayerInShiveringIsles);
         EXPECT_EQ(raw.mPlayerFormValues, (std::optional<std::array<std::int32_t, 4>>{{45, 0, 150, 0}}));
         EXPECT_FALSE(raw.mNonPlayerFormHealth);
         for (std::size_t av = 0; av < 72; ++av)
@@ -308,6 +312,15 @@ namespace
         const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(mStore);
         EXPECT_EQ(settings.mMagickaMultiplier, 1.f);
         service.publishPlayerValues(player, raw, settings);
+        EXPECT_EQ(service.crimeBounty(raw.mActor), 0.f);
+        EXPECT_EQ(ptr.getClass().getNpcStats(ptr).getBounty(), 0);
+        EXPECT_THROW(ptr.getClass().getNpcStats(ptr).setBounty(7), std::logic_error);
+        ESM::GameSetting capacity{};
+        capacity.mId = ESM::RefId::stringRefId("fEncumbranceStrMult");
+        capacity.mValue.setType(ESM::VT_Float);
+        capacity.mValue.setFloat(5.f);
+        mStore.getWritable<ESM::GameSetting>().insertStatic(capacity);
+        EXPECT_FALSE(MWWorld::resolveOblivionLegacyPlayerValues(player, mStore).mBounty);
         EXPECT_EQ(service.getPlayerBaseValue(8), 125); // Form45 + current Endurance40 *2.
         EXPECT_EQ(service.getPlayerBaseValue(9), 100);
         EXPECT_EQ(service.getPlayerBaseValue(10), 300); // Form150 + four current attributes.
@@ -2490,6 +2503,10 @@ namespace
         EXPECT_EQ(values.mBase, mActorKey);
         EXPECT_EQ(values.mOwner, ESM4::ActorValueOwner::NonPlayer);
         EXPECT_EQ(values.mProcess, ESM4::ActorValueProcess::Low);
+        ASSERT_TRUE(values.mBounty);
+        EXPECT_EQ(values.mBounty->mNormal, 0.f);
+        EXPECT_EQ(values.mBounty->mShiveringIsles, 0.f);
+        EXPECT_FALSE(values.mPlayerInShiveringIsles);
         EXPECT_EQ(values.mValues[0].mBase, 44);
         EXPECT_EQ(values.mValues[8].mBase, 30);
         EXPECT_EQ(values.mNonPlayerFormHealth, 30);
@@ -2547,12 +2564,16 @@ namespace
         const auto initialCreature = MWWorld::resolveOblivionInitialNonPlayerValues(
             mStore, actor, creatureKey, {}, ESM4::ActorValueProcess::Active);
         EXPECT_EQ(initialCreature.mNonPlayerFormHealth, 99);
+        ASSERT_TRUE(initialCreature.mBounty);
+        EXPECT_EQ(initialCreature.mBounty->mNormal, 0.f);
+        EXPECT_EQ(initialCreature.mBounty->mShiveringIsles, 0.f);
         EXPECT_EQ(initialCreature.mValues[12].mBase, 10);
         EXPECT_EQ(initialCreature.mValues[19].mBase, 20);
         EXPECT_EQ(initialCreature.mValues[28].mBase, 30); // Form getter; runtime aliases are separate.
         EXPECT_EQ(initialCreature.mValues[36].mBase, 101);
         const auto lowCreature = MWWorld::resolveOblivionInitialNonPlayerValues(
             mStore, actor, creatureKey, {}, ESM4::ActorValueProcess::Low);
+        EXPECT_EQ(lowCreature.mBounty, initialCreature.mBounty);
         for (const auto av : {9, 10})
             EXPECT_EQ(lowCreature.mValues[av].mModifiers,
                 (ESM4::ActorValueModifiers{std::nullopt, 0.f, 0.f}));

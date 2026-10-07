@@ -3209,13 +3209,16 @@ namespace
         }
         auto legacy = captureNativeActorState(fixture, actor);
         legacy.mVersion = 28;
+        for (auto& values : legacy.mNativeActorValues) values.mBounty.reset();
         acceptNativeSnapshot(fixture, legacy);
         actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Weapon);
         EXPECT_FALSE(world.restoreOblivionActorDrawState(actor));
         EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Weapon);
         actor.getRefData().setCustomData(nullptr);
         EXPECT_EQ(actor.getClass().getCreatureStats(actor).getDrawState(), MWMechanics::DrawState::Nothing);
-        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), baseline);
+        auto expectedLegacy = ESM4::RuntimeState::deserializeBinary(baseline);
+        for (auto& values : expectedLegacy.mNativeActorValues) values.mBounty.reset();
+        EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), expectedLegacy.serializeBinary());
     }
 
     TEST(OblivionWorldTest, NativeCreatureDrawRestoresThroughRecordAndLazyClassWithoutCombatDeltas)
@@ -5660,6 +5663,7 @@ namespace
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), binary);
         auto old = saved;
         old.mVersion = 25;
+        for (auto& values : old.mNativeActorValues) values.mBounty.reset();
         old.mNativeActorValues[0].mProcessAction.reset();
         service.restore(ESM4::RuntimeState::deserializeBinary(old.serializeBinary()), world.getStore());
         EXPECT_THROW(service.getProcessAction(key), std::invalid_argument);
@@ -6033,6 +6037,7 @@ namespace
         const auto key = actor.getCellRef().getFormKey();
         auto old = captureNativeActorState(fixture, actor);
         old.mVersion = 24;
+        for (auto& values : old.mNativeActorValues) values.mBounty.reset();
         old.mNativeActorValues[0].mProcessKnockedState.reset();
         old.mNativeActorValues[0].mProcessAction.reset();
         service.restore(ESM4::RuntimeState::deserializeBinary(old.serializeBinary()), world.getStore());
@@ -6129,6 +6134,7 @@ namespace
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), binary);
         auto old = saved;
         old.mVersion = 24;
+        for (auto& values : old.mNativeActorValues) values.mBounty.reset();
         old.mNativeActorValues[0].mProcessKnockedState.reset();
         old.mNativeActorValues[0].mProcessAction.reset();
         service.restore(ESM4::RuntimeState::deserializeBinary(old.serializeBinary()), world.getStore());
@@ -7938,6 +7944,7 @@ namespace
         auto lossy = initial;
         lossy.mCombatRngState = 1;
         lossy.mVersion = 26;
+        for (auto& values : lossy.mNativeActorValues) values.mBounty.reset();
         const auto untouched = lossy.serializeBinary();
         EXPECT_THROW(service.capture(lossy), std::invalid_argument);
         EXPECT_EQ(lossy.serializeBinary(), untouched);
@@ -12044,6 +12051,7 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedActorAuthorityFromEverySup
         if (version < 29) legacy.mReferences.front().mActorDrawState.reset();
         ASSERT_EQ(legacy.mNativeActorValues.size(), 1u);
         auto& values = legacy.mNativeActorValues.front();
+        if (version < 44) values.mBounty.reset();
         values.mValues[8].mModifiers[2] = -9.f;
         if (version < 17) values.mNonPlayerFormHealth.reset();
         if (version < 18) values.mPassiveAbilities.reset();
@@ -13866,7 +13874,13 @@ TEST(OblivionWorldTest, BountyPlayerClassLuaAndGenericAVCommandsShareDistinctNat
     ASSERT_TRUE(world.initializeOblivionPlayerActor());
     auto player = world.getPlayerPtr();
     auto& stats = player.getClass().getNpcStats(player);
-    stats.setBounty(9); // Unowned legacy facade still retains its old contract.
+    EXPECT_EQ(stats.getBounty(), 0);
+    EXPECT_THROW(stats.setBounty(9), std::logic_error); // Fresh actors already own zero.
+    auto legacyValues = *world.getOblivionCombatService()->findActorValues(ESM::FormKey::dynamic("player", 1));
+    legacyValues.mBounty.reset();
+    world.getOblivionCombatService()->publishPlayerValues(world.getPlayer(), legacyValues,
+        MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    stats.setBounty(9); // An explicitly unowned legacy facade retains its contract.
     auto& service = *world.getOblivionCombatService();
     auto values = (*service.findActorValues(ESM::FormKey::dynamic("player", 1)));
     values.mBounty = ESM4::CrimeBountyState{.25f, -3.5f};

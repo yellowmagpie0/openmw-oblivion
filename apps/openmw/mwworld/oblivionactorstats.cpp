@@ -199,6 +199,7 @@ namespace MWWorld
         result.mActor = actor;
         result.mBase = actorBase;
         result.mProcess = process;
+        result.mBounty.emplace(); // A fresh reference has no ExtraCrimeGold: owned zero.
         if (process == ESM4::ActorValueProcess::Active)
         {
             result.mProcessKnockedState = 0; // Original High/MiddleHigh constructor64B52D.
@@ -328,6 +329,9 @@ namespace MWWorld
     ESM4::RuntimeActorValues resolveOblivionLegacyPlayerValues(Player& player, const ESMStore& store)
     {
         auto result = resolveOblivionInitialPlayerValues(store);
+        // A legacy shared bounty is not evidence of zero native crime gold.
+        // Keep its authority unresolved until deliberate legacy admission.
+        result.mBounty.reset();
         const auto ptr = player.getPlayer();
         const auto& stats = ptr.getClass().getNpcStats(ptr);
         const auto copyStat = [&](std::uint8_t av, const MWMechanics::AttributeValue& value) {
@@ -396,6 +400,7 @@ namespace MWWorld
         result.mBase = ESM::FormKey::dynamic("player-base", 1);
         result.mOwner = ESM4::ActorValueOwner::Player;
         result.mProcess = ESM4::ActorValueProcess::Active;
+        result.mBounty.emplace();
         result.mProcessKnockedState = 0;
         result.mProcessAction = -1;
         const auto a = attributes(npc->mData.attribs);
