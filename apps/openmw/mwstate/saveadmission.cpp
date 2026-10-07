@@ -487,6 +487,18 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        // These fields are restored separately from the native
+                        // Player projection. A valid T4ST position cannot make
+                        // poisoned shared recall/exterior coordinates safe.
+                        for (const float coordinate : player.mLastKnownExteriorPosition)
+                            if (!std::isfinite(coordinate))
+                                throw std::runtime_error("Saved game Player has a nonfinite exterior position");
+                        if (player.mHasMark)
+                            validatePosition(player.mMarkedPosition);
+                        for (const auto* values : {&player.mSaveAttributes, &player.mSaveSkills})
+                            for (const auto& [id, value] : *values)
+                                if (!std::isfinite(value))
+                                    throw std::runtime_error("Saved game Player has a nonfinite saved stat");
                         // Player::readRecord resolves this shared field before
                         // native state is applied. Reject a missing incoming
                         // content dependency before outgoing-world teardown.

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <cmath>
 #include <array>
 #include <set>
 #include <sstream>
@@ -205,6 +206,85 @@ TEST(SaveAdmissionTest, SharedPlayerBirthsignResolvesBeforeNativePreparationForE
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
         EXPECT_EQ(content.get<ESM::BirthSign>().search(sign.mId) != nullptr, mode == 1 || mode == 3);
     }
+}
+
+TEST(SaveAdmissionTest, SharedPlayerAuxiliaryFloatsRejectBeforePreparationForEveryNativeVersion)
+{
+    // All independently restored float channels, including both halves of
+    // recall transforms and the complete werewolf attribute/skill arrays.
+    constexpr int channels = 3 + 6 + ESM::Attribute::Length + ESM::Skill::Length;
+    const std::array values{std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -123.5f};
+    MWWorld::ESMStore content;
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int channel = 0; channel != channels; ++channel)
+    for (const float value : values)
+    for (const bool prepareState : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(channel);
+        SCOPED_TRACE(value);
+        SCOPED_TRACE(prepareState);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            if (channel < 3)
+                player.mLastKnownExteriorPosition[channel] = value;
+            else if (channel < 9)
+            {
+                player.mHasMark = true;
+                player.mMarkedCell = player.mCellId;
+                if (channel < 6) player.mMarkedPosition.pos[channel - 3] = value;
+                else player.mMarkedPosition.rot[channel - 6] = value;
+            }
+            else if (channel < 9 + ESM::Attribute::Length)
+                player.mSaveAttributes[ESM::Attribute::indexToRefId(channel - 9)] = value;
+            else
+                player.mSaveSkills[ESM::Skill::indexToRefId(channel - 9 - ESM::Attribute::Length)] = value;
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version == 0 ? ESM4::CurrentRuntimeStateVersion : version, 1, version == 0 ? 0 : 1) + records);
+        const auto offset = reader.getFileOffset();
+        int validations = 0, preparations = 0;
+        const auto validate = [&](const auto&) { ++validations; };
+        const auto prepare = [&](const auto&, auto) { ++preparations; };
+        std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)> preparation;
+        if (prepareState) preparation = prepare;
+        if (std::isfinite(value))
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content, preparation));
+        else
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, validate, &content, preparation),
+                std::runtime_error);
+        EXPECT_EQ(validations, int(std::isfinite(value) && version != 0 && !prepareState));
+        EXPECT_EQ(preparations, int(std::isfinite(value) && version != 0 && prepareState));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::NPC>().getDynamicSize(), 0u);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedPlayerAuxiliaryFloatChecksPreserveMorrowindCompatibility)
+{
+    const auto records = worldRecords([](ESM::ESMWriter& writer) {
+        ESM::Player player{}; player.mObject.blank();
+        player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+        player.mCellId = ESM::RefId::stringRefId("Balmora");
+        player.mLastKnownExteriorPosition[0] = std::numeric_limits<float>::quiet_NaN();
+        player.mHasMark = true;
+        player.mMarkedCell = player.mCellId;
+        player.mMarkedPosition.rot[2] = std::numeric_limits<float>::infinity();
+        player.mSaveSkills[ESM::Skill::Acrobatics] = -std::numeric_limits<float>::infinity();
+        writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+    });
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + records);
+    const auto offset = reader.getFileOffset();
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}));
+    EXPECT_EQ(reader.getFileOffset(), offset);
+    EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
 }
 
 TEST(SaveAdmissionTest, EverySupportedNativeVersionIsValidatedAndReaderIsRewound)

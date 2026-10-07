@@ -6,6 +6,51 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 shared Player auxiliary float admission — 2026-10-07
+
+The Oblivion admission pass now validates all three last-known exterior
+coordinates, the six recall position/rotation channels when a mark is present,
+and all eight saved attributes and27 saved skills before native preparation or
+outgoing-world teardown. These shared fields restore independently of T4ST;
+a finite native Player position cannot repair their nonfinite payloads. Finite
+negative values remain accepted. Morrowind retains its existing admission path.
+
+The new matrix checks **16,544 combinations** across schemas1–46 and no-T4ST
+input: every44-channel field, NaN/both infinities/finite negative controls,
+and both validation-only and retained-preparation paths. It checks callback
+suppression, reader rewind and unchanged content. Normal
+`S3/shared-player-floats-normal-02` and instrumented
+`shared-player-floats-sanitized-02` each passed all **1,219 engine tests** with
+exact inventories/XML, zero failures/skips and stable source fingerprints.
+ASan/UBSan halt on errors; leak detection is disabled. The compiled parent is
+`7665b0dacc8f0f1cd296828cc5e31124055a2b17`, tested fingerprint
+`295682df94d49956be52f2cba36bcc5110e51a33505b5aa6cf3c5d477ff5cd7c`.
+The fixture checkpoint passed all **280 Python tests**; the published scenario
+also passes production manifest validation. Compiled source/test hashes are
+unchanged by subsequent fixture publication and documentation.
+
+Actual normal `shared-player-floats-reject-01` and instrumented
+`shared-player-floats-reject-sanitized-02` courses replace only one binary32
+coordinate in PLAY/LKEP of a real F5 output with a quiet NaN. Every other byte,
+including all native state and record sizes, is unchanged. F9 rejects before
+teardown; Return/F5 preserves the native actor/Player/crime/action/quest fields
+and restores the original shared exterior coordinates. Each course has one
+completed load and two completed saves in the same PID/epoch; the initial load
+matches all38 snapshot fields. All four rejection/resave captures were reviewed.
+
+Editable `oblivion_m15_shared_player_floats_{reject,fault}.json` sources are under
+`scripts/data/oblivion_compat/`; preparation, receipt workers, independent
+verification and private saves are in the named ignored courses.
+`S3/shared-player-floats-report.json` records source/check/capture hashes and
+verification layers. The initial normal/sanitizer compile failures and the
+first sanitizer course's missing ASan-preload launch are retained separately.
+
+This closes the bounded Player-float admission chunk. Full shared restore
+staging remains open. The next semantic audit identifies shared timestamp hour
+domains that can throw in live restore and GMAP image shapes that can throw in
+the renderer after cleanup; source evidence is retained in
+`S3/shared-semantic-followup-20261007.json`. S3 remains in progress.
+
 ## S3 committed recovery and continuation handoff — 2026-10-07
 
 The eight verified chunks previously blocked by the other session's read-only

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 shared Player float fault; native state unchanged",
+  "record": "PLAY",
+  "subrecord": "LKEP",
+  "channel": 0,
+  "offset_within_payload": 0,
+  "after_payload_prefix_hex": "0000c07f",
+  "encoding": "IEEE754 little-endian binary32 quiet NaN",
+  "update_sizes": [],
+  "preserve": "Save size, all other bytes, every ordered save record and all native state bytes",
+  "expected_error": "Saved game Player has a nonfinite exterior position",
+  "preparation_reference": "build/oblivion-compat/m15/S3/shared-player-floats-reject-01/mutate.py"
+}

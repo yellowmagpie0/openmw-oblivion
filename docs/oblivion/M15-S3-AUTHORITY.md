@@ -36,7 +36,10 @@ before dispatch so a callback save cannot replay that event.
 `World::prepareOblivionSaveState` retains detached definitions, inventories and
 native service plans; installation requires the expected clear boundary.
 World capture uses the same live service state, not telemetry as an authority.
-Admission errors preserve the outgoing world. Later shared record/resource
+Admission errors preserve the outgoing world. Shared Player exterior/recall
+coordinates and saved attribute/skill floats are checked before native
+preparation; their live F9 rejection/resave courses preserve the outgoing world.
+Later shared record/resource
 restoration still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
 
