@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>M15: combat, stealth, crime, and jail — implementation tour</title>
+  <style>
+    :root { color-scheme: light; --ink:#18212c; --muted:#526174; --line:#d8e0e8; --paper:#fff; --wash:#f3f6f9; --blue:#174d78; --teal:#087e73; --amber:#865900; --red:#a13e35; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--wash); color:var(--ink); font:16px/1.62 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1060px; margin:0 auto; padding:38px 24px 72px; }
+    header { padding:36px 40px; color:white; background:linear-gradient(125deg,#123c61,#087e73); border-radius:18px; }
+    h1 { margin:0 0 10px; font-size:clamp(2rem,5vw,3.25rem); line-height:1.1; letter-spacing:-.035em; }
+    header p { max-width:780px; margin:12px 0 0; color:#e4f2f3; font-size:1.08rem; }
+    .meta { margin-top:20px; color:#d3e8ed; font-size:.9rem; }
+    section { margin-top:26px; padding:28px 32px; background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:0 5px 20px #19324b08; }
+    h2 { margin:0 0 14px; color:var(--blue); font-size:1.55rem; line-height:1.25; }
+    h3 { margin:23px 0 7px; font-size:1.12rem; }
+    p { margin:10px 0; }
+    .lede { font-size:1.1rem; }
+    .callout { margin:18px 0 0; padding:15px 18px; background:#edf6f8; border-left:4px solid var(--teal); border-radius:5px; }
+    .callout strong { color:#075c55; }
+    .warning { background:#fff6e7; border-color:#d99a26; }
+    .warning strong { color:var(--amber); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:13px; margin-top:18px; }
+    .card { padding:16px 17px; background:#f7f9fb; border:1px solid var(--line); border-radius:10px; }
+    .card h3 { margin:0 0 5px; }
+    .card p { margin:5px 0 0; color:var(--muted); font-size:.95rem; }
+    .tag { display:inline-block; padding:2px 9px; border-radius:999px; font-size:.78rem; font-weight:700; letter-spacing:.02em; white-space:nowrap; }
+    .passed { color:#075b43; background:#dff4e9; }
+    .active { color:#754d00; background:#fff0c7; }
+    .pending { color:#6e7784; background:#e9edf1; }
+    table { width:100%; border-collapse:collapse; margin:16px 0 4px; font-size:.94rem; }
+    th,td { padding:11px 10px; vertical-align:top; text-align:left; border-bottom:1px solid var(--line); }
+    th { color:#31475c; background:#f3f6f8; font-size:.84rem; text-transform:uppercase; letter-spacing:.04em; }
+    td:first-child { width:66px; font-weight:750; white-space:nowrap; }
+    td:nth-child(2) { width:126px; }
+    .flow { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; margin:18px 0; }
+    .step { flex:1 1 145px; padding:13px; text-align:center; color:#18344d; background:#edf3f7; border:1px solid #cbd9e3; border-radius:9px; font-weight:650; }
+    .arrow { align-self:center; color:#658096; font-size:1.3rem; }
+    code { padding:1px 5px; color:#24415a; background:#edf1f5; border-radius:4px; font-size:.9em; }
+    ul { padding-left:23px; }
+    li { margin:6px 0; }
+    a { color:#145a8a; }
+    .small { color:var(--muted); font-size:.9rem; }
+    footer { margin:22px 8px 0; color:var(--muted); font-size:.88rem; }
+    @media(max-width:620px) { main{padding:16px 12px 42px} header,section{padding:23px 20px} table{display:block;overflow-x:auto} .arrow{display:none} }
+    @media print { body{background:white} main{max-width:none;padding:0} header,section{box-shadow:none;break-inside:avoid} }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>M15: combat, stealth, crime, and jail</h1>
+    <p>A gameplay programmer’s tour of what the local OpenMW Oblivion fork has built, what is being wired together now, and what still has to work in a real playthrough.</p>
+    <div class="meta">Repository snapshot: 5 October 2026 · branch <code>master</code> · based on committed history, the M15 handoff, and the current local diff</div>
+  </header>
+
+  <section>
+    <h2>The state of the milestone</h2>
+    <p class="lede">M15 is a long-running compatibility effort, not a finished combat feature. The native Oblivion data model and much of the rule math are reviewed and implemented. Native melee and projectile foundations exist. The current work is still closing gaps in restore safety and the physical bow/pickup pipeline. Stealth, crime, arrest, jail, official campaign playthroughs, and final acceptance remain ahead.</p>
+    <div class="callout warning"><strong>Important status distinction:</strong> the report marks S0, S1 and S2 passed; S3, S4 and S5 in progress; S6–S14 pending. “Passed” here means that stage’s declared data/rule or harness gate, not that Oblivion gameplay is complete. No full M15 normal-input campaign has been accepted.</div>
+    <div class="grid">
+      <div class="card"><h3>Done: knowledge and pure rules</h3><p>Native TES4 inputs are parsed and audited, and reviewed formulas have independent expected values and provenance.</p></div>
+      <div class="card"><h3>In progress: world integration</h3><p>Combat actions, actor state, inventory, scene objects, save data and callbacks are being joined without partial updates.</p></div>
+      <div class="card"><h3>Still ahead: player-visible outcomes</h3><p>AI fights, sneak and pickpocket, witnesses, guards, jail, and the official content routes still need end-to-end proof.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What the stages mean</h2>
+    <table>
+      <thead><tr><th>Stage</th><th>Status</th><th>What it covers in player terms</th><th>What remains at that boundary</th></tr></thead>
+      <tbody>
+        <tr><td>S0</td><td><span class="tag passed">Passed</span></td><td>Baseline inventory: engine boundaries, source data, existing regressions, build/runtime environment, and candidate content routes.</td><td>Carry baseline defects and campaign dependencies into their owner stages.</td></tr>
+        <tr><td>S1</td><td><span class="tag passed">Passed</span></td><td>Evidence harness: capture what happened, compare cause and effect, detect missing/skipped cases, and continue a save in a fresh process.</td><td>Add feature-specific observations and controls as gameplay is integrated.</td></tr>
+        <tr><td>S2</td><td><span class="tag passed">Passed</span></td><td>TES4 data plus pure mechanics: combat styles, creature/faction inputs, settings, physical rules, detection, crime and jail decisions.</td><td>Connect these reviewed rules to live actors and prove them through input, rendering and persistence.</td></tr>
+        <tr><td>S3</td><td><span class="tag active">In progress</span></td><td>Services and persistence: stable actor identity, runtime state, inventory, action/event continuity, and safe load/restore.</td><td>Full load/cache reconciliation, historical populated saves, active-action/event migration and restart continuation.</td></tr>
+        <tr><td>S4</td><td><span class="tag active">In progress</span></td><td>Melee and blocking: native attack/contact/damage path, block, condition wear, cancellation and reactions.</td><td>Actor and power/mastery matrices, reactions/control views and complete restart acceptance.</td></tr>
+        <tr><td>S5</td><td><span class="tag active">In progress</span></td><td>Bow/projectile and loose items: held bow, arrow, flight physics, impact, drop/pickup and saved item metadata.</td><td>Normal input controller, full projectile transaction, flight/impact recovery, NPC bow drops and in-flight restart.</td></tr>
+        <tr><td>S6</td><td><span class="tag pending">Pending</span></td><td>Death, essential knockouts, corpse, loot and recovery.</td><td>Physical lifecycle and restart behavior.</td></tr>
+        <tr><td>S7</td><td><span class="tag pending">Pending</span></td><td>Combat AI, pursuit interruption and return to schedules.</td><td>Autonomous fights through the native AI route.</td></tr>
+        <tr><td>S8</td><td><span class="tag pending">Pending</span></td><td>Sneaking, detection, pickpocket and related mastery.</td><td>Normal interactions using shared perception and native rules.</td></tr>
+        <tr><td>S9</td><td><span class="tag pending">Pending</span></td><td>Theft, trespass, assault, murder, witnesses, bounty and faction consequences.</td><td>Correct legal outcomes and persistence across witness states.</td></tr>
+        <tr><td>S10–S11</td><td><span class="tag pending">Pending</span></td><td>Guard pursuit, surrender/arrest choices, fines, confiscation, jail sentence, release and escape.</td><td>Real interaction paths, property handling, time/geography and save continuity.</td></tr>
+        <tr><td>S12</td><td><span class="tag pending">Pending</span></td><td>Oblivion script commands/events and campaign prerequisites.</td><td>Correct command semantics and actual dialogue/results used by the routes.</td></tr>
+        <tr><td>S13</td><td><span class="tag pending">Pending</span></td><td>Official content campaigns: tutorial combat, dungeon, Arena and crime resolution routes.</td><td>Complete normal gameplay outcomes and media review.</td></tr>
+        <tr><td>S14</td><td><span class="tag pending">Pending</span></td><td>Universal acceptance and regression.</td><td>Full matrix, sanitizers, performance, original-game comparisons and end-to-end signoff.</td></tr>
+      </tbody>
+    </table>
+    <p class="small">S10 and S11 are grouped in the table for readability; the roadmap keeps arrest/fine and jail as separate stages.</p>
+  </section>
+
+  <section>
+    <h2>How the implementation is shaped</h2>
+    <p>OpenMW is a shared engine with support for more than one game’s data and rules. This fork adds an Oblivion-native path alongside older Morrowind-shaped systems. The main risk is allowing a familiar shared helper to quietly apply the wrong game’s rule. M15 therefore separates three jobs: TES4 records supply inputs, pure native rules calculate outcomes, and world services apply those outcomes to live actors and objects.</p>
+    <div class="flow" aria-label="M15 gameplay flow">
+      <div class="step">Input, AI, or script requests an action</div><div class="arrow">→</div>
+      <div class="step">Native service validates actors and equipment</div><div class="arrow">→</div>
+      <div class="step">Contact, release, transfer, or arrest becomes authoritative</div><div class="arrow">→</div>
+      <div class="step">Rules update health, fatigue, item condition, crime, or jail state</div><div class="arrow">→</div>
+      <div class="step">Animation, UI, sound and scripts observe the committed result</div><div class="arrow">→</div>
+      <div class="step">The same state can be saved and restored</div>
+    </div>
+    <p>Think of this as one simulation authority with several adapters. Input and AI propose actions; they should not each implement their own damage or crime math. The shared animation/physics engine can provide motion and contacts, while TES4-specific services decide what those contacts mean. Inventory and item condition remain owned by the existing native inventory system rather than copied into a second combat-only inventory.</p>
+    <p>Stable form keys identify actors and items across load order and save/load. Persistent records store identities and logical state, not transient pointers or renderer handles. Typed data and fail-closed diagnostics make missing or malformed TES4 inputs visible instead of borrowing a Morrowind default.</p>
+  </section>
+
+  <section>
+    <h2>What is already implemented</h2>
+    <h3>TES4 data and rule audit</h3>
+    <p>S2 adds typed support for combat styles and the actor/faction inputs that feed native policy. The report describes a complete audit of 11 official plugins, a winning-record/hash/count lock, 130 explained policies covering 3,636 actors, and independent comparison of 7,540 fields. Pure rule comparisons include tens of thousands of original-instruction results. The mastery matrix covers 41 abilities. This gives later gameplay code a reviewed contract for rounding, thresholds, data defaults and exceptional records.</p>
+    <p>This is the equivalent of having a trustworthy design spec and tested math library. It does not mean an NPC can yet complete a fight or that a player can finish the Arena.</p>
+    <h3>Native actor and runtime foundations</h3>
+    <p>The fork already has native actor stats, inventory and actor identity work from earlier milestones. M15’s S3 work extends the runtime save schema and connects native state to world restore. Recent committed work prepares character data, complete inventories and native actor views before publication; a migration fix preserves the equipment choices that old saves historically reconstructed from content.</p>
+    <p>The current uncommitted diff extends that transaction to ObScript state. It builds the restored script instances and quest state privately, checks program identities, locals, duplicate instances and winning quest records, and only then swaps them into the live script manager. World restore now prepares this before publishing the broader replacement. The goal is that a bad script binding cannot leave the player’s inventory, clock or dynamic-reference identity half-restored. The local diff also adds focused world regression cases for cancel/move/commit, invalid bindings and omitted quest defaults. Those tests are present in the working tree; this review did not run them.</p>
+    <h3>Melee and block foundations</h3>
+    <p>S4 has a native attack/contact route for ordinary Player and NPC cases, block and item wear logic, cancellation paths, stock sound recordings, and persisted timed knockback work. Many recent commits show work around actual input/action publication and avoiding side effects before a valid contact. The report still calls out incomplete actor/power/mastery/reaction coverage and the full restart gate.</p>
+    <h3>Bow, projectile and pickup foundations</h3>
+    <p>S5 now has saved bow-input state, held-arrow geometry, shared swept projectile physics, and careful publication for equipment breakage and loose items. Recent checkpoints preserve exact item extras (condition, charge, usage and ownership), derive dropped-weapon placement from actual renderer bindings, retain loose-body definitions/poses, and stage rendering, physics, navigation, inventory and script notifications before a pickup becomes visible to observers.</p>
+    <p>The design is deliberately transactional because a pickup touches several engine subsystems. If the item disappears from the scene but inventory insertion fails, or inventory grants it before collision/navigation removal succeeds, the player can duplicate or lose it. The latest committed pickup checkpoint prepares these resources first, then commits the source debit and inventory registration before observer callbacks. Bow launch, native flight/impact/recovery and normal-input acceptance are still open.</p>
+  </section>
+
+  <section>
+    <h2>Why so much effort goes into transactions</h2>
+    <p>From the player’s view, “load save,” “take sword,” or “release arrow” is one action. Inside an engine, each may touch multiple owners: save data, inventory stacks, equipped-item views, world reference registries, scene graph, physics scheduler, navigation index, Lua events and UI observers. An exception or callback halfway through can expose contradictory state.</p>
+    <p>The implementation pattern is prepare → validate → commit → notify. Preparation allocates and resolves everything while the old world is still intact. Validation checks that the assumptions still hold. Commit swaps or removes the prepared state in a controlled, low-failure section. Callbacks run after publication, so observers see a complete result. Prepared handles can be discarded without changing the live world, and single-use commits prevent accidental replay.</p>
+    <p>This matters especially for saving mid-combat. An arrow must not hit twice after reload; an equipped weapon must not vanish during a drop; an observer must not see an item before it has a registered owner. The same rules apply to arrest and jail later, where confiscation, bounty, sentence and teleport need to form one coherent outcome.</p>
+  </section>
+
+  <section>
+    <h2>What is left to prove</h2>
+    <p>Implementation checkpoints and unit/world fixtures are useful, but the player-facing acceptance target is much higher. The staged plan requires real input and real content, with continuation in a fresh process. The remaining work broadly falls into these groups:</p>
+    <ul>
+      <li><strong>Finish S3:</strong> complete load/cache reconciliation, populated historical migrations beyond the current chunk, queued callbacks and passive-effect migration, and active-action save/restart continuation.</li>
+      <li><strong>Finish S4–S5:</strong> cover the remaining attacker/target, power attack, mastery, reaction, control and projectile cases; connect bow input through launch, collision, damage, recovery and save/load; prove NPC equipment drops and normal pickup behavior.</li>
+      <li><strong>Build S6–S8:</strong> physical death/corpse/loot and essential recovery; combat-capable native AI that resumes its schedule; sneak and pickpocket through normal interaction and the existing perception authority.</li>
+      <li><strong>Build S9–S12:</strong> witnessed crime and legal exceptions, guard pursuit and arrest choices, confiscation/fines, jail time/property/release/escape, and the actual script/dialogue paths needed by those actions.</li>
+      <li><strong>Run S13–S14:</strong> complete the selected official campaigns with ordinary gameplay, inspect the resulting media, continue saves in new processes, compare with the original game, and run the full required regression/sanitizer/performance matrix.</li>
+    </ul>
+    <div class="callout"><strong>Acceptance language:</strong> a source change can be implemented; a record can be parsed; a rule can match the original executable; an engine fixture can pass; and the game can still fail in normal play. The report keeps those claims separate. Full M15 completion means the required player routes and persistence work end to end.</div>
+  </section>
+
+  <section>
+    <h2>Reading the repository evidence</h2>
+    <p>The most useful handoff documents are <a href="M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md">the staged implementation plan</a>, <a href="M15-COMBAT-STEALTH-CRIME.md">the running progress and evidence report</a>, <a href="M15-S2-RULE-MATRIX.json">the S2 rule review index</a>, and <a href="M15-NATIVE-RULE-PROVENANCE.md">the native rule provenance notes</a>. Generated run artifacts live under <code>build/oblivion-compat/m15/</code> and are not committed.</p>
+    <p class="small">This walkthrough is a read-only explanation of the repository snapshot. It does not claim to have built the checkout, executed tests, launched OpenMW, or performed gameplay acceptance. The worktree already contained local changes when inspected; those changes are summarized above and were left untouched.</p>
+  </section>
+  <footer>Prepared from the M15 report and plan at the local 5 October 2026 repository state. Internal links resolve relative to this HTML file.</footer>
+</main>
+</body>
+</html>
