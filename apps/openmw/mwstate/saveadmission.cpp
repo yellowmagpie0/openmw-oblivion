@@ -13,6 +13,7 @@
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadclas.hpp>
+#include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/player.hpp>
@@ -486,6 +487,14 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        // Player::readRecord resolves this shared field before
+                        // native state is applied. Reject a missing incoming
+                        // content dependency before outgoing-world teardown.
+                        // Birthsigns are not saved dynamic definitions; an
+                        // outgoing transient definition must not mask absence.
+                        if (content && !player.mBirthsign.empty()
+                            && !content->get<ESM::BirthSign>().searchStatic(player.mBirthsign))
+                            throw std::runtime_error("invalid player state record (birthsign does not exist)");
                         if (player.mObject.mHasCustomState)
                         {
                             sharedBounties.emplace(ESM::FormKey::dynamic("player", 1),

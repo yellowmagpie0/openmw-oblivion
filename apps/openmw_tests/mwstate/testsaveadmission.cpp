@@ -23,6 +23,7 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadclas.hpp>
+#include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
@@ -163,6 +164,46 @@ namespace
         ESM::ESMReader reader;
         openBytes(reader, stream.str());
         return stream.str().substr(reader.getFileOffset());
+    }
+}
+
+TEST(SaveAdmissionTest, SharedPlayerBirthsignResolvesBeforeNativePreparationForEveryVersion)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const bool remapped : {false, true})
+    for (int mode = 0; mode != 4; ++mode)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(remapped);
+        SCOPED_TRACE(mode);
+        MWWorld::ESMStore content;
+        ESM::BirthSign sign{}; sign.blank();
+        sign.mId = remapped ? ESM::RefId(ESM::FormId{0x12, 2}) : ESM::RefId::stringRefId("admission-sign");
+        if (mode == 1) content.getWritable<ESM::BirthSign>().insertStatic(sign);
+        if (mode == 3) content.getWritable<ESM::BirthSign>().insert(sign); // Outgoing transient definition only.
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            if (mode != 0)
+                player.mBirthsign = remapped ? ESM::RefId(ESM::FormId{0x12, 0}) : sign.mId;
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version == 0 ? ESM4::CurrentRuntimeStateVersion : version, 1, version == 0 ? 0 : 1) + records);
+        const std::map<int, int> mapping{{0, 2}};
+        if (remapped) reader.setContentFileMapping(&mapping);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        if (mode >= 2)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        EXPECT_EQ(calls, int(mode < 2 && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::BirthSign>().search(sign.mId) != nullptr, mode == 1 || mode == 3);
     }
 }
 

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 shared Player dependency fault; native state unchanged",
+  "record": "PLAY",
+  "subrecord": "SIGN",
+  "before_payload_hex": "00",
+  "after_payload_hex": "026d31352d6d697373696e672d62697274687369676e",
+  "encoding": "UnsizedString RefId tag2 followed by name bytes",
+  "update_sizes": [
+    "SIGN payload length",
+    "PLAY payload length"
+  ],
+  "preserve": "Every other ordered save record and all native state bytes",
+  "expected_error": "invalid player state record (birthsign does not exist)",
+  "preparation_reference": "build/oblivion-compat/m15/S3/prepare-shared-birthsign.py"
+}
