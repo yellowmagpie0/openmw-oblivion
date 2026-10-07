@@ -115,6 +115,9 @@ namespace ESM
             while (esm.isNextSub(tag))
             {
                 ActiveSpells::ActiveSpellParams params;
+                // Live restore constructs a TimeStamp even for effects without
+                // worsening data. Do not leave the omitted timestamp undefined.
+                params.mNextWorsening = {};
                 params.mSourceSpellId = esm.getRefId();
                 if (format > MaxActiveSpellTypeVersion)
                     params.mActiveSpellId = esm.getHNRefId("SPID");

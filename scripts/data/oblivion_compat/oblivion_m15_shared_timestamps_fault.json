@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 shared cell timestamp fault; native state unchanged",
+  "record": "CSTA",
+  "cell_key": "content:oblivion.esm:01fbb9",
+  "cell_id_payload_hex": "03b9fb010001000000",
+  "subrecord": "RESP",
+  "offset_within_payload": 0,
+  "before_hour": 0,
+  "after_hour": 24,
+  "after_payload_prefix_hex": "0000c041",
+  "encoding": "IEEE754 little-endian binary32 hour; signed32 day follows unchanged",
+  "update_sizes": [],
+  "preserve": "Save size, all other bytes, every ordered save record and all native state bytes",
+  "expected_error": "Saved game shared timestamp hour is outside [0, 24)",
+  "preparation_reference": "build/oblivion-compat/m15/S3/shared-timestamps-reject-01/mutate.py"
+}

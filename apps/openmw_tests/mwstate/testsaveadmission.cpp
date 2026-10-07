@@ -25,6 +25,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadbsgn.hpp>
+#include <components/esm3/loadspel.hpp>
 #include <components/esm3/loadglob.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
@@ -45,6 +46,7 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
+#include "apps/openmw/mwworld/timestamp.hpp"
 #include "apps/openmw/mwlua/userdataserializer.hpp"
 #include "apps/openmw/mwlua/object.hpp"
 #include <components/lua/configuration.hpp>
@@ -285,6 +287,200 @@ TEST(SaveAdmissionTest, SharedPlayerAuxiliaryFloatChecksPreserveMorrowindCompati
     EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}));
     EXPECT_EQ(reader.getFileOffset(), offset);
     EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+}
+
+namespace
+{
+    const auto timestampNpcId = ESM::RefId::stringRefId("timestamp-npc");
+    const auto timestampCreatureId = ESM::RefId::stringRefId("timestamp-creature");
+    const auto timestampPowerId = ESM::RefId::stringRefId("timestamp-power");
+
+    // owner: Player, shared NPC, shared creature, cell. channel: restock,
+    // death, used power, active effect, queued effect (cell has only respawn).
+    std::string timestampRecords(int owner, int channel, float hour, bool customState = true)
+    {
+        return worldRecords([&](ESM::ESMWriter& writer) {
+            const ESM::TimeStamp timestamp{hour, -17}; // Preserve signed legacy days.
+            ESM::Player player{}; player.mObject.blank();
+            ESM::CreatureState creature{}; creature.blank();
+            ESM::NpcState npc{}; npc.blank();
+            ESM::ObjectState* object = owner == 0 ? &player.mObject : owner == 1
+                ? static_cast<ESM::ObjectState*>(&npc) : &creature;
+            ESM::CreatureStats* stats = owner == 2 ? &creature.mCreatureStats : owner == 0
+                ? &player.mObject.mCreatureStats : &npc.mCreatureStats;
+            object->mRef.mRefID = owner == 0 ? ESM::RefId::stringRefId("Player")
+                : owner == 1 ? timestampNpcId : timestampCreatureId;
+            object->mRef.mRefNum = {1, -1};
+            object->mHasCustomState = customState;
+            if (channel == 0) stats->mTradeTime = timestamp;
+            else if (channel == 1) stats->mTimeOfDeath = timestamp;
+            else if (channel == 2) stats->mSpells.mUsedPowers[timestampPowerId] = timestamp;
+            else
+            {
+                ESM::ActiveSpells::ActiveSpellParams spell{};
+                spell.mSourceSpellId = timestampPowerId;
+                spell.mActiveSpellId = ESM::RefId::generated(23);
+                spell.mWorsenings = 0;
+                spell.mNextWorsening = timestamp;
+                (channel == 3 ? stats->mActiveSpells.mSpells : stats->mActiveSpells.mQueue).push_back(spell);
+            }
+            if (owner == 0)
+            {
+                player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+                writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            }
+            else
+            {
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+                ESM::CellState cell{}; cell.mIsInterior = true;
+                if (owner == 3) cell.mLastRespawn = timestamp;
+                cell.save(writer);
+                if (owner != 3)
+                {
+                    writer.writeHNT("OBJE", std::uint32_t{0});
+                    object->save(writer);
+                }
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+    }
+
+    void installTimestampContent(MWWorld::ESMStore& content)
+    {
+        ESM::NPC npc{}; npc.blank(); npc.mId = timestampNpcId;
+        ESM::Creature creature{}; creature.blank(); creature.mId = timestampCreatureId;
+        ESM::Spell spell{}; spell.blank(); spell.mId = timestampPowerId;
+        content.getWritable<ESM::NPC>().insertStatic(npc);
+        content.getWritable<ESM::Creature>().insertStatic(creature);
+        content.getWritable<ESM::Spell>().insertStatic(spell);
+        content.setUp();
+    }
+}
+
+TEST(SaveAdmissionTest, SharedTimestampDomainsRejectBeforePreparationForEveryNativeVersion)
+{
+    MWWorld::ESMStore content;
+    installTimestampContent(content);
+    const std::array hours{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), -0.01f, 24.f, -0.f, 0.f, std::nextafter(24.f, 0.f)};
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 4; ++owner)
+    for (int channel = 0; channel != (owner == 3 ? 1 : 5); ++channel)
+    for (const float hour : hours)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(channel);
+        SCOPED_TRACE(hour);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version == 0 ? ESM4::CurrentRuntimeStateVersion : version, 1, version == 0 ? 0 : 1)
+            + timestampRecords(owner, channel, hour));
+        const auto offset = reader.getFileOffset();
+        int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool valid = std::isfinite(hour) && hour >= 0 && hour < 24;
+        if (valid)
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        else
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare),
+                std::runtime_error);
+        EXPECT_EQ(calls, int(valid && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::NPC>().getDynamicSize(), 0u);
+        EXPECT_EQ(content.get<ESM::Creature>().getDynamicSize(), 0u);
+        EXPECT_EQ(content.get<ESM::Spell>().getDynamicSize(), 0u);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedUsedPowerTimestampUsesIncomingDefinitionsInEitherRecordOrder)
+{
+    for (int owner = 0; owner != 3; ++owner)
+    for (int definition = 0; definition != 4; ++definition)
+    for (const bool definitionFirst : {false, true})
+    {
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(definition);
+        SCOPED_TRACE(definitionFirst);
+        MWWorld::ESMStore content;
+        ESM::NPC npc{}; npc.blank(); npc.mId = timestampNpcId;
+        ESM::Creature creature{}; creature.blank(); creature.mId = timestampCreatureId;
+        ESM::Spell spell{}; spell.blank(); spell.mId = timestampPowerId;
+        content.getWritable<ESM::NPC>().insertStatic(npc);
+        content.getWritable<ESM::Creature>().insertStatic(creature);
+        if (definition == 1) content.getWritable<ESM::Spell>().insertStatic(spell);
+        if (definition == 2) content.getWritable<ESM::Spell>().insert(spell); // Outgoing only.
+        content.setUp();
+        const auto savedDefinition = definition == 3 ? worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_SPEL); spell.save(writer); writer.endRecord(ESM::REC_SPEL);
+        }) : std::string{};
+        const auto actor = timestampRecords(owner, 2, 24.f);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + (definitionFirst ? savedDefinition + actor : actor + savedDefinition));
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        if (definition == 1 || definition == 3)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        EXPECT_EQ(calls, int(definition == 0 || definition == 2));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(content.get<ESM::Spell>().getDynamicSize(), std::size_t(definition == 2));
+    }
+}
+
+TEST(SaveAdmissionTest, SharedTimestampChecksPreserveOmittedActorStateAndMorrowindAdmission)
+{
+    MWWorld::ESMStore content;
+    installTimestampContent(content);
+    for (int owner = 0; owner != 4; ++owner)
+    for (int channel = 0; channel != (owner == 3 ? 1 : 5); ++channel)
+    {
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(channel);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + timestampRecords(owner, channel, 24.f));
+        const auto offset = reader.getFileOffset();
+        EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        if (owner == 3) continue;
+        openBytes(reader, saveBytes() + timestampRecords(owner, channel, 24.f, false));
+        int calls = 0;
+        EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { ++calls; }));
+        EXPECT_EQ(calls, 1);
+    }
+}
+
+TEST(SaveAdmissionTest, ActiveEffectWithoutWorseningDecodesDeterministicTimestampForLiveRestore)
+{
+    ESM::ActiveSpells state{};
+    ESM::ActiveSpells::ActiveSpellParams spell{};
+    spell.mSourceSpellId = timestampPowerId;
+    spell.mActiveSpellId = ESM::RefId::generated(23);
+    spell.mWorsenings = -1;
+    spell.mNextWorsening = {std::numeric_limits<float>::quiet_NaN(), 17}; // Not serialized.
+    state.mSpells.push_back(spell);
+    state.mQueue.push_back(spell);
+    const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+        writer.startRecord(ESM::fourCC("TEST")); state.save(writer); writer.endRecord(ESM::fourCC("TEST"));
+    });
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 0, 0) + records);
+    ASSERT_EQ(reader.getRecName(), ESM::fourCC("JUNK")); reader.getRecHeader(); reader.skipRecord();
+    ASSERT_EQ(reader.getRecName(), ESM::fourCC("TEST")); reader.getRecHeader();
+    ESM::ActiveSpells decoded{}; decoded.load(reader);
+    ASSERT_EQ(decoded.mSpells.size(), 1u);
+    ASSERT_EQ(decoded.mQueue.size(), 1u);
+    for (const auto* effects : {&decoded.mSpells, &decoded.mQueue})
+    {
+        EXPECT_EQ(effects->front().mWorsenings, -1);
+        EXPECT_EQ(effects->front().mNextWorsening.mHour, 0.f);
+        EXPECT_EQ(effects->front().mNextWorsening.mDay, 0);
+        EXPECT_NO_THROW(MWWorld::TimeStamp{effects->front().mNextWorsening});
+    }
 }
 
 TEST(SaveAdmissionTest, EverySupportedNativeVersionIsValidatedAndReaderIsRewound)

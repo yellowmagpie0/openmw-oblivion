@@ -39,7 +39,9 @@ World capture uses the same live service state, not telemetry as an authority.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.
-Later shared record/resource
+Shared cell/actor timestamp hour domains are also admitted before preparation;
+removed used-power definitions retain their skip behavior, and omitted active
+effect worsening timestamps reconstruct as zero. Later shared record/resource
 restoration still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
 

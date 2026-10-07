@@ -14,6 +14,7 @@
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadbsgn.hpp>
+#include <components/esm3/loadspel.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/player.hpp>
@@ -53,6 +54,42 @@ namespace
         T state{};
         state.load(reader);
         return state;
+    }
+
+    void validateSharedTimestamp(const ESM::TimeStamp& timestamp)
+    {
+        // Match the shared TimeStamp consumer's hour domain. Signed days are
+        // retained: the live constructor does not impose a day restriction.
+        if (!std::isfinite(timestamp.mHour) || timestamp.mHour < 0 || timestamp.mHour >= 24)
+            throw std::runtime_error("Saved game shared timestamp hour is outside [0, 24)");
+    }
+
+    void validateSharedActorTimestamps(const ESM::ObjectState& object,
+        const MWWorld::ESMStore& incoming, const MWWorld::ESMStore* content)
+    {
+        if (!object.mHasCustomState)
+            return;
+        const ESM::CreatureStats* stats = nullptr;
+        if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&object))
+            stats = &npc->mCreatureStats;
+        else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&object))
+            stats = &creature->mCreatureStats;
+        if (!stats)
+            return;
+        validateSharedTimestamp(stats->mTradeTime);
+        validateSharedTimestamp(stats->mTimeOfDeath);
+        for (const auto& [id, timestamp] : stats->mSpells.mUsedPowers)
+        {
+            // Spells::readState discards powers missing from incoming content.
+            // An outgoing dynamic definition must not supply that dependency.
+            if (!content || incoming.get<ESM::Spell>().search(id)
+                || content->get<ESM::Spell>().searchStatic(id))
+                validateSharedTimestamp(timestamp);
+        }
+        for (const auto* spells : {&stats->mActiveSpells.mSpells, &stats->mActiveSpells.mQueue})
+            for (const auto& spell : *spells)
+                if (spell.mWorsenings >= 0)
+                    validateSharedTimestamp(spell.mNextWorsening);
     }
 
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
@@ -487,6 +524,7 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
+                        validateSharedActorTimestamps(player.mObject, *shared, content);
                         // These fields are restored separately from the native
                         // Player projection. A valid T4ST position cannot make
                         // poisoned shared recall/exterior coordinates safe.
@@ -525,6 +563,7 @@ namespace MWState
                         cell.load(reader);
                         if (!std::isfinite(cell.mWaterLevel) || !std::isfinite(cell.mLastRespawn.mHour))
                             throw std::runtime_error("Saved game shared cell has a nonfinite value");
+                        validateSharedTimestamp(cell.mLastRespawn);
                         if (cell.mHasFogOfWar)
                         {
                             ESM::FogState fog{};
@@ -543,6 +582,7 @@ namespace MWState
                             {
                                 const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
+                                validateSharedActorTimestamps(*state, *shared, content);
                                 // CSTA reference numbers retain their saved load-order
                                 // index; base IDs have already been remapped by getRefId.
                                 const ESM::InventoryState* inventory = nullptr;

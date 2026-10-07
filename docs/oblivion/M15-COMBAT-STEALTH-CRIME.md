@@ -6,6 +6,56 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 shared timestamp admission — 2026-10-07
+
+Shared cell respawn and Player/NPC/creature restock/death timestamps now require
+finite hours in `[0, 24)` before native preparation or outgoing-world teardown.
+The same check covers active and queued effect worsening timestamps and used
+powers whose definitions resolve in the incoming saved/static stores. Removed
+powers retain the production skip behavior; outgoing transient definitions
+cannot supply them. Signed legacy days remain accepted, as in the live
+`TimeStamp` constructor. Omitted actor custom state remains omitted.
+
+The shared active-effect reader now initializes an absent worsening timestamp
+to zero. Live effect reconstruction constructs a `TimeStamp` even without
+worsening data, so leaving that decoded field uninitialized was unsafe. This
+parser fix applies to both profiles; Morrowind's save admission path is unchanged.
+No native schema or payload layout changes.
+
+The new matrix checks **6,016 cases** across schemas 1–46 and no-T4ST input:
+all 16 actor/cell timestamp sites, NaN/both infinities, negative/24-hour failures,
+and signed zero/zero/the largest float below 24 controls. Another 24 cases cover
+missing/static/outgoing-only/saved power definitions in either record order;
+31 cases cover Morrowind and omitted actor-state compatibility. The decoder
+check verifies deterministic timestamps for both active and queued effects
+without worsening data and constructs the actual live `TimeStamp` objects.
+
+`S3/shared-timestamps-normal-02` passed **1,223 engine** and **2,590 component**
+tests; `shared-timestamps-sanitized-02` passed all **1,223 engine tests** under
+ASan/UBSan. Exact inventories/XML agree, with zero failures/skips and stable
+source fingerprints. Leak detection is disabled; sanitizers halt on errors.
+Compiled parent: `1d9103c7218ee420a8a235b6ba38e696c7e24308`; tested fingerprint:
+`73f71880c869141c6abbe159102d910c603304b607a79e894e653668d268bef8`.
+The initial normal/sanitizer runs passed their tests but failed source-stability
+verification when an unrelated tutorial handoff appeared; those invalidated
+runs are retained. The handoff is preserved and excluded from this chunk.
+The fixture checkpoint passed all **280 Python tests**, and the published
+scenario passes production manifest validation.
+
+Actual normal/instrumented `shared-timestamps-reject{,-sanitized}-01` courses
+alter only the binary32 hour in the Player's cell CSTA/RESP from 0 to 24 in a
+real F5 output. Every other byte, record size and native state is unchanged.
+F9 rejects before teardown; Return/F5 preserves native actor/Player/crime/action/
+quest fields and the original shared cell respawn timestamp. Each course has
+one completed load and two saves in the same PID/epoch; the initial load matches
+all 38 snapshot fields. All four rejection/resave captures were reviewed.
+
+Editable `oblivion_m15_shared_timestamps_{reject,fault}.json` sources are under
+`scripts/data/oblivion_compat/`; isolated preparation/workers/verifiers/private
+saves are in the named ignored courses. `S3/shared-timestamps-report.json`
+records hashes and verification layers. Full semantic/resource staging remains
+open, including the GMAP image-shape failure after cleanup. S3 remains in progress.
+
 ## S3 shared Player auxiliary float admission — 2026-10-07
 
 The Oblivion admission pass now validates all three last-known exterior
