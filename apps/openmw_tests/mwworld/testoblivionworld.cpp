@@ -14095,3 +14095,47 @@ TEST(OblivionWorldTest, ExplicitReputationWriteAdoptsLegacyInfamyWithoutGuessing
     EXPECT_THROW(service.capture(downgrade), std::invalid_argument);
     EXPECT_EQ(downgrade.serializeBinary(), original);
 }
+
+TEST(OblivionWorldTest, LegacyPlayerCounterReadsCheckIntegerBoundsWithoutChangingLoadedAuthority)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto saved = world.captureOblivionRuntimeState();
+    prepareNativeSnapshotPlayer(fixture, saved);
+    MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+    const std::array<std::pair<const char*, const char*>, 3> commands{{
+        {"GetPCInfamy", "infamy"}, {"GetPCFactionMurder", "faction_murder"},
+        {"GetPCFactionSteal", "faction_steal"}}};
+    for (const auto& [command, field] : commands)
+    {
+        SCOPED_TRACE(command);
+        EXPECT_EQ(ObScript::asInteger(host.call(command, {}, {}, {}, {})), 0);
+        for (const auto& [number, expected] : std::array<std::pair<double, std::int64_t>, 6>{{
+                 {100.75, 100}, {-100.75, -100}, {0x1p40, std::int64_t{1} << 40},
+                 {-0x1p63, std::numeric_limits<std::int64_t>::min()},
+                 {std::nextafter(0x1p63, 0.), std::numeric_limits<std::int64_t>::max() - 1023},
+                 {-0.75, 0}}})
+        {
+            SCOPED_TRACE(number);
+            saved.mPlayer.mActorValues[field] = number;
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            const auto before = world.captureOblivionRuntimeState().serializeBinary();
+            EXPECT_EQ(ObScript::asInteger(host.call(command, {}, {}, {}, {})), expected);
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        }
+        for (const double number : {0x1p63, std::nextafter(-0x1p63, -INFINITY), 0x1p100, -0x1p100})
+        {
+            SCOPED_TRACE(number);
+            saved.mPlayer.mActorValues[field] = number;
+            readNativeSnapshot(fixture, saved);
+            ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+            const auto before = world.captureOblivionRuntimeState().serializeBinary();
+            EXPECT_THROW(host.call(command, {}, {}, {}, {}), ObScript::RuntimeError);
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        }
+        saved.mPlayer.mActorValues.erase(field);
+        readNativeSnapshot(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    }
+}

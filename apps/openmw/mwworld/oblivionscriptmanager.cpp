@@ -2010,8 +2010,15 @@ namespace MWWorld
             const std::string valueName = name == "getpcinfamy" ? "infamy"
                 : name == "getpcfactionmurder" ? "faction_murder" : "faction_steal";
             const auto value = mWorld.mOblivionRuntimeState->mPlayer.mActorValues.find(valueName);
-            return std::int64_t(value == mWorld.mOblivionRuntimeState->mPlayer.mActorValues.end()
-                    ? 0 : value->second);
+            if (value == mWorld.mOblivionRuntimeState->mPlayer.mActorValues.end())
+                return std::int64_t(0);
+            const double integer = std::trunc(value->second);
+            // Old snapshots retain their floating-point script-map authority
+            // until explicitly adopted. Never invoke an undefined conversion
+            // or silently clamp an unsupported legacy value on a read.
+            if (!std::isfinite(integer) || integer < -0x1p63 || integer >= 0x1p63)
+                throw ObScript::RuntimeError("OBSV117", "Legacy Player counter cannot fit int64 storage", name);
+            return static_cast<std::int64_t>(integer);
         }
         if (name == "modpcinfamy")
         {
