@@ -203,7 +203,8 @@ namespace
         std::set<std::uint32_t>& singletons,
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
         const std::function<void(const ESM::WeatherState&)>& prepareWeather,
-        std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems)
+        std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems,
+        std::vector<ESM::ProjectileState>& projectiles, std::vector<ESM::MagicBoltState>& bolts)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -358,6 +359,7 @@ namespace
                 for (const float value : state.mVelocity.mValues) finite(value);
                 finite(state.mAttackStrength);
                 finite(state.mAttackWindUp);
+                projectiles.push_back(state);
                 break;
             }
             case ESM::REC_MPRJ:
@@ -365,6 +367,7 @@ namespace
                 const auto state = readSharedState<ESM::MagicBoltState>(reader);
                 projectile(state);
                 finite(state.mSpeed);
+                bolts.push_back(state);
                 break;
             }
             default:
@@ -471,7 +474,9 @@ namespace MWState
         const MWWorld::ESMStore* content,
         const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative,
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
-        const std::function<void(const ESM::WeatherState&)>& prepareWeather)
+        const std::function<void(const ESM::WeatherState&)>& prepareWeather,
+        const std::function<void(const std::vector<ESM::ProjectileState>&,
+            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles)
     {
         const auto start = reader.getContext();
         try
@@ -528,6 +533,8 @@ namespace MWState
                 && profile.mRuntimeStateVersion > ESM4::CurrentRuntimeStateVersion)
                 throw std::runtime_error("Saved game declares an unsupported TES4 runtime-state version");
             std::unique_ptr<MWWorld::ESMStore> shared;
+            std::vector<ESM::ProjectileState> projectiles;
+            std::vector<ESM::MagicBoltState> bolts;
             std::map<ESM::RefId, ESM::Global> globals;
             std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
             ESM4::LocalLuaScripts nativeScripts;
@@ -587,7 +594,7 @@ namespace MWState
                         decoded = true;
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
-                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems))
+                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, projectiles, bolts))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -876,13 +883,20 @@ namespace MWState
                             throw std::runtime_error("TES4 runtime-state global exceeds the integer conversion domain");
                     }
                 }
+                if (prepareProjectiles)
+                    prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareNative)
                     prepareNative(native, std::move(shared));
                 else
                     validateNative(native);
             }
-            else if (!nativeScripts.empty())
-                throw std::runtime_error("Native local Lua state requires T4ST");
+            else
+            {
+                if (!nativeScripts.empty())
+                    throw std::runtime_error("Native local Lua state requires T4ST");
+                if (prepareProjectiles && shared)
+                    prepareProjectiles(projectiles, bolts, *shared);
+            }
             reader.restoreContext(start);
             return profile;
         }

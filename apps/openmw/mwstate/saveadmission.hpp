@@ -3,11 +3,12 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
 #include <components/esm/gameprofile.hpp>
 #include <components/esm3/savedgame.hpp>
 
-namespace ESM { class ESMReader; struct GlobalMap; struct WeatherState; }
+namespace ESM { class ESMReader; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
 namespace ESM4 { struct RuntimeState; }
 namespace MWWorld { class ESMStore; }
 
@@ -23,7 +24,9 @@ namespace MWState
         const MWWorld::ESMStore* content = nullptr,
         const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative = {},
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap = {},
-        const std::function<void(const ESM::WeatherState&)>& prepareWeather = {});
+        const std::function<void(const ESM::WeatherState&)>& prepareWeather = {},
+        const std::function<void(const std::vector<ESM::ProjectileState>&,
+            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles = {});
 }
 
 #endif

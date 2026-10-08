@@ -484,6 +484,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
         std::function<void()> preparedGlobalMap;
         std::function<bool()> preparedWeather;
+        std::function<bool()> preparedProjectiles;
         std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
@@ -492,6 +493,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 preparedGlobalMap = MWBase::Environment::get().getWindowManager()->prepareGlobalMap(map);
             }, [&](const ESM::WeatherState& state) {
                 preparedWeather = world.prepareWeather(state);
+            }, [&](const auto& projectiles, const auto& bolts, const auto& incoming) {
+                preparedProjectiles = world.prepareProjectiles(projectiles, bolts, incoming);
             });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
@@ -503,7 +506,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         restorationStarted = true;
         // Prepared native and weather plans require one reset for both initial
         // menu loads and in-game loads. Other shared-only loads retain their lifecycle.
-        cleanup(preparedNative != nullptr || bool(preparedWeather));
+        cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles));
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
 
@@ -574,8 +577,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_CSTA:
                 case ESM::REC_DYNA:
                 case ESM::REC_ACTC:
-                case ESM::REC_PROJ:
-                case ESM::REC_MPRJ:
                 case ESM::REC_ENAB:
                 case ESM::REC_LEVC:
                 case ESM::REC_LEVI:
@@ -604,6 +605,14 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_GSCR:
 
                     MWBase::Environment::get().getScriptManager()->getGlobalScripts().readRecord(reader, n.toInt());
+                    break;
+
+                case ESM::REC_PROJ:
+                case ESM::REC_MPRJ:
+                    if (preparedProjectiles)
+                        reader.skipRecord();
+                    else
+                        world.readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_WTHR:
@@ -682,6 +691,12 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         mLastSavegame = filepath;
 
         MWBase::Environment::get().getWindowManager()->setNewGame(false);
+        if (preparedProjectiles)
+        {
+            auto apply = std::move(preparedProjectiles);
+            if (!apply())
+                throw std::runtime_error("Prepared projectiles no longer match the cleared World");
+        }
         MWBase::Environment::get().getWorld()->saveLoaded(reader);
         actorIdConverter.apply();
         MWBase::Environment::get().getWorld()->setupPlayer();

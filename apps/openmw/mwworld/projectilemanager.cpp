@@ -64,31 +64,44 @@
 namespace
 {
     ESM::EffectList getMagicBoltData(std::vector<ESM::RefId>& projectileIDs, std::set<ESM::RefId>& sounds, float& speed,
-        VFS::Path::NormalizedView& texture, std::string& sourceName, const ESM::RefId& id)
+        VFS::Path::NormalizedView& texture, std::string& sourceName, const ESM::RefId& id,
+        const MWWorld::ESMStore* content = nullptr, const MWWorld::ESMStore* incoming = nullptr)
     {
-        const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
+        const MWWorld::ESMStore& esmStore = content ? *content : *MWBase::Environment::get().getESMStore();
         const ESM::EffectList* effects;
-        if (const ESM::Spell* spell = esmStore.get<ESM::Spell>().search(id)) // check if it's a spell
+        if (const ESM::Spell* spell = incoming ? esmStore.searchForRestore<ESM::Spell>(id, *incoming)
+                                             : esmStore.get<ESM::Spell>().search(id)) // check if it's a spell
         {
             sourceName = spell->mName;
             effects = &spell->mEffects;
         }
         else // check if it's an enchanted item
         {
-            MWWorld::ManualRef ref(esmStore, id);
+            MWWorld::ManualRef ref(esmStore, id, 1, incoming);
             MWWorld::Ptr ptr = ref.getPtr();
-            const ESM::Enchantment* ench = esmStore.get<ESM::Enchantment>().find(ptr.getClass().getEnchantment(ptr));
+            const auto enchantment = ptr.getClass().getEnchantment(ptr);
+            const ESM::Enchantment* ench = incoming
+                ? esmStore.searchForRestore<ESM::Enchantment>(enchantment, *incoming)
+                : esmStore.get<ESM::Enchantment>().search(enchantment);
+            if (!ench)
+                throw std::runtime_error("Missing incoming projectile enchantment");
             sourceName = ptr.getClass().getName(ptr);
             effects = &ench->mEffects;
         }
 
+        const auto definition = [&](const ESM::RefId& effectId) {
+            const auto* effect = incoming ? esmStore.get<ESM::MagicEffect>().searchStatic(effectId)
+                : esmStore.get<ESM::MagicEffect>().search(effectId);
+            if (!effect)
+                throw std::runtime_error("Missing immutable projectile effect definition");
+            return effect;
+        };
         int count = 0;
         speed = 0.0f;
         ESM::EffectList projectileEffects;
         for (const ESM::IndexedENAMstruct& effect : effects->mList)
         {
-            const ESM::MagicEffect* magicEffect
-                = MWBase::Environment::get().getESMStore()->get<ESM::MagicEffect>().find(effect.mData.mEffectID);
+            const ESM::MagicEffect* magicEffect = definition(effect.mData.mEffectID);
 
             // Speed of multi-effect projectiles should be the average of the constituent effects,
             // based on observation of the original engine.
@@ -106,11 +119,13 @@ namespace
             if (!magicEffect->mBoltSound.empty())
                 sounds.emplace(magicEffect->mBoltSound);
             else
-                sounds.emplace(MWBase::Environment::get()
-                                   .getESMStore()
-                                   ->get<ESM::Skill>()
-                                   .find(magicEffect->mData.mSchool)
-                                   ->mSchool->mBoltSound);
+            {
+                const auto* skill = incoming ? esmStore.get<ESM::Skill>().searchStatic(magicEffect->mData.mSchool)
+                    : esmStore.get<ESM::Skill>().search(magicEffect->mData.mSchool);
+                if (!skill || !skill->mSchool)
+                    throw std::runtime_error("Missing projectile magic school sound definition");
+                sounds.emplace(skill->mSchool->mBoltSound);
+            }
             projectileEffects.mList.push_back(effect);
         }
 
@@ -120,9 +135,7 @@ namespace
         // the particle texture is only used if there is only one projectile
         if (projectileEffects.mList.size() == 1)
         {
-            const ESM::MagicEffect* magicEffect
-                = MWBase::Environment::get().getESMStore()->get<ESM::MagicEffect>().find(
-                    effects->mList.begin()->mData.mEffectID);
+            const ESM::MagicEffect* magicEffect = definition(effects->mList.begin()->mData.mEffectID);
             texture = magicEffect->mParticle.getNormalized();
         }
 
@@ -137,18 +150,24 @@ namespace
         return projectileEffects;
     }
 
-    osg::Vec4 getMagicBoltLightDiffuseColor(const ESM::EffectList& effects)
+    osg::Vec4 getMagicBoltLightDiffuseColor(const ESM::EffectList& effects,
+        const MWWorld::ESMStore* content = nullptr)
     {
+        const auto& esmStore = content ? *content : *MWBase::Environment::get().getESMStore();
         // Calculate combined light diffuse color from magical effects
         osg::Vec4 lightDiffuseColor;
         for (const ESM::IndexedENAMstruct& enam : effects.mList)
         {
-            const ESM::MagicEffect* magicEffect
-                = MWBase::Environment::get().getESMStore()->get<ESM::MagicEffect>().find(enam.mData.mEffectID);
+            const ESM::MagicEffect* magicEffect = content
+                ? esmStore.get<ESM::MagicEffect>().searchStatic(enam.mData.mEffectID)
+                : esmStore.get<ESM::MagicEffect>().search(enam.mData.mEffectID);
+            if (!magicEffect)
+                throw std::runtime_error("Missing immutable projectile light effect definition");
             lightDiffuseColor += magicEffect->getColor();
         }
-        size_t numberOfEffects = effects.mList.size();
-        lightDiffuseColor /= static_cast<float>(numberOfEffects);
+        const auto numberOfEffects = effects.mList.size();
+        if (numberOfEffects != 0)
+            lightDiffuseColor /= static_cast<float>(numberOfEffects);
 
         return lightDiffuseColor;
     }
@@ -217,7 +236,8 @@ namespace MWWorld
 
     void ProjectileManager::createModel(State& state, VFS::Path::NormalizedView model, const osg::Vec3f& pos,
         const osg::Quat& orient, bool rotate, bool createLight, osg::Vec4 lightDiffuseColor,
-        VFS::Path::NormalizedView texture, bool publishScene)
+        VFS::Path::NormalizedView texture, bool publishScene,
+        const ESMStore* content, const ESMStore* incoming)
     {
         state.mNode = new osg::PositionAttitudeTransform;
         state.mNode->setNodeMask(MWRender::Mask_Effect);
@@ -242,8 +262,12 @@ namespace MWWorld
             {
                 std::ostringstream nodeName;
                 nodeName << "Dummy" << std::setw(2) << std::setfill('0') << iter;
-                const ESM::Weapon* weapon
-                    = MWBase::Environment::get().getESMStore()->get<ESM::Weapon>().find(state.mIdMagic.at(iter));
+                const auto& store = content ? *content : *MWBase::Environment::get().getESMStore();
+                const auto id = state.mIdMagic.at(iter);
+                const ESM::Weapon* weapon = incoming ? store.searchForRestore<ESM::Weapon>(id, *incoming)
+                    : store.get<ESM::Weapon>().search(id);
+                if (!weapon)
+                    throw std::runtime_error("Missing incoming magic projectile model definition");
                 std::string nameToFind = nodeName.str();
                 SceneUtil::FindByNameVisitor findVisitor(nameToFind);
                 attachTo->accept(findVisitor);
@@ -673,6 +697,7 @@ namespace MWWorld
 
     void ProjectileManager::clear()
     {
+        ++mRestoreGeneration;
         for (auto& mProjectile : mProjectiles)
             cleanupProjectile(mProjectile);
         mProjectiles.clear();
@@ -721,6 +746,142 @@ namespace MWWorld
 
             writer.endRecord(ESM::REC_MPRJ);
         }
+    }
+
+    std::function<bool()> ProjectileManager::prepareRead(const std::vector<ESM::ProjectileState>& projectiles,
+        const std::vector<ESM::MagicBoltState>& bolts, const ESMStore& content, const ESMStore& incoming)
+    {
+        struct Plan
+        {
+            std::vector<ProjectileState> mProjectiles;
+            std::vector<MagicBoltState> mBolts;
+            std::vector<std::unique_ptr<MWPhysics::PreparedProjectile>> mCollisions;
+            std::vector<State*> mPublished;
+        };
+        auto plan = std::make_shared<Plan>();
+        plan->mProjectiles.reserve(projectiles.size());
+        plan->mBolts.reserve(bolts.size());
+        plan->mCollisions.reserve(projectiles.size() + bolts.size());
+        for (const auto& saved : projectiles)
+        {
+            ProjectileState state{};
+            state.mCaster = saved.mCaster;
+            state.mBowId = saved.mBowId;
+            state.mVelocity = saved.mVelocity;
+            state.mIdArrow = saved.mId;
+            state.mAttackStrength = saved.mAttackStrength;
+            state.mAttackWindUp = saved.mAttackWindUp;
+            VFS::Path::Normalized model;
+            std::unique_ptr<MWPhysics::PreparedProjectile> collision;
+            try
+            {
+                ManualRef ref(content, saved.mId, 1, &incoming);
+                model = ref.getPtr().getClass().getCorrectedModel(ref.getPtr());
+                // Never retain an outgoing caster handle. Rebind after native
+                // actors and legacy ActorId conversion have been restored.
+                collision = mPhysics->prepareProjectile({}, osg::Vec3f(saved.mPosition), model, false);
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Failed to add projectile for " << saved.mId
+                    << " while preparing projectile record: " << e.what();
+                continue;
+            }
+            createModel(state, model, osg::Vec3f(saved.mPosition), osg::Quat(saved.mOrientation),
+                false, false, osg::Vec4{}, {}, false, &content, &incoming);
+            plan->mProjectiles.push_back(std::move(state));
+            plan->mCollisions.push_back(std::move(collision));
+        }
+        for (const auto& saved : bolts)
+        {
+            MagicBoltState state{};
+            state.mIdMagic.push_back(saved.mId);
+            state.mSpellId = saved.mSpellId;
+            state.mCaster = saved.mCaster;
+            state.mItem = saved.mItem;
+            VFS::Path::NormalizedView texture;
+            try
+            {
+                state.mEffects = getMagicBoltData(state.mIdMagic, state.mSoundIds,
+                    state.mSpeed, texture, state.mSourceName, state.mSpellId, &content, &incoming);
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Failed to recreate magic projectile for " << saved.mId
+                    << " and spell " << state.mSpellId << " while preparing projectile record: " << e.what();
+                continue;
+            }
+            state.mSpeed = saved.mSpeed;
+            VFS::Path::Normalized model;
+            try
+            {
+                ManualRef ref(content, state.mIdMagic.front(), 1, &incoming);
+                model = ref.getPtr().getClass().getCorrectedModel(ref.getPtr());
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Failed to get model for " << saved.mId
+                    << " while preparing projectile record: " << e.what();
+                continue;
+            }
+            createModel(state, model, osg::Vec3f(saved.mPosition), osg::Quat(saved.mOrientation),
+                true, true, getMagicBoltLightDiffuseColor(state.mEffects, &content), texture, false, &content, &incoming);
+            auto collision = mPhysics->prepareProjectile({}, osg::Vec3f(saved.mPosition), model, true);
+            state.mSounds.reserve(state.mSoundIds.size());
+            plan->mBolts.push_back(std::move(state));
+            plan->mCollisions.push_back(std::move(collision));
+        }
+        plan->mPublished.reserve(plan->mCollisions.size());
+        const std::weak_ptr<const char> identity = mRestoreIdentity;
+        const auto generation = mRestoreGeneration + 1;
+        return [this, identity, generation, plan = std::move(plan)]() mutable {
+            if (!plan || identity.expired() || mRestoreGeneration != generation
+                || !mProjectiles.empty() || !mMagicBolts.empty())
+                return false;
+            std::size_t collision = 0;
+            // Decoding and model/geometry setup are already detached.
+            // Roll back publication if a scene/collision integration fails.
+            auto& published = plan->mPublished;
+            const auto publish = [&](auto& states) {
+                for (auto& state : states)
+                {
+                    published.push_back(&state);
+                    if (!mParent->addChild(state.mNode))
+                        throw std::runtime_error("projectile scene publication rejected");
+                    state.mProjectileId = mPhysics->commitProjectile(*plan->mCollisions[collision++]);
+                }
+            };
+            try
+            {
+                publish(plan->mProjectiles);
+                publish(plan->mBolts);
+            }
+            catch (...)
+            {
+                for (auto* state : published)
+                {
+                    mParent->removeChild(state->mNode);
+                    if (state->mProjectileId != 0)
+                        mPhysics->removeProjectile(state->mProjectileId);
+                }
+                ++mRestoreGeneration;
+                plan.reset();
+                throw;
+            }
+            mProjectiles.swap(plan->mProjectiles);
+            mMagicBolts.swap(plan->mBolts);
+            ++mRestoreGeneration;
+            plan.reset();
+            for (auto& state : mMagicBolts)
+                for (const auto& id : state.mSoundIds)
+                {
+                    MWBase::SoundManager* sounds = MWBase::Environment::get().getSoundManager();
+                    if (auto* sound = sounds->playSound3D(osg::Vec3f(state.mNode->getPosition()), id,
+                            1.f, 1.f, MWSound::Type::Sfx, MWSound::PlayMode::Loop))
+                        state.mSounds.push_back(sound);
+                }
+            return true;
+        };
     }
 
     bool ProjectileManager::readRecord(ESM::ESMReader& reader, uint32_t type)

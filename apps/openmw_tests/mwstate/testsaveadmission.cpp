@@ -2375,3 +2375,75 @@ TEST(SaveAdmissionTest, WeatherPreparationDoesNotChangeMorrowindAdmission)
         [&](const auto&) { ++calls; }));
     EXPECT_EQ(calls, 0);
 }
+
+TEST(SaveAdmissionTest, ProjectilesPrepareWithAllIncomingDefinitionsBeforeNativePublicationAcrossEverySchema)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (bool definitionFirst : {false, true})
+    for (bool reject : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(definitionFirst);
+        SCOPED_TRACE(reject);
+        ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId::stringRefId("incoming-arrow");
+        item.mModel = "incoming-model.nif";
+        ESM::ProjectileState arrow{}; arrow.mId = item.mId;
+        arrow.mAttackStrength = .375f; arrow.mAttackWindUp = -.5f;
+        ESM::MagicBoltState bolt{}; bolt.mId = item.mId;
+        bolt.mSpellId = ESM::RefId::stringRefId("incoming-spell"); bolt.mSpeed = 17.25f;
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            const auto definition = [&] {
+                writer.startRecord(ESM::REC_WEAP); item.save(writer, false); writer.endRecord(ESM::REC_WEAP);
+            };
+            if (definitionFirst) definition();
+            writer.startRecord(ESM::REC_PROJ); arrow.save(writer); writer.endRecord(ESM::REC_PROJ);
+            writer.startRecord(ESM::REC_MPRJ); bolt.save(writer); writer.endRecord(ESM::REC_MPRJ);
+            if (!definitionFirst) definition();
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset();
+        int nativeCalls = 0, resourceCalls = 0;
+        auto resources = [&](const auto& arrows, const auto& bolts, const MWWorld::ESMStore& incoming) {
+            ++resourceCalls;
+            ASSERT_EQ(arrows.size(), 1u); ASSERT_EQ(bolts.size(), 1u);
+            EXPECT_EQ(arrows.front().mId, item.mId);
+            EXPECT_EQ(arrows.front().mAttackStrength, .375f);
+            EXPECT_EQ(arrows.front().mAttackWindUp, -.5f);
+            EXPECT_EQ(bolts.front().mSpeed, 17.25f);
+            EXPECT_EQ(bolts.front().mSpellId, bolt.mSpellId);
+            EXPECT_EQ(incoming.get<ESM::Weapon>().find(item.mId)->mModel.getOriginal(), item.mModel.getOriginal());
+            if (reject) throw std::runtime_error("injected resource preparation failure");
+        };
+        auto native = [&](const auto&, auto) { ++nativeCalls; EXPECT_EQ(resourceCalls, 1); };
+        if (reject)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr,
+                native, {}, {}, resources), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr,
+                native, {}, {}, resources));
+        EXPECT_EQ(resourceCalls, 1);
+        EXPECT_EQ(nativeCalls, int(version != 0 && !reject));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
+TEST(SaveAdmissionTest, MorrowindDoesNotPrepareSharedProjectileResources)
+{
+    ESM::ProjectileState state{};
+    state.mId = ESM::RefId::stringRefId("removed-model");
+    state.mAttackStrength = 1.f;
+    state.mAttackWindUp = -1.f;
+    const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+        writer.startRecord(ESM::REC_PROJ); state.save(writer); writer.endRecord(ESM::REC_PROJ);
+    });
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + records);
+    const auto offset = reader.getFileOffset();
+    int calls = 0;
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, nullptr, {}, {}, {},
+        [&](const auto&, const auto&, const auto&) { ++calls; }));
+    EXPECT_EQ(calls, 0);
+    EXPECT_EQ(reader.getFileOffset(), offset);
+}

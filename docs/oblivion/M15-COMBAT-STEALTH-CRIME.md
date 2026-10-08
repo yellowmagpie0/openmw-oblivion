@@ -6,6 +6,65 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 detached shared projectile model/collision restoration — 2026-10-07
+
+Oblivion admission now collects PROJ/MPRJ data while decoding all incoming
+shared definitions, then prepares projectile resources before native
+preparation and cleanup. Physical/magic models and Bullet collision geometry
+remain detached. Preparation stores caster numbers, never outgoing caster
+handles; legacy ActorId conversion and actual caster binding retain their
+existing postload phases. StateManager skips the original records and installs
+the prepared batch before World saveLoaded/actor conversion.
+
+Model/source spell/enchantment lookup uses incoming/static definitions;
+prepared effect/school/light lookup excludes outgoing-only effect data.
+Additional magic models also resolve against that view. Missing physical
+sources/geometry and removed magic sources retain their skip paths. Valid
+magic model/geometry failures propagate before cleanup. Empty light-effect
+lists produce zero color instead of a division by zero. Audio loops start at
+publication and remain an explicit later failure-boundary audit.
+
+The lifetime/clear-generation-guarded batch installs once. Discarded/stale/
+copied/orphan handles cannot publish; scene/collision publication exceptions
+remove partial resources and consume the failed plan. Actor snapshots and
+committed gameplay events are not replayed by resource preparation. Actual
+headless scene/Bullet tests cover physical and magic preparation, no IDs or
+ray hits before publication, clear/commit/replay, stale/copy/destruction,
+retained resources after source change, parent reject/throw rollback, removed
+sources and outgoing-only effect exclusion. The188-case admission matrix
+covers schemas1–46 and no-T4ST, both definition orders, callback failure/native
+preparation suppression and reader rewind. Morrowind omits this callback.
+
+Final `S3/projectile-prepare-engine-02` and
+`projectile-prepare-sanitized-engine-02` pass all **1,241 engine tests**;
+three isolated cases also pass in each configuration. Fixture publication
+passes all **280 Python tests** and scenario validation. Exact inventories/
+XML, no failures/skips, stable common fingerprint:
+`e5a4b014d63b32ebcf10e12432c467f5569dd0b7e045d3aea5185dfc7d827d20`.
+Parent: `67511031c25fb3abac193d9b13969090eeb48519`. ASan/UBSan halt on errors;
+leak checking is disabled. Initial1240-case engine01 checks also passed before
+the final magic-only immutable lookup and Morrowind callback follow-up.
+
+Actual normal/instrumented `projectile-prepare-runtime{,-sanitized}-02`
+courses each load/F5/quit/fresh-PID load/F5/quit with epochs1/2. Both outputs
+retain one physical PROJ generated43, unset caster, strength.375/windup.125
+and evolving finite positions around20000 XYZ. All38 initial native fields
+match; native generated item44 condition37.125/charge9.25/hotkey3 and raw KEYS
+also persist. These courses execute the initial bridge binary (fingerprint
+`c2ede333183ee07b8c8897ea5d0a18cea18a7648c63b03dad92359464f87e88b`),
+whose physical path is unchanged by the final magic-only follow-up. They do
+not establish final-build magic/audio acceptance. Four captures were reviewed;
+they show stable dungeon/HUD, not a visible faraway projectile. Runtime01 was
+a failed retention fixture beyond the existing72000-unit cleanup threshold;
+its failed semantic verification remains. Corrected02 inputs are inside it.
+
+Editable `oblivion_m15_shared_projectile_{roundtrip,input}.json` recipes and
+`S3/projectile-prepare-report.json` preserve structural, compiler/world,
+semantic and actual-runtime scope separately. Precompile failures (NotNullPtr
+deduction and Path comparison) remain in their logs. This closes the bounded
+shared projectile model/collision staging gap. Audio, other shared resources,
+full failed-load atomicity and remaining S3 audits stay open.
+
 ## S3 immutable restore definition lookup — 2026-10-07
 
 Prepared ManualRef construction now selects its type and base from immutable

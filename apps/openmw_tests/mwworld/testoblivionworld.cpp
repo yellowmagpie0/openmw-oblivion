@@ -8867,6 +8867,117 @@ namespace
         launch(item.getPtr());
         EXPECT_NE(physics.getProjectile(2), nullptr);
         manager.clear();
+
+        ESM::ProjectileState saved{};
+        saved.mId = arrow.mId;
+        saved.mPosition = ESM::Vector3(osg::Vec3f(5, 0, 0));
+        saved.mOrientation = ESM::Quaternion(osg::Quat{});
+        saved.mVelocity = ESM::Vector3(osg::Vec3f(100, 0, 0));
+        saved.mAttackStrength = .375f;
+        saved.mAttackWindUp = .125f;
+        MWWorld::ESMStore incoming;
+        arrow.mModel = "arrow.osgt";
+        incoming.getWritable<ESM::Weapon>().insert(arrow);
+        const auto prepare = [&] {
+            return manager.prepareRead({saved}, {}, world.getStore(), incoming);
+        };
+        {
+            auto discarded = prepare();
+            EXPECT_FALSE(discarded()); // No publication before its clear boundary.
+        }
+        EXPECT_EQ(parent->getNumChildren(), 0u);
+        EXPECT_FALSE(ray());
+        EXPECT_EQ(physics.getProjectile(3), nullptr);
+        auto stale = prepare();
+        manager.clear();
+        manager.clear();
+        EXPECT_FALSE(stale());
+        auto plan = prepare();
+        auto copied = plan;
+        // Resource objects are already detached: the incoming model source may
+        // change and the source node may disappear before installation.
+        arrow.mModel = "missing.osgt";
+        incoming.getWritable<ESM::Weapon>().insert(arrow);
+        std::filesystem::remove(fixture.mDirectory / "meshes/arrow.osgt");
+        manager.clear();
+        ASSERT_TRUE(plan());
+        EXPECT_FALSE(plan());
+        EXPECT_FALSE(copied());
+        EXPECT_EQ(parent->getNumChildren(), 1u);
+        EXPECT_TRUE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 1u);
+        EXPECT_NE(physics.getProjectile(3), nullptr);
+        manager.clear();
+        EXPECT_FALSE(ray());
+        EXPECT_EQ(parent->getNumChildren(), 0u);
+        EXPECT_EQ(physics.getProjectile(3), nullptr);
+        // Incoming spell data, model and light geometry are also prepared
+        // without sound/scene/collision publication.
+        ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "meshes/arrow.osgt").string()));
+        arrow.mModel = "arrow.osgt";
+        incoming.getWritable<ESM::Weapon>().insert(arrow);
+        ESM::MagicEffect effect{}; effect.blank(); effect.mId = ESM::MagicEffect::FireDamage;
+        effect.mBolt = arrow.mId;
+        effect.mBoltSound = ESM::RefId::stringRefId("fixture-bolt-sound");
+        effect.mData.mRed = 255; effect.mData.mGreen = 127; effect.mData.mBlue = 0;
+        effect.mData.mSpeed = 1.f;
+        world.getStore().getWritable<ESM::MagicEffect>().insertStatic(effect);
+        ESM::Spell spell{}; spell.blank(); spell.mId = ESM::RefId::stringRefId("incoming-bolt-spell");
+        ESM::IndexedENAMstruct target{}; target.mData.mEffectID = effect.mId;
+        target.mData.mRange = ESM::RT_Target;
+        spell.mEffects.mList.push_back(target);
+        incoming.getWritable<ESM::Spell>().insert(spell);
+        ESM::MagicBoltState bolt{}; bolt.mId = arrow.mId; bolt.mSpellId = spell.mId;
+        bolt.mPosition = saved.mPosition; bolt.mOrientation = saved.mOrientation;
+        bolt.mSpeed = 13.25f;
+        auto magic = manager.prepareRead({}, {bolt}, world.getStore(), incoming);
+        EXPECT_EQ(parent->getNumChildren(), 0u);
+        EXPECT_FALSE(ray());
+        manager.clear();
+        ASSERT_TRUE(magic());
+        EXPECT_EQ(manager.countSavedGameRecords(), 1u);
+        EXPECT_EQ(parent->getNumChildren(), 1u);
+        EXPECT_TRUE(ray());
+        EXPECT_FALSE(magic());
+        manager.clear();
+        EXPECT_FALSE(ray());
+        for (auto mode : {Parent::Reject, Parent::ThrowAfterAttach})
+        {
+            auto rejected = prepare();
+            manager.clear();
+            parent->mMode = mode;
+            EXPECT_THROW(rejected(), std::runtime_error);
+            EXPECT_FALSE(rejected());
+            EXPECT_EQ(parent->getNumChildren(), 0u);
+            EXPECT_FALSE(ray());
+            EXPECT_EQ(manager.countSavedGameRecords(), 0u);
+            parent->mMode = Parent::Accept;
+        }
+        // Definitions removed by content changes retain the legacy skip path.
+        saved.mId = ESM::RefId::stringRefId("removed-projectile");
+        bolt.mSpellId = ESM::RefId::stringRefId("removed-spell");
+        auto removed = manager.prepareRead({saved}, {bolt}, world.getStore(), incoming);
+        manager.clear();
+        EXPECT_TRUE(removed());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u);
+        std::function<bool()> orphan;
+        {
+            MWWorld::ProjectileManager temporary(parent, &fixture.mResources, nullptr, &physics);
+            orphan = temporary.prepareRead({}, {}, world.getStore(), incoming);
+        }
+        EXPECT_FALSE(orphan());
+        effect.mId = ESM::RefId::stringRefId("outgoing-only-projectile-effect");
+        ASSERT_EQ(world.getStore().get<ESM::MagicEffect>().searchStatic(effect.mId), nullptr);
+        world.getStore().getWritable<ESM::MagicEffect>().insert(effect);
+        spell.mEffects.mList.front().mData.mEffectID = effect.mId;
+        incoming.getWritable<ESM::Spell>().insert(spell);
+        bolt.mSpellId = spell.mId;
+        auto unavailableEffect = manager.prepareRead({}, {bolt}, world.getStore(), incoming);
+        manager.clear();
+        EXPECT_TRUE(unavailableEffect());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u);
+        EXPECT_EQ(parent->getNumChildren(), 0u);
+        EXPECT_FALSE(ray());
     }
 
 }

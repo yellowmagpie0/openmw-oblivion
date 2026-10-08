@@ -42,7 +42,14 @@ outgoing types/projections are excluded, including native MISC dispatch.
 ESMStore's public immutable restore lookup includes late facades and raw
 incoming stores without indexes. Its20-family clear/commit matrix and actual
 normal/instrumented generated-inventory two-process courses pass. Shared
-projectile/magic resource preparation still needs to use that lookup.
+projectile/magic restoration now uses that lookup for detached DTO/model and
+Bullet collision preparation before native preparation/cleanup. Effect/school/
+light definitions use static content. StateManager installs the guarded batch
+once before saveLoaded/ActorId conversion and later rebinds casters; real scene/
+Bullet tests cover cancellation, stale/copy/destruction, rollback and skips.
+Normal/instrumented two-process physical PROJ courses preserve resources in
+resaves; they precede the final magic-only lookup follow-up. Audio and broader
+shared-resource failure boundaries remain open.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.

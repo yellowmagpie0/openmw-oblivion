@@ -3509,6 +3509,16 @@ namespace MWWorld
         }
     }
 
+    std::function<bool()> World::prepareProjectiles(const std::vector<ESM::ProjectileState>& projectiles,
+        const std::vector<ESM::MagicBoltState>& bolts, const ESMStore& incoming)
+    {
+        if (projectiles.empty() && bolts.empty())
+            return {};
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mProjectileManager)
+            throw std::runtime_error("Native projectile preparation requires an initialized Oblivion World");
+        return mProjectileManager->prepareRead(projectiles, bolts, mStore, incoming);
+    }
+
     std::function<bool()> World::prepareWeather(const ESM::WeatherState& state)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mWeatherManager)

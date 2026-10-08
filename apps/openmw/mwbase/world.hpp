@@ -70,6 +70,8 @@ namespace ESM
     struct ItemLevList;
     struct TimeStamp;
     struct WeatherState;
+    struct ProjectileState;
+    struct MagicBoltState;
     class RefId;
     struct ExteriorCellLocation;
 }
@@ -190,6 +192,8 @@ namespace MWBase
 
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
         virtual std::function<bool()> prepareWeather(const ESM::WeatherState& state) { return {}; }
+        virtual std::function<bool()> prepareProjectiles(const std::vector<ESM::ProjectileState>& projectiles,
+            const std::vector<ESM::MagicBoltState>& bolts, const MWWorld::ESMStore& incoming) { return {}; }
 
         virtual void useDeathCamera() = 0;
 

@@ -378,6 +378,8 @@ namespace MWWorld
 
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
         std::function<bool()> prepareWeather(const ESM::WeatherState& state) override;
+        std::function<bool()> prepareProjectiles(const std::vector<ESM::ProjectileState>& projectiles,
+            const std::vector<ESM::MagicBoltState>& bolts, const ESMStore& incoming) override;
 
         // switch to POV before showing player's death animation
         void useDeathCamera() override;

@@ -2,6 +2,8 @@
 #define OPENMW_MWWORLD_PROJECTILEMANAGER_H
 
 #include <string>
+#include <functional>
+#include <components/esm3/projectilestate.hpp>
 
 #include <osg/PositionAttitudeTransform>
 #include <osg/ref_ptr>
@@ -42,6 +44,7 @@ namespace MWRender
 
 namespace MWWorld
 {
+    class ESMStore;
 
     class ProjectileManager
     {
@@ -67,6 +70,8 @@ namespace MWWorld
 
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const;
         bool readRecord(ESM::ESMReader& reader, uint32_t type);
+        std::function<bool()> prepareRead(const std::vector<ESM::ProjectileState>& projectiles,
+            const std::vector<ESM::MagicBoltState>& bolts, const ESMStore& content, const ESMStore& incoming);
         size_t countSavedGameRecords() const;
         void saveLoaded(const ESM::ESMReader& reader);
 
@@ -76,6 +81,8 @@ namespace MWWorld
         MWRender::RenderingManager* mRendering;
         MWPhysics::PhysicsSystem* mPhysics;
         float mCleanupTimer;
+        const std::shared_ptr<const char> mRestoreIdentity = std::make_shared<const char>();
+        std::uint64_t mRestoreGeneration = 0;
 
         struct State
         {
@@ -135,7 +142,8 @@ namespace MWWorld
         void moveMagicBolts(float dt);
 
         void createModel(State& state, VFS::Path::NormalizedView model, const osg::Vec3f& pos, const osg::Quat& orient,
-            bool rotate, bool createLight, osg::Vec4 lightDiffuseColor, VFS::Path::NormalizedView texture = {}, bool publishScene = true);
+            bool rotate, bool createLight, osg::Vec4 lightDiffuseColor, VFS::Path::NormalizedView texture = {}, bool publishScene = true,
+            const ESMStore* content = nullptr, const ESMStore* incoming = nullptr);
         void update(State& state, float duration);
 
         void operator=(const ProjectileManager&);

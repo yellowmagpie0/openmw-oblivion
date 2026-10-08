@@ -1,0 +1,36 @@
+{
+  "added_record": "PROJ",
+  "generated_id": 43,
+  "position": [
+    20000,
+    20000,
+    20000
+  ],
+  "velocity": [
+    0,
+    0,
+    0
+  ],
+  "quaternion": [
+    0,
+    0,
+    0,
+    1
+  ],
+  "caster": {
+    "index": 0,
+    "content_file": -1
+  },
+  "attack_strength": 0.375,
+  "attack_wind_up": 0.125,
+  "other_bytes_unchanged": true,
+  "distance_limit": 72000,
+  "scope": "Private physical projectile injected into actual generated-inventory fixture; shared PROJ survives load/F5/quit/fresh load/F5/quit; not a launch/impact gameplay producer",
+  "schema_version": 1,
+  "records": [
+    "PROJ"
+  ],
+  "generated_id_encoding": "ESM RefId prefix04 and uint64 little-endian43",
+  "caster_encoding": "Wide RefNum uint32 index0 and int32 content_file -1",
+  "reference": "build/oblivion-compat/m15/S3/projectile-prepare-runtime-02/verify.py"
+}
