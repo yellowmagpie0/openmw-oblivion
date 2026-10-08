@@ -116,6 +116,7 @@ namespace MWRender
 
     void LocalMap::clear()
     {
+        ++mInteriorRevision;
         for (const auto& rtt : mLocalMapRTTs)
             mRoot->removeChild(rtt);
         mLocalMapRTTs.clear();
@@ -323,6 +324,7 @@ namespace MWRender
         if (!bounds.valid() || bounds.radius2() == 0.0)
             return;
 
+        ++mInteriorRevision;
         mInterior = true;
         mExteriorSegments.clear();
 
@@ -631,8 +633,7 @@ namespace MWRender
 
     MyGUI::IntRect LocalMap::getInteriorGrid() const
     {
-        auto segments = divideIntoSegments(mBounds, mMapWorldSize);
-        return { -1, -1, segments.first, segments.second };
+        return { -1, -1, mInteriorSize.first, mInteriorSize.second };
     }
 
     void LocalMap::MapSegment::createFogOfWarTexture()

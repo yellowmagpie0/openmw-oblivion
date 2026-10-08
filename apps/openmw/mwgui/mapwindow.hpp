@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <memory>
 #include <functional>
+#include <optional>
 
 #include <osg/Vec2f>
+#include <osg/Vec2d>
 
 #include <MyGUI_ITexture.h>
 
@@ -186,6 +188,13 @@ namespace MWGui
         MWGui::LocalMapBase::MapEntry& addMapEntry();
 
         MyGUI::IntRect mGrid{ -1, -1, 1, 1 };
+        std::optional<MyGUI::IntRect> mInteriorFullGrid;
+        std::uint64_t mActiveRendererRevision = 0;
+        osg::Vec2d mPlayerMapPosition;
+        bool mHavePlayerMapPosition = false;
+        void rebuildMapEntries();
+        void setInteriorViewCenter(double x, double y);
+        void updateInteriorViewport();
         float mMarkerUpdateTimer = 0.f;
 
         float mLastDirectionX = 0.f;

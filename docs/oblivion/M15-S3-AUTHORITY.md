@@ -220,3 +220,17 @@ compared fog metadata/RGBA pixels; inspected scene/HUD remain intact. The milest
 records exact fingerprints and evidence. Full-grid GUI widget pairs and integer
 canvas arithmetic remain open, so this does not close large-map runtime acceptance
 or the broader pre-teardown resource guarantee.
+
+
+Interior GUI map widgets now use a sliding viewport over full logical bounds.
+Pan/zoom preserve logical points; current renderer revisions refresh reload bindings
+without resetting ordinary per-frame views. Coordinate/canvas arithmetic is widened
+and off-canvas markers keep their original logical identity. Both full1269-case
+engine inventories pass. Normal/instrumented actual Xvfb courses load an unchanged-
+native-state save with trillion-cell BOUN, open/pan/return/zoom/F5/quit, prove changed
+pan/zoom pixels and pixel-exact return, retain original fog pixels and metadata,
+and preserve declared native/weather/KEYS state. A fresh normal PID preserves all
+five resulting fog fragments. The milestone discloses private Lua menu setup and
+failed/metadata-only probes. This addresses initial whole-grid renderer/widget
+allocation for the tested large interiors; broader resource staging, full marker/
+exterior/profile/lifecycle and prior-World acceptance remain open.

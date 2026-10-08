@@ -6,6 +6,63 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 use a sliding interior map GUI viewport — 2026-10-08
+
+Interior map views now retain full logical bounds but create a tile-widget window
+sized to the viewport plus a two-cell margin. Panning rebases that window and its
+canvas offset, keeping every logical cell accessible at the existing zoom limits.
+Zoom keeps the cursor's logical point, and the compass refreshes with the tiles.
+Double coordinate differences preserve subcell fractions at large indices;
+off-canvas marker widget coordinates are clipped while their logical IDs/positions
+remain unchanged. Canvas arithmetic and tile iteration use widened values.
+Renderer clear/setup revisions refresh bindings when CellStore identity survives
+reload, while ordinary per-frame activation preserves the user's panned view.
+The renderer grid query uses current prepared dimensions rather than stale bounds.
+No save schema, native numeric rule or authored map bounds change.
+
+The extracted production path's red cases fail full-grid selection and large-index
+fraction preservation. Four final viewport cases check bounded windows near integer
+limits, exact small-grid behavior, edge clipping, pan coordinate invariance and
+representable distant markers. The actual renderer case additionally checks clear
+revision changes. Full normal-03 and sanitized-03 engine inventories each pass all
+1269 tests, exact unfiltered inventories/XML, no failures/skips. Fingerprint
+f444bd4214a78948fd7d39997a8ba9efb07e5d0a587019433b37b71ee4464876
+against parentaab63dba8d. SDL offscreen enables GL checks; ASan leak detection is
+disabled and UBSan halts. Evidence: build/oblivion-compat/m15/S3/
+local-map-viewport-{red-01,green-01,normal-03,sanitized-03}. Unchanged component/
+Python checks were not repeated.
+
+A private save mutation changes only one CSTA BOUN to ±4294967296 on both axes,
+representing1,099,511,627,776 logical cells. Native fields and input PNG bytes remain
+exact. Final normal-05 and instrumented-02 Xvfb courses load this save, open the
+local map, drag across tile boundaries, return, zoom, close and F5/quit. Both pass
+scenario/error-log audits. Independent screenshot crops prove pan and zoom changes,
+with exact original map pixels after return. Independent PNG readback preserves
+bounds/angle/center and the original fragment's RGBA pixels; four new explored
+fragments yield five total. All38 initial native groups, ten stable post-save groups,
+raw KEYS and all37 independently walked weather identities pass. A separate fresh
+normal PID reloads/resaves the output, retaining all five fog fragments pixel-exact.
+Evidence: local-map-viewport-large-gui-{normal-05,sanitized-02}/
+{verification,visual-verification,fog-verification}.json and
+local-map-viewport-continuation-normal-01 under the S3 root.
+
+Earlier probes remain retained: -01 used a symbol instead of key code; -02 used
+Inventory instead of this fork's Interface mode. Normal-04/instrumented-01 passed
+metadata checks but their images exposed per-frame reset and zoom disabled in the
+fixture; these are not pan/zoom acceptance. Final setup uses a private Lua M-key
+handler to open/close only the map because the seed is pre-chargen. Actual map
+gestures and F5 are normal Xvfb input. The no-sound interior courses do not prove
+F1, global/exterior maps, all marker actions or audible acceptance.
+
+Normal final runtime binary SHA256:
+f1d2b1d9dd79fcc64a64adf92bd947f6a9f4aeba2786c5c1cadad7068f15ce83;
+instrumented:
+ace11f4e91ffc39e2b45fe3ca09db7ab85f39b99817b2d317644731de22bdb89.
+The full-grid initial renderer/widget allocation defect is addressed for these
+valid large interior bounds. Broader resource staging, contradictory/changed
+content, combined migration/profile/lifecycle and public-UI acceptance remain
+open. Full S3 remains active.
+
 ## S3 create interior renderer tiles on demand — 2026-10-08
 
 LocalMap interior setup now prepares geometry and retains actual saved fog

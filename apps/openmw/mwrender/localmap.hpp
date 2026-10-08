@@ -101,6 +101,7 @@ namespace MWRender
         osg::Group* getRoot();
 
         MyGUI::IntRect getInteriorGrid() const;
+        std::uint64_t getInteriorRevision() const { return mInteriorRevision; }
 
     private:
         osg::ref_ptr<osg::Group> mRoot;
@@ -156,6 +157,7 @@ namespace MWRender
         void requestInteriorMap(const MWWorld::CellStore* cell);
         MapSegment* ensureInteriorSegment(int x, int y, bool render);
         std::pair<int, int> mInteriorSize{0, 0};
+        std::uint64_t mInteriorRevision = 0;
         osg::Vec3d mInteriorNorth;
         float mInteriorZMin = 0;
         float mInteriorZMax = 0;

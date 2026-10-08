@@ -4,6 +4,7 @@
 #include <components/esm3/loadcell.hpp>
 #include <apps/openmw/mwrender/objects.hpp>
 #include <apps/openmw/mwrender/localmap.hpp>
+#include <apps/openmw/mwgui/localmapview.hpp>
 #include <apps/openmw/mwrender/vismask.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
@@ -169,7 +170,9 @@ namespace
         for (float span : {65536.f, 8589934592.f})
         {
             SCOPED_TRACE(span);
+            const auto oldRevision = map.getInteriorRevision();
             map.clear();
+            EXPECT_NE(map.getInteriorRevision(), oldRevision);
             EXPECT_EQ(root->getNumChildren(), baseChildren);
             geometry->removeDrawables(0, geometry->getNumDrawables());
             geometry->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3(), span, span, 1024.f)));
@@ -432,4 +435,62 @@ namespace
         EXPECT_EQ(mRoot->getNumChildren(), 0u);
         objects->~Objects();
     }
+}
+
+
+TEST(LocalMapViewTest, InteriorGridNearIntegerLimitsAllocatesOnlyViewportTiles)
+{
+    const MyGUI::IntRect full{-1, -1, std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+    for (double center : {0., 1000000000.25, double(std::numeric_limits<int>::max())})
+    {
+        const auto grid = MWGui::LocalMapView::gridForViewport(full, center, center, 1024, 768, 256);
+        EXPECT_LE(std::int64_t(grid.right) - grid.left + 1, 8);
+        EXPECT_LE(std::int64_t(grid.bottom) - grid.top + 1, 7);
+        EXPECT_LE(grid.left, center); EXPECT_GE(grid.right, center);
+        EXPECT_LE(grid.top, center); EXPECT_GE(grid.bottom, center);
+    }
+}
+
+TEST(LocalMapViewTest, SubcellFractionsSurviveLargeLogicalIndices)
+{
+    const MyGUI::IntRect grid{999999999, 999999999, 1000000003, 1000000003};
+    const auto point = MWGui::LocalMapView::position(grid, 1000000000, 1000000000, .25f, .75f, 256);
+    EXPECT_EQ(point.left, 320); EXPECT_EQ(point.top, 960);
+}
+
+
+TEST(LocalMapViewTest, SmallGridEdgesAndPanRebasingPreserveTheLogicalViewpoint)
+{
+    const MyGUI::IntRect small{-1, -1, 2, 3};
+    EXPECT_EQ(MWGui::LocalMapView::gridForViewport(small, 0, 0, 1024, 768, 256), small);
+    const MyGUI::IntRect full{-1, -1, std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+    auto grid = MWGui::LocalMapView::gridForViewport(full, 1000000000.25, 1000000000.25, 1024, 768, 256);
+    MyGUI::IntPoint offset{-520, -480};
+    for (const auto delta : {MyGUI::IntPoint{400, -400}, MyGUI::IntPoint{-700, 350}, MyGUI::IntPoint{100, 100}})
+    {
+        offset += delta;
+        const double x = grid.left + (512. - offset.left) / 256;
+        const double y = double(grid.bottom) + 1 - (384. - offset.top) / 256;
+        const auto next = MWGui::LocalMapView::gridForViewport(full, x, y, 1024, 768, 256);
+        offset.left += MWGui::LocalMapView::pixel((double(next.left) - grid.left) * 256);
+        offset.top += MWGui::LocalMapView::pixel((double(grid.bottom) - next.bottom) * 256);
+        EXPECT_DOUBLE_EQ(next.left + (512. - offset.left) / 256, x);
+        EXPECT_DOUBLE_EQ(double(next.bottom) + 1 - (384. - offset.top) / 256, y);
+        grid = next;
+    }
+    EXPECT_EQ(MWGui::LocalMapView::gridForViewport(full, 0, 0, 1024, 768, 256).left, -1);
+    EXPECT_EQ(MWGui::LocalMapView::gridForViewport(full, double(full.right), double(full.bottom), 1024, 768, 256).right,
+        full.right);
+}
+
+TEST(LocalMapViewTest, RemoteMarkersStayRepresentableWithoutLosingLogicalIdentity)
+{
+    const MyGUI::IntRect grid{999999999, 999999999, 1000000003, 1000000003};
+    const auto remote = MWGui::LocalMapView::position(grid, std::numeric_limits<int>::min(),
+        std::numeric_limits<int>::max(), .25f, .75f, 2048);
+    EXPECT_LT(remote.left, -1000000); EXPECT_LT(remote.top, -1000000);
+    EXPECT_GT(remote.left, std::numeric_limits<int>::min() / 2);
+    EXPECT_GT(remote.top, std::numeric_limits<int>::min() / 2);
+    const auto nearby = MWGui::LocalMapView::position(grid, 1000000000, 1000000000, .25f, .75f, 2048);
+    EXPECT_EQ(nearby.left, 2560); EXPECT_EQ(nearby.top, 7680);
 }
