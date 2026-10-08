@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source_sha256": "7a2f9589aa2f56e7b4036f5aefe7a9dec4521854fb4db824aa81cd608d47213a",
+  "update_time": 10000,
+  "regions": [
+    {
+      "region": "content:oblivion.esm:00015f",
+      "weather": "content:m15-weather-a.esp:000800",
+      "buckets": [
+        {
+          "weather": "content:m15-weather-a.esp:000800",
+          "chance": 25
+        },
+        {
+          "weather": "content:m15-weather-b.esp:000800",
+          "chance": 75
+        }
+      ],
+      "fallback": "content:oblivion.esm:08ef42"
+    },
+    {
+      "region": "content:oblivion.esm:032e16",
+      "weather": "content:m15-weather-a.esp:000800",
+      "buckets": [
+        {
+          "weather": "content:m15-weather-a.esp:000800",
+          "chance": 25
+        },
+        {
+          "weather": "content:m15-weather-b.esp:000800",
+          "chance": 25
+        }
+      ],
+      "fallback": "content:m15-weather-b.esp:000800"
+    }
+  ]
+}

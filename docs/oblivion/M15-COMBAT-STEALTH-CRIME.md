@@ -6,6 +6,49 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 regional probability windows through actual reordering — 2026-10-08
+
+`scripts/saved_weather_fixture.py` applies the editable
+`oblivion_m15_regional_weather_input.json` diagnostic recipe to a private copy
+of the previously accepted first A/B save. It hash-pins that input, retains all
+**300 non-WTHR records byte-for-byte**, and verifies exact semantic readback.
+Climate00015f uses weather A with chance windows A25/B75. Climate032e16 uses A,
+A25/B25 and B fallback. The10000 countdown keeps ordinary updates from replacing
+these diagnostic interior overlays. Original catalog keys and every other
+regional overlay remain exact. Run `python3 scripts/saved_weather_fixture.py
+SOURCE scripts/data/oblivion_compat/oblivion_m15_regional_weather_input.json
+DESTINATION.omwsave` to reproduce the input; its SHA256 is
+`66c9e29c8bda404ba36a862ea56a20404371140bd8cb1259dc96e9aa90620c86`.
+
+Normal and ASan/UBSan engine courses load B/A, perform F5 and quit, then load
+A/B and resave in distinct processes. ASan leak checks are disabled. Neither scenario forces weather. Independent
+save inspection checks all39 catalog keys, unchanged stable regional/current
+weather and fallback identities, and exact original chance-window order.
+Raw RGNW is38 then37 for both regions; the underfull RGDF is37 then38. The last
+RGIX windows are38/37 then37/38, while RGNC remains25/75 or25/25. All37 original
+zero windows keep their original order. Initial native fields match apart from
+the intentional content array order; plugin/fingerprint maps and ten fixed
+postsave authority groups match. All four reviewed captures show the prison scene
+and HUD. This demonstrates real manager load/resave, not an exterior draw or
+weather-rendering oracle; actual World RNG tests separately cover every roll.
+
+All **292 Python tests** pass with no failures/skips, unchanged source
+fingerprint `f7c6d3b0ee216d698b40f2f21577488603d004d003de6eb66fd82abcb323842e`
+against parent `947764c621f7741c2114946af60e9440eaf3ee90`. Three new hermetic
+fixture cases check opaque-record preservation, exact semantic output,
+determinism and malformed inputs. The retained preflight failure was a test
+expecting ValueError for malformed framing; the existing decoder correctly
+raises RuntimeStateError. The corrected assertion accepts the decoder's typed
+exception. No production behavior changed for that correction.
+
+Editable scenarios are `oblivion_m15_regional_weather_{roundtrip,continuation}.json`.
+Evidence: `build/oblivion-compat/m15/S3/regional-weather-input-01`,
+`regional-weather-fixture-preflight-01/tests.log`, `regional-weather-python-01`
+and `regional-weather-runtime-{normal,sanitized}-01/verification.json`. C++ implementation
+is unchanged from the preceding verified weather-catalog build. Full S3 remains
+active: changed-content admission, explicit manager-handle lifecycle and wider
+shared semantic/resource restoration still need completion evidence.
+
 ## S3 actual weather plugin reordering — 2026-10-08
 
 Two independent TES4 plugins each add one weather record with its own
@@ -41,8 +84,8 @@ against parent `614e0f47955503cd6775496b33284272791fed87`.
 Evidence: `build/oblivion-compat/m15/S3/weather-reordered-python-01` and
 `weather-reordered-runtime-{normal,sanitized}-01/verification.json`. C++ implementation
 remains the previously verified catalog-persistence build. This closes actual
-current-weather restoration through plugin reversal. Nonzero fixture-weather
-regional bucket/fallback remapping, changed-content rejection, exterior weather
+current-weather restoration through plugin reversal. The regional course above
+adds nonzero bucket/fallback evidence. Changed-content rejection, exterior weather
 visuals, explicit manager handles and the wider S3 restore gaps remain open.
 
 ## S3 stable native weather catalog persistence — 2026-10-08
@@ -100,9 +143,8 @@ Editable sources are
 No failing full attempts occurred. Targeted production/codec/engine builds and
 focused codec/Python checks preceded the full runs.
 
-Full S3 remains active. Changed native-weather content, nonzero regional bucket
-remapping through actual processes, explicit manager-handle lifecycle, wider
-semantic/shared-resource staging and
+Full S3 remains active. Changed native-weather content, explicit manager-handle
+lifecycle, wider semantic/shared-resource staging and
 postcleanup prior-World preservation still require completion evidence.
 
 ## S3 removed weather-region identity admission — 2026-10-07
