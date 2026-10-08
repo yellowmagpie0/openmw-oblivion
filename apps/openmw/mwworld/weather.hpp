@@ -2,6 +2,8 @@
 #define GAME_MWWORLD_WEATHER_H
 
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <map>
 #include <span>
 #include <string>
@@ -11,6 +13,7 @@
 #include <osg/Vec4f>
 
 #include <components/esm/refid.hpp>
+#include <components/esm3/weatherstate.hpp>
 #include <components/fallback/fallback.hpp>
 
 #include "../mwbase/soundmanager.hpp"
@@ -320,6 +323,17 @@ namespace MWWorld
         float earlyMoonShadowAlpha(float angle) const;
     };
 
+    // Detached restore data: static region defaults plus accepted saved overlays.
+    // Preparation does not roll weather, publish sound, or borrow outgoing regions.
+    struct PreparedWeatherRestore
+    {
+        ESM::WeatherState mState;
+        std::map<ESM::RefId, RegionWeather> mRegions;
+    };
+
+    PreparedWeatherRestore prepareWeatherRestore(const ESM::WeatherState& state,
+        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions);
+
     /// Interface for weather settings
     class WeatherManager
     {
@@ -394,6 +408,10 @@ namespace MWWorld
 
         bool readRecord(ESM::ESMReader& reader, uint32_t type);
 
+        // Install once after the next clear; discarded, stale and copied handles
+        // cannot publish state or replay effects.
+        std::function<bool()> prepareRead(const ESM::WeatherState& state);
+
         void clear();
 
     private:
@@ -449,7 +467,11 @@ namespace MWWorld
         void addWeather(
             const std::string& name, float dlFactor, float dlOffset, const std::string& particleEffect = "");
 
+        std::map<ESM::RefId, RegionWeather> makeRegions() const;
         void importRegions();
+        void applyRestore(PreparedWeatherRestore& prepared);
+        const std::shared_ptr<const char> mRestoreIdentity = std::make_shared<const char>();
+        std::uint64_t mRestoreGeneration = 0;
         void configureClimate(const ESM::RefId& climateId);
         ESM::RefId getPlayerEnvironment() const;
 

@@ -64,6 +64,7 @@
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
 #include "apps/openmw/mwworld/timestamp.hpp"
+#include "apps/openmw/mwworld/weather.hpp"
 #include "apps/openmw/mwrender/globalmap.hpp"
 #include "apps/openmw/mwlua/userdataserializer.hpp"
 #include "apps/openmw/mwlua/object.hpp"
@@ -2310,4 +2311,67 @@ TEST(SaveAdmissionTest, OwnedNpcBountyChecksStableReferenceBaseAndDuplicateShare
         EXPECT_EQ(calls, int(fault == 0));
         EXPECT_EQ(reader.getFileOffset(), offset);
     }
+}
+
+TEST(SaveAdmissionTest, WeatherResourcesPrepareBeforeNativeStateAndRestoreReaderAcrossEverySchema)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (bool corrupt : {false, true})
+    for (bool nativeFirst : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(corrupt);
+        SCOPED_TRACE(nativeFirst);
+        ESM::WeatherState weather{};
+        weather.mCurrentWeather = corrupt ? 3 : 2;
+        weather.mNextWeather = weather.mQueuedWeather = -1;
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_WTHR); weather.save(writer); writer.endRecord(ESM::REC_WTHR);
+        });
+        const auto base = saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0);
+        // Move WTHR ahead of the profile/native records as well as after them.
+        ESM::ESMReader header;
+        openBytes(header, base);
+        const auto firstRecord = header.getFileOffset();
+        const auto framed = nativeFirst ? base + records
+            : base.substr(0, firstRecord) + records + base.substr(firstRecord);
+        ESM::ESMReader reader;
+        openBytes(reader, framed);
+        const auto offset = reader.getFileOffset();
+        int nativeCalls = 0, weatherCalls = 0;
+        std::optional<MWWorld::PreparedWeatherRestore> retained;
+        auto prepare = [&](const ESM::WeatherState& saved) {
+            ++weatherCalls;
+            retained = MWWorld::prepareWeatherRestore(saved, 3, {});
+        };
+        auto native = [&](const auto&, auto) {
+            ++nativeCalls;
+            ASSERT_TRUE(retained);
+            EXPECT_EQ(retained->mState.mCurrentWeather, 2);
+        };
+        if (corrupt)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare),
+                std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare));
+        EXPECT_EQ(weatherCalls, 1);
+        EXPECT_EQ(nativeCalls, int(!corrupt && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
+TEST(SaveAdmissionTest, WeatherPreparationDoesNotChangeMorrowindAdmission)
+{
+    ESM::WeatherState weather{};
+    weather.mCurrentWeather = std::numeric_limits<int>::max();
+    const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+        writer.startRecord(ESM::REC_WTHR); weather.save(writer); writer.endRecord(ESM::REC_WTHR);
+    });
+    ESM::ESMReader reader;
+    openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + records);
+    int calls = 0;
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, nullptr, {}, {},
+        [&](const auto&) { ++calls; }));
+    EXPECT_EQ(calls, 0);
 }

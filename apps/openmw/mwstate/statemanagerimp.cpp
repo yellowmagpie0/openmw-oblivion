@@ -483,12 +483,15 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         reader.setContentFileMapping(&contentFileMap);
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
         std::function<void()> preparedGlobalMap;
+        std::function<bool()> preparedWeather;
         std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
                 preparedNative = world.prepareOblivionSaveState(native, std::move(definitions));
             }, [&](const ESM::GlobalMap& map) {
                 preparedGlobalMap = MWBase::Environment::get().getWindowManager()->prepareGlobalMap(map);
+            }, [&](const ESM::WeatherState& state) {
+                preparedWeather = world.prepareWeather(state);
             });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
@@ -498,9 +501,9 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         // leave the outgoing game intact. Later record restoration still owns
         // the cleanup-on-failure boundary until full staging is implemented.
         restorationStarted = true;
-        // Native plans require the same single reset for an initial menu load
-        // and an in-game load. Shared-only legacy loads keep their old lifecycle.
-        cleanup(preparedNative != nullptr);
+        // Prepared native and weather plans require one reset for both initial
+        // menu loads and in-game loads. Other shared-only loads retain their lifecycle.
+        cleanup(preparedNative != nullptr || bool(preparedWeather));
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
 
@@ -569,7 +572,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_GLOB:
                 case ESM::REC_PLAY:
                 case ESM::REC_CSTA:
-                case ESM::REC_WTHR:
                 case ESM::REC_DYNA:
                 case ESM::REC_ACTC:
                 case ESM::REC_PROJ:
@@ -602,6 +604,18 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 case ESM::REC_GSCR:
 
                     MWBase::Environment::get().getScriptManager()->getGlobalScripts().readRecord(reader, n.toInt());
+                    break;
+
+                case ESM::REC_WTHR:
+                    if (preparedWeather)
+                    {
+                        reader.skipRecord();
+                        auto apply = std::move(preparedWeather);
+                        if (!apply())
+                            throw std::runtime_error("Prepared weather no longer matches the cleared World");
+                    }
+                    else
+                        world.readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_GMAP:

@@ -202,6 +202,7 @@ namespace
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
         std::set<std::uint32_t>& singletons,
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
+        const std::function<void(const ESM::WeatherState&)>& prepareWeather,
         std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems)
     {
         const auto singleton = [&] {
@@ -346,6 +347,8 @@ namespace
                 finite(state.mTimePassed);
                 finite(state.mWeatherUpdateTime);
                 finite(state.mTransitionFactor);
+                if (prepareWeather)
+                    prepareWeather(state);
                 break;
             }
             case ESM::REC_PROJ:
@@ -467,7 +470,8 @@ namespace MWState
         const std::function<void(const ESM4::RuntimeState&)>& validateNative,
         const MWWorld::ESMStore* content,
         const std::function<void(const ESM4::RuntimeState&, std::unique_ptr<MWWorld::ESMStore>)>& prepareNative,
-        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap)
+        const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
+        const std::function<void(const ESM::WeatherState&)>& prepareWeather)
     {
         const auto start = reader.getContext();
         try
@@ -583,7 +587,7 @@ namespace MWState
                         decoded = true;
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
-                                 prepareGlobalMap, quickkeySpells, quickkeyItems))
+                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <limits>
 
 #include <components/esm4/loadclmt.hpp>
 #include <components/esm4/loadwthr.hpp>
@@ -71,6 +72,89 @@ namespace MWWorld
             const Weather snow(native, 8);
             EXPECT_TRUE(snow.mRainEffect.empty());
             EXPECT_FALSE(snow.mParticleEffect.empty());
+        }
+
+        TEST(MWWorldWeatherTest, nativeWeatherRestoreStagesFreshRegionsAndChecksConsumedIndexDomains)
+        {
+            const auto known = ESM::RefId::stringRefId("known-climate");
+            const auto added = ESM::RefId::stringRefId("added-climate");
+            const auto removed = ESM::RefId::stringRefId("removed-climate");
+            for (std::size_t count : {1u, 3u, 10u, 17u})
+            for (int field = 0; field != 4; ++field)
+            for (int index : {-2, -1, 0, int(count - 1), int(count), std::numeric_limits<int>::max()})
+            {
+                SCOPED_TRACE(count);
+                SCOPED_TRACE(field);
+                SCOPED_TRACE(index);
+                ESM::WeatherState state{};
+                state.mNextWeather = state.mQueuedWeather = -1;
+                state.mRegions[known] = {-1, {100}};
+                // Removed data is ignored even when its values cannot be consumed.
+                state.mRegions[removed] = {std::numeric_limits<int>::max(), {0, 0, 0, 100}};
+                if (field == 0) state.mCurrentWeather = index;
+                if (field == 1) state.mNextWeather = index;
+                if (field == 2) state.mQueuedWeather = index;
+                if (field == 3) state.mRegions[known].mWeather = index;
+                std::map<ESM::RefId, RegionWeather> defaults;
+                defaults.emplace(known, RegionWeather(std::vector<uint8_t>{0, 100}));
+                defaults.emplace(added, RegionWeather(std::vector<uint8_t>{100}));
+                const bool accepted = (index >= 0 && std::size_t(index) < count) || (field != 0 && index == -1);
+                if (!accepted)
+                    EXPECT_THROW(prepareWeatherRestore(state, count, defaults), std::runtime_error);
+                else
+                {
+                    auto prepared = prepareWeatherRestore(state, count, defaults);
+                    state.mRegions.clear(); // The plan owns its saved overlay.
+                    ASSERT_EQ(prepared.mRegions.size(), 2u);
+                    EXPECT_EQ(ESM::RegionWeatherState(prepared.mRegions.at(known)).mChances,
+                        std::vector<uint8_t>({100}));
+                    EXPECT_EQ(ESM::RegionWeatherState(prepared.mRegions.at(added)).mWeather, -1);
+                    EXPECT_EQ(ESM::RegionWeatherState(prepared.mRegions.at(added)).mChances,
+                        std::vector<uint8_t>({100}));
+                }
+                // Neither successful nor rejected preparation changes caller defaults.
+                EXPECT_EQ(ESM::RegionWeatherState(defaults.at(known)).mChances,
+                    std::vector<uint8_t>({0, 100}));
+                EXPECT_EQ(ESM::RegionWeatherState(defaults.at(known)).mWeather, -1);
+            }
+        }
+
+        TEST(MWWorldWeatherTest, nativeWeatherRestorePreservesUnreachableProbabilityTailsAndFiniteCountdowns)
+        {
+            const auto region = ESM::RefId::stringRefId("climate");
+            std::map<ESM::RefId, RegionWeather> defaults;
+            defaults.emplace(region, RegionWeather(std::vector<uint8_t>{100}));
+            ESM::WeatherState state{};
+            state.mNextWeather = state.mQueuedWeather = -1;
+            state.mTimePassed = -3.f;
+            state.mWeatherUpdateTime = -7.f;
+            state.mTransitionFactor = 1.25f; // Domain enforcement follows consumption, not an invented clamp.
+            for (const auto& chances : std::initializer_list<std::vector<uint8_t>>{{}, {0}, {99, 0, 0}, {100, 255}, {255, 1}})
+            {
+                state.mRegions[region] = {-1, chances};
+                auto prepared = prepareWeatherRestore(state, 1, defaults);
+                EXPECT_EQ(ESM::RegionWeatherState(prepared.mRegions.at(region)).mChances, chances);
+                EXPECT_EQ(prepared.mState.mTimePassed, -3.f);
+                EXPECT_EQ(prepared.mState.mWeatherUpdateTime, -7.f);
+                EXPECT_EQ(prepared.mState.mTransitionFactor, 1.25f);
+            }
+            for (const auto& chances : std::initializer_list<std::vector<uint8_t>>{{0, 1}, {99, 1}, {0, 0, 100}})
+            {
+                state.mRegions[region] = {-1, chances};
+                EXPECT_THROW(prepareWeatherRestore(state, 1, defaults), std::runtime_error);
+            }
+            state.mRegions.clear();
+            EXPECT_THROW(prepareWeatherRestore(state, 0, defaults), std::runtime_error);
+            for (float invalid : {std::numeric_limits<float>::quiet_NaN(),
+                std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+            for (int field = 0; field != 3; ++field)
+            {
+                auto corrupt = state;
+                if (field == 0) corrupt.mTimePassed = invalid;
+                if (field == 1) corrupt.mWeatherUpdateTime = invalid;
+                if (field == 2) corrupt.mTransitionFactor = invalid;
+                EXPECT_THROW(prepareWeatherRestore(corrupt, 1, defaults), std::runtime_error);
+            }
         }
 
         // MASSER PHASES

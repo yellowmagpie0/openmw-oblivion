@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "name": "oblivion_m15_weather_restore_reject",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{output}/test-data\"\ncontent=Oblivion.esm\ncontent=m15-bounty.omwscripts\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 1 command dynamic:native-reference:0000000000000001 getscale\nat 1 command player getdead\nat 1 command dynamic:native-reference:0000000000000001 getincell \"content:oblivion.esm:022288\"\nat 1 command dynamic:native-reference:0000000000000001 getincell \"content:oblivion.esm:01fbb9\"\nat 1 command player isplayerinjail\nat 1 command player getav Bounty\nat 1 command player getbaseav Bounty\nat 1 command player modpcinfamy 0\nat 1 command player getpcinfamy\nat 1 command player getav Infamy\nat 1 command player getbaseav Infamy\nat 1 command player getav Fame\nat 1 command player getbaseav Fame\n"
+    },
+    {
+      "path": "test-data/m15-bounty.omwscripts",
+      "content": "GLOBAL: scripts/m15-bounty.lua\nPLAYER: scripts/m15-reputation.lua\n"
+    },
+    {
+      "path": "test-data/scripts/m15-bounty.lua",
+      "content": "local world = require('openmw.world')\nlocal types = require('openmw.types')\nlocal done = false\nlocal function update()\n    if done then return end\n    local player = world.players[1]\n    if not player then return end\n    local before = types.Player.getCrimeLevel(player)\n    assert(before == -3 or before == -4)\n    if before == -3 then types.Player.setCrimeLevel(player, -4) end\n    assert(types.Player.getCrimeLevel(player) == -4)\n    print('M15 bounty Lua before=' .. before .. ' after=-4')\n    done = true\nend\nreturn {{engineHandlers={{onUpdate=update,onSave=function() return {{done=done}} end,onLoad=function() done=false end}}}}\n"
+    },
+    {
+      "path": "test-data/scripts/m15-reputation.lua",
+      "content": "local self = require('openmw.self')\nlocal types = require('openmw.types')\nlocal done = false\nlocal function update()\n    if done then return end\n    local before = types.NPC.stats.reputation(self).current\n    assert(before == 16777217 or before == 16777219)\n    if before == 16777217 then types.NPC.stats.reputation(self).current = 16777219 end\n    assert(types.NPC.stats.reputation(self).current == 16777219)\n    print('M15 Fame Lua before=' .. before .. ' after=16777219')\n    done = true\nend\nreturn {{engineHandlers={{onUpdate=update,onSave=function() return {{done=done}} end,onLoad=function() done=false end}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Fame Lua before=1677721[79] after=16777219",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "wait_log",
+      "pattern": "name=getpcinfamy result=-3",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "wait_log",
+      "path": "mutation-receipt.txt",
+      "pattern": "prepared",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_held",
+      "value": "F9"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Failed to load saved game: Saved game weather index is outside loaded weather settings",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "screenshot",
+      "name": "rejected-live-save.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Return"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "resave-receipt.txt",
+      "pattern": "resaved",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "screenshot",
+      "name": "after-rejection-resave.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 720,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Writing saved game 'Quicksave'",
+    "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+    "M15 Fame Lua before=1677721[79] after=16777219",
+    "Failed to load saved game: Saved game weather index is outside loaded weather settings"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "ERROR: AddressSanitizer",
+    "runtime error:"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "oblivion_m15_weather_restore_reject",
+    "OPENMW_M15_EPOCH": "1",
+    "TMPDIR": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/compiler-tmp"
+  },
+  "sdl_offscreen_input": true,
+  "sdl_input_timeout_seconds": 120,
+  "reviewed_error_log": [
+    "Failed\\ to\\ open\\ image:\\ Resource\\ 'textures/menu_icon_equip\\.dds'\\ not\\ found",
+    "Failed to load saved game: Saved game weather index is outside loaded weather settings"
+  ]
+}

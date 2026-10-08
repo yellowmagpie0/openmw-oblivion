@@ -1251,27 +1251,15 @@ namespace MWWorld
             ESM::WeatherState state;
             state.load(reader);
 
-            std::swap(mCurrentRegion, state.mCurrentRegion);
-            mTimePassed = state.mTimePassed;
-            mFastForward = state.mFastForward;
-            mWeatherUpdateTime = state.mWeatherUpdateTime;
-            mTransitionFactor = state.mTransitionFactor;
-            mCurrentWeather = state.mCurrentWeather;
-            mNextWeather = state.mNextWeather;
-            mQueuedWeather = state.mQueuedWeather;
-            mWeatherOverride = state.mWeatherOverride;
-
-            mRegions.clear();
-            importRegions();
-
-            for (auto it = state.mRegions.begin(); it != state.mRegions.end(); ++it)
-            {
-                auto found = mRegions.find(it->first);
-                if (found != mRegions.end())
-                {
-                    found->second = RegionWeather(it->second);
-                }
-            }
+            auto prepared = mNativeWeather
+                ? prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions())
+                : PreparedWeatherRestore{ state, makeRegions() };
+            if (!mNativeWeather)
+                for (const auto& [id, region] : state.mRegions)
+                    if (auto found = prepared.mRegions.find(id); found != prepared.mRegions.end())
+                        found->second = RegionWeather(region);
+            applyRestore(prepared);
+            ++mRestoreGeneration;
 
             return true;
         }
@@ -1281,6 +1269,7 @@ namespace MWWorld
 
     void WeatherManager::clear()
     {
+        ++mRestoreGeneration;
         stopSounds();
 
         mCurrentRegion = ESM::RefId();
@@ -1303,8 +1292,9 @@ namespace MWWorld
         mWeatherSettings.push_back(std::move(weather));
     }
 
-    inline void WeatherManager::importRegions()
+    std::map<ESM::RefId, RegionWeather> WeatherManager::makeRegions() const
     {
+        std::map<ESM::RefId, RegionWeather> regions;
         if (mNativeWeather)
         {
             std::map<ESM::RefId, std::size_t> weatherIndices;
@@ -1330,14 +1320,85 @@ namespace MWWorld
                 }
                 if (assigned < 100 && !chances.empty())
                     chances[last] = static_cast<std::uint8_t>(chances[last] + 100 - assigned);
-                mRegions.emplace(ESM::RefId(climate.mId), RegionWeather(std::move(chances)));
+                regions.emplace(ESM::RefId(climate.mId), RegionWeather(std::move(chances)));
             }
-            return;
+            return regions;
         }
         for (const ESM::Region& region : mStore.get<ESM::Region>())
         {
-            mRegions.insert(std::make_pair(region.mId, RegionWeather(region)));
+            regions.insert(std::make_pair(region.mId, RegionWeather(region)));
         }
+        return regions;
+    }
+
+    void WeatherManager::importRegions()
+    {
+        mRegions = makeRegions();
+    }
+
+    PreparedWeatherRestore prepareWeatherRestore(const ESM::WeatherState& state,
+        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions)
+    {
+        const auto valid = [weatherCount](int id, bool optional) {
+            if ((optional && id == invalidWeatherID) || (id >= 0 && std::size_t(id) < weatherCount))
+                return;
+            throw std::runtime_error("Saved game weather index is outside loaded weather settings");
+        };
+        if (!std::isfinite(state.mTimePassed) || !std::isfinite(state.mWeatherUpdateTime)
+            || !std::isfinite(state.mTransitionFactor))
+            throw std::runtime_error("Saved game weather contains a nonfinite timer or transition");
+        valid(state.mCurrentWeather, false);
+        valid(state.mNextWeather, true);
+        valid(state.mQueuedWeather, true);
+        for (const auto& [id, saved] : state.mRegions)
+        {
+            auto found = regions.find(id);
+            if (found == regions.end())
+                continue; // Removed regions have always been skipped by the consumer.
+            valid(saved.mWeather, true);
+            // Only a bucket reachable by the 1..100 roll can select an index.
+            // Preserve zero tails and unreachable probabilities from older saves.
+            unsigned int sum = 0;
+            for (std::size_t i = 0; i < saved.mChances.size() && sum < 100; ++i)
+            {
+                if (saved.mChances[i] != 0 && i >= weatherCount)
+                    throw std::runtime_error("Saved game regional weather can select an unavailable weather");
+                sum += saved.mChances[i];
+            }
+            found->second = RegionWeather(saved);
+        }
+        return { state, std::move(regions) };
+    }
+
+    void WeatherManager::applyRestore(PreparedWeatherRestore& prepared)
+    {
+        auto& state = prepared.mState;
+        std::swap(mCurrentRegion, state.mCurrentRegion);
+        mTimePassed = state.mTimePassed;
+        mFastForward = state.mFastForward;
+        mWeatherUpdateTime = state.mWeatherUpdateTime;
+        mTransitionFactor = state.mTransitionFactor;
+        mCurrentWeather = state.mCurrentWeather;
+        mNextWeather = state.mNextWeather;
+        mQueuedWeather = state.mQueuedWeather;
+        mWeatherOverride = state.mWeatherOverride;
+        mRegions.swap(prepared.mRegions);
+    }
+
+    std::function<bool()> WeatherManager::prepareRead(const ESM::WeatherState& state)
+    {
+        auto prepared = std::make_shared<PreparedWeatherRestore>(
+            prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions()));
+        const std::weak_ptr<const char> identity = mRestoreIdentity;
+        const auto generation = mRestoreGeneration + 1;
+        return [this, identity, generation, prepared = std::move(prepared)]() mutable {
+            if (!prepared || identity.expired() || mRestoreGeneration != generation)
+                return false;
+            applyRestore(*prepared);
+            ++mRestoreGeneration;
+            prepared.reset();
+            return true;
+        };
     }
 
     void WeatherManager::configureClimate(const ESM::RefId& climateId)

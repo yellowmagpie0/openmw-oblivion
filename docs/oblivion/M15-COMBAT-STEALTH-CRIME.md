@@ -6,6 +6,56 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 detached shared weather restoration — 2026-10-07
+
+Oblivion admission now prepares WTHR against the actual loaded weather catalog
+before native preparation and cleanup. Current weather must name a loaded
+entry; next/queued/regional weather also preserve the -1 unset sentinel. Saved
+regional probabilities may not select unavailable entries in the 1..100 roll.
+Zero tails and unreachable tails after a cumulative100 retain compatibility;
+removed regions remain ignored. Finite negative countdowns and finite transition
+values retain their existing domains. No fixed TES3 ten-weather limit is used.
+
+WeatherManager builds a detached fresh region map from immutable content,
+then applies accepted saved overlays. Installation swaps the staged map and
+metadata without rolling weather or publishing sounds. The restore handle is
+protected by manager lifetime and expected clear generation, installs once,
+and invalidates competing/copied handles after publication. StateManager
+consumes it after the same single World clear on initial and in-game loads.
+Morrowind keeps its existing admission and saved overlay behavior.
+
+Four new tests cover96 index-domain combinations with catalogs1/3/10/17,
+removed/new/retained regions, independent saved ownership, reachable/unreachable
+probability tails and finite timer checks. The admission matrix covers188
+cases across schemas1–46 and no-T4ST, valid/invalid indices and both record
+orders; resource rejection suppresses native preparation and rewinds the reader.
+
+`S3/weather-prepare-engine-02` and `weather-prepare-sanitized-engine-02` pass
+all **1,236 engine tests**, exact inventory/XML, no failures/skips. Fixture
+publication passes all **280 Python tests** and scenario validation. All three
+runs have stable fingerprint `693abf9e8c64d8d5f5297a74f89eb19bf13f407342f676f6bf99719fb13c71a4`,
+parent `0e80984f6c2d8f98943c05353cfcce22e3ba5061`. ASan/UBSan halt on errors;
+leak checking is disabled. The -01 build failures are retained test macro
+redeclarations, corrected before the fresh -02 runs.
+
+Actual `weather-prepare-reject-01` and `weather-prepare-reject-sanitized-02`
+courses change only four-byte WTHR/CWTH31 to INT_MAX in a private actual F5.
+F9 rejects before teardown; Return/F5 recovers31 and compared live native
+fields, with one load/two saves and clean quit. `weather-prepare-continuation-02`
+then loads the normal resave in a distinct PID/epoch2, compares all38 native
+fields on load, and resaves31. All five captures were reviewed. Failed runtime
+recipes remain: continuation01 retained an unused mutation receipt wait;
+instrumented rejection01 lacked libasan-first SDL preload ordering. Neither
+is counted as a passing engine course.
+
+Editable `oblivion_m15_weather_restore_{reject,continuation,fault}.json`
+recipes and `S3/weather-prepare-report.json` preserve the separate structural,
+compiler/world, semantic and actual-runtime evidence. This closes the bounded
+weather staging/index gap. Duplicate weather identities, changed/reordered
+weather catalogs, explicit stale/copied handle integration, exterior rendering,
+and remaining shared resources are not established by these courses. Full
+failed-load atomicity, combined migration and remaining S3 audits stay open.
+
 ## S3 populated World crime migration coverage — 2026-10-07
 
 The World crime/arrest/jail restore matrix now spans every supported crime

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 weather index admission rejection; all native state and other bytes unchanged",
+  "records": [
+    "WTHR"
+  ],
+  "field": "CWTH current weather index",
+  "payload": "Replace four-byte signed int32 CWTH payload with INT_MAX little-endian ffffff7f; preserve record and subrecord lengths",
+  "preserve": "Every other byte; actual resave after rejection must recover original CWTH and declared native authority fields",
+  "expected_error": "Saved game weather index is outside loaded weather settings",
+  "preparation_reference": "build/oblivion-compat/m15/S3/weather-prepare-reject-01/mutate.py"
+}

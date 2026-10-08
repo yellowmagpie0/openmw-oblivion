@@ -4,6 +4,7 @@
 #include "rotationflags.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <deque>
 #include <optional>
 #include <memory>
@@ -68,6 +69,7 @@ namespace ESM
     struct CreatureLevList;
     struct ItemLevList;
     struct TimeStamp;
+    struct WeatherState;
     class RefId;
     struct ExteriorCellLocation;
 }
@@ -187,6 +189,7 @@ namespace MWBase
         virtual void write(ESM::ESMWriter& writer, Loading::Listener& listener) const = 0;
 
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
+        virtual std::function<bool()> prepareWeather(const ESM::WeatherState& state) { return {}; }
 
         virtual void useDeathCamera() = 0;
 

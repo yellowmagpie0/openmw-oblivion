@@ -3509,6 +3509,13 @@ namespace MWWorld
         }
     }
 
+    std::function<bool()> World::prepareWeather(const ESM::WeatherState& state)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mWeatherManager)
+            throw std::runtime_error("Native weather preparation requires an initialized Oblivion World");
+        return mWeatherManager->prepareRead(state);
+    }
+
     void World::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         if (mSharedDefinitionsPrepared && ESMStore::isSavedDynamicRecord(type))

@@ -377,6 +377,7 @@ namespace MWWorld
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const override;
 
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
+        std::function<bool()> prepareWeather(const ESM::WeatherState& state) override;
 
         // switch to POV before showing player's death animation
         void useDeathCamera() override;
