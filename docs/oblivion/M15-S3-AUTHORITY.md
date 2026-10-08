@@ -36,6 +36,13 @@ before dispatch so a callback save cannot replay that event.
 `World::prepareOblivionSaveState` retains detached definitions, inventories and
 native service plans; installation requires the expected clear boundary.
 World capture uses the same live service state, not telemetry as an authority.
+Prepared ManualRef type/base selection now uses incoming/static definitions
+with the same override policy and signature precedence as actual publication;
+outgoing types/projections are excluded, including native MISC dispatch.
+ESMStore's public immutable restore lookup includes late facades and raw
+incoming stores without indexes. Its20-family clear/commit matrix and actual
+normal/instrumented generated-inventory two-process courses pass. Shared
+projectile/magic resource preparation still needs to use that lookup.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.

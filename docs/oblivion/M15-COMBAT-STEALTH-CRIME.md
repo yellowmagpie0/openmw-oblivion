@@ -6,6 +6,55 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 immutable restore definition lookup — 2026-10-07
+
+Prepared ManualRef construction now selects its type and base from immutable
+content plus accepted incoming definitions, reproducing the definition index
+that actual prepared publication installs. An outgoing dynamic type can no
+longer select the wrong incoming family. Ordinary IDs, raw incoming stores
+without an ID cache, and late content facades are supported. Native MISC
+lockpick/repair dispatch resolves static projections instead of borrowing
+outgoing dynamic lookalikes. ESMStore exposes `findForRestore` and typed
+`searchForRestore` for the remaining shared resource preparation work.
+
+The override-only policy is shared with `prepareDynamicRecords`, preserving
+its accepted generated IDs, known static overrides, and deliberate unknown
+ordinary-record skips. Three new tests compare **80 prepare/clear/commit
+cases across20 saved definition families**, then test actual manual references
+with poisoned outgoing types, incoming higher-precedence types, late facades
+and native misc projections. Both lookup queries leave outgoing state intact.
+
+`S3/restore-definition-lookup-engine-03` and
+`restore-definition-lookup-sanitized-engine-03` pass all **1,239 engine tests**,
+exact inventories/XML, no failures/skips. Each configuration also passes the
+three new tests in isolation, proving explicit class registration. Stable
+fingerprint: `50c93776e8f87e4e00ad9ac6afb6ae2cf0946eea16b3859ab79e0fd8edf3c652`;
+parent: `5a970821780baac16a13cc14a960e49cec9ff71c`. ASan/UBSan halt on errors;
+leak checking is disabled. No Python/wire/manifest change is made or retested.
+
+Actual `restore-definition-lookup-runtime-01` and
+`restore-definition-lookup-runtime-sanitized-01` reuse the editable generated
+hotkey roundtrip recipe: real load/F5/quit/fresh-PID load/F5/quit, epochs1/2.
+All38 initial native snapshot fields match the expected fixture. Raw KEYS
+retains generated43; native shared-item44 retains hotkey3, condition37.125 and
+charge9.25. Both courses compare declared native fields across the resaves,
+quit cleanly, and have no unreviewed errors. All four captures were reviewed.
+This is populated restore regression, not a new gameplay producer or a live
+outgoing-type-poisoning course.
+
+Normal engine01 caught a test type name (`MiscItem` is the native class);
+normal engine02 caught missing Misc/Lockpick/Repair registration in the new
+headless fixture. Corresponding instrumented01/02 attempts were cancelled
+when those normal failures were known; their terminal -15 helper reports and
+all failed logs remain. Corrected fresh03 checks and runtime verifiers pass.
+`S3/restore-definition-lookup-report.json` records source/check/binary hashes
+and separates structural, compiler/world, semantic and runtime evidence.
+
+This supplies a required immutable lookup for the remaining resource staging;
+shared projectile/magic preparation is not yet wired to it. Full failed-load
+atomicity, combined migration and remaining lifecycle/adapter/action audits
+remain open. S3 remains in progress.
+
 ## S3 detached shared weather restoration — 2026-10-07
 
 Oblivion admission now prepares WTHR against the actual loaded weather catalog

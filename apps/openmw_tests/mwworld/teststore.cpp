@@ -21,6 +21,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadcell.hpp>
 #include <components/esm4/loadstat.hpp>
+#include <components/esm4/loadmisc.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/esm4/idletree.hpp>
@@ -32,6 +33,11 @@
 
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
+#include "apps/openmw/mwclass/armor.hpp"
+#include "apps/openmw/mwclass/weapon.hpp"
+#include "apps/openmw/mwclass/misc.hpp"
+#include "apps/openmw/mwclass/lockpick.hpp"
+#include "apps/openmw/mwclass/repair.hpp"
 
 static Loading::Listener dummyListener;
 
@@ -1579,4 +1585,152 @@ TEST(MWWorldStoreTest, PreparedInventoryReferencesRejectOutgoingOnlyDefinitions)
     store.getWritable<ESM::Weapon>().insert(outgoing);
     store.rebuildIdsIndex();
     EXPECT_THROW(MWWorld::ManualRef(store, outgoing.mId, 1, &empty), std::logic_error);
+}
+
+TEST(MWWorldStoreTest, RestoreLookupMatchesPreparedPublicationAcrossEverySavedDefinitionFamily)
+{
+    const auto check = []<class T>() {
+        for (int mode = 0; mode != 4; ++mode)
+        {
+            SCOPED_TRACE(T::sRecordId);
+            SCOPED_TRACE(mode);
+            MWWorld::ESMStore store;
+            populateSharedDefinitionContent(store);
+            auto incoming = std::make_unique<MWWorld::ESMStore>();
+            const auto id = mode == 1 ? incoming->generateId() : ESM::RefId::stringRefId("restore-lookup");
+            T record{};
+            record.blank();
+            record.mId = id;
+            const T* immutable = nullptr;
+            if (mode >= 2)
+                immutable = store.getWritable<T>().insertStatic(record);
+            const T* saved = nullptr;
+            if (mode != 3)
+                saved = incoming->getWritable<T>().insert(record);
+            // Populate an outgoing family independently of the incoming type.
+            // Rebuilding that index must never supply restore's missing types.
+            ESM::Weapon outgoing{}; outgoing.blank(); outgoing.mId = id;
+            store.getWritable<ESM::Weapon>().insert(outgoing);
+            store.rebuildIdsIndex();
+            const bool accepted = mode != 3
+                && (!MWWorld::ESMStore::isSavedDynamicRecordOverrideOnly(T::sRecordId)
+                    || mode != 0);
+            const auto* expected = accepted ? saved : immutable;
+            const auto beforeDynamic = store.get<T>().getDynamicSize();
+            const auto beforeIndex = store.find(id);
+            const auto type = store.findForRestore(id, *incoming);
+            EXPECT_EQ(store.searchForRestore<T>(id, *incoming), expected);
+            EXPECT_EQ(store.get<T>().getDynamicSize(), beforeDynamic);
+            EXPECT_EQ(store.find(id), beforeIndex);
+            auto plan = store.prepareDynamicRecords(std::move(incoming));
+            EXPECT_EQ(store.findForRestore(id, plan.definitions()), type);
+            EXPECT_EQ(store.searchForRestore<T>(id, plan.definitions()), expected);
+            store.clearDynamic();
+            ASSERT_NE(plan.commit(), nullptr);
+            EXPECT_EQ(store.find(id), type);
+            EXPECT_EQ(store.get<T>().search(id), expected);
+        }
+    };
+    check.template operator()<ESM::Potion>();
+    check.template operator()<ESM::Armor>();
+    check.template operator()<ESM::Book>();
+    check.template operator()<ESM::Class>();
+    check.template operator()<ESM::Clothing>();
+    check.template operator()<ESM::Enchantment>();
+    check.template operator()<ESM::Spell>();
+    check.template operator()<ESM::Weapon>();
+    check.template operator()<ESM::NPC>();
+    check.template operator()<ESM::Creature>();
+    check.template operator()<ESM::Container>();
+    check.template operator()<ESM::Miscellaneous>();
+    check.template operator()<ESM::Activator>();
+    check.template operator()<ESM::ItemLevList>();
+    check.template operator()<ESM::CreatureLevList>();
+    check.template operator()<ESM::Light>();
+    check.template operator()<ESM::Static>();
+    check.template operator()<ESM::Door>();
+    check.template operator()<ESM::Probe>();
+    check.template operator()<ESM::Ingredient>();
+}
+
+TEST(MWWorldStoreTest, PreparedManualReferencesIgnoreOutgoingTypeAndAcceptIncomingTypeWithoutOutgoingIndex)
+{
+    MWClass::Armor::registerSelf();
+    MWClass::Weapon::registerSelf();
+    const auto id = ESM::RefId::stringRefId("restore-type");
+    MWWorld::ESMStore store;
+    populateSharedDefinitionContent(store);
+    ESM::Armor immutable{}; immutable.blank(); immutable.mId = id;
+    immutable.mName = "Immutable armor";
+    const auto* base = store.getWritable<ESM::Armor>().insertStatic(immutable);
+    ESM::Weapon outgoing{}; outgoing.blank(); outgoing.mId = id;
+    outgoing.mName = "Outgoing weapon";
+    store.getWritable<ESM::Weapon>().insert(outgoing);
+    store.rebuildIdsIndex();
+    ASSERT_EQ(store.find(id), ESM::REC_WEAP);
+    MWWorld::ESMStore empty;
+    MWWorld::ManualRef fallback(store, id, 2, &empty);
+    ASSERT_EQ(fallback.getPtr().getType(), ESM::REC_ARMO);
+    EXPECT_EQ(fallback.getPtr().get<ESM::Armor>()->mBase, base);
+    MWWorld::ESMStore incoming;
+    outgoing.mName = "Incoming weapon";
+    const auto* saved = incoming.getWritable<ESM::Weapon>().insert(outgoing);
+    EXPECT_EQ(incoming.find(id), 0); // Raw prepared inputs need no mutable ID cache.
+    MWWorld::ManualRef replacement(store, id, 3, &incoming);
+    ASSERT_EQ(replacement.getPtr().getType(), ESM::REC_WEAP);
+    EXPECT_EQ(replacement.getPtr().get<ESM::Weapon>()->mBase, saved);
+    EXPECT_EQ(replacement.getPtr().getCellRef().getCount(false), 3);
+    // With no outgoing weapon, the incoming higher-precedence type still wins.
+    store.clearDynamic();
+    MWWorld::ManualRef afterClear(store, id, 3, &incoming);
+    ASSERT_EQ(afterClear.getPtr().getType(), ESM::REC_WEAP);
+    EXPECT_EQ(afterClear.getPtr().get<ESM::Weapon>()->mBase, saved);
+}
+
+TEST(MWWorldStoreTest, RestoreLookupIncludesLateFacadesAndDoesNotBorrowOutgoingNativeMiscProjections)
+{
+    MWClass::Armor::registerSelf();
+    MWClass::Miscellaneous::registerSelf();
+    MWClass::Lockpick::registerSelf();
+    MWClass::Repair::registerSelf();
+    MWWorld::ESMStore store, incoming;
+    populateSharedDefinitionContent(store);
+    const auto lateId = ESM::RefId::stringRefId("late-facade");
+    EXPECT_EQ(store.findStatic(lateId), 0);
+    ESM::Armor armor{}; armor.blank(); armor.mId = lateId;
+    const auto* facade = store.getWritable<ESM::Armor>().insertStatic(armor);
+    EXPECT_EQ(store.findStatic(lateId), 0);
+    MWWorld::ManualRef late(store, lateId, 1, &incoming);
+    EXPECT_EQ(late.getPtr().get<ESM::Armor>()->mBase, facade);
+    for (bool repair : {false, true})
+    {
+        SCOPED_TRACE(repair);
+        const auto id = ESM::RefId(ESM::FormId{repair ? 0x961u : 0x960u, 0});
+        ESM4::MiscItem native{}; native.mId = *id.getIf<ESM::FormId>();
+        store.getWritable<ESM4::MiscItem>().insertStatic(native,
+            ESM::FormKey::content("headless.esm", repair ? 0x961 : 0x960));
+        ESM::Miscellaneous misc{}; misc.blank(); misc.mId = id;
+        const auto* immutable = store.getWritable<ESM::Miscellaneous>().insertStatic(misc);
+        ESM::Lockpick pick{}; pick.blank(); pick.mId = id;
+        store.getWritable<ESM::Lockpick>().insert(pick);
+        ESM::Repair tool{}; tool.blank(); tool.mId = id;
+        if (repair) store.getWritable<ESM::Repair>().insert(tool);
+        store.rebuildIdsIndex();
+        MWWorld::ManualRef restored(store, id, 1, &incoming);
+        EXPECT_EQ(restored.getPtr().get<ESM::Miscellaneous>()->mBase, immutable);
+        // A real static projection retains native dispatch, unlike an outgoing
+        // dynamic lookalike that disappears at the load clear boundary.
+        if (repair)
+        {
+            const auto* projected = store.getWritable<ESM::Repair>().insertStatic(tool);
+            MWWorld::ManualRef staticTool(store, id, 1, &incoming);
+            EXPECT_EQ(staticTool.getPtr().get<ESM::Repair>()->mBase, projected);
+        }
+        else
+        {
+            const auto* projected = store.getWritable<ESM::Lockpick>().insertStatic(pick);
+            MWWorld::ManualRef staticTool(store, id, 1, &incoming);
+            EXPECT_EQ(staticTool.getPtr().get<ESM::Lockpick>()->mBase, projected);
+        }
+    }
 }

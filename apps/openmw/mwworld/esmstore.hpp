@@ -267,6 +267,24 @@ namespace MWWorld
 
         int findStatic(const ESM::RefId& id) const;
 
+        // The type index that prepared definition publication would install:
+        // immutable content (including late facades) plus accepted incoming
+        // records, never outgoing dynamic definitions.
+        int findForRestore(const ESM::RefId& id, const ESMStore& incoming) const;
+        static bool isSavedDynamicRecordOverrideOnly(std::uint32_t type);
+
+        template <class T>
+        const T* searchForRestore(const ESM::RefId& id, const ESMStore& incoming) const
+        {
+            const auto* immutable = get<T>().searchStatic(id);
+            if (isSavedDynamicRecord(T::sRecordId)
+                && (!isSavedDynamicRecordOverrideOnly(T::sRecordId)
+                    || id.is<ESM::GeneratedRefId>() || immutable))
+                if (const auto* saved = incoming.get<T>().search(id))
+                    return saved;
+            return immutable;
+        }
+
         // Winning typed native content records, including record types omitted
         // from the placeable-object ID cache. No load, insertion or mutation.
         bool hasEsm4ContentRecord(const ESM::RefId& id) const;

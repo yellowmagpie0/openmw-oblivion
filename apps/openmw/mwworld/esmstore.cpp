@@ -695,6 +695,39 @@ namespace MWWorld
         return player;
     }
 
+    bool ESMStore::isSavedDynamicRecordOverrideOnly(std::uint32_t type)
+    {
+        switch (type)
+        {
+            case ESM::REC_NPC_: case ESM::REC_CREA: case ESM::REC_CONT: case ESM::REC_MISC:
+            case ESM::REC_ACTI: case ESM::REC_LEVI: case ESM::REC_LEVC: case ESM::REC_LIGH:
+            case ESM::REC_STAT: case ESM::REC_DOOR: case ESM::REC_PROB: case ESM::REC_INGR:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    int ESMStore::findForRestore(const ESM::RefId& id, const ESMStore& incoming) const
+    {
+        int type = 0;
+        const auto index = [&]<class T>(const Store<T>& typed) {
+            if constexpr (requires { typed.mStatic; T::sRecordId; typed.searchStatic(id); })
+                if constexpr (isCacheableRecord(T::sRecordId))
+                {
+                    const bool immutable = typed.searchStatic(id) != nullptr;
+                    const bool saved = isSavedDynamicRecord(T::sRecordId)
+                        && (!isSavedDynamicRecordOverrideOnly(T::sRecordId)
+                            || id.is<ESM::GeneratedRefId>() || immutable)
+                        && incoming.get<T>().search(id) != nullptr;
+                    if (immutable || saved)
+                        type = std::max(type, static_cast<int>(T::sRecordId));
+                }
+        };
+        std::apply([&](const auto&... store) { (index(store), ...); }, mStoreImp->mStores);
+        return type;
+    }
+
     ESMStore::PreparedDynamicRecords ESMStore::prepareDynamicRecords(std::unique_ptr<ESMStore> incoming)
     {
         if (!incoming || mDynamicClearGeneration == std::numeric_limits<std::uint64_t>::max()
@@ -733,7 +766,8 @@ namespace MWWorld
             npcs.insert(*player);
         }
         std::set<ESM::RefId> generatedIds;
-        const auto prepare = [&]<class T>(bool overridesOnly) {
+        const auto prepare = [&]<class T>() {
+            const bool overridesOnly = isSavedDynamicRecordOverrideOnly(T::sRecordId);
             auto& target = getWritable<T>();
             auto& saved = source.getWritable<T>();
             if (!saved.mStatic.empty())
@@ -778,26 +812,26 @@ namespace MWWorld
                 binding->mPlayerId = playerId;
             plan->mBindings.push_back(std::move(binding));
         };
-        prepare.template operator()<ESM::Potion>(false);
-        prepare.template operator()<ESM::Armor>(false);
-        prepare.template operator()<ESM::Book>(false);
-        prepare.template operator()<ESM::Class>(false);
-        prepare.template operator()<ESM::Clothing>(false);
-        prepare.template operator()<ESM::Enchantment>(false);
-        prepare.template operator()<ESM::Spell>(false);
-        prepare.template operator()<ESM::Weapon>(false);
-        prepare.template operator()<ESM::NPC>(true);
-        prepare.template operator()<ESM::Creature>(true);
-        prepare.template operator()<ESM::Container>(true);
-        prepare.template operator()<ESM::Miscellaneous>(true);
-        prepare.template operator()<ESM::Activator>(true);
-        prepare.template operator()<ESM::ItemLevList>(true);
-        prepare.template operator()<ESM::CreatureLevList>(true);
-        prepare.template operator()<ESM::Light>(true);
-        prepare.template operator()<ESM::Static>(true);
-        prepare.template operator()<ESM::Door>(true);
-        prepare.template operator()<ESM::Probe>(true);
-        prepare.template operator()<ESM::Ingredient>(true);
+        prepare.template operator()<ESM::Potion>();
+        prepare.template operator()<ESM::Armor>();
+        prepare.template operator()<ESM::Book>();
+        prepare.template operator()<ESM::Class>();
+        prepare.template operator()<ESM::Clothing>();
+        prepare.template operator()<ESM::Enchantment>();
+        prepare.template operator()<ESM::Spell>();
+        prepare.template operator()<ESM::Weapon>();
+        prepare.template operator()<ESM::NPC>();
+        prepare.template operator()<ESM::Creature>();
+        prepare.template operator()<ESM::Container>();
+        prepare.template operator()<ESM::Miscellaneous>();
+        prepare.template operator()<ESM::Activator>();
+        prepare.template operator()<ESM::ItemLevList>();
+        prepare.template operator()<ESM::CreatureLevList>();
+        prepare.template operator()<ESM::Light>();
+        prepare.template operator()<ESM::Static>();
+        prepare.template operator()<ESM::Door>();
+        prepare.template operator()<ESM::Probe>();
+        prepare.template operator()<ESM::Ingredient>();
         // Inventory preparation dispatches generated IDs through this owned
         // view, including callers that supplied records without an ID index.
         source.rebuildIdsIndex();

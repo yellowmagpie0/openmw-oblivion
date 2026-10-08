@@ -32,9 +32,10 @@ namespace
     }
 
     template <typename F>
-    void visitRefStore(const MWWorld::ESMStore& store, ESM::RefId name, F func)
+    void visitRefStore(const MWWorld::ESMStore& store, ESM::RefId name, F func,
+        const MWWorld::ESMStore* incoming = nullptr)
     {
-        switch (store.find(name))
+        switch (incoming ? store.findForRestore(name, *incoming) : store.find(name))
         {
             case ESM::REC_ACTI:
                 return func(store.get<ESM::Activator>());
@@ -100,9 +101,11 @@ namespace
             case ESM::REC_LIGH4:
                 return func(store.get<ESM::Light>());
             case ESM::REC_MISC4:
-                if (store.get<ESM::Lockpick>().search(name) != nullptr)
+                if ((incoming ? store.searchForRestore<ESM::Lockpick>(name, *incoming)
+                              : store.get<ESM::Lockpick>().search(name)) != nullptr)
                     return func(store.get<ESM::Lockpick>());
-                if (store.get<ESM::Repair>().search(name) != nullptr)
+                if ((incoming ? store.searchForRestore<ESM::Repair>(name, *incoming)
+                              : store.get<ESM::Repair>().search(name)) != nullptr)
                     return func(store.get<ESM::Repair>());
                 return func(store.get<ESM::Miscellaneous>());
             case ESM::REC_ALCH4:
@@ -132,13 +135,12 @@ MWWorld::ManualRef::ManualRef(const MWWorld::ESMStore& store, const ESM::RefId& 
 {
     auto cb = [&](const auto& typedStore) {
         using T = std::remove_cv_t<std::remove_pointer_t<decltype(typedStore.search(name))>>;
-        const T* base = incoming ? incoming->get<T>().search(name) : typedStore.find(name);
-        if (incoming && !base)
-            base = typedStore.searchStatic(name);
+        const T* base = incoming ? store.searchForRestore<T>(name, *incoming) : typedStore.find(name);
         create(base, name, mRef, mPtr);
     };
-    // A generated incoming item need not exist in the outgoing ID index.
-    visitRefStore(incoming && name.getIf<ESM::GeneratedRefId>() ? *incoming : store, name, cb);
+    // Match the incoming publication index without borrowing outgoing types,
+    // including ordinary IDs and native lockpick/repair projections.
+    visitRefStore(store, name, cb, incoming);
 
     mPtr.getCellRef().setCount(count);
 }
