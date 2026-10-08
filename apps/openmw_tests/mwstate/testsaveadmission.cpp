@@ -25,6 +25,7 @@
 #include <components/esm3/stolenitems.hpp>
 #include <components/esm3/weatherstate.hpp>
 #include <components/misc/rng.hpp>
+#include <components/misc/constants.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadclas.hpp>
@@ -671,7 +672,7 @@ TEST(SaveAdmissionTest, LocalFogResourcesPrepareAndRewindAcrossEveryNativeSchema
     const auto narrow = mapPng(31, 32);
     const auto rgb = mapPng(32, 32, GL_RGB);
     for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
-    for (int fault = 0; fault != 9; ++fault)
+    for (int fault = 0; fault != 13; ++fault)
     {
         SCOPED_TRACE(version);
         SCOPED_TRACE(fault);
@@ -683,6 +684,10 @@ TEST(SaveAdmissionTest, LocalFogResourcesPrepareAndRewindAcrossEveryNativeSchema
         if (fault == 6) fog.mBounds.mMinX = std::numeric_limits<float>::infinity();
         if (fault == 7) for (int i = 16; i != 20; ++i) bytes[i] = char(0x7f); // Reject before decoder allocation/CRC.
         if (fault == 8) fog.mNorthMarkerAngle = -0.f;
+        if (fault == 9) fog.mBounds.mMaxX = std::numeric_limits<float>::max();
+        if (fault == 10) fog.mBounds.mMinY = -std::numeric_limits<float>::max();
+        if (fault == 11) fog.mBounds.mMinX = fog.mBounds.mMaxX + 1;
+        if (fault == 12) fog.mCenterY = std::numeric_limits<float>::max();
         fog.mFogTextures.push_back({0, 0, bytes});
         const auto records = worldRecords([&](ESM::ESMWriter& writer) {
             writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId::stringRefId("fog-cell"));
@@ -699,7 +704,7 @@ TEST(SaveAdmissionTest, LocalFogResourcesPrepareAndRewindAcrossEveryNativeSchema
             EXPECT_EQ(id, ESM::RefId::stringRefId("fog-cell")); EXPECT_EQ(nativeCalls, 0);
             ++fogCalls; retained = std::move(state);
         };
-        const bool rejected = fault == 1 || fault == 2 || fault == 5 || fault == 6 || fault == 7;
+        const bool rejected = fault == 1 || fault == 2 || fault == 5 || fault == 6 || fault == 7 || fault >= 9;
         if (rejected)
         {
             EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, native,
@@ -735,6 +740,33 @@ TEST(SaveAdmissionTest, MorrowindFogAdmissionRetainsStructuralCompatibility)
     EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, nullptr,
         {}, {}, {}, {}, [&](const auto&, auto) { ++calls; }));
     EXPECT_EQ(calls, 0); EXPECT_EQ(reader.getFileOffset(), start);
+}
+
+TEST(SaveAdmissionTest, LocalFogGridUsesRepresentableIntegerBoundariesWithoutAnArbitrarySizeCap)
+{
+    ESM::FogState fog{};
+    fog.mBounds = {0, 0, 512, 512};
+    const float positiveOutside = std::ldexp(float(Constants::CellSizeInUnits), 31);
+    const float positiveInside = std::nextafter(positiveOutside, 0.f);
+    const float negativeInside = -positiveOutside;
+    fog.mCenterX = positiveInside;
+    fog.mCenterY = negativeInside;
+    EXPECT_NO_THROW(ESM::prepareFogState(fog, true));
+    fog.mCenterX = positiveOutside;
+    EXPECT_THROW(ESM::prepareFogState(fog, true), std::runtime_error);
+    fog.mCenterX = positiveInside;
+    fog.mCenterY = std::nextafter(negativeInside, -std::numeric_limits<float>::infinity());
+    EXPECT_THROW(ESM::prepareFogState(fog, true), std::runtime_error);
+    fog.mCenterY = 0;
+    fog.mBounds.mMaxX = positiveInside;
+    EXPECT_NO_THROW(ESM::prepareFogState(fog, true));
+    fog.mBounds.mMinX = negativeInside; // Each endpoint fits, but their span does not.
+    EXPECT_THROW(ESM::prepareFogState(fog, true), std::runtime_error);
+    fog.mBounds = {0, 0, 0, 0};
+    EXPECT_NO_THROW(ESM::prepareFogState(fog, true));
+    // Exterior records do not consume interior geometry.
+    fog.mCenterX = std::numeric_limits<float>::max();
+    EXPECT_NO_THROW(ESM::prepareFogState(fog, false));
 }
 
 TEST(SaveAdmissionTest, GlobalMapResourcePreparesBeforeNativeStateForEveryAcceptedVersion)

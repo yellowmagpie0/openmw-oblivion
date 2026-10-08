@@ -6,6 +6,45 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 reject unrepresentable saved interior fog grids — 2026-10-08
+
+Native fog admission now rejects inverted bounds and coordinates, centers or
+spans beyond the integer grid representation used by LocalMap. Span subtraction
+uses double precision so finite float endpoints cannot overflow before checking.
+The check derives from CellSizeInUnits and the int limits; it adds no arbitrary
+map-size cap. Zero-sized geometry and exterior records retain their admission
+behavior. Renderer arithmetic and resource limits for large representable maps
+still need work; this is not a complete geometry-safety guarantee.
+
+The retained local-fog-grid-red-01 baseline admits four new faults for all 47
+schemas, invokes fog preparation, and invokes native preparation where a native
+record exists. Corrected focused green-01 passes. The full matrix now covers 611
+schema/fault combinations. A separate case checks adjacent floats at positive
+and negative int-grid boundaries, individually representable endpoints with an
+unrepresentable combined span, zero bounds and exterior compatibility.
+
+Full normal and ASan/UBSan checks each pass 2596 component and 1260 engine tests,
+with exact unfiltered inventories/XML, no failures/skips, and matching source
+fingerprint 24d406f2ab6e0a30819bce49fa485303bb5cb4babfceec9530d2ade9d4e30017 against parent 4002dc3019. Leak checks are disabled.
+Evidence: build/oblivion-compat/m15/S3/local-fog-grid-{normal,sanitized}-01.
+No Python implementation changed; the previous 298-test result still covers the
+fixture writer. The new geometry scenario source validates with the harness.
+
+Actual local-fog-grid-reject-normal-01 loads schema 46, presses F5, changes only
+CSTA.BOUN maximum X to the largest finite float, and presses F9. Independent
+byte comparison confirms the exact single-float patch. Native state and all
+other bytes are preserved in the fault input. The bounds error occurs before a
+second native installation; Return/F5 then succeeds and the game quits cleanly.
+Ten fixed authority groups, prior reference/script instances and 37 weather
+catalog keys/current/regional identities persist. Both screenshots were inspected
+and retain the Imperial Prison scene/HUD. Fog PNGs remain 32×32. This is a normal
+no-sound interior rejection course, not an instrumented geometry runtime course
+or a fresh-process geometry continuation. The actual game binary is 004392dcc65fdbeddda43d90515baea1726d9c333b5a17cb9ceb7ca4e24d8213.
+
+Full S3 remains active. Remaining renderer arithmetic/resource staging and the
+complete prior-World, populated migration and profile/lifecycle acceptance gates
+are not closed by this chunk.
+
 ## S3 local fog images prepared before teardown — 2026-10-08
 
 Native save admission now decodes local-map fog before clearing the live World.

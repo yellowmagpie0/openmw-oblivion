@@ -4,12 +4,14 @@
 #include "esmwriter.hpp"
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 
 #include <osgDB/ReadFile>
 
 #include <components/debug/debuglog.hpp>
 #include <components/files/memorystream.hpp>
+#include <components/misc/constants.hpp>
 
 namespace ESM
 {
@@ -28,6 +30,20 @@ namespace ESM
                      state.mBounds.mMaxX, state.mBounds.mMaxY, state.mCenterX, state.mCenterY})
                 if (!std::isfinite(value))
                     throw std::runtime_error("Saved local-map fog has a nonfinite interior value");
+            // Local-map coordinates and segment counts are represented by int.
+            // Compute in double so finite float subtraction cannot overflow first.
+            const auto fitsGrid = [](double value) {
+                const double index = std::ceil(value / Constants::CellSizeInUnits);
+                return index >= std::numeric_limits<int>::min() && index <= std::numeric_limits<int>::max();
+            };
+            const double width = double(state.mBounds.mMaxX) - state.mBounds.mMinX;
+            const double height = double(state.mBounds.mMaxY) - state.mBounds.mMinY;
+            if (width < 0 || height < 0 || !fitsGrid(width) || !fitsGrid(height))
+                throw std::runtime_error("Saved local-map fog has unrepresentable interior bounds");
+            for (float value : {state.mBounds.mMinX, state.mBounds.mMinY, state.mBounds.mMaxX,
+                     state.mBounds.mMaxY, state.mCenterX, state.mCenterY})
+                if (!fitsGrid(value))
+                    throw std::runtime_error("Saved local-map fog has unrepresentable interior bounds");
         }
         FogState result = state;
         for (auto& texture : result.mFogTextures)

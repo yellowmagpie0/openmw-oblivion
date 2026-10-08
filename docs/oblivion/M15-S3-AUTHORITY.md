@@ -137,3 +137,10 @@ preservation for the wrong-size image fault. A fresh normal PID reloads the
 resaved output. Full C++ inventories and fixture-source Python checks pass;
 see the local-fog evidence in the milestone. Finite-but-extreme geometry and
 complete shared-resource/prior-World preservation remain open.
+
+Native fog geometry admission additionally rejects inverted bounds and integer
+map-grid overflow in coordinates, center and spans, using double subtraction.
+All 47-schema fault coverage and adjacent-float domain boundaries pass, as do
+full normal/sanitizer checks. The actual normal extreme-BOUN F9/Return/F5 course
+preserves the prior scene and checked authoritative state. Representable oversized
+maps and renderer arithmetic remain open; this is not complete geometry safety.
