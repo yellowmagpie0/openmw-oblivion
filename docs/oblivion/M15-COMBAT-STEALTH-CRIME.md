@@ -6,6 +6,59 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 weather restore owner and publication guards — 2026-10-08
+
+WeatherManager can now construct its real weather state without a scene
+renderer. Preparation, clear, installation, queries and WTHR persistence use
+that same manager implementation; frame updates require the rendering
+constructor and reject before mutation when no renderer exists. The live
+constructor retains its renderer. Copying/moving the manager is prohibited:
+prepared callbacks retain its address and a weak lifetime identity, so copying
+that identity could keep an expired owner's callbacks apparently alive.
+The retained compile assertion fails before this prohibition and passes after it.
+
+Two actual manager regressions exposed a separate publication bug. A direct
+WTHR restore could advance the old generation counter to the value an earlier
+plan expected after a clear. Similarly, installing one plan could enable a newer
+plan which still awaited a clear and overwrite the installed state. Both
+regression assertions failed (`stale()`/`waitingForNextClear()` returned true);
+the second also demonstrated the changed serialized state. Publications now
+advance past the next-clear generation. Only clear advances by one, so a direct
+read or installation invalidates pending handles without impersonating a clear.
+
+Six new manager cases exercise owned/reordered metadata through the real save
+codec, premature calls, cancellation, rejected preparation, exactly one clear,
+copied handles, competing plans, extra clears, owner destruction, a fresh owner,
+direct reads, future-clear plans and renderer requirements. Assertions cover
+current/next/queued weather, override, regional chance ordering and fallback,
+countdown sign, transition and public chance queries. They supplement the
+existing pure preparation/World RNG tests rather than replacing them.
+
+Final normal and ASan/UBSan runs each pass **1255 engine tests**, exact full
+inventories/XML, no failures/skips, matching source fingerprints
+`97e033537c1263ecdc57e9aaa6e38a697f7c568d775bb0bf72fce87f22cd8b03`
+against parent `08a60aaa8e132f55b61156940f99ba811d8fbc6a`. ASan leak checks
+are disabled. The earlier1254-case passes preceded the two publication
+regressions and are retained, along with their failing focused baseline.
+An existing unused-context compiler warning remains unrelated.
+
+The final rebuilt normal executable
+`842206a4ddf7179340d37d0fa3f2bbaf0534fa1a6dede40b3377a3cbce822ea4`
+also passes the existing regional B/A then A/B actual load/F5/quit and distinct-PID
+load/resave course. All39 stable catalog keys and regional/current/fallback
+identities persist, with37 initial native groups exact apart from deliberate
+content-array order and ten fixed authority groups exact after saving. Both
+captures show the expected prison scene and HUD. This validates the live
+renderer constructor path; final sanitizer evidence is test-process coverage,
+not a newly rendered sanitizer course or an exterior weather claim.
+
+Evidence: `build/oblivion-compat/m15/S3/weather-manager-{normal,sanitized}-02`,
+`weather-manager-copy-{red,green}-01`, `weather-manager-publication-red-01`,
+`weather-manager-runtime-normal-02` and `weather-manager-report.json`.
+Full S3 remains active: changed-content admission runtime, wider shared semantic/
+resource restoration, combined migration/lifecycle audit and the remaining
+acceptance requirements still need completion evidence.
+
 ## S3 regional probability windows through actual reordering — 2026-10-08
 
 `scripts/saved_weather_fixture.py` applies the editable

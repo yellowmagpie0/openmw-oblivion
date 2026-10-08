@@ -745,6 +745,16 @@ namespace MWWorld
     }
 
     WeatherManager::WeatherManager(MWRender::RenderingManager& rendering, MWWorld::ESMStore& store)
+        : WeatherManager(store, &rendering)
+    {
+    }
+
+    WeatherManager::WeatherManager(MWWorld::ESMStore& store)
+        : WeatherManager(store, nullptr)
+    {
+    }
+
+    WeatherManager::WeatherManager(MWWorld::ESMStore& store, MWRender::RenderingManager* rendering)
         : mStore(store)
         , mRendering(rendering)
         , mSunriseTime(Fallback::Map::getFloat("Weather_Sunrise_Time"))
@@ -1006,6 +1016,9 @@ namespace MWWorld
 
     void WeatherManager::update(float duration, bool paused, const TimeStamp& time, bool isExterior)
     {
+        if (!mRendering)
+            throw std::logic_error("Weather frame updates require a scene renderer");
+        auto& rendering = *mRendering;
         MWWorld::ConstPtr player = MWMechanics::getPlayer();
 
         if (!paused || mFastForward)
@@ -1034,7 +1047,7 @@ namespace MWWorld
 
         if (!isExterior)
         {
-            mRendering.setSkyEnabled(false);
+            rendering.setSkyEnabled(false);
             stopSounds();
             mWindSpeed = 0.f;
             mCurrentWindSpeed = 0.f;
@@ -1058,13 +1071,13 @@ namespace MWWorld
             && mResult.mParticleEffect != Settings::models().mWeatherashcloud.get();
 
         mStormDirection = calculateStormDirection(mResult.mParticleEffect);
-        mRendering.getSkyManager()->setStormParticleDirection(mStormDirection);
+        rendering.getSkyManager()->setStormParticleDirection(mStormDirection);
 
         // disable sun during night
         if (time.getHour() >= mTimeSettings.mNightStart || time.getHour() <= mSunriseTime)
-            mRendering.getSkyManager()->sunDisable();
+            rendering.getSkyManager()->sunDisable();
         else
-            mRendering.getSkyManager()->sunEnable();
+            rendering.getSkyManager()->sunEnable();
 
         // Update the sun direction.  Run it east to west at a fixed angle from overhead.
         // The sun's speed at day and night may differ, since mSunriseTime and mNightStart
@@ -1096,8 +1109,8 @@ namespace MWWorld
 
             // Hardcoded constant from Morrowind
             const osg::Vec3f sunDir(-400.f * orbit, 75.f, -100.f);
-            mRendering.setSunDirection(sunDir);
-            mRendering.setNight(isNight);
+            rendering.setSunDirection(sunDir);
+            rendering.setNight(isNight);
         }
 
         float underwaterFog = mUnderwaterFog.getValue(time.getHour(), mTimeSettings, "Fog");
@@ -1111,25 +1124,25 @@ namespace MWWorld
         else
             glareFade = 1.f - (time.getHour() - peakHour) / (mTimeSettings.mNightStart - peakHour);
 
-        mRendering.getSkyManager()->setGlareTimeOfDayFade(glareFade);
+        rendering.getSkyManager()->setGlareTimeOfDayFade(glareFade);
 
-        mRendering.getSkyManager()->setMasserState(mMasser.calculateState(time));
-        mRendering.getSkyManager()->setSecundaState(mSecunda.calculateState(time));
+        rendering.getSkyManager()->setMasserState(mMasser.calculateState(time));
+        rendering.getSkyManager()->setSecundaState(mSecunda.calculateState(time));
 
         if (mResult.mUseExactFog)
-            mRendering.configureFogExact(mResult.mFogNear, mResult.mFogFar, mResult.mFogColor);
+            rendering.configureFogExact(mResult.mFogNear, mResult.mFogFar, mResult.mFogColor);
         else
-            mRendering.configureFog(
+            rendering.configureFog(
                 mResult.mFogDepth, underwaterFog, mResult.mDLFogFactor, mResult.mDLFogOffset / 100.0f, mResult.mFogColor);
 
         const ESM::RefId waterId = player.getCell()->getCell()->getWaterType();
         if (const ESM4::Water* water = mStore.get<ESM4::Water>().search(waterId))
-            mRendering.configureUnderwaterFog(water->mData.mFogNear, water->mData.mFogFar,
+            rendering.configureUnderwaterFog(water->mData.mFogNear, water->mData.mFogFar,
                 SceneUtil::colourFromRGBA(water->mData.mDeepColor));
-        mRendering.setAmbientColour(mResult.mAmbientColor);
-        mRendering.setSunColour(mResult.mSunColor, mResult.mSunColor, mResult.mGlareView * glareFade);
+        rendering.setAmbientColour(mResult.mAmbientColor);
+        rendering.setSunColour(mResult.mSunColor, mResult.mSunColor, mResult.mGlareView * glareFade);
 
-        mRendering.getSkyManager()->setWeather(mResult);
+        rendering.getSkyManager()->setWeather(mResult);
 
         // Play sounds
         if (mPlayingAmbientSoundID != mResult.mAmbientLoopSoundID)
@@ -1288,7 +1301,9 @@ namespace MWWorld
                     if (auto found = prepared.mRegions.find(id); found != prepared.mRegions.end())
                         found->second = RegionWeather(region);
             applyRestore(prepared);
-            ++mRestoreGeneration;
+            // Only clear() may advance to the generation a prepared handle awaits.
+            // Publication skips it so direct reads cannot impersonate a clear.
+            mRestoreGeneration += 2;
 
             return true;
         }
@@ -1495,7 +1510,9 @@ namespace MWWorld
             if (!prepared || identity.expired() || mRestoreGeneration != generation)
                 return false;
             applyRestore(*prepared);
-            ++mRestoreGeneration;
+            // Consume this and competing plans without enabling a plan that was
+            // prepared after the last clear and still awaits the next one.
+            mRestoreGeneration += 2;
             prepared.reset();
             return true;
         };
@@ -1533,7 +1550,8 @@ namespace MWWorld
         const VFS::Path::Normalized stars = climate->mModel.empty()
             ? VFS::Path::Normalized("meshes/sky/stars.nif")
             : Misc::ResourceHelpers::correctMeshPath(climate->mModel.getNormalized());
-        mRendering.getSkyManager()->setNativeClimate(sun, glare, stars, climate->hasMasser(), climate->hasSecunda());
+        if (mRendering)
+            mRendering->getSkyManager()->setNativeClimate(sun, glare, stars, climate->hasMasser(), climate->hasSecunda());
         mMasser.setPhaseLength(climate->phaseLength());
         mSecunda.setPhaseLength(climate->phaseLength());
 

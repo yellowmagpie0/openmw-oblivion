@@ -1,18 +1,237 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <algorithm>
 #include <limits>
+#include <sstream>
+#include <type_traits>
+
+#include <components/esm3/esmreader.hpp>
+#include <components/esm3/esmwriter.hpp>
+#include <components/loadinglistener/loadinglistener.hpp>
 
 #include <components/esm4/loadclmt.hpp>
 #include <components/esm4/loadwthr.hpp>
 
 #include "apps/openmw/mwworld/timestamp.hpp"
 #include "apps/openmw/mwworld/weather.hpp"
+#include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwbase/environment.hpp"
+#include "apps/openmw/mwsound/soundmanagerimp.hpp"
+#include <components/vfs/manager.hpp>
 
 namespace MWWorld
 {
     namespace
     {
+        struct WeatherManagerFixture
+        {
+            MWBase::Environment mEnvironment;
+            VFS::Manager mVfs;
+            MWSound::SoundManager mSoundManager{&mVfs, false};
+            ESMStore mStore;
+            const ESM::RefId mRegion{ESM::FormId{0x300, 0}};
+
+            WeatherManagerFixture()
+            {
+                mEnvironment.setSoundManager(mSoundManager);
+                for (std::uint32_t id : {0x100u, 0x200u})
+                {
+                    ESM4::Weather weather{};
+                    weather.mId = {id, 0};
+                    weather.mEditorId = id == 0x100 ? "Clear" : "Other";
+                    mStore.getWritable<ESM4::Weather>().insertStatic(
+                        weather, ESM::FormKey::content("weather.esm", id));
+                }
+                ESM4::Climate climate{};
+                climate.mId = {0x300, 0};
+                climate.mWeather = {{{0x100, 0}, 25}, {{0x200, 0}, 75}};
+                mStore.getWritable<ESM4::Climate>().insertStatic(
+                    climate, ESM::FormKey::content("weather.esm", 0x300));
+            }
+
+            std::string capture(WeatherManager& manager)
+            {
+                std::stringstream output;
+                ESM::ESMWriter writer;
+                writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+                writer.save(output);
+                Loading::Listener listener;
+                manager.write(writer, listener);
+                return output.str();
+            }
+
+            ESM::WeatherState decode(const std::string& bytes)
+            {
+                ESM::ESMReader reader;
+                reader.open(std::make_unique<std::stringstream>(bytes), "manager-weather");
+                reader.getRecName(); reader.getRecHeader();
+                ESM::WeatherState state{};
+                state.load(reader, true);
+                return state;
+            }
+
+            ESM::WeatherState incoming(WeatherManager& manager)
+            {
+                auto state = decode(capture(manager));
+                std::reverse(state.mWeatherIdentities->begin(), state.mWeatherIdentities->end());
+                state.mCurrentRegion = mRegion;
+                state.mCurrentWeather = 0;
+                state.mNextWeather = 1;
+                state.mQueuedWeather = -1;
+                state.mWeatherOverride = true;
+                state.mTimePassed = -1.25f;
+                state.mFastForward = true;
+                state.mWeatherUpdateTime = -0.f;
+                state.mTransitionFactor = .375f;
+                state.mRegions[mRegion] = {0, {25, 25}, {}, 0};
+                return state;
+            }
+
+            void expectInstalled(WeatherManager& manager)
+            {
+                const auto state = decode(capture(manager));
+                ASSERT_TRUE(state.mWeatherIdentities);
+                EXPECT_EQ(state.mWeatherIdentities->at(state.mCurrentWeather),
+                    ESM::FormKey::content("weather.esm", 0x200));
+                EXPECT_EQ(state.mCurrentRegion, mRegion);
+                EXPECT_EQ(state.mNextWeather, 0);
+                EXPECT_EQ(state.mQueuedWeather, -1);
+                EXPECT_TRUE(state.mWeatherOverride);
+                EXPECT_TRUE(manager.hasWeatherOverride());
+                EXPECT_FLOAT_EQ(state.mTimePassed, -1.25f);
+                EXPECT_TRUE(state.mFastForward);
+                EXPECT_TRUE(std::signbit(state.mWeatherUpdateTime));
+                EXPECT_FLOAT_EQ(state.mTransitionFactor, .375f);
+                const auto& region = state.mRegions.at(mRegion);
+                EXPECT_EQ(region.mWeather, 1);
+                EXPECT_EQ(region.mChances, (std::vector<std::uint8_t>{25, 25}));
+                EXPECT_EQ(region.mSelectionOrder, (std::vector<std::int32_t>{1, 0}));
+                EXPECT_EQ(region.mFallbackWeather, 1);
+                EXPECT_EQ(std::vector(manager.getRegionChances(mRegion).begin(), manager.getRegionChances(mRegion).end()),
+                    (std::vector<std::uint8_t>{25, 25}));
+            }
+        };
+
+        TEST(MWWorldWeatherTest, managerPreparedRestoreOwnsStateAndCopiedHandlesInstallOnceAfterExactlyOneClear)
+        {
+            WeatherManagerFixture fixture;
+            WeatherManager manager(fixture.mStore);
+            const auto before = fixture.capture(manager);
+            auto incoming = fixture.incoming(manager);
+            auto install = manager.prepareRead(incoming);
+            auto copy = install;
+            incoming.mRegions.clear();
+            incoming.mCurrentWeather = 99;
+            EXPECT_EQ(fixture.capture(manager), before);
+            EXPECT_FALSE(install()); // Premature calls do not consume the prepared state.
+            EXPECT_EQ(fixture.capture(manager), before);
+            manager.clear();
+            EXPECT_TRUE(copy());
+            fixture.expectInstalled(manager);
+            const auto installed = fixture.capture(manager);
+            EXPECT_FALSE(copy());
+            EXPECT_FALSE(install());
+            EXPECT_EQ(fixture.capture(manager), installed);
+        }
+
+        TEST(MWWorldWeatherTest, managerDiscardedAndRejectedPreparationLeaveOutgoingStateUntouched)
+        {
+            WeatherManagerFixture fixture;
+            WeatherManager manager(fixture.mStore);
+            const auto before = fixture.capture(manager);
+            { auto cancelled = manager.prepareRead(fixture.incoming(manager)); }
+            EXPECT_EQ(fixture.capture(manager), before);
+            auto invalid = fixture.incoming(manager);
+            invalid.mCurrentWeather = 2;
+            EXPECT_THROW(manager.prepareRead(invalid), std::runtime_error);
+            EXPECT_EQ(fixture.capture(manager), before);
+            auto valid = manager.prepareRead(fixture.incoming(manager));
+            manager.clear();
+            EXPECT_TRUE(valid());
+            fixture.expectInstalled(manager);
+        }
+
+        TEST(MWWorldWeatherTest, managerExtraClearAndCompetingPlansCannotReplayOrOverwriteInstalledState)
+        {
+            WeatherManagerFixture fixture;
+            WeatherManager manager(fixture.mStore);
+            auto stale = manager.prepareRead(fixture.incoming(manager));
+            auto staleCopy = stale;
+            manager.clear(); manager.clear();
+            const auto cleared = fixture.capture(manager);
+            EXPECT_FALSE(stale()); EXPECT_FALSE(staleCopy());
+            EXPECT_EQ(fixture.capture(manager), cleared);
+            auto selected = manager.prepareRead(fixture.incoming(manager));
+            auto competing = manager.prepareRead(fixture.decode(cleared));
+            manager.clear();
+            EXPECT_TRUE(selected());
+            const auto installed = fixture.capture(manager);
+            EXPECT_FALSE(competing());
+            EXPECT_EQ(fixture.capture(manager), installed);
+            fixture.expectInstalled(manager);
+        }
+
+        TEST(MWWorldWeatherTest, managerDestroyedOwnerAndNewManagerDoNotReviveRetainedCopies)
+        {
+            static_assert(!std::is_copy_constructible_v<WeatherManager>);
+            static_assert(!std::is_copy_assignable_v<WeatherManager>);
+            static_assert(!std::is_move_constructible_v<WeatherManager>);
+            static_assert(!std::is_move_assignable_v<WeatherManager>);
+            WeatherManagerFixture fixture;
+            auto manager = std::make_unique<WeatherManager>(fixture.mStore);
+            auto install = manager->prepareRead(fixture.incoming(*manager));
+            auto copy = install;
+            manager->clear();
+            manager.reset();
+            EXPECT_FALSE(install()); EXPECT_FALSE(copy());
+            manager = std::make_unique<WeatherManager>(fixture.mStore);
+            manager->clear();
+            const auto before = fixture.capture(*manager);
+            EXPECT_FALSE(install()); EXPECT_FALSE(copy());
+            EXPECT_EQ(fixture.capture(*manager), before);
+        }
+
+        TEST(MWWorldWeatherTest, managerDirectRecordRestoreInvalidatesPreparedHandlesAndRequiresRendererForFrames)
+        {
+            WeatherManagerFixture fixture;
+            WeatherManager manager(fixture.mStore);
+            auto incoming = fixture.incoming(manager);
+            auto stale = manager.prepareRead(incoming);
+            // A direct restore must invalidate this handle without acting as its requested clear.
+            std::stringstream stream;
+            ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+            writer.startRecord(ESM::REC_WTHR); incoming.save(writer); writer.endRecord(ESM::REC_WTHR);
+            ESM::ESMReader reader;
+            reader.open(std::make_unique<std::stringstream>(stream.str()), "direct-weather");
+            reader.getRecName(); reader.getRecHeader();
+            ASSERT_TRUE(manager.readRecord(reader, ESM::REC_WTHR));
+            fixture.expectInstalled(manager);
+            const auto installed = fixture.capture(manager);
+            EXPECT_FALSE(stale());
+            EXPECT_THROW(manager.update(1.f, false, TimeStamp(0.f, 1), true), std::logic_error);
+            EXPECT_EQ(fixture.capture(manager), installed);
+        }
+
+        TEST(MWWorldWeatherTest, managerPublicationCannotActAsTheClearRequestedByANewerPreparedPlan)
+        {
+            WeatherManagerFixture fixture;
+            WeatherManager manager(fixture.mStore);
+            auto selected = manager.prepareRead(fixture.incoming(manager));
+            manager.clear();
+            auto incoming = fixture.incoming(manager);
+            incoming.mTimePassed = 123.f;
+            auto waitingForNextClear = manager.prepareRead(incoming);
+            ASSERT_TRUE(selected());
+            const auto installed = fixture.capture(manager);
+            EXPECT_FALSE(waitingForNextClear());
+            EXPECT_EQ(fixture.capture(manager), installed);
+            manager.clear();
+            const auto cleared = fixture.capture(manager);
+            EXPECT_FALSE(waitingForNextClear());
+            EXPECT_EQ(fixture.capture(manager), cleared);
+        }
+
         TEST(MWWorldWeatherTest, moonPhasesHaveMwscriptCompatibleValues)
         {
             using Phase = MWRender::MoonState::Phase;

@@ -101,8 +101,13 @@ content/catalog and native state comparisons pass. Additional normal and
 instrumented two-process courses preserve nonzero A25/B75 and A25/B25-with-B-
 fallback chance windows through B/A then A/B. Raw RGNW/RGDF/RGIX and stable
 keys agree across both reversals, with every non-weather setup record exact.
-Changed-content rejection and explicit stale/copied manager-handle integration
-remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
+Actual WeatherManager/save-codec tests now verify discarded, copied, stale,
+extra-clear and destroyed-owner handles. The owner is immovable. Direct reads
+and prepared publication skip the next-clear generation, preventing them from
+enabling a callback awaiting a clear; both failing regressions now pass.
+A state-only constructor exercises the actual manager while live frames still
+require rendering. The final normal regional runtime course also passes.
+Changed-content rejection runtime remains open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
 replacement reconciliation remain open. Later shared record/resource restoration
 still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.

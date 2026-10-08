@@ -344,7 +344,15 @@ namespace MWWorld
     public:
         // Have to pass fallback and Store, can't use singleton since World isn't fully constructed yet at the time
         WeatherManager(MWRender::RenderingManager& rendering, MWWorld::ESMStore& store);
+        // State preparation, installation and persistence need no scene renderer.
+        // Frame updates still require the rendering constructor above.
+        explicit WeatherManager(MWWorld::ESMStore& store);
         ~WeatherManager();
+        // Prepared callbacks retain this owner's address and lifetime identity.
+        WeatherManager(const WeatherManager&) = delete;
+        WeatherManager& operator=(const WeatherManager&) = delete;
+        WeatherManager(WeatherManager&&) = delete;
+        WeatherManager& operator=(WeatherManager&&) = delete;
 
         /**
          * Change the weather in the specified region by id of the weather
@@ -420,7 +428,9 @@ namespace MWWorld
 
     private:
         MWWorld::ESMStore& mStore;
-        MWRender::RenderingManager& mRendering;
+        WeatherManager(MWWorld::ESMStore& store, MWRender::RenderingManager* rendering);
+
+        MWRender::RenderingManager* mRendering;
         float mSunriseTime;
         float mSunsetTime;
         float mSunriseDuration;
