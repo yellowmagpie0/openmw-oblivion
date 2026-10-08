@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 shared actor scalar NaN admission failure; native state unchanged",
+  "records": [
+    "PLAY"
+  ],
+  "field": "First NpcStats skill STBA: skill index0 Block base",
+  "payload": "Replace four-byte float STBA payload with quiet NaN little-endian bytes0000c07f; preserve subrecord/record lengths",
+  "encoding": "NpcState writes inventory, then NpcStats. NpcStats writes 27 skills in ESM3 index order; Block is first. Four-byte subrecord name and uint32 little-endian size; STBA payload float32.",
+  "preserve": "Every other byte in private actual F5 output, including all native bytes; original skill base must return on resave",
+  "expected_error": "Saved game shared actor has a nonfinite stat",
+  "preparation_reference": "build/oblivion-compat/m15/S3/shared-actor-scalars-reject-01/mutate.py"
+}

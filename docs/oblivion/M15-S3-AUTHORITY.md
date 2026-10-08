@@ -39,6 +39,10 @@ World capture uses the same live service state, not telemetry as an authority.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.
+Shared consumed attribute/resource/skill floats, fall/drowning scalars and
+draw-state enums are admitted before preparation, preserving ignored wire fields
+and MissingACDT/custom-state skips. Actual normal/instrumented shared skill NaN
+rejection/resave courses preserve the outgoing world and original shared stat.
 Shared cell/actor timestamp hour domains are also admitted before preparation;
 removed used-power definitions retain their skip behavior, and omitted active
 effect worsening timestamps reconstruct as zero. GMAP PNG decoding and shape

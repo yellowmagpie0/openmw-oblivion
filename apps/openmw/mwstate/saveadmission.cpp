@@ -49,6 +49,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/oblivioninventoryidentity.hpp"
+#include "../mwmechanics/drawstate.hpp"
 #include "../mwlua/userdataserializer.hpp"
 #include "../mwrender/globalmap.hpp"
 
@@ -134,7 +135,7 @@ namespace
             throw std::runtime_error("Saved game shared timestamp hour is outside [0, 24)");
     }
 
-    void validateSharedActorTimestamps(const ESM::ObjectState& object,
+    void validateSharedActorState(const ESM::ObjectState& object,
         const MWWorld::ESMStore& incoming, const MWWorld::ESMStore* content)
     {
         if (!object.mHasCustomState)
@@ -146,6 +147,42 @@ namespace
             stats = &creature->mCreatureStats;
         if (!stats)
             return;
+        const auto finite = [](float value) {
+            if (!std::isfinite(value))
+                throw std::runtime_error("Saved game shared actor has a nonfinite stat");
+        };
+        // Validate the fields consumed by the shared stat readers. The other
+        // StatState members are legacy wire fields ignored by those readers.
+        if (!stats->mMissingACDT)
+        {
+            for (const auto& [id, value] : stats->mAttributes)
+            {
+                finite(value.mBase);
+                finite(value.mMod);
+                finite(value.mDamage);
+            }
+            for (const auto& value : stats->mDynamic)
+            {
+                finite(value.mBase);
+                finite(value.mMod);
+                finite(value.mCurrent);
+            }
+        }
+        finite(stats->mFallHeight);
+        if (stats->mDrawState < static_cast<int>(MWMechanics::DrawState::Nothing)
+            || stats->mDrawState > static_cast<int>(MWMechanics::DrawState::Spell))
+            throw std::runtime_error("Saved game shared actor has an invalid draw state");
+        if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&object))
+        {
+            for (const auto& [id, value] : npc->mNpcStats.mSkills)
+            {
+                finite(value.mBase);
+                finite(value.mMod);
+                finite(value.mDamage);
+                finite(value.mProgress);
+            }
+            finite(npc->mNpcStats.mTimeToStartDrowning);
+        }
         validateSharedTimestamp(stats->mTradeTime);
         validateSharedTimestamp(stats->mTimeOfDeath);
         for (const auto& [id, timestamp] : stats->mSpells.mUsedPowers)
@@ -632,7 +669,7 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
-                        validateSharedActorTimestamps(player.mObject, *shared, content);
+                        validateSharedActorState(player.mObject, *shared, content);
                         // These fields are restored separately from the native
                         // Player projection. A valid T4ST position cannot make
                         // poisoned shared recall/exterior coordinates safe.
@@ -690,7 +727,7 @@ namespace MWState
                             {
                                 const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
-                                validateSharedActorTimestamps(*state, *shared, content);
+                                validateSharedActorState(*state, *shared, content);
                                 // CSTA reference numbers retain their saved load-order
                                 // index; base IDs have already been remapped by getRefId.
                                 const ESM::InventoryState* inventory = nullptr;

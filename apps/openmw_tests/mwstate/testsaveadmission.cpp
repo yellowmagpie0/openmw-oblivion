@@ -374,6 +374,119 @@ namespace
         content.getWritable<ESM::Spell>().insertStatic(spell);
         content.setUp();
     }
+
+    // Consumed: attribute base/mod/damage, dynamic base/mod/current, skill
+    // base/mod/damage/progress, fall height, drowning. Remaining channels are
+    // deliberately ignored StatState wire fields in the production readers.
+    std::string actorScalarRecords(int owner, int channel, float value, int mode = 0, int draw = 0)
+    {
+        return worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            ESM::NpcState npc{}; npc.blank();
+            ESM::CreatureState creature{}; creature.blank();
+            ESM::ObjectState* object = owner == 0 ? &player.mObject : owner == 1
+                ? static_cast<ESM::ObjectState*>(&npc) : &creature;
+            auto* stats = owner == 0 ? &player.mObject.mCreatureStats : owner == 1
+                ? &npc.mCreatureStats : &creature.mCreatureStats;
+            auto* npcStats = owner == 0 ? &player.mObject.mNpcStats : owner == 1 ? &npc.mNpcStats : nullptr;
+            object->mRef.mRefID = owner == 0 ? ESM::RefId::stringRefId("Player")
+                : owner == 1 ? timestampNpcId : timestampCreatureId;
+            object->mRef.mRefNum = {1, -1}; object->mHasCustomState = mode != 1;
+            stats->mMissingACDT = mode == 2; stats->mDrawState = draw;
+            auto& attribute = stats->mAttributes[ESM::Attribute::Strength];
+            auto& dynamic = stats->mDynamic[0];
+            ESM::StatState<float>* skill = npcStats ? &npcStats->mSkills[ESM::Skill::Block] : nullptr;
+            std::array<float*, 19> fields{
+                &attribute.mBase, &attribute.mMod, &attribute.mDamage,
+                &dynamic.mBase, &dynamic.mMod, &dynamic.mCurrent,
+                skill ? &skill->mBase : nullptr, skill ? &skill->mMod : nullptr,
+                skill ? &skill->mDamage : nullptr, skill ? &skill->mProgress : nullptr,
+                &stats->mFallHeight, npcStats ? &npcStats->mTimeToStartDrowning : nullptr,
+                &attribute.mCurrent, &attribute.mProgress, &dynamic.mDamage, &dynamic.mProgress,
+                skill ? &skill->mCurrent : nullptr, &stats->mAiSettings[0].mDamage, &stats->mAiSettings[0].mProgress};
+            stats->mHasAiSettings = channel >= 17;
+            if (channel >= 0) { ASSERT_NE(fields[channel], nullptr); *fields[channel] = value; }
+            if (owner == 0)
+            {
+                player.mCellId = ESM::RefId::stringRefId("Admission Cell");
+                writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            }
+            else
+            {
+                writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId::stringRefId("Admission Cell"));
+                ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                writer.writeHNT("OBJE", std::uint32_t{0}); object->save(writer); writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+    }
+}
+
+TEST(SaveAdmissionTest, SharedActorConsumedFloatDomainsRejectBeforePreparationForEveryNativeVersion)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    const std::array<float, 10> values{0.f, -0.f, -1.f, 1.f, 23.125f,
+        std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity()};
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 3; ++owner)
+    for (int channel = 0; channel != 19; ++channel)
+    for (int mode = 0; mode != 3; ++mode)
+    for (const auto value : values)
+    {
+        if (owner == 2 && ((channel >= 6 && channel <= 9) || channel == 11 || channel == 16)) continue;
+        SCOPED_TRACE(::testing::PrintToString(std::make_tuple(version, owner, channel, mode, value)));
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + actorScalarRecords(owner, channel, value, mode));
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool rejected = !std::isfinite(value) && mode != 1 && channel < 12 && !(mode == 2 && channel < 6);
+        if (rejected)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        EXPECT_EQ(calls, int(!rejected && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::NPC>().getDynamicSize(), 0u);
+        EXPECT_EQ(content.get<ESM::Creature>().getDynamicSize(), 0u);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedActorDrawEnumsAndMorrowindScalarCompatibility)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 3; ++owner)
+    for (const bool custom : {false, true})
+    for (const int draw : {-1, 0, 1, 2, 3, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()})
+    {
+        SCOPED_TRACE(::testing::PrintToString(std::make_tuple(version, owner, custom, draw)));
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + actorScalarRecords(owner, -1, 0.f, custom ? 0 : 1, draw));
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool rejected = custom && (draw < 0 || draw > 2);
+        if (rejected)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        EXPECT_EQ(calls, int(!rejected && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+    for (int owner = 0; owner != 3; ++owner)
+    for (int channel = 0; channel != 19; ++channel)
+    {
+        if (owner == 2 && ((channel >= 6 && channel <= 9) || channel == 11 || channel == 16)) continue;
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0)
+            + actorScalarRecords(owner, channel, std::numeric_limits<float>::quiet_NaN(), 0, -1));
+        EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, &content));
+    }
 }
 
 TEST(SaveAdmissionTest, SharedTimestampDomainsRejectBeforePreparationForEveryNativeVersion)

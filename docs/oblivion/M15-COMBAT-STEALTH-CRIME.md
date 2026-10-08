@@ -6,6 +6,57 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 shared actor consumed scalar and draw-state admission — 2026-10-07
+
+Oblivion admission now validates the floating fields actually consumed by the
+shared Player/NPC/creature stat readers before native preparation and teardown:
+attribute base/modifier/damage; resource base/modifier/current; NPC skill base/
+modifier/damage/progress; fall height and NPC drowning time. The shared draw
+state must be Nothing/Weapon/Spell. Valid native fields cannot sanitize a
+poisoned shared state that is applied before native restore. Finite negative,
+sentinel, signed-zero and extreme scalar values remain accepted.
+
+The checks follow actual consumers in `stat.cpp`, `creaturestats.cpp` and
+`npcstats.cpp`: no custom state skips all actor fields; MissingACDT skips
+attributes/resources but not NPC skills/drowning/fall/draw. Ignored attribute
+current/progress, resource damage/progress, skill current and integer AI stat
+damage/progress wire fields retain compatibility, including nonfinite unused
+values. Morrowind admission is unchanged. This is data/adapter validation,
+not a new native gameplay formula or a blanket clamp of legacy values.
+
+The matrices exercise **71,910 float cases** across schemas1–46 and no-T4ST,
+three actor owners, consumed/ignored channels, custom/MissingACDT paths, zero/
+signed-zero/negative/normal/finite extrema/NaN/both infinities. **1,974 draw
+cases** cover all owners/versions/custom paths and valid/invalid/extreme enum
+values; **51 cases** preserve Morrowind scalar/enum admission. Preparation
+suppression, reader rewind and unchanged outgoing stores are checked.
+
+`S3/shared-actor-scalars-engine-02` and `shared-actor-scalars-sanitized-engine-02`
+passed all **1,232 engine tests**, exact inventories/XML, no failures/skips and
+stable source fingerprints. Parent: `d3d6dc51fa100da01a84958ac927caaad6292a9d`;
+tested fingerprint: `8c0fed99a124c3bb86b3d1350dab32510ace64ab1a582417bc9a199f28115c06`.
+ASan/UBSan halt on errors; leak checks are disabled. Fixture publication passed
+all **280 Python tests** and the production scenario validator. Compiled
+implementation/test hashes are unchanged by later fixture/docs publication.
+The two retained engine01 failures were a test enum-name compilation mistake.
+
+Actual normal/instrumented `shared-actor-scalars-reject{,-sanitized}-01`
+courses replace only the four-byte first skill STBA (Block base5) in a private
+real F5 output with quiet NaN. Every other byte, record length and native byte
+remains identical. F9 rejects before teardown; Return/F5 preserves original
+shared Block base5 and compared Player/actor/action/crime/quest fields. Both
+courses have one load/two actual saves in one PID/epoch, all38 initial native
+snapshot fields match, and both quit cleanly. All four captures reviewed.
+
+Editable `oblivion_m15_shared_actor_scalars_{reject,fault}.json` recipes live
+under `scripts/data/oblivion_compat/`; exact workers/verifiers and private saves
+stay in the ignored courses. `S3/shared-actor-scalars-report.json` records hashes
+and separate structural, compiler/world, semantic and runtime verification.
+Shared inventory/effects/AI/fog/auxiliary resources and the postcleanup failure
+boundary still need audit/preparation, alongside broader populated migration,
+legacy authority, lifecycle/profile/adapter and queue/action gates. S3 is still
+in progress; no TES4 authoring/MCP support is established.
+
 ## S3 generated quickkey adapter and final inventory binding — 2026-10-07
 
 The public Player hotkey setter now resolves generated shared-item identities
