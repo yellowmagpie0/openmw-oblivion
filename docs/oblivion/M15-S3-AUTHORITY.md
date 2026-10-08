@@ -250,3 +250,14 @@ continuation passes too. See the milestone's exact directories, failures and sco
 This establishes hotkey image preparation and the declared display-kind restores;
 it does not establish native spell-icon translation, enchanted-item activation,
 all hotkey UI/legacy paths or complete all-or-nothing S3 restoration.
+
+
+S3 actual content-rejection follow-up (2026-10-08): the normal executable rejects
+an actually changed selected script-content file by its independently checked
+saved/current SHA-256 and an actually removed selected file by name. The editable
+changed/missing-content source manifests are byte-identical to tested manifests;
+private `content-changed-runtime-normal-01` / `content-missing-runtime-normal-01`
+courses pass action/error/exit audits, retain untouched input/save bytes and emit
+no native application or load/save completion. This supersedes the initial-load
+content-rejection gap for that family. Prior running-world preservation, other
+content families and complete all-or-nothing restoration remain separate gates.

@@ -6,6 +6,45 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 actual changed/missing content rejection — 2026-10-08
+
+Two actual normal-engine courses now reject content changes on initial save load.
+The editable source manifests are
+`scripts/data/oblivion_compat/oblivion_m15_reject_changed_content.json` and
+`oblivion_m15_reject_missing_content.json`; each is byte-identical to its tested
+private course manifest. Both require the existing private M15Review input save
+copied to `OUTPUT/userdata/saves/M15Review/Quicksave.omwsave`, with a pristine
+copy and SHA-256 retained. The tested input is
+`S3/quickkey-resources-gui-normal-02/input.omwsave`, SHA-256
+`c251a52b498b9a2e6574b3e2f1900f20e670e05f556580e37a40e9473b4b2857`.
+Use the existing scenario entrypoint with openmw/resources/oblivion_data variables.
+
+`build/oblivion-compat/m15/S3/content-changed-runtime-normal-01` appends a harmless
+comment to the manifest-generated selected `m15-bounty.omwscripts` file. The
+original saved fingerprint is
+`4e2c25f19fb1b3fc2b026ea6634fad5641efc330917f80606085564470787733`;
+the actual staged file independently hashes to
+`265dbac5f749d365c95dcec5aec3b3e4b6247ef3f965a67c2924f477b83296f9`.
+The real load rejection reports those exact saved/current hashes. The missing
+course removes that file from the selected content list and reports the missing
+file by name. These change actual selected content, not a forged T4ST fingerprint.
+
+Both scenarios pass all actions, exit0 and error-log audits with only the precise
+expected rejection reviewed. Independent verification checks actual file hash/
+selection, byte-identical untouched input/save slots, no load-complete/save-complete
+events and no native application/save logs. The changed-content screenshot was
+inspected and shows the matching rejection in the live GUI. Original Oblivion.esm
+is untouched. Both use normal executable SHA-256
+`e04c09aa9c65ccb99600c26196878455674a1fcc9c9e2b773af408e51ae65548`,
+tested alongside source fingerprint
+`71453cb314d426ccbb6b0156378adf52c1a71b643afa81e74aeee23012baa714`;
+the hotkey resource implementation is recorded in `1b5f63833a`.
+
+This establishes actual initial-load changed/missing-content rejection for the
+selected script-content family. It does not establish every plugin family,
+a running-world rejection/resave course, or complete failed-load World preservation.
+**S3 remains open** for the remaining declared transaction/runtime/audit gates.
+
 ## S3 prepare hotkey GUI resources before World teardown — 2026-10-08
 
 Save admission now retains the decoded KEYS bindings and passes them, detached
