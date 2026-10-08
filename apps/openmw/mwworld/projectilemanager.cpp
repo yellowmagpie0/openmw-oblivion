@@ -869,13 +869,17 @@ namespace MWWorld
                     if (state->mProjectileId != 0)
                         mPhysics->removeProjectile(state->mProjectileId);
                 }
-                ++mRestoreGeneration;
+                // Failed publication must skip the next-clear generation too:
+                // the empty manager must not enable another waiting plan.
+                mRestoreGeneration += 2;
                 plan.reset();
                 throw;
             }
             mProjectiles.swap(plan->mProjectiles);
             mMagicBolts.swap(plan->mBolts);
-            ++mRestoreGeneration;
+            // Only clear() may reach the generation a pending handle awaits.
+            // An empty (e.g. removed-definition) publication must not impersonate it.
+            mRestoreGeneration += 2;
             plan.reset();
             for (auto& state : mMagicBolts)
             {

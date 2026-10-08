@@ -54,8 +54,12 @@ content; native directory preparation preserves global RNG. Lifetime/next-clear
 one-shot callbacks publish after scene/collision installation and release failed
 backend ownership. Actual null-backend tests cover cancellation, stale/copy,
 source removal, playback recovery, queries and destruction in both builds.
-Audible/full projectile runtime acceptance and broader shared-resource failure
-boundaries remain open.
+Projectile publication and rollback now skip the next-clear generation,
+preventing failed or empty restores from enabling another future-clear plan.
+The actual scene/Bullet regression failed before the fix and now preserves
+empty scene, collision and saved-record state. Sound/World reset counters only
+advance on clear. Audible/full projectile runtime acceptance and broader
+shared-resource failure boundaries remain open.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.

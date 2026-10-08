@@ -6,6 +6,41 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 projectile publication cannot impersonate clear — 2026-10-08
+
+ProjectileManager had the same generation issue as weather: successful or
+failed publication advanced by one and could enable a newer plan still waiting
+for clear. The focused baseline reproduced this after both scene refusal and an
+exception after attachment, and after an empty publication: a stale callback
+returned true, added a scene node and Bullet collision, and created a saved
+projectile record. The failing inventory/XML/logs are retained.
+
+Success and rollback now advance past the next-clear generation. Only clear
+advances by one. The extended actual scene/physics test checks rejected and
+throwing parent publication, copied/future handles and extra clears. Its final
+empty-publication fixture uses a nonempty saved record whose definition was
+removed, exercising the deliberate skip path. Scene nodes, collision ray hits
+and saved record counts remain empty. Existing physical/magic restore,
+detached-resource and owner-lifetime assertions continue to pass.
+
+Normal and ASan/UBSan each pass all **1255 engine tests**, with exact full
+inventories/XML, no failures/skips and stable source fingerprint
+`f573d8e3321b13f5da926029314240cb682a91d01bbca1dbd6a82c3fed0a87e0` against parent
+`292003a429`. The case count is unchanged because the existing projectile case
+was strengthened. Leak checks are disabled. The unchanged unused-context
+compiler warning remains. No save format or gameplay rule changed; this chunk's
+new integration evidence is the actual manager/scene/Bullet test, not a fresh
+rendered game course. Source inspection confirms SoundManager and World advance
+their relevant reset counters only on clear, so their publication does not
+impersonate that boundary.
+
+Evidence: `build/oblivion-compat/m15/S3/projectile-publication-red-01`,
+`projectile-publication-{normal,sanitized}-01` and
+`projectile-publication-report.json`. Full S3 remains active. The next concrete
+staging gap is local-map fog: native admission currently parses its PNG bytes
+without validating the32×32 RGBA shape later assumed by pixel access. Broader
+prior-World preservation and remaining requirement gates are still open.
+
 ## S3 weather restore owner and publication guards — 2026-10-08
 
 WeatherManager can now construct its real weather state without a scene

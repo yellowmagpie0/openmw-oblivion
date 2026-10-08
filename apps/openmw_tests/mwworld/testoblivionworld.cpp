@@ -9121,6 +9121,8 @@ namespace
         {
             auto rejected = prepare();
             manager.clear();
+            auto awaitingClear = prepare();
+            auto awaitingCopy = awaitingClear;
             parent->mMode = mode;
             EXPECT_THROW(rejected(), std::runtime_error);
             EXPECT_FALSE(rejected());
@@ -9128,8 +9130,29 @@ namespace
             EXPECT_FALSE(ray());
             EXPECT_EQ(manager.countSavedGameRecords(), 0u);
             parent->mMode = Parent::Accept;
+            // Failure must invalidate future-clear plans, not enable them in
+            // the now-empty manager without an actual clear.
+            EXPECT_FALSE(awaitingClear());
+            EXPECT_FALSE(awaitingCopy());
+            EXPECT_EQ(parent->getNumChildren(), 0u);
+            EXPECT_FALSE(ray());
+            EXPECT_EQ(manager.countSavedGameRecords(), 0u);
+            manager.clear();
+            EXPECT_FALSE(awaitingClear());
         }
         // Definitions removed by content changes retain the legacy skip path.
+        auto skipped = saved;
+        skipped.mId = ESM::RefId::stringRefId("removed-before-publication");
+        auto emptyPublication = manager.prepareRead({skipped}, {}, world.getStore(), incoming);
+        manager.clear();
+        auto awaitingEmptyClear = prepare();
+        ASSERT_TRUE(emptyPublication());
+        EXPECT_FALSE(awaitingEmptyClear());
+        EXPECT_EQ(parent->getNumChildren(), 0u);
+        EXPECT_FALSE(ray());
+        EXPECT_EQ(manager.countSavedGameRecords(), 0u);
+        manager.clear();
+        EXPECT_FALSE(awaitingEmptyClear());
         saved.mId = ESM::RefId::stringRefId("removed-projectile");
         bolt.mSpellId = ESM::RefId::stringRefId("removed-spell");
         auto removed = manager.prepareRead({saved}, {bolt}, world.getStore(), incoming);
