@@ -2990,3 +2990,171 @@ TEST(SaveInputTest, SnapshotSurvivesSourceRemovalAndReportsOpenFailures)
     EXPECT_EQ(captured, "owned input");
     EXPECT_THROW(MWState::openSaveSnapshot(path), std::runtime_error);
 }
+
+namespace
+{
+    template <class F>
+    std::string actorRestoreRecords(int owner, F fill)
+    {
+        return worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            ESM::NpcState npc{}; npc.blank();
+            ESM::CreatureState creature{}; creature.blank();
+            auto* object = owner == 0 ? static_cast<ESM::ObjectState*>(&player.mObject)
+                : owner == 1 ? static_cast<ESM::ObjectState*>(&npc) : &creature;
+            auto* stats = owner == 0 ? &player.mObject.mCreatureStats
+                : owner == 1 ? &npc.mCreatureStats : &creature.mCreatureStats;
+            object->mRef.mRefID = owner == 0 ? ESM::RefId::stringRefId("Player")
+                : owner == 1 ? timestampNpcId : timestampCreatureId;
+            object->mRef.mRefNum = {1, -1};
+            fill(*stats);
+            if (owner == 0)
+            {
+                player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+                writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            }
+            else
+            {
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+                ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                writer.writeHNT("OBJE", std::uint32_t{0}); object->save(writer);
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+    }
+}
+
+TEST(SaveAdmissionTest, SharedAiAndAggregateMagicScalarsAreAdmittedBeforeNativePreparation)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    const std::array values{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), -123.5f, 0.f, 123.5f};
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 3; ++owner)
+    for (int channel = 0; channel != 16; ++channel)
+    for (const auto value : values)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(channel);
+        SCOPED_TRACE(value);
+        const auto records = actorRestoreRecords(owner, [&](ESM::CreatureStats& stats) {
+            ESM::AiSequence::AiPackageContainer package{};
+            if (channel == 15)
+                stats.mMagicEffects.mEffects[ESM::MagicEffect::Paralyze] = {7, value};
+            else if (channel < 4)
+            {
+                package.mType = ESM::AiSequence::Ai_Wander;
+                auto data = std::make_unique<ESM::AiSequence::AiWander>();
+                data->mStoredInitialActorPosition = true;
+                if (channel == 0) data->mDurationData.mRemainingDuration = value;
+                else data->mInitialActorPosition.mValues[channel - 1] = value;
+                package.mPackage = std::move(data);
+            }
+            else if (channel < 7)
+            {
+                package.mType = ESM::AiSequence::Ai_Travel;
+                auto data = std::make_unique<ESM::AiSequence::AiTravel>();
+                const std::array members{&ESM::AiSequence::AiTravelData::mX,
+                    &ESM::AiSequence::AiTravelData::mY, &ESM::AiSequence::AiTravelData::mZ};
+                data->mData.*members[channel - 4] = value;
+                data->mHidden = channel == 5;
+                package.mPackage = std::move(data);
+            }
+            else if (channel < 11)
+            {
+                package.mType = ESM::AiSequence::Ai_Escort;
+                auto data = std::make_unique<ESM::AiSequence::AiEscort>();
+                const std::array members{&ESM::AiSequence::AiEscortData::mX,
+                    &ESM::AiSequence::AiEscortData::mY, &ESM::AiSequence::AiEscortData::mZ};
+                if (channel == 10) data->mRemainingDuration = value;
+                else data->mData.*members[channel - 7] = value;
+                package.mPackage = std::move(data);
+            }
+            else
+            {
+                package.mType = ESM::AiSequence::Ai_Follow;
+                auto data = std::make_unique<ESM::AiSequence::AiFollow>();
+                const std::array members{&ESM::AiSequence::AiEscortData::mX,
+                    &ESM::AiSequence::AiEscortData::mY, &ESM::AiSequence::AiEscortData::mZ};
+                if (channel == 14) data->mRemainingDuration = value;
+                else data->mData.*members[channel - 11] = value;
+                package.mPackage = std::move(data);
+            }
+            if (package.mPackage) stats.mAiSequence.mPackages.push_back(std::move(package));
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { ++calls; }); };
+        if (std::isfinite(value)) { EXPECT_NO_THROW(admit()); }
+        else { EXPECT_THROW(admit(), std::runtime_error); }
+        EXPECT_EQ(calls, int(version && std::isfinite(value)));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}
+
+TEST(SaveAdmissionTest, LegacyPermanentPlayerEffectsValidateOnlyConsumedIncomingSpellData)
+{
+    const std::array values{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(),
+        -std::numeric_limits<float>::infinity(), -123.5f, 123.5f};
+    const std::array effectIds{ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyAttribute),
+        ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::DrainAttribute),
+        ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyHealth)};
+    for (int owner = 0; owner != 3; ++owner)
+    for (int spellSource = 0; spellSource != 4; ++spellSource)
+    for (const auto effectId : effectIds)
+    for (const auto attribute : {-1, 0, ESM::Attribute::Length - 1, ESM::Attribute::Length})
+    for (const auto value : values)
+    {
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(spellSource);
+        SCOPED_TRACE(effectId);
+        SCOPED_TRACE(attribute);
+        SCOPED_TRACE(value);
+        MWWorld::ESMStore content; installTimestampContent(content);
+        content.getWritable<ESM::Spell>().eraseStatic(timestampPowerId);
+        ESM::Spell spell{}; spell.blank(); spell.mId = timestampPowerId;
+        if (spellSource == 1) content.getWritable<ESM::Spell>().insertStatic(spell);
+        else if (spellSource == 2) content.getWritable<ESM::Spell>().insert(spell);
+        // 0 removed; 1 immutable content; 2 outgoing-only; 3 incoming saved.
+        const auto definitions = spellSource == 3 ? worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_SPEL); spell.save(writer); writer.endRecord(ESM::REC_SPEL);
+        }) : std::string{};
+        // The writer deliberately omits these obsolete fields. Add a real
+        // legacy PERM sequence at SpellState's position before the AI LAST.
+        auto records = actorRestoreRecords(owner, [](auto&) {});
+        auto payload = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::fourCC("TEST"));
+            writer.writeHNRefId("PERM", timestampPowerId);
+            writer.writeHNT("EFID", effectId);
+            writer.writeHNT("ARG_", attribute);
+            writer.writeHNT("MAGN", value);
+            writer.endRecord(ESM::fourCC("TEST"));
+        }).substr(16);
+        const auto offset = records.find("LAST");
+        ASSERT_NE(offset, std::string::npos);
+        records.insert(offset, payload);
+        std::uint32_t size;
+        std::memcpy(&size, records.data() + 4, sizeof(size));
+        size += payload.size();
+        std::memcpy(records.data() + 4, &size, sizeof(size));
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes() + records + definitions);
+        const auto before = reader.getFileOffset(); int calls = 0;
+        const bool consumed = owner == 0 && (spellSource == 1 || spellSource == 3)
+            && effectId != ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyHealth);
+        const bool rejected = consumed && (!std::isfinite(value) || attribute < 0 || attribute >= ESM::Attribute::Length);
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { ++calls; }); };
+        if (rejected) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(calls, int(!rejected));
+        EXPECT_EQ(reader.getFileOffset(), before);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

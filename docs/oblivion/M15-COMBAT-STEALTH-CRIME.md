@@ -6,6 +6,61 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 admit shared AI, aggregate magic and legacy attribute effects — 2026-10-08
+
+Shared Player/NPC/creature admission now rejects nonfinite aggregate magic-effect
+modifiers and consumed Wander/Travel/Escort/Follow coordinates and remaining
+durations before native preparation or World cleanup. Stored Wander coordinates
+are checked only when present. Finite signed values remain accepted. Legacy
+permanent FortifyAttribute/DrainAttribute effects additionally require a valid
+attribute index and finite magnitude when the Player loader would consume them.
+Removed spells, outgoing-only definitions, non-Player actors and unrelated effect
+IDs retain their existing skip behavior; incoming saved spell definitions resolve
+regardless of record order. These checks introduce no native gameplay formula.
+
+Both regressions fail before the implementation, retained under
+`build/oblivion-compat/m15/S3/actor-restore-admission-red-01`. The final
+`actor-restore-admission-normal-01` and `actor-restore-admission-sanitized-01`
+checks each pass all **1279 engine tests**, exact unfiltered inventory/XML match,
+without failures/skips. Tested parent:
+`661346353304c932b3ab1ac4e88a326b486597d4`; source fingerprint:
+`1b683338799544861330c47596f0a7cc4eb9060346166cb4bfa56a3ace9e69a1`.
+The first matrix covers no-T4ST and every supported native version1–46, three
+actor kinds,16 consumed float channels and six finite/nonfinite controls
+(**13536 combinations**). The second covers three actors, four spell-definition
+sources, three effect IDs, four attribute indices and five magnitudes
+(**720 combinations**). Rejection preserves the reader context and prevents
+native preparation. ASan leak detection is disabled; ASan/UBSan halt on errors.
+
+Actual courses `actor-restore-{magic,ai,permanent}-normal-01`,
+`actor-restore-{ai,permanent}-sanitized-01` and
+`actor-restore-magic-sanitized-02` each pass load/F5, injected shared PLAY fault,
+F9 rejection, Return/F5 and clean quit. Faults are respectively a quiet-NaN MODI,
+a quiet-NaN Travel X and legacy permanent attribute index8. T4ST remains identical
+at injection; non-PLAY records remain byte-identical. Independent verification
+checks exact38-group initial native application, ten unchanged stable groups,
+retention of every preceding native reference/script-instance entry, absence of
+the injected payload in the resave, and one load/two saves in the same PID.
+Scenario/input/action/error/exit audits pass. The permanent course deliberately
+retains the known shared Paralyze empty-icon warning-image compatibility; it
+does not prove native spell icon translation or activation.
+
+The first instrumented magic course remains failed evidence: the SDL driver
+exceeded its120-second input receipt deadline during three concurrent instrumented
+games, despite the expected rejection being logged. The fresh solo course uses a
+300-second receipt deadline and completes. No sanitizer finding was observed;
+failed-course rejection alone is not counted as preservation acceptance.
+Fault-source metadata identifies aggregate magic insertion before AISE after LAST,
+and AI/permanent insertion before the AI sequence LAST.
+
+Runtime executable SHA-256: normal
+`52d0a1f5c714c43c8f2c72f15c4f08e9b9d235cb45c034397d108144e15c7864`;
+instrumented `0bd0c247ac46c12ad69793c5bf76dca2b4ccdee5ca9f5919bae764b640404ccc`.
+
+**S3 remains open.** These consumed shared-state checks precede teardown;
+player rendering, cell activation and other later publication/resource failures
+still require complete staging and their declared runtime acceptance.
+
 ## S3 restore the same owned bytes admitted before teardown — 2026-10-08
 
 Native save loading now copies the opened input into an owned binary input stream

@@ -285,3 +285,18 @@ Actual normal/instrumented workers truncate the10MB slot to46 bytes during
 preparation, before observed restore logging; native restore, GUI state, exact
 shared SPEL and real F5 resave remain correct. This closes admitted-input stability,
 not the remaining later publication/resource failure boundary or full S3 gate.
+
+
+S3 shared AI/magic/legacy attribute follow-up (2026-10-08): aggregate magic
+modifiers and consumed AI coordinates/durations reject nonfinite values before
+native preparation; Player permanent attribute effects validate only existing
+incoming/static spells and consumed effect IDs. Finite signed and intentional
+skip paths remain accepted. Retained red regressions fail; normal/instrumented
+full inventories each pass1279 tests at fingerprint
+1b683338799544861330c47596f0a7cc4eb9060346166cb4bfa56a3ace9e69a1.
+The13536-case all-version/all-actor float matrix and720-case legacy dependency
+matrix preserve reader contexts and suppress preparation on rejection. Six
+successful actual F5/fault/F9/Return/F5 courses prove scoped prior-World state
+preservation; the first concurrent instrumented magic input timeout remains
+failed evidence and a fresh solo course passes. See the milestone's exact
+paths, hashes, warning scope and remaining publication/resource boundary.

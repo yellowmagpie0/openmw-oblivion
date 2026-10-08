@@ -136,7 +136,7 @@ namespace
     }
 
     void validateSharedActorState(const ESM::ObjectState& object,
-        const MWWorld::ESMStore& incoming, const MWWorld::ESMStore* content)
+        const MWWorld::ESMStore& incoming, const MWWorld::ESMStore* content, bool player = false)
     {
         if (!object.mHasCustomState)
             return;
@@ -183,6 +183,69 @@ namespace
             }
             finite(npc->mNpcStats.mTimeToStartDrowning);
         }
+        for (const auto& [id, value] : stats->mMagicEffects.mEffects)
+            if (!std::isfinite(value.second))
+                throw std::runtime_error("Saved game shared actor magic modifier has a nonfinite value");
+        const auto validateAiFloat = [](float value) {
+            if (!std::isfinite(value))
+                throw std::runtime_error("Saved game shared actor AI has a nonfinite value");
+        };
+        const auto validateDestination = [&](const auto& data) {
+            validateAiFloat(data.mX);
+            validateAiFloat(data.mY);
+            validateAiFloat(data.mZ);
+        };
+        for (const auto& package : stats->mAiSequence.mPackages)
+            switch (package.mType)
+            {
+                case ESM::AiSequence::Ai_Wander:
+                {
+                    const auto& data = static_cast<const ESM::AiSequence::AiWander&>(*package.mPackage);
+                    validateAiFloat(data.mDurationData.mRemainingDuration);
+                    if (data.mStoredInitialActorPosition)
+                        for (const auto coordinate : data.mInitialActorPosition.mValues)
+                            validateAiFloat(coordinate);
+                    break;
+                }
+                case ESM::AiSequence::Ai_Travel:
+                    validateDestination(static_cast<const ESM::AiSequence::AiTravel&>(*package.mPackage).mData);
+                    break;
+                case ESM::AiSequence::Ai_Escort:
+                {
+                    const auto& data = static_cast<const ESM::AiSequence::AiEscort&>(*package.mPackage);
+                    validateDestination(data.mData);
+                    validateAiFloat(data.mRemainingDuration);
+                    break;
+                }
+                case ESM::AiSequence::Ai_Follow:
+                {
+                    const auto& data = static_cast<const ESM::AiSequence::AiFollow&>(*package.mPackage);
+                    validateDestination(data.mData);
+                    validateAiFloat(data.mRemainingDuration);
+                    break;
+                }
+                default: break; // Other decoded packages contain no consumed floats.
+            }
+        // Spells::readState imports obsolete permanent attribute data only
+        // for Player and still-existing spells. Match both skip paths and
+        // resolve dependencies without borrowing outgoing dynamic records.
+        if (player)
+            for (const auto& [id, effects] : stats->mSpells.mPermanentSpellEffects)
+            {
+                if (content && !incoming.get<ESM::Spell>().search(id)
+                    && !content->get<ESM::Spell>().searchStatic(id))
+                    continue;
+                for (const auto& effect : effects)
+                {
+                    if (effect.mId != ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyAttribute)
+                        && effect.mId != ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::DrainAttribute))
+                        continue;
+                    if (ESM::Attribute::indexToRefId(effect.mArg).empty())
+                        throw std::runtime_error("Saved game Player permanent effect has an invalid attribute");
+                    if (!std::isfinite(effect.mMagnitude))
+                        throw std::runtime_error("Saved game Player permanent effect has a nonfinite magnitude");
+                }
+            }
         validateSharedTimestamp(stats->mTradeTime);
         validateSharedTimestamp(stats->mTimeOfDeath);
         for (const auto& [id, timestamp] : stats->mSpells.mUsedPowers)
@@ -696,7 +759,7 @@ namespace MWState
                         ESM::Player player{};
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
-                        validateSharedActorState(player.mObject, *shared, content);
+                        validateSharedActorState(player.mObject, *shared, content, true);
                         // These fields are restored separately from the native
                         // Player projection. A valid T4ST position cannot make
                         // poisoned shared recall/exterior coordinates safe.
