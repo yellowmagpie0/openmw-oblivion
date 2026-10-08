@@ -300,3 +300,19 @@ successful actual F5/fault/F9/Return/F5 courses prove scoped prior-World state
 preservation; the first concurrent instrumented magic input timeout remains
 failed evidence and a fresh solo course passes. See the milestone's exact
 paths, hashes, warning scope and remaining publication/resource boundary.
+
+
+S3 canonical Player metadata follow-up (2026-10-08): prepared native saves now
+select and allocate the canonical name/race/class/sex record in their detached
+shared definition plan before cleanup. Install publishes that record; native
+apply retains its identity and consumes the staged birthsign. Dynamic classes
+resolve against incoming/static definitions in direct World preparation too;
+the loader's existing shared-class admission error remains unchanged. The88-case
+schemas3–46 regression fails before the change; full normal/instrumented
+inventories each pass1280 tests at fingerprint
+62263573b68e1fe1b861c553aeaec51e63c8ecfd261ba79b60302968aaaf9ae9.
+Actual normal/instrumented class-removal F9 rejection/resave courses pass;
+the instrumented PID loads the exact normal final save, independently checked
+by hash and38-group initial native readback. The first normal course's wrong
+expected error remains failed evidence. This stages Player metadata allocation,
+not all later shared actor/scene/resource/publication work; S3 remains open.

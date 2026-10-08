@@ -14747,3 +14747,57 @@ TEST(OblivionWorldTest, NativeItemHotkeyQueryPreservesEveryInventorySchemaAndBin
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
     }
 }
+
+TEST(OblivionWorldTest, PreparedPlayerMetadataResolvesIncomingClassAndPublishesCanonicalRecordAtInstall)
+{
+    for (std::uint32_t version = 3; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const bool incomingClass : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(incomingClass);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mVersion = version;
+        saved.mPlayer.mClass = ESM::FormKey::dynamic("player-class", 1);
+        saved.mPlayer.mName = "Canonical admitted Player";
+        saved.mPlayer.mFemale = true;
+        auto definitions = std::make_unique<MWWorld::ESMStore>();
+        definitions->generateId(); definitions->generateId();
+        ESM::Class characterClass{}; characterClass.blank();
+        characterClass.mId = ESM::RefId::generated(1);
+        // An outgoing class must never conceal a missing incoming definition.
+        world.getStore().getWritable<ESM::Class>().insert(characterClass);
+        auto player = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        player.mClass = characterClass.mId;
+        player.mName = "Shared pre-canonical Player";
+        player.setIsMale(true);
+        definitions->getWritable<ESM::NPC>().insert(player);
+        if (incomingClass) definitions->getWritable<ESM::Class>().insert(characterClass);
+        const auto* oldPlayer = world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        if (!incomingClass)
+        {
+            EXPECT_THROW(world.prepareOblivionSaveState(saved, std::move(definitions)), std::runtime_error);
+            EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, oldPlayer);
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+            continue;
+        }
+        auto plan = world.prepareOblivionSaveState(saved, std::move(definitions));
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, oldPlayer);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        world.clear();
+        ASSERT_TRUE(plan->install());
+        const auto* installed = world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        EXPECT_EQ(installed->mName, saved.mPlayer.mName);
+        EXPECT_EQ(installed->isMale(), !saved.mPlayer.mFemale);
+        EXPECT_EQ(installed->mClass, characterClass.mId);
+        EXPECT_EQ(installed->mRace, ESM::RefId(*ESM::FormKeyResolver({"headless.esm"}).toFormId(saved.mPlayer.mRace)));
+        restorePreparedSaveActorFixture(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        // Metadata was already staged. Native apply consumes the same record,
+        // rather than allocating a second Player definition after teardown.
+        EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, installed);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mName, saved.mPlayer.mName);
+    }
+}

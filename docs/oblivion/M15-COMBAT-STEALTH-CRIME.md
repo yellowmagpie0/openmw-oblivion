@@ -6,6 +6,63 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 stage canonical Player metadata with incoming definitions — 2026-10-08
+
+Prepared native saves now select and allocate the canonical Player NPC record
+inside the detached incoming definition plan before World teardown. Native name,
+race, class and sex are ready when that plan installs; native apply consumes the
+same record and retained birthsign instead of preparing another Player record
+after cleanup. Dynamic class resolution uses incoming/static definitions, so
+outgoing-only classes cannot satisfy direct World preparation. Versions before3
+retain their metadata migration path; direct record restore retains synchronous
+Player preparation. Plans without incoming shared records still own a detached
+Player definition. No gameplay formula changes.
+
+The new88-case World matrix covers versions3–46, absent/incoming generated class
+sources, deliberate conflicting shared/native name and sex, exact outgoing state
+and pointer preservation before clear, canonical metadata at install, and the
+same Player record after apply. Its pre-fix regression fails under
+`build/oblivion-compat/m15/S3/player-metadata-red-01`; an initial test compile
+attempt had two SCOPED_TRACE macros on one line and was corrected before that
+regression run. Final `player-metadata-normal-01` and
+`player-metadata-sanitized-01` each pass all **1280 engine tests**, exact unfiltered
+inventory/XML match, no failures or skips, parent
+`3329726030d98e58a0df05527b35945d29f50c1e`, fingerprint
+`62263573b68e1fe1b861c553aeaec51e63c8ecfd261ba79b60302968aaaf9ae9`.
+ASan leak detection is disabled; ASan/UBSan halt on errors; SDL is offscreen.
+
+The loader already rejected missing dynamic Player classes in admission. This
+change moves canonical record allocation earlier and makes direct World
+preparation enforce that dependency too; the runtime course checks the existing
+loader rejection alongside the new metadata installation. The first normal
+`player-class-reject-normal-01` course expected the direct-preparation error but
+observed the earlier `TES4 runtime-state shared Player class cannot be resolved`
+error. Its private processes were stopped and its failed evidence retained.
+The corrected `player-class-reject-normal-02` course passes real F5, removal of
+its one CLAS record with unchanged T4ST, F9 rejection, Return/F5 and peaceful
+quit. Independent verification proves exact38-group initial native application,
+ten preserved stable native groups, retention of preceding native reference/
+script-instance entries, byte-identical non-CLAS rejected input and byte-identical
+original CLAS in the resave. It requires one load/two saves in the same PID and
+clean scenario/action/error audits. The retained rejection screenshot shows the
+expected error dialog over the prior prison scene and HUD.
+
+The corrected `player-class-reject-sanitized-02` course also passes. It loads the
+normal course's actual final F5 save in a distinct PID, then performs the same
+rejection/resave sequence. `continuation-verification.json` checks exact input
+SHA-256 and distinct PIDs alongside both course verifiers. This provides actual
+save → quit → fresh load → resave acceptance for the declared state groups.
+The unused `player-class-reject-sanitized-01` fixture was never run.
+
+Runtime executable SHA-256: normal
+`93531e2efeaf90bf8d67b9515927c64782e28796596511d07585c8de5e460629`;
+instrumented `ba7df10b138036ca8ec553799fb68de2ca602c4533d271412e340251c06a9c32`.
+
+**S3 remains open.** Canonical Player metadata now joins definitions and native
+services in pre-teardown preparation. Shared actor construction, scene activation
+and other later resource/publication allocations still require their full staging
+and acceptance scope.
+
 ## S3 admit shared AI, aggregate magic and legacy attribute effects — 2026-10-08
 
 Shared Player/NPC/creature admission now rejects nonfinite aggregate magic-effect

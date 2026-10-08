@@ -158,6 +158,8 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
         std::optional<ESMStore::PreparedDynamicRecords> mDefinitions;
+        bool mPlayerMetadataPrepared = false;
+        ESM::RefId mPlayerBirthSign;
         std::unique_ptr<InventoryStore> mPlayerInventory;
         std::map<ESM::FormKey, std::unique_ptr<InventoryStore>> mActorInventories;
     };
@@ -179,8 +181,40 @@ namespace MWWorld
             , mState(std::make_unique<ESM4::RuntimeState>(state))
             , mServices(std::make_unique<PreparedOblivionServices>())
         {
-            if (definitions)
-                mServices->mDefinitions.emplace(world.mStore.prepareDynamicRecords(std::move(definitions)));
+            if (!definitions)
+                definitions = std::make_unique<ESMStore>();
+            if (state.mVersion >= 3)
+            {
+                // Canonical metadata belongs to the detached incoming store.
+                // Resolve dynamic classes through its Player facade, never
+                // through an outgoing record that the next clear will remove.
+                const ESM::FormKeyResolver resolver(world.mContentFiles);
+                const auto playerId = ESM::RefId::stringRefId("Player");
+                const auto* source = world.mStore.searchForRestore<ESM::NPC>(playerId, *definitions);
+                const auto race = resolver.toFormId(state.mPlayer.mRace);
+                const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
+                if (!source || (!characterClass && !state.mPlayer.mClass.isDynamic()))
+                    throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
+                const auto classId = characterClass ? ESM::RefId(*characterClass) : source->mClass;
+                if (!race || !world.mStore.get<ESM::Race>().searchStatic(ESM::RefId(*race))
+                    || !world.mStore.searchForRestore<ESM::Class>(classId, *definitions))
+                    throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+                if (!state.mPlayer.mBirthSign.isNull())
+                {
+                    const auto sign = resolver.toFormId(state.mPlayer.mBirthSign);
+                    if (!sign || !world.mStore.get<ESM::BirthSign>().searchStatic(ESM::RefId(*sign)))
+                        throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
+                    mServices->mPlayerBirthSign = ESM::RefId(*sign);
+                }
+                auto player = *source;
+                player.mName = state.mPlayer.mName;
+                player.mRace = ESM::RefId(*race);
+                player.mClass = classId;
+                player.setIsMale(!state.mPlayer.mFemale);
+                definitions->getWritable<ESM::NPC>().insert(player);
+                mServices->mPlayerMetadataPrepared = true;
+            }
+            mServices->mDefinitions.emplace(world.mStore.prepareDynamicRecords(std::move(definitions)));
             // Even a caller without shared records must not borrow outgoing overrides.
             const ESMStore emptyDefinitions;
             const auto& incoming = mServices->mDefinitions
@@ -2529,8 +2563,8 @@ namespace MWWorld
         }
         const ESM::FormKeyResolver resolver(mContentFiles);
         std::optional<ESMStore::PreparedPlayerRecord> preparedPlayerRecord;
-        ESM::RefId preparedBirthSign;
-        if (state.mVersion >= 3)
+        ESM::RefId preparedBirthSign = retained ? retained->mPlayerBirthSign : ESM::RefId{};
+        if (state.mVersion >= 3 && (!retained || !retained->mPlayerMetadataPrepared))
         {
             const auto race = resolver.toFormId(state.mPlayer.mRace);
             const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
@@ -2974,10 +3008,11 @@ namespace MWWorld
         mTimeManager->updateGlobalFloat(Globals::sTimeScale, static_cast<float>(state.mClock.mTimeScale));
         synchronizeOblivionCalendarGlobals(mGlobalVariables);
 
-        if (preparedPlayerRecord)
+        if (preparedPlayerRecord || (retained && retained->mPlayerMetadataPrepared))
         {
             static_assert(std::is_nothrow_copy_assignable_v<ESM::RefId>);
-            mPlayer->set(preparedPlayerRecord->commit());
+            if (preparedPlayerRecord)
+                mPlayer->set(preparedPlayerRecord->commit());
             mPlayer->setBirthSign(preparedBirthSign);
             mPlayer->setOblivionCharacterGenerationFlags(state.mPlayer.mCharacterGenerationFlags);
         }
