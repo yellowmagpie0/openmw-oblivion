@@ -6,6 +6,47 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 reconcile moved native item hotkey buttons — 2026-10-08
+
+QuickKeysMenu now requires the native inventory assignment to succeed before
+publishing an Item or MagicItem button. After that assignment, it removes other
+GUI Item/MagicItem bindings of the same base ID without issuing another native
+mutation from their stale slots. Removing a button also cancels its pending
+activation. Morrowind assignments bypass native reconciliation. Numeric native
+inventory rules and the save schema are unchanged.
+
+The retained prior GUI phase2 save demonstrates the defect: native hotkey7 but
+both GUI slots0 and7 are Item. The new normal mouse course verifies old-slot
+Unassigned immediately after the move, before manual unassignment. All three
+F5 saves pass native/KEYS checks (0→7→7), and all six inventory entries equal
+the pristine seed apart from the expected target hotkey. Counts, condition,
+charge, ownership and other metadata are unchanged. Screenshots confirm the
+old button clears automatically. The final scenario and error-log audit pass.
+Lua menu-opening setup, pre-chargen F1 limitation and no-sound interior scope
+remain disclosed. Evidence: build/oblivion-compat/m15/S3/
+hotkey-reconcile-gui-normal-01/{phase-verification,inventory-verification}.json.
+
+A separate normal fresh-PID course loads the retained duplicate phase2 save.
+It preserves all38 initial native groups and ten stable post-save groups,
+normalizes only old GUI slot0 TYPE/ID to Unassigned/empty on resave, retains
+slot7 Item and all other KEYS subrecords, and compares all37 independent weather
+catalog keys. Scenario/error-log audit passes. Evidence:
+hotkey-reconcile-legacy-continuation-normal-01/verification.json in the S3 root.
+Actual runtime binary SHA256:
+3f9cc3f2b93769876ccb778fc3b54a4b3b57d406441b016477340341cde9b58e.
+
+Full normal-02 and sanitized-02 engine checks each pass all1264 tests, exact
+unfiltered inventories/XML, no failures/skips, fingerprint
+64d5a098c4d1dc013222e4f6828bbe6f80ba70843ac4b6b521b961a2e3a3df9c
+against parent4d160f53c6. SDL offscreen enables actual GL tests; ASan leaks are
+disabled and UBSan halts. Failed -01 builds retain the corrected non-null pointer
+wrapper deduction error. Component/Python code is unchanged. Evidence directories:
+hotkey-reconcile-{normal,sanitized}-02 under the S3 root.
+
+This closes the observed duplicate moved-item GUI binding and its retained-save
+case. MagicItem/spell GUI branches, inconsistent nonduplicate native/shared
+assignments, resource preparation and complete S3 restore guarantees remain open.
+
 ## S3 native hotkey captions, weapon hover and item frames — 2026-10-08
 
 Native weapon tooltips now fall back to Interface localization keys when a

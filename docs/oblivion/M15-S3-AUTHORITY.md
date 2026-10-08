@@ -178,3 +178,16 @@ initial native groups exact and ten stable post-save groups equal. Both full
 are in the milestone. This closes the observed hover/frame defects, leaving
 full hotkey reconciliation, spell replacement, texture preflight and full S3
 restore guarantees open.
+
+
+Moved native items now clear duplicate GUI Item/MagicItem buttons after a
+successful native assignment, without another native mutation from stale slots.
+Pending activation of a removed button is cancelled. Normal real mouse/F5
+checks prove automatic removal at phase2 and exact six-entry inventory metadata
+apart from the intended hotkey. A retained duplicate-binding save normalizes its
+old GUI TYPE/ID through a fresh normal PID load/resave, with all38 initial native
+groups exact, ten stable post-save groups equal and remaining KEYS exact. Both
+full1264-case normal/instrumented engine inventories pass. The milestone records
+fingerprint/evidence and retained failed build attempts. This does not close
+MagicItem/spell runtime coverage, conflicting nonduplicate assignments or full
+pre-teardown resource staging.

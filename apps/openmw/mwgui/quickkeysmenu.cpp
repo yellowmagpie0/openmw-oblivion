@@ -145,12 +145,14 @@ namespace MWGui
             mMagicSelectionDialog->setVisible(false);
     }
 
-    void QuickKeysMenu::unassign(keyData* key)
+    void QuickKeysMenu::unassign(keyData* key, bool clearNative)
     {
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+        if (clearNative && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
             && key->index >= 1 && key->index <= 8 && !key->id.empty())
             static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
                 ->oblivionSetPlayerHotkey({}, key->index - 1);
+        if (mActivated == key)
+            mActivated = nullptr;
         key->button->clearUserStrings();
         key->button->setItem(MWWorld::Ptr());
 
@@ -262,9 +264,28 @@ namespace MWGui
         mAssignDialog->setVisible(false);
     }
 
+    bool QuickKeysMenu::assignNativeItemHotkey(const ESM::RefId& id)
+    {
+        MWBase::World* world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() != ESM::GameProfile::Oblivion)
+            return true;
+        if (!static_cast<MWWorld::World*>(world)->oblivionSetPlayerHotkey(id, mSelected->index - 1))
+            return false;
+
+        // The native inventory owns one slot per base item. Clear obsolete GUI
+        // bindings without making a second native mutation from their stale slots.
+        for (auto& key : mKey)
+            if (&key != mSelected && key.id == id
+                && (key.type == ESM::QuickKeys::Type::Item || key.type == ESM::QuickKeys::Type::MagicItem))
+                unassign(&key, false);
+        return true;
+    }
+
     void QuickKeysMenu::assignItem(MWWorld::Ptr item)
     {
         assert(mSelected);
+        if (!assignNativeItemHotkey(item.getCellRef().getRefId()))
+            return;
 
         while (mSelected->button->getChildCount()) // Destroy number label
             MyGUI::Gui::getInstance().destroyWidget(mSelected->button->getChildAt(0));
@@ -272,9 +293,6 @@ namespace MWGui
         mSelected->type = ESM::QuickKeys::Type::Item;
         mSelected->id = item.getCellRef().getRefId();
         mSelected->name = item.getClass().getName(item);
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
-            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-                ->oblivionSetPlayerHotkey(mSelected->id, mSelected->index - 1);
 
         mSelected->button->setItem(item, ItemWidget::Barter);
         mSelected->button->setUserString("ToolTipType", "ItemPtr");
@@ -298,6 +316,8 @@ namespace MWGui
     void QuickKeysMenu::onAssignMagicItem(MWWorld::Ptr item)
     {
         assert(mSelected);
+        if (!assignNativeItemHotkey(item.getCellRef().getRefId()))
+            return;
 
         while (mSelected->button->getChildCount()) // Destroy number label
             MyGUI::Gui::getInstance().destroyWidget(mSelected->button->getChildAt(0));
@@ -305,9 +325,6 @@ namespace MWGui
         mSelected->type = ESM::QuickKeys::Type::MagicItem;
         mSelected->id = item.getCellRef().getRefId();
         mSelected->name = item.getClass().getName(item);
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
-            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-                ->oblivionSetPlayerHotkey(mSelected->id, mSelected->index - 1);
 
         float scale = 1.f;
         MyGUI::ITexture* texture
