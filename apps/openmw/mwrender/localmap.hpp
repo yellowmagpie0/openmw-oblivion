@@ -154,6 +154,11 @@ namespace MWRender
 
         void requestExteriorMap(const MWWorld::CellStore* cell, MapSegment& segment);
         void requestInteriorMap(const MWWorld::CellStore* cell);
+        MapSegment* ensureInteriorSegment(int x, int y, bool render);
+        std::pair<int, int> mInteriorSize{0, 0};
+        osg::Vec3d mInteriorNorth;
+        float mInteriorZMin = 0;
+        float mInteriorZMax = 0;
 
         void setupRenderToTexture(
             int segmentX, int segmentY, float left, float top, const osg::Vec3d& upVector, float zmin, float zmax);

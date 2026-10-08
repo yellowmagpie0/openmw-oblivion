@@ -6,6 +6,52 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 create interior renderer tiles on demand — 2026-10-08
+
+LocalMap interior setup now prepares geometry and retains actual saved fog
+fragments without creating a camera/map texture for every theoretical cell.
+Map/fog texture requests create valid tiles on demand; repeated requests reuse
+them. Player exploration creates only its affected neighboring tiles. Existing
+saved fragments stay queryable and survive saves even when their map tile has
+never rendered. Offset arithmetic is widened before bounds checks. Clear and
+interior unload remove queued cameras as well as cached segments, so previous
+scene work cannot render after a reset. No fog format or native gameplay rule change.
+
+The bounded red case adds81 cameras for a9×9 grid before any tile is requested;
+its camera-count assertion fails. The final actual SDL/OSG-context case checks
+that grid and a valid1,048,577×1,048,577 grid (over a trillion theoretical cells).
+Neither request allocates render cameras; one tile request creates one and
+reuses it, invalid indices create none, a remote saved fragment remains explored
+and survives save, player exploration creates at most four neighboring tiles,
+and clear/unload cancel the queued work and leave no queryable textures/fog.
+Coordinate round-trip and finite-domain cases still pass. Red and focused green
+evidence: build/oblivion-compat/m15/S3/local-map-lazy-{red,green}-01. Final full
+normal and ASan/UBSan engine inventories each pass all1265 tests, exact unfiltered
+inventories/XML, no failures/skips. Source fingerprint
+f4d2d4bbf0b7ae70e5dcc30cefc22cefea893821fc6447d324c10b9688dc5dc8
+against parent92eedb7846. SDL offscreen enables GL checks; leak checking is
+disabled and UBSan halts. Evidence: local-map-lazy-{normal,sanitized}-01 under
+the S3 root. Component/Python implementation is unchanged.
+
+Normal and instrumented fresh-PID load/F5/quit courses pass all38 initial native
+groups, ten stable post-save groups, expected raw KEYS and all37 independently
+walked weather identities. Independent Pillow PNG readback compares the saved
+cell's BOUN/ANGL/CNTR and every32×32 RGBA pixel: all metadata and pixels remain
+exact. Inspected normal/instrumented screenshots retain the prison scene and
+HUD. These no-sound, ordinary-size interior courses do not prove large-map GUI
+acceptance or exterior/audio behavior. Evidence: local-map-lazy-continuation-
+{normal,sanitized}-01/{verification,fog-verification}.json under the S3 root.
+Normal runtime binary SHA256:
+f70d367af3bc38561cbbcbb6a4e9a1703b642c26c39e202d85c9a50b46b3b8ce;
+instrumented:
+e75f063e2d277e9341f024af90536a100546d17d062ecbe75d67a0a76514089f.
+
+The GUI still creates widget pairs for the entire grid and multiplies its full
+size into an integer canvas. That coupled allocation/coordinate work remains
+open; the renderer check alone does not close the large-map gate. Full S3
+resource staging and broader restore/migration/profile/lifecycle acceptance
+remain active.
+
 ## S3 restore modern item hotkeys from native inventory authority — 2026-10-08
 
 World now exposes a read-only eight-slot item query using live inventory and

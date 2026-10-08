@@ -116,8 +116,13 @@ namespace MWRender
 
     void LocalMap::clear()
     {
+        for (const auto& rtt : mLocalMapRTTs)
+            mRoot->removeChild(rtt);
+        mLocalMapRTTs.clear();
         mExteriorSegments.clear();
         mInteriorSegments.clear();
+        mInteriorSize = {0, 0};
+        mInterior = false;
     }
 
     void LocalMap::saveFogOfWar(MWWorld::CellStore* cell) const
@@ -221,11 +226,16 @@ namespace MWRender
         saveFogOfWar(cell);
 
         if (!cell->isExterior())
-            mInteriorSegments.clear();
+            clear();
     }
 
     osg::ref_ptr<osg::Texture2D> LocalMap::getMapTexture(int x, int y)
     {
+        if (mInterior)
+        {
+            const auto* segment = ensureInteriorSegment(x, y, true);
+            return segment ? segment->mMapTexture : nullptr;
+        }
         auto& segments(mInterior ? mInteriorSegments : mExteriorSegments);
         SegmentMap::iterator found = segments.find(std::make_pair(x, y));
         if (found == segments.end())
@@ -236,6 +246,11 @@ namespace MWRender
 
     osg::ref_ptr<osg::Texture2D> LocalMap::getFogOfWarTexture(int x, int y)
     {
+        if (mInterior)
+        {
+            const auto* segment = ensureInteriorSegment(x, y, false);
+            return segment ? segment->mFogOfWarTexture : nullptr;
+        }
         auto& segments(mInterior ? mInteriorSegments : mExteriorSegments);
         SegmentMap::iterator found = segments.find(std::make_pair(x, y));
         if (found == segments.end())
@@ -390,48 +405,47 @@ namespace MWRender
             }
         }
 
-        osg::Vec2f min(mBounds.xMin(), mBounds.yMin());
+        mInteriorSize = divideIntoSegments(mBounds, mMapWorldSize);
+        mInteriorNorth = osg::Vec3d(north.x(), north.y(), 0.f);
+        mInteriorZMin = zMin;
+        mInteriorZMax = zMax;
+        for (auto& [coords, segment] : mInteriorSegments)
+            segment.mMapTexture = nullptr;
 
-        osg::Quat cameraOrient(mAngle, osg::Vec3d(0, 0, -1));
-
-        auto segments = divideIntoSegments(mBounds, mMapWorldSize);
-        for (int x = 0; x < segments.first; ++x)
-        {
-            for (int y = 0; y < segments.second; ++y)
+        // Retain actual saved fog fragments, not every cell in the bounds.
+        // Unvisited fragments must remain available to queries and future saves.
+        if (const ESM::FogState* fog = cell->getFog())
+            for (const auto& texture : fog->mFogTextures)
             {
-                osg::Vec2f start
-                    = min + osg::Vec2f(mMapWorldSize * float(x), mMapWorldSize * float(y));
-                osg::Vec2f newcenter = start + osg::Vec2f(mMapWorldSize / 2.f, mMapWorldSize / 2.f);
-
-                osg::Vec2f a = newcenter - mCenter;
-                osg::Vec3f rotatedCenter = cameraOrient * (osg::Vec3f(a.x(), a.y(), 0));
-
-                osg::Vec2f pos = osg::Vec2f(rotatedCenter.x(), rotatedCenter.y()) + mCenter;
-
-                setupRenderToTexture(x, y, pos.x(), pos.y(), osg::Vec3f(north.x(), north.y(), 0.f), zMin, zMax);
-
-                auto coords = std::make_pair(x, y);
-                MapSegment& segment = mInteriorSegments[coords];
+                const auto x = std::int64_t(texture.mX) + xOffset;
+                const auto y = std::int64_t(texture.mY) + yOffset;
+                if (x < 0 || y < 0 || x >= mInteriorSize.first || y >= mInteriorSize.second)
+                    continue;
+                auto& segment = mInteriorSegments[{static_cast<int>(x), static_cast<int>(y)}];
                 if (!segment.mFogOfWarImage)
-                {
-                    bool loaded = false;
-                    if (const ESM::FogState* fog = cell->getFog())
-                    {
-                        auto match = std::find_if(
-                            fog->mFogTextures.begin(), fog->mFogTextures.end(), [&](const ESM::FogTexture& texture) {
-                                return texture.mX == x - xOffset && texture.mY == y - yOffset;
-                            });
-                        if (match != fog->mFogTextures.end())
-                        {
-                            segment.loadFogOfWar(*match);
-                            loaded = true;
-                        }
-                    }
-                    if (!loaded)
-                        segment.initFogOfWar();
-                }
+                    segment.loadFogOfWar(texture);
             }
+    }
+
+    LocalMap::MapSegment* LocalMap::ensureInteriorSegment(int x, int y, bool render)
+    {
+        if (!mInterior || x < 0 || y < 0 || x >= mInteriorSize.first || y >= mInteriorSize.second)
+            return nullptr;
+        auto& segment = mInteriorSegments[{x, y}];
+        if (!segment.mFogOfWarImage)
+            segment.initFogOfWar();
+        if (render && !segment.mMapTexture)
+        {
+            const osg::Vec2f center(
+                static_cast<float>(double(mBounds.xMin()) + double(mMapWorldSize) * (double(x) + 0.5)),
+                static_cast<float>(double(mBounds.yMin()) + double(mMapWorldSize) * (double(y) + 0.5)));
+            const osg::Quat cameraOrient(mAngle, osg::Vec3d(0, 0, -1));
+            const osg::Vec2f relative = center - mCenter;
+            const osg::Vec3f rotated = cameraOrient * osg::Vec3f(relative.x(), relative.y(), 0);
+            const osg::Vec2f position = osg::Vec2f(rotated.x(), rotated.y()) + mCenter;
+            setupRenderToTexture(x, y, position.x(), position.y(), mInteriorNorth, mInteriorZMin, mInteriorZMax);
         }
+        return &segment;
     }
 
     void LocalMap::worldToInteriorMapPosition(osg::Vec2f pos, float& nX, float& nY, int& x, int& y) const
@@ -546,6 +560,8 @@ namespace MWRender
                 const int texX = static_cast<int>(wideX);
                 const int texY = static_cast<int>(wideY);
 
+                if (mInterior)
+                    ensureInteriorSegment(texX, texY, true);
                 auto& segments(mInterior ? mInteriorSegments : mExteriorSegments);
                 const auto found = segments.find(std::make_pair(texX, texY));
                 if (found == segments.end())

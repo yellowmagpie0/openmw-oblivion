@@ -207,3 +207,16 @@ pass. Both full1265-case normal/instrumented engine inventories pass. The milest
 records fingerprints, binary hashes, failed build/startup attempts and evidence.
 MagicItem/spell and legacy GUI runtime, resource preflight and full S3 restore
 acceptance remain open.
+
+
+LocalMap now retains actual saved interior fog fragments and creates render
+cameras/map textures only for requested or player-explored tiles. Clear/interior
+unload cancel queued cameras and cached segments. The actual SDL/OSG case covers
+9×9 and over-trillion-cell representable grids without initial camera allocation,
+repeated/invalid requests, remote saved fog preservation and bounded exploration.
+Both full1265-case engine inventories pass. Normal/instrumented ordinary-size
+fresh-PID courses preserve declared native/weather/KEYS state and independently
+compared fog metadata/RGBA pixels; inspected scene/HUD remain intact. The milestone
+records exact fingerprints and evidence. Full-grid GUI widget pairs and integer
+canvas arithmetic remain open, so this does not close large-map runtime acceptance
+or the broader pre-teardown resource guarantee.

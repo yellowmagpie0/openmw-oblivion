@@ -141,6 +141,7 @@ namespace
         static SceneUtil::ShadowManager shadows(scene, root, MWRender::Mask_Static,
             MWRender::Mask_Static, MWRender::Mask_Scene, Settings::shadows(), shaders);
         MWRender::LocalMap map(root, 32);
+        const auto baseChildren = root->getNumChildren();
         map.requestMap(&cell);
         ASSERT_TRUE(map.getMapTexture(0, 0));
         ASSERT_TRUE(map.getFogOfWarTexture(0, 0));
@@ -161,6 +162,53 @@ namespace
         ASSERT_EQ(cell.getFog()->mFogTextures.size(), 1u);
         EXPECT_EQ(cell.getFog()->mFogTextures.front().mX, 0);
         EXPECT_EQ(cell.getFog()->mFogTextures.front().mY, 0);
+        const auto explored = *cell.getFog();
+
+        // A saved fragment far from the current viewport must survive without
+        // rendering the entire theoretical grid, including a trillion-cell map.
+        for (float span : {65536.f, 8589934592.f})
+        {
+            SCOPED_TRACE(span);
+            map.clear();
+            EXPECT_EQ(root->getNumChildren(), baseChildren);
+            geometry->removeDrawables(0, geometry->getNumDrawables());
+            geometry->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3(), span, span, 1024.f)));
+            auto retained = std::make_unique<ESM::FogState>(explored);
+            retained->mBounds = {-span / 2 - 500.f, -span / 2 - 500.f,
+                span / 2 + 500.f, span / 2 + 500.f};
+            retained->mCenterX = retained->mCenterY = 0;
+            retained->mFogTextures.front().mX = 6;
+            retained->mFogTextures.front().mY = 7;
+            cell.setFog(std::move(retained));
+            const auto children = root->getNumChildren();
+            map.requestMap(&cell);
+            ASSERT_EQ(root->getNumChildren(), children);
+            EXPECT_TRUE(map.isPositionExplored(1012.f / 8192, 1 - 1012.f / 8192, 6, 7));
+            EXPECT_FALSE(map.getMapTexture(-1, 0));
+            EXPECT_FALSE(map.getMapTexture(std::numeric_limits<int>::max(), 0));
+            const auto texture = map.getMapTexture(0, 0);
+            ASSERT_TRUE(texture);
+            EXPECT_EQ(root->getNumChildren(), children + 1);
+            EXPECT_EQ(map.getMapTexture(0, 0), texture);
+            EXPECT_EQ(root->getNumChildren(), children + 1);
+            ASSERT_TRUE(map.getFogOfWarTexture(0, 0));
+            map.saveFogOfWar(&cell);
+            ASSERT_EQ(cell.getFog()->mFogTextures.size(), 1u);
+            EXPECT_EQ(cell.getFog()->mFogTextures.front().mX, 6);
+            EXPECT_EQ(cell.getFog()->mFogTextures.front().mY, 7);
+            map.updatePlayer({0, 0, 0}, osg::Quat(), u, v, x, y, direction);
+            EXPECT_TRUE(map.isPositionExplored(u, v, x, y));
+            EXPECT_LE(root->getNumChildren(), children + 5);
+            map.saveFogOfWar(&cell);
+            EXPECT_LE(cell.getFog()->mFogTextures.size(), 5u);
+            EXPECT_TRUE(std::any_of(cell.getFog()->mFogTextures.begin(), cell.getFog()->mFogTextures.end(),
+                [](const auto& fog) { return fog.mX == 6 && fog.mY == 7; }));
+        }
+        map.removeCell(&cell);
+        EXPECT_EQ(root->getNumChildren(), baseChildren);
+        EXPECT_FALSE(map.getMapTexture(x, y));
+        EXPECT_FALSE(map.getFogOfWarTexture(x, y));
+        EXPECT_FALSE(map.isPositionExplored(u, v, x, y));
     }
 
     class PreparedModelFailureRoot : public osg::Group
