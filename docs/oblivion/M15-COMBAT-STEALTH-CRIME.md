@@ -6,6 +6,48 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 native hotkey captions, weapon hover and item frames — 2026-10-08
+
+Native weapon tooltips now fall back to Interface localization keys when a
+legacy string GMST is absent or has another type. Existing string settings
+retain precedence. Native hotkey menu, assignment and item-selection captions
+also use Interface keys. The original numeric tooltip calculations are unchanged.
+Native ItemWidget frames retain available legacy/mod textures, otherwise use
+the shipped omw_menu_icon_active DDS at its full dimensions, with equipment/
+magic tint and ordinary-frame tint reset. Editable YAML/layout sources remain
+tracked; no generated or licensed asset was added.
+
+Full normal-03 and sanitized-02 engine inventories each pass all 1264 tests,
+no failures/skips, fingerprint
+83d2512ac0e8020c39867bf9c38200b9a532cc5be487e0bd2db5775db1d52f0c
+against parent b715726b27. Both use SDL offscreen; ASan leak checking is disabled
+and UBSan halts. Evidence: build/oblivion-compat/m15/S3/
+hotkey-tooltip-frame-{normal-03,sanitized-02}. Unchanged component/Python
+checks were not repeated.
+
+Actual Xvfb GUI normal-02 passes mouse assignment/move/unassign, three F5 saves
+and a clean error-log audit. Independent native/KEYS readback confirms 0→7→7,
+old GUI slot unassigned and new slot retaining the same generated item.
+Inspected screenshots show readable captions and weapon tooltip (condition
+38/100, weight4.25, value123), the fallback frame and the final prison scene/HUD.
+Lua opens/reopens the menu solely for setup because this pre-chargen seed blocks
+F1; this does not prove F1 or character-generation acceptance. The no-sound
+interior course does not prove audio, exterior or all rendered fields.
+
+Continuation normal-01 passes a fresh PID load/F5/quit, compares all38 initial
+native groups and ten stable post-save groups, all raw KEYS subrecords and
+37 independently walked weather catalog identities. Old slot remains Unassigned,
+slot eight remains Item with the same generated ID. Runtime openmw SHA256:
+f5a36aa8b078d52e44c0e0d9bf9152b4ab2a16f332f45d1b80e995d921eb36dd.
+Runtime evidence uses the hotkey-tooltip-frame-gui-normal-02 and
+hotkey-tooltip-frame-continuation-normal-01 directories under the same S3 root.
+
+The prior failed hover/frame course is retained. These defects are closed for
+the tested generated melee weapon course; verbose reach, spell replacement,
+complete native/shared hotkey reconciliation and pre-teardown resources remain
+open. Full S3 remains active, including oversized map allocation and broader
+restore/migration/profile/lifecycle acceptance.
+
 ## S3 clear native item hotkeys by GUI slot — 2026-10-08
 
 The World hotkey adapter now accepts an empty item ID with a slot 0–7 to clear

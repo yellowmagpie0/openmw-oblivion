@@ -2,7 +2,7 @@
 <MyGUI type="Layout">
     <Widget type="Window" skin="MW_Dialog" position="0 0 380 224" layer="Modal" align="Center" name="_Main">
 
-        <Widget type="TextBox" skin="SandText" position="8 7 356 18">
+        <Widget type="TextBox" skin="SandText" position="8 7 356 18" name="Title">
             <Property key="Caption" value="#{sQuickMenuTitle}"/>
             <Property key="TextAlign" value="Center"/>
         </Widget>

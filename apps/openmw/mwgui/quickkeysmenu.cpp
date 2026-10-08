@@ -44,6 +44,13 @@ namespace MWGui
     {
         getWidget(mOkButton, "OKButton");
         getWidget(mInstructionLabel, "InstructionLabel");
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            MyGUI::TextBox* title;
+            getWidget(title, "Title");
+            title->setCaptionWithReplacing("#{Interface:Hotkeys}");
+            mInstructionLabel->setCaptionWithReplacing("#{Interface:HotkeyInstructions}");
+        }
 
         mMainWidget->setSize(mMainWidget->getWidth(),
             mMainWidget->getHeight() + (mInstructionLabel->getTextSize().height - mInstructionLabel->getHeight()));
@@ -219,7 +226,9 @@ namespace MWGui
     {
         if (!mItemSelectionDialog)
         {
-            mItemSelectionDialog = std::make_unique<ItemSelectionDialog>("#{sQuickMenu6}");
+            mItemSelectionDialog = std::make_unique<ItemSelectionDialog>(
+                MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+                    ? "#{Interface:ChooseItem}" : "#{sQuickMenu6}");
             mItemSelectionDialog->eventItemSelected += MyGUI::newDelegate(this, &QuickKeysMenu::onAssignItem);
             mItemSelectionDialog->eventDialogCanceled += MyGUI::newDelegate(this, &QuickKeysMenu::onAssignItemCancel);
         }
@@ -530,6 +539,13 @@ namespace MWGui
         getWidget(mMagicButton, "MagicButton");
         getWidget(mUnassignButton, "UnassignButton");
         getWidget(mCancelButton, "CancelButton");
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            mLabel->setCaptionWithReplacing("#{Interface:AssignHotkey}");
+            mItemButton->setCaptionWithReplacing("#{Interface:Item}");
+            mMagicButton->setCaptionWithReplacing("#{Interface:Magic}");
+            mUnassignButton->setCaptionWithReplacing("#{Interface:Unassign}");
+        }
 
         mItemButton->eventMouseButtonClick += MyGUI::newDelegate(mParent, &QuickKeysMenu::onItemButtonClicked);
         mMagicButton->eventMouseButtonClick += MyGUI::newDelegate(mParent, &QuickKeysMenu::onMagicButtonClicked);

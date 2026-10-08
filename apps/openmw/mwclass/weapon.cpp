@@ -11,6 +11,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwworld/actionequip.hpp"
 #include "../mwworld/cellstore.hpp"
@@ -153,12 +154,20 @@ namespace MWClass
 
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
 
+        const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        const auto label = [&](std::string_view setting, std::string_view fallback) {
+            const auto* value = store.get<ESM::GameSetting>().search(setting);
+            if (native && (!value || value->mValue.getType() != ESM::VT_String))
+                return "#{Interface:" + std::string(fallback) + "}";
+            return "#{" + std::string(setting) + "}";
+        };
+
         std::string text;
 
         // weapon type & damage
         if (weaponType->mWeaponClass != ESM::WeaponType::Ammo || Settings::game().mShowProjectileDamage)
         {
-            text += "\n#{sType} ";
+            text += "\n" + label("sType", "Type") + " ";
 
             const ESM::Skill* skill
                 = store.get<ESM::Skill>().find(MWMechanics::getWeaponType(ref->mBase->mData.mType)->mSkill);
@@ -173,32 +182,32 @@ namespace MWClass
 
             text += skill->mName;
             if (!oneOrTwoHanded.empty())
-                text += ", " + store.get<ESM::GameSetting>().find(oneOrTwoHanded)->mValue.getString();
+                text += ", " + label(oneOrTwoHanded, oneOrTwoHanded == "sOneHanded" ? "OneHanded" : "TwoHanded");
 
             // weapon damage
             if (weaponType->mWeaponClass == ESM::WeaponType::Thrown)
             {
                 // Thrown weapons have 2x real damage applied
                 // as they're both the weapon and the ammo
-                text += "\n#{sAttack}: " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0] * 2))
+                text += "\n" + label("sAttack", "Attack") + ": " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0] * 2))
                     + " - " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[1] * 2));
             }
             else if (weaponType->mWeaponClass == ESM::WeaponType::Melee)
             {
                 // Chop
-                text += "\n#{sChop}: " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0])) + " - "
+                text += "\n" + label("sChop", "Chop") + ": " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0])) + " - "
                     + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[1]));
                 // Slash
-                text += "\n#{sSlash}: " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mSlash[0]))
+                text += "\n" + label("sSlash", "Slash") + ": " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mSlash[0]))
                     + " - " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mSlash[1]));
                 // Thrust
-                text += "\n#{sThrust}: " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mThrust[0]))
+                text += "\n" + label("sThrust", "Thrust") + ": " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mThrust[0]))
                     + " - " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mThrust[1]));
             }
             else
             {
                 // marksman
-                text += "\n#{sAttack}: " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0]))
+                text += "\n" + label("sAttack", "Attack") + ": " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[0]))
                     + " - " + MWGui::ToolTips::toString(static_cast<int>(ref->mBase->mData.mChop[1]));
             }
         }
@@ -206,7 +215,7 @@ namespace MWClass
         if (hasItemHealth(ptr))
         {
             int remainingHealth = getItemHealth(ptr);
-            text += "\n#{sCondition}: " + MWGui::ToolTips::toString(remainingHealth) + "/"
+            text += "\n" + label("sCondition", "Condition") + ": " + MWGui::ToolTips::toString(remainingHealth) + "/"
                 + MWGui::ToolTips::toString(ref->mBase->mData.mHealth);
         }
 
@@ -217,18 +226,18 @@ namespace MWClass
             // display value in feet
             const float combatDistance
                 = store.get<ESM::GameSetting>().find("fCombatDistance")->mValue.getFloat() * ref->mBase->mData.mReach;
-            text += MWGui::ToolTips::getWeightString(combatDistance / Constants::UnitsPerFoot, "#{sRange}");
-            text += " #{sFeet}";
+            text += MWGui::ToolTips::getWeightString(combatDistance / Constants::UnitsPerFoot, label("sRange", "Range"));
+            text += " " + label("sFeet", "Feet");
         }
 
         // add attack speed for any weapon excepts arrows and bolts
         if (weaponType->mWeaponClass != ESM::WeaponType::Ammo && verbose)
         {
-            text += MWGui::ToolTips::getPercentString(ref->mBase->mData.mSpeed, "#{sAttributeSpeed}");
+            text += MWGui::ToolTips::getPercentString(ref->mBase->mData.mSpeed, label("sAttributeSpeed", "Speed"));
         }
 
-        text += MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{sWeight}");
-        text += MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{sValue}");
+        text += MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, label("sWeight", "Weight"));
+        text += MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, label("sValue", "Value"));
 
         info.enchant = ref->mBase->mEnchant;
 

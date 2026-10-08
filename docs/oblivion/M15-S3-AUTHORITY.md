@@ -164,3 +164,17 @@ engine inventories pass. Actual Xvfb mouse/F5 evidence proves item slots 0→7�
 and final GUI slot removal, but its scenario remains failed by generated weapon
 legacy sOneHanded tooltip lookup and absent barter-frame resources. This is
 metadata evidence, not complete GUI acceptance or full hotkey reconciliation.
+
+
+Native weapon hover now uses Interface labels for missing legacy string settings;
+QuickKeysMenu captions use localized native labels. ItemWidget retains available
+legacy frames or uses the existing shipped DDS at full size with state tint.
+The final normal Xvfb mouse course passes all three saves, independent slot
+0→7→7/KEYS checks and the error-log audit; inspected captions/tooltips/frame are
+readable. Lua menu setup is disclosed because the seed blocks F1. A fresh normal
+PID preserves all raw KEYS and the generated binding through load/F5, with all38
+initial native groups exact and ten stable post-save groups equal. Both full
+1264-case normal/instrumented engine inventories pass; evidence and fingerprint
+are in the milestone. This closes the observed hover/frame defects, leaving
+full hotkey reconciliation, spell replacement, texture preflight and full S3
+restore guarantees open.

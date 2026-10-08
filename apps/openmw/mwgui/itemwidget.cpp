@@ -12,6 +12,7 @@
 #include <components/vfs/manager.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 
 #include "../mwworld/class.hpp"
 
@@ -189,6 +190,24 @@ namespace MWGui
         if (!backgroundTex.empty())
             backgroundTex += ".dds";
 
+        bool fallbackFrame = false;
+        const auto& environment = MWBase::Environment::get();
+        if (!backgroundTex.empty() && environment.getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            const auto& vfs = *environment.getResourceSystem()->getVFS();
+            const VFS::Path::Normalized original(backgroundTex);
+            constexpr VFS::Path::NormalizedView fallback("textures/omw_menu_icon_active.dds");
+            if (!vfs.exists(original) && vfs.exists(fallback))
+            {
+                backgroundTex = fallback.value();
+                fallbackFrame = true;
+            }
+        }
+        if (mFrame)
+            mFrame->setColour(!fallbackFrame ? MyGUI::Colour::White
+                : state == Equip ? MyGUI::Colour(1.f, 0.85f, 0.5f)
+                : isMagic ? MyGUI::Colour(0.65f, 0.75f, 1.f) : MyGUI::Colour::White);
+
         float scale = 1.f;
         if (!backgroundTex.empty())
         {
@@ -209,7 +228,12 @@ namespace MWGui
         }
 
         const int diameter = static_cast<int>(44 * scale);
-        if (state == Barter && !isMagic)
+        if (fallbackFrame)
+        {
+            const auto* texture = MyGUI::RenderManager::getInstance().getTexture(backgroundTex);
+            setFrame(backgroundTex, MyGUI::IntCoord(0, 0, texture->getWidth(), texture->getHeight()));
+        }
+        else if (state == Barter && !isMagic)
             setFrame(backgroundTex,
                 MyGUI::IntCoord(static_cast<int>(2 * scale), static_cast<int>(2 * scale), diameter, diameter));
         else
