@@ -2442,6 +2442,72 @@ TEST(SaveAdmissionTest, WeatherPreparationDoesNotChangeMorrowindAdmission)
     EXPECT_EQ(calls, 0);
 }
 
+TEST(SaveAdmissionTest, WeatherRemovedRegionsUseOriginalIdentitiesBeforeRemappingAcrossEverySchema)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int fault : {0, 1, 2})
+    for (bool removed : {false, true})
+    for (bool nativeFirst : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(fault);
+        SCOPED_TRACE(removed);
+        SCOPED_TRACE(nativeFirst);
+        ESM::WeatherState weather{};
+        weather.mCurrentWeather = 0;
+        weather.mNextWeather = weather.mQueuedWeather = -1;
+        const auto first = ESM::RefId(ESM::FormId{0x881, 0});
+        const auto second = fault == 1 ? first : ESM::RefId(ESM::FormId{0x882, 0});
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_WTHR); weather.save(writer);
+            writer.writeHNRefId("RGNN", first); writer.writeHNT("RGNW", 0);
+            writer.writeHNRefId("RGNN", second);
+            if (fault == 2) writer.writeHNT("RGNW", std::uint16_t{0});
+            else writer.writeHNT("RGNW", 1);
+            writer.endRecord(ESM::REC_WTHR);
+        });
+        const auto base = saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0);
+        ESM::ESMReader header; openBytes(header, base);
+        const auto firstRecord = header.getFileOffset();
+        ESM::ESMReader reader;
+        openBytes(reader, nativeFirst ? base + records
+            : base.substr(0, firstRecord) + records + base.substr(firstRecord));
+        const std::map<int, int> mapping = removed ? std::map<int, int>{} : std::map<int, int>{{0, 3}};
+        reader.setContentFileMapping(&mapping);
+        const auto offset = reader.getFileOffset();
+        int nativeCalls = 0, weatherCalls = 0;
+        const auto native = [&](const auto&, auto) { ++nativeCalls; };
+        const auto prepare = [&](const ESM::WeatherState& saved) {
+            ++weatherCalls;
+            if (removed)
+            {
+                EXPECT_TRUE(saved.mRegions.empty());
+            }
+            else
+            {
+                ASSERT_EQ(saved.mRegions.size(), 2u);
+                EXPECT_EQ(saved.mRegions.at(ESM::RefId(ESM::FormId{0x881, 3})).mWeather, 0);
+                EXPECT_EQ(saved.mRegions.at(ESM::RefId(ESM::FormId{0x882, 3})).mWeather, 1);
+            }
+        };
+        if (fault)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare),
+                std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare));
+        EXPECT_EQ(weatherCalls, int(fault == 0));
+        EXPECT_EQ(nativeCalls, int(fault == 0 && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        auto probe = ESM::FormId{0x881, 0};
+        EXPECT_EQ(reader.applyContentFileMapping(probe), !removed);
+        if (!removed)
+        {
+            EXPECT_EQ(probe.mContentFile, 3);
+        }
+    }
+}
+
 TEST(SaveAdmissionTest, ProjectilesPrepareWithAllIncomingDefinitionsBeforeNativePublicationAcrossEverySchema)
 {
     for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)

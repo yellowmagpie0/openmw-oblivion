@@ -237,6 +237,9 @@ namespace ESM
         std::string_view getHStringView();
 
         RefId getRefId();
+        // Preserve saved identity for duplicate checks before removed content
+        // is collapsed to an empty reference by load-order remapping.
+        RefId getUnmappedRefId();
 
         void skipHString();
 
@@ -371,7 +374,7 @@ namespace ESM
 
         void clearCtx();
 
-        RefId getRefIdImpl(std::size_t size);
+        RefId getRefIdImpl(std::size_t size, bool applyMapping = true);
 
         std::unique_ptr<std::istream> mEsm;
 

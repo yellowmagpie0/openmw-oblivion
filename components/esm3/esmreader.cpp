@@ -221,6 +221,14 @@ namespace ESM
         return getRefIdImpl(mCtx.leftSub);
     }
 
+    RefId ESMReader::getUnmappedRefId()
+    {
+        if (mHeader.mFormatVersion <= MaxStringRefIdFormatVersion)
+            return getRefId();
+        getSubHeader();
+        return getRefIdImpl(mCtx.leftSub, false);
+    }
+
     void ESMReader::skipHString()
     {
         getSubHeader();
@@ -453,7 +461,7 @@ namespace ESM
         return getRefIdImpl(size);
     }
 
-    RefId ESMReader::getRefIdImpl(std::size_t size)
+    RefId ESMReader::getRefIdImpl(std::size_t size, bool applyMapping)
     {
         RefIdType refIdType = RefIdType::Empty;
         getT(refIdType);
@@ -486,7 +494,7 @@ namespace ESM
                 FormId formId{};
                 getT(formId.mIndex);
                 getT(formId.mContentFile);
-                if (applyContentFileMapping(formId))
+                if (!applyMapping || applyContentFileMapping(formId))
                     return RefId(formId);
                 else
                     return RefId(); // content file was removed from load order

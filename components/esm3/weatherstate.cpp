@@ -3,6 +3,8 @@
 #include "esmreader.hpp"
 #include "esmwriter.hpp"
 
+#include <set>
+
 namespace ESM
 {
     namespace
@@ -36,9 +38,21 @@ namespace ESM
         esm.getHNT(mQueuedWeather, queuedWeatherRecord);
         esm.getHNOT(mWeatherOverride, weatherOverrideRecord);
 
+        std::set<ESM::RefId> savedRegions;
         while (esm.isNextSub(regionNameRecord))
         {
-            ESM::RefId regionID = esm.getRefId();
+            ESM::RefId regionID = rejectDuplicateRegions ? esm.getUnmappedRefId() : esm.getRefId();
+            if (rejectDuplicateRegions && !savedRegions.insert(regionID).second)
+                esm.fail("Saved weather contains duplicate region identities");
+            bool removed = false;
+            if (rejectDuplicateRegions)
+                if (const auto* form = regionID.getIf<ESM::FormId>())
+                {
+                    auto remapped = *form;
+                    removed = !esm.applyContentFileMapping(remapped);
+                    if (!removed)
+                        regionID = ESM::RefId(remapped);
+                }
             RegionWeatherState region;
             esm.getHNT(region.mWeather, regionWeatherRecord);
             while (esm.isNextSub(regionChanceRecord))
@@ -48,6 +62,8 @@ namespace ESM
                 region.mChances.push_back(chance);
             }
 
+            if (removed)
+                continue;
             const auto inserted = mRegions.emplace(regionID, std::move(region));
             if (rejectDuplicateRegions && !inserted.second)
                 esm.fail("Saved weather contains duplicate region identities");

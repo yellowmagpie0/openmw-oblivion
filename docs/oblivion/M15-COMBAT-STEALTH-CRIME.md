@@ -6,6 +6,45 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 removed weather-region identity admission — 2026-10-07
+
+Strict weather admission now compares original saved region identities before
+content-file remapping. Distinct regions from removed content no longer collapse
+to one empty ID and falsely reject as duplicates. Their payloads still decode
+and validate before the removed entries are skipped. Repeated original IDs
+reject even when their plugin was removed; retained mapped collisions also
+reject. The new `ESMReader::getUnmappedRefId` preserves the reader's mapping for
+later ordinary reads. Default legacy weather decoding remains unchanged.
+
+Normal and ASan/UBSan checks each pass all **2592 component tests** and
+**1245 engine tests**, with exact inventories/XML, no failures/skips and stable
+common source fingerprint
+`4dc55a80879b05a07324495f5f320fe1591dd7ae5fedb836ce307aa259b480dc`;
+compiled parent `4ff3d725376b9201664408fea60107ed8e2c2b73`.
+Two isolated reader and four isolated weather-admission cases pass in each
+configuration. The new564-combination matrix covers schemas0–46,
+valid/distinct, duplicate and malformed regions, present/removed content,
+and native-first/weather-first order. It checks preparation callback suppression,
+reader rewind, remapped retained IDs and continued mapping behavior. Reader
+tests interleave mapped/unmapped reads and cover legacy/typed string encodings.
+ASan leak checks are disabled. Targeted precompile01's dangling-else warning
+was corrected before passing precompile02 and the full runs. Python sources
+and published fixtures did not change; unchanged Python checks were not repeated.
+
+Evidence: `build/oblivion-compat/m15/S3/weather-removed-report.json`,
+`weather-removed-{normal,sanitized}-01`, and reader/engine isolated XML/logs.
+Reinspection of the historical actual Morrowind resave confirms its original
+output hash, all102 record bounds and no GPRO/T4VR/T4ST tags; this is not a
+fresh runtime check of the current binary. Private inputs under
+`weather-removed-runtime-preparation-01` declare a missing optional master and
+append distinct/duplicate region entries, preserving native state and T4ST
+bytes exactly. They establish input framing/provenance only: no new actual
+removed-region load/F9/restart course has run yet.
+
+Weather catalog identity across content changes/reordering, full restore
+resource staging and postcleanup prior-World preservation remain open.
+Full S3 remains active.
+
 ## S3 duplicate weather-region admission — 2026-10-07
 
 Oblivion WTHR admission now rejects repeated region identities during decode,
