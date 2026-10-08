@@ -3,11 +3,17 @@
 #include <components/esm3/readerscache.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <apps/openmw/mwrender/objects.hpp>
+#include <apps/openmw/mwrender/localmap.hpp>
 #include <apps/openmw/mwrender/vismask.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
 #include <components/esm3/loadstat.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
+#include <components/sceneutil/shadow.hpp>
+#include <components/settings/values.hpp>
+#include <components/sceneutil/glextensions.hpp>
+#include <components/sdlutil/sdlgraphicswindow.hpp>
+#include <SDL.h>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/testing/util.hpp>
 #include <osgDB/Registry>
@@ -26,9 +32,137 @@
 
 #include <gtest/gtest.h>
 #include <osg/Group>
+#include <osg/Geode>
+#include <osg/ShapeDrawable>
 
 namespace
 {
+    struct LocalMapGraphicsContext
+    {
+        SDL_Window* mWindow = nullptr;
+        osg::ref_ptr<SDLUtil::GraphicsWindowSDL2> mContext;
+        LocalMapGraphicsContext()
+        {
+            if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
+                throw std::runtime_error(SDL_GetError());
+            mWindow = SDL_CreateWindow("Local map integration", 0, 0, 32, 32, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+            if (!mWindow)
+                throw std::runtime_error(SDL_GetError());
+            osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+            traits->width = traits->height = 32;
+            traits->inheritedWindowData = new SDLUtil::GraphicsWindowSDL2::WindowData(mWindow);
+            mContext = new SDLUtil::GraphicsWindowSDL2(traits, SDLUtil::Disabled);
+            if (!mContext->valid() || !mContext->realize() || !mContext->makeCurrent())
+                throw std::runtime_error("Could not create the local-map integration graphics context");
+            osg::ref_ptr<SceneUtil::GetGLExtensionsOperation> extensions = new SceneUtil::GetGLExtensionsOperation;
+            (*extensions)(mContext);
+        }
+        ~LocalMapGraphicsContext()
+        {
+            mContext = nullptr;
+            SDL_DestroyWindow(mWindow);
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        }
+    };
+
+    TEST(LocalMapCoordinatesTest, LargeRepresentableExteriorCoordinatesKeepNormalizedPosition)
+    {
+        osg::ref_ptr<osg::Group> root = new osg::Group;
+        osg::ref_ptr<osg::Group> scene = new osg::Group;
+        scene->setName("Scene Root");
+        root->addChild(scene);
+        MWRender::LocalMap map(root, 32);
+        for (float position : {4294967296.f, -4294967296.f, 8192.f, -8192.f, 0.f})
+        {
+            SCOPED_TRACE(position);
+            float u = -1, v = -1;
+            int x = 0, y = 0;
+            osg::Vec3f direction;
+            map.updatePlayer({position, position, 0}, osg::Quat(), u, v, x, y, direction);
+            EXPECT_FLOAT_EQ(u, 1.f);
+            EXPECT_FLOAT_EQ(v, 0.f);
+            EXPECT_EQ(x, static_cast<int>(double(position) / 8192) - 1);
+            EXPECT_EQ(y, x);
+            EXPECT_EQ(root->getNumChildren(), 1u);
+        }
+    }
+
+    TEST(LocalMapCoordinatesTest, ExteriorBoundaryAndInvalidCoordinatesDoNotOverflowOrPublishOutputs)
+    {
+        osg::ref_ptr<osg::Group> root = new osg::Group;
+        osg::ref_ptr<osg::Group> scene = new osg::Group;
+        scene->setName("Scene Root");
+        root->addChild(scene);
+        MWRender::LocalMap map(root, 32);
+        float u = -1, v = -1;
+        int x = 123, y = 456;
+        osg::Vec3f direction;
+        const float boundary = std::ldexp(8192.f, 31);
+        ASSERT_NO_THROW(map.updatePlayer({boundary, boundary, 0}, osg::Quat(), u, v, x, y, direction));
+        EXPECT_EQ(x, std::numeric_limits<int>::max());
+        EXPECT_EQ(y, x);
+        EXPECT_FLOAT_EQ(u, 1);
+        EXPECT_FLOAT_EQ(v, 0);
+        for (float invalid : {std::nextafter(boundary, std::numeric_limits<float>::infinity()), -boundary,
+                 std::numeric_limits<float>::max(), std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::quiet_NaN()})
+        {
+            u = -1; v = -2; x = 123; y = 456;
+            EXPECT_THROW(map.updatePlayer({8192, invalid, 0}, osg::Quat(), u, v, x, y, direction), std::runtime_error);
+            EXPECT_EQ(x, 123); EXPECT_EQ(y, 456);
+            EXPECT_FLOAT_EQ(u, -1); EXPECT_FLOAT_EQ(v, -2);
+        }
+        const float inside = std::nextafter(8192.f, std::numeric_limits<float>::infinity());
+        map.updatePlayer({inside, inside, 0}, osg::Quat(), u, v, x, y, direction);
+        EXPECT_EQ(x, 1); EXPECT_EQ(y, 1);
+        EXPECT_FLOAT_EQ(u, std::ldexp(1.f, -23));
+        EXPECT_FLOAT_EQ(v, 1 - std::ldexp(1.f, -23));
+    }
+
+    TEST(LocalMapCoordinatesTest, ActualInteriorMapRetainsCoordinateRoundTripAndFogExploration)
+    {
+        osg::ref_ptr<osg::Group> root = new osg::Group;
+        osg::ref_ptr<osg::Group> scene = new osg::Group;
+        scene->setName("Scene Root");
+        osg::ref_ptr<osg::Geode> geometry = new osg::Geode;
+        geometry->setNodeMask(MWRender::Mask_Static);
+        geometry->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3(), 1024.f)));
+        scene->addChild(geometry);
+        root->addChild(scene);
+        MWWorld::ESMStore store;
+        ESM::ReadersCache readers;
+        ESM::Cell record; record.blank(); record.mId = ESM::RefId::stringRefId("map arithmetic interior");
+        record.mData.mFlags = ESM::Cell::Interior;
+        MWWorld::CellStore cell{MWWorld::Cell(record), store, readers}; cell.load();
+        // Local-map cameras use the engine's process-wide shadow service.
+        static LocalMapGraphicsContext context;
+        static Shader::ShaderManager shaders;
+        shaders.setShaderPath(OPENMW_PROJECT_SOURCE_DIR "/files/shaders");
+        static SceneUtil::ShadowManager shadows(scene, root, MWRender::Mask_Static,
+            MWRender::Mask_Static, MWRender::Mask_Scene, Settings::shadows(), shaders);
+        MWRender::LocalMap map(root, 32);
+        map.requestMap(&cell);
+        ASSERT_TRUE(map.getMapTexture(0, 0));
+        ASSERT_TRUE(map.getFogOfWarTexture(0, 0));
+        float u, v; int x, y;
+        map.worldToInteriorMapPosition({4294967296.f, 4294967296.f}, u, v, x, y);
+        EXPECT_EQ(x, 524288); EXPECT_EQ(y, 524288);
+        EXPECT_FLOAT_EQ(u, 1012.f / 8192);
+        EXPECT_FLOAT_EQ(v, 1 - 1012.f / 8192);
+        const auto position = map.interiorMapToWorldPosition(u, v, x, y);
+        EXPECT_FLOAT_EQ(position.x(), 4294967296.f); EXPECT_FLOAT_EQ(position.y(), 4294967296.f);
+        osg::Vec3f direction;
+        map.updatePlayer({0, 0, 0}, osg::Quat(), u, v, x, y, direction);
+        EXPECT_TRUE(map.isPositionExplored(u, v, x, y));
+        EXPECT_FALSE(map.isPositionExplored(std::numeric_limits<float>::quiet_NaN(), v, x, y));
+        EXPECT_FALSE(map.isPositionExplored(u, std::numeric_limits<float>::infinity(), x, y));
+        map.saveFogOfWar(&cell);
+        ASSERT_TRUE(cell.getFog());
+        ASSERT_EQ(cell.getFog()->mFogTextures.size(), 1u);
+        EXPECT_EQ(cell.getFog()->mFogTextures.front().mX, 0);
+        EXPECT_EQ(cell.getFog()->mFogTextures.front().mY, 0);
+    }
+
     class PreparedModelFailureRoot : public osg::Group
     {
     public:

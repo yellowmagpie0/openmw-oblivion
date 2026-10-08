@@ -144,3 +144,14 @@ All 47-schema fault coverage and adjacent-float domain boundaries pass, as do
 full normal/sanitizer checks. The actual normal extreme-BOUN F9/Return/F5 course
 preserves the prior scene and checked authoritative state. Representable oversized
 maps and renderer arithmetic remain open; this is not complete geometry safety.
+
+LocalMap now checks double-precision grid conversions and avoids integer
+coordinate/neighbor overflow. Unknown position queries do not allocate empty
+segments. Fog serialization visits actual retained segments in coordinate order,
+avoiding theoretical-grid products and traversal. Three actual LocalMap cases,
+including SDL/OSG GL context, texture creation, fog exploration and CellStore save,
+pass in both full 1263-case engine inventories using SDL offscreen. Actual final
+normal/instrumented rejection/resave and normal fresh-PID continuation preserve
+the checked native/weather/fog state and inspected scene/HUD. Large representable
+initial render-grid allocation and complete pre-teardown resource staging remain
+open; these checks do not prove full prior-World preservation.

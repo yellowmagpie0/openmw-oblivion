@@ -1,6 +1,7 @@
 #include "localmap.hpp"
 
 #include <cstdint>
+#include <limits>
 
 #include <osg/ComputeBoundsVisitor>
 #include <osg/Fog>
@@ -38,13 +39,20 @@ namespace
         return val * val;
     }
 
+    int checkedMapIndex(double value)
+    {
+        if (!std::isfinite(value) || value < std::numeric_limits<int>::min()
+            || value > std::numeric_limits<int>::max())
+            throw std::runtime_error("Local-map coordinate exceeds the integer grid");
+        return static_cast<int>(value);
+    }
+
     std::pair<int, int> divideIntoSegments(const osg::BoundingBox& bounds, int mapSize)
     {
-        osg::Vec2f min(bounds.xMin(), bounds.yMin());
-        osg::Vec2f max(bounds.xMax(), bounds.yMax());
-        osg::Vec2f length = max - min;
-        const int segsX = static_cast<int>(std::ceil(length.x() / mapSize));
-        const int segsY = static_cast<int>(std::ceil(length.y() / mapSize));
+        if (!bounds.valid())
+            return {0, 0};
+        const int segsX = checkedMapIndex(std::ceil((double(bounds.xMax()) - bounds.xMin()) / mapSize));
+        const int segsY = checkedMapIndex(std::ceil((double(bounds.yMax()) - bounds.yMin()) / mapSize));
         return { segsX, segsY };
     }
 }
@@ -73,9 +81,14 @@ namespace MWRender
     };
 
     LocalMap::LocalMap(osg::Group* root)
-        : mRoot(root)
-        , mMapResolution(static_cast<int>(
+        : LocalMap(root, static_cast<int>(
               Settings::map().mLocalMapResolution * MWBase::Environment::get().getWindowManager()->getScalingFactor()))
+    {
+    }
+
+    LocalMap::LocalMap(osg::Group* root, int mapResolution)
+        : mRoot(root)
+        , mMapResolution(mapResolution)
         , mMapWorldSize(Constants::CellSizeInUnits)
         , mCellDistance(Constants::CellGridRadius)
         , mAngle(0.f)
@@ -141,23 +154,17 @@ namespace MWRender
             fog->mCenterX = mCenter.x();
             fog->mCenterY = mCenter.y();
 
-            fog->mFogTextures.reserve(segments.first * segments.second);
+            fog->mFogTextures.reserve(mInteriorSegments.size());
 
-            for (int x = 0; x < segments.first; ++x)
+            for (const auto& [coords, segment] : mInteriorSegments)
             {
-                for (int y = 0; y < segments.second; ++y)
-                {
-                    const auto it = mInteriorSegments.find(std::make_pair(x, y));
-                    if (it == mInteriorSegments.end())
-                        continue;
-                    const MapSegment& segment = it->second;
-                    if (!segment.mHasFogState)
-                        continue;
-                    ESM::FogTexture& texture = fog->mFogTextures.emplace_back();
-                    segment.saveFogOfWar(texture);
-                    texture.mX = x;
-                    texture.mY = y;
-                }
+                const auto [x, y] = coords;
+                if (x < 0 || y < 0 || x >= segments.first || y >= segments.second || !segment.mHasFogState)
+                    continue;
+                ESM::FogTexture& texture = fog->mFogTextures.emplace_back();
+                segment.saveFogOfWar(texture);
+                texture.mX = x;
+                texture.mY = y;
             }
 
             cell->setFog(std::move(fog));
@@ -263,7 +270,7 @@ namespace MWRender
         float zmin = bound.center().z() - bound.radius();
         float zmax = bound.center().z() + bound.radius();
 
-        setupRenderToTexture(x, y, x * mMapWorldSize + mMapWorldSize / 2.f, y * mMapWorldSize + mMapWorldSize / 2.f,
+        setupRenderToTexture(x, y, float(x) * mMapWorldSize + mMapWorldSize / 2.f, float(y) * mMapWorldSize + mMapWorldSize / 2.f,
             osg::Vec3d(0, 1, 0), zmin, zmax);
 
         if (segment.mFogOfWarImage != nullptr)
@@ -355,9 +362,9 @@ namespace MWRender
                 }
                 else if (fog->mBounds.mMinX > mBounds.xMin())
                 {
-                    float diff = fog->mBounds.mMinX - mBounds.xMin();
-                    xOffset = static_cast<int>(std::ceil(diff / mMapWorldSize));
-                    mBounds.xMin() = fog->mBounds.mMinX - xOffset * mMapWorldSize;
+                    double diff = double(fog->mBounds.mMinX) - mBounds.xMin();
+                    xOffset = checkedMapIndex(std::ceil(diff / mMapWorldSize));
+                    mBounds.xMin() = static_cast<float>(double(fog->mBounds.mMinX) - double(xOffset) * mMapWorldSize);
                 }
                 if (fog->mBounds.mMinY < mBounds.yMin())
                 {
@@ -365,9 +372,9 @@ namespace MWRender
                 }
                 else if (fog->mBounds.mMinY > mBounds.yMin())
                 {
-                    float diff = fog->mBounds.mMinY - mBounds.yMin();
-                    yOffset = static_cast<int>(std::ceil(diff / mMapWorldSize));
-                    mBounds.yMin() = fog->mBounds.mMinY - yOffset * mMapWorldSize;
+                    double diff = double(fog->mBounds.mMinY) - mBounds.yMin();
+                    yOffset = checkedMapIndex(std::ceil(diff / mMapWorldSize));
+                    mBounds.yMin() = static_cast<float>(double(fog->mBounds.mMinY) - double(yOffset) * mMapWorldSize);
                 }
                 if (fog->mBounds.mMaxX > mBounds.xMax())
                     mBounds.xMax() = fog->mBounds.mMaxX;
@@ -393,7 +400,7 @@ namespace MWRender
             for (int y = 0; y < segments.second; ++y)
             {
                 osg::Vec2f start
-                    = min + osg::Vec2f(static_cast<float>(mMapWorldSize * x), static_cast<float>(mMapWorldSize * y));
+                    = min + osg::Vec2f(mMapWorldSize * float(x), mMapWorldSize * float(y));
                 osg::Vec2f newcenter = start + osg::Vec2f(mMapWorldSize / 2.f, mMapWorldSize / 2.f);
 
                 osg::Vec2f a = newcenter - mCenter;
@@ -433,11 +440,13 @@ namespace MWRender
 
         osg::Vec2f min(mBounds.xMin(), mBounds.yMin());
 
-        x = static_cast<int>(std::ceil((pos.x() - min.x()) / mMapWorldSize) - 1);
-        y = static_cast<int>(std::ceil((pos.y() - min.y()) / mMapWorldSize) - 1);
+        const int nextX = checkedMapIndex(std::ceil((double(pos.x()) - min.x()) / mMapWorldSize) - 1);
+        const int nextY = checkedMapIndex(std::ceil((double(pos.y()) - min.y()) / mMapWorldSize) - 1);
+        x = nextX;
+        y = nextY;
 
-        nX = (pos.x() - min.x() - mMapWorldSize * x) / mMapWorldSize;
-        nY = 1.0f - (pos.y() - min.y() - mMapWorldSize * y) / mMapWorldSize;
+        nX = static_cast<float>((double(pos.x()) - min.x() - double(mMapWorldSize) * x) / mMapWorldSize);
+        nY = 1.0f - static_cast<float>((double(pos.y()) - min.y() - double(mMapWorldSize) * y) / mMapWorldSize);
     }
 
     osg::Vec2f LocalMap::interiorMapToWorldPosition(float nX, float nY, int x, int y) const
@@ -451,8 +460,13 @@ namespace MWRender
 
     bool LocalMap::isPositionExplored(float nX, float nY, int x, int y)
     {
+        if (!std::isfinite(nX) || !std::isfinite(nY))
+            return false;
         auto& segments(mInterior ? mInteriorSegments : mExteriorSegments);
-        const MapSegment& segment = segments[std::make_pair(x, y)];
+        const auto found = segments.find(std::make_pair(x, y));
+        if (found == segments.end())
+            return false;
+        const MapSegment& segment = found->second;
         if (!segment.mFogOfWarImage)
             return false;
 
@@ -490,12 +504,14 @@ namespace MWRender
         {
             direction = orientation * osg::Vec3f(0, 1, 0);
 
-            x = static_cast<int>(std::ceil(pos.x() / mMapWorldSize) - 1);
-            y = static_cast<int>(std::ceil(pos.y() / mMapWorldSize) - 1);
+            const int nextX = checkedMapIndex(std::ceil(double(pos.x()) / mMapWorldSize) - 1);
+            const int nextY = checkedMapIndex(std::ceil(double(pos.y()) / mMapWorldSize) - 1);
+            x = nextX;
+            y = nextY;
 
             // convert from world coordinates to texture UV coordinates
-            u = std::abs((pos.x() - (mMapWorldSize * x)) / mMapWorldSize);
-            v = 1.0f - std::abs((pos.y() - (mMapWorldSize * y)) / mMapWorldSize);
+            u = static_cast<float>(std::abs((double(pos.x()) - double(mMapWorldSize) * x) / mMapWorldSize));
+            v = 1.0f - static_cast<float>(std::abs((double(pos.y()) - double(mMapWorldSize) * y) / mMapWorldSize));
         }
 
         // explore radius (squared)
@@ -522,11 +538,19 @@ namespace MWRender
                 if (!affected)
                     continue;
 
-                int texX = x + mx;
-                int texY = y + my * -1;
+                const auto wideX = std::int64_t(x) + mx;
+                const auto wideY = std::int64_t(y) - my;
+                if (wideX < std::numeric_limits<int>::min() || wideX > std::numeric_limits<int>::max()
+                    || wideY < std::numeric_limits<int>::min() || wideY > std::numeric_limits<int>::max())
+                    continue;
+                const int texX = static_cast<int>(wideX);
+                const int texY = static_cast<int>(wideY);
 
                 auto& segments(mInterior ? mInteriorSegments : mExteriorSegments);
-                MapSegment& segment = segments[std::make_pair(texX, texY)];
+                const auto found = segments.find(std::make_pair(texX, texY));
+                if (found == segments.end())
+                    continue;
+                MapSegment& segment = found->second;
 
                 if (!segment.mFogOfWarImage || !segment.mMapTexture)
                     continue;
@@ -577,7 +601,12 @@ namespace MWRender
         std::uint8_t result = 0;
         for (const auto& [flag, dx, dy] : flags)
         {
-            auto it = mExteriorSegments.find(std::pair(cellX + dx, cellY + dy));
+            const auto x = std::int64_t(cellX) + dx;
+            const auto y = std::int64_t(cellY) + dy;
+            if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max()
+                || y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max())
+                continue;
+            auto it = mExteriorSegments.find(std::pair(static_cast<int>(x), static_cast<int>(y)));
             if (it != mExteriorSegments.end() && it->second.mMapTexture)
                 result |= flag;
         }

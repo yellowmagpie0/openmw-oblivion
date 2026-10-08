@@ -6,6 +6,58 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 checked local-map arithmetic and sparse fog save — 2026-10-08
+
+The actual LocalMap baseline reproduced integer multiplication overflow: exterior
+positions ±4294967296 produced normalized texture coordinates around 524289 instead
+of 1. Checked double-precision grid conversion now rejects nonfinite/out-of-range
+indices before publishing coordinate outputs. Coordinate products are converted
+before multiplication; interior grid alignment subtracts in double precision.
+Neighbor arithmetic uses wide integers and skips unrepresentable adjacent cells.
+Unknown exploration/update queries no longer insert empty segments. Fog save
+reserves and visits actual segments rather than multiplying grid dimensions and
+walking every theoretical grid position; it retains coordinate order and filters
+out-of-grid/unexplored entries. This does not bound the separate initial render
+allocation for a large but representable saved grid.
+
+LocalMap's live constructor delegates its configured pixel resolution to an
+explicit-resolution constructor. Three real renderer cases cover positive and
+negative large positions, zero/cell edges and adjacent floats, the maximum grid
+index and neighbor overflow, rejected nonfinite/outside coordinates with unchanged
+outputs, and actual interior map/fog textures. The interior case initializes a
+real SDL/OpenGL context through the engine SDL/OSG wrapper and retains the shadow
+service for the test process. It checks large-coordinate round trips, ordinary
+fog exploration, nonfinite UV rejection, and CellStore fog serialization. It
+creates the render-to-texture graph, not an independent GPU visual acceptance.
+The full checks use SDL_VIDEODRIVER=offscreen; this integration case requires a
+working SDL/OpenGL driver. Green-01/02 caught missing fixture shadow/GL services;
+green-03 passes. The failing red baseline remains retained.
+
+Normal and ASan/UBSan full unfiltered engine checks each pass 1263 tests, exact
+inventories/XML, no failures/skips, source fingerprint 3ca4bc9d249da1ce0c8546ff7b276a8d4a9e701ba60e89c62d96dc7c592051cd against
+parent f3f5ba846f. ASan leak checking is disabled. Engine-only changes did not
+require repeating unchanged component/Python inventories. Evidence is
+build/oblivion-compat/m15/S3/local-map-arithmetic-{normal,sanitized}-01.
+
+Actual normal rejection/resave and fresh-PID continuation pass on the final
+normal binary. All 38 initial native groups match the saved input; ten fixed
+authority groups, prior reference/script instances and 37 stable weather catalog
+keys/current/regional identities remain exact in their declared scopes. The fog
+PNG remains 32×32. The screenshots were inspected and retain the Imperial Prison
+scene/HUD. The final instrumented game also passes the actual rejection/Return/F5/quit
+course with the same native/record/weather checks and inspected screenshots.
+Normal game binary: 19448ca4e35f7b55941ffd31e273756acbfc191b3aa8cdadd984dffe1f7da4ae.
+Instrumented game binary: 30cf66e77b983469117e253504b388caa28c52c1d92c2ea97aa044868d7c917e.
+Runtime evidence: local-map-arithmetic-reject-{normal,sanitized}-01 and
+local-map-arithmetic-continuation-normal-01 in the same S3 directory. These are
+no-sound interior courses; large coordinate arithmetic is covered by the actual
+LocalMap tests rather than a player teleport in the gameplay course.
+
+Full S3 remains active. Large representable render-grid allocation, full shared
+semantic/resource staging and prior-World preservation, combined populated
+migration, profile/lifecycle and public-UI acceptance still need verification and
+implementation where missing.
+
 ## S3 reject unrepresentable saved interior fog grids — 2026-10-08
 
 Native fog admission now rejects inverted bounds and coordinates, centers or

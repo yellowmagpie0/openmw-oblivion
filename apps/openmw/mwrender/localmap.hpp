@@ -41,6 +41,7 @@ namespace MWRender
     {
     public:
         LocalMap(osg::Group* root);
+        LocalMap(osg::Group* root, int mapResolution);
         ~LocalMap();
 
         /**
