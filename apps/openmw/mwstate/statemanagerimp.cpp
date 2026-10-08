@@ -11,6 +11,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/esm3/loadclas.hpp>
+#include <components/esm3/fogstate.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include <components/l10n/manager.hpp>
@@ -485,6 +486,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::function<void()> preparedGlobalMap;
         std::function<bool()> preparedWeather;
         std::function<bool()> preparedProjectiles;
+        std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
         std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
@@ -495,6 +497,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 preparedWeather = world.prepareWeather(state);
             }, [&](const auto& projectiles, const auto& bolts, const auto& incoming) {
                 preparedProjectiles = world.prepareProjectiles(projectiles, bolts, incoming);
+            }, [&](const ESM::RefId& cell, ESM::FogState fog) {
+                preparedFog.emplace(cell, std::make_unique<ESM::FogState>(std::move(fog)));
             });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
@@ -509,6 +513,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles));
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
+        MWBase::Environment::get().getWorldModel()->setPreparedFogStates(std::move(preparedFog));
 
         MWBase::Environment::get().getLuaManager()->setContentFileMapping(contentFileMap);
 

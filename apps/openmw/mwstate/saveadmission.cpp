@@ -477,7 +477,8 @@ namespace MWState
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
         const std::function<void(const ESM::WeatherState&)>& prepareWeather,
         const std::function<void(const std::vector<ESM::ProjectileState>&,
-            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles)
+            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles,
+        const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog)
     {
         const auto start = reader.getContext();
         try
@@ -723,8 +724,14 @@ namespace MWState
                         validateSharedTimestamp(cell.mLastRespawn);
                         if (cell.mHasFogOfWar)
                         {
+                            // Interior metadata is identified by its wire fields;
+                            // CellState::mIsInterior is not serialized or loaded.
+                            const bool hasInteriorMetadata = reader.peekNextSub("BOUN")
+                                || reader.peekNextSub("ANGL") || reader.peekNextSub("CNTR");
                             ESM::FogState fog{};
                             fog.load(reader);
+                            auto prepared = ESM::prepareFogState(fog, hasInteriorMetadata);
+                            if (prepareFog) prepareFog(cell.mId, std::move(prepared));
                         }
                         while (reader.isNextSub("OBJE"))
                         {

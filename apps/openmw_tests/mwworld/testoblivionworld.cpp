@@ -6,8 +6,10 @@
 #include <components/esm3/objectstate.hpp>
 #include <components/esm3/npcstate.hpp>
 #include <components/esm3/cellstate.hpp>
+#include <components/esm3/fogstate.hpp>
 #include <bit>
 #include <cstddef>
+#include <cstring>
 #include <new>
 #include <components/esm4/loadweap.hpp>
 #include "apps/openmw/mwclass/weapon.hpp"
@@ -32,6 +34,7 @@
 #include <osg/FrameStamp>
 #include <osgUtil/UpdateVisitor>
 #include <osgDB/WriteFile>
+#include <osgDB/Registry>
 #include "apps/openmw/mwphysics/actor.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
 #include "apps/openmw/mwphysics/oblivionragdoll.hpp"
@@ -12130,6 +12133,64 @@ TEST(OblivionWorldTest, NativeRestoreResidentProjectionRejectsBeforeInventoryClo
     readNativeSnapshot(fixture, saved);
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_FALSE(pending->isValid());
+}
+
+TEST(OblivionWorldTest, PreparedLocalFogInstallsOnceWithoutDecodingWireImagesAndClearsWithModel)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{0xabc, 0});
+    cell.mFormKey = ESM::FormKey::content("headless.esm", 0xabc);
+    cell.mCellFlags = ESM4::CELL_Interior; cell.mEditorId = "PreparedFogCell";
+    world.getStore().getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+    osg::ref_ptr<osg::Image> image = new osg::Image;
+    image->allocateImage(32, 32, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+    for (int y = 0; y != 32; ++y) for (int x = 0; x != 32; ++x)
+    {
+        auto* pixel = image->data(x, y); pixel[0] = pixel[1] = pixel[2] = 0; pixel[3] = y;
+    }
+    auto* codec = osgDB::Registry::instance()->getReaderWriterForExtension("png");
+    ASSERT_NE(codec, nullptr);
+    std::ostringstream encoded; ASSERT_TRUE(codec->writeImage(*image, encoded).success());
+    const auto png = encoded.str();
+    ESM::FogState fog{}; fog.mBounds = {0, 0, 512, 512}; fog.mCenterX = fog.mCenterY = 256;
+    fog.mFogTextures.push_back({0, 0, {png.begin(), png.end()}});
+    auto prepared = std::make_unique<ESM::FogState>(ESM::prepareFogState(fog, true));
+    auto pinned = prepared->mFogTextures.at(0).mPreparedImage;
+    ASSERT_TRUE(pinned); EXPECT_TRUE(ESM::isUsableFogImage(*pinned));
+    EXPECT_EQ(prepared->mFogTextures.at(0).mImageData, fog.mFogTextures.at(0).mImageData);
+    // Compare preparation with an independently decoded/flipped image.
+    std::istringstream pngStream(png); auto raw = codec->readImage(pngStream);
+    ASSERT_TRUE(raw.success()); raw.getImage()->flipVertical();
+    EXPECT_EQ(std::memcmp(raw.getImage()->data(), pinned->data(), 4096), 0);
+    std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states;
+    states.emplace(cell.mId, std::move(prepared));
+    world.getWorldModel().setPreparedFogStates(std::move(states));
+    // The wire image is deliberately unreadable: the admitted image must supply restoration.
+    fog.mFogTextures.at(0).mImageData = {'b','a','d'};
+    std::stringstream stream; ESM::ESMWriter writer;
+    writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+    writer.startRecord(ESM::REC_CSTA); writer.writeCellId(cell.mId);
+    ESM::CellState state{}; state.mIsInterior = true; state.mHasFogOfWar = true; state.save(writer);
+    fog.save(writer, true); writer.endRecord(ESM::REC_CSTA);
+    const auto read = [&] {
+        ESM::ESMReader reader; reader.open(std::make_unique<std::stringstream>(stream.str()), "prepared-fog");
+        reader.getRecName(); reader.getRecHeader();
+        EXPECT_TRUE(world.getWorldModel().readRecord(reader, ESM::REC_CSTA));
+        EXPECT_FALSE(reader.hasMoreSubs());
+    };
+    read();
+    auto* restored = world.getWorldModel().getCell(cell.mId).getFog(); ASSERT_NE(restored, nullptr);
+    EXPECT_EQ(restored->mFogTextures.at(0).mPreparedImage, pinned);
+    EXPECT_EQ(restored->mFogTextures.at(0).mImageData, std::vector<char>(png.begin(), png.end()));
+    read(); // The plan is consumed; ordinary rereading does not reuse its image.
+    EXPECT_FALSE(world.getWorldModel().getCell(cell.mId).getFog()->mFogTextures.at(0).mPrepared);
+    states.emplace(cell.mId, std::make_unique<ESM::FogState>(ESM::prepareFogState(
+        ESM::FogState{}, true)));
+    world.getWorldModel().setPreparedFogStates(std::move(states));
+    world.getWorldModel().clear();
+    read();
+    EXPECT_FALSE(world.getWorldModel().getCell(cell.mId).getFog()->mFogTextures.at(0).mPrepared);
 }
 
 TEST(OblivionWorldTest, NativeRestorePreparesEmptyAuthorityFromEveryAcceptedRuntimeVersion)

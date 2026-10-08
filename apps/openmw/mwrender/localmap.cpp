@@ -622,10 +622,20 @@ namespace MWRender
 
     void LocalMap::MapSegment::loadFogOfWar(const ESM::FogTexture& esm)
     {
+        static_assert(sFogOfWarResolution == ESM::FogTexture::Resolution);
         const std::vector<char>& data = esm.mImageData;
         if (data.empty())
         {
             initFogOfWar();
+            return;
+        }
+
+        if (esm.mPrepared)
+        {
+            if (!esm.mPreparedImage) return; // Admitted unreadable-image skip.
+            mFogOfWarImage = esm.mPreparedImage;
+            createFogOfWarTexture();
+            mHasFogState = true;
             return;
         }
 
@@ -645,6 +655,11 @@ namespace MWRender
             return;
         }
 
+        if (!result.getImage() || !ESM::isUsableFogImage(*result.getImage()))
+        {
+            Log(Debug::Warning) << "Skipping local-map fog with unsupported image shape or channels";
+            return;
+        }
         mFogOfWarImage = result.getImage();
         mFogOfWarImage->flipVertical();
         mFogOfWarImage->dirty();

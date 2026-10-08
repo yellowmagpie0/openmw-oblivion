@@ -125,3 +125,15 @@ prepared restore; the Player/NPC inventory matrix explicitly preserves absent
 crime state across schemas1–46. Remaining
 semantic/resource staging, combined populated migration and profile/lifecycle matrices
 must be audited against their full scope before S3 can close.
+
+Native CSTA fog restoration now prepares optional PNG images before cleanup:
+recognized dimensions are bounded before allocation, readable images require
+32×32 RGBA bytes, and interior metadata must be finite. StateManager retains
+admitted images, WorldModel consumes the plan once into CellStore without another
+decode, and clear discards pending plans. TES3 admission remains structural;
+ordinary rendering rejects unsafe decoded image layouts before pixel access.
+Actual normal/instrumented F9 rejection followed by F5 proves live-state
+preservation for the wrong-size image fault. A fresh normal PID reloads the
+resaved output. Full C++ inventories and fixture-source Python checks pass;
+see the local-fog evidence in the milestone. Finite-but-extreme geometry and
+complete shared-resource/prior-World preservation remain open.

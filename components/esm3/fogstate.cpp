@@ -2,6 +2,9 @@
 
 #include "esmreader.hpp"
 #include "esmwriter.hpp"
+#include <cmath>
+#include <cstring>
+#include <stdexcept>
 
 #include <osgDB/ReadFile>
 
@@ -10,6 +13,62 @@
 
 namespace ESM
 {
+    bool isUsableFogImage(const osg::Image& image)
+    {
+        return image.s() == FogTexture::Resolution && image.t() == FogTexture::Resolution && image.r() == 1
+            && image.getPixelFormat() == GL_RGBA && image.getDataType() == GL_UNSIGNED_BYTE
+            && image.isDataContiguous() && image.getTotalSizeInBytes() == FogTexture::Resolution * FogTexture::Resolution * 4;
+    }
+
+    FogState prepareFogState(const FogState& state, bool interior)
+    {
+        if (interior)
+        {
+            for (float value : {state.mNorthMarkerAngle, state.mBounds.mMinX, state.mBounds.mMinY,
+                     state.mBounds.mMaxX, state.mBounds.mMaxY, state.mCenterX, state.mCenterY})
+                if (!std::isfinite(value))
+                    throw std::runtime_error("Saved local-map fog has a nonfinite interior value");
+        }
+        FogState result = state;
+        for (auto& texture : result.mFogTextures)
+        {
+            texture.mPrepared = true;
+            texture.mPreparedImage = nullptr;
+            if (texture.mImageData.empty()) continue;
+            // Bound recognized PNG dimensions before the codec allocates pixels.
+            static constexpr unsigned char signature[]{137, 80, 78, 71, 13, 10, 26, 10};
+            const auto& data = texture.mImageData;
+            if (data.size() >= 24 && std::memcmp(data.data(), signature, 8) == 0
+                && std::memcmp(data.data() + 12, "IHDR", 4) == 0)
+            {
+                const auto dimension = [&](std::size_t offset) {
+                    std::uint32_t value = 0;
+                    for (std::size_t i = offset; i != offset + 4; ++i)
+                        value = (value << 8) | static_cast<unsigned char>(data[i]);
+                    return value;
+                };
+                if (dimension(16) != FogTexture::Resolution || dimension(20) != FogTexture::Resolution)
+                    throw std::runtime_error("Saved local-map fog image must be 32x32 RGBA unsigned bytes");
+            }
+            auto* codec = osgDB::Registry::instance()->getReaderWriterForExtension("png");
+            if (!codec)
+                throw std::runtime_error("Local-map fog PNG decoder is unavailable");
+            Files::IMemStream stream(texture.mImageData.data(), texture.mImageData.size());
+            auto decoded = codec->readImage(stream);
+            if (!decoded.success() || !decoded.getImage())
+            {
+                // Existing local-map restoration skips unreadable optional fog images.
+                Log(Debug::Warning) << "Skipping unreadable saved local-map fog: " << decoded.message();
+                continue;
+            }
+            if (!isUsableFogImage(*decoded.getImage()))
+                throw std::runtime_error("Saved local-map fog image must be 32x32 RGBA unsigned bytes");
+            texture.mPreparedImage = decoded.getImage();
+            texture.mPreparedImage->flipVertical();
+        }
+        return result;
+    }
+
     namespace
     {
         void convertFogOfWar(std::vector<char>& imageData)

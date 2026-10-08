@@ -6,6 +6,68 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 local fog images prepared before teardown — 2026-10-08
+
+Native save admission now decodes local-map fog before clearing the live World.
+Recognized PNG dimensions are bounded before allocation; readable images must
+be 32×32 RGBA unsigned bytes with contiguous 4096-byte storage. Interior metadata
+must be finite. Prepared images retain their encoded bytes and are flipped once,
+then moved through StateManager and WorldModel into CellStore. Restoration consumes
+the admitted wire fields without decoding again. Clear discards pending resources.
+Unreadable optional images retain the existing skip behavior, and empty images
+remain blank. The ordinary renderer path also checks image shape before pixel access.
+No save schema or gameplay formula changes.
+
+The retained -red-02 baseline accepted a valid 1×1 PNG for schemas 0/7/46 and
+invoked native preparation for 7/46. Earlier -red-01/-green-01 did not reach their
+assertions because the fixture incorrectly attempted to write a schema 0 native
+header; schema 0 is now represented by the current SAVE format without T4ST.
+Preflight-03 caught a fixture compile error. Preflight-04 exposed an admission
+peek consuming BOUN before FogState loading; the corrected non-consuming peek
+and exact error assertion pass in preflight-05. Four focused cases cover 423
+schema/fault combinations, reader rewind and callback ordering, TES3 structural
+compatibility, and real WorldModel/CellStore installation. An independent decode,
+vertical flip and byte comparison checks the retained image. Deliberately invalid
+wire bytes prove installation uses the prepared resource; consumption and clear
+prevent reuse.
+
+Full normal and ASan/UBSan runs each pass 2596 component tests and 1259 engine
+tests, exact unfiltered inventories/XML with no failures or skips. Both retain
+source fingerprint 18253f084c9177327572621c80ac2a41dbdf670dcecc3eda3551495090828fa3
+against parent 511473c69ec8f49ae911c7289fd580dbedd9e69f. Leak checking is disabled.
+Existing unused-context and actor range-loop warnings remain unrelated.
+Evidence: build/oblivion-compat/m15/S3/local-fog-{normal,sanitized}-01.
+
+Actual normal and instrumented courses load the schema 46 save, press F5, replace
+only the actual saved CSTA.FTEX with a valid 1×1 PNG, and press F9. The expected
+error appears before a second native-state installation. Return/F5 succeeds and
+clean quit follows. Independent readback checks every native field and non-CSTA
+record in the rejected input, ten fixed authority groups after resave, retained
+reference/script instances, and all 37 weather catalog keys with current and
+regional identities. Both screenshot pairs were inspected: the rejection dialog
+and subsequent resave retain the Imperial Prison scene/HUD. A distinct-PID normal
+load/resave of the result preserves all 38 initial native groups, the checked
+post-save groups and 32×32 fog PNG. These no-sound interior courses do not prove
+exterior fog or audio behavior. Runtime evidence is local-fog-reject-{normal,
+sanitized}-01 and local-fog-continuation-normal-01 under the same S3 directory.
+
+Editable scenario manifests and a hash-pinned input recipe accompany
+scripts/saved_fog_fixture.py. Its structural readback preserves native/other
+records and cell metadata; it is an OpenMW save diagnostic writer, not TES4 plugin
+support. Generated saves remain private artifacts. Separate runtime evidence
+establishes rejection and preservation. All 298 Python tests pass without failures/skips in
+local-fog-python-01, including six fixture-writer cases. The writer reproduces
+both archived runtime fault inputs byte for byte using their recorded recipes.
+The separate Python source fingerprint is
+7bc48d592b9edd45b719faa1a5890ae3f5ee0d09be799c189ed66796e3655a9d.
+Normal game binary: e02f6fb3fd486f4a66842e34d198442e2c5acb9e005b21c38e40cc31436e33eb.
+Instrumented game binary: 84f1c1e3307daa98f5f354da9ca4acc3452265ef44a32c0b707ea27fa3668d3f.
+
+This closes the image decode/shape staging chunk. Full S3 remains active.
+Finite-but-extreme geometry bounds, broader resource/semantic staging and complete
+prior-World preservation still need implementation and acceptance, alongside
+combined populated migration, profile/lifecycle and public-UI gates.
+
 ## S3 projectile publication cannot impersonate clear — 2026-10-08
 
 ProjectileManager had the same generation issue as weather: successful or

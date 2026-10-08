@@ -13,6 +13,7 @@
 #include <components/esm3/cellid.hpp>
 #include <components/esm3/cellref.hpp>
 #include <components/esm3/cellstate.hpp>
+#include <components/esm3/fogstate.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadregn.hpp>
@@ -147,6 +148,7 @@ MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 
 void MWWorld::WorldModel::clear()
 {
+    mPreparedFogStates.clear();
     mPreparationIdentity.reset();
     mPtrRegistry.clear();
     mInteriors.clear();
@@ -199,6 +201,13 @@ MWWorld::WorldModel::WorldModel(MWWorld::ESMStore& store, ESM::ReadersCache& rea
 
 namespace MWWorld
 {
+    WorldModel::~WorldModel() = default;
+
+    void WorldModel::setPreparedFogStates(std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states)
+    {
+        mPreparedFogStates = std::move(states);
+    }
+
     CellStore& WorldModel::getExterior(ESM::ExteriorCellLocation location, bool forceLoad) const
     {
         CellStore* cellStore = getOrCreateExterior(location, mExteriors, mStore, mReaders, mCells, true);
@@ -651,6 +660,7 @@ bool MWWorld::WorldModel::readRecord(ESM::ESMReader& reader, uint32_t type)
 
         if (cellStore == nullptr)
         {
+            mPreparedFogStates.erase(state.mId);
             Log(Debug::Warning) << "Dropping state for cell " << state.mId << " (cell no longer exists)";
             reader.skipRecord();
             return true;
@@ -660,7 +670,20 @@ bool MWWorld::WorldModel::readRecord(ESM::ESMReader& reader, uint32_t type)
         cellStore->loadState(state);
 
         if (state.mHasFogOfWar)
-            cellStore->readFog(reader);
+        {
+            auto prepared = mPreparedFogStates.extract(state.mId);
+            if (prepared)
+            {
+                // Framing and values were admitted on this same reader before clear.
+                // Consume wire fields without another image decode or conversion.
+                while (reader.isNextSub("BOUN") || reader.isNextSub("ANGL")
+                    || reader.isNextSub("CNTR") || reader.isNextSub("FTEX"))
+                    reader.skipHSub();
+                cellStore->setFog(std::move(prepared.mapped()));
+            }
+            else
+                cellStore->readFog(reader);
+        }
 
         if (cellStore->getState() != CellStore::State_Loaded)
             cellStore->load();

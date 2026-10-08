@@ -23,6 +23,7 @@ namespace ESM
     class ESMWriter;
     class ReadersCache;
     struct Cell;
+    struct FogState;
 }
 
 namespace ESM4
@@ -50,6 +51,7 @@ namespace MWWorld
     {
     public:
         explicit WorldModel(ESMStore& store, ESM::ReadersCache& reader);
+        ~WorldModel();
 
         // Batch publication for detached prepared references. Preparation may
         // assign their RefNums, but leaves the live registry and serial alone.
@@ -203,8 +205,11 @@ namespace MWWorld
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const;
 
         bool readRecord(ESM::ESMReader& reader, uint32_t type);
+        // Install admitted resources after clear and before CSTA restoration.
+        void setPreparedFogStates(std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states);
 
     private:
+        std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> mPreparedFogStates;
         struct GetCellStoreCallback;
 
         std::shared_ptr<const char> mPreparationIdentity;

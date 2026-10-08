@@ -16,6 +16,7 @@
 #include <components/esm3/custommarkerstate.hpp>
 #include <components/esm3/dialoguestate.hpp>
 #include <components/esm3/globalmap.hpp>
+#include <components/esm3/fogstate.hpp>
 #include <components/esm3/globalscript.hpp>
 #include <components/esm3/journalentry.hpp>
 #include <components/esm3/projectilestate.hpp>
@@ -617,10 +618,10 @@ TEST(SaveAdmissionTest, ActiveEffectWithoutWorseningDecodesDeterministicTimestam
 
 namespace
 {
-    std::vector<char> mapPng(int width, int height)
+    std::vector<char> mapPng(int width, int height, GLenum format = GL_RGBA)
     {
         osg::ref_ptr<osg::Image> image = new osg::Image;
-        image->allocateImage(width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        image->allocateImage(width, height, 1, format, GL_UNSIGNED_BYTE);
         std::memset(image->data(), 127, image->getTotalSizeInBytes());
         auto* codec = osgDB::Registry::instance()->getReaderWriterForExtension("png");
         if (!codec) throw std::runtime_error("Test requires the actual PNG codec");
@@ -629,6 +630,111 @@ namespace
         const auto bytes = stream.str();
         return {bytes.begin(), bytes.end()};
     }
+}
+
+TEST(SaveAdmissionTest, ReadableLocalFogWrongShapeRejectsBeforeNativePreparation)
+{
+    for (std::uint32_t version : {0u, 7u, ESM4::CurrentRuntimeStateVersion})
+    {
+        SCOPED_TRACE(version);
+        auto native = nativeState(); native.mVersion = version;
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_CSTA);
+            writer.writeCellId(ESM::RefId::stringRefId("fog-cell"));
+            ESM::CellState cell{}; cell.mIsInterior = true; cell.mHasFogOfWar = true; cell.save(writer);
+            ESM::FogState fog{}; fog.mBounds = {0, 0, 512, 512}; fog.mCenterX = fog.mCenterY = 256;
+            fog.mFogTextures.push_back({0, 0, mapPng(1, 1)});
+            fog.save(writer, true);
+            writer.endRecord(ESM::REC_CSTA);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0, false, false, &native) + records);
+        const auto start = reader.getFileOffset(); int calls = 0;
+        try
+        {
+            MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) { ++calls; });
+            FAIL() << "wrong-shape fog accepted";
+        }
+        catch (const std::runtime_error& error)
+        {
+            EXPECT_STREQ(error.what(), "Saved local-map fog image must be 32x32 RGBA unsigned bytes");
+        }
+        EXPECT_EQ(calls, 0);
+        EXPECT_EQ(reader.getFileOffset(), start);
+    }
+}
+
+TEST(SaveAdmissionTest, LocalFogResourcesPrepareAndRewindAcrossEveryNativeSchema)
+{
+    const auto valid = mapPng(32, 32);
+    const auto narrow = mapPng(31, 32);
+    const auto rgb = mapPng(32, 32, GL_RGB);
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int fault = 0; fault != 9; ++fault)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(fault);
+        ESM::FogState fog{}; fog.mBounds = {0, 0, 512, 512}; fog.mCenterX = fog.mCenterY = 256;
+        auto bytes = fault == 1 ? narrow : fault == 2 ? rgb : valid;
+        if (fault == 3) bytes = {'b','a','d'};
+        if (fault == 4) bytes.clear();
+        if (fault == 5) fog.mNorthMarkerAngle = std::numeric_limits<float>::quiet_NaN();
+        if (fault == 6) fog.mBounds.mMinX = std::numeric_limits<float>::infinity();
+        if (fault == 7) for (int i = 16; i != 20; ++i) bytes[i] = char(0x7f); // Reject before decoder allocation/CRC.
+        if (fault == 8) fog.mNorthMarkerAngle = -0.f;
+        fog.mFogTextures.push_back({0, 0, bytes});
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId::stringRefId("fog-cell"));
+            ESM::CellState cell{}; cell.mIsInterior = true; cell.mHasFogOfWar = true; cell.save(writer);
+            fog.save(writer, true); writer.endRecord(ESM::REC_CSTA);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+        const auto start = reader.getFileOffset(); int nativeCalls = 0, fogCalls = 0;
+        std::optional<ESM::FogState> retained;
+        const auto native = [&](const auto&) { EXPECT_EQ(fogCalls, 1); ++nativeCalls; };
+        const auto prepare = [&](const ESM::RefId& id, ESM::FogState state) {
+            EXPECT_EQ(id, ESM::RefId::stringRefId("fog-cell")); EXPECT_EQ(nativeCalls, 0);
+            ++fogCalls; retained = std::move(state);
+        };
+        const bool rejected = fault == 1 || fault == 2 || fault == 5 || fault == 6 || fault == 7;
+        if (rejected)
+        {
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, native,
+                nullptr, {}, {}, {}, {}, prepare), std::runtime_error);
+            EXPECT_EQ(nativeCalls, 0); EXPECT_EQ(fogCalls, 0);
+        }
+        else
+        {
+            ASSERT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, native,
+                nullptr, {}, {}, {}, {}, prepare));
+            EXPECT_EQ(nativeCalls, version ? 1 : 0); ASSERT_EQ(fogCalls, 1); ASSERT_TRUE(retained);
+            const auto& texture = retained->mFogTextures.at(0);
+            EXPECT_EQ(texture.mImageData, bytes); EXPECT_TRUE(texture.mPrepared);
+            EXPECT_EQ(texture.mPreparedImage.valid(), fault != 3 && fault != 4);
+            if (texture.mPreparedImage) { EXPECT_TRUE(ESM::isUsableFogImage(*texture.mPreparedImage)); }
+            if (fault == 8) { EXPECT_TRUE(std::signbit(retained->mNorthMarkerAngle)); }
+        }
+        EXPECT_EQ(reader.getFileOffset(), start);
+    }
+}
+
+TEST(SaveAdmissionTest, MorrowindFogAdmissionRetainsStructuralCompatibility)
+{
+    const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+        writer.startRecord(ESM::REC_CSTA); writer.writeCellId(ESM::RefId::stringRefId("fog-cell"));
+        ESM::CellState cell{}; cell.mIsInterior = true; cell.mHasFogOfWar = true; cell.save(writer);
+        ESM::FogState fog{}; fog.mNorthMarkerAngle = std::numeric_limits<float>::quiet_NaN();
+        fog.mFogTextures.push_back({0, 0, mapPng(1, 1)}); fog.save(writer, true);
+        writer.endRecord(ESM::REC_CSTA);
+    });
+    ESM::ESMReader reader; openBytes(reader, saveBytes(ESM::GameProfile::Morrowind, 0, 1, 0) + records);
+    int calls = 0; const auto start = reader.getFileOffset();
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Morrowind, {}, nullptr,
+        {}, {}, {}, {}, [&](const auto&, auto) { ++calls; }));
+    EXPECT_EQ(calls, 0); EXPECT_EQ(reader.getFileOffset(), start);
 }
 
 TEST(SaveAdmissionTest, GlobalMapResourcePreparesBeforeNativeStateForEveryAcceptedVersion)

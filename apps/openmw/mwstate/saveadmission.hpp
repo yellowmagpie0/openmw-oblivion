@@ -8,7 +8,7 @@
 #include <components/esm/gameprofile.hpp>
 #include <components/esm3/savedgame.hpp>
 
-namespace ESM { class ESMReader; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
+namespace ESM { class ESMReader; class RefId; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
 namespace ESM4 { struct RuntimeState; }
 namespace MWWorld { class ESMStore; }
 
@@ -26,7 +26,8 @@ namespace MWState
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap = {},
         const std::function<void(const ESM::WeatherState&)>& prepareWeather = {},
         const std::function<void(const std::vector<ESM::ProjectileState>&,
-            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles = {});
+            const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles = {},
+        const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog = {});
 }
 
 #endif
