@@ -6,6 +6,36 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 populated World crime migration coverage — 2026-10-07
+
+The World crime/arrest/jail restore matrix now spans every supported crime
+schema42–46 instead of only the current schema. Schema42 exercises its integer
+bounty-delta envelope (9), and schema43 onward exercises the widened fractional
+envelope (9.5). These are selected persistence values, not bounty-rule outputs.
+Each version serializes/deserializes populated incidents, committed arrests,
+serving jail and property metadata, prepares and clears/installs/applies the
+actual World, promotes capture to the current schema, then repeats the entire
+prepared clear/install/apply cycle. Exact contracts and `isPlayerInJail` persist
+without consuming or duplicating the transaction; World clear removes jail.
+
+The matrix checks **40 missing-binding rejections** before clear, comparing the
+serialized outgoing World after each error. The existing populated Player/NPC
+inventory matrix now explicitly asserts empty crime state after decode and
+World capture, plus a false jail query across schemas1–46, including baseline7.
+This closes that group's World migration coverage gap; it does not prove the
+whole combined migration surface or any fine/confiscation/jail gameplay action.
+
+`S3/crime-migrations-engine-01` and `crime-migrations-sanitized-engine-01`
+passed all **1,232 engine tests**, exact inventories/XML, no failures/skips and
+stable source fingerprints. Parent: `26c6d7ff12fe8e3fc26e2b815ac4703f24cd11bb`;
+tested fingerprint: `9040f8a071aab999eb2e90830da61d2e85ed3d871128a51b22f7449836f6a0c4`.
+ASan/UBSan halt on errors; leak checks are disabled. This test-only change does
+not alter production code or fixtures; no new Python or actual-runtime course
+is claimed. `S3/crime-migrations-report.json` records source/check hashes and
+separate structural, compiler/world, semantic and runtime evidence scope.
+Broader shared restore preparation, combined migration, lifecycle/profile/
+adapter and queue/action audits remain open. S3 remains in progress.
+
 ## S3 shared actor consumed scalar and draw-state admission — 2026-10-07
 
 Oblivion admission now validates the floating fields actually consumed by the

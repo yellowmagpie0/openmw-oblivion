@@ -11995,6 +11995,7 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFro
         }
         ASSERT_NO_THROW(legacy.validate());
         const auto decoded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+        EXPECT_EQ(decoded.mNativeCrime, ESM4::CrimeStateContracts{});
         EXPECT_EQ(decoded.mPlayer.mInventory, legacy.mPlayer.mInventory);
         EXPECT_EQ(decoded.mReferences.front().mInventory, legacy.mReferences.front().mInventory);
         const auto beforeClock = world.getTimeStamp();
@@ -12031,6 +12032,8 @@ TEST(OblivionWorldTest, NativeRestoreMigratesPopulatedPlayerAndNpcInventoriesFro
         EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), expectedActor);
         const auto migrated = world.captureOblivionRuntimeState();
         EXPECT_EQ(migrated.mVersion, ESM4::CurrentRuntimeStateVersion);
+        EXPECT_EQ(migrated.mNativeCrime, ESM4::CrimeStateContracts{});
+        EXPECT_FALSE(world.isPlayerInJail());
         EXPECT_EQ(migrated.mPlayer.mActorValues.at("health.current"), 67);
         EXPECT_EQ(migrated.mClock.mHour, 7);
         readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()));
@@ -13860,67 +13863,89 @@ TEST(OblivionWorldTest, SavedDryInteriorWaterIsInitializedAndWetInteriorLevelIsP
 
 TEST(OblivionWorldTest, CrimeContractsRejectMissingBindingsBeforeClearAndSurvivePreparedRestore)
 {
-    PopulatedMigrationFixture fixture;
-    auto& world = fixture.mWorld;
-    auto saved = world.captureOblivionRuntimeState();
-    ASSERT_FALSE(saved.mReferences.empty());
-    saved.mPhysicalActions.mNext = 2;
-    auto& crime = saved.mNativeCrime;
-    crime.mNextIncident = crime.mNextTransaction = 2;
-    ESM4::CrimeIncident incident;
-    incident.mRequest.mAction = 1;
-    incident.mRequest.mPerpetrator = saved.mPlayer.mReference;
-    incident.mRequest.mVictim = saved.mReferences.front().mKey;
-    incident.mRequest.mAffectedReference = saved.mReferences.front().mKey;
-    incident.mRequest.mCell = saved.mPlayer.mCell;
-    incident.mOutcome.mIncident = 1;
-    incident.mOutcome.mConsequencesCommitted = true;
-    crime.mIncidents = {incident};
-    crime.mArrests = {{1, 1, saved.mPlayer.mReference, saved.mReferences.front().mKey,
-        saved.mPlayer.mCell, ESM4::ArrestResolution::Jail, ESM4::ArrestPhase::Committed, 25, false, true, true}};
-    ESM4::JailTransaction jail;
-    jail.mTransaction = 1; jail.mActor = saved.mPlayer.mReference;
-    jail.mPrison = jail.mEvidence = jail.mBelongings = jail.mRelease = saved.mReferences.front().mKey;
-    jail.mPhase = ESM4::JailPhase::Serving; jail.mPropertyCommitted = true;
-    jail.mRemainingHours = 3.5f; jail.mSentenceStart = 11.25;
-    ESM4::CrimePropertyMetadata property;
-    property.mInstance = ESM::FormKey::dynamic("historical-property", 1);
-    property.mBase = ESM::FormKey::content("headless.esm", 0x940);
-    property.mCount = 1; property.mCondition = 37.125f; property.mCharge = 9.25f;
-    property.mOriginalOwner = ESM::FormKey::content("headless.esm", 0x800);
-    property.mOriginalOwnershipRank = -2; property.mQuestItem = true;
-    jail.mProperty = {property}; crime.mJails = {jail};
-    saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
-    const auto before = world.captureOblivionRuntimeState().serializeBinary();
-    const auto missing = ESM::FormKey::content("headless.esm", 0xfffffe);
-    for (int field = 0; field < 8; ++field)
+    for (std::uint32_t version = 42; version <= ESM4::CurrentRuntimeStateVersion; ++version)
     {
-        SCOPED_TRACE(field);
-        auto bad = saved;
-        switch (field)
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mVersion = version;
+        ASSERT_FALSE(saved.mReferences.empty());
+        saved.mPhysicalActions.mNext = 2;
+        auto& crime = saved.mNativeCrime;
+        crime.mNextIncident = crime.mNextTransaction = 2;
+        ESM4::CrimeIncident incident;
+        incident.mRequest.mAction = 1;
+        incident.mRequest.mPerpetrator = saved.mPlayer.mReference;
+        incident.mRequest.mVictim = saved.mReferences.front().mKey;
+        incident.mRequest.mAffectedReference = saved.mReferences.front().mKey;
+        incident.mRequest.mCell = saved.mPlayer.mCell;
+        incident.mOutcome.mIncident = 1;
+        incident.mOutcome.mConsequencesCommitted = true;
+        // Schema42 stores an integer bounty delta; schema43 widened that wire
+        // field. Exercise each representable envelope through the actual World.
+        incident.mOutcome.mBountyDelta = version == 42 ? 9.0 : 9.5;
+        crime.mIncidents = {incident};
+        crime.mArrests = {{1, 1, saved.mPlayer.mReference, saved.mReferences.front().mKey,
+            saved.mPlayer.mCell, ESM4::ArrestResolution::Jail, ESM4::ArrestPhase::Committed, 25, false, true, true}};
+        ESM4::JailTransaction jail;
+        jail.mTransaction = 1; jail.mActor = saved.mPlayer.mReference;
+        jail.mPrison = jail.mEvidence = jail.mBelongings = jail.mRelease = saved.mReferences.front().mKey;
+        jail.mPhase = ESM4::JailPhase::Serving; jail.mPropertyCommitted = true;
+        jail.mRemainingHours = 3.5f; jail.mSentenceStart = 11.25;
+        ESM4::CrimePropertyMetadata property;
+        property.mInstance = ESM::FormKey::dynamic("historical-property", 1);
+        property.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        property.mCount = 1; property.mCondition = 37.125f; property.mCharge = 9.25f;
+        property.mOriginalOwner = ESM::FormKey::content("headless.esm", 0x800);
+        property.mOriginalOwnershipRank = -2; property.mQuestItem = true;
+        jail.mProperty = {property}; crime.mJails = {jail};
+        saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto missing = ESM::FormKey::content("headless.esm", 0xfffffe);
+        for (int field = 0; field < 8; ++field)
         {
-            case 0: bad.mNativeCrime.mIncidents.front().mRequest.mVictim = missing; break;
-            case 1: bad.mNativeCrime.mIncidents.front().mRequest.mAffectedReference = missing; break;
-            case 2: bad.mNativeCrime.mIncidents.front().mRequest.mCell = missing; break;
-            case 3: bad.mNativeCrime.mIncidents.front().mRequest.mOwnership.mOwner = missing; break;
-            case 4: bad.mNativeCrime.mIncidents.front().mOutcome.mFactionDeltas = {{missing, -1}}; break;
-            case 5: bad.mNativeCrime.mArrests.front().mAuthority = missing; break;
-            case 6: bad.mNativeCrime.mJails.front().mEvidence = missing; break;
-            case 7: bad.mNativeCrime.mJails.front().mProperty.front().mBase = missing; break;
+            SCOPED_TRACE(field);
+            auto bad = saved;
+            switch (field)
+            {
+                case 0: bad.mNativeCrime.mIncidents.front().mRequest.mVictim = missing; break;
+                case 1: bad.mNativeCrime.mIncidents.front().mRequest.mAffectedReference = missing; break;
+                case 2: bad.mNativeCrime.mIncidents.front().mRequest.mCell = missing; break;
+                case 3: bad.mNativeCrime.mIncidents.front().mRequest.mOwnership.mOwner = missing; break;
+                case 4: bad.mNativeCrime.mIncidents.front().mOutcome.mFactionDeltas = {{missing, -1}}; break;
+                case 5: bad.mNativeCrime.mArrests.front().mAuthority = missing; break;
+                case 6: bad.mNativeCrime.mJails.front().mEvidence = missing; break;
+                case 7: bad.mNativeCrime.mJails.front().mProperty.front().mBase = missing; break;
+            }
+            EXPECT_ANY_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
         }
-        EXPECT_ANY_THROW(world.prepareOblivionSaveState(bad, std::make_unique<MWWorld::ESMStore>()));
-        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        EXPECT_FALSE(world.isPlayerInJail());
+        auto plan = world.prepareOblivionSaveState(saved, std::make_unique<MWWorld::ESMStore>());
+        world.clear();
+        ASSERT_TRUE(plan->install());
+        restorePreparedSaveActorFixture(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeCrime, saved.mNativeCrime);
+        EXPECT_TRUE(world.isPlayerInJail());
+        const auto migrated = world.captureOblivionRuntimeState();
+        EXPECT_EQ(migrated.mVersion, ESM4::CurrentRuntimeStateVersion);
+        EXPECT_DOUBLE_EQ(migrated.mNativeCrime.mIncidents.front().mOutcome.mBountyDelta,
+            version == 42 ? 9.0 : 9.5);
+        // A fresh preparation/clear/install cycle must retain the same committed
+        // transaction rather than consuming or duplicating it during restoration.
+        auto repeated = world.prepareOblivionSaveState(
+            ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()), std::make_unique<MWWorld::ESMStore>());
+        world.clear();
+        ASSERT_TRUE(repeated->install());
+        restorePreparedSaveActorFixture(fixture, migrated);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeCrime, saved.mNativeCrime);
+        EXPECT_TRUE(world.isPlayerInJail());
+        world.clear();
+        EXPECT_FALSE(world.isPlayerInJail());
     }
-    EXPECT_FALSE(world.isPlayerInJail());
-    auto plan = world.prepareOblivionSaveState(saved, std::make_unique<MWWorld::ESMStore>());
-    world.clear();
-    ASSERT_TRUE(plan->install());
-    restorePreparedSaveActorFixture(fixture, saved);
-    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
-    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeCrime, saved.mNativeCrime);
-    EXPECT_TRUE(world.isPlayerInJail());
-    world.clear();
-    EXPECT_FALSE(world.isPlayerInJail());
 }
 
 TEST(OblivionWorldTest, CrimePlayerAliasRestoresLosslesslyAndPlacedActorsRequireTheCorrectWinningBase)

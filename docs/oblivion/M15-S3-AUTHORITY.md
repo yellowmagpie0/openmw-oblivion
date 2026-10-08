@@ -65,6 +65,8 @@ Current evidence includes actual World/T4ST/host tests for native stat adapters,
 legacy counter bounds, prepared crime restore and dynamic reconstruction;
 normal/instrumented reputation courses prove actual save/quickload/quit/fresh
 load/resave and pre-teardown conflicting shared-Fame rejection. Source tracing
-of UI getters does not independently prove every rendered field. Remaining
-semantic/resource staging, populated migration and profile/lifecycle matrices
+of UI getters does not independently prove every rendered field. The populated World crime matrix now covers schemas42–46 and repeated
+prepared restore; the Player/NPC inventory matrix explicitly preserves absent
+crime state across schemas1–46. Remaining
+semantic/resource staging, combined populated migration and profile/lifecycle matrices
 must be audited against their full scope before S3 can close.
