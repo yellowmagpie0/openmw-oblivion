@@ -6,6 +6,54 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 restore the same owned bytes admitted before teardown — 2026-10-08
+
+Native save loading now copies the opened input into an owned binary input stream
+before format checking, admission or World cleanup. Both validation and later
+record restoration use that same stream. Retaining only a file descriptor was
+insufficient: in-place overwrite/truncation could change the second pass after
+the outgoing World had already been cleared. Open, size/read and allocation
+failures now precede teardown. The original path remains reader metadata and save/
+character identity. The Morrowind load path is unchanged. Snapshot memory remains
+owned until restoration finishes; this adds one complete save-file byte buffer.
+
+The retained `build/oblivion-compat/m15/S3/save-input-snapshot-red-01` tests reproduce
+the file-backed behavior: both source-overwrite retention and post-admission
+restoration fail; source removal alone retains an open descriptor's bytes. The
+final `save-input-snapshot-normal-01` and `save-input-snapshot-sanitized-01` checks
+each pass all **1277 engine tests**, exact unfiltered inventory/XML match, no
+failures/skips, at parent `a2e141cf185627e2ab483aa8a15e22765235fe1a` and fingerprint
+`f2dfe8ef39a2e6a0e740252b1d64e0cbbf4ae3a66ed49cbe39416c2b0cb4b60e`.
+Tests preserve binary bytes through overwrite/rewind, remove the original file,
+reject open failure, and mutate the source from the admission callback before
+reading SAVE/T4ST again from the original reader context. The preliminary red
+build's binary string hex escape was corrected for the final tests. ASan leak
+checks are disabled; ASan/UBSan halt on errors; SDL tests use offscreen.
+
+Actual normal/instrumented courses `save-input-snapshot-runtime-normal-01` and
+`save-input-snapshot-runtime-sanitized-01` truncate the real slot during resource
+preparation. A worker observes the existing empty-Paralyze-icon pre-restore
+warning, confirms that restoration has not yet been logged, then changes the
+**10452014-byte** slot to **46 bytes**. Receipts retain old/new hashes and the
+observed log boundary. Despite that truncation, actual native application loads
+all38 initial groups exactly from the admitted input. Real GUI closing/F5/quit
+preserves ten stable native groups, expected KEYS, all37 independently identified
+weather keys and byte-identical shared SPEL data. Scenarios and error/action/exit
+audits pass. The optional empty-icon warning image is deliberately expected;
+this course does not establish native effect icon translation or activation.
+Original/pristine inputs remain unchanged; F5 replaces the truncated slot with a
+valid save. `snapshot-verification.json` independently checks each receipt,
+pre-restore observation, native readback and exact shared spell data.
+
+Runtime executable SHA-256: normal
+`e6f7a2498bf4933a3907845e89529f98453f7afa7d526dfee45184d40ec36d59`;
+instrumented `5266da9ff264205e0fe90eb4625dc52c1e75f9e38a5f61a07e14abd675394154`.
+
+**S3 remains open.** This removes source-file mutation/read inconsistency between
+admission and restoration, rather than proving every later resource/semantic
+publication exception safe. Remaining staging, runtime and migration/profile/
+lifecycle gates still require their declared scope of evidence.
+
 ## S3 reject nonfinite shared active/queued effect values — 2026-10-08
 
 Shared Player, NPC and creature active/queued effects now validate magnitude,

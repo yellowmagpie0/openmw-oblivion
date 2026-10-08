@@ -272,3 +272,16 @@ prove rejection without teardown and preservation of declared owned state and
 preceding native references/script instances. The incorrectly ordered first
 fixture remains a failed framing course. Full input/publication transaction
 staging and other S3 gates remain open; see the milestone's hashes and scope.
+
+
+S3 immutable admitted-input follow-up (2026-10-08): StateManager's native loader
+now snapshots input bytes before admission and reads every subsequent record from
+that owned stream, retaining the original path only as identity/metadata. Source
+in-place overwrite/truncation can no longer invalidate the admitted second pass;
+read/allocation failures precede cleanup. The Morrowind path is unchanged. Two
+file-backed regressions fail before the fix; final normal/instrumented inventories
+each pass1277 tests at fingerprintf2dfe8ef39a2e6a0e740252b1d64e0cbbf4ae3a66ed49cbe39416c2b0cb4b60e.
+Actual normal/instrumented workers truncate the10MB slot to46 bytes during
+preparation, before observed restore logging; native restore, GUI state, exact
+shared SPEL and real F5 resave remain correct. This closes admitted-input stability,
+not the remaining later publication/resource failure boundary or full S3 gate.

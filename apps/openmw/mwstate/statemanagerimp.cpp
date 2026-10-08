@@ -1,4 +1,5 @@
 #include "statemanagerimp.hpp"
+#include "saveinput.hpp"
 
 #include <filesystem>
 
@@ -470,8 +471,12 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
     {
         Log(Debug::Info) << "Reading save file " << filepath.filename();
 
+        auto& world = *MWBase::Environment::get().getWorld();
         ESM::ESMReader reader;
-        reader.open(filepath);
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+            reader.open(openSaveSnapshot(filepath), filepath);
+        else
+            reader.open(filepath);
 
         ESM::FormatVersion version = reader.getFormatVersion();
         if (version > ESM::CurrentSaveGameFormatVersion)
@@ -479,7 +484,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         else if (version < ESM::MinSupportedSaveGameFormatVersion)
             throw SaveVersionTooOldError(version);
 
-        auto& world = *MWBase::Environment::get().getWorld();
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;

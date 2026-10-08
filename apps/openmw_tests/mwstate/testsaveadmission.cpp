@@ -1,4 +1,7 @@
 #include <gtest/gtest.h>
+#include <fstream>
+#include <components/testing/util.hpp>
+#include <apps/openmw/mwstate/saveinput.hpp>
 
 #include <osg/Image>
 #include <osgDB/Registry>
@@ -2935,4 +2938,55 @@ TEST(SaveAdmissionTest, ActiveEffectScalarsRejectBeforePreparationAcrossActorsQu
         EXPECT_EQ(reader.getFileOffset(), offset);
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
+}
+
+
+TEST(SaveInputTest, SnapshotRetainsBinaryBytesAfterSourceOverwrite)
+{
+    const auto path = TestingOpenMW::currentTestDirPath() / "input.omwsave";
+    const std::string bytes("initial\0binary\xff" "bytes", 20);
+    { std::ofstream out(path, std::ios::binary); out.write(bytes.data(), bytes.size()); }
+    auto snapshot = MWState::openSaveSnapshot(path);
+    { std::ofstream out(path, std::ios::binary | std::ios::trunc); out << "changed"; }
+    const std::string captured{std::istreambuf_iterator<char>(*snapshot), std::istreambuf_iterator<char>()};
+    EXPECT_EQ(captured, bytes);
+    snapshot->clear(); snapshot->seekg(0);
+    const std::string replay{std::istreambuf_iterator<char>(*snapshot), std::istreambuf_iterator<char>()};
+    EXPECT_EQ(replay, bytes);
+}
+
+TEST(SaveInputTest, AdmissionAndRestorationReadTheSameBytesAfterSourceChanges)
+{
+    const auto path = TestingOpenMW::currentTestDirPath() / "input.omwsave";
+    const auto bytes = saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, 1);
+    { std::ofstream out(path, std::ios::binary); out.write(bytes.data(), bytes.size()); }
+    ESM::ESMReader reader;
+    reader.open(MWState::openSaveSnapshot(path), path);
+    EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [&](const auto&) {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        out << std::string(bytes.size(), '\0');
+    }));
+    EXPECT_EQ(reader.getContext().filename, path);
+    EXPECT_EQ(reader.getFileSize(), bytes.size());
+    ASSERT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    reader.getRecHeader();
+    ESM::SavedGame profile;
+    EXPECT_NO_THROW(profile.load(reader));
+    EXPECT_EQ(profile.mGameProfile, ESM::GameProfile::Oblivion);
+    ASSERT_EQ(reader.getRecName(), ESM::REC_T4ST);
+    reader.getRecHeader();
+    ESM4::RuntimeState state;
+    EXPECT_NO_THROW(state.load(reader));
+    EXPECT_EQ(state.mVersion, ESM4::CurrentRuntimeStateVersion);
+}
+
+TEST(SaveInputTest, SnapshotSurvivesSourceRemovalAndReportsOpenFailures)
+{
+    const auto path = TestingOpenMW::currentTestDirPath() / "input.omwsave";
+    { std::ofstream out(path, std::ios::binary); out << "owned input"; }
+    auto snapshot = MWState::openSaveSnapshot(path);
+    ASSERT_TRUE(std::filesystem::remove(path));
+    const std::string captured{std::istreambuf_iterator<char>(*snapshot), std::istreambuf_iterator<char>()};
+    EXPECT_EQ(captured, "owned input");
+    EXPECT_THROW(MWState::openSaveSnapshot(path), std::runtime_error);
 }
