@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scope": "Private generated-item GUI hotkey adoption and two-process load/resave; original native input unchanged",
+  "records": [
+    "KEYS"
+  ],
+  "key_slot": 3,
+  "key_type": 0,
+  "generated_id": 43,
+  "native_item_key": "dynamic:shared-item:000000000000002c",
+  "encoding": "KEYS with nine TYPE/ID__ pairs; slot3 is uint32 Item=0 and ID__ tag04 plus little-endian uint64 GeneratedRefId43; other slots are Unassigned=3 and Empty tag00",
+  "preserve": "Every other ordered save record and all native bytes in original input",
+  "expected_initial_hotkey": 3,
+  "expected_save": "KEYS retains GeneratedRefId43 and native inventory shared-item44 retains slot3 through actual F5/quit/fresh-process load/F5/quit",
+  "initial_snapshot_expected_fields": 38,
+  "course_reference": "build/oblivion-compat/m15/S3/generated-hotkeys-runtime-03",
+  "preparation_reference": "build/oblivion-compat/m15/S3/generated-hotkeys-runtime-03/preparation.json",
+  "run_reference": "build/oblivion-compat/m15/S3/generated-hotkeys-runtime-03/run.py",
+  "verification_reference": "build/oblivion-compat/m15/S3/generated-hotkeys-runtime-03/verify.py",
+  "reviewed_resource": "Exact stock Oblivion missing TES3 decorative menu_icon_barter.dds frame; no broad error waiver"
+}

@@ -47,6 +47,7 @@
 #include "manualref.hpp"
 #include "scene.hpp"
 #include "oblivionprofileservices.hpp"
+#include "oblivioninventoryidentity.hpp"
 #include "worldimp.hpp"
 
 namespace MWWorld
@@ -627,12 +628,20 @@ namespace MWWorld
             return false;
         const ESM::RefId nativeId = OblivionProfileServices::nativeItemId(mStore, sharedId);
         const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
-        if (formId == nullptr)
+        const auto generatedKey = OblivionInventory::sharedKey(nativeId);
+        if (formId == nullptr && !generatedKey)
+            return false;
+        const auto key = generatedKey ? *generatedKey : ESM::FormKeyResolver(mContentFiles).toFormKey(*formId);
+        // Live inventory owns item presence and instance metadata. The cached
+        // save DTO may precede a shared generated-item addition or removal.
+        // Stage the assignment without creating authority for a missing item.
+        auto inventory = captureOblivionActorInventory(getPlayerPtr());
+        if (!ESM4::setInventoryHotkey(inventory, key, hotkey))
             return false;
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
-        return ESM4::setInventoryHotkey(mOblivionRuntimeState->mPlayer.mInventory,
-            ESM::FormKeyResolver(mContentFiles).toFormKey(*formId), hotkey);
+        mOblivionRuntimeState->mPlayer.mInventory.swap(inventory);
+        return true;
     }
 
     std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>

@@ -48,8 +48,12 @@ quickkey dependencies now resolve against incoming saved/static definitions
 before native preparation; removed spells and the ignored tenth slot retain
 their compatibility paths. Item quickkeys now validate non-item targets and
 incoming inventory projections, preserving removed/discarded IDs and native
-lockpick/repair dispatch. Quickkey texture preparation and native/shared hotkey
-authority reconciliation remain open. Later shared record/resource restoration
+lockpick/repair dispatch. Oblivion GUI keys now bind after native inventory
+replacement, Player setup and the load cell transition. The public hotkey setter
+resolves generated shared-item keys and stages current live inventory metadata;
+actual normal/instrumented two-process courses retain the GUI/native assignment.
+Quickkey texture preparation and complete native/shared hotkey authority/removal/
+replacement reconciliation remain open. Later shared record/resource restoration
 still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
 

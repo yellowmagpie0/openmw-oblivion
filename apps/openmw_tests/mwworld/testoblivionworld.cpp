@@ -13781,8 +13781,14 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     installEquipmentInventory(fixture, fixture.mActor, {item});
     EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), (std::vector{item}));
     EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{item}));
+    // The generated item was added to the live store after the last accepted
+    // native snapshot. The public quickkey adapter must use that live view.
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, 3));
+    item.mHotkey = 3;
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), (std::vector{item}));
+    auto actorItem = item; actorItem.mHotkey = -1;
+    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{actorItem}));
     auto saved = world.captureOblivionRuntimeState();
-    saved.mPlayer.mInventory.front().mHotkey = 3;
     saved = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
     const auto before = world.captureOblivionRuntimeState().serializeBinary();
     // Outgoing definitions cannot satisfy an incoming generated identity.
@@ -13812,6 +13818,19 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     readNativeSnapshot(fixture, captured);
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
     EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mInventory, saved.mPlayer.mInventory);
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, 7));
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()).front().mHotkey, 7);
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(weapon.mId, -1));
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()).front().mHotkey, -1);
+    const auto unchanged = world.captureOblivionRuntimeState().serializeBinary();
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, 8));
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, -2));
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey(ESM::RefId::generated(generatedId + 1), 3));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), unchanged);
+    // Removing a live generated item invalidates a stale cached assignment.
+    world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr()).clear();
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey(weapon.mId, 3));
+    EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
 }
 
 TEST(OblivionWorldTest, SavedDryInteriorWaterIsInitializedAndWetInteriorLevelIsPreserved)

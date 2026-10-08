@@ -483,6 +483,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         reader.setContentFileMapping(&contentFileMap);
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
         std::function<void()> preparedGlobalMap;
+        std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
                 preparedNative = world.prepareOblivionSaveState(native, std::move(definitions));
@@ -614,6 +615,17 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     MWBase::Environment::get().getWindowManager()->readRecord(reader, n.toInt());
                     break;
                 case ESM::REC_KEYS:
+                    if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+                    {
+                        // Native apply replaces the Player inventory after the
+                        // record loop. Bind GUI item handles only to the final
+                        // restored inventory, and publish its hotkeys there.
+                        deferredQuickKeys = reader.getContext();
+                        reader.skipRecord();
+                        break;
+                    }
+                    MWBase::Environment::get().getWindowManager()->readRecord(reader, n.toInt());
+                    break;
                 case ESM::REC_ASPL:
                 case ESM::REC_MARK:
 
@@ -694,6 +706,14 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         }
 
         MWBase::Environment::get().getWorld()->updateProjectilesCasters();
+
+        if (deferredQuickKeys)
+        {
+            const auto end = reader.getContext();
+            reader.restoreContext(*deferredQuickKeys);
+            MWBase::Environment::get().getWindowManager()->readRecord(reader, ESM::REC_KEYS);
+            reader.restoreContext(end);
+        }
 
         // Vanilla MW will restart startup scripts when a save game is loaded. This is unintuitive,
         // but some mods may be using it as a reload detector.

@@ -6,6 +6,58 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 generated quickkey adapter and final inventory binding — 2026-10-07
+
+The public Player hotkey setter now resolves generated shared-item identities
+as well as native content IDs and stages assignments from the live inventory.
+A cached native snapshot no longer excludes a newly added generated item or
+supplies an item removed from the live store. Missing items and invalid slots
+return without creating a new runtime snapshot; assignments preserve current
+instance metadata and native capture joins the stored assignment.
+
+Oblivion KEYS restoration is deferred until native apply, Player setup and the
+load's cell transition have completed. The admitted reader context is replayed
+once against the final inventory, then the reader's end context is restored.
+Previously the GUI assigned its key before native apply replaced the inventory
+and pending runtime state: native hotkeys were lost, and GUI pointers could
+refer to retired items. A real first F5 saved the generated weapon key as an
+unrelated XMarker static FormID (0x3b), and the fresh-process load correctly
+rejected it. The
+fixed path binds current inventory pointers and publishes assignments into the
+applied native cache. Morrowind retains its existing KEYS restore path.
+
+The existing generated Player/NPC gear World test now drives the actual public
+setter before capture and after binary/definition/clear/restore. It checks
+reassignment, clearing, invalid slots, missing generated IDs and stale cached
+entries after live inventory clear, alongside preserved gear/actor metadata.
+`S3/generated-hotkeys-engine-02` and `generated-hotkeys-sanitized-engine-02`
+passed all **1,230 engine tests**, exact inventories/XML, no failures/skips and
+stable fingerprints. Parent: `025cc7efb23d21ad2fd85b2b1708808ed962e118`;
+tested fingerprint: `42cb22af9001e79d6403d0a63223d18d47c9bf7e7d7ee0b67d01e118ebe7ac84`.
+ASan/UBSan halt on errors; leak checks are disabled. Fixture publication passed
+all **280 Python tests** and the production scenario validator; compiled
+implementation/test hashes are unchanged by fixture/documentation publication.
+
+Actual normal/instrumented `generated-hotkeys-runtime{,-sanitized}-03` courses
+start with a private KEYS-only assignment to generated weapon43 in slot3;
+original native bytes remain unchanged. Both initial snapshots match all38
+expected fields, including adopted native hotkey3. Each mode then performs
+actual F5/quit/fresh-process load/F5/quit in two distinct PIDs/epochs, one load
+and save per epoch. Both saves retain GeneratedRefId43 in KEYS, shared-item44's
+native hotkey3, condition37.125, charge9.25 and the compared Player/actor/action/
+crime/quest fields. All four captures reviewed. The exact missing stock TES3
+decorative barter frame warning is reviewed alongside the known equip frame;
+there is no broad error waiver. Failed source/fixture attempts remain retained.
+
+Editable `oblivion_m15_generated_hotkeys_{assignment,roundtrip}.json` recipes
+are in `scripts/data/oblivion_compat/`; private saves and exact workers/verifiers
+stay in the named ignored courses. `S3/generated-hotkeys-report.json` records
+hashes and separate structural, compiler/world, semantic and runtime layers.
+Complete hotkey authority/removal/replacement and texture preparation still
+need audit, as do broader shared restore, populated migration, lifecycle/profile/
+adapter and queue/action gates. S3 remains in progress; no TES4 authoring/MCP
+support is established by this checkpoint.
+
 ## S3 shared item quickkey role and projection admission — 2026-10-07
 
 Oblivion admission now resolves item/magic-item quickkey targets against
