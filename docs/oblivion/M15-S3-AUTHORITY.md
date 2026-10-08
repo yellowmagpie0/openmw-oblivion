@@ -261,3 +261,14 @@ courses pass action/error/exit audits, retain untouched input/save bytes and emi
 no native application or load/save completion. This supersedes the initial-load
 content-rejection gap for that family. Prior running-world preservation, other
 content families and complete all-or-nothing restoration remain separate gates.
+
+
+S3 shared effect-scalar follow-up (2026-10-08): all five consumed float channels
+of Player/NPC/creature active and queued effects reject NaN/infinity before native
+preparation and cleanup, preserving signed finite/permanent values. A7050-case
+matrix fails before the fix; final normal/instrumented inventories each pass1274
+engine tests. Actual F5/injected shared LEFT NaN/F9/Return/F5 courses in both builds
+prove rejection without teardown and preservation of declared owned state and
+preceding native references/script instances. The incorrectly ordered first
+fixture remains a failed framing course. Full input/publication transaction
+staging and other S3 gates remain open; see the milestone's hashes and scope.

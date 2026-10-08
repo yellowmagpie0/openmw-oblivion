@@ -195,8 +195,18 @@ namespace
         }
         for (const auto* spells : {&stats->mActiveSpells.mSpells, &stats->mActiveSpells.mQueue})
             for (const auto& spell : *spells)
+            {
                 if (spell.mWorsenings >= 0)
                     validateSharedTimestamp(spell.mNextWorsening);
+                // Both collections are copied into the live actor. Signed
+                // magnitudes and -1 permanent timing remain compatible, but
+                // nonfinite values cannot safely enter effect arithmetic/UI.
+                for (const auto& effect : spell.mEffects)
+                    for (const float value : {effect.mMagnitude, effect.mMinMagnitude,
+                             effect.mMaxMagnitude, effect.mDuration, effect.mTimeLeft})
+                        if (!std::isfinite(value))
+                            throw std::runtime_error("Saved game shared actor active effect has a nonfinite scalar");
+            }
     }
 
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,

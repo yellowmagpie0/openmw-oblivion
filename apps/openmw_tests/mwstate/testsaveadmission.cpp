@@ -2860,3 +2860,79 @@ TEST(SaveAdmissionTest, QuickkeyResourcePreparationReceivesNativeStateWithoutKey
         EXPECT_EQ(calls, profile == ESM::GameProfile::Oblivion ? 1 : 0);
     }
 }
+
+TEST(SaveAdmissionTest, ActiveEffectScalarsRejectBeforePreparationAcrossActorsQueuesAndNativeVersions)
+{
+    MWWorld::ESMStore content;
+    installTimestampContent(content);
+    constexpr std::array channels{&ESM::ActiveEffect::mMagnitude, &ESM::ActiveEffect::mMinMagnitude,
+        &ESM::ActiveEffect::mMaxMagnitude, &ESM::ActiveEffect::mDuration, &ESM::ActiveEffect::mTimeLeft};
+    const std::array values{std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -1.f, 123.5f};
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 3; ++owner)
+    for (const bool queued : {false, true})
+    for (std::size_t channel = 0; channel != channels.size(); ++channel)
+    for (const auto value : values)
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(queued);
+        SCOPED_TRACE(channel);
+        SCOPED_TRACE(value);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            ESM::NpcState npc{}; npc.blank();
+            ESM::CreatureState creature{}; creature.blank();
+            auto* object = owner == 0 ? static_cast<ESM::ObjectState*>(&player.mObject)
+                : owner == 1 ? static_cast<ESM::ObjectState*>(&npc) : &creature;
+            auto* stats = owner == 0 ? &player.mObject.mCreatureStats
+                : owner == 1 ? &npc.mCreatureStats : &creature.mCreatureStats;
+            object->mRef.mRefID = owner == 0 ? ESM::RefId::stringRefId("Player")
+                : owner == 1 ? timestampNpcId : timestampCreatureId;
+            object->mRef.mRefNum = {1, -1};
+            ESM::ActiveEffect effect{};
+            effect.mEffectId = ESM::MagicEffect::Paralyze;
+            effect.mDuration = -1.f;
+            effect.mTimeLeft = -1.f;
+            effect.*channels[channel] = value;
+            ESM::ActiveSpells::ActiveSpellParams spell{};
+            spell.mSourceSpellId = timestampPowerId;
+            spell.mActiveSpellId = ESM::RefId::generated(23);
+            spell.mWorsenings = -1;
+            spell.mEffects.push_back(effect);
+            (queued ? stats->mActiveSpells.mQueue : stats->mActiveSpells.mSpells).push_back(spell);
+            if (owner == 0)
+            {
+                player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+                writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            }
+            else
+            {
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{1, 0}));
+                ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                writer.writeHNT("OBJE", std::uint32_t{0}); object->save(writer);
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset();
+        int preparations = 0;
+        const auto prepare = [&](const auto&, auto) { ++preparations; };
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare); };
+        if (std::isfinite(value))
+        {
+            EXPECT_NO_THROW(admit());
+        }
+        else
+        {
+            EXPECT_THROW(admit(), std::runtime_error);
+        }
+        EXPECT_EQ(preparations, int(version && std::isfinite(value)));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

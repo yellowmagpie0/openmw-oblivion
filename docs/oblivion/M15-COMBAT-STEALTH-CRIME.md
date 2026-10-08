@@ -6,6 +6,52 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 reject nonfinite shared active/queued effect values — 2026-10-08
+
+Shared Player, NPC and creature active/queued effects now validate magnitude,
+minimum/maximum magnitude, duration and time-left before native preparation or
+World teardown. These fields are copied into live effect state and consumed by
+arithmetic and UI code. The check preserves finite signed values and the shared
+runtime's -1 permanent timing sentinel; it introduces no native effect formula.
+
+The new admission regression fails before the fix: nonfinite fields are accepted
+and native preparation runs. Its retained red log/XML is
+`build/oblivion-compat/m15/S3/active-effect-admission-red-01`. The final normal and
+ASan/UBSan checks `active-effect-admission-normal-01` and
+`active-effect-admission-sanitized-01` each pass all **1274 engine tests**, exact
+unfiltered inventory/XML match, no failures or skips. Both record parent
+`97cea5802faa3418eb5839c1713725157c7f454b` and source fingerprint
+`ae238687123ad8738a6e07149bb55a603ff66c68a3149ff4a897a68c0bb44953`.
+The new matrix covers schemas1–46 and no-T4ST input, all three actors, both
+collections, all five channels, NaN/positive/negative infinity and finite controls
+(**7050 combinations**). Rejected input preserves the reader context and never
+calls native preparation. SDL is offscreen; sanitizer leak checks are disabled.
+
+Actual normal and instrumented courses `active-effect-reject-normal-02` and
+`active-effect-reject-sanitized-02` load the native save, F5, inject one well-framed
+shared Player active effect with a quiet-NaN LEFT value while retaining identical
+T4ST state, then F9. Admission rejects that effect before teardown. Return/F5
+resaves the preserved running game and cleanly quits. Independent checks require
+one load/two save completions in one PID, exact initial native live state, ten
+unchanged owned native groups, preservation of every preceding native reference/
+script-instance entry, byte-identical non-PLAY records in the rejected input,
+and absence of the injected effect in the resave. Scenario/action/error audits
+pass; only the precise expected rejection is reviewed. The SDL input bridge
+provides real save/quickload/dialog input; no native World mutation injects the
+fault. This is malformed-effect rejection, not native spell gameplay acceptance.
+
+The first normal course `active-effect-reject-normal-01` is retained as failed:
+the fixture inserted after the AI LAST marker and hit framing rejection instead
+of the intended scalar validator. The corrected courses insert before the AI
+sequence. Normal executable SHA-256
+`872d2a370e3d0d482bbfec0ffcc0fcb984abd6fcc55c8b503a6ffc5c25f1b272`;
+instrumented `58d43a8b8ba55977dcf199913469c45f19862e15d4a03d7af6208d75e0ae6b71`.
+
+**S3 remains open.** This closes another consumed-scalar admission gap; later
+record/resource publication still has a cleanup-on-failure boundary. Immutable
+admitted input and the remaining transaction/runtime/migration gates require
+further work.
+
 ## S3 actual changed/missing content rejection — 2026-10-08
 
 Two actual normal-engine courses now reject content changes on initial save load.
