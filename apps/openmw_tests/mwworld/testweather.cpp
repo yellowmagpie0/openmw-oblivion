@@ -157,6 +157,70 @@ namespace MWWorld
             }
         }
 
+        TEST(MWWorldWeatherTest, nativeIdentityCatalogSkipsUnusedMissingWeatherAndRejectsConsumedDependencies)
+        {
+            const auto region = ESM::RefId::stringRefId("catalog-climate");
+            const std::vector<ESM::FormKey> old{ESM::FormKey::content("weather.esm", 1),
+                ESM::FormKey::content("removed.esp", 2), ESM::FormKey::content("weather.esm", 3),
+                ESM::FormKey::content("removed.esp", 4)};
+            const std::vector<ESM::FormKey> loaded{old[2], old[0]};
+            std::map<ESM::RefId, RegionWeather> defaults;
+            defaults.emplace(region, RegionWeather(std::vector<uint8_t>{100}));
+            ESM::WeatherState state{};
+            state.mWeatherIdentities = old;
+            state.mCurrentWeather = 0; state.mNextWeather = 2; state.mQueuedWeather = -1;
+            state.mRegions[region] = {-1, {10, 0, 25, 0}};
+            const auto prepared = prepareWeatherRestore(state, loaded.size(), defaults, loaded);
+            EXPECT_EQ(prepared.mState.mCurrentWeather, 1); EXPECT_EQ(prepared.mState.mNextWeather, 0);
+            EXPECT_EQ(prepared.mState.mRegions.at(region).mSelectionOrder,
+                (std::vector<int32_t>{1, -1, 0, -1}));
+            EXPECT_EQ(prepared.mState.mRegions.at(region).mFallbackWeather, 1);
+            EXPECT_TRUE(state.mRegions.at(region).mSelectionOrder.empty()); // Detached input untouched.
+            for (int fault = 0; fault != 11; ++fault)
+            {
+                SCOPED_TRACE(fault);
+                auto corrupt = state;
+                if (fault == 0) corrupt.mCurrentWeather = 1;
+                if (fault == 1) corrupt.mNextWeather = 1;
+                if (fault == 2) corrupt.mQueuedWeather = 3;
+                if (fault == 3) corrupt.mRegions[region].mWeather = 1;
+                if (fault == 4) corrupt.mRegions[region].mChances[1] = 1;
+                if (fault == 5) corrupt.mRegions[region].mFallbackWeather = 1;
+                if (fault == 6) corrupt.mCurrentWeather = 4;
+                if (fault == 7) corrupt.mRegions[region].mSelectionOrder = {0};
+                if (fault == 8) corrupt.mRegions[region].mSelectionOrder = {0, -2, 2, 3};
+                if (fault == 9) corrupt.mRegions[region].mFallbackWeather = 4;
+                if (fault == 10) corrupt.mWeatherIdentities->push_back(old[0]);
+                EXPECT_THROW(prepareWeatherRestore(corrupt, loaded.size(), defaults, loaded), std::runtime_error);
+            }
+            auto removed = state;
+            removed.mRegions[region].mWeather = 12345;
+            EXPECT_NO_THROW(prepareWeatherRestore(removed, loaded.size(), {}, loaded));
+            EXPECT_THROW(prepareWeatherRestore(state, 3, defaults, loaded), std::runtime_error);
+            const std::vector<ESM::FormKey> duplicate{old[0], old[0]};
+            EXPECT_THROW(prepareWeatherRestore(state, 2, defaults, duplicate), std::runtime_error);
+            auto legacy = state;
+            legacy.mWeatherIdentities.reset(); legacy.mNextWeather = -1;
+            legacy.mRegions[region].mChances = {100, 255};
+            EXPECT_EQ(prepareWeatherRestore(legacy, 2, defaults, loaded).mState.mCurrentWeather, 0);
+        }
+
+        TEST(MWWorldWeatherTest, nativeCatalogPreservesUnreachableLegacyTailsThroughRepeatedRestoration)
+        {
+            const auto region = ESM::RefId::stringRefId("climate");
+            const std::vector<ESM::FormKey> keys{ESM::FormKey::content("weather.esm", 1)};
+            ESM::WeatherState state{};
+            state.mWeatherIdentities = keys;
+            state.mNextWeather = state.mQueuedWeather = -1;
+            state.mRegions[region] = {-1, {100, 255}};
+            std::map<ESM::RefId, RegionWeather> defaults;
+            defaults.emplace(region, RegionWeather(std::vector<uint8_t>{100}));
+            const auto first = prepareWeatherRestore(state, 1, defaults, keys);
+            const auto second = prepareWeatherRestore(first.mState, 1, defaults, keys);
+            EXPECT_EQ(second.mState.mRegions.at(region).mChances, (std::vector<uint8_t>{100, 255}));
+            EXPECT_EQ(second.mState.mRegions.at(region).mSelectionOrder, (std::vector<int32_t>{0, -1}));
+        }
+
         // MASSER PHASES
 
         TEST(MWWorldWeatherTest, masserPhasesFullToWaningGibbousAtCorrectTimes)

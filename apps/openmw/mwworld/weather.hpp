@@ -283,6 +283,9 @@ namespace MWWorld
     private:
         int mWeather;
         std::vector<uint8_t> mChances;
+        std::vector<int32_t> mSelectionOrder;
+        std::vector<uint8_t> mProjectedChances;
+        int32_t mFallbackWeather = 0;
 
         void chooseNewWeather();
     };
@@ -332,7 +335,8 @@ namespace MWWorld
     };
 
     PreparedWeatherRestore prepareWeatherRestore(const ESM::WeatherState& state,
-        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions);
+        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions,
+        std::span<const ESM::FormKey> identities = {});
 
     /// Interface for weather settings
     class WeatherManager
@@ -456,6 +460,7 @@ namespace MWWorld
         int mQueuedWeather;
         std::map<ESM::RefId, RegionWeather> mRegions;
         bool mNativeWeather = false;
+        std::vector<ESM::FormKey> mWeatherIdentities;
         bool mWeatherOverride = false;
         MWRender::WeatherResult mResult;
 

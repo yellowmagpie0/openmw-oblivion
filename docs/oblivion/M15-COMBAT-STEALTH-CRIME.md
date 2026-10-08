@@ -6,6 +6,64 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 stable native weather catalog persistence — 2026-10-08
+
+New native WTHR saves carry a local versioned WXVR1/WXID catalog of immutable
+content FormKeys. WeatherManager obtains it from the native store's indexed
+identities. Admission resolves current/next/queued and retained regional weather
+against the loaded catalog before cleanup. Missing consumed definitions reject;
+unused missing weather and removed regions retain deliberate skip behavior.
+Saves without a catalog retain their legacy numeric interpretation: identity
+cannot be inferred from their absent metadata. TES3 weather emits no extension.
+T4ST remains schema46; this is a versioned optional shared WTHR extension.
+
+Regional RGIX bucket identities and RGDF fallback state preserve the original
+chance-window order and fallback weather across repeated catalog reordering,
+including non-normalized probabilities and unreachable tails. No new draw or
+probability formula is introduced. Region chance queries project onto current
+catalog indices; assigning new chances resets the saved mapping. Decoder and
+writer reject invalid versions, keys, duplicate catalogs, incomplete/duplicate
+selection maps and out-of-domain metadata. The independent Python reader
+`scripts/saved_weather_state.py` inspects real WTHR state as JSON-ready stable
+identities, preserving explicit legacy numeric values.
+
+Normal and ASan/UBSan checks each pass all **2596 component tests** and
+**1249 engine tests**. All **286 Python tests** pass. Exact inventories/XML
+match, no failures/skips, stable compiled fingerprint
+`40ad9ee3310fbc465f42705798601da381c701a775797e0b6ab66ea70ca883a4`;
+compiled parent `daaac6f1b3f25b0e1313419d943968b1228ce6de`.
+Four isolated codec and ten isolated engine cases pass in each configuration.
+Actual World RNG/RegionWeather selection covers all100 rolls across two
+reorderings, exact RNG advancement, unchanged RNG during preparation and
+current-index chance queries. The new564-combination admission matrix covers
+schemas0–46, record ordering, missing dependencies and malformed metadata before
+preparation/commit. ASan leak checks are disabled.
+
+The actual normal `weather-catalog-runtime-normal-01` course performs legacy
+load/F5/quit then fresh-PID WXVR1 load/F5/quit (epochs1/2). Both initial loads
+match all38 declared native fields; ten fixed authority groups persist after
+saving. Both outputs retain current key `content:oblivion.esm:038eee`, derived
+from legacy index31, and the same regional identities/buckets. The37-entry
+catalog exactly matches an independent original TES4 record/group walk,
+including first-insertion/winning order and deleted-record handling. Two
+reviewed captures show the same prison scene and HUD. These are diagnostic
+interior courses with audio disabled, not exterior weather visual acceptance.
+They do not change actual catalog order; that integration course remains open.
+
+Editable sources are
+`oblivion_m15_weather_catalog_{roundtrip,continuation}.json` under
+`scripts/data/oblivion_compat`. Their publication passes another complete
+286-case Python check; C++ sources remain those compiled above. Evidence is
+`build/oblivion-compat/m15/S3/weather-catalog-report.json`,
+`weather-catalog-{normal,sanitized}-01`, isolated XML/logs,
+`weather-catalog-fixture-python-01` and the normal runtime directory.
+No failing full attempts occurred. Targeted production/codec/engine builds and
+focused codec/Python checks preceded the full runs.
+
+Full S3 remains active. Actual reordered/changed native-weather content,
+explicit manager-handle lifecycle, wider semantic/shared-resource staging and
+postcleanup prior-World preservation still require completion evidence.
+
 ## S3 removed weather-region identity admission — 2026-10-07
 
 Strict weather admission now compares original saved region identities before

@@ -2427,6 +2427,69 @@ TEST(SaveAdmissionTest, WeatherDuplicateRegionsRejectBeforePreparationAcrossEver
     }
 }
 
+TEST(SaveAdmissionTest, WeatherIdentityCatalogAdmitsBeforeNativePreparationAcrossEverySchema)
+{
+    const auto a = ESM::FormKey::content("weather.esm", 1);
+    const auto b = ESM::FormKey::content("weather.esm", 2);
+    const auto c = ESM::FormKey::content("added.esp", 3);
+    const auto region = ESM::RefId::stringRefId("climate");
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int fault = 0; fault != 6; ++fault)
+    for (bool nativeFirst : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(fault);
+        SCOPED_TRACE(nativeFirst);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::WeatherState weather{};
+            weather.mCurrentWeather = 0; weather.mNextWeather = 1; weather.mQueuedWeather = -1;
+            writer.startRecord(ESM::REC_WTHR); weather.save(writer);
+            writer.writeHNT("WXVR", uint32_t{fault == 2 ? 2u : 1u});
+            writer.writeHNString("WXID", a.serialize());
+            writer.writeHNString("WXID", fault == 3 ? a.serialize() : b.serialize());
+            writer.writeHNRefId("RGNN", region); writer.writeHNT("RGNW", -1);
+            if (fault == 5) writer.writeHNT("RGDF", 2);
+            writer.writeHNT("RGNC", uint8_t{40});
+            writer.writeHNT("RGIX", 0);
+            writer.writeHNT("RGNC", uint8_t{60});
+            writer.writeHNT("RGIX", fault == 4 ? 0 : 1);
+            writer.endRecord(ESM::REC_WTHR);
+        });
+        const auto base = saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0);
+        ESM::ESMReader header; openBytes(header, base);
+        const auto firstRecord = header.getFileOffset();
+        ESM::ESMReader reader;
+        openBytes(reader, nativeFirst ? base + records
+            : base.substr(0, firstRecord) + records + base.substr(firstRecord));
+        const auto offset = reader.getFileOffset();
+        int weatherCalls = 0, nativeCalls = 0;
+        std::optional<MWWorld::PreparedWeatherRestore> retained;
+        const std::vector<ESM::FormKey> current{b, fault == 1 ? c : a};
+        const auto prepare = [&](const ESM::WeatherState& state) {
+            ++weatherCalls;
+            std::map<ESM::RefId, MWWorld::RegionWeather> defaults;
+            defaults.emplace(region, MWWorld::RegionWeather(std::vector<uint8_t>{100}));
+            retained = MWWorld::prepareWeatherRestore(state, current.size(), defaults, current);
+        };
+        const auto native = [&](const auto&, auto) {
+            ++nativeCalls;
+            ASSERT_TRUE(retained);
+            EXPECT_EQ(retained->mState.mCurrentWeather, 1);
+            EXPECT_EQ(retained->mState.mNextWeather, 0);
+            EXPECT_EQ(retained->mState.mRegions.at(region).mSelectionOrder, (std::vector<int32_t>{1, 0}));
+        };
+        if (fault)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare),
+                std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare));
+        EXPECT_EQ(weatherCalls, int(fault <= 1));
+        EXPECT_EQ(nativeCalls, int(fault == 0 && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
 TEST(SaveAdmissionTest, WeatherPreparationDoesNotChangeMorrowindAdmission)
 {
     ESM::WeatherState weather{};

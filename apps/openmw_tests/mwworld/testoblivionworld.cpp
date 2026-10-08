@@ -21,6 +21,7 @@
 #include "apps/openmw/mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
 #include <components/misc/rng.hpp>
+#include "apps/openmw/mwworld/weather.hpp"
 #include <components/sceneutil/keyframe.hpp>
 #include <components/settings/values.hpp>
 #include <components/vfs/filesystemarchive.hpp>
@@ -8787,6 +8788,64 @@ namespace
             EXPECT_EQ(animation->mBone->getNumChildren(), 0u);
             EXPECT_EQ(equipped->getCellRef().getCount(), 3);
         }
+    }
+
+    TEST(OblivionWorldTest, NativeWeatherCatalogRestorePreservesEveryRngBucketAcrossRepeatedReordering)
+    {
+        NativeWorldFixture fixture;
+        const auto region = ESM::RefId::stringRefId("catalog-climate");
+        const std::vector<ESM::FormKey> original{ESM::FormKey::content("a.esm", 1),
+            ESM::FormKey::content("b.esp", 2), ESM::FormKey::content("a.esm", 3),
+            ESM::FormKey::content("b.esp", 4)};
+        const std::vector<ESM::FormKey> firstKeys{original[3], original[2], original[0], original[1]};
+        const std::vector<ESM::FormKey> secondKeys{original[1], original[0], original[3], original[2]};
+        ESM::WeatherState saved{};
+        saved.mWeatherIdentities = original;
+        saved.mCurrentWeather = 0; saved.mNextWeather = 2; saved.mQueuedWeather = 1;
+        saved.mRegions[region] = {-1, {10, 0, 25, 0}};
+        std::map<ESM::RefId, MWWorld::RegionWeather> defaults;
+        defaults.emplace(region, MWWorld::RegionWeather(std::vector<uint8_t>{100}));
+        const auto beforePreparation = fixture.mWorld.getPrng();
+        const auto first = MWWorld::prepareWeatherRestore(saved, firstKeys.size(), defaults, firstKeys);
+        const auto second = MWWorld::prepareWeatherRestore(first.mState, secondKeys.size(), defaults, secondKeys);
+        EXPECT_EQ(fixture.mWorld.getPrng(), beforePreparation);
+        EXPECT_EQ(first.mState.mCurrentWeather, 2); EXPECT_EQ(first.mState.mNextWeather, 1);
+        EXPECT_EQ(first.mState.mQueuedWeather, 3);
+        EXPECT_EQ(second.mState.mCurrentWeather, 1); EXPECT_EQ(second.mState.mNextWeather, 3);
+        EXPECT_EQ(second.mState.mQueuedWeather, 0);
+        EXPECT_EQ(first.mState.mRegions.at(region).mChances, saved.mRegions.at(region).mChances);
+        EXPECT_EQ(second.mState.mRegions.at(region).mChances, saved.mRegions.at(region).mChances);
+        EXPECT_EQ(std::vector<uint8_t>(first.mRegions.at(region).getChances().begin(),
+                      first.mRegions.at(region).getChances().end()), (std::vector<uint8_t>{0, 25, 10, 0}));
+        EXPECT_EQ(std::vector<uint8_t>(second.mRegions.at(region).getChances().begin(),
+                      second.mRegions.at(region).getChances().end()), (std::vector<uint8_t>{0, 10, 0, 25}));
+        std::array<bool, 100> covered{};
+        int count = 0;
+        for (unsigned int seed = 1; seed <= 100000 && count != 100; ++seed)
+        {
+            const Misc::Rng::Generator initial(seed);
+            auto expectedGenerator = initial;
+            const int roll = Misc::Rng::rollDice(100, expectedGenerator) + 1;
+            if (covered[roll - 1]) continue;
+            covered[roll - 1] = true; ++count;
+            SCOPED_TRACE(roll);
+            // Original buckets: 1..10 -> A, 11..35 -> C, 36..100 ->
+            // original catalog's fallback A. Check actual RegionWeather draws
+            // and the World RNG after both restore generations.
+            const auto& expectedKey = original[roll > 10 && roll <= 35 ? 2 : 0];
+            for (int generation : {0, 1})
+            {
+                const auto& prepared = generation == 0 ? first : second;
+                const auto& keys = generation == 0 ? firstKeys : secondKeys;
+                auto current = prepared.mRegions.at(region);
+                fixture.mWorld.getPrng() = initial;
+                const int selected = current.getWeather();
+                ASSERT_GE(selected, 0); ASSERT_LT(std::size_t(selected), keys.size());
+                EXPECT_EQ(keys[selected], expectedKey);
+                EXPECT_EQ(fixture.mWorld.getPrng(), expectedGenerator);
+            }
+        }
+        EXPECT_EQ(count, 100);
     }
 
     TEST(OblivionWorldTest, PreparedProjectileAudioDecodesBeforeClearAndPublishesOnceFromPinnedStaticBuffers)

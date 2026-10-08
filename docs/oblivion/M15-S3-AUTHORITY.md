@@ -86,8 +86,17 @@ rejects duplicate original weather-region identities before remapping, map
 merging or preparation. Distinct removed regions are decoded then skipped,
 while repeated original IDs and malformed payloads reject. The564-combination
 schemas0–46/order/removal matrix checks rewind and callback suppression;
-legacy first-entry decoding and ordinary reader remapping remain unchanged. Changed/reordered weather identity and explicit
-stale/copied manager-handle integration remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
+legacy first-entry decoding and ordinary reader remapping remain unchanged.
+New native WTHR WXVR1/WXID persists stable weather content keys; RGIX/RGDF
+preserves bucket order and fallback through catalog remapping. Current/next/
+queued/regional choices validate against the loaded catalog before cleanup;
+consumed missing definitions reject while unused/removed state skips. Legacy
+catalog absence remains numeric. Native chance queries use the current-index
+projection. Actual World RNG tests cover every roll through two reorderings;
+normal legacy-to-WXVR1/fresh-process courses preserve current and regional
+identities and compare all37 catalog keys with the original record walk.
+Actual reordered-content runtime and explicit stale/copied manager-handle
+integration remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
 replacement reconciliation remain open. Later shared record/resource restoration
 still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.

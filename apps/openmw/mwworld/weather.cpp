@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <set>
 
 namespace MWWorld
 {
@@ -399,7 +400,22 @@ namespace MWWorld
     RegionWeather::RegionWeather(const ESM::RegionWeatherState& state)
         : mWeather(state.mWeather)
         , mChances(state.mChances)
+        , mSelectionOrder(state.mSelectionOrder)
+        , mFallbackWeather(state.mFallbackWeather)
     {
+        if (!mSelectionOrder.empty())
+        {
+            if (mSelectionOrder.size() != mChances.size())
+                throw std::runtime_error("Saved weather selection order is incomplete");
+            std::size_t count = 0;
+            for (const auto index : mSelectionOrder)
+                if (index >= 0)
+                    count = std::max(count, std::size_t(index) + 1);
+            mProjectedChances.assign(count, 0);
+            for (std::size_t i = 0; i < mSelectionOrder.size(); ++i)
+                if (mSelectionOrder[i] >= 0)
+                    mProjectedChances[mSelectionOrder[i]] = mChances[i];
+        }
     }
 
     RegionWeather::RegionWeather(std::vector<uint8_t> chances)
@@ -410,7 +426,7 @@ namespace MWWorld
 
     RegionWeather::operator ESM::RegionWeatherState() const
     {
-        ESM::RegionWeatherState state = { mWeather, mChances };
+        ESM::RegionWeatherState state = { mWeather, mChances, mSelectionOrder, mFallbackWeather };
 
         return state;
     }
@@ -418,6 +434,9 @@ namespace MWWorld
     void RegionWeather::setChances(std::span<const uint8_t> chances)
     {
         mChances.assign(chances.begin(), chances.end());
+        mSelectionOrder.clear();
+        mProjectedChances.clear();
+        mFallbackWeather = 0;
 
         // Regional weather no longer supports the current type, select a new weather pattern.
         if ((static_cast<size_t>(mWeather) >= mChances.size()) || (mChances[mWeather] == 0))
@@ -428,7 +447,8 @@ namespace MWWorld
 
     std::span<const uint8_t> RegionWeather::getChances() const
     {
-        return mChances;
+        return mSelectionOrder.empty() ? std::span<const uint8_t>(mChances)
+                                      : std::span<const uint8_t>(mProjectedChances);
     }
 
     void RegionWeather::setWeather(int weatherID)
@@ -461,13 +481,13 @@ namespace MWWorld
             sum += mChances[i];
             if (chance <= sum)
             {
-                mWeather = static_cast<int>(i);
+                mWeather = mSelectionOrder.empty() ? static_cast<int>(i) : mSelectionOrder[i];
                 return;
             }
         }
 
         // if we hit this path then the chances don't add to 100, choose a default weather instead
-        mWeather = 0;
+        mWeather = mFallbackWeather;
     }
 
     MoonModel::MoonModel(float fadeInStart, float fadeInFinish, float fadeOutStart, float fadeOutFinish,
@@ -786,7 +806,14 @@ namespace MWWorld
         if (mNativeWeather)
         {
             for (const ESM4::Weather& weather : store.get<ESM4::Weather>())
+            {
                 mWeatherSettings.emplace_back(weather, static_cast<int>(mWeatherSettings.size()));
+                const auto key = store.get<ESM4::Weather>().findFormKey(ESM::RefId(weather.mId));
+                if (!key)
+                    throw std::runtime_error("Native weather lacks a stable content identity");
+                mWeatherIdentities.push_back(*key);
+            }
+            ESM::validateWeatherIdentityCatalog(mWeatherIdentities);
             importRegions();
             // A climate is selected once the player enters a cell. Record iteration order is not a
             // meaningful default (the base master happens to begin with a Shivering Isles test climate).
@@ -1232,6 +1259,8 @@ namespace MWWorld
         state.mNextWeather = mNextWeather;
         state.mQueuedWeather = mQueuedWeather;
         state.mWeatherOverride = mWeatherOverride;
+        if (mNativeWeather)
+            state.mWeatherIdentities = mWeatherIdentities;
 
         auto it = mRegions.begin();
         for (; it != mRegions.end(); ++it)
@@ -1252,7 +1281,7 @@ namespace MWWorld
             state.load(reader);
 
             auto prepared = mNativeWeather
-                ? prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions())
+                ? prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions(), mWeatherIdentities)
                 : PreparedWeatherRestore{ state, makeRegions() };
             if (!mNativeWeather)
                 for (const auto& [id, region] : state.mRegions)
@@ -1337,7 +1366,8 @@ namespace MWWorld
     }
 
     PreparedWeatherRestore prepareWeatherRestore(const ESM::WeatherState& state,
-        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions)
+        std::size_t weatherCount, std::map<ESM::RefId, RegionWeather> regions,
+        std::span<const ESM::FormKey> identities)
     {
         const auto valid = [weatherCount](int id, bool optional) {
             if ((optional && id == invalidWeatherID) || (id >= 0 && std::size_t(id) < weatherCount))
@@ -1347,27 +1377,97 @@ namespace MWWorld
         if (!std::isfinite(state.mTimePassed) || !std::isfinite(state.mWeatherUpdateTime)
             || !std::isfinite(state.mTransitionFactor))
             throw std::runtime_error("Saved game weather contains a nonfinite timer or transition");
-        valid(state.mCurrentWeather, false);
-        valid(state.mNextWeather, true);
-        valid(state.mQueuedWeather, true);
-        for (const auto& [id, saved] : state.mRegions)
+        ESM::WeatherState prepared = state;
+        std::map<ESM::FormKey, int32_t> indices;
+        if (state.mWeatherIdentities)
+        {
+            ESM::validateWeatherIdentityCatalog(*state.mWeatherIdentities);
+            ESM::validateWeatherIdentityCatalog(identities);
+            if (identities.size() != weatherCount)
+                throw std::runtime_error("Loaded weather identity catalog has an invalid size");
+            for (std::size_t i = 0; i < identities.size(); ++i)
+                indices.emplace(identities[i], static_cast<int32_t>(i));
+            prepared.mWeatherIdentities = std::vector<ESM::FormKey>(identities.begin(), identities.end());
+        }
+        const auto remap = [&](int32_t index, bool optional) -> int32_t {
+            if (!state.mWeatherIdentities)
+            {
+                valid(index, optional);
+                return index;
+            }
+            if (optional && index == invalidWeatherID)
+                return index;
+            if (index < 0 || std::size_t(index) >= state.mWeatherIdentities->size())
+                throw std::runtime_error("Saved game weather index is outside saved identity catalog");
+            const auto found = indices.find((*state.mWeatherIdentities)[index]);
+            if (found == indices.end())
+                throw std::runtime_error("Saved game uses a weather identity missing from loaded content");
+            return found->second;
+        };
+        prepared.mCurrentWeather = remap(state.mCurrentWeather, false);
+        prepared.mNextWeather = remap(state.mNextWeather, true);
+        prepared.mQueuedWeather = remap(state.mQueuedWeather, true);
+        if (state.mWeatherIdentities)
+            std::erase_if(prepared.mRegions, [&](const auto& entry) { return !regions.contains(entry.first); });
+        for (auto& [id, saved] : prepared.mRegions)
         {
             auto found = regions.find(id);
             if (found == regions.end())
                 continue; // Removed regions have always been skipped by the consumer.
-            valid(saved.mWeather, true);
+            saved.mWeather = remap(saved.mWeather, true);
+            if (!saved.mSelectionOrder.empty() && saved.mSelectionOrder.size() != saved.mChances.size())
+                throw std::runtime_error("Saved weather selection order is incomplete");
+            if (!state.mWeatherIdentities && (!saved.mSelectionOrder.empty() || saved.mFallbackWeather != 0))
+                throw std::runtime_error("Saved weather selection identities require a catalog");
+            if (state.mWeatherIdentities && (saved.mFallbackWeather < 0
+                    || std::size_t(saved.mFallbackWeather) >= state.mWeatherIdentities->size()))
+                throw std::runtime_error("Saved weather fallback is outside saved identity catalog");
             // Only a bucket reachable by the 1..100 roll can select an index.
             // Preserve zero tails and unreachable probabilities from older saves.
             unsigned int sum = 0;
-            for (std::size_t i = 0; i < saved.mChances.size() && sum < 100; ++i)
+            std::vector<int32_t> order;
+            if (state.mWeatherIdentities)
+                order.assign(saved.mChances.size(), invalidWeatherID);
+            std::set<int64_t> selections;
+            for (std::size_t i = 0; i < saved.mChances.size(); ++i)
             {
-                if (saved.mChances[i] != 0 && i >= weatherCount)
+                if (!state.mWeatherIdentities && sum >= 100)
+                    break;
+                const bool reachable = saved.mChances[i] != 0 && sum < 100;
+                if (state.mWeatherIdentities)
+                {
+                    const auto old = saved.mSelectionOrder.empty() ? static_cast<int64_t>(i) : saved.mSelectionOrder[i];
+                    if (!saved.mSelectionOrder.empty()
+                        && (old < -1 || (old >= 0 && std::size_t(old) >= state.mWeatherIdentities->size())))
+                        throw std::runtime_error("Saved weather selection index is outside saved identity catalog");
+                    if (!saved.mSelectionOrder.empty() && old >= 0 && !selections.insert(old).second)
+                        throw std::runtime_error("Saved weather selection order contains duplicate identities");
+                    if (reachable)
+                    {
+                        if (old < 0 || std::size_t(old) >= state.mWeatherIdentities->size())
+                            throw std::runtime_error("Saved weather selection index is outside saved identity catalog");
+                        order[i] = remap(static_cast<int32_t>(old), false);
+                    }
+                    else if (old >= 0 && std::size_t(old) < state.mWeatherIdentities->size())
+                        if (auto entry = indices.find((*state.mWeatherIdentities)[old]); entry != indices.end())
+                            order[i] = entry->second;
+                }
+                else if (reachable && i >= weatherCount)
                     throw std::runtime_error("Saved game regional weather can select an unavailable weather");
-                sum += saved.mChances[i];
+                if (sum < 100)
+                    sum += saved.mChances[i];
+            }
+            if (state.mWeatherIdentities)
+            {
+                if (sum < 100)
+                    saved.mFallbackWeather = remap(saved.mFallbackWeather, false);
+                else
+                    saved.mFallbackWeather = 0;
+                saved.mSelectionOrder = std::move(order);
             }
             found->second = RegionWeather(saved);
         }
-        return { state, std::move(regions) };
+        return { std::move(prepared), std::move(regions) };
     }
 
     void WeatherManager::applyRestore(PreparedWeatherRestore& prepared)
@@ -1388,7 +1488,7 @@ namespace MWWorld
     std::function<bool()> WeatherManager::prepareRead(const ESM::WeatherState& state)
     {
         auto prepared = std::make_shared<PreparedWeatherRestore>(
-            prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions()));
+            prepareWeatherRestore(state, mWeatherSettings.size(), makeRegions(), mWeatherIdentities));
         const std::weak_ptr<const char> identity = mRestoreIdentity;
         const auto generation = mRestoreGeneration + 1;
         return [this, identity, generation, prepared = std::move(prepared)]() mutable {
