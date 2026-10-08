@@ -6,6 +6,58 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 restore modern item hotkeys from native inventory authority — 2026-10-08
+
+World now exposes a read-only eight-slot item query using live inventory and
+stable native/generated identities. Schemas before4 return no native slot view,
+retaining KEYS as the legacy migration source. Modern GUI restore rebuilds Item/
+MagicItem buttons from that view rather than assigning saved GUI slots into the
+native inventory. It retains available Item/MagicItem display kinds, preserves
+spells in slots without native items and reconstructs absent item buttons.
+Menu opening and UI save writing also synchronize this view, including a missing
+KEYS record. A scoped restore flag prevents item, spell and unassign callbacks
+from mutating native hotkeys during that projection. Ordinary user assignment
+still uses the World mutation adapter. No schema or native numeric rule change.
+
+The retained pre-fix binary passes the clean stale-record scenario but fails
+native-state equality: saved blade hotkey7 becomes0 after GUI restore, and this
+is the only initial native difference. Evidence: build/oblivion-compat/m15/S3/
+hotkey-authority-stale-gui-red-04/regression-verification.json. Failed copied-
+executable startup/default/config attempts (-01/-02) and resource-version audit
+(-03) remain separate. Red04 uses isolated matching-version resources, no error
+allowance. Normal stale/empty/missing GUI-record courses each pass fresh-PID
+load/F5/quit, all38 initial native groups, ten stable post-save groups, exact
+expected KEYS and all37 independently walked weather identities. The instrumented
+stale course passes the same comparisons and clean error-log audit. These are
+hotkey-authority-{stale,empty,missing}-gui-normal-01 and
+hotkey-authority-stale-gui-sanitized-01 under the S3 root.
+
+The actual Xvfb mouse course also passes assignment/move/old-slot removal,
+three F5 saves, native slots0→7→7 and automatic old-button removal. All six
+inventory entries remain exact apart from the expected target hotkey; screenshots
+confirm the menu and moved binding. Evidence: hotkey-authority-mouse-gui-normal-01.
+Lua opens/reopens the menu for this pre-chargen seed, which blocks F1. These
+no-sound interior courses do not prove F1, audio, exterior or every rendered field.
+
+Full normal-02 and sanitized-03 engine inventories each pass all1265 tests,
+no failures/skips. The new actual World matrix covers inventory schemas1–46,
+legacy query absence, modern native ID resolution and binary-state immutability;
+the generated Player/NPC gear case additionally checks both assigned shared IDs.
+Fingerprint ac60ab704273b2afd5349cbd116680b9cc4cb96d50ad409b09434f25a85b6873
+against parent3917215c2a. SDL offscreen enables GL tests; ASan leaks are disabled
+and UBSan halts. Failed first builds retain the const-accessor error; sanitizer
+-02 retains a killed compiler, corrected by --jobs1 in -03. Evidence directories:
+hotkey-authority-normal-02 and hotkey-authority-sanitized-03 under the S3 root.
+Unchanged component/Python checks were not repeated.
+
+Normal runtime binary SHA256:
+43e8f533ded4a215015c6cfc86eed24a588f425087ffe885f1a2d1586357203e;
+instrumented:
+e5022b5da3884d3f44dcbecc155897ab0a233de8a63d6795dc88653d50a7ff5e.
+MagicItem/spell GUI runtime, legacy GUI migration, quickkey resource preflight,
+large-map allocation and the broader restore/migration/profile/lifecycle audit
+remain open. Full S3 remains active.
+
 ## S3 reconcile moved native item hotkey buttons — 2026-10-08
 
 QuickKeysMenu now requires the native inventory assignment to succeed before

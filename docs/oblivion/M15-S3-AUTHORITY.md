@@ -14,6 +14,8 @@ Checkpoints, test fingerprints and runtime evidence are in
 | Unloaded reference | Native service state and retained reference metadata remain available by stable key without loading a cell. | `World::getOblivionScriptActorValue` uses live flags when resident, otherwise retained/authored flags, and delegates to the native service. Disabled GetAV reference counters use the reviewed base-form behavior; base queries remain reference-base queries. |
 | Projected equipment | Live `InventoryStore`/item `CellRef` own counts, slots and instance condition/charge/ownership. Native preparation resolves definitions before staged inventory publication. | World captures native inventory descriptors. Shared generated definitions and compatible inventory records preserve the projected identities. Generated gear recovery, class/ammunition, weapon/cell and water controls are checked separately from actor-value tests. |
 
+| Native player item hotkeys | T4ST inventory metadata owns item slots; `World::oblivionSetPlayerHotkey` is the mutation adapter. Live inventory determines surviving positive-count items. | `World::oblivionPlayerItemHotkeys` resolves eight shared GUI IDs without changing native state. Modern KEYS is a GUI projection rebuilt on restore, menu opening and UI save; spell bindings remain when a slot has no native item. Schemas before4 retain KEYS migration. |
+
 The Player canonical key is `dynamic:player:0000000000000001`.
 `components/esm4/runtimereferences.hpp` normalizes the Player reference alias.
 Content keys retain plugin/local-form identity; dynamic keys retain namespace
@@ -191,3 +193,17 @@ full1264-case normal/instrumented engine inventories pass. The milestone records
 fingerprint/evidence and retained failed build attempts. This does not close
 MagicItem/spell runtime coverage, conflicting nonduplicate assignments or full
 pre-teardown resource staging.
+
+
+Modern item hotkey restoration now treats T4ST inventory as authority rather than
+letting KEYS reassign it. The public World eight-slot query resolves native and
+generated IDs; actual schemas1–46 prove read immutability and pre4 legacy absence.
+A scoped GUI restore suppresses native mutation callbacks. Stale, empty and missing
+GUI-record fresh-PID normal courses preserve all38 initial native groups, ten
+stable post-save groups and reconstruct the expected KEYS; an instrumented stale
+course passes the same comparisons. The clean pre-fix course changes native
+hotkey7 to0 as its only initial native difference. Actual mouse/F5 checks also
+pass. Both full1265-case normal/instrumented engine inventories pass. The milestone
+records fingerprints, binary hashes, failed build/startup attempts and evidence.
+MagicItem/spell and legacy GUI runtime, resource preflight and full S3 restore
+acceptance remain open.

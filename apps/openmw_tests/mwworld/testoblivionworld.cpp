@@ -14230,6 +14230,11 @@ TEST(OblivionWorldTest, HotkeySlotClearingUsesLiveInventoryWithoutClearingMovedO
     ASSERT_TRUE(world.oblivionSetPlayerHotkey(secondId, 4));
     ASSERT_TRUE(world.oblivionSetPlayerHotkey(firstId, 7));
     const auto before = world.captureOblivionRuntimeState();
+    const auto hotkeys = world.oblivionPlayerItemHotkeys();
+    ASSERT_TRUE(hotkeys);
+    EXPECT_EQ((*hotkeys)[7], firstId);
+    EXPECT_EQ((*hotkeys)[4], secondId);
+    for (int slot : {0, 1, 2, 3, 5, 6}) EXPECT_TRUE((*hotkeys)[slot].empty());
     EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, 2));
     for (int invalid : {-2, -1, 8}) EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, invalid));
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
@@ -14703,5 +14708,42 @@ TEST(OblivionWorldTest, LegacyPlayerCounterReadsCheckIntegerBoundsWithoutChangin
         saved.mPlayer.mActorValues.erase(field);
         readNativeSnapshot(fixture, saved);
         ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    }
+}
+
+
+TEST(OblivionWorldTest, NativeItemHotkeyQueryPreservesEveryInventorySchemaAndBinaryState)
+{
+    for (std::uint32_t version = 1; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        SCOPED_TRACE(version);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mVersion = version;
+        if (version < 3)
+        {
+            saved.mPlayer.mName.clear(); saved.mPlayer.mRace = {}; saved.mPlayer.mClass = {};
+            saved.mPlayer.mBirthSign = {}; saved.mPlayer.mFemale = false;
+            saved.mPlayer.mCharacterGenerationFlags = 0;
+        }
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = 1;
+        if (version >= 4) item.mHotkey = 7;
+        saved.mPlayer.mInventory = {item};
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        readNativeSnapshot(fixture, decoded);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto hotkeys = world.oblivionPlayerItemHotkeys();
+        if (version < 4) EXPECT_FALSE(hotkeys);
+        else
+        {
+            ASSERT_TRUE(hotkeys);
+            EXPECT_EQ((*hotkeys)[7], ESM::RefId(ESM::FormId{0x940, 0}));
+            for (int i = 0; i < 7; ++i) EXPECT_TRUE((*hotkeys)[i].empty());
+        }
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
     }
 }

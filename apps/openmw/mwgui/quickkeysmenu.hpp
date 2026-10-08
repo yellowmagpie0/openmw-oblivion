@@ -76,6 +76,10 @@ namespace MWGui
         inline void validate(int index);
         void unassign(keyData* key, bool clearNative = true);
         bool assignNativeItemHotkey(const ESM::RefId& id);
+        bool reconcileNativeItemHotkeys(ESM::QuickKeys& keys) const;
+        void synchronizeNativeItemHotkeys();
+        void restoreKeys(ESM::QuickKeys keys);
+        bool mRestoringNativeKeys = false;
         void assignItem(MWWorld::Ptr item);
 
         bool onControllerButtonEvent(const SDL_ControllerButtonEvent& arg) override;

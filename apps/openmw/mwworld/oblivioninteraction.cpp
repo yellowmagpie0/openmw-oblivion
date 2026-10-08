@@ -45,6 +45,7 @@
 #include "datetimemanager.hpp"
 #include "inventorystore.hpp"
 #include "manualref.hpp"
+#include "player.hpp"
 #include "scene.hpp"
 #include "oblivionprofileservices.hpp"
 #include "oblivioninventoryidentity.hpp"
@@ -620,6 +621,32 @@ namespace MWWorld
             }
             ESM4::equipInventoryItem(mOblivionRuntimeState->mPlayer.mInventory, *definition, preferredSlot);
         }
+    }
+
+    std::optional<std::array<ESM::RefId, 8>> World::oblivionPlayerItemHotkeys() const
+    {
+        // Schemas before 4 have no native item hotkeys; their KEYS record is
+        // still the migration source. Modern item slots belong to inventory.
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState
+            || mOblivionRuntimeState->mVersion < 4)
+            return std::nullopt;
+        std::array<ESM::RefId, 8> result;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        for (const auto& item : captureOblivionActorInventory(mPlayer ? mPlayer->getPlayer() : Ptr{}))
+        {
+            if (item.mCount <= 0 || item.mHotkey < 0)
+                continue;
+            if (const auto generated = OblivionInventory::sharedId(item.mBase))
+                result.at(item.mHotkey) = *generated;
+            else
+            {
+                const auto native = resolver.toFormId(item.mBase);
+                if (!native)
+                    throw std::runtime_error("Native item hotkey identity cannot be resolved");
+                result.at(item.mHotkey) = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*native));
+            }
+        }
+        return result;
     }
 
     bool World::oblivionSetPlayerHotkey(const ESM::RefId& sharedId, int hotkey)

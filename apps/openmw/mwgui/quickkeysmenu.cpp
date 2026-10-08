@@ -1,5 +1,7 @@
 #include "quickkeysmenu.hpp"
 
+#include <algorithm>
+
 #include <MyGUI_Button.h>
 #include <MyGUI_EditBox.h>
 #include <MyGUI_Gui.h>
@@ -118,6 +120,7 @@ namespace MWGui
     void QuickKeysMenu::onOpen()
     {
         WindowBase::onOpen();
+        synchronizeNativeItemHotkeys();
 
         // Quick key index
         for (int index = 0; index < 10; ++index)
@@ -147,7 +150,7 @@ namespace MWGui
 
     void QuickKeysMenu::unassign(keyData* key, bool clearNative)
     {
-        if (clearNative && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+        if (clearNative && !mRestoringNativeKeys && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
             && key->index >= 1 && key->index <= 8 && !key->id.empty())
             static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
                 ->oblivionSetPlayerHotkey({}, key->index - 1);
@@ -267,7 +270,7 @@ namespace MWGui
     bool QuickKeysMenu::assignNativeItemHotkey(const ESM::RefId& id)
     {
         MWBase::World* world = MWBase::Environment::get().getWorld();
-        if (world->getGameProfile() != ESM::GameProfile::Oblivion)
+        if (mRestoringNativeKeys || world->getGameProfile() != ESM::GameProfile::Oblivion)
             return true;
         if (!static_cast<MWWorld::World*>(world)->oblivionSetPlayerHotkey(id, mSelected->index - 1))
             return false;
@@ -351,7 +354,8 @@ namespace MWGui
 
         const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
         const ESM::Spell* spell = esmStore.get<ESM::Spell>().find(spellId);
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        if (!mRestoringNativeKeys
+            && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
             static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
                 ->oblivionSetPlayerHotkey({}, mSelected->index - 1);
 
@@ -628,6 +632,7 @@ namespace MWGui
 
     void QuickKeysMenu::write(ESM::ESMWriter& writer)
     {
+        synchronizeNativeItemHotkeys();
         writer.startRecord(ESM::REC_KEYS);
 
         ESM::QuickKeys keys;
@@ -667,6 +672,50 @@ namespace MWGui
         writer.endRecord(ESM::REC_KEYS);
     }
 
+    bool QuickKeysMenu::reconcileNativeItemHotkeys(ESM::QuickKeys& keys) const
+    {
+        const auto native = static_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))->oblivionPlayerItemHotkeys();
+        if (!native)
+            return false;
+        const auto original = keys.mKeys;
+        keys.mKeys.resize(9, {ESM::QuickKeys::Type::Unassigned, {}});
+        const auto isItem = [](ESM::QuickKeys::Type type) {
+            return type == ESM::QuickKeys::Type::Item || type == ESM::QuickKeys::Type::MagicItem;
+        };
+        for (std::size_t i = 0; i < keys.mKeys.size(); ++i)
+        {
+            auto& key = keys.mKeys[i];
+            if (i == native->size() || (*native)[i].empty())
+            {
+                if (isItem(key.mType))
+                    key = {ESM::QuickKeys::Type::Unassigned, {}};
+                continue;
+            }
+            if (isItem(key.mType) && key.mId == (*native)[i])
+                continue;
+            const auto previous = std::find_if(original.begin(), original.end(), [&](const auto& candidate) {
+                return isItem(candidate.mType) && candidate.mId == (*native)[i];
+            });
+            key = {previous == original.end() ? ESM::QuickKeys::Type::Item : previous->mType, (*native)[i]};
+        }
+        if (keys.mKeys.size() != original.size())
+            return true;
+        for (std::size_t i = 0; i < original.size(); ++i)
+            if (keys.mKeys[i].mType != original[i].mType || keys.mKeys[i].mId != original[i].mId)
+                return true;
+        return false;
+    }
+
+    void QuickKeysMenu::synchronizeNativeItemHotkeys()
+    {
+        ESM::QuickKeys keys;
+        for (int i = 0; i < 9; ++i)
+            keys.mKeys.push_back({mKey[i].type, mKey[i].id});
+        if (reconcileNativeItemHotkeys(keys))
+            restoreKeys(std::move(keys));
+    }
+
     void QuickKeysMenu::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
         if (type != ESM::REC_KEYS)
@@ -674,6 +723,20 @@ namespace MWGui
 
         ESM::QuickKeys keys;
         keys.load(reader);
+        restoreKeys(std::move(keys));
+    }
+
+    void QuickKeysMenu::restoreKeys(ESM::QuickKeys keys)
+    {
+        reconcileNativeItemHotkeys(keys);
+        struct ResetFlag
+        {
+            bool& mFlag;
+            bool mPrevious;
+            ~ResetFlag() { mFlag = mPrevious; }
+        } reset{mRestoringNativeKeys, mRestoringNativeKeys};
+        mRestoringNativeKeys = static_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))->oblivionPlayerItemHotkeys().has_value();
 
         MWWorld::Ptr player = MWMechanics::getPlayer();
         MWWorld::InventoryStore& store = player.getClass().getInventoryStore(player);

@@ -4,6 +4,7 @@
 #include <osg/Timer>
 #include <osg/ref_ptr>
 
+#include <array>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -345,6 +346,7 @@ namespace MWWorld
         std::uint32_t oblivionEquipmentSlots(const Ptr& item, int sharedSlot) const;
         void oblivionPlayerEquipmentChanged();
         bool oblivionSetPlayerHotkey(const ESM::RefId& sharedId, int hotkey);
+        std::optional<std::array<ESM::RefId, 8>> oblivionPlayerItemHotkeys() const;
         std::optional<std::vector<std::pair<ESM::RefId, std::uint32_t>>>
             oblivionReferenceEquipment(const Ptr& actor) const;
         std::optional<ESM4::ActorDrawState> captureOblivionActorDrawState(const Ptr& actor) const;
