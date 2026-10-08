@@ -155,3 +155,12 @@ normal/instrumented rejection/resave and normal fresh-PID continuation preserve
 the checked native/weather/fog state and inspected scene/HUD. Large representable
 initial render-grid allocation and complete pre-teardown resource staging remain
 open; these checks do not prove full prior-World preservation.
+
+Native item hotkey removal now owns a GUI slot instead of clearing a possibly
+moved item by ID. The same World mutation entry point supports empty-ID slot
+clearing; spell replacement calls it to remove the native item assignment.
+Actual generated Player/NPC inventory/capture/binary cases and both full 1264-case
+engine inventories pass. Actual Xvfb mouse/F5 evidence proves item slots 0→7→7
+and final GUI slot removal, but its scenario remains failed by generated weapon
+legacy sOneHanded tooltip lookup and absent barter-frame resources. This is
+metadata evidence, not complete GUI acceptance or full hotkey reconciliation.

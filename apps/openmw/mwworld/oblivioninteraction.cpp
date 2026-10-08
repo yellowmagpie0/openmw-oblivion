@@ -626,17 +626,38 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || hotkey < -1 || hotkey > 7)
             return false;
-        const ESM::RefId nativeId = OblivionProfileServices::nativeItemId(mStore, sharedId);
-        const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
-        const auto generatedKey = OblivionInventory::sharedKey(nativeId);
-        if (formId == nullptr && !generatedKey)
+        if (sharedId.empty() && hotkey < 0)
             return false;
-        const auto key = generatedKey ? *generatedKey : ESM::FormKeyResolver(mContentFiles).toFormKey(*formId);
+        ESM::FormKey key;
+        if (!sharedId.empty())
+        {
+            const ESM::RefId nativeId = OblivionProfileServices::nativeItemId(mStore, sharedId);
+            const ESM::FormId* formId = nativeId.getIf<ESM::FormId>();
+            const auto generatedKey = OblivionInventory::sharedKey(nativeId);
+            if (formId == nullptr && !generatedKey)
+                return false;
+            key = generatedKey ? *generatedKey : ESM::FormKeyResolver(mContentFiles).toFormKey(*formId);
+        }
         // Live inventory owns item presence and instance metadata. The cached
         // save DTO may precede a shared generated-item addition or removal.
         // Stage the assignment without creating authority for a missing item.
         auto inventory = captureOblivionActorInventory(getPlayerPtr());
-        if (!ESM4::setInventoryHotkey(inventory, key, hotkey))
+        if (sharedId.empty())
+        {
+            // GUI removal/replacement owns a slot, not an item which may have
+            // moved to another slot since this button was assigned.
+            bool changed = false;
+            for (auto& item : inventory)
+                if (item.mHotkey == hotkey)
+                {
+                    item.mHotkey = -1;
+                    changed = true;
+                }
+            if (!changed)
+                return false;
+            ESM4::normalizeInventory(inventory);
+        }
+        else if (!ESM4::setInventoryHotkey(inventory, key, hotkey))
             return false;
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());

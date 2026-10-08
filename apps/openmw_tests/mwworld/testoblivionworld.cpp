@@ -14207,6 +14207,48 @@ TEST(OblivionWorldTest, GeneratedSharedActorGearCapturesAndSurvivesAdmissionClea
     EXPECT_TRUE(world.captureOblivionActorInventory(world.getPlayerPtr()).empty());
 }
 
+TEST(OblivionWorldTest, HotkeySlotClearingUsesLiveInventoryWithoutClearingMovedOrOtherAssignments)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM::Weapon weapon = *world.getStore().get<ESM::Weapon>().searchStatic(ESM::RefId(ESM::FormId{0x940, 0}));
+    weapon.mId = world.getStore().generateId();
+    const auto firstId = weapon.mId;
+    const auto firstKey = ESM::FormKey::dynamic("shared-item", firstId.getIf<ESM::GeneratedRefId>()->getValue() + 1);
+    world.getStore().getWritable<ESM::Weapon>().insert(weapon);
+    weapon.mId = world.getStore().generateId();
+    const auto secondId = weapon.mId;
+    const auto secondKey = ESM::FormKey::dynamic("shared-item", secondId.getIf<ESM::GeneratedRefId>()->getValue() + 1);
+    world.getStore().getWritable<ESM::Weapon>().insert(weapon);
+    world.getStore().rebuildIdsIndex();
+    ESM4::RuntimeInventoryItem first;
+    first.mBase = firstKey; first.mCount = 1; first.mCondition = 37.125f; first.mCharge = 9.25f;
+    auto second = first; second.mBase = secondKey; second.mCondition = 43.5f;
+    installEquipmentInventory(fixture, world.getPlayerPtr(), {first, second});
+    installEquipmentInventory(fixture, fixture.mActor, {first});
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(firstId, 2));
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(secondId, 4));
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey(firstId, 7));
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, 2));
+    for (int invalid : {-2, -1, 8}) EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, invalid));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+    ASSERT_TRUE(world.oblivionSetPlayerHotkey({}, 7));
+    auto expected = before;
+    for (auto& item : expected.mPlayer.mInventory)
+        if (item.mBase == firstKey) item.mHotkey = -1;
+    const auto cleared = world.captureOblivionRuntimeState();
+    EXPECT_EQ(cleared.serializeBinary(), expected.serializeBinary());
+    EXPECT_EQ(world.captureOblivionActorInventory(world.getPlayerPtr()), expected.mPlayer.mInventory);
+    EXPECT_EQ(world.captureOblivionActorInventory(fixture.mActor), (std::vector{first}));
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(cleared.serializeBinary()).mPlayer.mInventory,
+        expected.mPlayer.mInventory);
+    EXPECT_FALSE(world.oblivionSetPlayerHotkey({}, 7));
+    EXPECT_TRUE(world.oblivionSetPlayerHotkey({}, 4));
+    const auto inventory = world.captureOblivionActorInventory(world.getPlayerPtr());
+    for (const auto& item : inventory) EXPECT_EQ(item.mHotkey, -1);
+}
+
 TEST(OblivionWorldTest, SavedDryInteriorWaterIsInitializedAndWetInteriorLevelIsPreserved)
 {
     NativeWorldFixture fixture;

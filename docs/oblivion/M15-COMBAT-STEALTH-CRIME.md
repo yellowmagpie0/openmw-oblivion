@@ -6,6 +6,46 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 clear native item hotkeys by GUI slot — 2026-10-08
+
+The World hotkey adapter now accepts an empty item ID with a slot 0–7 to clear
+that slot's live item assignment. Empty-ID negative slots reject, and clearing
+an unowned slot returns false without publication. Existing nonempty-ID assignment
+and removal retain their behavior. QuickKeysMenu removal uses the old button's
+slot rather than its item identity, so removing an obsolete button cannot clear
+an item which moved to another slot. Spell assignment clears the item's native
+slot before publishing the GUI spell binding. No native rule or save schema changes.
+
+The retained hotkey-slot-clear-red-01 actual World case fails to clear slot 7.
+Green-01 passes that case and the existing generated gear restore case. The new
+case uses two real generated weapons and Player/NPC inventory stores: moves,
+unowned/invalid/repeated clears, other-slot and NPC isolation, immediate capture,
+full native snapshot equality apart from the intended field, and binary readback.
+Full normal and ASan/UBSan engine runs each pass 1264 tests, exact unfiltered
+inventories/XML, no failures/skips, source fingerprint 853df4edb6f569663239f7d27c853c1ba67f0266be1ac57de6a0b36ce55a8cdf against
+parent 7980ba0502. They use SDL offscreen for the existing renderer integration
+case; ASan leak checks are disabled. Component/Python code is unchanged.
+Evidence: build/oblivion-compat/m15/S3/hotkey-slot-clear-{normal,sanitized}-01.
+
+The real Xvfb GUI probes disclose Lua menu opening/reopening because this
+pre-chargen fixture blocks F1. Mouse selection, assignment, movement and old-slot
+removal are real, followed by three actual F5 saves. Independent T4ST/KEYS
+readback verifies hotkeys 0→7→7, the final old GUI slot unassigned and new slot
+still pointing to the same generated item; all other inventory metadata matches
+the pristine input. GUI-01 retained an observer mistake which assumed Item=1;
+the actual enum is Item=0/Unassigned=3. Corrected GUI-02 completes the metadata
+checks and exits cleanly, but its scenario FAILS the error-log audit. Weapon
+hover raises a missing legacy sOneHanded GMST error, and the legacy barter frame
+texture is absent. Screenshots also expose legacy captions/frame/tooltips.
+These are open defects, not waived errors or full GUI runtime acceptance.
+Spell-replacement GUI/runtime coverage is also outstanding. Runtime evidence and
+binding-verification.json are under hotkey-slot-clear-gui-normal-02.
+
+Full S3 remains active. The next concrete UI defect is the generated weapon's
+legacy tooltip setting lookup. Full hotkey authority/reconciliation, quickkey
+resource preparation, oversized map resources and remaining restore/migration/
+profile/lifecycle/public-UI acceptance still need work.
+
 ## S3 checked local-map arithmetic and sparse fog save — 2026-10-08
 
 The actual LocalMap baseline reproduced integer multiplication overflow: exterior

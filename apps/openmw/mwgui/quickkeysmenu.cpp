@@ -143,7 +143,7 @@ namespace MWGui
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
             && key->index >= 1 && key->index <= 8 && !key->id.empty())
             static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-                ->oblivionSetPlayerHotkey(key->id, -1);
+                ->oblivionSetPlayerHotkey({}, key->index - 1);
         key->button->clearUserStrings();
         key->button->setItem(MWWorld::Ptr());
 
@@ -325,6 +325,9 @@ namespace MWGui
 
         const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
         const ESM::Spell* spell = esmStore.get<ESM::Spell>().find(spellId);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                ->oblivionSetPlayerHotkey({}, mSelected->index - 1);
 
         mSelected->type = ESM::QuickKeys::Type::Magic;
         mSelected->id = spellId;
