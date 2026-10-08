@@ -234,3 +234,19 @@ five resulting fog fragments. The milestone discloses private Lua menu setup and
 failed/metadata-only probes. This addresses initial whole-grid renderer/widget
 allocation for the tested large interiors; broader resource staging, full marker/
 exterior/profile/lifecycle and prior-World acceptance remain open.
+
+
+S3 hotkey-resource follow-up (2026-10-08): KEYS and the migrated native snapshot
+now feed a read-only GUI resource preparation callback before native-plan ownership
+transfer and World cleanup. Detached incoming/static ManualRefs and static spell
+effects select cached MyGUI icons/frames; modern native item slots cover absent
+KEYS. Shared icon/frame resolution also supplies the native fallback for spell/
+MagicItem frames. The final normal and instrumented inventories each pass1273
+engine tests at source fingerprint71453cb314d426ccbb6b0156378adf52c1a71b643afa81e74aeee23012baa714.
+Actual authored/generated/MagicItem and absent-KEYS courses pass in both builds;
+a shared saved-spell course deliberately verifies existing empty-icon warning-image
+compatibility, exact SPEL bytes and pre-restore decode order. A distinct-PID normal
+continuation passes too. See the milestone's exact directories, failures and scope.
+This establishes hotkey image preparation and the declared display-kind restores;
+it does not establish native spell-icon translation, enchanted-item activation,
+all hotkey UI/legacy paths or complete all-or-nothing S3 restoration.

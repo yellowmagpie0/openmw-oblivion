@@ -334,6 +334,8 @@ namespace MWGui
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) override;
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
         std::function<void()> prepareGlobalMap(const ESM::GlobalMap& map) override;
+        void prepareQuickKeys(const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming,
+            const ESM4::RuntimeState* native) override;
         size_t countSavedGameRecords() const override;
 
         /// Does the current stack of GUI-windows permit saving?

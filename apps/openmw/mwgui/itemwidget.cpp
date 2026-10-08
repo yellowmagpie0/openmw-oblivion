@@ -1,12 +1,11 @@
 #include "itemwidget.hpp"
+#include "quickkeyresources.hpp"
 
 #include <MyGUI_FactoryManager.h>
 #include <MyGUI_ImageBox.h>
 #include <MyGUI_RenderManager.h>
 #include <MyGUI_TextBox.h>
 
-#include <components/debug/debuglog.hpp>
-#include <components/misc/resourcehelpers.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/settings/values.hpp>
 #include <components/vfs/manager.hpp>
@@ -137,19 +136,8 @@ namespace MWGui
 
     void ItemWidget::setIcon(const MWWorld::Ptr& ptr)
     {
-        constexpr VFS::Path::NormalizedView defaultIcon("default icon.tga");
-        VFS::Path::NormalizedView icon = ptr.getClass().getInventoryIcon(ptr);
-        if (icon.empty())
-            icon = defaultIcon;
-        const VFS::Manager* const vfs = MWBase::Environment::get().getResourceSystem()->getVFS();
-        VFS::Path::Normalized invIcon = Misc::ResourceHelpers::correctIconPath(icon, *vfs);
-        if (!vfs->exists(invIcon))
-        {
-            Log(Debug::Error) << "Failed to open image: '" << invIcon << "' not found, falling back to '"
-                              << defaultIcon.value() << "'";
-            invIcon = Misc::ResourceHelpers::correctIconPath(defaultIcon, *vfs);
-        }
-        setIcon(invIcon);
+        const auto& vfs = *MWBase::Environment::get().getResourceSystem()->getVFS();
+        setIcon(QuickKeyResources::inventoryIcon(ptr.getClass().getInventoryIcon(ptr), vfs));
     }
 
     void ItemWidget::setItem(const MWWorld::Ptr& ptr, ItemState state)
@@ -192,17 +180,10 @@ namespace MWGui
 
         bool fallbackFrame = false;
         const auto& environment = MWBase::Environment::get();
-        if (!backgroundTex.empty() && environment.getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
-        {
-            const auto& vfs = *environment.getResourceSystem()->getVFS();
-            const VFS::Path::Normalized original(backgroundTex);
-            constexpr VFS::Path::NormalizedView fallback("textures/omw_menu_icon_active.dds");
-            if (!vfs.exists(original) && vfs.exists(fallback))
-            {
-                backgroundTex = fallback.value();
-                fallbackFrame = true;
-            }
-        }
+        const auto resolvedFrame = QuickKeyResources::frame(backgroundTex,
+            environment.getWorld()->getGameProfile(), *environment.getResourceSystem()->getVFS());
+        fallbackFrame = resolvedFrame != backgroundTex;
+        backgroundTex = resolvedFrame;
         if (mFrame)
             mFrame->setColour(!fallbackFrame ? MyGUI::Colour::White
                 : state == Equip ? MyGUI::Colour(1.f, 0.85f, 0.5f)

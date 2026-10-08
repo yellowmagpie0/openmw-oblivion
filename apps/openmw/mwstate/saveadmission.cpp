@@ -203,7 +203,7 @@ namespace
         std::set<std::uint32_t>& singletons,
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
         const std::function<void(const ESM::WeatherState&)>& prepareWeather,
-        std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems,
+        std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems, ESM::QuickKeys& quickkeys,
         std::vector<ESM::ProjectileState>& projectiles, std::vector<ESM::MagicBoltState>& bolts)
     {
         const auto singleton = [&] {
@@ -269,6 +269,7 @@ namespace
             {
                 singleton();
                 const auto state = readSharedState<ESM::QuickKeys>(reader);
+                quickkeys = state;
                 if (state.mKeys.size() > 10)
                     throw std::runtime_error("Saved game contains too many quickkeys");
                 for (std::size_t index = 0; index != state.mKeys.size(); ++index)
@@ -478,7 +479,9 @@ namespace MWState
         const std::function<void(const ESM::WeatherState&)>& prepareWeather,
         const std::function<void(const std::vector<ESM::ProjectileState>&,
             const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles,
-        const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog)
+        const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog,
+        const std::function<void(const ESM::QuickKeys&, const MWWorld::ESMStore&,
+            const ESM4::RuntimeState*)>& prepareQuickKeys)
     {
         const auto start = reader.getContext();
         try
@@ -546,6 +549,7 @@ namespace MWState
             struct SharedBounty { ESM::FormKey mBase; int mAmount; };
             std::map<ESM::FormKey, SharedBounty> sharedBounties;
             std::optional<int> sharedPlayerFame;
+            ESM::QuickKeys quickkeys;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -596,7 +600,7 @@ namespace MWState
                         decoded = true;
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
-                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, projectiles, bolts))
+                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, quickkeys, projectiles, bolts))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -893,6 +897,8 @@ namespace MWState
                 }
                 if (prepareProjectiles)
                     prepareProjectiles(projectiles, bolts, *shared);
+                if (prepareQuickKeys)
+                    prepareQuickKeys(quickkeys, *shared, &native);
                 if (prepareNative)
                     prepareNative(native, std::move(shared));
                 else
@@ -904,6 +910,8 @@ namespace MWState
                     throw std::runtime_error("Native local Lua state requires T4ST");
                 if (prepareProjectiles && shared)
                     prepareProjectiles(projectiles, bolts, *shared);
+                if (prepareQuickKeys && shared)
+                    prepareQuickKeys(quickkeys, *shared, nullptr);
             }
             reader.restoreContext(start);
             return profile;

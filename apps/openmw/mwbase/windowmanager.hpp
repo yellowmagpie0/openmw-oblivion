@@ -43,7 +43,10 @@ namespace ESM
     class ESMReader;
     class ESMWriter;
     struct GlobalMap;
+    struct QuickKeys;
 }
+
+namespace ESM4 { struct RuntimeState; }
 
 namespace MWMechanics
 {
@@ -55,6 +58,7 @@ namespace MWMechanics
 
 namespace MWWorld
 {
+    class ESMStore;
     class CellStore;
     class Ptr;
 }
@@ -314,6 +318,8 @@ namespace MWBase
         virtual void write(ESM::ESMWriter& writer, Loading::Listener& progress) = 0;
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
         virtual std::function<void()> prepareGlobalMap(const ESM::GlobalMap& map) = 0;
+        virtual void prepareQuickKeys(const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming,
+            const ESM4::RuntimeState* native) = 0;
         virtual size_t countSavedGameRecords() const = 0;
 
         /// Does the current stack of GUI-windows permit saving?

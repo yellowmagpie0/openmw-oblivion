@@ -2780,3 +2780,83 @@ TEST(SaveAdmissionTest, MorrowindDoesNotPrepareSharedProjectileResources)
     EXPECT_EQ(calls, 0);
     EXPECT_EQ(reader.getFileOffset(), offset);
 }
+
+TEST(SaveAdmissionTest, QuickkeyResourcesPrepareIncomingDefinitionsBeforeNativePublication)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const bool keysFirst : {false, true})
+    for (const bool failResources : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(keysFirst);
+        SCOPED_TRACE(failResources);
+        const auto id = ESM::RefId::generated(718);
+        ESM::Weapon weapon{}; weapon.blank(); weapon.mId = id; weapon.mName = "incoming";
+        MWWorld::ESMStore content;
+        auto outgoing = weapon; outgoing.mName = "outgoing";
+        content.getWritable<ESM::Weapon>().insert(outgoing);
+        const auto definitions = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_WEAP); weapon.save(writer); writer.endRecord(ESM::REC_WEAP);
+        });
+        const auto keys = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::QuickKeys state{}; state.mKeys.push_back({ESM::QuickKeys::Type::MagicItem, id});
+            writer.startRecord(ESM::REC_KEYS); state.save(writer); writer.endRecord(ESM::REC_KEYS);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + (keysFirst ? keys + definitions : definitions + keys));
+        const auto offset = reader.getFileOffset();
+        std::vector<std::string> events;
+        const auto prepareNative = [&](const ESM4::RuntimeState&, auto incoming) {
+            events.push_back("native");
+            EXPECT_EQ(incoming->template get<ESM::Weapon>().find(id)->mName, "incoming");
+        };
+        const auto prepareResources = [&](const ESM::QuickKeys& state, const MWWorld::ESMStore& incoming,
+                                          const ESM4::RuntimeState* native) {
+            events.push_back("resources");
+            ASSERT_EQ(state.mKeys.size(), 1u);
+            EXPECT_EQ(state.mKeys[0].mType, ESM::QuickKeys::Type::MagicItem);
+            EXPECT_EQ(state.mKeys[0].mId, id);
+            EXPECT_EQ(incoming.get<ESM::Weapon>().find(id)->mName, "incoming");
+            EXPECT_EQ(native != nullptr, version != 0);
+            if (native)
+            {
+                EXPECT_EQ(native->mVersion, version);
+            }
+            EXPECT_EQ(content.get<ESM::Weapon>().find(id)->mName, "outgoing");
+            if (failResources) throw std::runtime_error("controlled resource preparation failure");
+        };
+        const auto admit = [&] {
+            MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepareNative,
+                {}, {}, {}, {}, prepareResources);
+        };
+        if (failResources) EXPECT_THROW(admit(), std::runtime_error);
+        else EXPECT_NO_THROW(admit());
+        EXPECT_EQ(events, (version && !failResources ? std::vector<std::string>{"resources", "native"}
+                                                    : std::vector<std::string>{"resources"}));
+        EXPECT_EQ(content.get<ESM::Weapon>().find(id)->mName, "outgoing");
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}
+
+TEST(SaveAdmissionTest, QuickkeyResourcePreparationReceivesNativeStateWithoutKeysAndSkipsMorrowind)
+{
+    for (const auto profile : {ESM::GameProfile::Oblivion, ESM::GameProfile::Morrowind})
+    {
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
+            profile == ESM::GameProfile::Oblivion ? 1 : 0));
+        MWWorld::ESMStore content;
+        int calls = 0;
+        EXPECT_NO_THROW(MWState::admitSave(reader, profile, [](const auto&) {}, &content, {}, {}, {}, {}, {},
+            [&](const ESM::QuickKeys& keys, const auto&, const ESM4::RuntimeState* native) {
+                ++calls;
+                EXPECT_TRUE(keys.mKeys.empty());
+                ASSERT_NE(native, nullptr);
+                EXPECT_EQ(native->mVersion, ESM4::CurrentRuntimeStateVersion);
+            }));
+        EXPECT_EQ(calls, profile == ESM::GameProfile::Oblivion ? 1 : 0);
+    }
+}

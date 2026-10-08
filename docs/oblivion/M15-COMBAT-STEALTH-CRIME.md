@@ -6,6 +6,80 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare hotkey GUI resources before World teardown — 2026-10-08
+
+Save admission now retains the decoded KEYS bindings and passes them, detached
+incoming definitions and the migrated native snapshot to GUI resource preparation
+before native-plan ownership transfer and cleanup. Preparation constructs temporary
+unregistered item references from incoming/static records, resolves spell effects
+against static content, and loads distinct icon/frame textures into MyGUI's cache.
+It also prepares positive-count native item slots that can reconstruct absent or
+stale KEYS. Live GUI bindings, temporary-reference ownership and native inventory
+are untouched. MyGUI retains the decoded textures through World cleanup. Missing
+optional images preserve ImageManager's existing warning-image behavior.
+
+Item widgets and preparation share icon correction/default selection and native
+frame fallback. Spell and MagicItem assignment now use that same frame fallback;
+authored frames and Morrowind frame selection retain their existing behavior.
+The fixed tenth shortcut is excluded from resource preparation.
+
+Validation:
+
+- `build/oblivion-compat/m15/S3/quickkey-resources-normal-02` and
+  `quickkey-resources-sanitized-01`: each passes all **1273 tests**, exact
+  unfiltered inventory/XML match, no failures or skips. Both bind parent
+  `3e90abae53e3b89ba1501b5166adc5870707df36` and tested source fingerprint
+  `71453cb314d426ccbb6b0156378adf52c1a71b643afa81e74aeee23012baa714`.
+  SDL uses offscreen; ASan leak checks are disabled and ASan/UBSan halt on errors.
+  Resource admission covers native schemas1–46 and no-T4ST saves, both definition
+  orders, controlled preparation failure, outgoing-definition preservation,
+  reader restoration, absent KEYS and Morrowind exclusion. VFS tests cover authored
+  frames, profile fallback and default/DDS icon selection. Component/Python code
+  is unchanged and those checks were not repeated.
+- Actual Xvfb GUI/load/F5/quit courses pass in `quickkey-resources-gui-normal-02`,
+  `quickkey-resources-authored-normal-01`, `quickkey-resources-missingkeys-normal-01`
+  and their `authored-sanitized-01` / `missingkeys-sanitized-01` counterparts.
+  Native authored Sack Cloth Pants reconstruct slot zero beside the generated
+  blade's MagicItem slot seven; the actual saved FormId matches content index one.
+  Inspected screenshots show both icons/frames and the blade tooltip. All38 initial
+  native groups match input, ten stable post-save groups remain equal, raw KEYS
+  match the declared display kinds, and all37 weather identities match an
+  independent original-ESM walk. The MagicItem fixture deliberately retains the
+  legacy display kind on an unenchanted item; enchanted-item activation is not
+  established by this course.
+- `quickkey-resources-gui-normal-03` and `quickkey-resources-spell-sanitized-01`
+  pass the shared saved-spell compatibility course. The existing static Paralyze
+  compatibility definition has an empty icon, so the explicitly expected
+  `icons/b_` error produces the existing warning image, visibly magenta. The log
+  order proves this decode occurs after opening the save and before restoration/
+  native application; only one warning occurs, demonstrating cache reuse. SPEL
+  bytes survive F5 exactly. This is not native spell-icon translation acceptance.
+- `quickkey-resources-continuation-normal-01` loads the actual preceding spell/
+  MagicItem resave in a distinct PID, resaves, and passes the same native/KEYS,
+  exact SPEL and preload-order checks. Lua opens the pre-chargen fixture's hotkey
+  menu; menu closing and F5 use actual mouse/keyboard input. These courses do not
+  establish normal hotkey-menu input, spell selection/activation or legacy GUI
+  migration. No sound backend is enabled.
+
+The first raw compile's duplicate same-line SCOPED_TRACE declarations were fixed.
+The earlier full normal run `quickkey-resources-normal-01` passed, then a test-only
+brace adjustment removed the new assertion warning; final normal/sanitized runs
+above cover the identical final source. The failed GUI course
+`quickkey-resources-gui-normal-01` is retained: it completed load/display/F5/quit
+but its unexpected empty-icon error failed the audit. Later clean MagicItem and
+explicit warning-compatibility courses are separately scoped.
+
+Runtime executable hashes: normal
+`e04c09aa9c65ccb99600c26196878455674a1fcc9c9e2b773af408e51ae65548`;
+instrumented `b1dd16c8cb09bd4ee6d3f56a8bbcb60033688a07484e8194c6a0976a1ab4f0ce`.
+Original Oblivion.esm remains read-only with SHA-256
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+
+This closes the implemented hotkey-image preparation gap with scoped runtime
+coverage. **S3 remains open** for broader record/resource staging and failed-load
+World preservation, remaining hotkey UI/legacy cases, enabled projectile audio,
+combined populated migration/profile/lifecycle audits and other declared gates.
+
 ## S3 use a sliding interior map GUI viewport — 2026-10-08
 
 Interior map views now retain full logical bounds but create a tile-widget window

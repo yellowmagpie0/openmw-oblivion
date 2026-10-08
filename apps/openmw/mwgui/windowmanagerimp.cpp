@@ -2059,6 +2059,12 @@ namespace MWGui
         }
     }
 
+    void WindowManager::prepareQuickKeys(const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming,
+        const ESM4::RuntimeState* native)
+    {
+        mQuickKeysMenu->prepareResources(keys, incoming, native);
+    }
+
     std::function<void()> WindowManager::prepareGlobalMap(const ESM::GlobalMap& map)
     {
         return mMap->prepareGlobalMap(map);

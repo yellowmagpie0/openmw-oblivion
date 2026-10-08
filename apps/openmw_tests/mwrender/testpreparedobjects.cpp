@@ -5,6 +5,7 @@
 #include <apps/openmw/mwrender/objects.hpp>
 #include <apps/openmw/mwrender/localmap.hpp>
 #include <apps/openmw/mwgui/localmapview.hpp>
+#include <apps/openmw/mwgui/quickkeyresources.hpp>
 #include <apps/openmw/mwrender/vismask.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
@@ -493,4 +494,35 @@ TEST(LocalMapViewTest, RemoteMarkersStayRepresentableWithoutLosingLogicalIdentit
     EXPECT_GT(remote.top, std::numeric_limits<int>::min() / 2);
     const auto nearby = MWGui::LocalMapView::position(grid, 1000000000, 1000000000, .25f, .75f, 2048);
     EXPECT_EQ(nearby.left, 2560); EXPECT_EQ(nearby.top, 7680);
+}
+
+
+TEST(QuickKeyResourcesTest, FramesPreserveAuthoredTexturesAndUseTheNativeFallback)
+{
+    TestingOpenMW::VFSTestFile file{"frame"};
+    const auto vfs = TestingOpenMW::createTestVFS({
+        {VFS::Path::NormalizedView("textures/omw_menu_icon_active.dds"), &file},
+        {VFS::Path::NormalizedView("textures/menu_icon_select_magic.dds"), &file}});
+    const std::string original = "textures\\menu_icon_select_magic.dds";
+    const std::string absent = "textures\\menu_icon_select_magic_magic.dds";
+    EXPECT_EQ(MWGui::QuickKeyResources::frame(original, ESM::GameProfile::Oblivion, *vfs), original);
+    EXPECT_EQ(MWGui::QuickKeyResources::frame(absent, ESM::GameProfile::Oblivion, *vfs),
+        "textures/omw_menu_icon_active.dds");
+    EXPECT_EQ(MWGui::QuickKeyResources::frame(absent, ESM::GameProfile::Morrowind, *vfs), absent);
+    EXPECT_TRUE(MWGui::QuickKeyResources::frame({}, ESM::GameProfile::Oblivion, *vfs).empty());
+    VFS::Manager empty;
+    EXPECT_EQ(MWGui::QuickKeyResources::frame(absent, ESM::GameProfile::Oblivion, empty), absent);
+}
+
+TEST(QuickKeyResourcesTest, InventoryIconsShareTheWidgetDefaultAndDdsCorrection)
+{
+    TestingOpenMW::VFSTestFile file{"icon"};
+    const auto vfs = TestingOpenMW::createTestVFS({
+        {VFS::Path::NormalizedView("icons/default icon.dds"), &file},
+        {VFS::Path::NormalizedView("icons/test.dds"), &file}});
+    EXPECT_EQ(MWGui::QuickKeyResources::inventoryIcon({}, *vfs).value(), "icons/default icon.dds");
+    EXPECT_EQ(MWGui::QuickKeyResources::inventoryIcon(VFS::Path::NormalizedView("test.tga"), *vfs).value(),
+        "icons/test.dds");
+    EXPECT_EQ(MWGui::QuickKeyResources::inventoryIcon(VFS::Path::NormalizedView("missing.tga"), *vfs).value(),
+        "icons/default icon.dds");
 }

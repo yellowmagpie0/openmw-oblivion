@@ -1,4 +1,10 @@
 #include "quickkeysmenu.hpp"
+#include "quickkeyresources.hpp"
+
+#include <set>
+#include <components/esm4/runtimestate.hpp>
+#include "../mwworld/oblivioninventoryidentity.hpp"
+#include "../mwworld/oblivionprofileservices.hpp"
 
 #include <algorithm>
 
@@ -34,6 +40,22 @@
 #include "itemwidget.hpp"
 #include "sortfilteritemmodel.hpp"
 #include "spellview.hpp"
+
+namespace
+{
+    void setMagicFrame(MWGui::ItemWidget& button, const std::string& original)
+    {
+        const auto& environment = MWBase::Environment::get();
+        const auto frame = MWGui::QuickKeyResources::frame(original,
+            environment.getWorld()->getGameProfile(), *environment.getResourceSystem()->getVFS());
+        const auto* texture = MyGUI::RenderManager::getInstance().getTexture(frame);
+        const float scale = texture ? texture->getHeight() / 64.f : 1.f;
+        const int diameter = static_cast<int>(44 * scale);
+        button.setFrame(frame, frame != original && texture
+            ? MyGUI::IntCoord(0, 0, texture->getWidth(), texture->getHeight())
+            : MyGUI::IntCoord(0, 0, diameter, diameter));
+    }
+}
 
 namespace MWGui
 {
@@ -329,14 +351,7 @@ namespace MWGui
         mSelected->id = item.getCellRef().getRefId();
         mSelected->name = item.getClass().getName(item);
 
-        float scale = 1.f;
-        MyGUI::ITexture* texture
-            = MyGUI::RenderManager::getInstance().getTexture("textures\\menu_icon_select_magic_magic.dds");
-        if (texture)
-            scale = texture->getHeight() / 64.f;
-
-        mSelected->button->setFrame("textures\\menu_icon_select_magic_magic.dds",
-            MyGUI::IntCoord(0, 0, static_cast<int>(44 * scale), static_cast<int>(44 * scale)));
+        setMagicFrame(*mSelected->button, "textures\\menu_icon_select_magic_magic.dds");
         mSelected->button->setIcon(item);
 
         mSelected->button->setUserString("ToolTipType", "ItemPtr");
@@ -374,14 +389,7 @@ namespace MWGui
         const VFS::Path::Normalized iconPath = Misc::ResourceHelpers::correctBigIconPath(
             effect->mIcon.getNormalized(), *MWBase::Environment::get().getResourceSystem()->getVFS());
 
-        float scale = 1.f;
-        MyGUI::ITexture* texture
-            = MyGUI::RenderManager::getInstance().getTexture("textures\\menu_icon_select_magic.dds");
-        if (texture)
-            scale = texture->getHeight() / 64.f;
-
-        const int diameter = static_cast<int>(44 * scale);
-        mSelected->button->setFrame("textures\\menu_icon_select_magic.dds", MyGUI::IntCoord(0, 0, diameter, diameter));
+        setMagicFrame(*mSelected->button, "textures\\menu_icon_select_magic.dds");
         mSelected->button->setIcon(iconPath);
 
         if (mMagicSelectionDialog)
@@ -714,6 +722,74 @@ namespace MWGui
             keys.mKeys.push_back({mKey[i].type, mKey[i].id});
         if (reconcileNativeItemHotkeys(keys))
             restoreKeys(std::move(keys));
+    }
+
+    void QuickKeysMenu::prepareResources(const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming,
+        const ESM4::RuntimeState* native)
+    {
+        const auto& environment = MWBase::Environment::get();
+        const auto& content = environment.getWorld()->getStore();
+        const auto& vfs = *environment.getResourceSystem()->getVFS();
+        const auto profile = environment.getWorld()->getGameProfile();
+        std::set<std::string> textures;
+        const auto addFrame = [&](const std::string& name) {
+            textures.insert(QuickKeyResources::frame(name, profile, vfs));
+        };
+        const auto addItem = [&](const ESM::RefId& id, ESM::QuickKeys::Type type) {
+            if (id.empty() || !content.findForRestore(id, incoming))
+                return; // Removed shortcuts are skipped during restoration too.
+            MWWorld::ManualRef reference(content, id, 0, &incoming);
+            const auto& item = reference.getPtr();
+            textures.insert(std::string(QuickKeyResources::inventoryIcon(
+                item.getClass().getInventoryIcon(item), vfs).value()));
+            if (type == ESM::QuickKeys::Type::MagicItem)
+                addFrame("textures\\menu_icon_select_magic_magic.dds");
+            else
+                addFrame(item.getClass().getEnchantment(item).empty()
+                    ? "textures\\menu_icon_barter.dds" : "textures\\menu_icon_magic_barter.dds");
+        };
+        for (std::size_t i = 0; i < std::min<std::size_t>(keys.mKeys.size(), 9); ++i)
+        {
+            const auto& key = keys.mKeys[i];
+            if (key.mType == ESM::QuickKeys::Type::Item || key.mType == ESM::QuickKeys::Type::MagicItem)
+                addItem(key.mId, key.mType);
+            else if (key.mType == ESM::QuickKeys::Type::Magic)
+            {
+                const auto* spell = content.searchForRestore<ESM::Spell>(key.mId, incoming);
+                if (!spell)
+                    continue;
+                if (spell->mEffects.mList.empty())
+                    throw std::runtime_error("Quickkey resource spell has no effects");
+                const auto* effect = content.get<ESM::MagicEffect>().searchStatic(
+                    spell->mEffects.mList.front().mData.mEffectID);
+                if (!effect)
+                    throw std::runtime_error("Quickkey resource spell effect does not exist");
+                textures.insert(std::string(Misc::ResourceHelpers::correctBigIconPath(effect->mIcon.getNormalized(), vfs).value()));
+                addFrame("textures\\menu_icon_select_magic.dds");
+            }
+        }
+        // Modern native slots can reconstruct absent/stale KEYS records. Warm
+        // their item presentation as well, without touching the outgoing GUI
+        // bindings, inventory, native hotkeys, or temporary-reference registry.
+        if (native && native->mVersion >= 4)
+        {
+            const ESM::FormKeyResolver resolver(environment.getWorld()->getContentFiles());
+            for (const auto& item : native->mPlayer.mInventory)
+            {
+                if (item.mCount <= 0 || item.mHotkey < 0)
+                    continue;
+                const auto generated = MWWorld::OblivionInventory::sharedId(item.mBase);
+                const auto form = generated ? std::optional<ESM::FormId>{} : resolver.toFormId(item.mBase);
+                if (!generated && !form)
+                    throw std::runtime_error("Native quickkey resource identity cannot be resolved");
+                addItem(generated ? *generated : MWWorld::OblivionProfileServices::sharedItemId(content, ESM::RefId(*form)),
+                    ESM::QuickKeys::Type::Item);
+            }
+        }
+        // MyGUI owns the decoded textures across World cleanup. Missing images
+        // keep ImageManager's existing warning-image compatibility behavior.
+        for (const auto& texture : textures)
+            MyGUI::RenderManager::getInstance().getTexture(texture);
     }
 
     void QuickKeysMenu::readRecord(ESM::ESMReader& reader, uint32_t type)

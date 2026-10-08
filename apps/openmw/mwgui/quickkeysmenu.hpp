@@ -11,6 +11,8 @@
 #include "spellmodel.hpp"
 #include "windowbase.hpp"
 
+namespace ESM4 { struct RuntimeState; }
+
 namespace MWGui
 {
 
@@ -44,6 +46,8 @@ namespace MWGui
 
         void write(ESM::ESMWriter& writer);
         void readRecord(ESM::ESMReader& reader, uint32_t type);
+        void prepareResources(const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming,
+            const ESM4::RuntimeState* native);
         void clear() override;
 
         std::string_view getWindowIdForLua() const override { return "QuickKeys"; }

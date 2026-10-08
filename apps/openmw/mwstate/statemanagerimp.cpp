@@ -499,6 +499,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 preparedProjectiles = world.prepareProjectiles(projectiles, bolts, incoming);
             }, [&](const ESM::RefId& cell, ESM::FogState fog) {
                 preparedFog.emplace(cell, std::make_unique<ESM::FogState>(std::move(fog)));
+            }, [&](const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming, const ESM4::RuntimeState* native) {
+                MWBase::Environment::get().getWindowManager()->prepareQuickKeys(keys, incoming, native);
             });
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
