@@ -46,8 +46,11 @@ validation now run before native preparation; the GUI retains the decoded image
 and StateManager consumes its prepared restore once after cleanup. Shared spell
 quickkey dependencies now resolve against incoming saved/static definitions
 before native preparation; removed spells and the ignored tenth slot retain
-their compatibility paths. Later shared record/resource restoration still has a
-cleanup-on-failure boundary: that is an open S3 gap,
+their compatibility paths. Item quickkeys now validate non-item targets and
+incoming inventory projections, preserving removed/discarded IDs and native
+lockpick/repair dispatch. Quickkey texture preparation and native/shared hotkey
+authority reconciliation remain open. Later shared record/resource restoration
+still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
 
 Current evidence includes actual World/T4ST/host tests for native stat adapters,

@@ -6,6 +6,54 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 shared item quickkey role and projection admission — 2026-10-07
+
+Oblivion admission now resolves item/magic-item quickkey targets against
+accepted incoming definitions and immutable content before native preparation.
+Registered non-items reject before the UI can construct an object and request
+its missing inventory icon interface after teardown. Native item signatures
+must have their corresponding shared inventory projections. Native miscellaneous
+lockpick/repair projections retain their ManualRef dispatch. Outgoing transient
+definitions cannot supply targets or projections. Removed IDs, discarded unknown
+ordinary overrides, unassigned/magic/hand-to-hand keys, the ignored tenth slot
+and Morrowind admission retain their compatibility paths. No schema change.
+
+The matrices check **2,632 incoming-role cases** over schemas 1–46 and no-T4ST,
+ordinary/remapped IDs, both record orders, both item key types, static/saved/
+outgoing-only/removed targets and discarded ordinary overrides. Another
+**360 cases** cover 15 native/shared projection pairs, missing definitions,
+slots 0/8/9 and both profiles; **60 cases** cover generated versus authored
+non-items, all key types, slots and profiles. Checks assert reader rewind,
+preparation suppression and unchanged outgoing definition stores. Unindexed
+native clothing without a shared projection follows the existing removed-ID
+path; the test expectation explicitly follows the actual index.
+
+`S3/quickkey-items-engine-04` and `quickkey-items-sanitized-engine-03` each
+passed all **1,230 engine tests**, exact inventories/XML, zero failures/skips
+and stable source fingerprints. ASan/UBSan halt on errors; leak checking is
+disabled. Compiled parent: `b8f499909e1b15e7ca1963154e88829ec0ad8490`;
+tested fingerprint: `a90666f0c3cc691a97f1209fadb55ffb4135815f6af39443febef698f557e67f`.
+Fixture publication passed all **280 Python tests** and production scenario
+validation. Engine/test source hashes are unchanged by fixture/documentation
+publication. Retained failed attempts record test compilation/expectation fixes
+and private course setup/master-index errors; they are not passing evidence.
+
+Actual normal/instrumented `quickkey-items-reject{,-sanitized}-04` courses
+change only KEYS slot0 to the registered native Player NPC base. The mutation
+derives Oblivion's index from the saved TES3 MAST list, preserving every other
+ordered record and native byte. F9 rejects before teardown; Return/F5 restores
+original KEYS and preserves fixed Player/actor/crime/action/quest fields.
+Each course has one load and two actual saves in one PID/epoch, all38 initial
+native snapshot fields match, and both quit cleanly. All four captures reviewed.
+
+Editable `oblivion_m15_quickkey_items_{reject,fault}.json` recipes live in
+`scripts/data/oblivion_compat/`; private saves, workers and exact verifiers stay
+in the named ignored courses. `S3/quickkey-items-report.json` records hashes
+and distinct verification layers. Quickkey texture preparation and hotkey
+authority reconciliation remain open, alongside broader shared resource/semantic,
+populated migration, lifecycle/profile/adapter and queue/action gates. S3 is
+still in progress; this does not establish TES4 authoring/MCP support.
+
 ## S3 shared spell quickkey dependency admission — 2026-10-07
 
 Oblivion save admission now resolves used spell quickkeys after every incoming

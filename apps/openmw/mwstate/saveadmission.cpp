@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <type_traits>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/loadglob.hpp>
@@ -16,6 +17,8 @@
 #include <components/esm3/loadbsgn.hpp>
 #include <components/esm3/loadspel.hpp>
 #include <components/esm3/loadmgef.hpp>
+#include <components/esm3/loadacti.hpp>
+#include <components/esm3/loadlevlist.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/player.hpp>
@@ -44,6 +47,7 @@
 #include "../mwworld/savedreference.hpp"
 #include "../mwworld/manualref.hpp"
 #include "../mwworld/class.hpp"
+#include "../mwworld/containerstore.hpp"
 #include "../mwworld/oblivioninventoryidentity.hpp"
 #include "../mwlua/userdataserializer.hpp"
 #include "../mwrender/globalmap.hpp"
@@ -56,6 +60,70 @@ namespace
         T state{};
         state.load(reader);
         return state;
+    }
+
+    void validateQuickkeyItem(const ESM::RefId& id, const MWWorld::ESMStore& incoming,
+        const MWWorld::ESMStore* content)
+    {
+        // Match the incoming ID index's signature precedence. Outgoing dynamic
+        // definitions must never make a missing saved shortcut look valid.
+        auto incomingType = incoming.find(id);
+        // These saved families accept only authored overrides or generated
+        // definitions. An unknown ordinary ID is discarded during installation.
+        const auto acceptsOverride = [&]<class T>() {
+            return id.getIf<ESM::GeneratedRefId>() || (content && content->get<T>().searchStatic(id));
+        };
+        switch (incomingType)
+        {
+            case ESM::REC_ACTI: if (!acceptsOverride.template operator()<ESM::Activator>()) incomingType = 0; break;
+            case ESM::REC_CONT: if (!acceptsOverride.template operator()<ESM::Container>()) incomingType = 0; break;
+            case ESM::REC_CREA: if (!acceptsOverride.template operator()<ESM::Creature>()) incomingType = 0; break;
+            case ESM::REC_NPC_: if (!acceptsOverride.template operator()<ESM::NPC>()) incomingType = 0; break;
+            case ESM::REC_LEVC: if (!acceptsOverride.template operator()<ESM::CreatureLevList>()) incomingType = 0; break;
+            case ESM::REC_LEVI: if (!acceptsOverride.template operator()<ESM::ItemLevList>()) incomingType = 0; break;
+            case ESM::REC_LIGH: if (!acceptsOverride.template operator()<ESM::Light>()) incomingType = 0; break;
+            case ESM::REC_MISC: if (!acceptsOverride.template operator()<ESM::Miscellaneous>()) incomingType = 0; break;
+            default: break;
+        }
+        const auto type = std::max(incomingType, content ? content->findStatic(id) : 0);
+        if (!type)
+            return; // QuickKeysMenu deliberately skips removed items.
+        const auto require = [&]<class T>() {
+            const auto* saved = incoming.get<T>().search(id);
+            if constexpr (std::is_same_v<T, ESM::Light> || std::is_same_v<T, ESM::Miscellaneous>)
+                if (!acceptsOverride.template operator()<T>()) saved = nullptr;
+            if (!saved && (!content || !content->get<T>().searchStatic(id)))
+                throw std::runtime_error("Saved game quickkey item has no inventory definition");
+        };
+        // ManualRef projects native item signatures into these shared record
+        // families. Every family here implements the inventory icon interface.
+        switch (type)
+        {
+            case ESM::REC_ALCH: case ESM::REC_ALCH4: return require.template operator()<ESM::Potion>();
+            case ESM::REC_APPA: case ESM::REC_APPA4: return require.template operator()<ESM::Apparatus>();
+            case ESM::REC_ARMO: case ESM::REC_ARMO4: return require.template operator()<ESM::Armor>();
+            case ESM::REC_BOOK: case ESM::REC_BOOK4: return require.template operator()<ESM::Book>();
+            case ESM::REC_CLOT: case ESM::REC_CLOT4: return require.template operator()<ESM::Clothing>();
+            case ESM::REC_INGR: case ESM::REC_INGR4: return require.template operator()<ESM::Ingredient>();
+            case ESM::REC_LIGH: case ESM::REC_LIGH4: return require.template operator()<ESM::Light>();
+            case ESM::REC_LOCK: return require.template operator()<ESM::Lockpick>();
+            case ESM::REC_PROB: return require.template operator()<ESM::Probe>();
+            case ESM::REC_REPA: return require.template operator()<ESM::Repair>();
+            case ESM::REC_MISC4:
+                if (incoming.get<ESM::Lockpick>().search(id)
+                    || (content && content->get<ESM::Lockpick>().searchStatic(id)))
+                    return require.template operator()<ESM::Lockpick>();
+                if (incoming.get<ESM::Repair>().search(id)
+                    || (content && content->get<ESM::Repair>().searchStatic(id)))
+                    return require.template operator()<ESM::Repair>();
+                [[fallthrough]];
+            case ESM::REC_MISC: case ESM::REC_KEYM4: case ESM::REC_SGST4: case ESM::REC_SLGM4:
+                return require.template operator()<ESM::Miscellaneous>();
+            case ESM::REC_WEAP: case ESM::REC_WEAP4: case ESM::REC_AMMO4:
+                return require.template operator()<ESM::Weapon>();
+            default:
+                throw std::runtime_error("Saved game quickkey target is not an inventory item");
+        }
     }
 
     void validateSharedTimestamp(const ESM::TimeStamp& timestamp)
@@ -97,7 +165,7 @@ namespace
     bool validateAuxiliaryRecord(ESM::ESMReader& reader, std::uint32_t type,
         std::set<std::uint32_t>& singletons,
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
-        std::vector<ESM::RefId>& quickkeySpells)
+        std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -173,6 +241,9 @@ namespace
                     // deliberately ignored by QuickKeysMenu::readRecord.
                     if (index < 9 && key.mType == ESM::QuickKeys::Type::Magic)
                         quickkeySpells.push_back(key.mId);
+                    if (index < 9 && (key.mType == ESM::QuickKeys::Type::Item
+                        || key.mType == ESM::QuickKeys::Type::MagicItem) && !key.mId.empty())
+                        quickkeyItems.push_back(key.mId);
                 }
                 break;
             }
@@ -435,6 +506,7 @@ namespace MWState
                 shared = std::make_unique<MWWorld::ESMStore>();
                 std::set<std::uint32_t> auxiliarySingletons;
                 std::vector<ESM::RefId> quickkeySpells;
+                std::vector<ESM::RefId> quickkeyItems;
                 reader.restoreContext(start);
                 while (reader.hasMoreRecs())
                 {
@@ -474,7 +546,7 @@ namespace MWState
                         decoded = true;
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
-                                 prepareGlobalMap, quickkeySpells))
+                                 prepareGlobalMap, quickkeySpells, quickkeyItems))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -484,6 +556,8 @@ namespace MWState
                         throw std::runtime_error("Saved game shared record contains unexpected trailing data");
                 }
                 shared->rebuildIdsIndex();
+                for (const auto& id : quickkeyItems)
+                    validateQuickkeyItem(id, *shared, content);
                 // Resolve only incoming definitions, after all saved records
                 // have been decoded. The UI skips removed spells, but an
                 // existing spell needs its first effect for icon restoration.

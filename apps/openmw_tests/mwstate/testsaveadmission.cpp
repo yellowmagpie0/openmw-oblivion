@@ -34,6 +34,7 @@
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
 #include <components/esm3/loadweap.hpp>
+#include <components/esm3/loadacti.hpp>
 #include <components/esm3/player.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/containerstate.hpp>
@@ -42,6 +43,18 @@
 #include <components/esm3/doorstate.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadammo.hpp>
+#include <components/esm4/loadalch.hpp>
+#include <components/esm4/loadappa.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadclot.hpp>
+#include <components/esm4/loadingr.hpp>
+#include <components/esm4/loadmisc.hpp>
+#include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadkeym.hpp>
+#include <components/esm4/loadsgst.hpp>
+#include <components/esm4/loadslgm.hpp>
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
 
@@ -679,6 +692,151 @@ TEST(SaveAdmissionTest, QuickkeySpellDependencyChecksRespectIgnoredSlotAndMorrow
         const auto offset = reader.getFileOffset(); int calls = 0;
         const auto prepare = [&](const auto&, auto) { ++calls; };
         const bool rejected = profile == ESM::GameProfile::Oblivion && type == ESM::QuickKeys::Type::Magic && slot < 9;
+        if (rejected)
+            EXPECT_THROW(MWState::admitSave(reader, profile, {}, &content, prepare), std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, profile, {}, &content, prepare));
+        EXPECT_EQ(calls, int(!rejected && profile == ESM::GameProfile::Oblivion));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+    }
+}
+
+TEST(SaveAdmissionTest, QuickkeyItemRolesUseIncomingDefinitionsBeforePreparation)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (const bool remapped : {false, true})
+    for (const bool definitionFirst : {false, true})
+    for (const auto type : {ESM::QuickKeys::Type::Item, ESM::QuickKeys::Type::MagicItem})
+    for (int mode = 0; mode != 7; ++mode)
+    {
+        SCOPED_TRACE(::testing::PrintToString(std::make_tuple(version, remapped, definitionFirst, int(type), mode)));
+        const auto savedId = remapped ? ESM::RefId(ESM::FormId{0x901, 0})
+            : ESM::RefId::stringRefId("quickkey-item");
+        const auto incomingId = remapped ? ESM::RefId(ESM::FormId{0x901, 2}) : savedId;
+        MWWorld::ESMStore content;
+        ESM::Weapon weapon{}; weapon.blank(); weapon.mId = incomingId;
+        ESM::Activator activator{}; activator.blank(); activator.mId = incomingId;
+        // Removed, immutable weapon, immutable activator, outgoing-only
+        // activator, saved weapon, saved activator overriding an authored one,
+        // and an unknown ordinary activator discarded during installation.
+        if (mode == 1) content.getWritable<ESM::Weapon>().insertStatic(weapon);
+        if (mode == 2 || mode == 5) content.getWritable<ESM::Activator>().insertStatic(activator);
+        content.setUp();
+        if (mode == 3) { content.getWritable<ESM::Activator>().insert(activator); content.rebuildIdsIndex(); }
+        const auto keys = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::QuickKeys state{}; state.mKeys.push_back({type, savedId});
+            writer.startRecord(ESM::REC_KEYS); state.save(writer); writer.endRecord(ESM::REC_KEYS);
+        });
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            if (mode == 4) { weapon.mId = savedId;
+                writer.startRecord(ESM::REC_WEAP); weapon.save(writer); writer.endRecord(ESM::REC_WEAP); }
+            if (mode == 5 || mode == 6) { activator.mId = savedId;
+                writer.startRecord(ESM::REC_ACTI); activator.save(writer); writer.endRecord(ESM::REC_ACTI); }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + (definitionFirst ? records + keys : keys + records));
+        const std::map<int, int> mapping{{0, 2}};
+        if (remapped) reader.setContentFileMapping(&mapping);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool valid = mode != 2 && mode != 5;
+        if (valid)
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare));
+        else
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content, prepare), std::runtime_error);
+        EXPECT_EQ(calls, int(valid && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+        EXPECT_EQ(content.get<ESM::Activator>().getDynamicSize(), std::size_t(mode == 3));
+    }
+}
+
+TEST(SaveAdmissionTest, QuickkeyItemChecksRespectAllProjectedFamiliesAndCompatibilitySkips)
+{
+    const auto check = [&]<class Shared, class Native>() {
+        for (const bool native : {false, true})
+        for (const bool projection : {false, true})
+        for (const int slot : {0, 8, 9})
+        for (const auto profile : {ESM::GameProfile::Oblivion, ESM::GameProfile::Morrowind})
+        {
+            SCOPED_TRACE(::testing::PrintToString(std::make_tuple(Shared::sRecordId, Native::sRecordId, native, projection, slot, int(profile))));
+            MWWorld::ESMStore content;
+            const auto id = ESM::RefId(ESM::FormId{0x901, 0});
+            Shared shared{}; shared.blank(); shared.mId = id;
+            Native record{}; record.mId = {0x901, 0};
+            if (native) content.getWritable<Native>().insertStatic(record);
+            if (projection) content.getWritable<Shared>().insertStatic(shared);
+            content.setUp();
+            const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+                ESM::QuickKeys keys{}; keys.mKeys.resize(slot + 1, {ESM::QuickKeys::Type::Unassigned, {}});
+                keys.mKeys[slot] = {ESM::QuickKeys::Type::Item, id};
+                writer.startRecord(ESM::REC_KEYS); keys.save(writer); writer.endRecord(ESM::REC_KEYS);
+            });
+            ESM::ESMReader reader;
+            openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
+                profile == ESM::GameProfile::Oblivion ? 1 : 0) + records);
+            const auto offset = reader.getFileOffset(); int calls = 0;
+            const auto prepare = [&](const auto&, auto) { ++calls; };
+            const bool rejected = native && !projection && content.findStatic(id) != 0
+                && slot < 9 && profile == ESM::GameProfile::Oblivion;
+            if (rejected)
+                EXPECT_THROW(MWState::admitSave(reader, profile, {}, &content, prepare), std::runtime_error);
+            else
+                EXPECT_NO_THROW(MWState::admitSave(reader, profile, {}, &content, prepare));
+            EXPECT_EQ(calls, int(!rejected && profile == ESM::GameProfile::Oblivion));
+            EXPECT_EQ(reader.getFileOffset(), offset);
+        }
+    };
+    check.template operator()<ESM::Potion, ESM4::Potion>();
+    check.template operator()<ESM::Apparatus, ESM4::Apparatus>();
+    check.template operator()<ESM::Armor, ESM4::Armor>();
+    check.template operator()<ESM::Book, ESM4::Book>();
+    check.template operator()<ESM::Clothing, ESM4::Clothing>();
+    check.template operator()<ESM::Ingredient, ESM4::Ingredient>();
+    check.template operator()<ESM::Light, ESM4::Light>();
+    check.template operator()<ESM::Miscellaneous, ESM4::MiscItem>();
+    check.template operator()<ESM::Miscellaneous, ESM4::Key>();
+    check.template operator()<ESM::Miscellaneous, ESM4::SigilStone>();
+    check.template operator()<ESM::Miscellaneous, ESM4::SoulGem>();
+    check.template operator()<ESM::Weapon, ESM4::Weapon>();
+    check.template operator()<ESM::Weapon, ESM4::Ammunition>();
+    check.template operator()<ESM::Lockpick, ESM4::MiscItem>();
+    check.template operator()<ESM::Repair, ESM4::MiscItem>();
+}
+
+TEST(SaveAdmissionTest, QuickkeyNonItemsRespectGeneratedIdentityIgnoredSlotAndProfiles)
+{
+    for (const bool generated : {false, true})
+    for (const auto type : {ESM::QuickKeys::Type::Item, ESM::QuickKeys::Type::MagicItem,
+             ESM::QuickKeys::Type::Magic, ESM::QuickKeys::Type::Unassigned, ESM::QuickKeys::Type::HandToHand})
+    for (const int slot : {0, 8, 9})
+    for (const auto profile : {ESM::GameProfile::Oblivion, ESM::GameProfile::Morrowind})
+    {
+        SCOPED_TRACE(::testing::PrintToString(std::make_tuple(generated, int(type), slot, int(profile))));
+        MWWorld::ESMStore content;
+        ESM::Activator activator{}; activator.blank();
+        activator.mId = generated ? ESM::RefId::generated(17) : ESM::RefId::stringRefId("authored-activator");
+        if (!generated) content.getWritable<ESM::Activator>().insertStatic(activator);
+        content.setUp();
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::QuickKeys keys{}; keys.mKeys.resize(slot + 1, {ESM::QuickKeys::Type::Unassigned, {}});
+            keys.mKeys[slot] = {type, activator.mId};
+            writer.startRecord(ESM::REC_KEYS); keys.save(writer); writer.endRecord(ESM::REC_KEYS);
+            if (generated)
+            {
+                writer.startRecord(ESM::REC_DYNA); writer.writeHNT("COUN", std::uint64_t{18}); writer.endRecord(ESM::REC_DYNA);
+                writer.startRecord(ESM::REC_ACTI); activator.save(writer); writer.endRecord(ESM::REC_ACTI);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(profile, ESM4::CurrentRuntimeStateVersion, 1,
+            profile == ESM::GameProfile::Oblivion ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset(); int calls = 0;
+        const auto prepare = [&](const auto&, auto) { ++calls; };
+        const bool rejected = slot < 9 && profile == ESM::GameProfile::Oblivion
+            && (type == ESM::QuickKeys::Type::Item || type == ESM::QuickKeys::Type::MagicItem);
         if (rejected)
             EXPECT_THROW(MWState::admitSave(reader, profile, {}, &content, prepare), std::runtime_error);
         else

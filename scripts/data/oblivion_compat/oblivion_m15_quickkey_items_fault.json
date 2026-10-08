@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope": "Private actual-F5 non-item quickkey dependency; native state unchanged",
+  "records": [
+    "KEYS"
+  ],
+  "key_slot": 0,
+  "key_type": 0,
+  "item_id": "content:oblivion.esm:000007",
+  "record_type": "NPC_",
+  "payload": "TYPE uint32 Item=0; ID__ tag03 followed by uint32 local form7 and int32 saved master index derived from TES3 MAST entry Oblivion.esm",
+  "encoding": "Subrecords have four-byte name and little-endian uint32 size; records have four-byte name and size/unused/flags uint32 words",
+  "preserve": "Every other ordered record, including all native bytes; restore original KEYS on resave",
+  "expected_error": "Saved game quickkey target is not an inventory item",
+  "preparation_reference": "build/oblivion-compat/m15/S3/quickkey-items-reject-04/mutate.py"
+}
