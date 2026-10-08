@@ -344,7 +344,8 @@ namespace
             case ESM::REC_WTHR:
             {
                 singleton();
-                const auto state = readSharedState<ESM::WeatherState>(reader);
+                ESM::WeatherState state{};
+                state.load(reader, true);
                 finite(state.mTimePassed);
                 finite(state.mWeatherUpdateTime);
                 finite(state.mTransitionFactor);

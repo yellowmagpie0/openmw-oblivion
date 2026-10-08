@@ -2361,6 +2361,72 @@ TEST(SaveAdmissionTest, WeatherResourcesPrepareBeforeNativeStateAndRestoreReader
     }
 }
 
+TEST(SaveAdmissionTest, WeatherDuplicateRegionsRejectBeforePreparationAcrossEverySchema)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int fault : {0, 1, 2})
+    for (bool nativeFirst : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(fault);
+        SCOPED_TRACE(nativeFirst);
+        ESM::WeatherState weather{};
+        weather.mCurrentWeather = 0;
+        weather.mNextWeather = weather.mQueuedWeather = -1;
+        const auto id = ESM::RefId::stringRefId("removed-region");
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            writer.startRecord(ESM::REC_WTHR); weather.save(writer);
+            writer.writeHNRefId("RGNN", id); writer.writeHNT("RGNW", 0);
+            writer.writeHNT("RGNC", std::uint8_t{100});
+            writer.writeHNRefId("RGNN", fault ? id : ESM::RefId::stringRefId("other-region"));
+            writer.writeHNT("RGNW", fault == 2 ? 1 : 0);
+            writer.writeHNT("RGNC", std::uint8_t{100});
+            writer.endRecord(ESM::REC_WTHR);
+        });
+        const auto base = saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0);
+        ESM::ESMReader header; openBytes(header, base);
+        const auto firstRecord = header.getFileOffset();
+        ESM::ESMReader reader;
+        openBytes(reader, nativeFirst ? base + records
+            : base.substr(0, firstRecord) + records + base.substr(firstRecord));
+        const auto offset = reader.getFileOffset();
+        int nativeCalls = 0, weatherCalls = 0;
+        const auto native = [&](const auto&, auto) { ++nativeCalls; };
+        const auto prepare = [&](const ESM::WeatherState& saved) {
+            ++weatherCalls;
+            EXPECT_EQ(saved.mRegions.size(), 2u);
+            // Even deliberately removed regions must have unambiguous saved
+            // identities; compatibility skipping happens after admission.
+            const auto prepared = MWWorld::prepareWeatherRestore(saved, 2, {});
+            EXPECT_TRUE(prepared.mRegions.empty());
+        };
+        if (fault)
+            EXPECT_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare),
+                std::runtime_error);
+        else
+            EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, nullptr, native, {}, prepare));
+        EXPECT_EQ(weatherCalls, int(fault == 0));
+        EXPECT_EQ(nativeCalls, int(fault == 0 && version != 0));
+        EXPECT_EQ(reader.getFileOffset(), offset);
+
+        // The strict path is Oblivion-only. Ordinary legacy decoding still
+        // retains the first duplicate and Morrowind admission does not use it.
+        ESM::ESMReader legacy;
+        openBytes(legacy, saveBytes(ESM::GameProfile::Morrowind, 1, 1, 0) + records);
+        EXPECT_NO_THROW(MWState::admitSave(legacy, ESM::GameProfile::Morrowind, {}));
+        while (legacy.hasMoreRecs())
+        {
+            const auto type = legacy.getRecName(); legacy.getRecHeader();
+            if (type != ESM::REC_WTHR) { legacy.skipRecord(); continue; }
+            ESM::WeatherState decoded;
+            EXPECT_NO_THROW(decoded.load(legacy));
+            EXPECT_EQ(decoded.mRegions.size(), fault ? 1u : 2u);
+            EXPECT_EQ(decoded.mRegions.at(id).mWeather, 0);
+        }
+    }
+}
+
 TEST(SaveAdmissionTest, WeatherPreparationDoesNotChangeMorrowindAdmission)
 {
     ESM::WeatherState weather{};

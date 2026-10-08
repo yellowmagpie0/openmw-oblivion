@@ -24,7 +24,7 @@ namespace ESM
 
 namespace ESM
 {
-    void WeatherState::load(ESMReader& esm)
+    void WeatherState::load(ESMReader& esm, bool rejectDuplicateRegions)
     {
         mCurrentRegion = esm.getHNRefId(currentRegionRecord);
         esm.getHNT(mTimePassed, timePassedRecord);
@@ -48,7 +48,9 @@ namespace ESM
                 region.mChances.push_back(chance);
             }
 
-            mRegions.insert(std::make_pair(regionID, region));
+            const auto inserted = mRegions.emplace(regionID, std::move(region));
+            if (rejectDuplicateRegions && !inserted.second)
+                esm.fail("Saved weather contains duplicate region identities");
         }
     }
 

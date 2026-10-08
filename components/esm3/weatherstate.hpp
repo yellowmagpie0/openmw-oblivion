@@ -30,7 +30,9 @@ namespace ESM
         bool mWeatherOverride = false;
         std::map<ESM::RefId, RegionWeatherState> mRegions;
 
-        void load(ESMReader& esm);
+        // Native save admission rejects duplicate identities before the map
+        // can merge them. Legacy callers retain their first-record behavior.
+        void load(ESMReader& esm, bool rejectDuplicateRegions = false);
         void save(ESMWriter& esm) const;
     };
 }

@@ -6,6 +6,37 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 duplicate weather-region admission — 2026-10-07
+
+Oblivion WTHR admission now rejects repeated region identities during decode,
+before a map can silently merge them and before either weather-resource or
+native preparation. Equal and conflicting duplicates both reject, including
+removed-region entries. Default shared decoding keeps its legacy first-entry
+behavior; Morrowind admission remains permissive. No wire schema changes.
+
+Normal and ASan/UBSan runs each pass all **1244 engine tests**, plus three
+isolated weather-admission cases in each configuration. Exact inventories/XML
+match, no failures/skips, stable common source fingerprint
+`4b01a3c9f1ce9da52bed4b73c968f53c0db11874747a64096a84f01a40638a71`;
+compiled parent `f9fbd5091d1d76b1d9843ce053b23342f49099d3`.
+The new matrix exercises 282 native combinations: schemas0–46 (0 omits T4ST),
+unique/equal/conflicting regions and weather-first/native-first order. Rejected
+cases execute no preparation callbacks and rewind the reader. Each combination
+also checks Morrowind admission and actual default decoding, including the
+first-entry value after a conflicting duplicate. Removed unique regions retain
+their skip path. ASan leak checks are disabled.
+
+Evidence: `build/oblivion-compat/m15/S3/weather-duplicates-report.json`,
+`weather-duplicates-{engine,sanitized-engine}-01` and
+`weather-duplicates-isolated-{normal,sanitized}-01.{xml,log}`.
+Targeted precompile01 retained two test-source errors (same-line SCOPED_TRACE
+macros and a missing validator argument); corrected precompile02 passes.
+No Python source/fixture changed, so unchanged Python checks were not repeated.
+This is compiler and admission/compatibility evidence; no new duplicate-region
+F9 game course was run. Weather identity across changed/reordered catalogs,
+explicit manager-handle lifecycle coverage, broader shared resources and
+postcleanup prior-World preservation remain open. Full S3 is active.
+
 ## S3 prepared shared magic-projectile audio — 2026-10-07
 
 Shared MPRJ preparation now decodes and pins immutable-content sound buffers

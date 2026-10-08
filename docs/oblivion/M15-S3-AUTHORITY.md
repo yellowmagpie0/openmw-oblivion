@@ -81,9 +81,11 @@ before native preparation/cleanup, validating consumed indices against the
 actual weather catalog and retaining removed-region/unreachable-tail behavior.
 StateManager installs the lifetime/generation-guarded handle once after clear.
 Normal/instrumented F9 rejection/resave and a normal fresh-process continuation
-preserve current weather31 and declared native state. Duplicate weather regions,
-changed/reordered weather identity and explicit stale/copied handle integration
-remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
+preserve current weather31 and declared native state. Oblivion admission now
+rejects duplicate weather-region identities before map merging or preparation;
+the schemas0–46/order matrix preserves legacy first-entry decoding and
+Morrowind admission. Changed/reordered weather identity and explicit
+stale/copied manager-handle integration remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
 replacement reconciliation remain open. Later shared record/resource restoration
 still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
