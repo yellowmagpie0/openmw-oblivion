@@ -118,6 +118,7 @@ namespace MWWorld
             ESM::RefNum mItem;
 
             std::vector<MWBase::Sound*> mSounds;
+            std::vector<std::function<MWBase::Sound*()>> mPreparedSounds;
             std::set<ESM::RefId> mSoundIds;
         };
 

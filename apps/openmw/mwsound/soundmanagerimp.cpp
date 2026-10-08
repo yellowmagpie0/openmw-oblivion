@@ -653,6 +653,40 @@ namespace MWSound
         return playSound3D(ptr, sfx, volume, pitch, type, mode, offset);
     }
 
+    std::function<Sound*()> SoundManager::prepareSound3D(const osg::Vec3f& pos, const ESM::RefId& id,
+        float volume, float pitch, Type type, PlayMode mode)
+    {
+        if (!mOutput->isInitialized())
+            return {};
+        auto buffer = mSoundBuffers.prepareImmutable(id);
+        if (!buffer)
+            return {};
+        struct Plan { std::shared_ptr<SoundBuffer> mBuffer; bool mConsumed = false; };
+        auto plan = std::make_shared<Plan>();
+        plan->mBuffer = std::move(buffer);
+        const std::weak_ptr<const char> identity = mRestoreIdentity;
+        const auto generation = mRestoreGeneration + 1;
+        return [this, identity, generation, plan, pos, volume, pitch, type, mode]() -> Sound* {
+            if (identity.expired() || plan->mConsumed || mRestoreGeneration != generation)
+                return nullptr;
+            plan->mConsumed = true;
+            // Backend playback failure has the same unavailable-sound outcome
+            // as ordinary playback. It must not reject an already installed World.
+            try
+            {
+                auto* sound = playSound3D(pos, plan->mBuffer.get(), volume, pitch, type, mode, 0.f);
+                plan->mBuffer.reset();
+                return sound;
+            }
+            catch (const std::exception& e)
+            {
+                plan->mBuffer.reset();
+                Log(Debug::Warning) << "Failed to publish prepared sound: " << e.what();
+                return nullptr;
+            }
+        };
+    }
+
     Sound* SoundManager::playSound3D(const osg::Vec3f& initialPos, const ESM::RefId& soundId, float volume, float pitch,
         Type type, PlayMode mode, float offset)
     {
@@ -664,6 +698,12 @@ namespace MWSound
         if (!sfx)
             return nullptr;
 
+        return playSound3D(initialPos, sfx, volume, pitch, type, mode, offset);
+    }
+
+    Sound* SoundManager::playSound3D(const osg::Vec3f& initialPos, SoundBuffer* sfx, float volume, float pitch,
+        Type type, PlayMode mode, float offset)
+    {
         const float squaredDist = (mListenerPos - initialPos).length2();
 
         SoundPtr sound = getSoundRef();
@@ -679,13 +719,26 @@ namespace MWSound
             params.mFlags = mode | type | Play_3D;
             return params;
         }());
-        if (!mOutput->playSound3D(sound.get(), sfx->getHandle(), offset))
-            return nullptr;
-
         Sound* result = sound.get();
-        mActiveSounds[nullptr].mList.emplace_back(std::move(sound), sfx);
+        auto& active = mActiveSounds[nullptr].mList;
+        active.emplace_back(std::move(sound), sfx);
         mSoundBuffers.use(*sfx);
-        return result;
+        try
+        {
+            if (mOutput->playSound3D(result, sfx->getHandle(), offset))
+                return result;
+        }
+        catch (...)
+        {
+            mOutput->finishSound(result);
+            mSoundBuffers.release(*sfx);
+            active.pop_back();
+            throw;
+        }
+        mOutput->finishSound(result);
+        mSoundBuffers.release(*sfx);
+        active.pop_back();
+        return nullptr;
     }
 
     void SoundManager::stopSound(Sound* sound)
@@ -711,12 +764,10 @@ namespace MWSound
     {
         if (!mOutput->isInitialized())
             return;
-
-        SoundBuffer* sfx = mSoundBuffers.lookup(soundId);
-        if (!sfx)
-            return;
-
-        stopSound(sfx, ptr);
+        if (auto* buffer = mSoundBuffers.lookup(soundId))
+            stopSound(buffer, ptr);
+        if (auto* buffer = mSoundBuffers.lookupPrepared(soundId))
+            stopSound(buffer, ptr);
     }
 
     void SoundManager::stopSound3D(const MWWorld::ConstPtr& ptr, VFS::Path::NormalizedView fileName)
@@ -777,11 +828,10 @@ namespace MWSound
         if (snditer != mActiveSounds.end())
         {
             SoundBuffer* sfx = mSoundBuffers.lookup(soundId);
-            if (sfx == nullptr)
-                return;
+            auto* prepared = mSoundBuffers.lookupPrepared(soundId);
             for (SoundBufferRefPair& sndbuf : snditer->second.mList)
             {
-                if (sndbuf.second == sfx)
+                if (sndbuf.second == sfx || sndbuf.second == prepared)
                     sndbuf.first->setFadeout(duration);
             }
         }
@@ -811,12 +861,11 @@ namespace MWSound
         if (snditer != mActiveSounds.end())
         {
             SoundBuffer* sfx = mSoundBuffers.lookup(soundId);
-            if (!sfx)
-                return false;
+            auto* prepared = mSoundBuffers.lookupPrepared(soundId);
 
             return std::find_if(snditer->second.mList.cbegin(), snditer->second.mList.cend(),
-                       [this, sfx](const SoundBufferRefPair& snd) -> bool {
-                           return snd.second == sfx && mOutput->isSoundPlaying(snd.first.get());
+                       [this, sfx, prepared](const SoundBufferRefPair& snd) -> bool {
+                           return (snd.second == sfx || snd.second == prepared) && mOutput->isSoundPlaying(snd.first.get());
                        })
                 != snditer->second.mList.cend();
         }
@@ -1358,6 +1407,7 @@ namespace MWSound
 
     void SoundManager::clear()
     {
+        ++mRestoreGeneration;
         stopMusic();
         mMusicType = MusicType::Normal;
         mNativePlaylist.clear();

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <memory>
 #include <unordered_map>
 
 #include <components/esm/refid.hpp>
@@ -75,6 +76,7 @@ namespace MWSound
         /// Lookup a soundId for its sound data (resource name, local volume,
         /// minRange, and maxRange)
         SoundBuffer* lookup(const ESM::RefId& soundId) const;
+        SoundBuffer* lookupPrepared(const ESM::RefId& soundId) const;
 
         /// Lookup a sound by file name for its sound data (resource name, local volume,
         /// minRange, and maxRange)
@@ -83,6 +85,10 @@ namespace MWSound
         /// Lookup a soundId for its sound data (resource name, local volume,
         /// minRange, and maxRange), and ensure it's ready for use.
         SoundBuffer* load(const ESM::RefId& soundId);
+
+        // Load only immutable content and pin it across game clear/cache eviction.
+        // Destruction releases the pin; retiring the pool invalidates old leases.
+        std::shared_ptr<SoundBuffer> prepareImmutable(const ESM::RefId& soundId);
 
         // Lookup for a sound by file name, and ensure it's ready for use.
         SoundBuffer* load(VFS::Path::NormalizedView fileName);
@@ -109,6 +115,8 @@ namespace MWSound
         SoundBuffer* loadSfx(SoundBuffer* sfx);
 
         SoundOutput* mOutput;
+        std::shared_ptr<const char> mPreparationIdentity = std::make_shared<const char>();
+        std::unordered_map<ESM::RefId, SoundBuffer*> mImmutableBufferNameMap;
         std::deque<SoundBuffer> mSoundBuffers;
         std::unordered_map<ESM::RefId, SoundBuffer*> mBufferNameMap;
         std::unordered_map<VFS::Path::Normalized, SoundBuffer*, VFS::Path::Hash, std::equal_to<>> mBufferFileNameMap;
@@ -118,9 +126,9 @@ namespace MWSound
         // NOTE: unused buffers are stored in front-newest order.
         std::deque<SoundBuffer*> mUnusedBuffers;
 
-        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM::Sound& sound);
-        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM4::Sound& sound);
-        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM4::SoundReference& sound);
+        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM::Sound& sound, bool index = true);
+        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM4::Sound& sound, bool index = true);
+        SoundBuffer* insertSound(const ESM::RefId& soundId, const ESM4::SoundReference& sound, bool index = true);
         SoundBuffer* insertSound(VFS::Path::NormalizedView fileName);
 
         inline void unloadUnused();

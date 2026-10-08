@@ -20,6 +20,7 @@
 #include "apps/openmw/mwmechanics/character.hpp"
 #include "apps/openmw/mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
+#include <components/misc/rng.hpp>
 #include <components/sceneutil/keyframe.hpp>
 #include <components/settings/values.hpp>
 #include <components/vfs/filesystemarchive.hpp>
@@ -8786,6 +8787,122 @@ namespace
             EXPECT_EQ(animation->mBone->getNumChildren(), 0u);
             EXPECT_EQ(equipped->getCellRef().getCount(), 3);
         }
+    }
+
+    TEST(OblivionWorldTest, PreparedProjectileAudioDecodesBeforeClearAndPublishesOnceFromPinnedStaticBuffers)
+    {
+        NativeWorldFixture fixture;
+        std::filesystem::create_directories(fixture.mDirectory / "sound");
+        std::string wav = "RIFF";
+        const auto integer = [&](auto value) { wav.append(reinterpret_cast<const char*>(&value), sizeof(value)); };
+        integer(std::uint32_t{548}); wav += "WAVEfmt "; integer(std::uint32_t{16});
+        integer(std::uint16_t{1}); integer(std::uint16_t{1}); integer(std::uint32_t{8000});
+        integer(std::uint32_t{16000}); integer(std::uint16_t{2}); integer(std::uint16_t{16});
+        wav += "data"; integer(std::uint32_t{512}); wav.append(512, '\0');
+        const auto path = fixture.mDirectory / "sound/prepared-loop.wav";
+        { std::ofstream output(path, std::ios::binary); output.write(wav.data(), wav.size()); }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        ESM::Sound definition{}; definition.blank();
+        definition.mId = ESM::RefId::stringRefId("prepared-projectile-loop");
+        definition.mSound = "prepared-loop.wav"; definition.mData.mVolume = 255;
+        definition.mData.mMinRange = 1; definition.mData.mMaxRange = 100;
+        fixture.mWorld.getStore().getWritable<ESM::Sound>().insertStatic(definition);
+        // Retire the old output before creating a new current OpenAL context.
+        fixture.mSoundManager.reset();
+        fixture.mSoundManager = std::make_unique<MWSound::SoundManager>(&fixture.mVfs, true);
+        fixture.mEnvironment.setSoundManager(*fixture.mSoundManager);
+        auto& sound = *fixture.mSoundManager;
+        ASSERT_TRUE(sound.isEnabled()); // Test runner supplies ALSOFT_DRIVERS=null.
+        using Type = MWSound::Type;
+        using Mode = MWSound::PlayMode;
+        auto* original = sound.playSound3D(osg::Vec3f{}, definition.mId, 1.f, 1.f, Type::Sfx, Mode::Loop);
+        ASSERT_NE(original, nullptr);
+        ASSERT_TRUE(sound.getSoundPlaying({}, definition.mId));
+        const auto prepare = [&] { return sound.prepareSound3D(osg::Vec3f(5, 0, 0), definition.mId,
+            1.f, 1.f, Type::Sfx, Mode::Loop); };
+        { auto cancelled = prepare(); ASSERT_TRUE(cancelled); EXPECT_EQ(cancelled(), nullptr); }
+        EXPECT_TRUE(sound.getSoundPlaying({}, definition.mId));
+        auto stale = prepare(); sound.clear(); sound.clear(); EXPECT_EQ(stale(), nullptr);
+        // A dynamic outgoing definition must not supply the restore resource.
+        definition.mSound = "outgoing-missing.wav";
+        fixture.mWorld.getStore().getWritable<ESM::Sound>().insert(definition);
+        auto plan = prepare(); ASSERT_TRUE(plan); auto copy = plan;
+        std::filesystem::remove(path);
+        sound.clear();
+        auto* restored = plan(); ASSERT_NE(restored, nullptr);
+        EXPECT_TRUE(sound.getSoundPlaying({}, definition.mId));
+        EXPECT_EQ(plan(), nullptr); EXPECT_EQ(copy(), nullptr);
+        sound.fadeOutSound3D({}, definition.mId, 0.f);
+        sound.stopSound3D({}, definition.mId);
+        EXPECT_FALSE(sound.getSoundPlaying({}, definition.mId));
+        sound.clear();
+        definition.mId = ESM::RefId::stringRefId("outgoing-only-projectile-loop");
+        fixture.mWorld.getStore().getWritable<ESM::Sound>().insert(definition);
+        EXPECT_FALSE(sound.prepareSound3D({}, definition.mId, 1.f, 1.f, Type::Sfx, Mode::Loop));
+
+        // Exercise actual backend refusal, then prove the active owner and
+        // source pool still admit a valid playback after rollback.
+        definition.mId = ESM::RefId::stringRefId("prepared-projectile-loop");
+        auto refused = sound.prepareSound3D({}, definition.mId, 1.f, -1.f, Type::Sfx, Mode::Loop);
+        ASSERT_TRUE(refused);
+        sound.clear();
+        EXPECT_EQ(refused(), nullptr);
+        EXPECT_EQ(refused(), nullptr);
+        EXPECT_FALSE(sound.getSoundPlaying({}, definition.mId));
+        auto recovered = prepare(); ASSERT_TRUE(recovered);
+        sound.clear(); ASSERT_NE(recovered(), nullptr);
+        EXPECT_TRUE(sound.getSoundPlaying({}, definition.mId));
+        sound.clear();
+
+        // Native directory selection during admission must not consume the
+        // outgoing world's RNG, including when the plan is discarded.
+        std::filesystem::create_directories(fixture.mDirectory / "sound/prepared-directory");
+        for (const auto* name : {"one.wav", "two.wav"})
+        {
+            std::ofstream output(fixture.mDirectory / "sound/prepared-directory" / name, std::ios::binary);
+            output.write(wav.data(), wav.size());
+        }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        ESM4::Sound native{}; native.mId = {0x880, 0};
+        native.mSoundFile = "prepared-directory/";
+        fixture.mWorld.getStore().getWritable<ESM4::Sound>().insertStatic(native);
+        const auto rng = Misc::Rng::getGenerator();
+        auto directory = sound.prepareSound3D({}, native.mId, 1.f, 1.f, Type::Sfx, Mode::Loop);
+        ASSERT_TRUE(directory);
+        EXPECT_EQ(Misc::Rng::getGenerator(), rng);
+        directory = {};
+        EXPECT_EQ(Misc::Rng::getGenerator(), rng);
+    }
+
+    TEST(OblivionWorldTest, PreparedProjectileAudioHandlesExpireAfterSoundOwnerTeardown)
+    {
+        NativeWorldFixture fixture;
+        std::filesystem::create_directories(fixture.mDirectory / "sound");
+        std::string wav = "RIFF";
+        const auto integer = [&](auto value) { wav.append(reinterpret_cast<const char*>(&value), sizeof(value)); };
+        integer(std::uint32_t{548}); wav += "WAVEfmt "; integer(std::uint32_t{16});
+        integer(std::uint16_t{1}); integer(std::uint16_t{1}); integer(std::uint32_t{8000});
+        integer(std::uint32_t{16000}); integer(std::uint16_t{2}); integer(std::uint16_t{16});
+        wav += "data"; integer(std::uint32_t{512}); wav.append(512, '\0');
+        { std::ofstream output(fixture.mDirectory / "sound/orphan-loop.wav", std::ios::binary);
+            output.write(wav.data(), wav.size()); }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        ESM::Sound definition{}; definition.blank(); definition.mId = ESM::RefId::stringRefId("orphan-loop");
+        definition.mSound = "orphan-loop.wav"; definition.mData.mVolume = 255;
+        fixture.mWorld.getStore().getWritable<ESM::Sound>().insertStatic(definition);
+        std::function<MWBase::Sound*()> orphan;
+        {
+            MWSound::SoundManager temporary(&fixture.mVfs, true);
+            ASSERT_TRUE(temporary.isEnabled());
+            orphan = temporary.prepareSound3D({}, definition.mId, 1.f, 1.f,
+                MWSound::Type::Sfx, MWSound::PlayMode::Loop);
+            ASSERT_TRUE(orphan);
+        }
+        EXPECT_EQ(orphan(), nullptr);
+        orphan = {};
     }
 
     TEST(OblivionWorldTest, ProjectileLaunchPreparesBeforePublicationAndRollsBackSceneFailures)

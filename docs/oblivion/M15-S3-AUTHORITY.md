@@ -48,8 +48,14 @@ light definitions use static content. StateManager installs the guarded batch
 once before saveLoaded/ActorId conversion and later rebinds casters; real scene/
 Bullet tests cover cancellation, stale/copy/destruction, rollback and skips.
 Normal/instrumented two-process physical PROJ courses preserve resources in
-resaves; they precede the final magic-only lookup follow-up. Audio and broader
-shared-resource failure boundaries remain open.
+resaves; they precede the final magic-only lookup follow-up. Shared magic bolt
+sound buffers now decode and remain pinned before cleanup against static
+content; native directory preparation preserves global RNG. Lifetime/next-clear
+one-shot callbacks publish after scene/collision installation and release failed
+backend ownership. Actual null-backend tests cover cancellation, stale/copy,
+source removal, playback recovery, queries and destruction in both builds.
+Audible/full projectile runtime acceptance and broader shared-resource failure
+boundaries remain open.
 Admission errors preserve the outgoing world. Shared Player exterior/recall
 coordinates and saved attribute/skill floats are checked before native
 preparation; their live F9 rejection/resave courses preserve the outgoing world.

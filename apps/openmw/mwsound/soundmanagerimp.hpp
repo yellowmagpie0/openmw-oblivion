@@ -131,6 +131,11 @@ namespace MWSound
 
         Sound* playSound(SoundBuffer* sfx, float volume, float pitch, Type type = Type::Sfx,
             PlayMode mode = PlayMode::Normal, float offset = 0);
+        Sound* playSound3D(const osg::Vec3f& pos, SoundBuffer* sfx, float volume, float pitch,
+            Type type, PlayMode mode, float offset);
+        const std::shared_ptr<const char> mRestoreIdentity = std::make_shared<const char>();
+        std::uint64_t mRestoreGeneration = 0;
+
         Sound* playSound3D(const MWWorld::ConstPtr& ptr, SoundBuffer* sfx, float volume, float pitch, Type type,
             PlayMode mode, float offset);
 
@@ -164,6 +169,9 @@ namespace MWSound
     public:
         SoundManager(const VFS::Manager* vfs, bool useSound);
         ~SoundManager() override;
+        std::function<Sound*()> prepareSound3D(const osg::Vec3f& pos, const ESM::RefId& id,
+            float volume, float pitch, Type type, PlayMode mode) override;
+
 
         void processChangedSettings(const Settings::CategorySettingVector& settings) override;
 

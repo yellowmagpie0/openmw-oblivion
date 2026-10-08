@@ -828,6 +828,11 @@ namespace MWWorld
                 true, true, getMagicBoltLightDiffuseColor(state.mEffects, &content), texture, false, &content, &incoming);
             auto collision = mPhysics->prepareProjectile({}, osg::Vec3f(saved.mPosition), model, true);
             state.mSounds.reserve(state.mSoundIds.size());
+            state.mPreparedSounds.reserve(state.mSoundIds.size());
+            for (const auto& id : state.mSoundIds)
+                if (auto prepared = MWBase::Environment::get().getSoundManager()->prepareSound3D(
+                        osg::Vec3f(saved.mPosition), id, 1.f, 1.f, MWSound::Type::Sfx, MWSound::PlayMode::Loop))
+                    state.mPreparedSounds.push_back(std::move(prepared));
             plan->mBolts.push_back(std::move(state));
             plan->mCollisions.push_back(std::move(collision));
         }
@@ -873,13 +878,12 @@ namespace MWWorld
             ++mRestoreGeneration;
             plan.reset();
             for (auto& state : mMagicBolts)
-                for (const auto& id : state.mSoundIds)
-                {
-                    MWBase::SoundManager* sounds = MWBase::Environment::get().getSoundManager();
-                    if (auto* sound = sounds->playSound3D(osg::Vec3f(state.mNode->getPosition()), id,
-                            1.f, 1.f, MWSound::Type::Sfx, MWSound::PlayMode::Loop))
+            {
+                for (auto& start : state.mPreparedSounds)
+                    if (auto* sound = start())
                         state.mSounds.push_back(sound);
-                }
+                state.mPreparedSounds.clear();
+            }
             return true;
         };
     }

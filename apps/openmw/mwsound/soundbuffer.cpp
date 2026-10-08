@@ -67,7 +67,7 @@ namespace MWSound
             return params;
         }
 
-        VFS::Path::Normalized resolveNativeSoundPath(std::string_view value)
+        VFS::Path::Normalized resolveNativeSoundPath(std::string_view value, bool isolated = false)
         {
             const auto* vfs = MWBase::Environment::get().getResourceSystem()->getVFS();
             if (!value.ends_with('\\') && !value.ends_with('/'))
@@ -87,8 +87,9 @@ namespace MWSound
             if (candidates.empty())
                 return directory;
             std::sort(candidates.begin(), candidates.end());
-            const std::size_t selected
-                = static_cast<std::size_t>(Misc::Rng::rollDice(static_cast<int>(candidates.size())));
+            auto copiedGenerator = Misc::Rng::getGenerator();
+            const auto selected = static_cast<std::size_t>(Misc::Rng::rollDice(
+                static_cast<int>(candidates.size()), isolated ? copiedGenerator : Misc::Rng::getGenerator()));
             Log(Debug::Verbose) << "M10 native sound directory: " << directory << " -> " << candidates[selected];
             return candidates[selected];
         }
@@ -117,6 +118,12 @@ namespace MWSound
                 return sfx;
         }
         return nullptr;
+    }
+
+    SoundBuffer* SoundBufferPool::lookupPrepared(const ESM::RefId& soundId) const
+    {
+        const auto found = mImmutableBufferNameMap.find(soundId);
+        return found != mImmutableBufferNameMap.end() && found->second->getHandle() ? found->second : nullptr;
     }
 
     SoundBuffer* SoundBufferPool::lookup(VFS::Path::NormalizedView fileName) const
@@ -186,6 +193,37 @@ namespace MWSound
         return loadSfx(sfx);
     }
 
+    std::shared_ptr<SoundBuffer> SoundBufferPool::prepareImmutable(const ESM::RefId& soundId)
+    {
+        if (!mPreparationIdentity)
+            mPreparationIdentity = std::make_shared<const char>();
+        SoundBuffer* buffer = nullptr;
+        const auto existing = mImmutableBufferNameMap.find(soundId);
+        if (existing != mImmutableBufferNameMap.end())
+            buffer = existing->second;
+        else
+        {
+            const auto& store = *MWBase::Environment::get().getESMStore();
+            if (const auto* sound = store.get<ESM::Sound>().searchStatic(soundId))
+                buffer = insertSound(soundId, *sound, false);
+            else if (const auto* native = store.get<ESM4::Sound>().searchStatic(soundId))
+                buffer = insertSound(soundId, *native, false);
+            else if (const auto* reference = store.get<ESM4::SoundReference>().searchStatic(soundId))
+                buffer = insertSound(soundId, *reference, false);
+            else
+                return {};
+            mImmutableBufferNameMap.emplace(soundId, buffer);
+        }
+        if (!loadSfx(buffer))
+            return {};
+        use(*buffer);
+        const std::weak_ptr<const char> identity = mPreparationIdentity;
+        return std::shared_ptr<SoundBuffer>(buffer, [this, identity](SoundBuffer* sound) {
+            if (!identity.expired())
+                release(*sound);
+        });
+    }
+
     SoundBuffer* SoundBufferPool::load(VFS::Path::NormalizedView fileName)
     {
         SoundBuffer* sfx;
@@ -200,11 +238,14 @@ namespace MWSound
 
     void SoundBufferPool::clear()
     {
+        mPreparationIdentity.reset();
+        mImmutableBufferNameMap.clear();
         for (auto& sfx : mSoundBuffers)
         {
             if (sfx.mHandle)
                 mOutput->unloadSound(sfx.mHandle);
             sfx.mHandle = nullptr;
+            sfx.mUses = 0;
         }
 
         mBufferFileNameMap.clear();
@@ -230,7 +271,7 @@ namespace MWSound
         return &sfx;
     }
 
-    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM::Sound& sound)
+    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM::Sound& sound, bool index)
     {
         static const AudioParams audioParams
             = makeAudioParams(MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>());
@@ -252,35 +293,38 @@ namespace MWSound
         SoundBuffer& sfx = mSoundBuffers.emplace_back(
             Misc::ResourceHelpers::correctSoundPath(VFS::Path::toNormalized(sound.mSound)), volume, min, max);
 
-        mBufferNameMap.emplace(soundId, &sfx);
+        if (index)
+            mBufferNameMap.emplace(soundId, &sfx);
         return &sfx;
     }
 
-    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::Sound& sound)
+    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::Sound& sound, bool index)
     {
         static const AudioParams audioParams
             = makeAudioParams(MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>());
-        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile);
+        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile, !index);
         const NativeSoundParams params = makeNativeSoundParams(sound.mData.staticAttenuation,
             sound.mData.minAttenuation, sound.mData.maxAttenuation, audioParams.mAudioDefaultMinDistance,
             audioParams.mAudioDefaultMaxDistance, audioParams.mAudioMinDistanceMult,
             audioParams.mAudioMaxDistanceMult);
         SoundBuffer& sfx
             = mSoundBuffers.emplace_back(std::move(path), params.mVolume, params.mMinDistance, params.mMaxDistance);
-        mBufferNameMap.emplace(soundId, &sfx);
+        if (index)
+            mBufferNameMap.emplace(soundId, &sfx);
         return &sfx;
     }
 
-    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::SoundReference& sound)
+    SoundBuffer* SoundBufferPool::insertSound(const ESM::RefId& soundId, const ESM4::SoundReference& sound, bool index)
     {
-        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile);
+        VFS::Path::Normalized path = resolveNativeSoundPath(sound.mSoundFile, !index);
         const float volume = std::pow(10.f, -static_cast<float>(sound.mData.staticAttenuation) / 2000.f);
         const float min = 1.f;
         const float max = 255.f;
         // TODO: sound.mSoundId can link to another SoundReference, probably we will need to add additional lookups to
         // ESMStore.
         SoundBuffer& sfx = mSoundBuffers.emplace_back(std::move(path), volume, min, max);
-        mBufferNameMap.emplace(soundId, &sfx);
+        if (index)
+            mBufferNameMap.emplace(soundId, &sfx);
         return &sfx;
     }
 

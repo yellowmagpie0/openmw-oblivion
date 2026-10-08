@@ -6,6 +6,44 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepared shared magic-projectile audio — 2026-10-07
+
+Shared MPRJ preparation now decodes and pins immutable-content sound buffers
+before world cleanup. It excludes outgoing dynamic sound definitions and uses
+a copied RNG for native sound-directory selection. Retained callbacks require
+the next sound-manager clear, reject expired/stale handles, and share one-shot
+consumption across copies. Projectile publication starts them after model and
+collision installation. Backend playback refusal releases active ownership;
+an exception produces an unavailable sound rather than rejecting an installed
+World. Queries, stop and fade recognize prepared and ordinary buffers.
+
+Normal and ASan/UBSan checks each pass all **1243 engine tests**, with exact
+inventory/XML matches, no failures/skips and stable common fingerprint
+`fe5bf3ee4ae1be2611f0b19e5977a6e4a30114e226e40ede26d42b7144c2e0d5`;
+compiled parent `f86f65f80018d89635bc9cd3afd70c1779f87ec5`.
+Three isolated audio/projectile cases pass in each configuration. Real PCM WAV
+and FFmpeg/OpenAL null output exercise existing playback preservation during
+preparation/discard, static lookup, source-file removal after decoding,
+clear/stale/copied/replayed handles, queries/stop/fade, owner teardown,
+backend refusal followed by successful playback, and unchanged global RNG
+on native directory preparation/discard. Leak checking is disabled.
+
+Evidence: `build/oblivion-compat/m15/S3/projectile-audio-report.json`,
+`projectile-audio-{engine,sanitized-engine}-02`, and
+`projectile-audio-isolated-{normal,sanitized}-02.{xml,log}`.
+Both engine01 attempts retain their sole failing fixture playback assertion:
+constructing the enabled manager before destroying the disabled manager
+cleared the new OpenAL context. The corrected fixture retires the old output
+first. Targeted precompile02 caught incorrect FormId/store test calls; corrected
+precompile03 passes. The invalid-pitch backend error in passing runs is an
+intentional refusal probe. No Python source/fixture changed; unchanged Python
+checks were not repeated.
+
+This proves compilation, direct resource/lifecycle semantics and null-backend
+playback. It does not establish audible game acceptance or a sound-enabled
+full projectile save/restart course. Broader shared-resource failures and
+postcleanup preservation of the prior World remain open; full S3 is active.
+
 ## S3 detached shared projectile model/collision restoration — 2026-10-07
 
 Oblivion admission now collects PROJ/MPRJ data while decoding all incoming

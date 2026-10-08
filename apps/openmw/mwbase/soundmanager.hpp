@@ -1,6 +1,7 @@
 #ifndef GAME_MWBASE_SOUNDMANAGER_H
 #define GAME_MWBASE_SOUNDMANAGER_H
 
+#include <functional>
 #include <memory>
 #include <set>
 #include <string>
@@ -200,6 +201,10 @@ namespace MWBase
             = 0;
         ///< Play a 3D sound at \a initialPos. If the sound should be moving, it must be updated using
         ///< Sound::setPosition.
+
+        // Native restore: decoding before cleanup, one playback after next clear.
+        virtual std::function<Sound*()> prepareSound3D(const osg::Vec3f& pos, const ESM::RefId& id,
+            float volume, float pitch, Type type, PlayMode mode) { return {}; }
 
         virtual void stopSound(Sound* sound) = 0;
         ///< Stop the given sound from playing
