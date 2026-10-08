@@ -6,6 +6,45 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 actual weather plugin reordering — 2026-10-08
+
+Two independent TES4 plugins each add one weather record with its own
+`content:m15-weather-{a,b}.esp:000800` identity. The editable recipes
+`m15_weather_{a,b}_fixture.json` pin the original master hash and weather
+038eee. `scripts/tes4_m15_weather_fixture.py` clones its payload, changing only
+EDID and the owning record FormID, declaring Oblivion.esm as its sole master.
+Generated licensed payloads remain ignored artifacts. This narrow writer is
+separate from the TES3-only OpenMW-CS MCP. Structural/readback tests verify
+payload preservation, compression, deterministic output and malformed recipe,
+identity, hash and template rejection.
+
+Generate each plugin with `python3 scripts/tes4_m15_weather_fixture.py
+MASTER scripts/data/oblivion_compat/m15_weather_a_fixture.json
+OUTPUT/m15-weather-a.esp` (and the corresponding b recipe/output). The source
+scenarios `oblivion_m15_weather_reordered_{roundtrip,continuation}.json` use
+`fixture_data=OUTPUT`, A/B then B/A. Only the first process forces persistent
+weather A. The fresh continuation issues no weather-setting command.
+
+Normal and ASan/UBSan courses pass actual load/F5/quit and a distinct-PID
+load/F5/quit in each configuration. ASan leak coverage is disabled.
+Independent save parsing confirms raw CWTH **37 then38**, stable current key A,
+override and regional state preserved, with all39 catalog entries checked
+against original master record order plus the two fixture identities. Initial
+native fields match except the deliberately extended/reordered content array;
+plugin/fingerprint maps retain every saved entry. Ten declared authority groups
+remain exact after saving. All four reviewed captures show the prison scene and HUD.
+The full Python suite passes **289 cases**, no failures/skips, with unchanged
+before/after fingerprint
+`cdc64a2f7730126751302aa3e1890ba8b23eedb7c287bebf07da649f277183c1`
+against parent `614e0f47955503cd6775496b33284272791fed87`.
+
+Evidence: `build/oblivion-compat/m15/S3/weather-reordered-python-01` and
+`weather-reordered-runtime-{normal,sanitized}-01/verification.json`. C++ implementation
+remains the previously verified catalog-persistence build. This closes actual
+current-weather restoration through plugin reversal. Nonzero fixture-weather
+regional bucket/fallback remapping, changed-content rejection, exterior weather
+visuals, explicit manager handles and the wider S3 restore gaps remain open.
+
 ## S3 stable native weather catalog persistence — 2026-10-08
 
 New native WTHR saves carry a local versioned WXVR1/WXID catalog of immutable
@@ -48,7 +87,8 @@ catalog exactly matches an independent original TES4 record/group walk,
 including first-insertion/winning order and deleted-record handling. Two
 reviewed captures show the same prison scene and HUD. These are diagnostic
 interior courses with audio disabled, not exterior weather visual acceptance.
-They do not change actual catalog order; that integration course remains open.
+They keep the original catalog order. The additional reordered-content course
+below supplies the separate integration evidence.
 
 Editable sources are
 `oblivion_m15_weather_catalog_{roundtrip,continuation}.json` under
@@ -60,8 +100,9 @@ Editable sources are
 No failing full attempts occurred. Targeted production/codec/engine builds and
 focused codec/Python checks preceded the full runs.
 
-Full S3 remains active. Actual reordered/changed native-weather content,
-explicit manager-handle lifecycle, wider semantic/shared-resource staging and
+Full S3 remains active. Changed native-weather content, nonzero regional bucket
+remapping through actual processes, explicit manager-handle lifecycle, wider
+semantic/shared-resource staging and
 postcleanup prior-World preservation still require completion evidence.
 
 ## S3 removed weather-region identity admission — 2026-10-07

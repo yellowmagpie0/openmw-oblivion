@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "purpose": "Independent weather identity for the M15S3 reordered-catalog restart course",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "template": 233198,
+  "weather": {
+    "id": 16779264,
+    "editor_id": "M15CatalogueA"
+  }
+}

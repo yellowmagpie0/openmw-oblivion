@@ -95,8 +95,12 @@ catalog absence remains numeric. Native chance queries use the current-index
 projection. Actual World RNG tests cover every roll through two reorderings;
 normal legacy-to-WXVR1/fresh-process courses preserve current and regional
 identities and compare all37 catalog keys with the original record walk.
-Actual reordered-content runtime and explicit stale/copied manager-handle
-integration remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
+Actual normal and instrumented two-plugin reversal now retain persistent
+current weather A
+while its raw saved index changes37 to38; independent content/catalog and native
+state comparisons pass. Nonzero regional bucket/fallback remapping through
+actual processes, changed-content rejection and explicit stale/copied
+manager-handle integration remain open. Quickkey texture preparation and complete native/shared hotkey authority/removal/
 replacement reconciliation remain open. Later shared record/resource restoration
 still has a cleanup-on-failure boundary: that is an open S3 gap,
 not a proved all-or-nothing restore guarantee.
