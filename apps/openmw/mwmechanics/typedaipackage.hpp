@@ -29,6 +29,12 @@ namespace MWMechanics
         {
         }
 
+        template <class Derived>
+        TypedAiPackage(Derived*, const Options& options)
+            : AiPackage(Derived::getTypeId(), options)
+        {
+        }
+
         std::unique_ptr<AiPackage> clone() const override { return std::make_unique<T>(*static_cast<const T*>(this)); }
     };
 }

@@ -150,6 +150,11 @@ namespace MWMechanics
         }
     }
 
+    void SpellList::reserveListeners(std::size_t count)
+    {
+        mListeners.reserve(count);
+    }
+
     void SpellList::addListener(Spells* spells)
     {
         if (std::find(mListeners.begin(), mListeners.end(), spells) != mListeners.end())

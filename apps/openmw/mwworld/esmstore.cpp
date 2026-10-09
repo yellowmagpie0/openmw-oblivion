@@ -16,6 +16,7 @@
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <components/esm4/common.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
@@ -551,6 +552,7 @@ namespace MWWorld
 
     void ESMStore::clearDynamic()
     {
+        mPreparedSpellListPins.clear();
         for (const auto& store : mDynamicStores)
             store->clearDynamic();
         mStoreImp->mIds = mStoreImp->mStaticIds;
@@ -837,6 +839,31 @@ namespace MWWorld
         source.rebuildIdsIndex();
         plan->mPlayer = source.get<ESM::NPC>().find(playerId);
         return PreparedDynamicRecords(std::move(plan));
+    }
+
+    ESM::NPC ESMStore::prepareRestoredPlayerMetadata(const ESM4::RuntimeState& state,
+        const ESMStore& incoming, const std::vector<std::string>& contentFiles) const
+    {
+        const auto* source = searchForRestore<ESM::NPC>(ESM::RefId::stringRefId("Player"), incoming);
+        if (!source)
+            throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
+        auto player = *source;
+        if (state.mVersion < 3)
+            return player;
+        const ESM::FormKeyResolver resolver(contentFiles);
+        const auto race = resolver.toFormId(state.mPlayer.mRace);
+        const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
+        if (!characterClass && !state.mPlayer.mClass.isDynamic())
+            throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
+        const auto classId = characterClass ? ESM::RefId(*characterClass) : source->mClass;
+        if (!race || !get<ESM::Race>().searchStatic(ESM::RefId(*race))
+            || !searchForRestore<ESM::Class>(classId, incoming))
+            throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+        player.mName = state.mPlayer.mName;
+        player.mRace = ESM::RefId(*race);
+        player.mClass = classId;
+        player.setIsMale(!state.mPlayer.mFemale);
+        return player;
     }
 
     bool ESMStore::isSavedDynamicRecord(std::uint32_t type)
@@ -1361,23 +1388,61 @@ namespace MWWorld
             throw std::runtime_error("Invalid player record (race or class unavailable");
     }
 
+    ESMStore::PreparedSpellLists ESMStore::prepareSpellLists(const SpellListRequests& requests) const
+    {
+        PreparedSpellLists prepared;
+        prepared.mIdentity = mDynamicRestoreIdentity;
+        prepared.mExpectedClear = mDynamicClearGeneration + 1;
+        prepared.mCache.reserve(requests.size());
+        prepared.mPins.reserve(requests.size());
+        for (const auto& [id, request] : requests)
+        {
+            const auto [type, count] = request;
+            if (id.empty() || (type != ESM::REC_NPC_ && type != ESM::REC_CREA) || count == 0)
+                throw std::invalid_argument("Invalid prepared shared spell-list request");
+            auto list = std::make_shared<MWMechanics::SpellList>(id, type);
+            list->reserveListeners(count);
+            prepared.mCache.emplace(id, SpellListCacheEntry{list, true});
+            prepared.mPins.push_back(std::move(list));
+        }
+        return prepared;
+    }
+
+    bool ESMStore::PreparedSpellLists::install(ESMStore& store)
+    {
+        if (mConsumed || mIdentity.lock() != store.mDynamicRestoreIdentity
+            || mExpectedClear != store.mDynamicClearGeneration)
+            return false;
+        store.mSpellListCache.swap(mCache);
+        store.mPreparedSpellListPins.swap(mPins);
+        mConsumed = true;
+        return true;
+    }
+
+    void ESMStore::finishSpellListRestore()
+    {
+        mPreparedSpellListPins.clear();
+    }
+
     std::pair<std::shared_ptr<MWMechanics::SpellList>, bool> ESMStore::getSpellList(const ESM::RefId& id) const
     {
         auto result = mSpellListCache.find(id);
         std::shared_ptr<MWMechanics::SpellList> ptr;
         if (result != mSpellListCache.end())
-            ptr = result->second.lock();
+            ptr = result->second.mList.lock();
         if (!ptr)
         {
             int type = find(id);
             ptr = std::make_shared<MWMechanics::SpellList>(id, type);
             if (result != mSpellListCache.end())
-                result->second = ptr;
+                result->second = SpellListCacheEntry{ptr, false};
             else
-                mSpellListCache.insert({ id, ptr });
-            return { ptr, false };
+                mSpellListCache.emplace(id, SpellListCacheEntry{ptr, false});
+            return {ptr, false};
         }
-        return { ptr, true };
+        const bool first = result->second.mFirstBindingPending;
+        result->second.mFirstBindingPending = false;
+        return {ptr, !first};
     }
 
     template <>

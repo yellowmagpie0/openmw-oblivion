@@ -19,13 +19,13 @@ namespace MWMechanics
     class AiTravel : public TypedAiPackage<AiTravel>
     {
     public:
-        AiTravel(float x, float y, float z, bool repeat, AiTravel* derived);
+        AiTravel(float x, float y, float z, bool repeat, AiTravel* derived, bool deferredRestore = false);
 
-        AiTravel(float x, float y, float z, AiInternalTravel* derived);
+        AiTravel(float x, float y, float z, AiInternalTravel* derived, bool deferredRestore = false);
 
-        AiTravel(float x, float y, float z, bool repeat);
+        AiTravel(float x, float y, float z, bool repeat, bool deferredRestore = false);
 
-        explicit AiTravel(const ESM::AiSequence::AiTravel* travel);
+        explicit AiTravel(const ESM::AiSequence::AiTravel* travel, bool deferredRestore = false);
 
         /// Simulates the passing of time
         void fastForward(const MWWorld::Ptr& actor, AiState& state) override;
@@ -61,7 +61,7 @@ namespace MWMechanics
     {
         AiInternalTravel(float x, float y, float z);
 
-        explicit AiInternalTravel(const ESM::AiSequence::AiTravel* travel);
+        explicit AiInternalTravel(const ESM::AiSequence::AiTravel* travel, bool deferredRestore = false);
 
         static constexpr AiPackageTypeId getTypeId() { return AiPackageTypeId::InternalTravel; }
 

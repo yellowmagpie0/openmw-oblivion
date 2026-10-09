@@ -37,8 +37,8 @@ namespace MWMechanics
     }
 
     AiEscort::AiEscort(
-        const ESM::RefId& actorId, std::string_view cellId, int duration, float x, float y, float z, bool repeat)
-        : TypedAiPackage<AiEscort>(repeat)
+        const ESM::RefId& actorId, std::string_view cellId, int duration, float x, float y, float z, bool repeat, bool deferredRestore)
+        : TypedAiPackage<AiEscort>(makeDefaultOptions().withRepeat(repeat).withDeferredRestore(deferredRestore))
         , mCellId(cellId)
         , mX(x)
         , mY(y)
@@ -49,8 +49,8 @@ namespace MWMechanics
         mTargetActorRefId = actorId;
     }
 
-    AiEscort::AiEscort(const ESM::AiSequence::AiEscort* escort)
-        : TypedAiPackage<AiEscort>(escort->mRepeat)
+    AiEscort::AiEscort(const ESM::AiSequence::AiEscort* escort, bool deferredRestore)
+        : TypedAiPackage<AiEscort>(makeDefaultOptions().withRepeat(escort->mRepeat).withDeferredRestore(deferredRestore))
         , mCellId(escort->mCellId)
         , mX(escort->mData.mX)
         , mY(escort->mData.mY)

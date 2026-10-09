@@ -44,6 +44,13 @@ namespace MWMechanics
             bool mShouldCancelPreviousAi = true;
             bool mRepeat = false;
             bool mAlwaysActive = false;
+            bool mDeferredRestore = false;
+
+            constexpr Options withDeferredRestore(bool value)
+            {
+                mDeferredRestore = value;
+                return *this;
+            }
 
             constexpr Options withRepeat(bool value)
             {

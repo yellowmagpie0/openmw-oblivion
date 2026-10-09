@@ -1,5 +1,7 @@
 #include "aifollow.hpp"
 
+#include <stdexcept>
+
 #include <components/esm3/aisequence.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/misc/algorithm.hpp>
@@ -47,8 +49,8 @@ namespace MWMechanics
     }
 
     AiFollow::AiFollow(
-        const ESM::RefId& actorId, std::string_view cellId, float duration, float x, float y, float z, bool repeat)
-        : TypedAiPackage<AiFollow>(repeat)
+        const ESM::RefId& actorId, std::string_view cellId, float duration, float x, float y, float z, bool repeat, bool deferredRestore)
+        : TypedAiPackage<AiFollow>(makeDefaultOptions().withRepeat(repeat).withDeferredRestore(deferredRestore))
         , mAlwaysFollow(false)
         , mDuration(duration)
         , mRemainingDuration(duration)
@@ -57,7 +59,7 @@ namespace MWMechanics
         , mZ(z)
         , mCellId(cellId)
         , mActive(false)
-        , mFollowIndex(mFollowIndexCounter++)
+        , mFollowIndex(deferredRestore ? -1 : mFollowIndexCounter++)
     {
         mTargetActorRefId = actorId;
     }
@@ -77,9 +79,9 @@ namespace MWMechanics
         mTargetActor = actor.getCellRef().getRefNum();
     }
 
-    AiFollow::AiFollow(const ESM::AiSequence::AiFollow* follow)
+    AiFollow::AiFollow(const ESM::AiSequence::AiFollow* follow, bool deferredRestore)
         : TypedAiPackage<AiFollow>(
-            makeDefaultOptions().withShouldCancelPreviousAi(!follow->mCommanded).withRepeat(follow->mRepeat))
+            makeDefaultOptions().withShouldCancelPreviousAi(!follow->mCommanded).withRepeat(follow->mRepeat).withDeferredRestore(deferredRestore))
         , mAlwaysFollow(follow->mAlwaysFollow)
         , mDuration(follow->mData.mDuration)
         , mRemainingDuration(follow->mRemainingDuration)
@@ -88,10 +90,17 @@ namespace MWMechanics
         , mZ(follow->mData.mZ)
         , mCellId(follow->mCellId)
         , mActive(follow->mActive)
-        , mFollowIndex(mFollowIndexCounter++)
+        , mFollowIndex(deferredRestore ? -1 : mFollowIndexCounter++)
     {
         mTargetActorRefId = follow->mTargetId;
         mTargetActor = follow->mTargetActor;
+    }
+
+    void AiFollow::initializeRestoreIndex()
+    {
+        if (mFollowIndex != -1)
+            throw std::logic_error("AI Follow restore index already initialized");
+        mFollowIndex = mFollowIndexCounter++;
     }
 
     bool AiFollow::execute(

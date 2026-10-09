@@ -82,7 +82,7 @@ namespace MWMechanics
         /** \param actor Actor to fight **/
         explicit AiCombat(const MWWorld::Ptr& actor);
 
-        explicit AiCombat(const ESM::AiSequence::AiCombat* combat);
+        explicit AiCombat(const ESM::AiSequence::AiCombat* combat, bool deferredRestore = false);
 
         void init();
 

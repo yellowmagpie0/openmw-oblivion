@@ -90,6 +90,13 @@ void MWWorld::InventoryStore::readEquipmentState(
         {
             int count = iter->getCellRef().getCount(false);
             MWWorld::ContainerStoreIterator newIter = addNewStack(*iter, count > 0 ? 1 : -1);
+            if (mDetachedRestoreRead)
+            {
+                // The split copy is a new instance. It receives a fresh
+                // registry identity only when the prepared contents publish.
+                newIter->getCellRef().unsetRefNum();
+                newIter->getRefData().setLuaScripts(nullptr);
+            }
             iter->getCellRef().setCount(subtractItems(count, 1));
             mSlots[slot] = newIter;
         }

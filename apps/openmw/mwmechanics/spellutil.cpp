@@ -1,5 +1,8 @@
 #include "spellutil.hpp"
+#include "spellcalculation.hpp"
 
+#include <cmath>
+#include <cstdint>
 #include <limits>
 
 #include <components/esm3/loadalch.hpp>
@@ -20,13 +23,17 @@ namespace MWMechanics
 {
     namespace
     {
-        float getTotalCost(const ESM::EffectList& list, const EffectCostMethod method = EffectCostMethod::GameSpell)
+        float getTotalCost(const ESM::EffectList& list, const EffectCostMethod method = EffectCostMethod::GameSpell,
+            SpellCalculationContext* context = nullptr)
         {
             float cost = 0;
 
             for (const ESM::IndexedENAMstruct& effect : list.mList)
             {
-                float effectCost = std::max(0.f, MWMechanics::calcEffectCost(effect.mData, nullptr, method));
+                const float rawCost = MWMechanics::calcEffectCost(effect.mData, nullptr, method, context);
+                if (context && context->isPreparing() && !std::isfinite(rawCost))
+                    throw std::runtime_error("Prepared spell effect cost is nonfinite");
+                float effectCost = std::max(0.f, rawCost);
 
                 // This is applied to the whole spell cost for each effect when
                 // creating spells, but is only applied on the effect itself in TES:CS.
@@ -40,11 +47,14 @@ namespace MWMechanics
     }
 
     float calcEffectCost(
-        const ESM::ENAMstruct& effect, const ESM::MagicEffect* magicEffect, const EffectCostMethod method)
+        const ESM::ENAMstruct& effect, const ESM::MagicEffect* magicEffect, const EffectCostMethod method,
+        SpellCalculationContext* context)
     {
-        const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+        std::optional<SpellCalculationContext> ordinary;
+        if (!context) ordinary.emplace(*MWBase::Environment::get().getESMStore());
+        auto& calculation = context ? *context : *ordinary;
         if (!magicEffect)
-            magicEffect = store.get<ESM::MagicEffect>().find(effect.mEffectID);
+            magicEffect = calculation.effect(effect.mEffectID);
         bool hasMagnitude = !(magicEffect->mData.mFlags & ESM::MagicEffect::NoMagnitude);
         bool hasDuration = !(magicEffect->mData.mFlags & ESM::MagicEffect::NoDuration);
         bool appliedOnce = magicEffect->mData.mFlags & ESM::MagicEffect::AppliedOnce;
@@ -58,8 +68,8 @@ namespace MWMechanics
         int duration = hasDuration ? effect.mDuration : 1;
         if (!appliedOnce)
             duration = std::max(1, duration);
-        static const float fEffectCostMult = store.get<ESM::GameSetting>().find("fEffectCostMult")->mValue.getFloat();
-        static const float iAlchemyMod = store.get<ESM::GameSetting>().find("iAlchemyMod")->mValue.getFloat();
+        const float fEffectCostMult = calculation.setting(spellCalculationCaches().mEffectCost);
+        const float iAlchemyMod = calculation.setting(spellCalculationCaches().mAlchemyCost);
 
         int durationOffset = 0;
         int minArea = 0;
@@ -75,6 +85,14 @@ namespace MWMechanics
             costMult = iAlchemyMod;
         }
 
+        if (calculation.isPreparing())
+        {
+            const auto magnitude = std::int64_t(minMagn) + maxMagn;
+            const auto durationTerm = std::int64_t(durationOffset) + duration;
+            if (magnitude < std::numeric_limits<int>::min() || magnitude > std::numeric_limits<int>::max()
+                || durationTerm < std::numeric_limits<int>::min() || durationTerm > std::numeric_limits<int>::max())
+                throw std::runtime_error("Prepared spell effect arithmetic exceeds the integer domain");
+        }
         float x = 0.5f * (minMagn + maxMagn);
         x *= 0.1f * magicEffect->mData.mBaseCost;
         x *= durationOffset + duration;
@@ -83,14 +101,18 @@ namespace MWMechanics
         return x * costMult;
     }
 
-    int calcSpellCost(const ESM::Spell& spell)
+    int calcSpellCost(const ESM::Spell& spell, SpellCalculationContext* context)
     {
         if (!(spell.mData.mFlags & ESM::Spell::F_Autocalc))
             return spell.mData.mCost;
 
-        float cost = getTotalCost(spell.mEffects);
+        float cost = getTotalCost(spell.mEffects, EffectCostMethod::GameSpell, context);
 
-        return static_cast<int>(std::round(cost));
+        const float rounded = std::round(cost);
+        if (context && context->isPreparing()
+            && (!std::isfinite(rounded) || rounded < -0x1p31f || rounded >= 0x1p31f))
+            throw std::runtime_error("Prepared spell cost exceeds the integer domain");
+        return static_cast<int>(rounded);
     }
 
     int getEffectiveEnchantmentCastCost(float castCost, const MWWorld::Ptr& actor)

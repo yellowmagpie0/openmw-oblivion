@@ -100,6 +100,7 @@ namespace MWMechanics
         Collection::const_iterator end() const { return mCollection.end(); }
 
         void readState(const ESM::MagicEffects& state);
+        void installPreparedState(MagicEffects& prepared);
         void writeState(ESM::MagicEffects& state) const;
 
         void add(const EffectKey& key, const EffectParam& param);

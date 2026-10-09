@@ -554,7 +554,11 @@ namespace MWState
             const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles,
         const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog,
         const std::function<void(const ESM::QuickKeys&, const MWWorld::ESMStore&,
-            const ESM4::RuntimeState*)>& prepareQuickKeys)
+            const ESM4::RuntimeState*)>& prepareQuickKeys,
+        const std::function<void(ESM::ObjectState&, const MWWorld::ESMStore&,
+            const ESM4::RuntimeState*)>& prepareInventory,
+        const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions,
+        const std::function<bool(const ESM::RefId&)>& restoreCell)
     {
         const auto start = reader.getContext();
         try
@@ -615,6 +619,11 @@ namespace MWState
             std::vector<ESM::MagicBoltState> bolts;
             std::map<ESM::RefId, ESM::Global> globals;
             std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
+            std::vector<std::unique_ptr<ESM::ObjectState>> inventoryOwners;
+            std::vector<std::unique_ptr<ESM::Player>> inventoryPlayers;
+            // Pointees stay stable when the owning vectors grow. Preserve wire
+            // encounter order across cell owners and Player, as restoration does.
+            std::vector<ESM::ObjectState*> inventoryOrder;
             ESM4::LocalLuaScripts nativeScripts;
             std::vector<LegacyGeneratedItem> legacyPlayerItems;
             struct ActorInventory { ESM::FormKey mBase; std::vector<LegacyGeneratedItem> mItems; };
@@ -731,7 +740,7 @@ namespace MWState
                 std::vector<ESM::LuaScripts> localScripts;
                 const auto collectScripts = [&](ESM::ObjectState& object) {
                     if (!object.mLuaScripts.mScripts.empty())
-                        localScripts.push_back(std::move(object.mLuaScripts));
+                        localScripts.push_back(object.mLuaScripts);
                     ESM::InventoryState* inventory = nullptr;
                     if (auto* npc = dynamic_cast<ESM::NpcState*>(&object)) inventory = &npc->mInventory;
                     else if (auto* creature = dynamic_cast<ESM::CreatureState*>(&object)) inventory = &creature->mInventory;
@@ -739,7 +748,7 @@ namespace MWState
                     if (inventory)
                         for (auto& item : inventory->mItems)
                             if (!item.mLuaScripts.mScripts.empty())
-                                localScripts.push_back(std::move(item.mLuaScripts));
+                                localScripts.push_back(item.mLuaScripts);
                 };
                 const auto validatePosition = [](const ESM::Position& position) {
                     for (int axis = 0; axis != 3; ++axis)
@@ -756,7 +765,8 @@ namespace MWState
                         if (hasPlayer)
                             throw std::runtime_error("Saved game contains duplicate PLAY records");
                         hasPlayer = true;
-                        ESM::Player player{};
+                        auto ownedPlayer = std::make_unique<ESM::Player>();
+                        auto& player = *ownedPlayer;
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
                         validateSharedActorState(player.mObject, *shared, content, true);
@@ -788,6 +798,11 @@ namespace MWState
                         }
                         legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
+                        if (prepareInventory)
+                        {
+                            inventoryOrder.push_back(&ownedPlayer->mObject);
+                            inventoryPlayers.push_back(std::move(ownedPlayer));
+                        }
                     }
                     else
                     {
@@ -796,6 +811,7 @@ namespace MWState
                         if (!cells.insert(cell.mId).second)
                             throw std::runtime_error("Saved game contains duplicate CSTA records");
                         cell.load(reader);
+                        const bool prepareOwners = !restoreCell || restoreCell(cell.mId);
                         if (!std::isfinite(cell.mWaterLevel) || !std::isfinite(cell.mLastRespawn.mHour))
                             throw std::runtime_error("Saved game shared cell has a nonfinite value");
                         validateSharedTimestamp(cell.mLastRespawn);
@@ -821,7 +837,7 @@ namespace MWState
                                 referenceType = content->findStatic(reference.mRefID);
                             if (referenceType)
                             {
-                                const auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
+                                auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
                                 validateSharedActorState(*state, *shared, content);
                                 // CSTA reference numbers retain their saved load-order
@@ -858,6 +874,11 @@ namespace MWState
                                     }
                                 }
                                 collectScripts(*state);
+                                if (prepareInventory && prepareOwners)
+                                {
+                                    inventoryOrder.push_back(state.get());
+                                    inventoryOwners.push_back(std::move(state));
+                                }
                             }
                             else
                                 // Match CellStore's deliberate missing-object
@@ -972,6 +993,10 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys)
                     prepareQuickKeys(quickkeys, *shared, &native);
+                if (prepareInventory)
+                {
+                    for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, &native);
+                }
                 if (prepareNative)
                     prepareNative(native, std::move(shared));
                 else
@@ -985,6 +1010,12 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys && shared)
                     prepareQuickKeys(quickkeys, *shared, nullptr);
+                if (prepareInventory && shared)
+                {
+                    for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, nullptr);
+                }
+                if (prepareSharedDefinitions && shared)
+                    prepareSharedDefinitions(std::move(shared));
             }
             reader.restoreContext(start);
             return profile;

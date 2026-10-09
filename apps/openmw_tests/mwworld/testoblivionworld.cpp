@@ -1,3 +1,7 @@
+#include <cstdlib>
+#include "apps/openmw/mwmechanics/autocalcspell.hpp"
+#include "apps/openmw/mwmechanics/spellcalculation.hpp"
+#include "apps/openmw/mwmechanics/spellutil.hpp"
 #include <components/esm4/common.hpp>
 #include "apps/openmw/mwworld/projectilemanager.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
@@ -5,6 +9,14 @@
 #include <components/esm3/inventorystate.hpp>
 #include <components/esm3/objectstate.hpp>
 #include <components/esm3/npcstate.hpp>
+#include <components/esm3/creaturestate.hpp>
+#include <components/esm3/aisequence.hpp>
+#include <components/esm3/spellstate.hpp>
+#include <components/esm3/containerstate.hpp>
+#include "apps/openmw/mwclass/creature.hpp"
+#include "apps/openmw/mwclass/container.hpp"
+#include <components/esm3/loadcrea.hpp>
+#include <components/esm3/loadcont.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <bit>
@@ -14800,4 +14812,2020 @@ TEST(OblivionWorldTest, PreparedPlayerMetadataResolvesIncomingClassAndPublishesC
         EXPECT_EQ(world.getPlayerPtr().get<ESM::NPC>()->mBase, installed);
         EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mName, saved.mPlayer.mName);
     }
+}
+
+
+TEST(OblivionWorldTest, PreparedSharedInventoryOwnsIncomingItemsAcrossClearAndConsumesOnce)
+{
+    for (const bool equipment : {false, true})
+    for (const bool overrideItem : {false, true})
+    {
+        SCOPED_TRACE(equipment);
+        SCOPED_TRACE(overrideItem);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& model = world.getWorldModel();
+        const auto itemId = ESM::RefId(ESM::FormId{0x940, 0});
+        const auto* immutable = world.getStore().get<ESM::Weapon>().searchStatic(itemId);
+        auto outgoing = *immutable; outgoing.mName = "Outgoing discarded item";
+        world.getStore().getWritable<ESM::Weapon>().insert(outgoing);
+        auto definitions = std::make_unique<MWWorld::ESMStore>();
+        const ESM::Weapon* accepted = immutable;
+        if (overrideItem)
+        {
+            auto incoming = *immutable; incoming.mName = "Owned incoming item";
+            accepted = definitions->getWritable<ESM::Weapon>().insert(incoming);
+        }
+        ESM::InventoryState state{};
+        ESM::ObjectState item{}; item.blank();
+        item.mRef.mRefID = itemId; item.mRef.mRefNum = {200, -1};
+        item.mRef.mCount = 2; item.mRef.mChargeInt = 13;
+        item.mEnabled = false; item.mFlags = 72;
+        state.mItems.push_back(item);
+        state.mEquipmentSlots.emplace(0, MWWorld::InventoryStore::Slot_CarriedRight);
+        state.mSelectedEnchantItem = 0;
+        const auto nativeBefore = world.captureOblivionRuntimeState().serializeBinary();
+        const auto registryBefore = model.getLastGeneratedRefNum();
+        const auto rngBefore = Misc::Rng::serialize(world.getPrng());
+        auto prepared = MWWorld::ContainerStore::prepareReadState(state, world.getStore(), *definitions, equipment);
+        ASSERT_TRUE(prepared);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), registryBefore);
+        EXPECT_TRUE(model.getPtr(item.mRef.mRefNum).isEmpty());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), nativeBefore);
+        EXPECT_EQ(Misc::Rng::serialize(world.getPrng()), rngBefore);
+        for (const auto& ptr : *prepared)
+        {
+            EXPECT_EQ(ptr.mRef->mWorldModel, nullptr);
+            EXPECT_EQ(ptr.get<ESM::Weapon>()->mBase, accepted);
+        }
+        auto plan = world.prepareOblivionSharedDefinitions(std::move(definitions));
+        EXPECT_FALSE(plan->install());
+        world.clear(); ASSERT_TRUE(plan->install()); EXPECT_FALSE(plan->install());
+        std::unique_ptr<MWWorld::ContainerStore> target = equipment
+            ? std::make_unique<MWWorld::InventoryStore>() : std::make_unique<MWWorld::ContainerStore>();
+        // Simulate the legacy active-spell converter's identity assignment.
+        state.mItems[0].mRef.mRefNum = {201, -1};
+        target->installPreparedContents(*prepared, state);
+        EXPECT_TRUE(prepared->begin() == prepared->end());
+        EXPECT_EQ(target->count(itemId), 2);
+        EXPECT_FALSE(model.getPtr({201, -1}).isEmpty());
+        EXPECT_EQ(model.getPtr({201, -1}).getContainerStore(), target.get());
+        EXPECT_EQ(target->getSelectedEnchantItem()->getCellRef().getRefNum(), (ESM::RefNum{201, -1}));
+        for (const auto& ptr : *target)
+        {
+            EXPECT_EQ(ptr.get<ESM::Weapon>()->mBase, accepted);
+            EXPECT_EQ(ptr.getCellRef().getCharge(), 13);
+            EXPECT_FALSE(ptr.getRefData().isEnabled());
+            ESM::ObjectState savedItem{};
+            ptr.getRefData().write(savedItem);
+            EXPECT_EQ(savedItem.mFlags, 72u);
+            EXPECT_EQ(model.getPtr(ptr.getCellRef().getRefNum()), ptr);
+        }
+        if (equipment)
+        {
+            auto& slots = static_cast<MWWorld::InventoryStore&>(*target);
+            const auto held = slots.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            ASSERT_NE(held, slots.end());
+            EXPECT_EQ(held->getCellRef().getCount(), 1);
+            EXPECT_NE(held->getCellRef().getRefNum(), (ESM::RefNum{201, -1}));
+        }
+        EXPECT_THROW(target->installPreparedContents(*prepared, state), std::logic_error);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedSharedInventoryOwnerKeysRestockingKindsAndClearAreDeliberate)
+{
+    for (int kind = 0; kind != 5; ++kind)
+    {
+        SCOPED_TRACE(kind);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+        MWWorld::ESMStore incoming;
+        std::unique_ptr<ESM::ObjectState> owner;
+        const auto id = ESM::RefId::stringRefId("shared-owner");
+        const auto itemId = ESM::RefId(ESM::FormId{0x940, 0});
+        ESM::InventoryState* inventory = nullptr;
+        bool equipment = kind != 3 && kind != 4;
+        if (kind < 2)
+        {
+            auto npc = std::make_unique<ESM::NpcState>(); npc->blank();
+            npc->mRef.mRefID = kind == 0 ? ESM::RefId::stringRefId("Player") : id;
+            ESM::NPC base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            base.mId = npc->mRef.mRefID; base.mInventory.mList.push_back({-2, itemId});
+            world.getStore().getWritable<ESM::NPC>().insertStatic(base);
+            inventory = &npc->mInventory; owner = std::move(npc);
+        }
+        else if (kind == 2 || kind == 4)
+        {
+            auto creature = std::make_unique<ESM::CreatureState>(); creature->blank(); creature->mRef.mRefID = id;
+            ESM::Creature base{}; base.blank(); base.mId = id; base.mFlags = kind == 2 ? ESM::Creature::Weapon : 0;
+            base.mInventory.mList.push_back({-2, itemId});
+            world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+            inventory = &creature->mInventory; owner = std::move(creature);
+        }
+        else
+        {
+            auto container = std::make_unique<ESM::ContainerState>(); container->blank(); container->mRef.mRefID = id;
+            ESM::Container base{}; base.blank(); base.mId = id; base.mInventory.mList.push_back({-2, itemId});
+            world.getStore().getWritable<ESM::Container>().insertStatic(base);
+            inventory = &container->mInventory; owner = std::move(container);
+        }
+        owner->mHasCustomState = true; owner->mRef.mRefNum = {300, -1};
+        owner->mVersion = ESM::MaxOldRestockingFormatVersion;
+        ESM::ObjectState item{}; item.blank(); item.mRef.mRefID = itemId; item.mRef.mCount = 2;
+        inventory->mItems.push_back(item);
+        auto prepared = model.prepareInventoryState(*owner, incoming);
+        ASSERT_TRUE(prepared);
+        EXPECT_EQ(dynamic_cast<MWWorld::InventoryStore*>(prepared.get()) != nullptr, equipment);
+        EXPECT_EQ(prepared->begin()->getCellRef().getCount(false), kind == 0 ? 2 : -2);
+        MWWorld::WorldModel::PreparedInventoryStates plans;
+        plans.emplace(model.preparedInventoryKey(*owner), std::move(prepared));
+        model.setPreparedInventoryStates(std::move(plans));
+        std::unique_ptr<MWWorld::ContainerStore> target = equipment
+            ? std::make_unique<MWWorld::InventoryStore>() : std::make_unique<MWWorld::ContainerStore>();
+        EXPECT_TRUE(model.readPreparedInventory(*owner, *target));
+        EXPECT_FALSE(model.readPreparedInventory(*owner, *target));
+        auto second = model.prepareInventoryState(*owner, incoming);
+        MWWorld::WorldModel::PreparedInventoryStates discarded;
+        discarded.emplace(model.preparedInventoryKey(*owner), std::move(second));
+        model.setPreparedInventoryStates(std::move(discarded));
+        // Exercise actual class restoration, not only the WorldModel bridge.
+        MWClass::Creature::registerSelf(); MWClass::Container::registerSelf();
+        world.getStore().rebuildIdsIndex();
+        MWWorld::ManualRef restored(world.getStore(), owner->mRef.mRefID);
+        restored.getPtr().mRef->load(*owner);
+        auto& liveInventory = restored.getPtr().getClass().getContainerStore(restored.getPtr());
+        EXPECT_EQ(liveInventory.begin()->getCellRef().getCount(false), kind == 0 ? 2 : -2);
+        EXPECT_FALSE(model.readPreparedInventory(*owner, liveInventory));
+        auto third = model.prepareInventoryState(*owner, incoming);
+        MWWorld::WorldModel::PreparedInventoryStates cleared;
+        cleared.emplace(model.preparedInventoryKey(*owner), std::move(third));
+        model.setPreparedInventoryStates(std::move(cleared));
+        model.clear(); EXPECT_FALSE(model.readPreparedInventory(*owner, *target));
+        owner->mHasCustomState = false;
+        EXPECT_FALSE(model.prepareInventoryState(*owner, incoming));
+    }
+}
+
+
+TEST(OblivionWorldTest, EmptySharedInventoryPreparationCannotReplayOrBorrowAnOrdinaryStore)
+{
+    PopulatedMigrationFixture fixture;
+    MWWorld::ESMStore incoming;
+    MWWorld::ContainerStore target;
+    auto prepared = MWWorld::ContainerStore::prepareReadState({}, fixture.mWorld.getStore(), incoming, false);
+    ASSERT_NO_THROW(target.installPreparedContents(*prepared, {}));
+    EXPECT_THROW(target.installPreparedContents(*prepared, {}), std::logic_error);
+    MWWorld::ContainerStore ordinary;
+    EXPECT_THROW(target.installPreparedContents(ordinary, {}), std::logic_error);
+}
+
+TEST(OblivionWorldTest, LegacyInventoryOwnerKeysPreserveUnsetActorIdsAndStableConvertedIds)
+{
+    ESM::NpcState first{}; first.blank(); first.mRef.mRefID = ESM::RefId::stringRefId("same-base");
+    first.mVersion = ESM::MaxActorIdSaveGameFormatVersion;
+    first.mCreatureStats.mActorId = -1; first.mRef.mRefNum = {42, -1};
+    ESM::NpcState second{}; second.blank(); second.mRef.mRefID = first.mRef.mRefID;
+    second.mVersion = first.mVersion;
+    second.mCreatureStats.mActorId = -1; second.mRef.mRefNum = {43, -1};
+    EXPECT_NE(MWWorld::WorldModel::preparedInventoryKey(first), MWWorld::WorldModel::preparedInventoryKey(second));
+    first.mCreatureStats.mActorId = 7; second.mCreatureStats.mActorId = 7;
+    EXPECT_EQ(MWWorld::WorldModel::preparedInventoryKey(first), MWWorld::WorldModel::preparedInventoryKey(second));
+    first.mVersion = ESM::CurrentSaveGameFormatVersion;
+    second.mVersion = first.mVersion;
+    EXPECT_NE(MWWorld::WorldModel::preparedInventoryKey(first), MWWorld::WorldModel::preparedInventoryKey(second));
+}
+
+TEST(OblivionWorldTest, PreparedSharedNpcStatsUseIncomingDefinitionsAndPreserveOverlayAndCreatureState)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    MWWorld::ESMStore incoming;
+    const auto kept = ESM::RefId::stringRefId("stat-kept");
+    const auto saved = ESM::RefId::generated(200);
+    const auto savedFaction = ESM::RefId::stringRefId("stat-saved-faction");
+    const auto outgoing = ESM::RefId::stringRefId("stat-outgoing");
+    for (const auto& id : {kept, saved, outgoing})
+    {
+        ESM::Faction faction{}; faction.blank(); faction.mId = id;
+        ESM::Miscellaneous item{}; item.blank(); item.mId = id;
+        if (id == kept)
+        {
+            store.getWritable<ESM::Faction>().insertStatic(faction);
+            store.getWritable<ESM::Miscellaneous>().insertStatic(item);
+        }
+        else
+        {
+            auto& definitions = id == saved ? incoming : store;
+            if (id == saved)
+            {
+                faction.mId = savedFaction;
+                store.getWritable<ESM::Faction>().insertStatic(faction);
+            }
+            else
+                definitions.getWritable<ESM::Faction>().insert(faction);
+            definitions.getWritable<ESM::Miscellaneous>().insert(item);
+        }
+    }
+    store.rebuildIdsIndex();
+    incoming.rebuildIdsIndex();
+    MWMechanics::NpcStats target;
+    target.setHealth(MWMechanics::DynamicStat<float>(61));
+    ESM::NpcStats initial{}; initial.blank();
+    initial.mFactions[kept].mRank = 4;
+    initial.mFactions[kept].mReputation = 12;
+    initial.mFactions[kept].mExpelled = true;
+    initial.mUsedIds = {kept};
+    initial.mSkills[kept].mBase = 73;
+    target.readState(initial);
+    ESM::NpcStats input{}; input.blank();
+    input.mFactions[kept].mRank = -1;
+    input.mFactions[savedFaction].mRank = 3;
+    input.mFactions[savedFaction].mReputation = 19;
+    input.mFactions[savedFaction].mExpelled = true;
+    input.mFactions[outgoing].mRank = 5;
+    input.mUsedIds = {saved, outgoing};
+    input.mSkills[saved].mBase = 47;
+    input.mBounty = -7; input.mReputation = 32;
+    input.mDisposition = 83; input.mCrimeDispositionModifier = -11;
+    input.mCrimeId = 6; input.mTimeToStartDrowning = 9;
+    input.mSkillIncrease[kept] = 2; input.mSpecIncreases = {3, 4, 5};
+    const auto native = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = world.getWorldModel().getPtrRegistryRevision();
+    auto prepared = MWMechanics::NpcStats::prepareReadState(input, store, &incoming);
+    ASSERT_TRUE(prepared);
+    EXPECT_EQ(target.getBounty(), initial.mBounty);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), native);
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+    // Publication no longer consults any definition store.
+    incoming.getWritable<ESM::Faction>().clearDynamic();
+    incoming.getWritable<ESM::Miscellaneous>().clearDynamic();
+    ASSERT_NO_THROW(prepared->install(target));
+    EXPECT_EQ(target.getHealth().getCurrent(), 61);
+    EXPECT_EQ(target.getFactionRank(kept), 4);
+    EXPECT_EQ(target.getFactionRank(savedFaction), 3);
+    EXPECT_FALSE(target.isInFaction(outgoing));
+    EXPECT_TRUE(target.getExpelled(kept));
+    EXPECT_TRUE(target.getExpelled(savedFaction));
+    EXPECT_TRUE(target.hasBeenUsed(kept));
+    EXPECT_TRUE(target.hasBeenUsed(saved));
+    EXPECT_FALSE(target.hasBeenUsed(outgoing));
+    EXPECT_EQ(target.getSkill(kept).getBase(), 73);
+    EXPECT_EQ(target.getSkill(saved).getBase(), 47);
+    EXPECT_EQ(target.getBounty(), -7);
+    EXPECT_EQ(target.getReputation(), 32);
+    ESM::NpcStats restored{}; restored.blank(); target.writeState(restored);
+    EXPECT_EQ(restored.mSkillIncrease, input.mSkillIncrease);
+    EXPECT_EQ(restored.mSpecIncreases, input.mSpecIncreases);
+    EXPECT_EQ(restored.mFactions.at(kept).mReputation, 12);
+    EXPECT_EQ(restored.mFactions.at(savedFaction).mReputation, 19);
+    EXPECT_THROW(prepared->install(target), std::logic_error);
+}
+
+TEST(OblivionWorldTest, SharedNpcStatPlansConsumeThroughClassRestoreAndClear)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& model = world.getWorldModel();
+    MWWorld::ESMStore incoming;
+    ESM::NpcState owner{}; owner.blank();
+    owner.mRef.mRefID = ESM::RefId::stringRefId("Player");
+    owner.mHasCustomState = true;
+    owner.mNpcStats.mBounty = 91;
+    owner.mNpcStats.mReputation = 28;
+    auto prepared = model.prepareNpcState(owner, incoming);
+    ASSERT_TRUE(prepared);
+    MWWorld::WorldModel::PreparedNpcStates plans;
+    plans.emplace(model.preparedInventoryKey(owner), std::move(prepared));
+    model.setPreparedNpcStates(std::move(plans));
+    MWWorld::ManualRef restored(world.getStore(), owner.mRef.mRefID);
+    restored.getPtr().mRef->load(owner);
+    auto& stats = restored.getPtr().getClass().getNpcStats(restored.getPtr());
+    EXPECT_EQ(stats.getBounty(), 91);
+    EXPECT_EQ(stats.getReputation(), 28);
+    EXPECT_FALSE(model.readPreparedNpcState(owner, stats));
+    MWWorld::WorldModel::PreparedNpcStates discarded;
+    discarded.emplace(model.preparedInventoryKey(owner), model.prepareNpcState(owner, incoming));
+    model.setPreparedNpcStates(std::move(discarded));
+    model.clear();
+    EXPECT_FALSE(model.readPreparedNpcState(owner, stats));
+    owner.mHasCustomState = false;
+    EXPECT_FALSE(model.prepareNpcState(owner, incoming));
+}
+
+
+TEST(OblivionWorldTest, SharedCreatureProjectionGuardFailurePreservesAllEarlierResources)
+{
+    PopulatedMigrationFixture fixture;
+    for (const int guarded : {1, 2})
+    {
+        SCOPED_TRACE(guarded);
+        MWMechanics::CreatureStats target;
+        target.setHealth(MWMechanics::DynamicStat<float>(61));
+        target.setMagicka(MWMechanics::DynamicStat<float>(47));
+        target.setFatigue(MWMechanics::DynamicStat<float>(55));
+        target.setGoldPool(7);
+        // Model the read-only view installed by a native publisher.
+        const_cast<MWMechanics::DynamicStat<float>&>(target.getDynamic(guarded)).setNativeProjection(64, 69, 37);
+        const std::array before{target.getHealth().getCurrent(),
+            target.getMagicka().getCurrent(), target.getFatigue().getCurrent()};
+        ESM::CreatureStats input{}; input.blank();
+        input.mDynamic[0].mBase = input.mDynamic[0].mCurrent = 23;
+        input.mGoldPool = 29;
+        input.mDead = true;
+        EXPECT_THROW(target.readState(input), std::logic_error);
+        EXPECT_EQ(target.getHealth().getCurrent(), before[0]);
+        EXPECT_EQ(target.getMagicka().getCurrent(), before[1]);
+        EXPECT_EQ(target.getFatigue().getCurrent(), before[2]);
+        EXPECT_EQ(target.getGoldPool(), 7);
+        EXPECT_FALSE(target.isDead());
+    }
+}
+
+#include "apps/openmw/mwmechanics/creaturestatsrestore.hpp"
+
+TEST(OblivionWorldTest, PreparedCreatureCoreOwnsFieldsPreservesMissingACDTOverlaysAndConsumesOnce)
+{
+    PopulatedMigrationFixture fixture;
+    for (const bool missing : {false, true})
+    {
+        SCOPED_TRACE(missing);
+        MWMechanics::CreatureStats target;
+        target.setHealth(MWMechanics::DynamicStat<float>(61));
+        target.setGoldPool(7);
+        auto strength = target.getAttribute(ESM::Attribute::Strength);
+        strength.setBase(73); target.setAttribute(ESM::Attribute::Strength, strength);
+        const auto keptEffect = ESM::MagicEffect::WaterWalking;
+        const auto savedEffect = ESM::MagicEffect::WaterBreathing;
+        target.getMagicEffects().modifyBase(MWMechanics::EffectKey(keptEffect), 8);
+        target.getSummonedCreatureMap().emplace(keptEffect, ESM::RefNum{9, -1});
+        ESM::CreatureStats input{}; input.blank();
+        input.mMissingACDT = missing;
+        input.mAttributes[ESM::Attribute::Endurance].mBase = 47;
+        input.mDynamic[0].mBase = input.mDynamic[0].mCurrent = 23;
+        input.mGoldPool = 29; input.mDead = true; input.mLevel = 5;
+        input.mTradeTime = {7.5f, 11}; input.mTimeOfDeath = {3.5f, 8};
+        input.mMagicEffects.mEffects[savedEffect] = {4, 1.25f};
+        input.mSummonedCreatures.emplace(savedEffect, ESM::RefNum{19, -1});
+        input.mSummonedCreatures.emplace(savedEffect, ESM::RefNum{20, -1});
+        input.mHasAiSettings = true; input.mAiSettings[1].mBase = 39;
+        auto prepared = MWMechanics::CreatureStats::prepareCoreState(input);
+        ASSERT_TRUE(prepared);
+        EXPECT_EQ(target.getHealth().getCurrent(), 61);
+        EXPECT_EQ(target.getMagicEffects().getOrDefault(savedEffect).getBase(), 0);
+        input.mDynamic[0].mCurrent = 99;
+        input.mMagicEffects.mEffects.clear(); input.mSummonedCreatures.clear();
+        ASSERT_NO_THROW(prepared->install(target));
+        EXPECT_EQ(target.getHealth().getCurrent(), missing ? 61 : 23);
+        EXPECT_EQ(target.getGoldPool(), missing ? 7 : 29);
+        EXPECT_EQ(target.getAttribute(ESM::Attribute::Strength).getBase(), 73);
+        EXPECT_EQ(target.getAttribute(ESM::Attribute::Endurance).getBase(), missing ? 0 : 47);
+        EXPECT_TRUE(target.isDead()); EXPECT_EQ(target.getLevel(), 5);
+        EXPECT_EQ(target.getLastRestockTime(), MWWorld::TimeStamp(7.5f, 11));
+        EXPECT_EQ(target.getMagicEffects().getOrDefault(keptEffect).getBase(), 8);
+        EXPECT_EQ(target.getMagicEffects().getOrDefault(savedEffect).getBase(), 4);
+        EXPECT_EQ(target.getMagicEffects().getOrDefault(savedEffect).getModifier(), 1.25f);
+        EXPECT_EQ(target.getSummonedCreatureMap().size(), 2u);
+        EXPECT_EQ(target.getSummonedCreatureMap().count(savedEffect), 2u);
+        EXPECT_EQ(target.getAiSetting(MWMechanics::AiSetting::Fight).getBase(), 39);
+        EXPECT_THROW(prepared->install(target), std::logic_error);
+    }
+}
+
+TEST(OblivionWorldTest, CreatureCorePlansConsumeThroughNpcCreatureClassRestoreAndClear)
+{
+    for (const bool creature : {false, true})
+    {
+        SCOPED_TRACE(creature);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+        std::unique_ptr<ESM::ObjectState> owner;
+        ESM::CreatureStats* stats = nullptr;
+        if (creature)
+        {
+            MWClass::Creature::registerSelf();
+            ESM::Creature base{}; base.blank(); base.mId = ESM::RefId::stringRefId("core-creature");
+            world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+            auto state = std::make_unique<ESM::CreatureState>(); state->blank(); state->mRef.mRefID = base.mId;
+            stats = &state->mCreatureStats; owner = std::move(state);
+        }
+        else
+        {
+            auto state = std::make_unique<ESM::NpcState>(); state->blank();
+            state->mRef.mRefID = ESM::RefId::stringRefId("Player");
+            stats = &state->mCreatureStats; owner = std::move(state);
+        }
+        owner->mHasCustomState = true;
+        stats->mDynamic[0].mBase = stats->mDynamic[0].mCurrent = 17;
+        stats->mGoldPool = 43;
+        ESM::ActiveSpells::ActiveSpellParams active{};
+        active.mActiveSpellId = ESM::RefId::generated(801);
+        active.mDisplayName = "class-staged-active";
+        stats->mActiveSpells.mSpells.push_back(active);
+        stats->mActiveSpells.mQueue.push_back(active);
+        auto travel = std::make_unique<ESM::AiSequence::AiTravel>();
+        travel->mData = {3.f, 4.f, 5.f}; travel->mHidden = false; travel->mRepeat = true;
+        stats->mAiSequence.mPackages.push_back({ESM::AiSequence::Ai_Travel, std::move(travel)});
+        ESM::Spell savedSpell{}; savedSpell.blank();
+        savedSpell.mId = ESM::RefId::stringRefId("class-staged-spell");
+        savedSpell.mData.mType = ESM::Spell::ST_Spell;
+        world.getStore().getWritable<ESM::Spell>().insertStatic(savedSpell);
+        stats->mSpells.mSpells.push_back(savedSpell.mId);
+        stats->mSpells.mSelectedSpell = savedSpell.mId;
+        stats->mSpells.mUsedPowers[savedSpell.mId] = {6.5f, 12};
+        auto data = model.prepareActorCustomData(*owner, world.getStore()); ASSERT_TRUE(data);
+        auto* preparedData = data.get();
+        MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+        dataPlans.emplace(model.preparedInventoryKey(*owner), std::move(data));
+        model.setPreparedActorCustomData(std::move(dataPlans));
+        auto core = model.prepareCreatureState(*owner); ASSERT_TRUE(core);
+        stats->mSpells.mSpells.clear(); stats->mSpells.mUsedPowers.clear(); stats->mSpells.mSelectedSpell = {};
+        stats->mAiSequence.mPackages.clear();
+        stats->mActiveSpells.mSpells.clear(); stats->mActiveSpells.mQueue.clear();
+        MWWorld::WorldModel::PreparedCreatureStates plans;
+        plans.emplace(model.preparedInventoryKey(*owner), std::move(core));
+        model.setPreparedCreatureStates(std::move(plans));
+        world.getStore().rebuildIdsIndex();
+        MWWorld::ManualRef restored(world.getStore(), owner->mRef.mRefID);
+        restored.getPtr().mRef->load(*owner);
+        EXPECT_EQ(restored.getPtr().getRefData().getCustomData(), preparedData);
+        EXPECT_FALSE(model.takePreparedActorCustomData(*owner));
+        auto& target = restored.getPtr().getClass().getCreatureStats(restored.getPtr());
+        EXPECT_EQ(target.getHealth().getCurrent(), 17); EXPECT_EQ(target.getGoldPool(), 43);
+        ESM::ActiveSpells restoredActive; target.getActiveSpells().writeState(restoredActive);
+        ASSERT_EQ(restoredActive.mSpells.size(), 1u); ASSERT_EQ(restoredActive.mQueue.size(), 1u);
+        EXPECT_EQ(restoredActive.mSpells.front().mDisplayName, "class-staged-active");
+        EXPECT_EQ(restoredActive.mQueue.front().mActiveSpellId, active.mActiveSpellId);
+        EXPECT_EQ(target.getAiSequence().getTypeId(), MWMechanics::AiPackageTypeId::Travel);
+        EXPECT_TRUE(target.getSpells().hasSpell(savedSpell.mId));
+        EXPECT_EQ(target.getSpells().getSelectedSpell(), savedSpell.mId);
+        ESM::SpellState restoredSpells; target.getSpells().writeState(restoredSpells);
+        ASSERT_EQ(restoredSpells.mUsedPowers.size(), 1u);
+        EXPECT_EQ(restoredSpells.mUsedPowers.at(savedSpell.mId).mHour, 6.5f);
+        EXPECT_FALSE(model.takePreparedCreatureState(*owner));
+        MWWorld::WorldModel::PreparedCreatureStates unused;
+        unused.emplace(model.preparedInventoryKey(*owner), model.prepareCreatureState(*owner));
+        model.setPreparedCreatureStates(std::move(unused));
+        model.clear(); EXPECT_FALSE(model.takePreparedCreatureState(*owner));
+        owner->mHasCustomState = false; EXPECT_FALSE(model.prepareCreatureState(*owner));
+    }
+}
+
+#include <components/esm3/actoridconverter.hpp>
+
+TEST(OblivionWorldTest, PreparedActiveSpellsOwnPayloadAppendAndRejectReplay)
+{
+    MWMechanics::ActiveSpells target;
+    ESM::ActiveSpells existing;
+    ESM::ActiveSpells::ActiveSpellParams old{};
+    old.mActiveSpellId = ESM::RefId::generated(701);
+    old.mDisplayName = "existing";
+    existing.mSpells.push_back(old); existing.mQueue.push_back(old);
+    target.readState(existing);
+    ESM::ActiveSpells source;
+    ESM::ActiveSpells::ActiveSpellParams spell{};
+    spell.mActiveSpellId = ESM::RefId::generated(702);
+    spell.mSourceSpellId = ESM::RefId::stringRefId("prepared-active-source");
+    spell.mDisplayName = "owned display name";
+    spell.mCaster = {41, -1}; spell.mItem = {52, -1};
+    spell.mFlags = ESM::ActiveSpells::Flag_Equipment;
+    spell.mWorsenings = 3; spell.mNextWorsening = {7.5f, 9};
+    ESM::ActiveEffect effect{};
+    effect.mEffectId = ESM::MagicEffect::SummonScamp;
+    effect.mArg = ESM::RefNum{63, -1}; effect.mMagnitude = 4.25f;
+    effect.mDuration = 18.f; effect.mTimeLeft = 11.f;
+    effect.mEffectIndex = 2; effect.mFlags = ESM::ActiveEffect::Flag_Applied;
+    spell.mEffects.push_back(effect);
+    source.mSpells.push_back(spell); source.mQueue.push_back(spell);
+    auto prepared = MWMechanics::ActiveSpells::prepareReadState(source);
+    source.mSpells.clear(); source.mQueue.clear();
+    ESM::ActiveSpells before; target.writeState(before);
+    EXPECT_EQ(before.mSpells.size(), 1u); EXPECT_EQ(before.mQueue.size(), 1u);
+    prepared->install(target);
+    ESM::ActiveSpells after; target.writeState(after);
+    ASSERT_EQ(after.mSpells.size(), 2u); ASSERT_EQ(after.mQueue.size(), 2u);
+    for (const auto* actual : {&after.mSpells.back(), &after.mQueue.back()})
+    {
+        EXPECT_EQ(actual->mActiveSpellId, spell.mActiveSpellId);
+        EXPECT_EQ(actual->mSourceSpellId, spell.mSourceSpellId);
+        EXPECT_EQ(actual->mDisplayName, spell.mDisplayName);
+        EXPECT_EQ(actual->mCaster, spell.mCaster); EXPECT_EQ(actual->mItem, spell.mItem);
+        EXPECT_EQ(actual->mFlags, spell.mFlags); EXPECT_EQ(actual->mWorsenings, 3);
+        EXPECT_EQ(actual->mNextWorsening.mHour, 7.5f); EXPECT_EQ(actual->mNextWorsening.mDay, 9);
+        ASSERT_EQ(actual->mEffects.size(), 1u);
+        EXPECT_EQ(actual->mEffects.front().mArg, effect.mArg);
+        EXPECT_EQ(actual->mEffects.front().mTimeLeft, 11.f);
+        EXPECT_EQ(actual->mEffects.front().mMagnitude, 4.25f);
+    }
+    EXPECT_THROW(prepared->install(target), std::logic_error);
+    ESM::ActiveSpells replay; target.writeState(replay);
+    EXPECT_EQ(replay.mSpells.size(), 2u); EXPECT_EQ(replay.mQueue.size(), 2u);
+}
+
+TEST(OblivionWorldTest, PreparedActiveSpellsDeferLegacyIdsAndUseRuntimeConverter)
+{
+    PopulatedMigrationFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    ESM::ActiveSpells input;
+    ESM::ActiveSpells::ActiveSpellParams spell{};
+    spell.mCaster = {41, -1}; spell.mItem = {52, -1};
+    ESM::ActiveEffect effect{}; effect.mArg = ESM::RefNum{63, -1};
+    spell.mEffects.push_back(effect);
+    input.mSpells.push_back(spell); input.mQueue.push_back(spell);
+    // This converter deliberately expires before install.
+    std::unique_ptr<MWMechanics::ActiveSpells::PreparedState> prepared;
+    auto first = store.generateId();
+    {
+        ESM::ActorIdConverter admission;
+        input.mActorIdConverter = &admission;
+        prepared = MWMechanics::ActiveSpells::prepareReadState(input);
+    }
+    input.mActorIdConverter = nullptr;
+    auto next = store.generateId();
+    EXPECT_EQ(next, ESM::RefId::generated(first.getIf<ESM::GeneratedRefId>()->getValue() + 1));
+    ESM::ActorIdConverter runtime;
+    runtime.mMappings.emplace(41, ESM::RefNum{141, 2});
+    MWMechanics::ActiveSpells target;
+    prepared->install(target, &runtime);
+    ESM::ActiveSpells installed; target.writeState(installed);
+    ASSERT_EQ(installed.mSpells.size(), 1u); ASSERT_EQ(installed.mQueue.size(), 1u);
+    EXPECT_FALSE(installed.mSpells.front().mActiveSpellId.empty());
+    EXPECT_TRUE(installed.mQueue.front().mActiveSpellId.empty());
+    EXPECT_EQ(installed.mSpells.front().mCaster, (ESM::RefNum{141, 2}));
+    runtime.mMappings.emplace(63, ESM::RefNum{163, 3});
+    runtime.apply();
+    ESM::ActiveSpells converted; target.writeState(converted);
+    for (const auto* actual : {&converted.mSpells.front(), &converted.mQueue.front()})
+    {
+        EXPECT_EQ(std::get<ESM::RefNum>(actual->mEffects.front().mArg), (ESM::RefNum{163, 3}));
+        EXPECT_EQ(actual->mItem, spell.mItem);
+    }
+}
+
+#include "apps/openmw/mwmechanics/aifollow.hpp"
+#include "apps/openmw/mwmechanics/aitimer.hpp"
+#include <components/esm3/aisequence.hpp>
+
+TEST(OblivionWorldTest, PreparedAiPackagesOwnAllTypesDeferRngAndFollowIdsAndConsumeOnce)
+{
+    PopulatedMigrationFixture fixture;
+    auto& rng = fixture.mWorld.getPrng();
+    ESM::AiSequence::AiSequence input;
+    const auto append = [&]<class T>(int type, std::unique_ptr<T> data) {
+        input.mPackages.push_back({type, std::move(data)});
+    };
+    auto wander = std::make_unique<ESM::AiSequence::AiWander>();
+    wander->mData = {}; wander->mData.mDistance = 23; wander->mData.mDuration = 12;
+    wander->mDurationData.mRemainingDuration = 4.f;
+    wander->mStoredInitialActorPosition = true; wander->mInitialActorPosition = ESM::Vector3(osg::Vec3f(1.f, 2.f, 3.f));
+    append(ESM::AiSequence::Ai_Wander, std::move(wander));
+    for (bool hidden : {false, true})
+    {
+        auto travel = std::make_unique<ESM::AiSequence::AiTravel>();
+        travel->mData = {7.f, 8.f, 9.f}; travel->mHidden = hidden; travel->mRepeat = true;
+        append(ESM::AiSequence::Ai_Travel, std::move(travel));
+    }
+    auto escort = std::make_unique<ESM::AiSequence::AiEscort>();
+    escort->mData = {4.f, 5.f, 6.f, 15}; escort->mTargetActor = {41, -1};
+    escort->mCellId = "owned escort cell"; escort->mRemainingDuration = 3.f; escort->mRepeat = true;
+    append(ESM::AiSequence::Ai_Escort, std::move(escort));
+    auto follow = std::make_unique<ESM::AiSequence::AiFollow>();
+    follow->mData = {10.f, 11.f, 12.f, 18}; follow->mTargetActor = {42, -1};
+    follow->mTargetId = ESM::RefId::stringRefId("owned-ai-target");
+    follow->mCellId = "owned follow cell"; follow->mRemainingDuration = 5.f;
+    follow->mAlwaysFollow = true; follow->mCommanded = true; follow->mActive = true; follow->mRepeat = true;
+    const auto followCopy = *follow;
+    append(ESM::AiSequence::Ai_Follow, std::move(follow));
+    auto activate = std::make_unique<ESM::AiSequence::AiActivate>();
+    activate->mTargetId = ESM::RefId::stringRefId("owned-ai-activation"); activate->mRepeat = true;
+    append(ESM::AiSequence::Ai_Activate, std::move(activate));
+    auto combat = std::make_unique<ESM::AiSequence::AiCombat>(); combat->mTargetActor = {43, -1};
+    append(ESM::AiSequence::Ai_Combat, std::move(combat));
+    auto pursue = std::make_unique<ESM::AiSequence::AiPursue>(); pursue->mTargetActor = {44, -1};
+    append(ESM::AiSequence::Ai_Pursue, std::move(pursue));
+    input.mLastAiPackage = static_cast<int>(MWMechanics::AiPackageTypeId::Follow);
+    MWMechanics::AiFollow before(&followCopy);
+    const auto savedRng = rng;
+    auto prepared = MWMechanics::AiSequence::prepareReadState(input);
+    auto canceled = MWMechanics::AiSequence::prepareReadState(input);
+    canceled.reset(); EXPECT_EQ(rng, savedRng);
+    MWMechanics::AiFollow after(&followCopy);
+    EXPECT_EQ(after.getFollowIndex(), before.getFollowIndex() + 1);
+    auto expectedRng = rng;
+    for (int i = 0; i < 8; ++i)
+        Misc::Rng::deviate(0.f, MWMechanics::AiReactionTimer::sDeviation, expectedRng);
+    input.mPackages.clear();
+    ESM::ActorIdConverter converter;
+    converter.mMappings.emplace(41, ESM::RefNum{141, 2});
+    MWMechanics::AiSequence target;
+    prepared->install(target, &converter);
+    EXPECT_EQ(rng, expectedRng);
+    EXPECT_EQ(target.getLastRunTypeId(), MWMechanics::AiPackageTypeId::Follow);
+    ASSERT_EQ(std::distance(target.begin(), target.end()), 8);
+    auto it = target.begin(); std::advance(it, 4);
+    EXPECT_EQ(dynamic_cast<const MWMechanics::AiFollow*>(it->get())->getFollowIndex(), after.getFollowIndex() + 1);
+    for (int id : {42, 43, 44}) converter.mMappings.emplace(id, ESM::RefNum{static_cast<unsigned>(id + 100), 2});
+    converter.apply();
+    ESM::AiSequence::AiSequence output; target.writeState(output);
+    ASSERT_EQ(output.mPackages.size(), 8u);
+    EXPECT_EQ(static_cast<const ESM::AiSequence::AiWander&>(*output.mPackages[0].mPackage).mData.mDistance, 23);
+    EXPECT_FALSE(static_cast<const ESM::AiSequence::AiTravel&>(*output.mPackages[1].mPackage).mHidden);
+    EXPECT_TRUE(static_cast<const ESM::AiSequence::AiTravel&>(*output.mPackages[2].mPackage).mHidden);
+    const auto& restoredEscort = static_cast<const ESM::AiSequence::AiEscort&>(*output.mPackages[3].mPackage);
+    EXPECT_EQ(restoredEscort.mCellId, "owned escort cell"); EXPECT_EQ(restoredEscort.mTargetActor, (ESM::RefNum{141, 2}));
+    const auto& restoredFollow = static_cast<const ESM::AiSequence::AiFollow&>(*output.mPackages[4].mPackage);
+    EXPECT_EQ(restoredFollow.mCellId, "owned follow cell"); EXPECT_TRUE(restoredFollow.mCommanded);
+    EXPECT_EQ(restoredFollow.mTargetActor, (ESM::RefNum{142, 2})); EXPECT_EQ(restoredFollow.mData.mX, 10.f);
+    EXPECT_EQ(static_cast<const ESM::AiSequence::AiActivate&>(*output.mPackages[5].mPackage).mTargetId,
+        ESM::RefId::stringRefId("owned-ai-activation"));
+    EXPECT_EQ(static_cast<const ESM::AiSequence::AiCombat&>(*output.mPackages[6].mPackage).mTargetActor, (ESM::RefNum{143, 2}));
+    EXPECT_EQ(static_cast<const ESM::AiSequence::AiPursue&>(*output.mPackages[7].mPackage).mTargetActor, (ESM::RefNum{144, 2}));
+    EXPECT_THROW(prepared->install(target), std::logic_error); EXPECT_EQ(rng, expectedRng);
+}
+
+TEST(OblivionWorldTest, PreparedAiEmptySourceRetainsPackagesAndUnknownOnlySourceClears)
+{
+    PopulatedMigrationFixture fixture;
+    ESM::AiSequence::AiSequence initial;
+    auto combat = std::make_unique<ESM::AiSequence::AiCombat>(); combat->mTargetActor = {11, -1};
+    initial.mPackages.push_back({ESM::AiSequence::Ai_Combat, std::move(combat)});
+    MWMechanics::AiSequence target; target.readState(initial);
+    EXPECT_TRUE(target.isInCombat());
+    const auto rng = fixture.mWorld.getPrng();
+    ESM::AiSequence::AiSequence empty;
+    empty.mLastAiPackage = static_cast<int>(MWMechanics::AiPackageTypeId::Travel);
+    MWMechanics::AiSequence::prepareReadState(empty)->install(target);
+    EXPECT_TRUE(target.isInCombat()); EXPECT_EQ(target.getLastRunTypeId(), MWMechanics::AiPackageTypeId::Travel);
+    EXPECT_EQ(fixture.mWorld.getPrng(), rng);
+    ESM::AiSequence::AiSequence unknown; unknown.mPackages.push_back({-123, nullptr});
+    MWMechanics::AiSequence::prepareReadState(unknown)->install(target);
+    EXPECT_TRUE(target.isEmpty()); EXPECT_FALSE(target.isInCombat());
+    EXPECT_EQ(fixture.mWorld.getPrng(), rng);
+}
+
+TEST(OblivionWorldTest, DetachedAiTimerRequiresInstallationAndMatchesImmediateDraws)
+{
+    Misc::Rng::Generator actual(77), expected(77);
+    MWMechanics::AiReactionTimer detached;
+    EXPECT_THROW(detached.update(1.f), std::logic_error);
+    EXPECT_THROW(detached.reset(), std::logic_error);
+    EXPECT_EQ(actual, expected);
+    MWMechanics::AiReactionTimer ordinary(expected);
+    detached.initialize(actual); EXPECT_EQ(actual, expected);
+    for (float duration : {0.f, 0.1f, 0.25f, 0.5f})
+    {
+        EXPECT_EQ(detached.update(duration), ordinary.update(duration)); EXPECT_EQ(actual, expected);
+    }
+    detached.reset(); ordinary.reset(); EXPECT_EQ(actual, expected);
+    EXPECT_THROW(detached.initialize(actual), std::logic_error); EXPECT_EQ(actual, expected);
+}
+
+TEST(OblivionWorldTest, PreparedSpellsResolveIncomingOwnPayloadAndPreserveBothBaseOrders)
+{
+    for (const bool baseFirst : {false, true})
+    {
+        SCOPED_TRACE(baseFirst);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        auto incoming = std::make_unique<MWWorld::ESMStore>();
+        const auto baseId = ESM::RefId::stringRefId("prepared-base-spell");
+        const auto savedId = ESM::RefId::generated(902);
+        for (unsigned id = 0; id <= 902; ++id) incoming->generateId();
+        ESM::Spell base{}; base.blank(); base.mId = baseId; base.mData.mType = ESM::Spell::ST_Spell;
+        const auto* basePtr = store.getWritable<ESM::Spell>().insertStatic(base);
+        ESM::Spell saved = base; saved.mId = savedId; saved.mName = "outgoing spell";
+        store.getWritable<ESM::Spell>().insert(saved);
+        saved.mName = "incoming spell";
+        const auto* savedPtr = incoming->getWritable<ESM::Spell>().insert(saved);
+        ESM::SpellState source;
+        source.mSpells = {savedId, savedId, ESM::RefId::stringRefId("absent-spell"), baseId};
+        source.mSelectedSpell = savedId; source.mUsedPowers[savedId] = {8.5f, 17};
+        source.mUsedPowers[ESM::RefId::stringRefId("absent-power")] = {1.f, 2};
+        const auto rng = world.getPrng();
+        auto prepared = MWMechanics::Spells::prepareReadState(source, store, {baseId, baseId}, incoming.get());
+        source.mSpells.clear(); source.mUsedPowers.clear(); source.mSelectedSpell = {};
+        EXPECT_EQ(world.getPrng(), rng);
+        auto definitions = world.prepareOblivionSharedDefinitions(std::move(incoming));
+        world.clear(); ASSERT_TRUE(definitions->install());
+        MWMechanics::Spells target;
+        if (baseFirst) target.add(basePtr, false);
+        target.setSelectedSpell(ESM::RefId::stringRefId("previous-selection"));
+        prepared->install(target, nullptr);
+        ASSERT_EQ(target.count(), 2u);
+        EXPECT_EQ(target.at(baseFirst ? 0 : 1), basePtr);
+        EXPECT_EQ(target.at(baseFirst ? 1 : 0), savedPtr);
+        EXPECT_EQ(target.at(baseFirst ? 1 : 0)->mName, "incoming spell");
+        EXPECT_EQ(target.getSelectedSpell(), savedId);
+        // Attach only for the ordinary persistence API; attachment itself remains a separate resource.
+        target.setSpells(ESM::RefId::stringRefId("Player"));
+        ESM::SpellState output; target.writeState(output);
+        ASSERT_EQ(output.mUsedPowers.size(), 1u);
+        EXPECT_EQ(output.mUsedPowers.at(savedId).mHour, 8.5f);
+        EXPECT_EQ(output.mUsedPowers.at(savedId).mDay, 17);
+        EXPECT_THROW(prepared->install(target, nullptr), std::logic_error);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedSpellSelectionAndOrdinaryReadsKeepExistingOverlays)
+{
+    PopulatedMigrationFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    ESM::Spell a{}; a.blank(); a.mId = ESM::RefId::stringRefId("overlay-spell-a"); a.mData.mType = ESM::Spell::ST_Spell;
+    const auto* first = store.getWritable<ESM::Spell>().insertStatic(a);
+    a.mId = ESM::RefId::stringRefId("overlay-spell-b");
+    const auto* second = store.getWritable<ESM::Spell>().insertStatic(a);
+    MWMechanics::Spells target; target.setSpells(ESM::RefId::stringRefId("Player"));
+    ESM::SpellState initial; initial.mSpells.push_back(first->mId); initial.mSelectedSpell = first->mId;
+    initial.mUsedPowers[first->mId] = {2.5f, 4}; target.readState(initial, nullptr);
+    ESM::SpellState input; input.mSpells = {second->mId, second->mId};
+    input.mSelectedSpell = ESM::RefId::stringRefId("unavailable-selection");
+    input.mUsedPowers[second->mId] = {3.5f, 5}; target.readState(input, nullptr);
+    ASSERT_EQ(target.count(), 2u); EXPECT_EQ(target.at(0), first); EXPECT_EQ(target.at(1), second);
+    EXPECT_EQ(target.getSelectedSpell(), first->mId);
+    ESM::SpellState output; target.writeState(output);
+    EXPECT_EQ(output.mUsedPowers.size(), 2u);
+    EXPECT_EQ(output.mUsedPowers.at(first->mId).mDay, 4);
+    EXPECT_EQ(output.mUsedPowers.at(second->mId).mDay, 5);
+    ESM::SpellState onlyBase; onlyBase.mSelectedSpell = second->mId;
+    auto prepared = MWMechanics::Spells::prepareReadState(onlyBase, store, {second->mId});
+    MWMechanics::Spells empty; empty.setSelectedSpell(first->mId); prepared->install(empty, nullptr);
+    EXPECT_EQ(empty.getSelectedSpell(), first->mId); // Base-only selection never selected by legacy reader.
+}
+
+TEST(OblivionWorldTest, PreparedLegacyPermanentSpellEffectsConvertOnlyActualPlayerAndOwnData)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    ESM::Spell spell{}; spell.blank(); spell.mId = ESM::RefId::stringRefId("legacy-corprus-conversion");
+    store.getWritable<ESM::Spell>().insertStatic(spell);
+    ESM::SpellState source;
+    source.mPermanentSpellEffects[spell.mId] = {
+        {ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyAttribute), 0, 3.f},
+        {ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::DrainAttribute), 0, 2.f}};
+    auto playerPlan = MWMechanics::Spells::prepareReadState(source, store, {});
+    auto actorPlan = MWMechanics::Spells::prepareReadState(source, store, {});
+    source.mPermanentSpellEffects.clear();
+    const auto player = world.getPlayerPtr();
+    auto& playerStats = player.getClass().getCreatureStats(player);
+    MWMechanics::AttributeValue value; value.setBase(50.f); value.setModifier(10.f); value.damage(7.f);
+    playerStats.setAttribute(ESM::Attribute::Strength, value);
+    MWMechanics::CreatureStats otherStats; otherStats.setAttribute(ESM::Attribute::Strength, value);
+    MWMechanics::Spells playerSpells, otherSpells;
+    actorPlan->install(otherSpells, &otherStats);
+    EXPECT_EQ(otherStats.getAttribute(ESM::Attribute::Strength).getModifier(), 10.f);
+    EXPECT_EQ(otherStats.getAttribute(ESM::Attribute::Strength).getDamage(), 7.f);
+    playerPlan->install(playerSpells, &playerStats);
+    EXPECT_EQ(playerStats.getAttribute(ESM::Attribute::Strength).getModifier(), 9.f);
+    EXPECT_EQ(playerStats.getAttribute(ESM::Attribute::Strength).getDamage(), 6.f);
+}
+
+TEST(OblivionWorldTest, PreparedClassSpellOrderingPreservesFirstAndCachedActorInstances)
+{
+    PopulatedMigrationFixture fixture;
+    auto& store = fixture.mWorld.getStore(); auto& model = fixture.mWorld.getWorldModel();
+    ESM::Spell spell{}; spell.blank(); spell.mData.mType = ESM::Spell::ST_Spell;
+    spell.mId = ESM::RefId::stringRefId("cache-base-spell");
+    const auto baseId = spell.mId; store.getWritable<ESM::Spell>().insertStatic(spell);
+    spell.mId = ESM::RefId::stringRefId("cache-saved-spell");
+    const auto savedId = spell.mId; store.getWritable<ESM::Spell>().insertStatic(spell);
+    auto npc = *fixture.mWorld.getPlayerPtr().get<ESM::NPC>()->mBase;
+    npc.mId = ESM::RefId::stringRefId("Player");
+    ASSERT_NE(store.get<ESM::NPC>().searchStatic(npc.mId), nullptr);
+    npc.mSpells.mList = {baseId};
+    store.getWritable<ESM::NPC>().insertStatic(npc); store.rebuildIdsIndex();
+    auto lists = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 2}}});
+    EXPECT_FALSE(lists.install(store));
+    fixture.mWorld.clear(); store.rebuildIdsIndex(); ASSERT_TRUE(lists.install(store));
+    std::vector<std::unique_ptr<MWWorld::ManualRef>> actors;
+    for (unsigned index = 0; index < 2; ++index)
+    {
+        ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+        owner.mRef.mRefID = npc.mId; owner.mRef.mRefNum = {700 + index, -1};
+        owner.mCreatureStats.mSpells.mSpells = {savedId};
+        auto core = model.prepareCreatureState(owner);
+        owner.mCreatureStats.mSpells.mSpells.clear();
+        MWWorld::WorldModel::PreparedCreatureStates plans;
+        plans.emplace(model.preparedInventoryKey(owner), std::move(core));
+        model.setPreparedCreatureStates(std::move(plans));
+        actors.push_back(std::make_unique<MWWorld::ManualRef>(store, npc.mId));
+        const auto actor = actors.back()->getPtr(); actor.mRef->load(owner);
+        const auto& spells = actor.getClass().getCreatureStats(actor).getSpells();
+        ASSERT_EQ(spells.count(), 2u);
+        EXPECT_EQ(spells.at(0)->mId, index == 0 ? baseId : savedId);
+        EXPECT_EQ(spells.at(1)->mId, index == 0 ? savedId : baseId);
+    }
+    store.finishSpellListRestore();
+    auto& first = actors[0]->getPtr().getClass().getCreatureStats(actors[0]->getPtr()).getSpells();
+    first.remove(baseId);
+    for (const auto& actor : actors)
+        EXPECT_FALSE(actor->getPtr().getClass().getCreatureStats(actor->getPtr()).getSpells().hasSpell(baseId));
+}
+
+TEST(OblivionWorldTest, PreparedSpellListCacheCancellationEpochMoveAndStoreIdentity)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC npc{}; npc.blank(); npc.mId = ESM::RefId::stringRefId("prepared-list-owner");
+    store.getWritable<ESM::NPC>().insertStatic(npc);
+    auto player = npc; player.mId = ESM::RefId::stringRefId("Player");
+    store.getWritable<ESM::NPC>().insertStatic(player); store.rebuildIdsIndex();
+    const auto [original, first] = store.getSpellList(npc.mId); EXPECT_FALSE(first);
+    {
+        auto canceled = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 2}}});
+        EXPECT_FALSE(canceled.install(store));
+        EXPECT_EQ(store.getSpellList(npc.mId).first, original);
+        EXPECT_TRUE(store.getSpellList(npc.mId).second);
+    }
+    auto prepared = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 2}}});
+    auto moved = std::move(prepared);
+    MWWorld::ESMStore other;
+    EXPECT_FALSE(moved.install(other));
+    store.clearDynamic(); EXPECT_FALSE(prepared.install(store));
+    ASSERT_TRUE(moved.install(store)); EXPECT_FALSE(moved.install(store));
+    const auto [replacement, initialized] = store.getSpellList(npc.mId);
+    EXPECT_NE(replacement, original); EXPECT_FALSE(initialized);
+    EXPECT_EQ(store.getSpellList(npc.mId).first, replacement);
+    EXPECT_TRUE(store.getSpellList(npc.mId).second);
+    auto stale = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 1}}});
+    store.clearDynamic(); store.clearDynamic(); EXPECT_FALSE(stale.install(store));
+}
+
+TEST(OblivionWorldTest, PreparedSpellListPinsReleaseUnusedListsAndRejectInvalidRequests)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC npc{}; npc.blank(); npc.mId = ESM::RefId::stringRefId("unused-prepared-list");
+    store.getWritable<ESM::NPC>().insertStatic(npc);
+    auto player = npc; player.mId = ESM::RefId::stringRefId("Player");
+    store.getWritable<ESM::NPC>().insertStatic(player); store.rebuildIdsIndex();
+    EXPECT_THROW(store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 0}}}), std::invalid_argument);
+    EXPECT_THROW(store.prepareSpellLists({{npc.mId, {ESM::REC_WEAP, 1}}}), std::invalid_argument);
+    EXPECT_THROW(store.prepareSpellLists({{ESM::RefId{}, {ESM::REC_NPC_, 1}}}), std::invalid_argument);
+    auto prepared = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 1}}});
+    store.clearDynamic(); ASSERT_TRUE(prepared.install(store));
+    std::weak_ptr<MWMechanics::SpellList> weak;
+    {
+        auto [list, initialized] = store.getSpellList(npc.mId); EXPECT_FALSE(initialized); weak = list;
+    }
+    EXPECT_FALSE(weak.expired()); store.finishSpellListRestore(); EXPECT_TRUE(weak.expired());
+    EXPECT_FALSE(store.getSpellList(npc.mId).second);
+    auto clearPins = store.prepareSpellLists({{npc.mId, {ESM::REC_NPC_, 1}}});
+    store.clearDynamic(); ASSERT_TRUE(clearPins.install(store));
+    { auto list = store.getSpellList(npc.mId); weak = list.first; }
+    EXPECT_FALSE(weak.expired()); store.clearDynamic(); EXPECT_TRUE(weak.expired());
+    MWWorld::ESMStore::PreparedSpellLists orphan = [] {
+        auto temporary = std::make_unique<MWWorld::ESMStore>();
+        return temporary->prepareSpellLists({});
+    }();
+    EXPECT_FALSE(orphan.install(store));
+}
+
+TEST(OblivionWorldTest, PreparedSpellAttachmentTransfersBaseStorageAndRejectsReattachment)
+{
+    PopulatedMigrationFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    ESM::Spell spell{}; spell.blank(); spell.mId = ESM::RefId::stringRefId("prepared-attachment-base");
+    const auto* base = store.getWritable<ESM::Spell>().insertStatic(spell);
+    ESM::SpellState source;
+    auto prepared = MWMechanics::Spells::prepareReadState(source, store, {spell.mId});
+    auto lists = store.prepareSpellLists({{ESM::RefId::stringRefId("Player"), {ESM::REC_NPC_, 1}}});
+    fixture.mWorld.clear(); ASSERT_TRUE(lists.install(store));
+    MWMechanics::Spells target;
+    EXPECT_FALSE(prepared->attach(target, ESM::RefId::stringRefId("Player")));
+    ASSERT_EQ(target.count(), 1u); EXPECT_EQ(target.at(0), base);
+    EXPECT_THROW(prepared->attach(target, ESM::RefId::stringRefId("Player")), std::logic_error);
+    prepared->install(target, nullptr); EXPECT_EQ(target.count(), 1u);
+    EXPECT_THROW(prepared->attach(target, ESM::RefId::stringRefId("Player")), std::logic_error);
+    store.finishSpellListRestore();
+}
+
+TEST(OblivionWorldTest, PreparedActorCustomDataIncludesLegacySkipsAbsentAndClearsUnusedOwners)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    ESM::NpcState owner; owner.blank(); owner.mRef.mRefID = ESM::RefId::stringRefId("Player");
+    owner.mHasCustomState = false;
+    EXPECT_FALSE(model.prepareActorCustomData(owner, world.getStore()));
+    owner.mHasCustomState = true; owner.mCreatureStats.mMissingACDT = true;
+    EXPECT_TRUE(model.prepareActorCustomData(owner, world.getStore()));
+    owner.mCreatureStats.mMissingACDT = false;
+    const auto revision = model.getPtrRegistryRevision();
+    const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+    auto data = model.prepareActorCustomData(owner, world.getStore()); ASSERT_TRUE(data);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+    MWWorld::WorldModel::PreparedActorCustomData plans;
+    plans.emplace(model.preparedInventoryKey(owner), std::move(data));
+    model.setPreparedActorCustomData(std::move(plans));
+    model.finishActorCustomDataRestore(); EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+    MWWorld::WorldModel::PreparedActorCustomData clearPlans;
+    clearPlans.emplace(model.preparedInventoryKey(owner), model.prepareActorCustomData(owner, world.getStore()));
+    model.setPreparedActorCustomData(std::move(clearPlans));
+    model.clear(); EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+    owner.mRef.mRefID = ESM::RefId::stringRefId("missing-prepared-npc");
+    EXPECT_THROW(model.prepareActorCustomData(owner, world.getStore()), std::runtime_error);
+}
+
+TEST(OblivionWorldTest, PreparedCreatureCustomDataUsesIncomingInventoryKind)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    MWClass::Creature::registerSelf();
+    ESM::Creature base{}; base.blank(); base.mId = ESM::RefId::stringRefId("prepared-armed-creature");
+    base.mFlags &= ~ESM::Creature::Weapon;
+    world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+    MWWorld::ESMStore incoming; base.mFlags |= ESM::Creature::Weapon;
+    incoming.getWritable<ESM::Creature>().insert(base);
+    ESM::CreatureState owner; owner.blank(); owner.mHasCustomState = true; owner.mRef.mRefID = base.mId;
+    auto data = model.prepareActorCustomData(owner, incoming); ASSERT_TRUE(data);
+    auto* preparedData = data.get();
+    MWWorld::WorldModel::PreparedActorCustomData plans;
+    plans.emplace(model.preparedInventoryKey(owner), std::move(data));
+    model.setPreparedActorCustomData(std::move(plans));
+    // Publish the same winning incoming definition before binding to the actor.
+    world.getStore().getWritable<ESM::Creature>().insert(base); world.getStore().rebuildIdsIndex();
+    MWWorld::ManualRef actor(world.getStore(), base.mId); actor.getPtr().mRef->load(owner);
+    EXPECT_EQ(actor.getPtr().getRefData().getCustomData(), preparedData);
+    EXPECT_NO_THROW(actor.getPtr().getClass().getInventoryStore(actor.getPtr()));
+    EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+}
+
+TEST(OblivionWorldTest, PreparedAuthoredAiMatchesOrdinaryFillAndDefersRngAndFollowIds)
+{
+    PopulatedMigrationFixture fixture;
+    auto& rng = fixture.mWorld.getPrng();
+    const auto encode = [](const MWMechanics::AiSequence& value) {
+        ESM::AiSequence::AiSequence state; value.writeState(state);
+        std::stringstream stream; ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+        writer.startRecord(ESM::REC_CSTA); state.save(writer); writer.endRecord(ESM::REC_CSTA);
+        return stream.str();
+    };
+    for (int duration : {-3, 0, 30}) for (bool repeat : {false, true})
+    {
+        ESM::AIPackageList source;
+        ESM::AIPackage wander{}; wander.mType = ESM::AI_Wander;
+        wander.mWander.mDistance = -4; wander.mWander.mDuration = duration;
+        wander.mWander.mTimeOfDay = 19; wander.mWander.mIdle[3] = 75;
+        wander.mWander.mShouldRepeat = repeat; source.mList.push_back(wander);
+        ESM::AIPackage travel{}; travel.mType = ESM::AI_Travel;
+        travel.mTravel = {12.f, 13.f, 14.f, static_cast<unsigned char>(repeat)};
+        source.mList.push_back(travel);
+        for (auto type : {ESM::AI_Escort, ESM::AI_Follow, static_cast<ESM::AiPackageType>(0)})
+        {
+            ESM::AIPackage target{}; target.mType = type; target.mCellName = "authored owned cell";
+            target.mTarget.mId.assign("authored-target"); target.mTarget.mDuration = duration;
+            target.mTarget.mX = 21; target.mTarget.mY = 22; target.mTarget.mZ = 23;
+            target.mTarget.mShouldRepeat = repeat; source.mList.push_back(target);
+        }
+        ESM::AIPackage activate{}; activate.mType = ESM::AI_Activate;
+        activate.mActivate.mName.assign("authored-activation"); activate.mActivate.mShouldRepeat = repeat;
+        source.mList.push_back(activate);
+        MWMechanics::AiFollow before(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+        const auto beforePrepare = rng;
+        auto prepared = MWMechanics::AiSequence::prepareFill(source);
+        auto canceled = MWMechanics::AiSequence::prepareFill(source); canceled.reset();
+        EXPECT_EQ(rng, beforePrepare);
+        MWMechanics::AiFollow after(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+        EXPECT_EQ(after.getFollowIndex(), before.getFollowIndex() + 1);
+        const auto start = rng;
+        MWMechanics::AiSequence ordinary; ordinary.fill(source);
+        const auto expectedRng = rng; const auto expectedState = encode(ordinary);
+        auto rejected = MWMechanics::AiSequence::prepareFill(source);
+        EXPECT_THROW(rejected->install(ordinary), std::logic_error); EXPECT_EQ(rng, expectedRng);
+        source.mList.clear(); rng = start;
+        MWMechanics::AiSequence restored; prepared->install(restored);
+        EXPECT_EQ(rng, expectedRng); EXPECT_EQ(encode(restored), expectedState);
+        EXPECT_THROW(prepared->install(restored), std::logic_error); EXPECT_EQ(rng, expectedRng);
+        auto retry = MWMechanics::AiSequence::prepareFill({});
+        MWMechanics::AiSequence empty; retry->install(empty); EXPECT_TRUE(empty.isEmpty());
+        EXPECT_THROW(retry->install(empty), std::logic_error); EXPECT_EQ(rng, expectedRng);
+    }
+}
+
+TEST(OblivionWorldTest, MissingACDTClassesConsumeDetachedAuthoredAiBeforeSavedOverlay)
+{
+    for (bool creature : {false, true}) for (bool savedOverlay : {false, true})
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+        for (const char* id : {"fNPCbaseMagickaMult", "fPCbaseMagickaMult"})
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(id);
+            setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(1.f);
+            world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+        ESM::AIPackage travel{}; travel.mType = ESM::AI_Travel;
+        travel.mTravel = {31.f, 32.f, 33.f, 1};
+        std::unique_ptr<ESM::ObjectState> owner;
+        ESM::CreatureStats* fields;
+        if (creature)
+        {
+            MWClass::Creature::registerSelf();
+            ESM::Creature base{}; base.blank(); base.mId = ESM::RefId::stringRefId("base-ai-creature");
+            base.mData.mHealth = 29; base.mData.mGold = 137; base.mAiPackage.mList = {travel};
+            world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+            auto state = std::make_unique<ESM::CreatureState>(); state->blank(); state->mRef.mRefID = base.mId;
+            fields = &state->mCreatureStats; owner = std::move(state);
+        }
+        else
+        {
+            auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+            base.mId = ESM::RefId::stringRefId("base-ai-npc"); base.mInventory.mList.clear();
+            base.mFaction = {}; base.mNpdtType = ESM::NPC::NPC_DEFAULT;
+            base.mNpdt.mHealth = 29; base.mNpdt.mGold = 137; base.mAiPackage.mList = {travel};
+            world.getStore().getWritable<ESM::NPC>().insertStatic(base);
+            auto state = std::make_unique<ESM::NpcState>(); state->blank(); state->mRef.mRefID = base.mId;
+            fields = &state->mCreatureStats; owner = std::move(state);
+        }
+        owner->mHasCustomState = true; fields->mMissingACDT = true;
+        if (savedOverlay)
+        {
+            auto saved = std::make_unique<ESM::AiSequence::AiTravel>();
+            saved->mData = {41.f, 42.f, 43.f}; saved->mHidden = false; saved->mRepeat = false;
+            fields->mAiSequence.mPackages.push_back({ESM::AiSequence::Ai_Travel, std::move(saved)});
+        }
+        const auto before = world.getPrng();
+        auto data = model.prepareActorCustomData(*owner, world.getStore()); ASSERT_TRUE(data);
+        auto* preparedData = data.get();
+        const auto revision = model.getPtrRegistryRevision();
+        MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+        dataPlans.emplace(model.preparedInventoryKey(*owner), std::move(data));
+        model.setPreparedActorCustomData(std::move(dataPlans));
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), before);
+        auto prepared = model.prepareCreatureState(*owner); ASSERT_TRUE(prepared);
+        EXPECT_EQ(world.getPrng(), before);
+        // Remove authored packages after preparation to prove detached ownership.
+        if (creature)
+        {
+            auto base = *world.getStore().get<ESM::Creature>().find(owner->mRef.mRefID);
+            base.mAiPackage.mList.clear(); world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+        }
+        else
+        {
+            auto base = *world.getStore().get<ESM::NPC>().find(owner->mRef.mRefID);
+            base.mAiPackage.mList.clear(); world.getStore().getWritable<ESM::NPC>().insertStatic(base);
+        }
+        MWWorld::WorldModel::PreparedCreatureStates plans;
+        plans.emplace(model.preparedInventoryKey(*owner), std::move(prepared)); model.setPreparedCreatureStates(std::move(plans));
+        world.getStore().rebuildIdsIndex(); MWWorld::ManualRef actor(world.getStore(), owner->mRef.mRefID);
+        actor.getPtr().mRef->load(*owner);
+        EXPECT_EQ(actor.getPtr().getRefData().getCustomData(), preparedData);
+        EXPECT_FALSE(model.takePreparedActorCustomData(*owner));
+        const auto& stats = actor.getPtr().getClass().getCreatureStats(actor.getPtr());
+        EXPECT_EQ(stats.getHealth().getCurrent(), 29); EXPECT_EQ(stats.getGoldPool(), 137);
+        EXPECT_EQ(stats.getAiSequence().getTypeId(), MWMechanics::AiPackageTypeId::Travel);
+        EXPECT_EQ(stats.getAiSequence().getActivePackage().getDestination(),
+            savedOverlay ? osg::Vec3f(41.f, 42.f, 43.f) : osg::Vec3f(31.f, 32.f, 33.f));
+        auto expectedRng = before;
+        for (int i = 0; i < (savedOverlay ? 2 : 1); ++i)
+            Misc::Rng::deviate(0.f, MWMechanics::AiReactionTimer::sDeviation, expectedRng);
+        EXPECT_EQ(world.getPrng(), expectedRng);
+        EXPECT_FALSE(model.takePreparedCreatureState(*owner));
+    }
+}
+
+TEST(OblivionWorldTest, PreparedLegacyCreatureBaseStatsMatchOrdinaryAndOwnWinningValues)
+{
+    const auto encode = [](const MWMechanics::CreatureStats& stats) {
+        ESM::CreatureStats state; stats.writeState(state);
+        std::stringstream stream; ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+        writer.startRecord(ESM::REC_CREA); state.save(writer); writer.endRecord(ESM::REC_CREA);
+        return stream.str();
+    };
+    for (bool armed : {false, true}) for (bool persistent : {false, true}) for (int health : {0, 29})
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+        MWClass::Creature::registerSelf();
+        for (const char* id : {"fNPCbaseMagickaMult", "fPCbaseMagickaMult"})
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(id);
+            setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(3.f);
+            world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+        ESM::Creature base{}; base.blank(); base.mId = ESM::RefId::stringRefId("prepared-base-stats-creature");
+        if (armed) base.mFlags |= ESM::Creature::Weapon;
+        if (persistent) base.mRecordFlags |= ESM::FLAG_Persistent;
+        for (int i = 0; i < 8; ++i) base.mData.mAttributes[ESM::Attribute::indexToRefId(i)] = 10 + i;
+        base.mData.mHealth = health; base.mData.mMana = 17; base.mData.mFatigue = 23;
+        base.mData.mLevel = 9; base.mData.mGold = 137;
+        base.mAiData.mHello = 51; base.mAiData.mFight = 52; base.mAiData.mFlee = 53; base.mAiData.mAlarm = 54;
+        ESM::AIPackage travel{}; travel.mType = ESM::AI_Travel; travel.mTravel = {31.f, 32.f, 33.f, 1};
+        base.mAiPackage.mList = {travel};
+        world.getStore().getWritable<ESM::Creature>().insertStatic(base); world.getStore().rebuildIdsIndex();
+        ESM::CreatureState owner; owner.blank(); owner.mRef.mRefID = base.mId; owner.mHasCustomState = true;
+        owner.mCreatureStats.mMissingACDT = true; owner.mCreatureStats.mHasAiSettings = false;
+        owner.mCreatureStats.mRecalcDynamicStats = false;
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto revision = model.getPtrRegistryRevision(); const auto rngBefore = world.getPrng();
+        const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+        auto data = model.prepareActorCustomData(owner, world.getStore()); ASSERT_TRUE(data);
+        auto* preparedData = data.get(); auto core = model.prepareCreatureState(owner); ASSERT_TRUE(core);
+        EXPECT_EQ(world.getPrng(), rngBefore); EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+        EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        MWWorld::ManualRef ordinary(world.getStore(), base.mId); ordinary.getPtr().mRef->load(owner);
+        const auto expected = encode(ordinary.getPtr().getClass().getCreatureStats(ordinary.getPtr()));
+        const auto expectedRng = world.getPrng();
+        // The detached object must own the captured values, including AI/gold.
+        auto changed = base; changed.mData.mHealth = 99; changed.mData.mMana = 98;
+        changed.mData.mFatigue = 97; changed.mData.mGold = 96; changed.mData.mLevel = 95;
+        changed.mData.mAttributes[ESM::Attribute::Intelligence] = 94;
+        changed.mAiData.mFight = 93; changed.mAiPackage.mList.clear();
+        world.getStore().getWritable<ESM::Creature>().insertStatic(changed);
+        MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+        dataPlans.emplace(model.preparedInventoryKey(owner), std::move(data));
+        model.setPreparedActorCustomData(std::move(dataPlans));
+        MWWorld::WorldModel::PreparedCreatureStates corePlans;
+        corePlans.emplace(model.preparedInventoryKey(owner), std::move(core));
+        model.setPreparedCreatureStates(std::move(corePlans));
+        world.getPrng() = rngBefore;
+        MWWorld::ManualRef restored(world.getStore(), base.mId); restored.getPtr().mRef->load(owner);
+        EXPECT_EQ(restored.getPtr().getRefData().getCustomData(), preparedData);
+        EXPECT_EQ(encode(restored.getPtr().getClass().getCreatureStats(restored.getPtr())), expected);
+        EXPECT_EQ(world.getPrng(), expectedRng);
+        EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+        if (armed)
+        {
+            EXPECT_NO_THROW(restored.getPtr().getClass().getInventoryStore(restored.getPtr()));
+        }
+    }
+}
+
+TEST(OblivionWorldTest, LegacyCreatureBasePreparationRejectsConsumedMissingGmstBeforeWorldMutation)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    ESM::Creature base{}; base.blank(); base.mId = ESM::RefId::stringRefId("missing-base-stat-gmst");
+    base.mData.mHealth = 29;
+    world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+    ESM::CreatureState owner; owner.blank(); owner.mHasCustomState = true;
+    owner.mRef.mRefID = base.mId; owner.mCreatureStats.mMissingACDT = true;
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    // Unchanged zero Intelligence does not consume the absent multiplier.
+    EXPECT_NO_THROW(model.prepareActorCustomData(owner, world.getStore()));
+    base.mData.mAttributes[ESM::Attribute::Intelligence] = 43;
+    world.getStore().getWritable<ESM::Creature>().insertStatic(base);
+    EXPECT_THROW(model.prepareActorCustomData(owner, world.getStore()), std::exception);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+}
+
+
+TEST(OblivionWorldTest, PreparedLegacyNpcBaseStatsMatchOrdinaryAndOwnIncomingValues)
+{
+    const auto encode = [](const MWMechanics::NpcStats& stats) {
+        ESM::CreatureStats creature; stats.MWMechanics::CreatureStats::writeState(creature);
+        ESM::NpcStats npc; stats.writeState(npc);
+        std::stringstream stream; ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+        writer.startRecord(ESM::REC_NPC_); creature.save(writer); npc.save(writer); writer.endRecord(ESM::REC_NPC_);
+        return stream.str();
+    };
+    for (bool autocalc : {false, true}) for (bool male : {false, true}) for (bool persistent : {false, true})
+    for (bool isPlayer : {false, true})
+    for (int overrides = 0; overrides != 8; ++overrides)
+    {
+        SCOPED_TRACE(autocalc);
+        SCOPED_TRACE(male);
+        SCOPED_TRACE(persistent);
+        SCOPED_TRACE(isPlayer);
+        SCOPED_TRACE(overrides);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+        for (const char* id : {"fNPCbaseMagickaMult", "fPCbaseMagickaMult"})
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(id);
+            setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(std::string_view(id) == "fPCbaseMagickaMult" ? 7.f : 3.f);
+            world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+        ESM::Race race{}; race.blank(); race.mId = ESM::RefId::stringRefId("prepared-npc-race");
+        for (int i = 0; i < 8; ++i)
+        {
+            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, 30 + i);
+            race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, 40 + i);
+        }
+        world.getStore().getWritable<ESM::Race>().insertStatic(race);
+        ESM::Class characterClass{}; characterClass.blank(); characterClass.mId = ESM::RefId::stringRefId("prepared-npc-class");
+        characterClass.mData.mSpecialization = ESM::Class::Combat;
+        characterClass.mData.mAttribute = {ESM::Attribute::Strength, ESM::Attribute::Intelligence};
+        MWWorld::ESMStore incoming; incoming.getWritable<ESM::Class>().insert(characterClass);
+        ESM::NPC base{}; base.blank(); base.mId = isPlayer ? ESM::RefId::stringRefId("Player") : ESM::RefId::generated(848);
+        base.mRace = race.mId; base.mClass = characterClass.mId; base.setIsMale(male);
+        base.mNpdtType = autocalc ? ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS : ESM::NPC::NPC_DEFAULT;
+        if (persistent) base.mRecordFlags |= ESM::FLAG_Persistent;
+        for (int i = 0; i < 8; ++i) base.mNpdt.mAttributes[ESM::Attribute::indexToRefId(i)] = 10 + i;
+        for (int i = 0; i < ESM::Skill::Length; ++i) base.mNpdt.mSkills[ESM::Skill::indexToRefId(i)] = 20 + i;
+        base.mNpdt.mHealth = persistent ? 0 : 29; base.mNpdt.mMana = 17; base.mNpdt.mFatigue = 23;
+        base.mNpdt.mLevel = 9; base.mNpdt.mGold = 137; base.mNpdt.mDisposition = 61; base.mNpdt.mReputation = 7;
+        base.mAiData.mHello = 51; base.mAiData.mFight = 52; base.mAiData.mFlee = 53; base.mAiData.mAlarm = 54;
+        incoming.getWritable<ESM::NPC>().insert(base);
+        if (overrides & 1)
+        {
+            auto shadow = race;
+            for (int i = 0; i < ESM::Attribute::Length; ++i)
+            {
+                shadow.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, 99);
+                shadow.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, 98);
+            }
+            world.getStore().getWritable<ESM::Race>().insert(shadow);
+            ASSERT_NE(world.getStore().get<ESM::Race>().find(race.mId),
+                world.getStore().get<ESM::Race>().searchStatic(race.mId));
+        }
+        if (overrides & 2)
+            for (const char* id : {"fNPCbaseMagickaMult", "fPCbaseMagickaMult"})
+            {
+                auto shadow = *world.getStore().get<ESM::GameSetting>().find(id);
+                shadow.mValue.setFloat(99.f);
+                world.getStore().getWritable<ESM::GameSetting>().insert(shadow);
+            }
+        const ESM::StringRefId extraAttributeId("outgoing-descriptor-attribute");
+        const ESM::StringRefId extraSkillId("outgoing-descriptor-skill");
+        if (overrides & 4)
+        {
+            auto shadow = *world.getStore().get<ESM::Skill>().find(ESM::Skill::LongBlade);
+            shadow.mData.mAttribute = ESM::Attribute::Luck;
+            shadow.mData.mSpecialization = ESM::Class::Magic;
+            world.getStore().getWritable<ESM::Skill>().insert(shadow);
+            shadow.mId = extraSkillId; shadow.mSchool.reset();
+            world.getStore().getWritable<ESM::Skill>().insert(shadow);
+            ESM::Attribute extra{}; extra.mId = extraAttributeId;
+            world.getStore().getWritable<ESM::Attribute>().insert(extra);
+        }
+        ESM::NpcState owner; owner.blank(); owner.mRef.mRefID = base.mId; owner.mHasCustomState = true;
+        owner.mCreatureStats.mMissingACDT = true; owner.mCreatureStats.mHasAiSettings = false;
+        owner.mCreatureStats.mRecalcDynamicStats = false;
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto revision = model.getPtrRegistryRevision(); const auto rngBefore = world.getPrng();
+        const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+        auto data = model.prepareActorCustomData(owner, incoming); ASSERT_TRUE(data);
+        auto* preparedData = data.get(); auto core = model.prepareCreatureState(owner, &incoming); ASSERT_TRUE(core);
+        EXPECT_EQ(world.getPrng(), rngBefore); EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+        EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        // These unsupported outgoing overrides will not survive restoration.
+        // Ordinary initialization is the independent baseline after removal.
+        if (overrides & 1)
+        {
+            ASSERT_TRUE(world.getStore().getWritable<ESM::Race>().erase(race.mId));
+        }
+        if (overrides & 2)
+        {
+            for (const char* id : {"fNPCbaseMagickaMult", "fPCbaseMagickaMult"})
+            {
+                ASSERT_TRUE(world.getStore().getWritable<ESM::GameSetting>().erase(ESM::RefId::stringRefId(id)));
+            }
+        }
+        if (overrides & 4)
+        {
+            ASSERT_TRUE(world.getStore().getWritable<ESM::Skill>().erase(ESM::Skill::LongBlade));
+            ASSERT_TRUE(world.getStore().getWritable<ESM::Skill>().erase(extraSkillId));
+            ASSERT_TRUE(world.getStore().getWritable<ESM::Attribute>().erase(extraAttributeId));
+        }
+        world.getStore().getWritable<ESM::Class>().insert(characterClass);
+        world.getStore().getWritable<ESM::NPC>().insert(base); world.getStore().rebuildIdsIndex();
+        std::unique_ptr<MWWorld::ManualRef> ordinary;
+        MWWorld::Ptr ordinaryPtr;
+        if (isPlayer)
+        {
+            world.getPlayer().set(world.getStore().get<ESM::NPC>().find(base.mId));
+            ordinaryPtr = world.getPlayerPtr(); ordinaryPtr.getRefData().setCustomData({});
+        }
+        else
+        {
+            ordinary = std::make_unique<MWWorld::ManualRef>(world.getStore(), base.mId);
+            ordinaryPtr = ordinary->getPtr();
+        }
+        const auto expectedBaseSkills = ordinaryPtr.getClass().getNpcStats(ordinaryPtr).getSkills();
+        const auto expectedBaseAttributes = ordinaryPtr.getClass().getNpcStats(ordinaryPtr).getAttributes();
+        // Saved NPC skills overwrite base skills. Inspect a detached clone
+        // through the real class getter before applying that saved overlay.
+        MWWorld::ManualRef baseProbe(world.getStore(), base.mId);
+        baseProbe.getPtr().getRefData().setCustomData(data->clone());
+        const auto& preparedBase = baseProbe.getPtr().getClass().getNpcStats(baseProbe.getPtr());
+        EXPECT_EQ(preparedBase.getSkills(), expectedBaseSkills);
+        EXPECT_EQ(preparedBase.getAttributes(), expectedBaseAttributes);
+        ordinaryPtr.mRef->load(owner);
+        const auto expected = encode(ordinaryPtr.getClass().getNpcStats(ordinaryPtr));
+        const auto expectedRng = world.getPrng();
+        auto changed = base; changed.mNpdt.mHealth = 99; changed.mNpdt.mMana = 98;
+        changed.mNpdt.mFatigue = 97; changed.mNpdt.mGold = 96; changed.mNpdt.mLevel = 95;
+        changed.mNpdt.mAttributes[ESM::Attribute::Intelligence] = 94; changed.mAiData.mFight = 93;
+        world.getStore().getWritable<ESM::NPC>().insert(changed);
+        MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+        dataPlans.emplace(model.preparedInventoryKey(owner), std::move(data)); model.setPreparedActorCustomData(std::move(dataPlans));
+        MWWorld::WorldModel::PreparedCreatureStates corePlans;
+        corePlans.emplace(model.preparedInventoryKey(owner), std::move(core)); model.setPreparedCreatureStates(std::move(corePlans));
+        world.getPrng() = rngBefore;
+        std::unique_ptr<MWWorld::ManualRef> restored;
+        MWWorld::Ptr restoredPtr;
+        if (isPlayer)
+        {
+            world.getPlayer().set(world.getStore().get<ESM::NPC>().find(base.mId));
+            restoredPtr = world.getPlayerPtr(); restoredPtr.getRefData().setCustomData({});
+        }
+        else
+        {
+            restored = std::make_unique<MWWorld::ManualRef>(world.getStore(), base.mId);
+            restoredPtr = restored->getPtr();
+        }
+        restoredPtr.mRef->load(owner);
+        EXPECT_EQ(restoredPtr.getRefData().getCustomData(), preparedData);
+        EXPECT_EQ(encode(restoredPtr.getClass().getNpcStats(restoredPtr)), expected);
+        EXPECT_EQ(world.getPrng(), expectedRng); EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+    }
+}
+
+TEST(OblivionWorldTest, RestoredPlayerMetadataUsesCanonicalNativeFieldsAndIncomingDynamicClass)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto native = world.captureOblivionRuntimeState(); native.mVersion = 3;
+    native.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+    native.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+    native.mPlayer.mName = "Canonical incoming Player"; native.mPlayer.mFemale = true;
+    MWWorld::ESMStore incoming;
+    auto player = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    player.mRace = ESM::RefId::stringRefId("invalid-outgoing-race"); player.setIsMale(true);
+    ESM::Class characterClass{}; characterClass.blank(); characterClass.mId = ESM::RefId::generated(875);
+    player.mClass = characterClass.mId;
+    incoming.getWritable<ESM::Class>().insert(characterClass); incoming.getWritable<ESM::NPC>().insert(player);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary(); const auto rng = world.getPrng();
+    const auto restored = world.getStore().prepareRestoredPlayerMetadata(native, incoming, world.getContentFiles());
+    EXPECT_EQ(restored.mName, native.mPlayer.mName); EXPECT_EQ(restored.mRace, ESM::RefId(ESM::FormId{0x810, 0}));
+    EXPECT_EQ(restored.mClass, characterClass.mId); EXPECT_FALSE(restored.isMale());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before); EXPECT_EQ(world.getPrng(), rng);
+    native.mVersion = 2;
+    const auto legacy = world.getStore().prepareRestoredPlayerMetadata(native, incoming, world.getContentFiles());
+    EXPECT_EQ(legacy.mRace, player.mRace); EXPECT_EQ(legacy.mClass, player.mClass); EXPECT_TRUE(legacy.isMale());
+}
+
+
+TEST(OblivionWorldTest, LegacyNpcBasePreparationRejectsOnlyConsumedMagickaSettingsBeforeWorldMutation)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    ESM::NPC base{}; base.blank(); base.mId = ESM::RefId::generated(849);
+    // This probe isolates consumed magicka settings; race powers now also
+    // require a surviving race before cleanup, even with authored stats.
+    base.mRace = world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace;
+    base.mNpdtType = ESM::NPC::NPC_DEFAULT; base.mNpdt.mHealth = 29;
+    MWWorld::ESMStore incoming; incoming.getWritable<ESM::NPC>().insert(base);
+    ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+    owner.mRef.mRefID = base.mId; owner.mCreatureStats.mMissingACDT = true;
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+    world.getStore().getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("fPCbaseMagickaMult"));
+    ASSERT_FALSE(world.getStore().get<ESM::GameSetting>().search("fPCbaseMagickaMult"));
+    EXPECT_NO_THROW(model.prepareActorCustomData(owner, incoming));
+    base.mNpdt.mAttributes[ESM::Attribute::Intelligence] = 43;
+    incoming.getWritable<ESM::NPC>().insert(base);
+    EXPECT_THROW(model.prepareActorCustomData(owner, incoming), std::exception);
+    ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId("fNPCbaseMagickaMult");
+    setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(3.f);
+    world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+    EXPECT_NO_THROW(model.prepareActorCustomData(owner, incoming));
+    base.mId = ESM::RefId::stringRefId("Player"); owner.mRef.mRefID = base.mId;
+    EXPECT_THROW(model.prepareActorCustomData(owner, incoming, &base), std::exception);
+    setting.mId = ESM::RefId::stringRefId("fPCbaseMagickaMult"); setting.mValue.setFloat(7.f);
+    world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+    EXPECT_NO_THROW(model.prepareActorCustomData(owner, incoming, &base));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+}
+
+
+TEST(OblivionWorldTest, DetachedBaseDependenciesRejectOutgoingOnlyRaceAndMagickaSettings)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+    MWWorld::ESMStore incoming;
+    ESM::Class characterClass{}; characterClass.blank(); characterClass.mId = ESM::RefId::generated(851);
+    incoming.getWritable<ESM::Class>().insert(characterClass);
+    ESM::Race race{}; race.blank(); race.mId = ESM::RefId::stringRefId("outgoing-only-base-race");
+    for (int i = 0; i < ESM::Attribute::Length; ++i)
+    {
+        race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, 40);
+        race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, 40);
+    }
+    world.getStore().getWritable<ESM::Race>().insert(race);
+    incoming.getWritable<ESM::Race>().insert(race); // Race is not a saved dynamic record type.
+    ESM::NPC npc{}; npc.blank(); npc.mId = ESM::RefId::generated(850);
+    npc.mNpdtType = ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS; npc.mNpdt.mLevel = 9;
+    npc.mRace = race.mId; npc.mClass = characterClass.mId;
+    incoming.getWritable<ESM::NPC>().insert(npc);
+    ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId("fNPCbaseMagickaMult");
+    setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(3.f);
+    world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+    ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+    owner.mRef.mRefID = npc.mId; owner.mCreatureStats.mMissingACDT = true;
+    EXPECT_THROW(model.prepareActorCustomData(owner, incoming), std::runtime_error);
+    world.getStore().getWritable<ESM::Race>().erase(race.mId);
+    world.getStore().getWritable<ESM::Race>().insertStatic(race);
+    world.getStore().getWritable<ESM::GameSetting>().eraseStatic(setting.mId);
+    world.getStore().getWritable<ESM::GameSetting>().insert(setting);
+    incoming.getWritable<ESM::GameSetting>().insert(setting); // Nor are GMSTs shared save records.
+    EXPECT_THROW(model.prepareActorCustomData(owner, incoming), std::runtime_error);
+    ESM::Creature creature{}; creature.blank(); creature.mId = ESM::RefId::generated(852);
+    creature.mData.mAttributes[ESM::Attribute::Intelligence] = 43;
+    creature.mData.mHealth = 29; incoming.getWritable<ESM::Creature>().insert(creature);
+    ESM::CreatureState creatureOwner; creatureOwner.blank(); creatureOwner.mHasCustomState = true;
+    creatureOwner.mRef.mRefID = creature.mId; creatureOwner.mCreatureStats.mMissingACDT = true;
+    EXPECT_THROW(model.prepareActorCustomData(creatureOwner, incoming), std::runtime_error);
+    world.getStore().getWritable<ESM::GameSetting>().insertStatic(setting);
+    EXPECT_NO_THROW(model.prepareActorCustomData(owner, incoming));
+    EXPECT_NO_THROW(model.prepareActorCustomData(creatureOwner, incoming));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+}
+
+
+TEST(OblivionWorldTest, DetachedStatConstructorsExcludeOutgoingDescriptorsAndKeepOrdinaryConstruction)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+    ESM::Attribute attribute{}; attribute.mId = ESM::StringRefId("outgoing-constructor-attribute");
+    ESM::Skill skill{}; skill.blank(); skill.mId = ESM::StringRefId("outgoing-constructor-skill");
+    store.getWritable<ESM::Attribute>().insert(attribute);
+    store.getWritable<ESM::Skill>().insert(skill);
+    MWMechanics::NpcStats ordinary;
+    MWMechanics::NpcStats detached(&store);
+    MWMechanics::CreatureStats creature(&store);
+    EXPECT_TRUE(ordinary.getAttributes().contains(attribute.mId));
+    EXPECT_TRUE(ordinary.getSkills().contains(skill.mId));
+    EXPECT_FALSE(detached.getAttributes().contains(attribute.mId));
+    EXPECT_FALSE(detached.getSkills().contains(skill.mId));
+    EXPECT_FALSE(creature.getAttributes().contains(attribute.mId));
+    ASSERT_TRUE(store.getWritable<ESM::Attribute>().erase(attribute.mId));
+    ASSERT_TRUE(store.getWritable<ESM::Skill>().erase(skill.mId));
+    MWMechanics::NpcStats afterClear;
+    EXPECT_EQ(detached.getAttributes(), afterClear.getAttributes());
+    EXPECT_EQ(detached.getSkills(), afterClear.getSkills());
+    EXPECT_EQ(creature.getAttributes(), afterClear.getAttributes());
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), outgoing);
+}
+
+
+namespace
+{
+    void npcFactionRestoreProbe(int mode)
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+        const auto setting = [&](std::string_view name, int value, bool immutable) {
+            ESM::GameSetting record{}; record.mId = ESM::RefId::stringRefId(name);
+            record.mValue.setType(ESM::VT_Int); record.mValue.setInteger(value);
+            if (immutable) store.getWritable<ESM::GameSetting>().insertStatic(record);
+            else store.getWritable<ESM::GameSetting>().insert(record);
+        };
+        const auto remove = [&](std::string_view name, bool immutable) {
+            if (immutable) store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId(name));
+            else store.getWritable<ESM::GameSetting>().erase(ESM::RefId::stringRefId(name));
+        };
+        ESM::NPC base{}; base.blank(); base.mId = ESM::RefId::generated(860);
+        base.mRace = world.getPlayerPtr().get<ESM::NPC>()->mBase->mRace;
+        base.mFaction = ESM::RefId::stringRefId("staged-faction");
+        base.mNpdtType = ESM::NPC::NPC_DEFAULT; base.mNpdt.mHealth = 29;
+        base.mNpdt.mLevel = 9; base.mNpdt.mRank = 2;
+        std::vector<std::unique_ptr<MWWorld::ManualRef>> ordinaryActors;
+        const auto ordinaryReputation = [&](const ESM::NPC& npc) {
+            store.getWritable<ESM::NPC>().insert(npc); store.rebuildIdsIndex();
+            auto& actor = ordinaryActors.emplace_back(std::make_unique<MWWorld::ManualRef>(store, npc.mId));
+            return actor->getPtr().getClass().getNpcStats(actor->getPtr()).getReputation();
+        };
+        setting("iAutoRepFacMod", 3, true); setting("iAutoRepLevMod", 4, true);
+        if (mode == 3)
+        {
+            setting("iAutoRepFacMod", 11, true); setting("iAutoRepLevMod", 13, true);
+            if (ordinaryReputation(base) != 137) std::_Exit(31);
+            remove("iAutoRepFacMod", true); remove("iAutoRepLevMod", true);
+        }
+        else
+        {
+            setting("iAutoRepFacMod", 99, false);
+            if (mode != 0) setting("iAutoRepLevMod", 99, false);
+            if (mode == 0) remove("iAutoRepLevMod", true);
+            if (mode == 4)
+            {
+                base.mFaction = {}; base.mNpdt.mReputation = 7;
+                remove("iAutoRepFacMod", true); remove("iAutoRepLevMod", true);
+                remove("iAutoRepFacMod", false); remove("iAutoRepLevMod", false);
+            }
+        }
+        MWWorld::ESMStore incoming; incoming.getWritable<ESM::NPC>().insert(base);
+        ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true; owner.mRef.mRefID = base.mId;
+        owner.mCreatureStats.mMissingACDT = true; owner.mCreatureStats.mHasAiSettings = false;
+        owner.mCreatureStats.mRecalcDynamicStats = false;
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+        const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+        std::unique_ptr<MWWorld::CustomData> data;
+        bool rejected = false;
+        try { data = model.prepareActorCustomData(owner, incoming); }
+        catch (const std::runtime_error&) { rejected = true; }
+        if (rejected != (mode == 0)) std::_Exit(32);
+        if (world.captureOblivionRuntimeState().serializeBinary() != before
+            || model.getPtrRegistryRevision() != revision || world.getPrng() != rng
+            || world.getPlayerPtr().getRefData().getCustomData() != outgoing) std::_Exit(33);
+        if (mode == 3 || mode == 4)
+        {
+            store.getWritable<ESM::NPC>().insert(base); store.rebuildIdsIndex();
+            MWWorld::ManualRef probe(store, base.mId);
+            probe.getPtr().getRefData().setCustomData(data->clone());
+            const int expected = mode == 3 ? 137 : 7;
+            if (probe.getPtr().getClass().getNpcStats(probe.getPtr()).getReputation() != expected)
+                std::_Exit(34);
+            std::_Exit(0);
+        }
+        remove("iAutoRepFacMod", false); remove("iAutoRepLevMod", false);
+        if (mode == 2)
+        {
+            store.getWritable<ESM::NPC>().insert(base); store.rebuildIdsIndex();
+            MWWorld::ManualRef probe(store, base.mId);
+            probe.getPtr().getRefData().setCustomData(data->clone());
+            if (probe.getPtr().getClass().getNpcStats(probe.getPtr()).getReputation() != 41)
+                std::_Exit(35);
+            // Later record/setting changes must not replace staged values.
+            setting("iAutoRepFacMod", 13, true); setting("iAutoRepLevMod", 17, true);
+            auto changed = base; changed.mFaction = {}; changed.mNpdt.mLevel = 1; changed.mNpdt.mRank = 0;
+            store.getWritable<ESM::NPC>().insert(changed);
+            auto* expectedData = data.get();
+            MWWorld::WorldModel::PreparedActorCustomData plans;
+            plans.emplace(model.preparedInventoryKey(owner), std::move(data));
+            model.setPreparedActorCustomData(std::move(plans));
+            MWWorld::ManualRef restored(store, base.mId); restored.getPtr().mRef->load(owner);
+            if (restored.getPtr().getRefData().getCustomData() != expectedData
+                || model.takePreparedActorCustomData(owner)) std::_Exit(36);
+            base.mId = ESM::RefId::generated(861);
+            if (ordinaryReputation(base) != 41) std::_Exit(37);
+        }
+        else
+        {
+            data.reset(); // Cancel a successful plan without priming either cache.
+            setting("iAutoRepFacMod", 5, true); setting("iAutoRepLevMod", 7, true);
+            if (ordinaryReputation(base) != 71) std::_Exit(38);
+        }
+        std::_Exit(0);
+    }
+}
+
+// Death-test suites run before ordinary cases. Each probe executes in its own
+// child, so process-global first-use cache behavior cannot contaminate another.
+TEST(NpcFactionRestoreDeathTest, FailedPreparationDoesNotPrimePartialLiveCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(0), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, CancelledPreparationDoesNotPrimeLiveCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(1), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, RestorationPrimesCapturedValuesAtOriginalFactionPhase)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(2), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, ExistingOrdinaryCacheSkipsAbsentSettings)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(3), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, NoFactionSkipsBothAbsentSettings)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(4), ::testing::ExitedWithCode(0), "");
+}
+
+TEST(OblivionWorldTest, PreparedInstanceSpellsResolveSurvivingPointersAndBindFirstAndCachedLists)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    MWWorld::ESMStore incoming;
+    ESM::Spell spell{}; spell.blank(); spell.mData.mType = ESM::Spell::ST_Spell;
+    spell.mId = ESM::RefId::stringRefId("prepared-instance-static");
+    const auto* immutable = store.getWritable<ESM::Spell>().insertStatic(spell);
+    spell.mId = ESM::RefId::generated(918); spell.mName = "outgoing";
+    store.getWritable<ESM::Spell>().insert(spell);
+    spell.mName = "incoming";
+    const auto* saved = incoming.getWritable<ESM::Spell>().insert(spell);
+    const auto absent = ESM::RefId::stringRefId("prepared-instance-absent");
+    spell.mId = absent; store.getWritable<ESM::Spell>().insert(spell);
+    auto npc = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    npc.mId = ESM::RefId::stringRefId("prepared-instance-owner");
+    npc.mSpells.mList = {immutable->mId, saved->mId, absent};
+    store.getWritable<ESM::NPC>().insertStatic(npc); store.rebuildIdsIndex();
+    const auto rng = world.getPrng(); const auto revision = world.getWorldModel().getPtrRegistryRevision();
+    auto firstPlan = MWMechanics::Spells::prepareInstance(npc.mSpells.mList, store, incoming);
+    auto cachedPlan = MWMechanics::Spells::prepareInstance(npc.mSpells.mList, store, incoming);
+    npc.mSpells.mList.clear(); // Neither install rereads the authored list.
+    store.getWritable<ESM::NPC>().insertStatic(npc);
+    EXPECT_EQ(world.getPrng(), rng);
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+    MWMechanics::Spells first, cached;
+    EXPECT_FALSE(firstPlan.bind(first, npc.mId));
+    EXPECT_TRUE(cachedPlan.bind(cached, npc.mId));
+    for (const auto* target : {&first, &cached})
+    {
+        ASSERT_EQ(target->count(), 2u);
+        EXPECT_EQ(target->at(0), immutable); EXPECT_EQ(target->at(1), saved);
+        EXPECT_EQ(target->at(1)->mName, "incoming");
+    }
+    EXPECT_THROW(firstPlan.bind(first, npc.mId), std::logic_error);
+    EXPECT_THROW(cachedPlan.install(cached), std::logic_error);
+}
+
+TEST(OblivionWorldTest, PreparedInstanceSpellAdditionsPreserveEarlierOrderAndRejectInsufficientCapacity)
+{
+    PopulatedMigrationFixture fixture;
+    auto& store = fixture.mWorld.getStore(); MWWorld::ESMStore incoming;
+    ESM::Spell spell{}; spell.blank(); spell.mData.mType = ESM::Spell::ST_Power;
+    spell.mId = ESM::RefId::stringRefId("prepared-addition-earlier");
+    const auto* earlier = store.getWritable<ESM::Spell>().insertStatic(spell);
+    spell.mId = ESM::RefId::stringRefId("prepared-addition-later");
+    const auto* later = store.getWritable<ESM::Spell>().insertStatic(spell);
+    std::vector<ESM::RefId> ids{earlier->mId, later->mId, later->mId};
+    auto plan = MWMechanics::Spells::prepareInstance(ids, store, incoming, 1);
+    auto tooSmall = MWMechanics::Spells::prepareInstance({}, store, incoming);
+    auto cloned = plan;
+    auto assigned = tooSmall; assigned = plan;
+    ids.clear();
+    MWMechanics::Spells target; target.add(earlier, false);
+    target.setSelectedSpell(earlier->mId);
+    EXPECT_THROW(tooSmall.install(target), std::logic_error);
+    ASSERT_EQ(target.count(), 1u); EXPECT_EQ(target.at(0), earlier);
+    plan.install(target);
+    ASSERT_EQ(target.count(), 2u); EXPECT_EQ(target.at(0), earlier); EXPECT_EQ(target.at(1), later);
+    EXPECT_EQ(target.getSelectedSpell(), earlier->mId);
+    EXPECT_THROW(plan.install(target), std::logic_error);
+    for (auto* copy : {&cloned, &assigned})
+    {
+        MWMechanics::Spells clonedTarget; clonedTarget.add(earlier, false);
+        copy->install(clonedTarget);
+        ASSERT_EQ(clonedTarget.count(), 2u);
+        EXPECT_EQ(clonedTarget.at(0), earlier); EXPECT_EQ(clonedTarget.at(1), later);
+        EXPECT_THROW(copy->install(clonedTarget), std::logic_error);
+    }
+}
+
+TEST(OblivionWorldTest, LegacyFullNpcRacePowersRequireSurvivingRaceBeforeWorldMutation)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    auto npc = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    npc.mNpdtType = ESM::NPC::NPC_DEFAULT;
+    npc.mRace = ESM::RefId::stringRefId("outgoing-only-full-npc-race");
+    ESM::Race race{}; race.blank(); race.mId = npc.mRace;
+    store.getWritable<ESM::Race>().insert(race);
+    MWWorld::ESMStore incoming; incoming.getWritable<ESM::Race>().insert(race);
+    incoming.getWritable<ESM::NPC>().insert(npc);
+    ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+    owner.mRef.mRefID = npc.mId; owner.mCreatureStats.mMissingACDT = true;
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto rng = world.getPrng(); const auto revision = world.getWorldModel().getPtrRegistryRevision();
+    EXPECT_THROW(world.getWorldModel().prepareActorCustomData(owner, incoming), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(world.getPrng(), rng); EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+    store.getWritable<ESM::Race>().insertStatic(race);
+    EXPECT_NO_THROW(world.getWorldModel().prepareActorCustomData(owner, incoming));
+}
+
+namespace
+{
+    void installSpellCalculationSettings(MWWorld::ESMStore& store)
+    {
+        for (const auto& [name, value] : std::array<std::pair<const char*, float>, 4>{
+            {{"fNPCbaseMagickaMult", 5.f}, {"fAutoSpellChance", 0.f}, {"fEffectCostMult", 1.f}, {"iAlchemyMod", 1.f}}})
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(name);
+            setting.mValue.setType(ESM::VT_Float); setting.mValue.setFloat(value);
+            store.getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+        for (const auto& [name, value] : std::array<std::pair<const char*, int>, 2>{
+            {{"iAutoSpellTimesCanCast", 1}, {"iAutoSpellAttSkillMin", 0}}})
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(name);
+            setting.mValue.setType(ESM::VT_Int); setting.mValue.setInteger(value);
+            store.getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+        auto school = *store.get<ESM::Skill>().find(ESM::Skill::Illusion);
+        if (!school.mSchool) school.mSchool = ESM::MagicSchool{};
+        school.mSchool->mAutoCalcMax = 1;
+        store.getWritable<ESM::Skill>().insertStatic(school);
+        ESM::MagicEffect effect{}; effect.blank(); effect.mId = ESM::MagicEffect::Paralyze;
+        effect.mData.mFlags = 0; effect.mData.mBaseCost = 10.f; effect.mData.mSchool = ESM::Skill::Illusion;
+        store.getWritable<ESM::MagicEffect>().insertStatic(effect);
+    }
+
+    ESM::Spell calculationSpell(std::string_view name, int magnitude)
+    {
+        ESM::Spell result{}; result.blank(); result.mId = ESM::RefId::stringRefId(name);
+        result.mData.mType = ESM::Spell::ST_Spell; result.mData.mFlags = ESM::Spell::F_Autocalc;
+        ESM::IndexedENAMstruct effect{}; effect.mData.mEffectID = ESM::MagicEffect::Paralyze;
+        effect.mData.mMagnMin = effect.mData.mMagnMax = magnitude;
+        effect.mData.mDuration = 1; effect.mData.mRange = ESM::RT_Self;
+        result.mEffects.mList.push_back(effect);
+        return result;
+    }
+
+    void spellCalculationRestoreProbe(int mode)
+    {
+        try
+        {
+            PopulatedMigrationFixture fixture;
+            auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+            installSpellCalculationSettings(store);
+            auto& caches = MWMechanics::spellCalculationCaches();
+            if (caches.mNpcMagicka.mValue || caches.mEffectCost.mValue || caches.mAlchemyCost.mValue
+                || caches.mWeakestSchoolCost.mValue || caches.mNpcChance.mValue
+                || caches.mAttributeSkillMinimum.mValue || caches.mTimesCanCast.mValue) std::_Exit(11);
+            auto spell = calculationSpell("calculation-cache-probe", 20);
+            if (mode < 4)
+            {
+                if (mode == 1 || mode == 2)
+                    store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("iAlchemyMod"));
+                MWWorld::ESMStore incoming;
+                MWMechanics::SpellCalculationContext context(store, &incoming);
+                bool rejected = false;
+                try
+                {
+                    const int cost = mode == 2 ? MWMechanics::calcSpellCost(spell)
+                                              : MWMechanics::calcSpellCost(spell, &context);
+                    if (cost != 20) std::_Exit(12);
+                }
+                catch (const std::runtime_error&) { rejected = true; }
+                if (rejected != (mode == 1 || mode == 2)) std::_Exit(13);
+                if (bool(caches.mEffectCost.mValue) != (mode == 2) || caches.mAlchemyCost.mValue)
+                    std::_Exit(14);
+                auto setting = *store.get<ESM::GameSetting>().find("fEffectCostMult");
+                setting.mValue.setFloat(3.f); store.getWritable<ESM::GameSetting>().insertStatic(setting);
+                setting.mId = ESM::RefId::stringRefId("iAlchemyMod"); setting.mValue.setFloat(1.f);
+                store.getWritable<ESM::GameSetting>().insertStatic(setting);
+                if (mode == 3)
+                {
+                    const auto commits = context.cacheCommits();
+                    store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("fEffectCostMult"));
+                    store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("iAlchemyMod"));
+                    for (const auto& commit : commits) commit();
+                }
+                if (MWMechanics::calcSpellCost(spell) != (mode == 2 || mode == 3 ? 20 : 60)) std::_Exit(16);
+                if (caches.mWeakestSchoolCost.mValue) std::_Exit(17); // Independent function cache.
+                std::_Exit(0);
+            }
+            if (mode == 6 || mode == 10)
+                spell.mEffects.mList.front().mData.mMagnMin
+                    = spell.mEffects.mList.front().mData.mMagnMax = std::numeric_limits<int>::max();
+            if (mode == 7)
+            {
+                spell.mEffects.mList.front().mData.mDuration = std::numeric_limits<int>::max();
+                auto setting = *store.get<ESM::GameSetting>().find("fEffectCostMult");
+                setting.mValue.setFloat(1e-9f); store.getWritable<ESM::GameSetting>().insertStatic(setting);
+            }
+            if (mode == 8)
+            {
+                auto setting = *store.get<ESM::GameSetting>().find("iAutoSpellTimesCanCast");
+                setting.mValue.setInteger(std::numeric_limits<int>::max());
+                store.getWritable<ESM::GameSetting>().insertStatic(setting);
+            }
+            if (mode == 9)
+            {
+                spell.mEffects.mList.front().mData.mMagnMin = spell.mEffects.mList.front().mData.mMagnMax = 50000;
+                spell.mEffects.mList.front().mData.mDuration = 100000;
+            }
+            store.getWritable<ESM::Spell>().insertStatic(spell);
+            ESM::Race race{}; race.blank(); race.mId = ESM::RefId::stringRefId("calculation-probe-race");
+            for (int i = 0; i < ESM::Attribute::Length; ++i)
+            {
+                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), true, 100);
+                race.mData.setAttribute(ESM::Attribute::indexToRefId(i), false, 100);
+            }
+            store.getWritable<ESM::Race>().insertStatic(race);
+            ESM::Class characterClass{}; characterClass.blank();
+            characterClass.mId = ESM::RefId::stringRefId("calculation-probe-class");
+            characterClass.mData.mAttribute = {ESM::Attribute::Intelligence, ESM::Attribute::Strength};
+            characterClass.mData.mSkills[0][1] = ESM::Skill::Illusion;
+            store.getWritable<ESM::Class>().insertStatic(characterClass);
+            ESM::NPC base{}; base.blank(); base.mId = ESM::RefId::generated(921);
+            base.mRace = race.mId; base.mClass = characterClass.mId;
+            base.mNpdtType = ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS; base.mNpdt.mLevel = 1;
+            store.getWritable<ESM::NPC>().insertStatic(base); store.rebuildIdsIndex();
+            MWWorld::ESMStore incoming;
+            ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+            owner.mRef.mRefID = base.mId; owner.mRef.mRefNum = {501, -1};
+            owner.mCreatureStats.mMissingACDT = true;
+            if (mode == 4)
+                store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("iAlchemyMod"));
+            const auto before = world.captureOblivionRuntimeState().serializeBinary();
+            const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+            bool rejected = false;
+            std::unique_ptr<MWWorld::CustomData> data;
+            try { data = model.prepareActorCustomData(owner, incoming, nullptr, false); }
+            catch (const std::runtime_error&) { rejected = true; }
+            if (rejected != (mode == 4 || mode >= 6)) std::_Exit(21);
+            if (world.captureOblivionRuntimeState().serializeBinary() != before
+                || model.getPtrRegistryRevision() != revision || world.getPrng() != rng
+                || caches.mNpcMagicka.mValue || caches.mEffectCost.mValue || caches.mAlchemyCost.mValue)
+                std::_Exit(22);
+            if (mode >= 6 && mode < 10) std::_Exit(0);
+            std::unique_ptr<MWWorld::ManualRef> first;
+            if (mode == 4 || mode == 10)
+            {
+                ESM::NpcState full; full.blank(); full.mHasCustomState = true;
+                full.mRef.mRefID = base.mId; full.mRef.mRefNum = {500, -1};
+                full.mCreatureStats.mMissingACDT = false;
+                first = std::make_unique<MWWorld::ManualRef>(store, base.mId);
+                first->getPtr().mRef->load(full); // Full saved stats bind without autocalculation.
+                data = model.prepareActorCustomData(owner, incoming, nullptr, true);
+            }
+            auto core = model.prepareCreatureState(owner, &incoming);
+            if (mode == 5)
+                for (const char* name : {"fNPCbaseMagickaMult", "fEffectCostMult", "iAlchemyMod",
+                    "iAutoSpellTimesCanCast", "iAutoSpellAttSkillMin", "fAutoSpellChance"})
+                    store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId(name));
+            MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+            dataPlans.emplace(model.preparedInventoryKey(owner), std::move(data));
+            model.setPreparedActorCustomData(std::move(dataPlans));
+            MWWorld::WorldModel::PreparedCreatureStates corePlans;
+            corePlans.emplace(model.preparedInventoryKey(owner), std::move(core));
+            model.setPreparedCreatureStates(std::move(corePlans));
+            MWWorld::ManualRef restored(store, base.mId); restored.getPtr().mRef->load(owner);
+            if (mode == 4 || mode == 10)
+            {
+                if (caches.mNpcMagicka.mValue || caches.mEffectCost.mValue || caches.mAlchemyCost.mValue)
+                    std::_Exit(23);
+            }
+            else if (caches.mNpcMagicka.mValue != 5.f || caches.mEffectCost.mValue != 1.f
+                || caches.mAlchemyCost.mValue != 1.f || caches.mWeakestSchoolCost.mValue != 1.f)
+                std::_Exit(24);
+            if (model.takePreparedActorCustomData(owner)) std::_Exit(25);
+            std::_Exit(0);
+        }
+        catch (...) { std::_Exit(99); }
+    }
+}
+
+TEST(SpellCalculationRestoreDeathTest, CancelledPreparationDoesNotPrimeEffectCostCaches)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(0), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, FailedPreparationDoesNotPrimePartialEffectCostCache)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(1), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, OrdinaryPartialFailureRetainsFirstFunctionCache)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(2), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, CapturedEffectCostCachesPrimeWithoutLaterLookups)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(3), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, EarlierFullSavedActorSkipsUnusedAutocalculationDependencies)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(4), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, ActualFirstLegacyNpcConsumesCapturedAutocalculation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(5), ::testing::ExitedWithCode(0), "");
+}
+
+TEST(OblivionWorldTest, PreparedNpcSpellsMatchPublishedTraversalWithOverridesAndOwnSelection)
+{
+    for (int cap : {0, 1, 2}) for (bool excludeRacePower : {false, true}) for (bool reverseIncoming : {false, true})
+    {
+    SCOPED_TRACE(cap);
+    SCOPED_TRACE(excludeRacePower);
+    SCOPED_TRACE(reverseIncoming);
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    installSpellCalculationSettings(store);
+    auto school = *store.get<ESM::Skill>().find(ESM::Skill::Illusion);
+    school.mSchool->mAutoCalcMax = cap;
+    store.getWritable<ESM::Skill>().insertStatic(school);
+    auto a = calculationSpell("calculation-static-a", 20);
+    const auto* staticA = store.getWritable<ESM::Spell>().insertStatic(a);
+    auto b = calculationSpell("calculation-static-b", 25);
+    store.getWritable<ESM::Spell>().insertStatic(b);
+    ESM::Spell power{}; power.blank(); power.mId = ESM::RefId::stringRefId("calculation-prior-power");
+    power.mData.mType = ESM::Spell::ST_Power;
+    const auto* prior = store.getWritable<ESM::Spell>().insertStatic(power);
+    auto outgoing = calculationSpell("calculation-outgoing-only", 90);
+    const auto* outgoingPtr = store.getWritable<ESM::Spell>().insert(outgoing);
+    auto incoming = std::make_unique<MWWorld::ESMStore>();
+    a.mEffects.mList.front().mData.mMagnMin = a.mEffects.mList.front().mData.mMagnMax = 40;
+    auto c = calculationSpell("calculation-incoming-c", 40);
+    if (reverseIncoming) incoming->getWritable<ESM::Spell>().insert(c);
+    const auto* incomingA = incoming->getWritable<ESM::Spell>().insert(a);
+    if (!reverseIncoming) incoming->getWritable<ESM::Spell>().insert(c);
+    ESM::Race race{}; race.blank();
+    if (excludeRacePower) race.mPowers.mList.push_back(a.mId);
+    std::map<ESM::RefId, MWMechanics::SkillValue> skills;
+    for (const auto& record : store.get<ESM::Skill>()) skills[record.mId].setBase(100.f);
+    std::map<ESM::RefId, MWMechanics::AttributeValue> attributes;
+    for (int i = 0; i < ESM::Attribute::Length; ++i) attributes[ESM::Attribute::indexToRefId(i)].setBase(100.f);
+    const auto savedSkills = skills; const auto savedAttributes = attributes;
+    MWMechanics::SpellCalculationContext context(store, incoming.get());
+    const auto futureOrder = context.spells();
+    EXPECT_NE(std::find(futureOrder.begin(), futureOrder.end(), staticA), futureOrder.end());
+    EXPECT_NE(std::find(futureOrder.begin(), futureOrder.end(), incomingA), futureOrder.end());
+    EXPECT_EQ(std::find(futureOrder.begin(), futureOrder.end(), outgoingPtr), futureOrder.end());
+    const auto before = world.captureOblivionRuntimeState().serializeBinary(); const auto rng = world.getPrng();
+    auto plan = MWMechanics::prepareNpcSpells(skills, attributes, &race, store, *incoming, 1);
+    auto cloned = plan;
+    skills.clear(); attributes.clear();
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before); EXPECT_EQ(world.getPrng(), rng);
+    auto definitions = world.prepareOblivionSharedDefinitions(std::move(incoming));
+    world.clear(); ASSERT_TRUE(definitions->install());
+    std::vector<const ESM::Spell*> published;
+    for (const auto& record : store.get<ESM::Spell>()) published.push_back(&record);
+    EXPECT_EQ(published, futureOrder); // Actual publication is the traversal authority.
+    MWMechanics::Spells expected; expected.add(prior, false);
+    expected.addAllToInstance(MWMechanics::autoCalcNpcSpells(savedSkills, savedAttributes, &race));
+    if (cap > 0)
+    {
+        ASSERT_GT(expected.count(), 1u);
+        if (cap == 1)
+        {
+            EXPECT_EQ(expected.at(1)->mId, excludeRacePower || reverseIncoming ? c.mId : a.mId);
+        }
+    }
+    else
+    {
+        EXPECT_EQ(expected.count(), 1u);
+    }
+    for (auto* prepared : {&plan, &cloned})
+    {
+        MWMechanics::Spells actual; actual.add(prior, false); prepared->install(actual);
+        EXPECT_EQ(MWMechanics::Spells::Collection(actual.begin(), actual.end()),
+            MWMechanics::Spells::Collection(expected.begin(), expected.end()));
+        EXPECT_THROW(prepared->install(actual), std::logic_error);
+    }
+}
+}
+
+TEST(OblivionWorldTest, RestoreCellAvailabilityUsesSurvivingDefinitionsWithoutCreatingLiveCells)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{0x9abc, 0});
+    store.getWritable<ESM4::Cell>().insertStatic(cell);
+    EXPECT_TRUE(model.canRestoreCell(cell.mId));
+    ESM::Cell legacy{}; legacy.mName = "surviving-authored-legacy-cell";
+    legacy.mData.mFlags = ESM::Cell::Interior; legacy.updateId();
+    std::stringstream bytes;
+    ESM::ESMWriter writer; writer.save(bytes);
+    writer.startRecord(ESM::REC_CELL); legacy.save(writer); writer.endRecord(ESM::REC_CELL);
+    ESM::ESMReader reader;
+    reader.open(std::make_unique<std::stringstream>(bytes.str()), "static-cell.esm");
+    EXPECT_EQ(reader.getRecName(), ESM::REC_CELL); reader.getRecHeader();
+    store.getWritable<ESM::Cell>().load(reader);
+    EXPECT_NE(store.get<ESM::Cell>().searchStatic(legacy.mId), nullptr);
+    EXPECT_TRUE(model.canRestoreCell(legacy.mId));
+    // Static content is loaded before outgoing dynamic definitions.
+    store.getWritable<ESM4::Cell>().insert(cell);
+    EXPECT_TRUE(model.canRestoreCell(cell.mId)); // Surviving static record wins after clear.
+    cell.mId = ESM::RefId(ESM::FormId{0x9abd, 0});
+    store.getWritable<ESM4::Cell>().insert(cell);
+    legacy.mName = "outgoing-only-legacy-cell"; legacy.updateId();
+    store.getWritable<ESM::Cell>().insert(legacy);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    EXPECT_FALSE(model.canRestoreCell(cell.mId));
+    EXPECT_NE(store.get<ESM::Cell>().search(legacy.mId), nullptr);
+    EXPECT_EQ(store.get<ESM::Cell>().searchStatic(legacy.mId), nullptr);
+    EXPECT_FALSE(model.canRestoreCell(legacy.mId));
+    EXPECT_TRUE(model.canRestoreCell(ESM::RefId::esm3ExteriorCell(99, 101)));
+    EXPECT_TRUE(model.canRestoreCell(ESM::RefId::index(ESM::REC_CSTA, 0)));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+}
+
+TEST(SpellCalculationRestoreDeathTest, ConsumedMagnitudeArithmeticRejectsBeforeWorldMutation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(6), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, ConsumedSchoolDurationRejectsBeforeWorldMutation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(7), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, ConsumedAffordabilityRejectsBeforeWorldMutation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(8), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, ConsumedRoundedCostRejectsBeforeWorldMutation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(9), ::testing::ExitedWithCode(0), "");
+}
+TEST(SpellCalculationRestoreDeathTest, CachedActorSkipsUnusedOverflowingAutocalculation)
+{
+    EXPECT_EXIT(spellCalculationRestoreProbe(10), ::testing::ExitedWithCode(0), "");
 }

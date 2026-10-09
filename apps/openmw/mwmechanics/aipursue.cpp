@@ -22,7 +22,8 @@ namespace MWMechanics
         mTargetActor = actor.getCellRef().getRefNum();
     }
 
-    AiPursue::AiPursue(const ESM::AiSequence::AiPursue* pursue)
+    AiPursue::AiPursue(const ESM::AiSequence::AiPursue* pursue, bool deferredRestore)
+        : TypedAiPackage<AiPursue>(makeDefaultOptions().withDeferredRestore(deferredRestore))
     {
         mTargetActor = pursue->mTargetActor;
     }

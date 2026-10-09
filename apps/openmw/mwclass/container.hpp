@@ -20,6 +20,7 @@ namespace MWClass
     public:
         ContainerCustomData(const ESM::Container& container, MWWorld::CellStore* cell);
         ContainerCustomData(const ESM::InventoryState& inventory);
+        ContainerCustomData() = default;
 
         ContainerCustomData& asContainerCustomData() override;
         const ContainerCustomData& asContainerCustomData() const override;

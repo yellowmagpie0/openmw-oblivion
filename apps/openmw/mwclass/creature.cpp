@@ -1,5 +1,7 @@
 #include "creature.hpp"
 
+#include <optional>
+
 #include <MyGUI_TextIterator.h>
 #include <MyGUI_UString.h>
 
@@ -16,6 +18,7 @@
 #include "../mwmechanics/combat.hpp"
 #include "../mwmechanics/creaturecustomdataresetter.hpp"
 #include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/creaturestatsrestore.hpp"
 #include "../mwmechanics/difficultyscaling.hpp"
 #include "../mwmechanics/disease.hpp"
 #include "../mwmechanics/inventory.hpp"
@@ -70,8 +73,14 @@ namespace MWClass
         MWMechanics::CreatureStats mCreatureStats;
         std::unique_ptr<MWWorld::ContainerStore> mContainerStore; // may be InventoryStore for some creatures
         MWMechanics::Movement mMovement;
+        bool mBaseStatsPrepared = false;
+        bool mDeferredBaseDeathTime = false;
+        std::optional<MWMechanics::Spells::PreparedInstance> mPreparedBaseSpells;
 
-        CreatureCustomData() = default;
+        explicit CreatureCustomData(const MWWorld::ESMStore* initializationStore = nullptr)
+            : mCreatureStats(initializationStore)
+        {
+        }
         CreatureCustomData(const CreatureCustomData& other);
         CreatureCustomData(CreatureCustomData&& other) = default;
 
@@ -83,6 +92,9 @@ namespace MWClass
         : mCreatureStats(other.mCreatureStats)
         , mContainerStore(other.mContainerStore->clone())
         , mMovement(other.mMovement)
+        , mBaseStatsPrepared(other.mBaseStatsPrepared)
+        , mDeferredBaseDeathTime(other.mDeferredBaseDeathTime)
+        , mPreparedBaseSpells(other.mPreparedBaseSpells)
     {
     }
 
@@ -118,52 +130,121 @@ namespace MWClass
         return staticGmst;
     }
 
-    void Creature::ensureCustomData(const MWWorld::Ptr& ptr) const
+    std::unique_ptr<MWWorld::CustomData> Creature::prepareSavedCustomData(
+        bool hasInventory, const MWWorld::ESMStore* initializationStore)
+    {
+        auto data = std::make_unique<CreatureCustomData>(initializationStore);
+        if (hasInventory)
+            data->mContainerStore = std::make_unique<MWWorld::InventoryStore>();
+        else
+            data->mContainerStore = std::make_unique<MWWorld::ContainerStore>();
+        return data;
+    }
+
+    void Creature::initializeBaseStats(MWMechanics::CreatureStats& stats, const ESM::Creature& base)
+    {
+        for (const auto& [attribute, value] : base.mData.mAttributes)
+            stats.setAttribute(attribute, static_cast<float>(value));
+        stats.setHealth(static_cast<float>(base.mData.mHealth));
+        stats.setMagicka(static_cast<float>(base.mData.mMana));
+        stats.setFatigue(static_cast<float>(base.mData.mFatigue));
+        stats.setLevel(base.mData.mLevel);
+    }
+
+    void Creature::initializeBaseAiSettings(MWMechanics::CreatureStats& stats, const ESM::Creature& base)
+    {
+        stats.setAiSetting(MWMechanics::AiSetting::Hello, base.mAiData.mHello);
+        stats.setAiSetting(MWMechanics::AiSetting::Fight, base.mAiData.mFight);
+        stats.setAiSetting(MWMechanics::AiSetting::Flee, base.mAiData.mFlee);
+        stats.setAiSetting(MWMechanics::AiSetting::Alarm, base.mAiData.mAlarm);
+    }
+
+    std::unique_ptr<MWWorld::CustomData> Creature::prepareLegacyCustomData(
+        const ESM::Creature& base, const MWWorld::ESMStore& store, const MWWorld::ESMStore* incoming)
+    {
+        auto prepared = prepareSavedCustomData((base.mFlags & ESM::Creature::Weapon) != 0, &store);
+        auto& data = prepared->asCreatureCustomData();
+        data.mPreparedBaseSpells = MWMechanics::Spells::prepareInstance(
+            base.mSpells.mList, store, incoming ? *incoming : store);
+        // The same setters and consumed GMST lookup run against detached data.
+        // Neither Player lazy initialization nor the outgoing clock is queried.
+        data.mCreatureStats.mBaseInitializationStore = &store;
+        initializeBaseStats(data.mCreatureStats, base);
+        data.mCreatureStats.mBaseInitializationStore = nullptr;
+        initializeBaseAiSettings(data.mCreatureStats, base);
+        data.mCreatureStats.setGoldPool(base.mData.mGold);
+        if (data.mCreatureStats.isDead())
+        {
+            data.mCreatureStats.setDeathAnimationFinished((base.mRecordFlags & ESM::FLAG_Persistent) != 0);
+            data.mDeferredBaseDeathTime = true;
+        }
+        data.mBaseStatsPrepared = true;
+        return prepared;
+    }
+
+    void Creature::ensureCustomData(const MWWorld::Ptr& ptr, MWMechanics::PreparedCreatureStats* prepared,
+        std::unique_ptr<MWWorld::CustomData> preparedData) const
     {
         if (!ptr.getRefData().getCustomData())
         {
             MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
-            auto tempData = std::make_unique<CreatureCustomData>();
-            CreatureCustomData* data = tempData.get();
+            auto tempData = std::move(preparedData);
+            if (!tempData)
+                tempData = std::make_unique<CreatureCustomData>();
+            CreatureCustomData* data = &tempData->asCreatureCustomData();
             MWMechanics::CreatureCustomDataResetter resetter{ ptr };
             ptr.getRefData().setCustomData(std::move(tempData));
 
             MWWorld::LiveCellRef<ESM::Creature>* ref = ptr.get<ESM::Creature>();
 
-            // creature stats
-            for (const auto& [attribute, value] : ref->mBase->mData.mAttributes)
-                data->mCreatureStats.setAttribute(attribute, static_cast<float>(value));
-            data->mCreatureStats.setHealth(static_cast<float>(ref->mBase->mData.mHealth));
-            data->mCreatureStats.setMagicka(static_cast<float>(ref->mBase->mData.mMana));
-            data->mCreatureStats.setFatigue(static_cast<float>(ref->mBase->mData.mFatigue));
+            const bool basePrepared = data->mBaseStatsPrepared;
+            data->mBaseStatsPrepared = false;
+            if (basePrepared)
+            {
+                if (data->mDeferredBaseDeathTime)
+                    data->mCreatureStats.mTimeOfDeath = MWBase::Environment::get().getWorld()->getTimeStamp();
+                data->mDeferredBaseDeathTime = false;
+            }
+            else
+                initializeBaseStats(data->mCreatureStats, *ref->mBase);
 
-            data->mCreatureStats.setLevel(ref->mBase->mData.mLevel);
+            if (!prepared || !prepared->installBaseAiSequence(data->mCreatureStats.getAiSequence()))
+                data->mCreatureStats.getAiSequence().fill(ref->mBase->mAiPackage);
 
-            data->mCreatureStats.getAiSequence().fill(ref->mBase->mAiPackage);
-
-            data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Hello, ref->mBase->mAiData.mHello);
-            data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Fight, ref->mBase->mAiData.mFight);
-            data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Flee, ref->mBase->mAiData.mFlee);
-            data->mCreatureStats.setAiSetting(MWMechanics::AiSetting::Alarm, ref->mBase->mAiData.mAlarm);
-
-            // Persistent actors with 0 health do not play death animation
-            if (data->mCreatureStats.isDead())
-                data->mCreatureStats.setDeathAnimationFinished(isPersistent(ptr));
+            if (!basePrepared)
+            {
+                initializeBaseAiSettings(data->mCreatureStats, *ref->mBase);
+                // Persistent actors with 0 health do not play death animation.
+                if (data->mCreatureStats.isDead())
+                    data->mCreatureStats.setDeathAnimationFinished(isPersistent(ptr));
+            }
 
             // spells
-            bool spellsInitialised = data->mCreatureStats.getSpells().setSpells(ref->mBase->mId);
+            bool spellsInitialised = data->mPreparedBaseSpells
+                ? data->mPreparedBaseSpells->bind(data->mCreatureStats.getSpells(), ref->mBase->mId)
+                : data->mCreatureStats.getSpells().setSpells(ref->mBase->mId);
             if (!spellsInitialised)
-                data->mCreatureStats.getSpells().addAllToInstance(ref->mBase->mSpells.mList);
+            {
+                if (data->mPreparedBaseSpells)
+                    data->mPreparedBaseSpells->warnMissing();
+                else
+                    data->mCreatureStats.getSpells().addAllToInstance(ref->mBase->mSpells.mList);
+            }
+            data->mPreparedBaseSpells.reset();
 
             // inventory
             bool hasInventory = hasInventoryStore(ptr);
-            if (hasInventory)
-                data->mContainerStore = std::make_unique<MWWorld::InventoryStore>();
-            else
-                data->mContainerStore = std::make_unique<MWWorld::ContainerStore>();
+            if (!data->mContainerStore)
+            {
+                if (hasInventory)
+                    data->mContainerStore = std::make_unique<MWWorld::InventoryStore>();
+                else
+                    data->mContainerStore = std::make_unique<MWWorld::ContainerStore>();
+            }
             data->mContainerStore->setPtr(ptr);
 
-            data->mCreatureStats.setGoldPool(ref->mBase->mData.mGold);
+            if (!basePrepared)
+                data->mCreatureStats.setGoldPool(ref->mBase->mData.mGold);
 
             resetter.mPtr = {};
 
@@ -750,23 +831,22 @@ namespace MWClass
             return;
 
         const ESM::CreatureState& creatureState = state.asCreatureState();
+        auto core = MWBase::Environment::get().getWorldModel()->takePreparedCreatureState(state);
 
         if (!ptr.getRefData().getCustomData())
         {
             if (creatureState.mCreatureStats.mMissingACDT)
-                ensureCustomData(ptr);
+                ensureCustomData(ptr, core.get(),
+                    MWBase::Environment::get().getWorldModel()->takePreparedActorCustomData(state));
             else
             {
                 // Create a CustomData, but don't fill it from ESM records (not needed)
-                auto data = std::make_unique<CreatureCustomData>();
-
-                if (hasInventoryStore(ptr))
-                    data->mContainerStore = std::make_unique<MWWorld::InventoryStore>();
-                else
-                    data->mContainerStore = std::make_unique<MWWorld::ContainerStore>();
+                auto data = MWBase::Environment::get().getWorldModel()->takePreparedActorCustomData(state);
+                if (!data)
+                    data = prepareSavedCustomData(hasInventoryStore(ptr));
 
                 MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
-                data->mContainerStore->setPtr(ptr);
+                data->asCreatureCustomData().mContainerStore->setPtr(ptr);
 
                 ptr.getRefData().setCustomData(std::move(data));
             }
@@ -774,11 +854,14 @@ namespace MWClass
 
         CreatureCustomData& customData = ptr.getRefData().getCustomData()->asCreatureCustomData();
 
-        customData.mContainerStore->readState(creatureState.mInventory);
-        bool spellsInitialised = customData.mCreatureStats.getSpells().setSpells(ptr.get<ESM::Creature>()->mBase->mId);
+        if (!MWBase::Environment::get().getWorldModel()->readPreparedInventory(state, *customData.mContainerStore))
+            customData.mContainerStore->readState(creatureState.mInventory);
+        const auto& actorId = ptr.get<ESM::Creature>()->mBase->mId;
+        bool spellsInitialised = core ? core->attachSpells(customData.mCreatureStats.getSpells(), actorId)
+                                     : customData.mCreatureStats.getSpells().setSpells(actorId);
         if (spellsInitialised)
             customData.mCreatureStats.getSpells().clear();
-        customData.mCreatureStats.readState(creatureState.mCreatureStats);
+        customData.mCreatureStats.readState(creatureState.mCreatureStats, core.get());
     }
 
     void Creature::writeAdditionalState(const MWWorld::ConstPtr& ptr, ESM::ObjectState& state) const

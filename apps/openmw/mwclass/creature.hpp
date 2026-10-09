@@ -10,6 +10,10 @@ namespace ESM
     struct GameSetting;
 }
 
+namespace MWMechanics { class PreparedCreatureStats; }
+namespace MWWorld { class ESMStore; }
+namespace ESM { struct Creature; }
+
 namespace MWClass
 {
     class Creature : public MWWorld::RegisteredClass<Creature, Actor>
@@ -17,8 +21,11 @@ namespace MWClass
         friend MWWorld::RegisteredClass<Creature, Actor>;
 
         Creature();
+        static void initializeBaseStats(MWMechanics::CreatureStats& stats, const ESM::Creature& base);
+        static void initializeBaseAiSettings(MWMechanics::CreatureStats& stats, const ESM::Creature& base);
 
-        void ensureCustomData(const MWWorld::Ptr& ptr) const;
+        void ensureCustomData(const MWWorld::Ptr& ptr, MWMechanics::PreparedCreatureStats* prepared = nullptr,
+            std::unique_ptr<MWWorld::CustomData> preparedData = {}) const;
 
         MWWorld::Ptr copyToCellImpl(const MWWorld::ConstPtr& ptr, MWWorld::CellStore& cell) const override;
 
@@ -45,6 +52,12 @@ namespace MWClass
         static const GMST& getGmst();
 
     public:
+        static std::unique_ptr<MWWorld::CustomData> prepareSavedCustomData(
+            bool hasInventory, const MWWorld::ESMStore* initializationStore = nullptr);
+        static std::unique_ptr<MWWorld::CustomData> prepareLegacyCustomData(
+            const ESM::Creature& base, const MWWorld::ESMStore& store,
+            const MWWorld::ESMStore* incoming = nullptr);
+
         void insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
             MWRender::RenderingInterface& renderingInterface) const override;
         ///< Add reference into a cell for rendering

@@ -15,6 +15,8 @@ namespace ESM
     struct SpellState;
 }
 
+namespace MWWorld { class ESMStore; }
+
 namespace MWMechanics
 {
     class CreatureStats;
@@ -102,6 +104,57 @@ namespace MWMechanics
         size_t count() const { return mSpells.size(); }
         const ESM::Spell* at(size_t index) const { return mSpells.at(index); }
 
+        // Resolved authored additions and a merge buffer owned before restore.
+        // Missing IDs retain the ordinary warning-and-skip behavior.
+        class PreparedInstance
+        {
+            friend class Spells;
+            Collection mAdditions;
+            Collection mMerged;
+            std::vector<ESM::RefId> mMissing;
+            bool mConsumed = false;
+
+        public:
+            PreparedInstance() = default;
+            PreparedInstance(const PreparedInstance& other);
+            PreparedInstance(PreparedInstance&&) = default;
+            PreparedInstance& operator=(const PreparedInstance& other);
+            PreparedInstance& operator=(PreparedInstance&&) = default;
+            bool bind(Spells& target, const ESM::RefId& actorId);
+            void install(Spells& target);
+            void warnMissing() const;
+        };
+        static PreparedInstance prepareInstance(const std::vector<ESM::RefId>& ids,
+            const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming,
+            std::size_t priorCapacity = 0);
+
+        class PreparedState
+        {
+            friend class Spells;
+            struct LegacyEffect { int mId; int mArg; float mMagnitude; };
+            Collection mExpectedBase;
+            Collection mBindingBase;
+            Collection mBaseFirst;
+            Collection mSavedFirst;
+            std::vector<std::pair<const ESM::Spell*, MWWorld::TimeStamp>> mUsedPowers;
+            std::vector<LegacyEffect> mLegacyEffects;
+            ESM::RefId mSelectedSpell;
+            bool mHasSelection = false;
+            bool mHasLegacyEffects = false;
+            bool mExisting = false;
+            bool mConsumed = false;
+            bool mAttached = false;
+            PreparedState() = default;
+
+        public:
+            PreparedState(const PreparedState&) = delete;
+            PreparedState& operator=(const PreparedState&) = delete;
+            bool attach(Spells& target, const ESM::RefId& actorId);
+            void install(Spells& target, CreatureStats* creatureStats);
+        };
+        static std::unique_ptr<PreparedState> prepareReadState(const ESM::SpellState& state,
+            const MWWorld::ESMStore& store, const std::vector<ESM::RefId>& baseSpells,
+            const MWWorld::ESMStore* incoming = nullptr, const Spells* existing = nullptr);
         void readState(const ESM::SpellState& state, CreatureStats* creatureStats);
         void writeState(ESM::SpellState& state) const;
 

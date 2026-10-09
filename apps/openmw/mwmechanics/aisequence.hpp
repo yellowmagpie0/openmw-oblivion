@@ -17,6 +17,7 @@ namespace MWWorld
 
 namespace ESM
 {
+    class ActorIdConverter;
     namespace AiSequence
     {
         struct AiSequence;
@@ -169,9 +170,37 @@ namespace MWMechanics
             \see ESM::AIPackageList **/
         void fill(const ESM::AIPackageList& list);
 
+        class PreparedFill
+        {
+            friend class AiSequence;
+            AiPackages mPackages;
+            bool mConsumed = false;
+            PreparedFill() = default;
+        public:
+            PreparedFill(const PreparedFill&) = delete;
+            PreparedFill& operator=(const PreparedFill&) = delete;
+            void install(AiSequence& target);
+        };
+        static std::unique_ptr<PreparedFill> prepareFill(const ESM::AIPackageList& list);
+
         bool isEmpty() const;
 
         void writeState(ESM::AiSequence::AiSequence& sequence) const;
+        class PreparedState
+        {
+            friend class AiSequence;
+            AiPackages mPackages;
+            bool mReplace = false;
+            bool mConsumed = false;
+            AiPackageTypeId mLastAiPackage;
+            PreparedState() = default;
+
+        public:
+            PreparedState(const PreparedState&) = delete;
+            PreparedState& operator=(const PreparedState&) = delete;
+            void install(AiSequence& target, ESM::ActorIdConverter* converter = nullptr);
+        };
+        static std::unique_ptr<PreparedState> prepareReadState(const ESM::AiSequence::AiSequence& sequence);
         void readState(const ESM::AiSequence::AiSequence& sequence);
     };
 }

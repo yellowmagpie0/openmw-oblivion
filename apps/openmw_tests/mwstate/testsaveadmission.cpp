@@ -6,6 +6,7 @@
 #include <osg/Image>
 #include <osgDB/Registry>
 
+#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <array>
@@ -3155,6 +3156,199 @@ TEST(SaveAdmissionTest, LegacyPermanentPlayerEffectsValidateOnlyConsumedIncoming
         else { EXPECT_NO_THROW(admit()); }
         EXPECT_EQ(calls, int(!rejected));
         EXPECT_EQ(reader.getFileOffset(), before);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}
+
+
+TEST(SaveAdmissionTest, SharedInventoriesPrepareBeforeIncomingDefinitionOwnershipMovesAcrossEveryNativeVersion)
+{
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    for (int owner = 0; owner != 3; ++owner)
+    for (const bool rejected : {false, true})
+    {
+        SCOPED_TRACE(version);
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(rejected);
+        MWWorld::ESMStore content; installTimestampContent(content);
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0)
+            + actorRestoreRecords(owner, [](auto&) {}));
+        const auto before = reader.getFileOffset();
+        std::vector<std::string> order;
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto incoming) { ASSERT_TRUE(incoming); order.push_back("native"); },
+            {}, {}, {}, {}, {},
+            [&](ESM::ObjectState& state, const MWWorld::ESMStore&, const ESM4::RuntimeState* native) {
+                EXPECT_TRUE(state.mHasCustomState);
+                EXPECT_EQ(native != nullptr, version != 0);
+                order.push_back("inventory");
+                if (rejected) throw std::runtime_error("inventory construction failed");
+            }, [&](auto incoming) { ASSERT_TRUE(incoming); order.push_back("shared"); }); };
+        if (rejected) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(order, rejected ? std::vector<std::string>{"inventory"}
+            : std::vector<std::string>({"inventory", version ? "native" : "shared"}));
+        EXPECT_EQ(reader.getFileOffset(), before);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}
+
+TEST(SaveAdmissionTest, PreparedSharedInventoryRetainsValidatedLocalLuaPayloadAndTimers)
+{
+    MWWorld::ESMStore content;
+    installAdmissionLuaConfiguration(content);
+    content.setUp();
+    sol::state lua;
+    const auto payload = LuaUtil::serialize(sol::make_object(lua, 42));
+    for (const bool luaFirst : {false, true})
+    for (const bool native : {false, true})
+    {
+        SCOPED_TRACE(luaFirst);
+        SCOPED_TRACE(native);
+        ESM::Player player{};
+        player.mObject.blank();
+        player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+        player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+        auto& item = player.mObject.mInventory.mItems.emplace_back();
+        item.blank();
+        item.mRef.mRefID = ESM::RefId::stringRefId("scripted-item");
+        for (auto* owner : {static_cast<ESM::ObjectState*>(&player.mObject), &item})
+            owner->mLuaScripts.mScripts.push_back({1, payload,
+                {{ESM::LuaTimer::Type::GAME_TIME, -1, "saved-callback", payload}}});
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            if (luaFirst) writeAdmissionLuaMapping(writer);
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            if (!luaFirst) writeAdmissionLuaMapping(writer);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+            ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        const auto offset = reader.getFileOffset();
+        int prepared = 0;
+        EXPECT_NO_THROW(MWState::admitSave(reader, ESM::GameProfile::Oblivion, [](const auto&) {}, &content,
+            {}, {}, {}, {}, {}, {}, [&](ESM::ObjectState& owner, const auto&, const ESM4::RuntimeState*) {
+                ++prepared;
+                const auto& inventory = owner.asNpcState().mInventory;
+                ASSERT_EQ(inventory.mItems.size(), 1u);
+                for (const auto* restored : {static_cast<const ESM::ObjectState*>(&owner), &inventory.mItems.front()})
+                {
+                    const auto& scripts = restored->mLuaScripts.mScripts;
+                    ASSERT_EQ(scripts.size(), 1u);
+                    EXPECT_EQ(scripts.front().mScriptId, 1);
+                    EXPECT_EQ(scripts.front().mData, payload);
+                    ASSERT_EQ(scripts.front().mTimers.size(), 1u);
+                    EXPECT_EQ(scripts.front().mTimers.front().mCallbackName, "saved-callback");
+                    EXPECT_EQ(scripts.front().mTimers.front().mCallbackArgument, payload);
+                    EXPECT_EQ(scripts.front().mTimers.front().mTime, -1);
+                }
+            }));
+        EXPECT_EQ(prepared, 1);
+        EXPECT_EQ(reader.getFileOffset(), offset);
+        EXPECT_EQ(reader.mScriptsConfiguration, nullptr);
+    }
+}
+
+TEST(SaveAdmissionTest, SharedActorPreparationKeepsWireOrderAcrossPlayerCellsVersionsAndFailures)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    for (std::uint32_t version = 0; version <= ESM4::CurrentRuntimeStateVersion; ++version)
+    {
+        std::array<int, 3> permutation{0, 1, 2};
+        do
+        {
+            const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+                for (const int owner : permutation)
+                {
+                    if (owner == 0)
+                    {
+                        ESM::Player player{}; player.mObject.blank();
+                        player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+                        player.mObject.mRef.mRefNum = {100, -1};
+                        player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+                        writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+                    }
+                    else
+                    {
+                        ESM::NpcState npc{}; npc.blank();
+                        ESM::CreatureState creature{}; creature.blank();
+                        ESM::ObjectState& state = owner == 1 ? static_cast<ESM::ObjectState&>(npc) : creature;
+                        state.mRef.mRefID = owner == 1 ? timestampNpcId : timestampCreatureId;
+                        state.mRef.mRefNum = {static_cast<std::uint32_t>(100 + owner), -1};
+                        writer.startRecord(ESM::REC_CSTA);
+                        writer.writeCellId(ESM::RefId(ESM::FormId{static_cast<std::uint32_t>(owner), 0}));
+                        ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                        writer.writeHNT("OBJE", std::uint32_t{0}); state.save(writer);
+                        writer.endRecord(ESM::REC_CSTA);
+                    }
+                }
+            });
+            for (int failAt : {-1, 0, 1, 2})
+            {
+                SCOPED_TRACE(version);
+                SCOPED_TRACE(::testing::PrintToString(permutation));
+                SCOPED_TRACE(failAt);
+                ESM::ESMReader reader;
+                openBytes(reader, saveBytes(ESM::GameProfile::Oblivion,
+                    version ? version : ESM4::CurrentRuntimeStateVersion, 1, version ? 1 : 0) + records);
+                const auto before = reader.getFileOffset();
+                std::vector<int> observed;
+                bool definitionsMoved = false;
+                const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+                    [&](const auto&, auto incoming) { EXPECT_TRUE(incoming); definitionsMoved = true; },
+                    {}, {}, {}, {}, {},
+                    [&](ESM::ObjectState& state, const MWWorld::ESMStore&, const ESM4::RuntimeState* native) {
+                        EXPECT_FALSE(definitionsMoved);
+                        EXPECT_EQ(native != nullptr, version != 0);
+                        observed.push_back(state.mRef.mRefNum.mIndex - 100);
+                        if (static_cast<int>(observed.size()) - 1 == failAt)
+                            throw std::runtime_error("ordered actor preparation rejected");
+                    }, [&](auto incoming) { EXPECT_TRUE(incoming); definitionsMoved = true; }); };
+                if (failAt < 0) { EXPECT_NO_THROW(admit()); }
+                else { EXPECT_THROW(admit(), std::runtime_error); }
+                const std::size_t expectedSize = failAt < 0 ? 3 : failAt + 1;
+                EXPECT_EQ(observed, std::vector<int>(permutation.begin(), permutation.begin() + expectedSize));
+                EXPECT_EQ(definitionsMoved, failAt < 0);
+                EXPECT_EQ(reader.getFileOffset(), before);
+                EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+            }
+        } while (std::next_permutation(permutation.begin(), permutation.end()));
+    }
+}
+
+TEST(SaveAdmissionTest, SkippedCellOwnersDoNotPrepareButStillReceivePayloadValidation)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    for (bool native : {false, true}) for (bool corrupt : {false, true})
+    {
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            for (int index = 1; index <= 2; ++index)
+            {
+                ESM::NpcState actor{}; actor.blank(); actor.mRef.mRefID = timestampNpcId;
+                actor.mRef.mRefNum = {static_cast<std::uint32_t>(100 + index), -1};
+                if (index == 1 && corrupt) actor.mPosition.pos[0] = std::numeric_limits<float>::quiet_NaN();
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{static_cast<std::uint32_t>(index), 0}));
+                ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                writer.writeHNT("OBJE", std::uint32_t{0}); actor.save(writer);
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        const auto before = reader.getFileOffset(); std::vector<std::uint32_t> prepared;
+        bool published = false;
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { published = true; }, {}, {}, {}, {}, {},
+            [&](ESM::ObjectState& owner, const MWWorld::ESMStore&, const ESM4::RuntimeState*) {
+                prepared.push_back(owner.mRef.mRefNum.mIndex);
+            }, [&](auto) { published = true; },
+            [&](const ESM::RefId& cell) { return cell == ESM::RefId(ESM::FormId{2, 0}); }); };
+        if (corrupt) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(prepared, corrupt ? std::vector<std::uint32_t>{} : std::vector<std::uint32_t>{102});
+        EXPECT_EQ(published, !corrupt); EXPECT_EQ(reader.getFileOffset(), before);
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
 }

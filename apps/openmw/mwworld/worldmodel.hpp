@@ -23,6 +23,7 @@ namespace ESM
     class ESMWriter;
     class ReadersCache;
     struct Cell;
+    struct NPC;
     struct FogState;
 }
 
@@ -37,6 +38,7 @@ namespace Loading
 }
 
 namespace osg { class Quat; }
+namespace MWMechanics { class PreparedNpcStats; class NpcStats; class PreparedCreatureStats; }
 namespace MWRender { class Objects; }
 namespace MWPhysics { class PhysicsSystem; }
 namespace NifBullet { struct ActorRagdollDefinition; }
@@ -45,6 +47,7 @@ class btTransform;
 namespace MWWorld
 {
     class ESMStore;
+    class ContainerStore;
 
     /// \brief Cell container
     class WorldModel
@@ -207,9 +210,36 @@ namespace MWWorld
         bool readRecord(ESM::ESMReader& reader, uint32_t type);
         // Install admitted resources after clear and before CSTA restoration.
         void setPreparedFogStates(std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states);
+        using PreparedInventoryKey = std::pair<ESM::RefNum, ESM::RefId>;
+        using PreparedInventoryStates = std::map<PreparedInventoryKey, std::unique_ptr<ContainerStore>>;
+        static PreparedInventoryKey preparedInventoryKey(const ESM::ObjectState& state);
+        std::unique_ptr<ContainerStore> prepareInventoryState(const ESM::ObjectState& state, const ESMStore& incoming);
+        void setPreparedInventoryStates(PreparedInventoryStates states);
+        bool readPreparedInventory(const ESM::ObjectState& state, ContainerStore& target);
+        using PreparedNpcStates = std::map<PreparedInventoryKey, std::unique_ptr<MWMechanics::PreparedNpcStats>>;
+        std::unique_ptr<MWMechanics::PreparedNpcStats> prepareNpcState(
+            const ESM::ObjectState& state, const ESMStore& incoming);
+        void setPreparedNpcStates(PreparedNpcStates states);
+        bool readPreparedNpcState(const ESM::ObjectState& state, MWMechanics::NpcStats& target);
+        bool canRestoreCell(const ESM::RefId& id) const;
+        using PreparedActorCustomData = std::map<PreparedInventoryKey, std::unique_ptr<CustomData>>;
+        std::unique_ptr<CustomData> prepareActorCustomData(const ESM::ObjectState& state, const ESMStore& incoming,
+            const ESM::NPC* canonicalPlayer = nullptr, bool spellsInitialized = false);
+        void setPreparedActorCustomData(PreparedActorCustomData states);
+        void finishActorCustomDataRestore() { mPreparedActorCustomData.clear(); }
+        std::unique_ptr<CustomData> takePreparedActorCustomData(const ESM::ObjectState& state);
+        using PreparedCreatureStates = std::map<PreparedInventoryKey, std::unique_ptr<MWMechanics::PreparedCreatureStats>>;
+        std::unique_ptr<MWMechanics::PreparedCreatureStats> prepareCreatureState(
+            const ESM::ObjectState& state, const ESMStore* incoming = nullptr);
+        void setPreparedCreatureStates(PreparedCreatureStates states);
+        std::unique_ptr<MWMechanics::PreparedCreatureStats> takePreparedCreatureState(const ESM::ObjectState& state);
 
     private:
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> mPreparedFogStates;
+        PreparedInventoryStates mPreparedInventoryStates;
+        PreparedNpcStates mPreparedNpcStates;
+        PreparedCreatureStates mPreparedCreatureStates;
+        PreparedActorCustomData mPreparedActorCustomData;
         struct GetCellStoreCallback;
 
         std::shared_ptr<const char> mPreparationIdentity;

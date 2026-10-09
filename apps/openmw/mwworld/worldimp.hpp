@@ -257,6 +257,8 @@ namespace MWWorld
         void validateOblivionSaveState(const ESM4::RuntimeState& state) const override;
         std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
             const ESM4::RuntimeState& state, std::unique_ptr<ESMStore> definitions = {}) override;
+        std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSharedDefinitions(
+            std::unique_ptr<ESMStore> definitions) override;
         ESM4::ObservationStream* getOblivionObservation() const override { return mOblivionObservation.get(); }
         void observeOblivionState(std::string_view event, const std::filesystem::path& save) const override;
         float getOblivionPlayerInventoryWeight() const override;

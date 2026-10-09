@@ -175,6 +175,14 @@ namespace MWMechanics
         }
     }
 
+    void MagicEffects::installPreparedState(MagicEffects& prepared)
+    {
+        mCollection.merge(prepared.mCollection);
+        for (const auto& [key, value] : prepared.mCollection)
+            mCollection.at(key) = value;
+        prepared.mCollection.clear();
+    }
+
     std::string getMagicEffectString(
         const ESM::MagicEffect& effect, const ESM::Attribute* attribute, const ESM::Skill* skill)
     {

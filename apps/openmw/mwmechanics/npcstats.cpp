@@ -20,7 +20,13 @@
 #include "../mwbase/windowmanager.hpp"
 
 MWMechanics::NpcStats::NpcStats()
-    : mDisposition(0)
+    : NpcStats(nullptr)
+{
+}
+
+MWMechanics::NpcStats::NpcStats(const MWWorld::ESMStore* initializationStore)
+    : CreatureStats(initializationStore)
+    , mDisposition(0)
     , mCrimeDispositionModifier(0)
     , mReputation(0)
     , mCrimeId(-1)
@@ -31,8 +37,14 @@ MWMechanics::NpcStats::NpcStats()
     , mIsWerewolf(false)
 {
     mSpecIncreases.resize(3, 0);
-    for (const ESM::Skill& skill : MWBase::Environment::get().getESMStore()->get<ESM::Skill>())
+    const auto& skills = initializationStore ? initializationStore->get<ESM::Skill>()
+        : MWBase::Environment::get().getESMStore()->get<ESM::Skill>();
+    for (const ESM::Skill& skill : skills)
+    {
+        if (initializationStore && skills.searchStatic(skill.mId) != &skill)
+            continue;
         mSkills.emplace(skill.mId, SkillValue{});
+    }
 }
 
 int MWMechanics::NpcStats::getBaseDisposition() const
@@ -458,52 +470,65 @@ void MWMechanics::NpcStats::writeState(ESM::NpcStats& state) const
 
     state.mTimeToStartDrowning = mTimeToStartDrowning;
 }
-void MWMechanics::NpcStats::readState(const ESM::CreatureStats& state)
+void MWMechanics::NpcStats::readState(const ESM::CreatureStats& state, PreparedCreatureStats* prepared)
 {
-    CreatureStats::readState(state);
+    CreatureStats::readState(state, prepared);
 }
 
 void MWMechanics::NpcStats::readState(const ESM::NpcStats& state)
 {
-    const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
+    prepareReadState(state, *MWBase::Environment::get().getESMStore())->install(*this);
+}
 
-    for (auto iter(state.mFactions.begin()); iter != state.mFactions.end(); ++iter)
-        if (store.get<ESM::Faction>().search(iter->first))
+std::unique_ptr<MWMechanics::PreparedNpcStats> MWMechanics::NpcStats::prepareReadState(
+    const ESM::NpcStats& state, const MWWorld::ESMStore& content, const MWWorld::ESMStore* incoming)
+{
+    auto prepared = std::unique_ptr<PreparedNpcStats>(new PreparedNpcStats);
+    prepared->mState = state;
+    for (const auto& [id, faction] : state.mFactions)
+        if (incoming ? content.searchForRestore<ESM::Faction>(id, *incoming)
+                     : content.get<ESM::Faction>().search(id))
         {
-            if (iter->second.mExpelled)
-                mExpelled.insert(iter->first);
-
-            if (iter->second.mRank >= 0)
-                mFactionRank[iter->first] = iter->second.mRank;
-
-            if (iter->second.mReputation)
-                mFactionReputation[iter->first] = iter->second.mReputation;
+            if (faction.mExpelled) prepared->mExpelled.insert(id);
+            if (faction.mRank >= 0) prepared->mFactionRank.emplace(id, faction.mRank);
+            if (faction.mReputation) prepared->mFactionReputation.emplace(id, faction.mReputation);
         }
-
-    mDisposition = state.mDisposition;
-    mCrimeDispositionModifier = state.mCrimeDispositionModifier;
-
     for (const auto& [id, value] : state.mSkills)
-        mSkills[id].readState(value);
+        prepared->mSkills[id].readState(value);
+    for (const auto& id : state.mUsedIds)
+        if (incoming ? content.findForRestore(id, *incoming) : content.find(id))
+            prepared->mUsedIds.insert(id);
+    prepared->mSpecIncreases.assign(state.mSpecIncreases.begin(), state.mSpecIncreases.end());
+    return prepared;
+}
 
-    mIsWerewolf = state.mIsWerewolf;
-
-    mCrimeId = state.mCrimeId;
-    mBounty = state.mBounty;
-    mNativeBounty.reset();
-    mReputation = state.mReputation;
-    mNativeReputation.reset();
-    mWerewolfKills = state.mWerewolfKills;
-    mLevelProgress = state.mLevelProgress;
-
-    mSkillIncreases = state.mSkillIncrease;
-
-    for (size_t i = 0; i < state.mSpecIncreases.size(); ++i)
-        mSpecIncreases[i] = state.mSpecIncreases[i];
-
-    for (auto iter(state.mUsedIds.begin()); iter != state.mUsedIds.end(); ++iter)
-        if (store.find(*iter))
-            mUsedIds.insert(*iter);
-
-    mTimeToStartDrowning = state.mTimeToStartDrowning;
+void MWMechanics::PreparedNpcStats::install(NpcStats& target)
+{
+    if (mConsumed)
+        throw std::logic_error("Prepared shared NPC stats already consumed");
+    mConsumed = true;
+    const auto overlay = [](auto& destination, auto& prepared) {
+        destination.merge(prepared);
+        for (const auto& [id, value] : prepared)
+            destination.at(id) = value;
+        prepared.clear();
+    };
+    overlay(target.mSkills, mSkills);
+    overlay(target.mFactionRank, mFactionRank);
+    overlay(target.mFactionReputation, mFactionReputation);
+    target.mExpelled.merge(mExpelled);
+    target.mUsedIds.merge(mUsedIds);
+    target.mDisposition = mState.mDisposition;
+    target.mCrimeDispositionModifier = mState.mCrimeDispositionModifier;
+    target.mIsWerewolf = mState.mIsWerewolf;
+    target.mCrimeId = mState.mCrimeId;
+    target.mBounty = mState.mBounty;
+    target.mNativeBounty.reset();
+    target.mReputation = mState.mReputation;
+    target.mNativeReputation.reset();
+    target.mWerewolfKills = mState.mWerewolfKills;
+    target.mLevelProgress = mState.mLevelProgress;
+    target.mSkillIncreases.swap(mState.mSkillIncrease);
+    target.mSpecIncreases.swap(mSpecIncreases);
+    target.mTimeToStartDrowning = mState.mTimeToStartDrowning;
 }

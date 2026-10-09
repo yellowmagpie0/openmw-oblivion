@@ -154,8 +154,8 @@ namespace MWMechanics
     {
     }
 
-    AiWander::AiWander(int distance, int duration, int timeOfDay, const std::vector<unsigned char>& idle, bool repeat)
-        : TypedAiPackage<AiWander>(repeat)
+    AiWander::AiWander(int distance, int duration, int timeOfDay, const std::vector<unsigned char>& idle, bool repeat, bool deferredRestore)
+        : TypedAiPackage<AiWander>(makeDefaultOptions().withRepeat(repeat).withDeferredRestore(deferredRestore))
         , mDistance(static_cast<unsigned>(std::max(0, distance)))
         , mDuration(static_cast<unsigned>(std::max(0, duration)))
         , mRemainingDuration(static_cast<float>(duration))
@@ -999,8 +999,8 @@ namespace MWMechanics
         sequence.mPackages.push_back(std::move(package));
     }
 
-    AiWander::AiWander(const ESM::AiSequence::AiWander* wander)
-        : TypedAiPackage<AiWander>(makeDefaultOptions().withRepeat(wander->mData.mShouldRepeat != 0))
+    AiWander::AiWander(const ESM::AiSequence::AiWander* wander, bool deferredRestore)
+        : TypedAiPackage<AiWander>(makeDefaultOptions().withRepeat(wander->mData.mShouldRepeat != 0).withDeferredRestore(deferredRestore))
         , mDistance(static_cast<unsigned>(std::max(static_cast<short>(0), wander->mData.mDistance)))
         , mDuration(static_cast<unsigned>(std::max(static_cast<short>(0), wander->mData.mDuration)))
         , mRemainingDuration(wander->mDurationData.mRemainingDuration)

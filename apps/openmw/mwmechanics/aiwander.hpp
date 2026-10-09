@@ -84,9 +84,9 @@ namespace MWMechanics
             \param timeOfDay Currently unimplemented. Not functional in the original engine.
             \param idle Chances of each idle to play (9 in total)
             \param repeat Repeat wander or not **/
-        AiWander(int distance, int duration, int timeOfDay, const std::vector<unsigned char>& idle, bool repeat);
+        AiWander(int distance, int duration, int timeOfDay, const std::vector<unsigned char>& idle, bool repeat, bool deferredRestore = false);
 
-        explicit AiWander(const ESM::AiSequence::AiWander* wander);
+        explicit AiWander(const ESM::AiSequence::AiWander* wander, bool deferredRestore = false);
 
         bool execute(const MWWorld::Ptr& actor, CharacterController& characterController, AiState& state,
             float duration) override;

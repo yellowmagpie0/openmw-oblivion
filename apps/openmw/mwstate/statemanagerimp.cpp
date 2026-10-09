@@ -1,7 +1,9 @@
 #include "statemanagerimp.hpp"
+
 #include "saveinput.hpp"
 
 #include <filesystem>
+#include <set>
 
 #include <SDL_clipboard.h>
 
@@ -13,6 +15,9 @@
 #include <components/esm3/loadcell.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/fogstate.hpp>
+#include <components/esm3/objectstate.hpp>
+#include <components/esm3/npcstate.hpp>
+#include <components/esm3/creaturestate.hpp>
 #include <components/esm4/runtimestate.hpp>
 
 #include <components/l10n/manager.hpp>
@@ -39,6 +44,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/containerstore.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/datetimemanager.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -48,6 +54,7 @@
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwmechanics/creaturestatsrestore.hpp"
 
 #include "../mwscript/globalscripts.hpp"
 
@@ -491,6 +498,13 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::function<bool()> preparedWeather;
         std::function<bool()> preparedProjectiles;
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
+        MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
+        MWWorld::WorldModel::PreparedNpcStates preparedNpcStats;
+        MWWorld::WorldModel::PreparedCreatureStates preparedCreatureStats;
+        MWWorld::WorldModel::PreparedActorCustomData preparedActorCustomData;
+        MWWorld::ESMStore::SpellListRequests spellListRequests;
+        std::set<ESM::RefId> spellBindings;
+        std::optional<MWWorld::ESMStore::PreparedSpellLists> preparedSpellLists;
         std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
             [&](const ESM4::RuntimeState& native, std::unique_ptr<MWWorld::ESMStore> definitions) {
@@ -505,7 +519,48 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 preparedFog.emplace(cell, std::make_unique<ESM::FogState>(std::move(fog)));
             }, [&](const ESM::QuickKeys& keys, const MWWorld::ESMStore& incoming, const ESM4::RuntimeState* native) {
                 MWBase::Environment::get().getWindowManager()->prepareQuickKeys(keys, incoming, native);
+            }, [&](ESM::ObjectState& owner, const MWWorld::ESMStore& incoming, const ESM4::RuntimeState* native) {
+                if (owner.mRef.mRefID != "Player" && !reader.applyContentFileMapping(owner.mRef.mRefNum))
+                    return; // Same removed-owner path as CellStore.
+                auto& model = *MWBase::Environment::get().getWorldModel();
+                const int spellType = dynamic_cast<const ESM::NpcState*>(&owner) ? int(ESM::REC_NPC_)
+                    : dynamic_cast<const ESM::CreatureState*>(&owner) ? int(ESM::REC_CREA) : 0;
+                if (spellType)
+                {
+                    auto [entry, inserted] = spellListRequests.try_emplace(owner.mRef.mRefID, spellType, 0);
+                    if (!inserted && entry->second.first != spellType)
+                        throw std::runtime_error("Conflicting shared spell-list actor kinds");
+                    ++entry->second.second;
+                }
+                const bool spellsInitialized = spellType && owner.mHasCustomState
+                    && !spellBindings.insert(owner.mRef.mRefID).second;
+                std::optional<ESM::NPC> canonicalPlayer;
+                if (owner.mRef.mRefID == "Player" && native)
+                    canonicalPlayer = world.getStore().prepareRestoredPlayerMetadata(
+                        *native, incoming, world.getContentFiles());
+                auto data = model.prepareActorCustomData(owner, incoming,
+                    canonicalPlayer ? &*canonicalPlayer : nullptr, spellsInitialized);
+                if (data && !preparedActorCustomData.emplace(model.preparedInventoryKey(owner), std::move(data)).second)
+                    throw std::runtime_error("Duplicate shared actor custom-data owner");
+                auto core = model.prepareCreatureState(owner, &incoming);
+                if (core && !preparedCreatureStats.emplace(model.preparedInventoryKey(owner), std::move(core)).second)
+                    throw std::runtime_error("Duplicate shared creature stats owner");
+                auto stats = model.prepareNpcState(owner, incoming);
+                if (stats && !preparedNpcStats.emplace(model.preparedInventoryKey(owner), std::move(stats)).second)
+                    throw std::runtime_error("Duplicate shared NPC stats owner");
+                auto inventory = model.prepareInventoryState(owner, incoming);
+                if (inventory && !preparedInventories.emplace(
+                    MWWorld::WorldModel::preparedInventoryKey(owner), std::move(inventory)).second)
+                    throw std::runtime_error("Duplicate shared inventory owner");
+            }, [&](std::unique_ptr<MWWorld::ESMStore> incoming) {
+                preparedNative = world.prepareOblivionSharedDefinitions(std::move(incoming));
+                if (!preparedNative)
+                    throw std::runtime_error("World cannot prepare native-profile shared definitions");
+            }, [&](const ESM::RefId& cell) {
+                return MWBase::Environment::get().getWorldModel()->canRestoreCell(cell);
             });
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+            preparedSpellLists.emplace(world.getStore().prepareSpellLists(spellListRequests));
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
             return;
@@ -516,10 +571,16 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         restorationStarted = true;
         // Prepared native and weather plans require one reset for both initial
         // menu loads and in-game loads. Other shared-only loads retain their lifecycle.
-        cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles));
+        cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles) || bool(preparedSpellLists));
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
+        if (preparedSpellLists && !preparedSpellLists->install(world.getStore()))
+            throw std::runtime_error("Shared spell lists no longer match the cleared World");
         MWBase::Environment::get().getWorldModel()->setPreparedFogStates(std::move(preparedFog));
+        MWBase::Environment::get().getWorldModel()->setPreparedInventoryStates(std::move(preparedInventories));
+        MWBase::Environment::get().getWorldModel()->setPreparedNpcStates(std::move(preparedNpcStats));
+        MWBase::Environment::get().getWorldModel()->setPreparedCreatureStates(std::move(preparedCreatureStats));
+        MWBase::Environment::get().getWorldModel()->setPreparedActorCustomData(std::move(preparedActorCustomData));
 
         MWBase::Environment::get().getLuaManager()->setContentFileMapping(contentFileMap);
 
@@ -770,6 +831,11 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             auto mapped = actorIdConverter.mMappings.find(actorId);
             if (mapped != actorIdConverter.mMappings.end())
                 MWBase::Environment::get().getMechanicsManager()->cleanupSummonedCreature(mapped->second);
+        }
+        if (preparedSpellLists)
+        {
+            world.getStore().finishSpellListRestore();
+            MWBase::Environment::get().getWorldModel()->finishActorCustomDataRestore();
         }
     }
     catch (const SaveVersionTooNewError& e)

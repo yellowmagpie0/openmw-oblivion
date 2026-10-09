@@ -321,10 +321,14 @@ namespace MWClass
             return;
 
         const ESM::ContainerState& containerState = state.asContainerState();
-        ptr.getRefData().setCustomData(std::make_unique<ContainerCustomData>(containerState.mInventory));
+        ptr.getRefData().setCustomData(std::make_unique<ContainerCustomData>());
 
-        MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
-        getContainerStore(ptr).setPtr(ptr);
+        auto& model = *MWBase::Environment::get().getWorldModel();
+        model.registerPtr(ptr);
+        auto& inventory = getContainerStore(ptr);
+        inventory.setPtr(ptr);
+        if (!model.readPreparedInventory(state, inventory))
+            inventory.readState(containerState.mInventory);
     }
 
     void Container::writeAdditionalState(const MWWorld::ConstPtr& ptr, ESM::ObjectState& state) const

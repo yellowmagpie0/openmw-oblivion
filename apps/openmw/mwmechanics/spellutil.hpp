@@ -23,6 +23,8 @@ namespace MWWorld
 
 namespace MWMechanics
 {
+    class SpellCalculationContext;
+
     enum class EffectCostMethod
     {
         GameSpell,
@@ -32,8 +34,8 @@ namespace MWMechanics
     };
 
     float calcEffectCost(const ESM::ENAMstruct& effect, const ESM::MagicEffect* magicEffect = nullptr,
-        const EffectCostMethod method = EffectCostMethod::GameSpell);
-    int calcSpellCost(const ESM::Spell& spell);
+        const EffectCostMethod method = EffectCostMethod::GameSpell, SpellCalculationContext* context = nullptr);
+    int calcSpellCost(const ESM::Spell& spell, SpellCalculationContext* context = nullptr);
 
     int getEffectiveEnchantmentCastCost(float castCost, const MWWorld::Ptr& actor);
     int getEffectiveEnchantmentCastCost(const ESM::Enchantment& enchantment, const MWWorld::Ptr& actor);

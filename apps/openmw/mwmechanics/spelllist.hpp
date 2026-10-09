@@ -52,6 +52,7 @@ namespace MWMechanics
         void clear();
         ///< Remove all spells of all types.
 
+        void reserveListeners(std::size_t count);
         void addListener(Spells* spells);
 
         void removeListener(Spells* spells);

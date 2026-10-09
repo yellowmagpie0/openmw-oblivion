@@ -173,32 +173,25 @@ namespace MWWorld
         std::unique_ptr<PreparedOblivionServices> mServices;
 
     public:
-        PreparedOblivionSaveStateImpl(World& world, const ESM4::RuntimeState& state,
+        PreparedOblivionSaveStateImpl(World& world, const ESM4::RuntimeState* sourceState,
             std::unique_ptr<ESMStore> definitions)
             : mWorld(&world)
             , mIdentity(world.mOblivionRestoreIdentity)
             , mClearGeneration(world.mOblivionClearGeneration + 1)
-            , mState(std::make_unique<ESM4::RuntimeState>(state))
+            , mState(sourceState ? std::make_unique<ESM4::RuntimeState>(*sourceState) : nullptr)
             , mServices(std::make_unique<PreparedOblivionServices>())
         {
             if (!definitions)
                 definitions = std::make_unique<ESMStore>();
-            if (state.mVersion >= 3)
+            if (mState && mState->mVersion >= 3)
             {
+                const auto& state = *mState;
                 // Canonical metadata belongs to the detached incoming store.
                 // Resolve dynamic classes through its Player facade, never
                 // through an outgoing record that the next clear will remove.
                 const ESM::FormKeyResolver resolver(world.mContentFiles);
-                const auto playerId = ESM::RefId::stringRefId("Player");
-                const auto* source = world.mStore.searchForRestore<ESM::NPC>(playerId, *definitions);
-                const auto race = resolver.toFormId(state.mPlayer.mRace);
-                const auto characterClass = resolver.toFormId(state.mPlayer.mClass);
-                if (!source || (!characterClass && !state.mPlayer.mClass.isDynamic()))
-                    throw std::runtime_error("TES4 runtime-state player class cannot be resolved");
-                const auto classId = characterClass ? ESM::RefId(*characterClass) : source->mClass;
-                if (!race || !world.mStore.get<ESM::Race>().searchStatic(ESM::RefId(*race))
-                    || !world.mStore.searchForRestore<ESM::Class>(classId, *definitions))
-                    throw std::runtime_error("TES4 runtime-state player race/class cannot be resolved");
+                auto player = world.mStore.prepareRestoredPlayerMetadata(
+                    state, *definitions, world.mContentFiles);
                 if (!state.mPlayer.mBirthSign.isNull())
                 {
                     const auto sign = resolver.toFormId(state.mPlayer.mBirthSign);
@@ -206,11 +199,6 @@ namespace MWWorld
                         throw std::runtime_error("TES4 runtime-state player birthsign cannot be resolved");
                     mServices->mPlayerBirthSign = ESM::RefId(*sign);
                 }
-                auto player = *source;
-                player.mName = state.mPlayer.mName;
-                player.mRace = ESM::RefId(*race);
-                player.mClass = classId;
-                player.setIsMale(!state.mPlayer.mFemale);
                 definitions->getWritable<ESM::NPC>().insert(player);
                 mServices->mPlayerMetadataPrepared = true;
             }
@@ -219,12 +207,13 @@ namespace MWWorld
             const ESMStore emptyDefinitions;
             const auto& incoming = mServices->mDefinitions
                 ? mServices->mDefinitions->definitions() : emptyDefinitions;
-            world.validateOblivionSaveStateImpl(*mState, mServices.get(), &incoming);
+            if (mState)
+                world.validateOblivionSaveStateImpl(*mState, mServices.get(), &incoming);
         }
 
         bool install() noexcept override
         {
-            if (!mState || mIdentity.expired())
+            if (!mServices || mIdentity.expired())
                 return false;
             auto& world = *mWorld;
             if (world.mOblivionClearGeneration != mClearGeneration
@@ -241,8 +230,13 @@ namespace MWWorld
                 world.mSharedDefinitionsPrepared = true;
                 mServices->mDefinitions.reset();
             }
-            world.mPendingOblivionRuntimeState = std::move(mState);
-            world.mPendingOblivionServices = std::move(mServices);
+            if (mState)
+            {
+                world.mPendingOblivionRuntimeState = std::move(mState);
+                world.mPendingOblivionServices = std::move(mServices);
+            }
+            else
+                mServices.reset(); // Shared-only saves publish no native DTO/services.
             return true;
         }
     };
@@ -3249,7 +3243,17 @@ namespace MWWorld
     {
         if (mOblivionClearGeneration == std::numeric_limits<std::uint64_t>::max())
             throw std::overflow_error("TES4 restore clear generation exhausted");
-        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, state, std::move(definitions));
+        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, &state, std::move(definitions));
+    }
+
+    std::unique_ptr<MWBase::World::PreparedOblivionSaveState> World::prepareOblivionSharedDefinitions(
+        std::unique_ptr<ESMStore> definitions)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            throw std::runtime_error("Shared definition staging requires the Oblivion profile");
+        if (mOblivionClearGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("TES4 restore clear generation exhausted");
+        return std::make_unique<PreparedOblivionSaveStateImpl>(*this, nullptr, std::move(definitions));
     }
 
     void World::validateOblivionSaveState(const ESM4::RuntimeState& state) const

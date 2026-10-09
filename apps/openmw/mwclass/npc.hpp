@@ -8,7 +8,11 @@
 namespace ESM
 {
     struct GameSetting;
+    struct NPC;
 }
+
+namespace MWMechanics { class PreparedCreatureStats; }
+namespace MWWorld { class ESMStore; }
 
 namespace MWClass
 {
@@ -18,7 +22,8 @@ namespace MWClass
 
         Npc();
 
-        void ensureCustomData(const MWWorld::Ptr& ptr) const;
+        void ensureCustomData(const MWWorld::Ptr& ptr, MWMechanics::PreparedCreatureStats* prepared = nullptr,
+            std::unique_ptr<MWWorld::CustomData> preparedData = {}) const;
 
         MWWorld::Ptr copyToCellImpl(const MWWorld::ConstPtr& ptr, MWWorld::CellStore& cell) const override;
 
@@ -49,6 +54,11 @@ namespace MWClass
         static const GMST& getGmst();
 
     public:
+        static std::unique_ptr<MWWorld::CustomData> prepareSavedCustomData(const MWWorld::ESMStore* initializationStore = nullptr);
+        static std::unique_ptr<MWWorld::CustomData> prepareLegacyCustomData(const ESM::NPC& base,
+            const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, bool isPlayer,
+            bool spellsInitialized = false);
+
         void insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
             MWRender::RenderingInterface& renderingInterface) const override;
         ///< Add reference into a cell for rendering

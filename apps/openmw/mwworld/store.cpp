@@ -674,6 +674,16 @@ namespace MWWorld
             return (it->second);
         return nullptr;
     }
+    const ESM::Cell* Store<ESM::Cell>::searchStatic(const ESM::RefId& id) const
+    {
+        const auto* record = search(id);
+        if (!record) return nullptr;
+        if (record->isExterior())
+            return searchStatic(record->getGridX(), record->getGridY()) == record ? record : nullptr;
+        const auto found = mInt.find(record->mName);
+        return found != mInt.end() && found->second == record ? record : nullptr;
+    }
+
     const ESM::Cell* Store<ESM::Cell>::searchOrCreate(int x, int y)
     {
         std::pair<int, int> key(x, y);

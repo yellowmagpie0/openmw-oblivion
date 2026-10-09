@@ -316,3 +316,253 @@ the instrumented PID loads the exact normal final save, independently checked
 by hash and38-group initial native readback. The first normal course's wrong
 expected error remains failed evidence. This stages Player metadata allocation,
 not all later shared actor/scene/resource/publication work; S3 remains open.
+
+Shared compatible inventories now prepare item references and equipment against
+incoming/static definitions during admission, retaining definition ownership for
+both T4ST and shared-only native-profile saves. WorldModel keys normalize Player
+and converted legacy ActorIds, preserve unset-ID identities, and consume plans
+once during actual class restoration. Legacy restocking and spell-created RefNums
+retain their compatibility behavior. Item registry publication still allocates
+after clear; shared stats/custom data and scene resources remain unstaged.
+The shared-inventory normal/instrumented1285-test reports and two actual populated
+save/reload/resave courses pass. A separate normal shared-only v7 course creates
+and reloads schema46 deliberately, with empty Player inventory and no claim of
+retaining its removed T4ST payload. See the milestone ledger for exact source,
+executable and continuation hashes and retained failed attempts. S3 remains open.
+
+Admission's shared Lua validation collection now copies owner/item payloads so
+prepared inventories keep saved scripts and timers. The four-case preparation
+regression failed before this fix; normal/instrumented full inventories now pass
+1286 tests at the fingerprint recorded in the ledger. Existing runtime courses
+precede this follow-up and do not prove scripted-item callback execution.
+
+Additional shared NPC fields now prepare during admission with inventories.
+Prepared skill/faction/expelled/used-ID nodes publish through the actual NPC class
+reader once, preserving old overlays and the native skill assignment guard.
+Factions use static content; used IDs follow accepted incoming/static publication
+policy. CreatureStats and other actor/scene allocations remain separate and open.
+Normal/instrumented full1288-test inventories, populated World fixtures and actual
+two-process save/reload/resave courses pass. A normal no-T4ST declared-v7 course
+also creates/reloads current state deliberately. Exact fingerprints, runtime
+hashes, fixture mistakes and verifier-only negative controls are in the ledger.
+This is not a complete transactional restore or S3 acceptance declaration.
+
+Core compatible CreatureStats now prepare attributes, resources, aggregate effects,
+summons, AI settings and consumed scalars before teardown. Owner-key plans publish
+once through actual NPC/creature class reads, retaining MissingACDT and overlays.
+Every relevant native guard is checked before core mutation; the former partial
+resource failure is reproduced and fixed. Normal/instrumented full1291-test reports
+and actual fresh-process resave courses pass, including shared core/AI subrecords.
+Spells, active effects, AI packages, custom data and later scene/registry work remain
+outside this core preparation. See the ledger for scope, fingerprints and failed
+fixture attempts; S3 is not closed.
+
+S3 active-effect preparation follow-up (2026-10-08): the existing shared
+creature plan now owns `ActiveSpells::PreparedState` before teardown, including
+active nodes, strings, effect vectors and queued storage. Class NPC/creature
+restoration consumes it with the runtime reader's converter, avoiding borrowed
+admission converter lifetime. Missing legacy active IDs are generated during
+installation; queued missing IDs and item-reference behavior are preserved.
+Normal and instrumented suites pass all1293 tests, and separately launched
+idle-effect F5/F9/F5 courses pass exact native/shared persistence comparisons.
+Populated active/queued payloads are covered by direct/class tests; these
+courses do not prove effect execution in gameplay. Existing nonempty queues
+and legacy converter bookkeeping may allocate during installation. Spell-list,
+AI-package, custom-data, registry and scene preparation plus late-load rollback
+remain open. AI construction currently draws World PRNG through its reaction
+timer and assigns global Follow indices; both require deferred initialization.
+
+S3 shared AI preparation follow-up (2026-10-08): `PreparedCreatureStats`
+now owns reconstructed `AiSequence::PreparedState` packages/vector before
+cleanup. Saved package constructors defer World PRNG reaction-timer draws and
+Follow global indices until installation, in saved order; cancellation consumes
+neither. Installation swaps package ownership, preserves empty-source retention
+and unknown-only clearing, rebuilds Combat/Pursue counts, and uses the runtime
+reader's actor converter. Direct/class tests cover all eight saved package
+paths, payload lifetime, cancellation, exact draws, timer guards and replay.
+All1296 normal/instrumented engine tests pass; native idle-service continuations
+and the declaredv7 shared-only noT4ST course pass. Populated shared AI coverage
+is from unit/class tests, not an AI execution gameplay claim. Legacy converter
+bookkeeping still allocates after cleanup. Spell-store/cache listeners, actor
+custom data, registry/scene resources, full load-failure transaction and broader
+adapter/migration acceptance remain open.
+
+S3 runtime evidence correction (2026-10-08): previous shared-core runtime
+reports incorrectly called the first11 STBA blocks creature stats and next4 AI.
+PLAY actually saves NPC27 skill blocks, then creature11, then AI4. An immutable
+post-hoc audit of all10 completed shared runtime courses now compares all42
+blocks and passes; prior labels are retained but superseded. The old changed
+health control mutated NPC skill index8. Fresh changed/missing health controls
+at the correct STBAindex35 are rejected without success reports. Direct health
+unit evidence is unaffected. The milestone ledger records the corrected scope.
+
+S3 shared spell-payload preparation follow-up (2026-10-08): the creature
+plan now owns resolved incoming saved/base spell vectors in both first/cached
+orders, used-power timestamps, saved selection and legacy permanent effect
+payload before cleanup. Installation swaps prepared vectors; unavailable and
+base-only selection retain the old selection. Ordinary readers preserve prior
+spell/power overlays. Actual first/cached NPC instance ordering and actual
+Player-only legacy attribute conversion are tested. All1300 engine tests pass
+in both builds, with normal/instrumented native continuations and shared-only
+legacy noT4ST acceptance. The corrected runtime decoder compares actual NPC27,
+creature11 andAI4 stat blocks plus spell fields. Runtime spell fields are empty;
+populated payload/legacy conversion evidence comes from unit/class tests.
+Shared SpellList cache/listener attachment, actor custom-data construction,
+legacy attribute mutation, registry/scene resources and full late-failure
+transaction remain outside this chunk's detached preparation.
+
+Shared spell-list restoration now prepares list/cache ownership and admitted
+listener capacity before cleanup. The store-identity/next-clear guarded batch
+installs once after definitions, preserves first/cached class ordering, and
+releases unused pins on success or clear. Live listeners keep lists alive.
+NPC/creature class spell attachment transfers prepared base vector storage.
+All1303 normal/instrumented tests and separate-process native continuation
+pass; declaredv7 shared-only/noT4ST normal course passes. Evidence and tested
+fingerprint are in the newest spell-attachment ledger entry. Actual runtime
+spell fields are empty; populated ordering/powers coverage uses actual class
+unit instances. Actor custom-data construction, missing-ACDT base initialization,
+additional unplanned bindings and full late-failure preservation remain open.
+
+Complete-stat shared NPC/creature custom data now constructs detached before
+cleanup. Owner-keyed WorldModel plans preserve incoming creature inventory
+kind, transfer the exact object once and release unused objects on successful
+restore or clear. Actual class tests check pointer identity and preparation
+leaving outgoing Player/registry unchanged. All1305 normal/instrumented tests
+and separate-process native continuation pass; see the newest custom-data
+ledger entry for fingerprint and evidence. Legacy missing-ACDT initialization
+still follows the existing base path. Registry binding, scene resources and
+whole late-failure rollback remain open; S3 is not complete.
+
+Authored base AI for missing-ACDT actors now prepares detached package/list
+storage before cleanup, deferring reaction RNG and Follow IDs to the existing
+base-fill location. Empty saved overlays retain authored packages; nonempty
+overlays replace them after consuming the same base draws. Actual NPC/creature
+class tests compare ordinary fill/wire/RNG and both overlay paths. All1307
+normal/instrumented tests and fresh native continuation pass. Normal and
+instrumented declared NOAC Player courses preserve native/shared state and
+authored base definition AI; Player::readRecord deliberately clears instance
+AI, so those courses do not prove Player instance package persistence. The
+first wrong Player persistence expectation and an SDL receipt timeout remain
+failed attempts. Recipe reproduction and verifier-only changed-authored-AI
+control pass. See the newest base-AI ledger entry for exact scope/fingerprints.
+Remaining base initialization, registry/scene resources and whole late-failure
+preservation keep S3 open.
+
+Missing-ACDT actors now use the same detached custom-data constructor and
+owner-keyed plan map as complete-stat actors. NPC/creature ensureCustomData
+consumes that exact object before performing its existing base initialization;
+creatures keep the prepared container. Ordinary fallback retains its original
+container-allocation point. All1307 normal/instrumented tests and separate
+process native continuation pass, as do normal/instrumented declared NOAC
+Player courses and recipe reproduction. Direct actual class tests check
+constructor identity, consumption and base/AI overlay behavior. See the newest
+legacy custom-data entry for exact scope and fingerprint. Base setters,
+recalculation, race/faction/spells/autocalculation, inventory fill/autoequip,
+registry/scene resources and full late-failure preservation remain open.
+
+Missing-ACDT shared creature base stats now compute detached from winning
+incoming/static definitions before cleanup. Existing setters resolve consumed
+NPC magicka GMSTs through a transient read-only context without live Player
+queries; it clears before publication. Zero-health death timestamps defer to
+the restore clock. AI/resource/gold/persistent flags retain captured values
+through the one-shot class initialization. Eight actual class cases preserve
+ordinary wire/RNG behavior after base changes, and missing consumed GMSTs fail
+without outgoing mutation. All1309 normal/instrumented tests and common
+CreatureStats/Player native+NOAC regression courses pass. Those engine courses
+do not prove shared creature runtime acceptance; the direct class matrix
+proves the creature path. See the newest ledger entry for exact evidence.
+NPC base computation/canonical metadata, remaining spells/inventory/registry/
+scene resources and full late-failure preservation keep S3 open.
+
+Missing-ACDT shared NPC/Player base stats now compute before cleanup from the
+winning NPC and incoming/static class, using common ordinary setters and a
+transient PC/NPC magicka context without live Player-stat queries. Canonical
+native Player race/class/sex comes from the same metadata helper used for World
+publication; old native versions and shared-only admission retain their intended
+metadata contracts. A 16-case actual Player/shared NPC wire/RNG matrix and
+missing consumed-setting tests pass within all1312 normal/instrumented engine
+tests. Normal/instrumented native continuation and declared Player NOAC courses
+also pass; these cover the Player NPC factory, while the direct class matrix
+proves shared NPC behavior, not ESM4 NPC adapter initialization. See the newest
+NPC ledger entry for exact fingerprints and retained failed/interrupted attempts.
+Autocalculated/base/race spells, inventory fill/autoequip, other future dependency
+views, registry/scene resources and full late-failure outgoing-World preservation
+remain open; S3 is not complete.
+
+Detached legacy NPC race and NPC/creature PC/NPC magicka settings now resolve
+against definitions that survive restoration. Unsupported outgoing/incoming-only
+race/GMST records cannot conceal a missing static dependency. A 64-case actual
+Player/shared NPC wire/RNG matrix covers independent conflicting outgoing race
+and multiplier overrides, and negative cases reject outgoing-only dependencies
+before mutation. All1313 normal/instrumented engine cases and fresh normal/
+instrumented declared Player NOAC courses pass. See the newest base-dependency
+ledger entry for exact fingerprint and runtime scope. Other descriptor/faction
+dependencies, base/race/autocalculated spells, inventory fill/autoequip,
+registry/scene resources and full late-failure preservation still keep S3 open.
+
+Detached complete-stat and missing-ACDT shared NPC/creature constructors now use
+surviving static attribute/skill descriptors, without retaining a store pointer.
+Existing ordinary constructors keep their behavior. Detached NPC base attribute/
+skill autocalculation uses the same static descriptor set. A 128-case actual
+Player/shared NPC matrix compares base values before the saved NPC overlay can
+mask an error, final wire/RNG behavior and outgoing World/registry preservation;
+constructor tests compare with the ordinary post-removal descriptor set.
+All1314 normal/instrumented engine tests and four final-source native/NOAC
+runtime courses pass. See the newest descriptor ledger entry for exact source,
+process continuation and runtime scope. Faction dependencies, base/race/
+autocalculated spell initialization, base inventory fill/autoequip, registry/
+scene resources and full late-failure preservation remain open; S3 is incomplete.
+
+Detached legacy NPC faction reputation no longer primes the ordinary global
+setting caches. It captures surviving settings or already cached values plus
+base rank/level. Only live restoration at the old faction phase primes unset
+cache entries, preserving ordinary first-use/partial-failure behavior and
+existing cache lifetime. Five isolated actual class probes verify failed/
+cancelled preparation, captured installation, existing-cache dependency skipping
+and no-faction skipping without cache-reset test APIs. All1319 normal/
+instrumented engine cases and four native/NOAC compatibility runtime courses
+pass. Direct class probes establish faction-cache semantics; rendered courses
+are compatibility evidence. See the newest faction ledger entry for exact
+source/runtime hashes. Base/race/autocalculated spells, inventory fill/autoequip,
+registry/scene resources and full late-failure preservation remain open.
+
+Legacy Missing-ACDT base spell binding and NPC race-power additions are now
+prepared as owned resolved pointer vectors, missing-ID warning lists and reserved
+merge buffers. Lookup uses incoming/static spell definitions; outgoing-only
+spells cannot supply missing definitions. First/cached list behavior, pointer
+deduplication, prior instance order and repeated authored warning phases remain
+ordinary-compatible. Prepared clones preserve reserved capacity. Full-stat NPC
+race powers now require the surviving static race before cleanup, like autocalc
+NPCs. All 1322 normal/instrumented engine cases and four actual native/NOAC
+compatibility courses pass; see the newest authored-spell ledger entry for
+attempt history, exact source/binary hashes and fresh-process continuation.
+Autocalculation/cache preparation, actual first-binding restoration ordering,
+base inventory fill/autoequip, registry/scene and full late-failure preservation
+remain open. This does not add native spell gameplay acceptance.
+
+Admission retains original serialized encounter order across Player and cell
+owners for detached actor preparation. The DTO ownership and definition transfer
+boundary are unchanged; callback failure restores the input reader before any
+incoming definition publication. A six-permutation/all-native-versions/shared-only
+failure-position matrix and all1323 normal/instrumented engine cases pass.
+This supplies ordering information for future first/cached spell prediction;
+that prediction remains open, including skipped-owner/cell behavior. See the
+latest ordering ledger entry for source fingerprint and evidence. No new game
+runtime acceptance is claimed by this callback ordering change.
+
+Detached explicit legacy NPC restoration now prepares autocalculated spell
+selection against static/incoming spell traversal, preserving duplicate-ID
+traversal and incoming winning lookup. Independent ordinary first-use caches
+remain unprimed during preparation; only first live binding installs consumed
+values and resolved selection at the old phase. Cached actors skip unused
+dependencies and arithmetic. Consumed integer sums/products and rounded costs
+reject out-of-domain values before cleanup. Eleven isolated actual class/cache
+probes, twelve actual-publication traversal cases, skipped-cell admission and
+static-cell availability tests pass alongside all1337 normal/instrumented cases.
+Four final native/NOAC compatibility courses pass with exact normal-save fresh
+instrumented continuation; see the newest ledger entry for fingerprints, binary
+hashes and preserved failed/interrupted attempts. This does not close implicit
+Player initialization from leveled initial inventory, base fill/autoequip,
+registry/scene resources or full prior-world late-failure preservation. The
+existing saved-owner prediction covers explicit record bindings; pending
+inventory work must preserve the earlier implicit Player level query.

@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -26,8 +27,13 @@ namespace ESM
     struct CreatureStats;
 }
 
+namespace MWClass { class Creature; class Npc; }
+namespace MWWorld { class ESMStore; }
+
 namespace MWMechanics
 {
+    class PreparedCreatureStats;
+
     struct CorprusStats
     {
         static constexpr int sWorseningPeriod = 24;
@@ -42,7 +48,14 @@ namespace MWMechanics
     class CreatureStats
     {
         friend class OblivionActorProjection;
+        friend class PreparedCreatureStats;
+        friend class MWClass::Creature;
+        friend class MWClass::Npc;
         friend class OblivionActorLifeAdoption;
+        // Borrowed only while the detached class factory computes base values.
+        // Cleared before the object can be published or copied.
+        const MWWorld::ESMStore* mBaseInitializationStore = nullptr;
+        bool mBaseInitializationIsPlayer = false;
         std::map<ESM::RefId, AttributeValue> mAttributes;
         DynamicStat<float> mDynamic[3]; // health, magicka, fatigue
         DrawState mDrawState = DrawState::Nothing;
@@ -109,6 +122,8 @@ namespace MWMechanics
 
     public:
         CreatureStats();
+        // Detached restore construction uses only surviving static descriptors.
+        explicit CreatureStats(const MWWorld::ESMStore* initializationStore);
 
         // Construction only: install already calculated native values without
         // TES3 derived-stat recalculation or a gameplay death transition.
@@ -283,7 +298,9 @@ namespace MWMechanics
 
         void writeState(ESM::CreatureStats& state) const;
 
-        void readState(const ESM::CreatureStats& state);
+        static std::unique_ptr<PreparedCreatureStats> prepareCoreState(const ESM::CreatureStats& state,
+            std::unique_ptr<Spells::PreparedState> spells = {});
+        void readState(const ESM::CreatureStats& state, PreparedCreatureStats* prepared = nullptr);
 
         void setLastRestockTime(MWWorld::TimeStamp tradeTime);
         MWWorld::TimeStamp getLastRestockTime() const;

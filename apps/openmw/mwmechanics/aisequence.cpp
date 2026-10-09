@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/actoridconverter.hpp>
@@ -9,6 +10,7 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwworld/class.hpp"
 #include "actorutil.hpp"
 #include "aiactivate.hpp"
@@ -529,6 +531,67 @@ namespace MWMechanics
         }
     }
 
+    std::unique_ptr<AiSequence::PreparedFill> AiSequence::prepareFill(const ESM::AIPackageList& list)
+    {
+        auto prepared = std::unique_ptr<PreparedFill>(new PreparedFill);
+        prepared->mPackages.reserve(list.mList.size());
+        for (const auto& esmPackage : list.mList)
+        {
+            std::unique_ptr<MWMechanics::AiPackage> package;
+            if (esmPackage.mType == ESM::AI_Wander)
+            {
+                ESM::AIWander data = esmPackage.mWander;
+                std::vector<unsigned char> idles;
+                idles.reserve(8);
+                for (int i = 0; i < 8; ++i)
+                    idles.push_back(data.mIdle[i]);
+                package = std::make_unique<MWMechanics::AiWander>(
+                    data.mDistance, data.mDuration, data.mTimeOfDay, idles, data.mShouldRepeat != 0, true);
+            }
+            else if (esmPackage.mType == ESM::AI_Escort)
+            {
+                ESM::AITarget data = esmPackage.mTarget;
+                package = std::make_unique<MWMechanics::AiEscort>(ESM::RefId::stringRefId(data.mId.toStringView()),
+                    esmPackage.mCellName, data.mDuration, data.mX, data.mY, data.mZ, data.mShouldRepeat != 0, true);
+            }
+            else if (esmPackage.mType == ESM::AI_Travel)
+            {
+                ESM::AITravel data = esmPackage.mTravel;
+                package = std::make_unique<MWMechanics::AiTravel>(data.mX, data.mY, data.mZ, data.mShouldRepeat != 0, true);
+            }
+            else if (esmPackage.mType == ESM::AI_Activate)
+            {
+                ESM::AIActivate data = esmPackage.mActivate;
+                package = std::make_unique<MWMechanics::AiActivate>(
+                    ESM::RefId::stringRefId(data.mName.toStringView()), data.mShouldRepeat != 0, true);
+            }
+            else // if (esmPackage.mType == ESM::AI_Follow)
+            {
+                ESM::AITarget data = esmPackage.mTarget;
+                package = std::make_unique<MWMechanics::AiFollow>(ESM::RefId::stringRefId(data.mId.toStringView()),
+                    esmPackage.mCellName, data.mDuration, data.mX, data.mY, data.mZ, data.mShouldRepeat != 0, true);
+            }
+
+            prepared->mPackages.push_back(std::move(package));
+        }
+        return prepared;
+    }
+
+    void AiSequence::PreparedFill::install(AiSequence& target)
+    {
+        if (mConsumed || !target.mPackages.empty())
+            throw std::logic_error("Authored AI restore plan consumed or target is not empty");
+        for (auto& package : mPackages)
+        {
+            package->mReaction.initialize(MWBase::Environment::get().getWorld()->getPrng());
+            if (auto* follow = dynamic_cast<AiFollow*>(package.get()))
+                follow->initializeRestoreIndex();
+            target.onPackageAdded(*package);
+        }
+        target.mPackages.swap(mPackages);
+        mConsumed = true;
+    }
+
     void AiSequence::writeState(ESM::AiSequence::AiSequence& sequence) const
     {
         for (const auto& package : mPackages)
@@ -537,22 +600,22 @@ namespace MWMechanics
         sequence.mLastAiPackage = static_cast<int>(mLastAiPackage);
     }
 
-    void AiSequence::readState(const ESM::AiSequence::AiSequence& sequence)
+    std::unique_ptr<AiSequence::PreparedState> AiSequence::prepareReadState(const ESM::AiSequence::AiSequence& sequence)
     {
-        if (!sequence.mPackages.empty())
-            clear();
+        auto prepared = std::unique_ptr<PreparedState>(new PreparedState);
+        prepared->mReplace = !sequence.mPackages.empty();
+        prepared->mPackages.reserve(sequence.mPackages.size());
 
         // Load packages
         for (auto& container : sequence.mPackages)
         {
             std::unique_ptr<MWMechanics::AiPackage> package;
-            bool hasTarget = false;
             switch (container.mType)
             {
                 case ESM::AiSequence::Ai_Wander:
                 {
                     package = std::make_unique<AiWander>(
-                        &static_cast<const ESM::AiSequence::AiWander&>(*container.mPackage));
+                        &static_cast<const ESM::AiSequence::AiWander&>(*container.mPackage), true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Travel:
@@ -560,43 +623,39 @@ namespace MWMechanics
                     const ESM::AiSequence::AiTravel& source
                         = static_cast<const ESM::AiSequence::AiTravel&>(*container.mPackage);
                     if (source.mHidden)
-                        package = std::make_unique<AiInternalTravel>(&source);
+                        package = std::make_unique<AiInternalTravel>(&source, true);
                     else
-                        package = std::make_unique<AiTravel>(&source);
+                        package = std::make_unique<AiTravel>(&source, true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Escort:
                 {
                     package = std::make_unique<AiEscort>(
-                        &static_cast<const ESM::AiSequence::AiEscort&>(*container.mPackage));
-                    hasTarget = true;
+                        &static_cast<const ESM::AiSequence::AiEscort&>(*container.mPackage), true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Follow:
                 {
                     package = std::make_unique<AiFollow>(
-                        &static_cast<const ESM::AiSequence::AiFollow&>(*container.mPackage));
-                    hasTarget = true;
+                        &static_cast<const ESM::AiSequence::AiFollow&>(*container.mPackage), true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Activate:
                 {
                     package = std::make_unique<AiActivate>(
-                        &static_cast<const ESM::AiSequence::AiActivate&>(*container.mPackage));
+                        &static_cast<const ESM::AiSequence::AiActivate&>(*container.mPackage), true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Combat:
                 {
                     package = std::make_unique<AiCombat>(
-                        &static_cast<const ESM::AiSequence::AiCombat&>(*container.mPackage));
-                    hasTarget = true;
+                        &static_cast<const ESM::AiSequence::AiCombat&>(*container.mPackage), true);
                     break;
                 }
                 case ESM::AiSequence::Ai_Pursue:
                 {
                     package = std::make_unique<AiPursue>(
-                        &static_cast<const ESM::AiSequence::AiPursue&>(*container.mPackage));
-                    hasTarget = true;
+                        &static_cast<const ESM::AiSequence::AiPursue&>(*container.mPackage), true);
                     break;
                 }
                 default:
@@ -605,14 +664,46 @@ namespace MWMechanics
 
             if (!package.get())
                 continue;
-            if (hasTarget && sequence.mActorIdConverter)
-                sequence.mActorIdConverter->convert(package->mTargetActor, package->mTargetActor.mIndex);
-
-            onPackageAdded(*package);
-            mPackages.push_back(std::move(package));
+            prepared->mPackages.push_back(std::move(package));
         }
 
-        mLastAiPackage = static_cast<AiPackageTypeId>(sequence.mLastAiPackage);
+        prepared->mLastAiPackage = static_cast<AiPackageTypeId>(sequence.mLastAiPackage);
+        return prepared;
+    }
+
+    void AiSequence::PreparedState::install(AiSequence& target, ESM::ActorIdConverter* converter)
+    {
+        if (mConsumed)
+            throw std::logic_error("AI-sequence restore plan already consumed");
+        // Preserve the legacy empty-source overlay and unknown-only replacement.
+        if (mReplace)
+        {
+            for (auto& package : mPackages)
+            {
+                package->mReaction.initialize(MWBase::Environment::get().getWorld()->getPrng());
+                if (auto* follow = dynamic_cast<AiFollow*>(package.get()))
+                    follow->initializeRestoreIndex();
+            }
+            target.clear();
+            target.mPackages.swap(mPackages);
+            mConsumed = true;
+            for (auto& package : target.mPackages)
+            {
+                const auto type = package->getTypeId();
+                const bool hasTarget = type == AiPackageTypeId::Escort || type == AiPackageTypeId::Follow
+                    || type == AiPackageTypeId::Combat || type == AiPackageTypeId::Pursue;
+                if (hasTarget && converter)
+                    converter->convert(package->mTargetActor, package->mTargetActor.mIndex);
+                target.onPackageAdded(*package);
+            }
+        }
+        mConsumed = true;
+        target.mLastAiPackage = mLastAiPackage;
+    }
+
+    void AiSequence::readState(const ESM::AiSequence::AiSequence& sequence)
+    {
+        prepareReadState(sequence)->install(*this, sequence.mActorIdConverter);
     }
 
     void AiSequence::fastForward(const MWWorld::Ptr& actor)

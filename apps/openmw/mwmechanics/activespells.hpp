@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <queue>
 #include <string>
 #include <variant>
@@ -93,6 +94,23 @@ namespace MWMechanics
         typedef std::list<ActiveSpellParams> Collection;
         typedef Collection::const_iterator TIterator;
 
+        class PreparedState
+        {
+            friend class ActiveSpells;
+            Collection mSpells;
+            std::vector<ActiveSpellParams> mQueue;
+            bool mConsumed = false;
+            PreparedState() = default;
+
+        public:
+            PreparedState(const PreparedState&) = delete;
+            PreparedState& operator=(const PreparedState&) = delete;
+            // Use the runtime reader's converter: admission converters have a
+            // shorter lifetime than this detached plan.
+            void install(ActiveSpells& target, ESM::ActorIdConverter* converter = nullptr);
+        };
+
+        static std::unique_ptr<PreparedState> prepareReadState(const ESM::ActiveSpells& state);
         void readState(const ESM::ActiveSpells& state);
         void writeState(ESM::ActiveSpells& state) const;
 

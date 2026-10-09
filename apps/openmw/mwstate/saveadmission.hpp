@@ -8,7 +8,7 @@
 #include <components/esm/gameprofile.hpp>
 #include <components/esm3/savedgame.hpp>
 
-namespace ESM { class ESMReader; class RefId; struct QuickKeys; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
+namespace ESM { class ESMReader; class RefId; struct ObjectState; struct QuickKeys; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
 namespace ESM4 { struct RuntimeState; }
 namespace MWWorld { class ESMStore; }
 
@@ -32,7 +32,11 @@ namespace MWState
             const std::vector<ESM::MagicBoltState>&, const MWWorld::ESMStore&)>& prepareProjectiles = {},
         const std::function<void(const ESM::RefId&, ESM::FogState)>& prepareFog = {},
         const std::function<void(const ESM::QuickKeys&, const MWWorld::ESMStore&,
-            const ESM4::RuntimeState*)>& prepareQuickKeys = {});
+            const ESM4::RuntimeState*)>& prepareQuickKeys = {},
+        const std::function<void(ESM::ObjectState&, const MWWorld::ESMStore&,
+            const ESM4::RuntimeState*)>& prepareInventory = {},
+        const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions = {},
+        const std::function<bool(const ESM::RefId&)>& restoreCell = {});
 }
 
 #endif

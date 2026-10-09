@@ -51,7 +51,8 @@ namespace
 MWMechanics::AiPackage::AiPackage(AiPackageTypeId typeId, const Options& options)
     : mTypeId(typeId)
     , mOptions(options)
-    , mReaction(MWBase::Environment::get().getWorld()->getPrng())
+    , mReaction(options.mDeferredRestore ? AiReactionTimer{}
+                                        : AiReactionTimer{MWBase::Environment::get().getWorld()->getPrng()})
 {
 }
 

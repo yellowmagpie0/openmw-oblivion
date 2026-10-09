@@ -14,8 +14,8 @@
 
 namespace MWMechanics
 {
-    AiActivate::AiActivate(const ESM::RefId& objectId, bool repeat)
-        : TypedAiPackage<AiActivate>(repeat)
+    AiActivate::AiActivate(const ESM::RefId& objectId, bool repeat, bool deferredRestore)
+        : TypedAiPackage<AiActivate>(makeDefaultOptions().withRepeat(repeat).withDeferredRestore(deferredRestore))
         , mObjectId(objectId)
     {
     }
@@ -62,8 +62,9 @@ namespace MWMechanics
         sequence.mPackages.push_back(std::move(package));
     }
 
-    AiActivate::AiActivate(const ESM::AiSequence::AiActivate* activate)
-        : AiActivate(activate->mTargetId, activate->mRepeat)
+    AiActivate::AiActivate(const ESM::AiSequence::AiActivate* activate, bool deferredRestore)
+        : TypedAiPackage<AiActivate>(makeDefaultOptions().withRepeat(activate->mRepeat).withDeferredRestore(deferredRestore))
+        , mObjectId(activate->mTargetId)
     {
     }
 }

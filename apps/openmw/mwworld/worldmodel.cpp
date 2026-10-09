@@ -14,6 +14,12 @@
 #include <components/esm3/cellref.hpp>
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
+#include <components/esm3/npcstate.hpp>
+#include <components/esm3/loadnpc.hpp>
+#include <components/esm3/loadcrea.hpp>
+#include <components/esm3/loadcont.hpp>
+#include <components/esm3/creaturestate.hpp>
+#include <components/esm3/containerstate.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadregn.hpp>
@@ -21,7 +27,12 @@
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/settings/values.hpp>
 
+#include "../mwclass/npc.hpp"
+#include "../mwclass/creature.hpp"
 #include "cellstore.hpp"
+#include "containerstore.hpp"
+#include "../mwmechanics/npcstats.hpp"
+#include "../mwmechanics/creaturestatsrestore.hpp"
 #include "esmstore.hpp"
 
 #include "../mwbase/environment.hpp"
@@ -149,6 +160,10 @@ MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 void MWWorld::WorldModel::clear()
 {
     mPreparedFogStates.clear();
+    mPreparedInventoryStates.clear();
+    mPreparedNpcStates.clear();
+    mPreparedCreatureStates.clear();
+    mPreparedActorCustomData.clear();
     mPreparationIdentity.reset();
     mPtrRegistry.clear();
     mInteriors.clear();
@@ -694,4 +709,196 @@ bool MWWorld::WorldModel::readRecord(ESM::ESMReader& reader, uint32_t type)
     }
 
     return false;
+}
+
+
+MWWorld::WorldModel::PreparedInventoryKey MWWorld::WorldModel::preparedInventoryKey(const ESM::ObjectState& state)
+{
+    if (state.mRef.mRefID == "Player")
+        return {{}, state.mRef.mRefID};
+    auto ref = state.mRef.mRefNum;
+    if (!ref.hasContentFile() && state.mVersion <= ESM::MaxActorIdSaveGameFormatVersion)
+    {
+        if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&state); npc && npc->mCreatureStats.mActorId >= 0)
+            ref = {static_cast<std::uint32_t>(npc->mCreatureStats.mActorId), -2};
+        else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&state);
+            creature && creature->mCreatureStats.mActorId >= 0)
+            ref = {static_cast<std::uint32_t>(creature->mCreatureStats.mActorId), -2};
+    }
+    return {ref, state.mRef.mRefID};
+}
+
+std::unique_ptr<MWWorld::ContainerStore> MWWorld::WorldModel::prepareInventoryState(
+    const ESM::ObjectState& state, const ESMStore& incoming)
+{
+    if (!state.mHasCustomState)
+        return {};
+    const ESM::InventoryState* source = nullptr;
+    const ESM::InventoryList* baseInventory = nullptr;
+    bool equipment = false;
+    if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&state))
+    {
+        source = &npc->mInventory; equipment = true;
+        const auto* base = mStore.searchForRestore<ESM::NPC>(state.mRef.mRefID, incoming);
+        if (!base) throw std::runtime_error("Prepared shared NPC base is unavailable");
+        if (state.mRef.mRefID != "Player") baseInventory = &base->mInventory;
+    }
+    else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&state))
+    {
+        source = &creature->mInventory;
+        const auto* base = mStore.searchForRestore<ESM::Creature>(state.mRef.mRefID, incoming);
+        if (!base) throw std::runtime_error("Prepared shared creature base is unavailable");
+        equipment = (base->mFlags & ESM::Creature::Weapon) != 0;
+        baseInventory = &base->mInventory;
+    }
+    else if (const auto* container = dynamic_cast<const ESM::ContainerState*>(&state))
+    {
+        source = &container->mInventory;
+        const auto* base = mStore.searchForRestore<ESM::Container>(state.mRef.mRefID, incoming);
+        if (!base) throw std::runtime_error("Prepared shared container base is unavailable");
+        baseInventory = &base->mInventory;
+    }
+    if (!source) return {};
+    auto inventory = *source;
+    // Same old-restocking migration as CellStore's reference reader. Player
+    // restoration deliberately does not apply this actor/container migration.
+    if (baseInventory && state.mVersion <= ESM::MaxOldRestockingFormatVersion)
+        for (const auto& base : baseInventory->mList)
+            if (base.mCount < 0)
+                for (auto& item : inventory.mItems)
+                    if (item.mRef.mCount > 0 && item.mRef.mRefID == base.mItem)
+                        item.mRef.mCount = -item.mRef.mCount;
+    return ContainerStore::prepareReadState(inventory, mStore, incoming, equipment);
+}
+
+void MWWorld::WorldModel::setPreparedInventoryStates(PreparedInventoryStates states)
+{
+    mPreparedInventoryStates = std::move(states);
+}
+
+bool MWWorld::WorldModel::readPreparedInventory(const ESM::ObjectState& state, ContainerStore& target)
+{
+    const auto found = mPreparedInventoryStates.find(preparedInventoryKey(state));
+    if (found == mPreparedInventoryStates.end()) return false;
+    const ESM::InventoryState* inventory = nullptr;
+    if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&state)) inventory = &npc->mInventory;
+    else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&state)) inventory = &creature->mInventory;
+    else if (const auto* container = dynamic_cast<const ESM::ContainerState*>(&state)) inventory = &container->mInventory;
+    if (!inventory) throw std::logic_error("Prepared inventory owner changed state kind");
+    target.installPreparedContents(*found->second, *inventory);
+    mPreparedInventoryStates.erase(found);
+    return true;
+}
+
+std::unique_ptr<MWMechanics::PreparedNpcStats> MWWorld::WorldModel::prepareNpcState(
+    const ESM::ObjectState& state, const ESMStore& incoming)
+{
+    const auto* npc = dynamic_cast<const ESM::NpcState*>(&state);
+    if (!npc || !state.mHasCustomState) return {};
+    return MWMechanics::NpcStats::prepareReadState(npc->mNpcStats, mStore, &incoming);
+}
+
+void MWWorld::WorldModel::setPreparedNpcStates(PreparedNpcStates states)
+{
+    mPreparedNpcStates = std::move(states);
+}
+
+bool MWWorld::WorldModel::readPreparedNpcState(const ESM::ObjectState& state, MWMechanics::NpcStats& target)
+{
+    const auto found = mPreparedNpcStates.find(preparedInventoryKey(state));
+    if (found == mPreparedNpcStates.end()) return false;
+    found->second->install(target);
+    mPreparedNpcStates.erase(found);
+    return true;
+}
+
+std::unique_ptr<MWMechanics::PreparedCreatureStats> MWWorld::WorldModel::prepareCreatureState(
+    const ESM::ObjectState& state, const ESMStore* incoming)
+{
+    if (!state.mHasCustomState) return {};
+    const ESM::CreatureStats* stats = nullptr;
+    const std::vector<ESM::RefId>* baseSpells = nullptr;
+    const ESM::AIPackageList* baseAi = nullptr;
+    const auto& definitions = incoming ? *incoming : mStore;
+    if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&state))
+    {
+        stats = &npc->mCreatureStats;
+        const auto* base = mStore.searchForRestore<ESM::NPC>(state.mRef.mRefID, definitions);
+        if (!base) throw std::runtime_error("Prepared spell NPC base is unavailable");
+        baseSpells = &base->mSpells.mList;
+        baseAi = &base->mAiPackage;
+    }
+    else if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&state))
+    {
+        stats = &creature->mCreatureStats;
+        const auto* base = mStore.searchForRestore<ESM::Creature>(state.mRef.mRefID, definitions);
+        if (!base) throw std::runtime_error("Prepared spell creature base is unavailable");
+        baseSpells = &base->mSpells.mList;
+        baseAi = &base->mAiPackage;
+    }
+    if (!stats) return {};
+    auto spells = MWMechanics::Spells::prepareReadState(stats->mSpells, mStore, *baseSpells, &definitions);
+    auto prepared = MWMechanics::CreatureStats::prepareCoreState(*stats, std::move(spells));
+    if (stats->mMissingACDT)
+        prepared->setBaseAiSequence(MWMechanics::AiSequence::prepareFill(*baseAi));
+    return prepared;
+}
+
+void MWWorld::WorldModel::setPreparedCreatureStates(PreparedCreatureStates states)
+{
+    mPreparedCreatureStates = std::move(states);
+}
+
+std::unique_ptr<MWMechanics::PreparedCreatureStats> MWWorld::WorldModel::takePreparedCreatureState(const ESM::ObjectState& state)
+{
+    const auto found = mPreparedCreatureStates.find(preparedInventoryKey(state));
+    if (found == mPreparedCreatureStates.end()) return {};
+    auto result = std::move(found->second);
+    mPreparedCreatureStates.erase(found);
+    return result;
+}
+
+bool MWWorld::WorldModel::canRestoreCell(const ESM::RefId& id) const
+{
+    return id == draftCellId || id.is<ESM::ESM3ExteriorCellRefId>()
+        || mStore.get<ESM4::Cell>().searchStatic(id) || mStore.get<ESM::Cell>().searchStatic(id);
+}
+
+std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::prepareActorCustomData(
+    const ESM::ObjectState& state, const ESMStore& incoming, const ESM::NPC* canonicalPlayer, bool spellsInitialized)
+{
+    if (!state.mHasCustomState) return {};
+    if (const auto* npc = dynamic_cast<const ESM::NpcState*>(&state))
+    {
+        const auto* base = canonicalPlayer ? canonicalPlayer
+            : mStore.searchForRestore<ESM::NPC>(state.mRef.mRefID, incoming);
+        if (!base || base->mId != state.mRef.mRefID)
+            throw std::runtime_error("Prepared custom-data NPC base is unavailable");
+        if (npc->mCreatureStats.mMissingACDT)
+            return MWClass::Npc::prepareLegacyCustomData(*base, mStore, incoming, state.mRef.mRefID == "Player", spellsInitialized);
+        return MWClass::Npc::prepareSavedCustomData(&mStore);
+    }
+    if (const auto* creature = dynamic_cast<const ESM::CreatureState*>(&state))
+    {
+        const auto* base = mStore.searchForRestore<ESM::Creature>(state.mRef.mRefID, incoming);
+        if (!base) throw std::runtime_error("Prepared custom-data creature base is unavailable");
+        if (creature->mCreatureStats.mMissingACDT)
+            return MWClass::Creature::prepareLegacyCustomData(*base, mStore, &incoming);
+        return MWClass::Creature::prepareSavedCustomData((base->mFlags & ESM::Creature::Weapon) != 0, &mStore);
+    }
+    return {};
+}
+
+void MWWorld::WorldModel::setPreparedActorCustomData(PreparedActorCustomData states)
+{
+    mPreparedActorCustomData = std::move(states);
+}
+
+std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::takePreparedActorCustomData(const ESM::ObjectState& state)
+{
+    const auto found = mPreparedActorCustomData.find(preparedInventoryKey(state));
+    if (found == mPreparedActorCustomData.end()) return {};
+    auto result = std::move(found->second);
+    mPreparedActorCustomData.erase(found);
+    return result;
 }

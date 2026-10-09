@@ -23,9 +23,9 @@ namespace MWMechanics
     public:
         /// Constructor
         /** \param objectId Reference to object to activate **/
-        explicit AiActivate(const ESM::RefId& objectId, bool repeat);
+        explicit AiActivate(const ESM::RefId& objectId, bool repeat, bool deferredRestore = false);
 
-        explicit AiActivate(const ESM::AiSequence::AiActivate* activate);
+        explicit AiActivate(const ESM::AiSequence::AiActivate* activate, bool deferredRestore = false);
 
         bool execute(const MWWorld::Ptr& actor, CharacterController& characterController, AiState& state,
             float duration) override;

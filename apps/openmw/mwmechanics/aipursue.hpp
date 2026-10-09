@@ -24,7 +24,7 @@ namespace MWMechanics
         /** \param actor Actor to pursue **/
         AiPursue(const MWWorld::Ptr& actor);
 
-        AiPursue(const ESM::AiSequence::AiPursue* pursue);
+        AiPursue(const ESM::AiSequence::AiPursue* pursue, bool deferredRestore = false);
 
         bool execute(const MWWorld::Ptr& actor, CharacterController& characterController, AiState& state,
             float duration) override;

@@ -1,5 +1,7 @@
 #include "activespells.hpp"
 
+#include <stdexcept>
+
 #include <components/debug/debuglog.hpp>
 
 #include <components/misc/resourcehelpers.hpp>
@@ -685,20 +687,43 @@ namespace MWMechanics
             state.mQueue.emplace_back(spell.toEsm());
     }
 
-    void ActiveSpells::readState(const ESM::ActiveSpells& state)
+    std::unique_ptr<ActiveSpells::PreparedState> ActiveSpells::prepareReadState(const ESM::ActiveSpells& state)
     {
-        for (const ESM::ActiveSpells::ActiveSpellParams& spell : state.mSpells)
+        auto prepared = std::unique_ptr<PreparedState>(new PreparedState);
+        for (const auto& spell : state.mSpells)
+            prepared->mSpells.emplace_back(ActiveSpellParams{ spell });
+        prepared->mQueue.reserve(state.mQueue.size());
+        for (const auto& spell : state.mQueue)
+            prepared->mQueue.emplace_back(ActiveSpellParams{ spell });
+        return prepared;
+    }
+
+    void ActiveSpells::PreparedState::install(ActiveSpells& target, ESM::ActorIdConverter* converter)
+    {
+        if (mConsumed)
+            throw std::logic_error("Active-spell restore plan already consumed");
+        // Existing readers append. Empty actor queues can take the prepared
+        // allocation directly; an existing queue needs additional capacity.
+        if (!target.mQueue.empty())
+            target.mQueue.reserve(target.mQueue.size() + mQueue.size());
+        for (auto& spell : mSpells)
         {
-            mSpells.emplace_back(ActiveSpellParams{ spell });
-            // Generate ID for older saves that didn't have any.
-            if (mSpells.back().getActiveSpellId().empty())
-                mSpells.back().setActiveSpellId(MWBase::Environment::get().getESMStore()->generateId());
+            if (spell.getActiveSpellId().empty())
+                spell.setActiveSpellId(MWBase::Environment::get().getESMStore()->generateId());
         }
-        for (const ESM::ActiveSpells::ActiveSpellParams& spell : state.mQueue)
-            mQueue.emplace_back(ActiveSpellParams{ spell });
-        if (state.mActorIdConverter)
+        target.mSpells.splice(target.mSpells.end(), mSpells);
+        if (target.mQueue.empty())
+            target.mQueue.swap(mQueue);
+        else
         {
-            const auto convertSummons = [converter = state.mActorIdConverter](auto& collection) {
+            for (auto& spell : mQueue)
+                target.mQueue.emplace_back(std::move(spell));
+            mQueue.clear();
+        }
+        mConsumed = true;
+        if (converter)
+        {
+            const auto convertSummons = [converter](auto& collection) {
                 for (ActiveSpellParams& params : collection)
                 {
                     converter->convert(params.mCaster, params.mCaster.mIndex);
@@ -709,9 +734,14 @@ namespace MWMechanics
                     }
                 }
             };
-            convertSummons(mSpells);
-            convertSummons(mQueue);
+            convertSummons(target.mSpells);
+            convertSummons(target.mQueue);
         }
+    }
+
+    void ActiveSpells::readState(const ESM::ActiveSpells& state)
+    {
+        prepareReadState(state)->install(*this, state.mActorIdConverter);
     }
 
     void ActiveSpells::unloadActor(const MWWorld::Ptr& ptr)

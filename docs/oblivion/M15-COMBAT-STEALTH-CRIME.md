@@ -6,6 +6,1242 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare autocalculated spells and consumed arithmetic — 2026-10-09
+
+Detached legacy NPC initialization now calculates its autocalculated spells
+against surviving static descriptors/effects/settings and the ordered
+static-plus-incoming spell traversal. Static and incoming records with the same
+spell ID both participate in traversal; selected-ID lookup uses the winning
+incoming/static definition. The existing selection algorithm, rounding and
+school-cap behavior are retained.
+
+Seven independent first-use setting caches retain their ordinary lookup order
+and partial-failure lifetime. Preparation reads existing cached values or
+captures surviving settings without priming live caches. Owned commit callbacks
+contain only stable cache addresses and numeric values. Live first binding
+primes consumed caches and installs prepared selection at the old
+autocalculation phase; cached actors skip it. Cloned plans own selection
+buffers and reject replay.
+
+Actor preparation follows serialized encounter order. The loader classifies
+first bindings only for actors with custom state, skips removed mapped owners
+and omits owners from cells that restoration will drop. Cell availability
+queries surviving native/TES3 static records, draft cells and creatable TES3
+exteriors without instantiating live cells. Skipped cell payloads still undergo
+admission validation. This prediction covers explicit saved-owner bindings.
+Initial leveled inventory calls getLevelledItem(), which can initialize Player
+earlier to read its level; preserving and preparing that implicit
+initialization remains part of the pending base inventory transaction work.
+
+Consumed arithmetic checks reject nonfinite effect costs/magicka, magnitude or
+duration integer sums, affordability products and rounded costs outside the
+integer domain before teardown. Valid arithmetic retains the ordinary formulas.
+Cached actors do not validate unused autocalculation arithmetic.
+
+Eleven isolated SpellCalculationRestoreDeathTest cases verify
+cancellation/failed preparation leaves caches untouched, ordinary partial
+initialization persists, captured values prime after settings disappear, actual
+first/cached actor consumption, four consumed overflow failures with
+prior-world/registry/RNG invariants, and skipped unused overflowing
+calculations. Twelve future-store cases compare traversal with actual
+definition publication and selection with ordinary calculation, covering
+incoming/static duplicates, incoming order ties, school caps, race exclusions,
+copied ownership and replay. Additional tests cover dropped-cell resource
+filtering with retained wire validation and static cell availability without
+live-world mutation.
+
+Final normal and ASan/UBSan shared-autocalc-spells-{normal,sanitized}-05 pass
+all 1337 tests in 108 suites, exact unfiltered inventory/XML agreement, zero
+failures/skips, stable matched dirty-source fingerprint
+0e2610c2a760b4cfe2970e5646290c68afd0c256cacb57201d685e2a96fd0238 at parent
+c29816aec81fc177d52fdfe736d86d75d29b0a87. Attempts remain preserved: -01
+missing complete Spell include; -02 invalid copy of owning NpcState in test;
+-03 normal all1332 passed, sanitizer interrupted for test brace warning; -04
+both all1332 passed before added arithmetic checks. Interrupted
+generated-object scans were empty. Static fixture records now load before
+dynamic records to preserve the real store prefix invariant. Remaining warnings
+are pre-existing.
+
+Final native shared-autocalc-spells-runtime-{normal,sanitized}-02 and declared
+Player NOAC shared-autocalc-spells-missing-acdt-{normal,sanitized}-02 all
+complete load/F5/F9/F5/quit. They verify 38 exact native groups, 10 stable
+groups, persistent item keys, shared inventory/NPC fields and all 42 stat
+blocks. All four final prison/HUD/blade images were inspected. Authored base AI
+persists while Player instance AI is deliberately cleared. Pure NOAC input
+regeneration matches
+af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506. Earlier
+normal01 courses remain preserved for the earlier arithmetic-free
+implementation with their own binaries and are not final-05 acceptance.
+
+The fresh instrumented native process loads the exact final normal save SHA256
+49d87cd55c50e9d1de3716b9d5e17f6f0f974a0400bbf715726f6c105bab6758.
+Continuation-verification.json records separate completed launcher sessions
+63570/2228, run IDs, clean exits/run-end receipts and distinct executable
+hashes. Both namespace PIDs happen to be 12; PID reuse is not the process
+separation evidence. Actual runtime executable SHA256s, separate from the
+helper test-binary hashes: normal
+6ab4273b136ad3c71f440b699221644f490f065177b30b540df13eba31a38915; instrumented
+032c41bb4587a705ebf09a1b63534ffc3e9b1ba8e8783151aab0ee5fba5b7b5c. Instrumented
+courses run sequentially after helper completion. Sound and leak detection are
+disabled. These are production compatibility courses; the actual class probes
+establish autocalculation and cache semantics, not rendered native spell
+gameplay.
+
+S3 remains open for base inventory fill/autoequip, registry/scene resources,
+late-failure prior-world preservation and the final requirement audit. No S4,
+native spell gameplay, combat, audible or leak acceptance is claimed.
+
+Git staging/commit result follows.
+
+## S3 retain serialized actor preparation order — 2026-10-09
+
+Save admission now retains a single non-owning encounter-order list backed by
+its owned Player and cell object DTOs. Actor preparation follows serialized
+record/reference order for both native and shared-only Oblivion saves, instead
+of grouping Player ahead of every cell actor. Definition ownership still moves
+only after all callbacks succeed. The reader still resets on success/failure.
+This is needed for subsequent first/cached spell-list prediction; that prediction
+and autocalculation/cache preparation are not yet implemented.
+
+One new test covers all six Player/NPC/creature permutations across every
+supported native runtime version and shared-only saves, with success and
+failures injected at each callback position. It checks exact callback prefixes,
+native snapshot availability, no premature definition publication and reader
+position restoration. Normal and ASan/UBSan
+`shared-owner-order-{normal,sanitized}-02` under `build/oblivion-compat/m15/S3/`
+pass **all 1,323 tests in 107 suites**, exact unfiltered inventory/XML agreement,
+zero failures/skips and matched stable tested dirty-source fingerprint
+`982809e1bf540333ec9d673644a7956e402538f8067458b0236c4817d22f706d`;
+parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`.
+Both -01 runs were interrupted (exit 130) to fix a narrowing warning in the
+new test reference index; generated zero-byte-object scans were empty. No new
+warning remains. Documentation was recorded after verification.
+
+This check proves read-only admission ordering and preparation failure boundaries.
+No new runtime/restart, rendered, audible, leak, spell gameplay or combat
+acceptance is claimed for this ordering change; the preceding authored-spell
+entry records its four production compatibility courses and exact binaries.
+S3 remains open for first-binding prediction, autocalculated spell/cache
+preparation, base inventory fill/autoequip, registry/scene resources and full
+prior-World preservation on late failure. The authorized targeted git add
+failed exit 128: `.git/index.lock` is read-only. No staging/commit/push occurred.
+
+## S3 prepare legacy authored spell initialization — 2026-10-09
+
+Missing-ACDT NPC/creature preparation now resolves authored base spells against
+static plus incoming saved spell definitions, excluding outgoing dynamic spell
+fallback. Detached plans own deduplicated pointers, missing-ID warning lists,
+and reserved merge buffers. Initial binding consumes the plan at the former
+setSpells phase, adding base spells for both first and cached shared lists.
+First instances retain the ordinary second authored-list warning pass; cached
+instances skip it. NPC race powers resolve from the surviving static race at
+preparation and install after base/autocalculated spells at their former phase.
+The original second saved-state attachment/clear ordering remains unchanged.
+Missing spell IDs remain warning-and-skip, including repeated warning IDs;
+missing races reject before cleanup for full-stat as well as autocalculated NPCs.
+
+Prepared merge buffers preserve earlier instance order and selection, deduplicate
+by the ordinary spell pointer identity, reject replay and reject insufficient
+capacity before target mutation. Copy construction/assignment preserve unused
+reserved capacity for prepared custom-data clones. Three new engine tests cover
+incoming/static versus outgoing-only spell definitions; first/cached bindings;
+captured IDs after authored-list changes; addition order/duplicates/selection;
+copy/assignment/replay/capacity; and missing surviving full-NPC races with world,
+registry and RNG invariants. Existing actual NPC/creature class matrices exercise
+factory consumption alongside base/core/AI/inventory overlays.
+
+Normal and ASan/UBSan `shared-authored-spells-{normal,sanitized}-03`
+under `build/oblivion-compat/m15/S3/` build openmw/openmw-tests/esmtool and pass
+**all 1,322 tests in 107 suites**, with exact unfiltered inventory/XML agreement,
+zero failures/skips and matched stable tested dirty-source fingerprint
+`6d302134a219eef75a0665ab3af5619b171ba760bbf61ead3d78d7adf56f157b`;
+parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`.
+Both -01 helpers were deliberately interrupted (exit 130) after review found
+unused vector-copy capacity loss; zero-byte generated-object scans were empty.
+Normal -02 passed 1,321/1,322: an earlier magicka-only fixture had no race,
+which now correctly rejects before magicka checks. The fixture was given the
+existing surviving Player race to isolate its intended setting dependency.
+Sanitizer -02 was interrupted before that test-only correction; its zero-byte
+scan was also empty. These attempts remain preserved. Final -03 passes both.
+Existing unrelated test warnings remain. Documentation follows verification.
+
+Native `shared-authored-spells-runtime-{normal,sanitized}-01` and declared
+Player NOAC `shared-authored-spells-missing-acdt-{normal,sanitized}-01` all
+complete load/F5/F9/F5/quit, verifying 38 exact native groups, 10 stable groups,
+persistent item keys, shared inventory/NPC fields and all 42 stat blocks.
+All four final prison/HUD/blade screenshots were inspected. Authored base AI
+survives and Player instance AI remains deliberately cleared. Pure NOAC inputs
+match SHA256
+`af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506`.
+The normal native runtime completed before the test-only fixture correction;
+its engine hash agrees with the final normal build. No engine C++ changed
+between those courses and final verification.
+
+The fresh instrumented native launch loads the exact normal final save SHA256
+`43d086f3e40f78640459af7ae8a6c4008469ed078ba789a84ffcc58433382209`;
+continuation-verification.json records separate completed launcher sessions,
+run IDs, clean exits/run-end receipts and distinct executable hashes. Namespace
+PIDs both happen to be 12; PID reuse is not the process-separation evidence.
+Actual runtime executable SHA256s (not helper openmw-tests hashes):
+normal `7ecb79c1ede0933a5b8837bf64307187df5d27a4969d8cf54cbbcc7d4b69cc92`;
+instrumented `bbd259b3237a4ece1448673c0b983debb2116992dbaccbe414d5f2c4a6f6a67d`.
+Instrumented courses ran sequentially after helper completion; sound and leak
+checks are disabled. These rendered courses are compatibility regressions,
+not native spell gameplay, audible, leak or combat acceptance.
+
+This closes authored base/race spell lookup and merge-buffer preparation.
+Autocalculated NPC spell computation and cache preparation remain open,
+including first-binding prediction in actual restoration order: admission
+currently visits Player before cell owners, while ordinary restoration writes/
+reads cells before Player. Base inventory fill/autoequip, registry/scene resources
+and full prior-World preservation on late failure also remain open. S3 is not
+complete. The authorized targeted git add failed with exit 128 because
+`.git/index.lock` is read-only; no source was staged or committed. This workspace
+cannot write Git metadata under its current permissions. Nothing was pushed.
+
+## S3 prepare faction reputation without priming live caches — 2026-10-09
+
+Legacy NPC faction reputation preparation now resolves surviving settings,
+or already initialized ordinary cache values, into owned rank/level/modifier
+data without priming either process-global cache. Failed or cancelled
+preparation leaves cache state untouched. Restoration primes unset entries
+at the former faction initialization phase without record lookups, preserves
+already initialized values, and evaluates the existing integer formula from
+captured base rank/level. Ordinary initialization retains first-use lookup
+order and the first cache's initialized state if the second lookup fails.
+No-faction initialization skips both dependencies. Cache values retain their
+old process lifetime; this does not change native TES4 faction or fame rules.
+
+Five process-isolated NpcFactionRestoreDeathTest probes verify failed partial
+preparation and successful cancellation cannot contaminate later ordinary
+NPC reputation; captured modifiers prime at the original live phase despite
+setting/base-NPC changes and the custom-data plan is consumed once; existing
+caches permit absent settings; and no-faction initialization skips absent
+settings. The death suite runs before ordinary cases and each child starts
+with the parent cache unchanged. No global-cache reset or test-only public API
+was introduced. Ordinary actors remain alive while the pointer registry holds
+their references.
+
+Normal and ASan/UBSan `shared-faction-base-{normal,sanitized}-01` under
+`build/oblivion-compat/m15/S3/` build openmw/openmw-tests/esmtool and pass
+**all 1,319 tests in 107 suites**, with exact unfiltered inventory/XML agreement
+and zero failures/skips. Matched tested dirty-source fingerprint:
+`bd28766d4d91d0f4a653ce1174b68861252c279f4ff7268530046facaf8e88ac`; parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`. Both first source/build attempts pass;
+the private fixture setup initially had a Path/string composition error before
+creating any files, then was corrected. Existing unrelated test warnings remain.
+Documentation was recorded after verification; C++ source is unchanged at closure.
+
+Native `shared-faction-base-runtime-{normal,sanitized}-01` and declared Player
+NOAC `shared-faction-base-missing-acdt-{normal,sanitized}-01` all complete
+load/F5/F9/F5/quit with 38 exact native groups, 10 stable groups, persistent
+item keys, shared inventory/NPC fields and all 42 stat blocks checked.
+All four final prison/HUD/blade screenshots were inspected. Authored base AI
+survives while Player instance AI is deliberately cleared. Fresh NOAC generation
+matches the pure input SHA256
+`af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506`.
+
+The instrumented native course loads the exact normal final save SHA256
+`768a174858e7238e03508a9fc8528f1520111dc5a3eadfd6118b8cc9e08577c2` in a
+separate completed launch; continuation-verification.json records run IDs,
+launcher sessions, clean exits and distinct executable hashes. Actual runtime
+executable SHA256s, separate from helper openmw-tests hashes:
+normal `aace4cab0fd6e0b240c4979af8f00868567956c27fa59988daf48f0a1a03f23f`;
+instrumented `cf9fe780b526aa859d539b6a6ad163a3d61ee21f29cc40e51c21c0ea8efd46ef`.
+Instrumented courses run sequentially after helper completion. Sound/leak
+detection are disabled. These are production compatibility regressions;
+the direct actual class probes establish faction-cache semantics. No rendered
+faction-gameplay, audible, leak or contact acceptance is claimed.
+
+This closes legacy base faction reputation preparation. Base/race/autocalculated
+spell initialization and its ordered future-store view, base inventory
+fill/autoequip, registry/scene resources and full prior-World preservation on
+late failure still keep S3 open. The authorized targeted git add failed with
+exit 128: .git/index.lock cannot be created on the read-only .git filesystem.
+Nothing was staged or committed; no push/publish was attempted. The unrelated
+tutorial handoff is unchanged.
+
+## S3 construct detached stats from surviving descriptors — 2026-10-09
+
+CreatureStats and NpcStats now offer explicit detached constructors that
+enumerate surviving static attribute/skill descriptors. Existing no-argument
+constructors retain ordinary enumeration behavior. Both complete-stat and
+missing-ACDT shared NPC/creature custom-data factories use the detached context;
+the constructor does not retain the store pointer. Detached NPC attribute/skill
+autocalculation filters the same static descriptor set while preserving ordinary
+formulas and record order.
+
+The real Player/shared NPC matrix expands to 128 cases with independent
+outgoing race, magicka and skill/attribute descriptor overrides. It compares
+base skills/attributes before saved NPC payloads can mask a calculation error:
+a detached clone is inspected through a ManualRef's real class getter and
+compared with ordinary class initialization before its saved overlay. Final
+serialized NPC/CreatureStats, RNG, captured ownership and outgoing World/registry
+invariants remain checked. A new constructor test proves ordinary construction
+still includes outgoing descriptors while detached construction matches the
+ordinary descriptor set after those records are removed.
+
+Final normal/instrumented `shared-static-descriptors-{normal,sanitized}-03`
+under `build/oblivion-compat/m15/S3/` both build openmw/openmw-tests/esmtool and
+pass **all 1,314 tests in 106 suites**, with exact unfiltered inventory/XML match,
+zero failures/skips and matched tested dirty-source fingerprint
+`1c175e26040c418427ad489bb4883c7c5e495c095784b20b7febca980bdb8c6b` on parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`. Documentation is recorded after
+verification; the tested C++ source is unchanged at this closure.
+
+Retained attempt 01 was interrupted to add pre-overlay comparisons; one empty
+normal cellstore.cpp.o was removed after termination and recorded in
+interruption-artifact-cleanup.json. Normal 02 passed all1314 and its two actual
+normal courses passed. Sanitized 02 was interrupted to rename the descriptor
+store local after two new Wshadow warnings; 03 removes those warnings on
+unchanged logic. Existing unrelated test warnings remain. Earlier prepared
+instrumented native01 was not launched; native02 uses the final normal02 save.
+
+Final native `shared-static-descriptors-runtime-{normal,sanitized}-02`,
+Player NOAC `shared-static-descriptors-missing-acdt-normal-02` and
+`shared-static-descriptors-missing-acdt-sanitized-01` all pass
+load/F5/F9/F5/quit and have reviewed prison/HUD/blade images. They compare
+38 exact native groups, 10 stable groups, persistent keys, shared inventory/NPC
+fields and 42 stat blocks. NOAC base AI survives while Player instance AI is
+deliberately cleared. Fresh regeneration retains pure NOAC input SHA256
+`af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506`.
+
+The normal native02 final save SHA256
+`eb3aba442b10dd61553d52a73d777249d46ac9db73f6bb42a688d10474d973dd` is loaded
+byte-for-byte by the separate instrumented native02 launch. Its
+continuation-verification.json records run IDs, launcher sessions, clean exits
+and distinct executables; namespace PIDs are not used alone as process proof.
+Actual runtime executable SHA256s, separate from helper openmw-tests hashes:
+normal `4b7c8d59f434dd35c2f9ab166480c5ffa1fd6c8f166fde29d759aa4360c02bc8`;
+instrumented `fa63291d32268a34ee5da1fb7e092506b5db9c08520f0842730e989dc0385b0a`.
+Instrumented runtime courses execute sequentially after the helper completes.
+Sound/leak detection are disabled; no gameplay-contact, audible or leak
+acceptance is claimed. The direct class matrix proves conflicting descriptor
+behavior; production native/NOAC courses verify the restored compatibility path.
+
+This closes attribute/skill descriptor construction and NPC base autocalculation
+dependency selection. Faction dependencies, base/race/autocalculated spells and
+their ordered future-store view, base inventory fill/autoequip, registry/scene
+resources and full prior-World preservation on late failure still keep S3 open.
+The authorized targeted git add failed with exit 128: .git/index.lock cannot
+be created on the read-only .git filesystem. Nothing was staged or committed;
+no push/publish was attempted. The unrelated tutorial handoff is unchanged.
+
+## S3 resolve base race and magicka dependencies before teardown — 2026-10-09
+
+Detached NPC autocalculation now resolves race through the incoming/static
+restore view. Race is not a supported shared dynamic save record, so outgoing
+or incoming-only overrides cannot conceal a missing immutable race. Detached
+NPC/creature Intelligence recalculation resolves its consumed PC/NPC magicka
+setting from immutable content rather than an outgoing dynamic GMST. Ordinary
+initialization and existing calculation rules remain unchanged. Missing consumed
+dependencies fail before outgoing World mutation.
+
+The actual Player/shared NPC ordinary-versus-prepared matrix expands from 16
+to 64 cases with independent outgoing race and PC/NPC multiplier overrides,
+including both together. Ordinary initialization runs after unsupported
+overrides are removed, giving the post-load baseline. Serialized NPC/CreatureStats,
+RNG, one-shot ownership and outgoing World/pointer/registry invariants agree.
+A new negative case rejects outgoing/incoming-only race and GMST dependencies
+for NPC/creature preparation, then accepts the corresponding static records.
+
+Normal and ASan/UBSan `shared-base-dependencies-{normal,sanitized}-02` under
+`build/oblivion-compat/m15/S3/` both build openmw/openmw-tests/esmtool and pass
+**all 1,313 cases in 106 suites**, with exact unfiltered inventory/XML agreement,
+zero failures/skips and matched tested dirty-source fingerprint
+`2b736c09b3ae9b35a7696a862ec799a6a5fee471e133a05232f8d496fcdd4384` on parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`. Attempt 01 was interrupted to brace
+a new ambiguous-else assertion warning; its interruption-artifact-cleanup.json
+records the empty-object check, with none removed. Remaining compilation warnings
+are the existing unrelated test warnings. Documentation was added after the
+verified runs; C++ sources are unchanged.
+
+Fresh declared Player NOAC
+`shared-base-dependencies-missing-acdt-{normal,sanitized}-01` both complete
+load/F5/F9/F5/quit, comparing 38 exact native groups, 10 stable groups, persistent
+keys, shared inventory/NPC fields and 42 stat blocks. Authored base AI survives
+while Player instance AI is deliberately cleared by Player::readRecord.
+Both final prison/HUD/blade screenshots were inspected. Fresh regeneration
+matches both inputs and the previous pure fixture at SHA256
+`af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506`.
+The instrumented course runs separately after helper completion. Actual engine
+SHA256s, distinct from helper openmw-tests hashes:
+normal `21b4f0d2f0e73b40787e35cd0522d9e1f26be1df351715a54ce4200d82a35b84`;
+instrumented `a2a9b6f7b65fcb4ac8466399d42c1b7031684d2d390bb2782733e43e631872ca`.
+Sound and leak detection are disabled; no audible or leak acceptance is claimed.
+
+The direct class matrix proves conflicting-outgoing-definition behavior; actual
+Player NOAC courses verify production restoration of the changed factory.
+This does not stage other descriptor/faction dependencies, legacy spell
+autocalculation and inventory filling, registry/scene resources, or preserve the
+prior whole World on every late restoration failure. S3 remains open.
+The authorized targeted git add failed with exit 128: .git/index.lock cannot
+be created on the read-only .git filesystem. Nothing was staged or committed;
+no push/publish was attempted. The unrelated tutorial handoff is unchanged.
+
+## S3 prepare legacy NPC base stats and canonical Player metadata — 2026-10-09
+
+Missing-ACDT shared NPC custom data now prepares full or autocalculated base
+attributes, skills, resources, level, disposition, reputation, authored AI
+settings, gold and persistent death-animation policy before outgoing cleanup.
+Ordinary and detached paths share the existing setters and rounding rules.
+A transient private context selects the PC/NPC magicka multiplier without
+querying or lazily initializing outgoing Player stats, and clears before
+publication. Death timestamps bind to the restore clock at the former live
+initialization point. The class consumes the prepared object once and retains
+captured base values after source-record changes.
+
+`ESMStore::prepareRestoredPlayerMetadata` now supplies the same canonical native
+Player race/class/sex to StateManager actor preparation and World publication.
+The admission owner callback receives the validated native DTO, or null for a
+shared-only native save. Versions 1/2 retain shared metadata. Dynamic classes
+resolve through incoming Player/class definitions; outgoing definitions cannot
+conceal a missing incoming class. This is shared NPC/Player compatibility work;
+it does not extend the imported TES3 MCP server to TES4 records.
+
+Three new tests cover a 16-case actual Player/shared NPC matrix (full/autocalc,
+male/female, persistence, distinct PC/NPC multipliers), serialized NPC and
+CreatureStats equivalence with ordinary loading, RNG and outgoing World/registry
+preservation, captured-value ownership and single consumption; canonical Player
+metadata/incoming dynamic class/version 2; and consumed-versus-skipped missing
+PC/NPC settings. Existing canonical World publication and every-version admission
+ordering tests exercise the common helper and native/null callback contract.
+
+Normal `shared-npc-base-stats-normal-05` and ASan/UBSan
+`shared-npc-base-stats-sanitized-07`, under `build/oblivion-compat/m15/S3/`, both
+build openmw/openmw-tests/esmtool and pass **all 1,312 tests in 106 suites** with
+exact unfiltered inventory/XML agreement, zero failures and zero skips. Parent:
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`; matched tested dirty-source fingerprint:
+`ea0b24e5734438d6db2e9edf421f30b8106285fa7ef6bf43effbd57c30853ef9`.
+Documentation below was recorded after verification; C++ sources are unchanged.
+
+Actual native `shared-npc-base-stats-runtime-{normal,sanitized}-01` and declared
+Player NOAC `shared-npc-base-stats-missing-acdt-{normal,sanitized}-01` all complete
+load/F5/F9/F5/quit, compare 38 exact native groups, 10 stable groups, persistent
+item keys, shared inventory/NPC fields and all 42 shared stat blocks, and have
+reviewed final prison/HUD/blade screenshots. The instrumented native course
+loads the exact normal final save SHA256
+`4ad8a528943cf484125b854c917a38b2c611958601a4f6302cd00dcc5ea1e434` in a separate
+completed executable launch. Namespace PIDs repeat; distinct run IDs, launcher
+sessions, clean exits and executable hashes establish the separate processes.
+NOAC courses preserve authored base AI while Player::readRecord deliberately
+clears Player instance AI. A fresh sibling recipe reproduction matches both
+NOAC inputs at SHA256
+`af033472cd61aa4b050ee207f5ac21b7d8ba8b08f8f78bd243573daf410f3506`.
+The actual Player NOAC courses cover this new NPC factory; the direct class
+matrix proves the shared NPC path, not native ESM4 NPC adapter initialization.
+
+Actual runtime executable SHA256s (separate from helper openmw-tests hashes):
+normal `0f2555b223242f414b38b3c638e8ae6548a3fe73eb7963e7eeb745643757ba92`;
+instrumented `2749d7a851a664134a866a8342f889abdc4cc421db4c98abbc87682796e2fdb7`.
+Instrumented runtime courses run sequentially after the helper finishes, with
+libasan preloaded before the SDL shim. Leak detection is disabled and all
+courses use no sound: no leak or audible-behavior acceptance is claimed.
+
+Retained attempts: 01 interrupted for test coverage additions; normal 02 failed
+SCOPED_TRACE compilation and sanitized 02 was interrupted before correction;
+normal 03/04 each ran 1,312 cases with 1,310 passing and two new fixture failures
+(restore-ID/incoming-store prerequisites and PC-setting initialization order),
+with corresponding instrumented runs interrupted before test-only corrections.
+Sanitized 05 was interrupted to use two jobs after the normal build finished.
+Sanitized 06 failed executable linking: two zero-byte generated objects,
+mapwindow.cpp.o and coremwscriptbindings.cpp.o, are diagnosed in its
+`empty-object-diagnosis.json`. Only those empty artifacts were removed after
+termination; sanitized 07 rebuilt them and passed on unchanged source.
+
+This closes NPC base-stat and canonical Player metadata preparation, not S3.
+Autocalculated spells, race powers, authored spells, base inventory fill/autoequip,
+other future dependency views, registry/scene resources and full outgoing-World
+preservation on late load failure remain open. Existing live phases are retained
+for those paths; the class matrix does not prove arbitrary outgoing race/skill/
+GMST overrides cannot affect preparation. Native formulas and gameplay contact
+rules are unchanged. The authorized targeted git add failed with exit 128:
+.git/index.lock cannot be created on the read-only .git filesystem. Nothing
+was staged or committed; no push/publish was attempted. The unrelated tutorial
+handoff remains unchanged (SHA256
+dd8a490edbc01839e04907af0c44c1d4fd67617c202ce5608ce36c3072f3fb38).
+
+## S3 prepare legacy creature base stats before World teardown — 2026-10-09
+
+Missing-ACDT shared creature custom data now computes base attributes, resources,
+level, AI settings, gold and persistent-death animation flags against the
+winning incoming/static record before cleanup. Both prepared and ordinary paths
+use the same existing setters and initialization helpers. A private transient
+store context resolves a consumed NPC magicka multiplier without asking the
+live Player class for stats. The context clears before publication. Zero-health
+initialization defers its death timestamp to the restoration clock. Class
+initialization consumes the prepared flag and preserves the existing base-AI
+RNG point; ordinary initialization retains its prior ordering.
+
+An eight-case actual class matrix covers armed/unarmed, persistent/nonpersistent
+and zero/positive health. Preparation leaves native capture, outgoing Player
+custom data, registry and RNG unchanged. After base records change, the exact
+prepared object still produces the ordinary baseline's complete CreatureStats
+wire bytes and RNG. Source AI is detached as before. A consumed missing magicka
+GMST fails during preparation without world mutation; zero unchanged Intelligence
+retains the unconsumed-GMST skip.
+
+Normal01 passed all1309/106 suites. A macro assertion needed explicit braces;
+instrumented01 stopped with exit130 before that test-only correction. Fresh
+normal02 passes all1309 with exact unfiltered inventory/XML, failed0/skipped0,
+fingerprint 009485f19e07836b2b3209bc7bf3e8c6361e44a9ba87b567647e591d6d3e5ed3
+on parent c29816aec81fc177d52fdfe736d86d75d29b0a87. Instrumented02 also passes all1309/106 suites with exact unfiltered
+inventory/XML, failed0/skipped0 and the same source fingerprint.
+
+Actual normal native continuation and declared Player NOAC regression courses
+pass native/shared persistence and all42 stat comparisons. Both final screenshots
+were viewed and hash-recorded. These are common CreatureStats/Player regression
+courses, not actual shared creature engine acceptance. The direct actual class
+matrix proves the creature path. Instrumented native and Player NOAC courses also pass the same checks.
+Normal final save SHA256
+`b4e8b17e328054d590f0d141b95cc0ec52acd933b72da93a9d5dce607a24f23d`
+becomes the exact instrumented input; completed launches82048/32424 have
+distinct run IDs/binaries. Namespace PIDs both12 are not process identity
+evidence. Both instrumented final screenshots were viewed and hash-recorded.
+Both NOAC inputs reproduce byte-for-byte from the retained two-edit recipe:
+`49b398639e96cb552135f2824d81444ce57c63648ef8c178ea31581d6fc711a6`.
+Actual runtime spell fields remain empty; direct actual class tests prove
+the prepared creature base path and owned package behavior.
+
+Evidence under `build/oblivion-compat/m15/S3/`:
+`shared-creature-base-stats-{normal,sanitized}-02`,
+`shared-creature-base-stats-runtime-{normal,sanitized}-01`,
+`shared-creature-base-stats-missing-acdt-{normal,sanitized}-01`,
+`shared-creature-base-stats-missing-acdt-reproduction-01`.
+Runtime executable hashes: normal
+`a763fedf2a207654f95e5d27206d1169653b15c11c0137359ef5db4f08fa450c`;
+instrumented `e74d7d19c074ac91832dcbef2e9e77632b5648f15069c68c77539f43532e7678`.
+
+NPC base calculation/canonical metadata, base spells and inventory fill/autoequip,
+registry/scene resources and whole late-failure preservation remain open.
+This is the shared creature class in the native profile; the ESM4 creature
+adapter is unchanged. No formula change, audible or leak acceptance is claimed.
+
+## S3 prepare missing-ACDT custom data before World teardown — 2026-10-08
+
+WorldModel now prepares default NPC/creature custom data for missing-ACDT
+actors as well as complete-stat actors. Class readers transfer the exact
+owner-keyed object to ensureCustomData, which attaches it and performs the
+existing base initialization. Creature initialization keeps its preallocated
+InventoryStore/ContainerStore rather than replacing it. The ordinary fallback
+still constructs an empty CreatureCustomData and allocates its container at
+the original post-stat/AI/spell point. NPC fallback retains ordinary default
+construction. No-custom-state actors skip preparation. Successful restore and
+clear release unused owner plans as before.
+
+The actual missing-ACDT NPC/creature empty/nonempty-AI overlay matrix now
+checks exact custom-data pointer identity, one-shot consumption and unchanged
+preparation RNG, while retaining base health/gold/package/draw checks. The
+existing custom-data lifecycle test now expects a missing-ACDT object and
+still covers absent state, missing bases, unused release and outgoing
+Player/registry preservation on the common constructor path.
+
+Both01 helpers stopped with exit130 before removing the now-unused dynamic
+cast bindings; neither is a pass. Fresh02 normal/instrumented checks pass
+all1307 tests/106 suites, exact unfiltered inventory/XML, failed0/skipped0,
+matching dirty source fingerprint
+`3f98ff68da80ff83d4df2419ae89e00dccff56c129c986cf54ba12470856d8b8`
+on parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`.
+
+Actual normal native continuation and declared NOAC Player load/F5/F9/F5/quit
+courses pass native/shared persistence and corrected all42 stat comparisons.
+The declared legacy fixture retains its authored base travel package and the
+Player reader's deliberate instance-AI clear. Both normal final screenshots
+were viewed and hash-recorded. Instrumented native and declared NOAC courses also pass the same persistence
+checks. Exact unchanged normal final save
+`aaa9f6b2c5b9ad270d22388eac50ed61212a363f787cb6bb3f8fa39130b714f0`
+links separate completed launches25249/90472 with distinct run IDs/binaries.
+Namespace PIDs both12 are not process identity evidence. The declared legacy
+inputs reproduce byte-for-byte from the retained recipe in a fresh directory.
+Both instrumented final screenshots were viewed and hash-recorded.
+Actual runtime shared spell fields remain empty; direct class tests prove
+authored/saved package ownership and constructor pointer identity.
+
+Evidence under `build/oblivion-compat/m15/S3/`:
+`shared-legacy-custom-data-{normal,sanitized}-02`,
+`shared-legacy-custom-data-runtime-{normal,sanitized}-01`,
+`shared-legacy-custom-data-missing-acdt-{normal,sanitized}-01`,
+`shared-legacy-custom-data-missing-acdt-reproduction-01`.
+Runtime executable hashes: normal
+`037a2871af3cecb02a83aead76117f44cb287bea25b23630afedab4148d6af05`;
+instrumented `e0ab716a5a454aafdd954f958ce2abecdd67d08f4b8704e80d6e7329a33ae963`.
+
+This closes default custom-data and container construction for admitted saved
+actors; base-stat setters/recalculation, race/faction/spell/autocalculation,
+base inventory fill/autoequip, registry and scene/controller work still occur
+later. Full late-failure preservation and S3 completion are not claimed.
+Sound disabled and leaks disabled; no audible or leak acceptance.
+
+## S3 prepare authored base AI for legacy actor restoration — 2026-10-08
+
+Authored Wander/Travel/Escort/Follow/Activate constructors now accept detached
+restore mode without consuming the live reaction RNG or Follow counter.
+Ordinary constructor defaults retain their prior behavior. AiSequence's new
+PreparedFill owns package objects, target/cell strings, idle vectors and list
+storage. It preserves authored constructor semantics, including negative
+Wander remaining duration and the existing unknown-type Follow fallback.
+Installation rejects a nonempty target or replay before drawing, initializes
+reaction timers/Follow IDs in authored order and transfers package storage once.
+The empty plan is also one-shot. Ordinary fill remains unchanged.
+
+WorldModel prepares authored base AI only for admitted missing-ACDT actors.
+NPC/creature class readers take the core plan before custom-data initialization;
+the base plan installs at the existing fill location. This preserves draw order
+and base packages even when a saved AI overlay later replaces them. A saved
+empty overlay retains the base sequence. Other base initialization remains later.
+
+Two new tests compare ordinary versus detached fill across five authored types,
+unknown fallback, negative/zero/positive duration and both repeat values. They
+check owned source data, cancellation, no preparation RNG/Follow consumption,
+identical persisted package bytes and RNG, nonempty-target rejection, replay
+and empty-plan consumption. Actual missing-ACDT NPC/creature instances check
+retained base health/gold, package ownership after authored source removal,
+empty/nonempty saved overlays and exact one/two reaction draws.
+
+Normal01 ran1307 cases,1306 passed; the new headless fixture lacked the magicka
+settings exercised by legacy stat initialization. Instrumented01 stopped with
+exit130 before adding fNPCbaseMagickaMult/fPCbaseMagickaMult float1 to the fixture.
+Fresh normal02 passes all1307/106 suites, exact unfiltered inventory/XML,
+failed0/skipped0. Instrumented02 also passes all1307/106 suites, exact unfiltered inventory/XML,
+failed0/skipped0. Both helpers match dirty source fingerprint
+`539924fd26a10a4d16cda3bd258bcd71d6c8926dbe9e2676e9c00fa09a0e5a3d`
+on parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`.
+
+Actual normal native load/F5/F9/F5/quit passes native state, shared inventory,
+NPC fields and the corrected complete42 stat blocks. A reproducible two-edit
+legacy fixture appends authored NPC_Player AI_T travel31/32/33 repeat1 and
+PLAY NOAC=1. Its first verifier wrongly expected Player instance AI persistence;
+Player::readRecord deliberately clears shared AI immediately after mPlayer.load.
+That failed attempt is retained with overall verification passedfalse and its
+limited native/shared intermediate report separately named. Fresh legacy02
+checks the intended Player clear, exact authored base AI in both resaves,
+NOAC normalization, exact native state and all existing shared stat fields.
+It passes; Player instance AI retention is not claimed. NPC/creature retention
+and overlay proof uses the direct actual class tests. Both normal screenshots
+were viewed and hash-recorded. Instrumented legacy01 also passes the same declared fixture and checks.
+Both loaded legacy inputs reproduce byte-for-byte from the recipe:
+SHA256 `8544d6719cfb054d763fa8c0151a9d4cf81fc3f1792389c964e0d9c9f3ee0ae9`.
+A verifier-only copied first resave changes authored AI_T x31 to99; it rejects
+without a passing report and preserves source artifacts.
+
+Instrumented native01 failed after quickload on an SDL screenshot receipt
+timeout (300seconds), with process exit-9 from course termination and no
+sanitizer diagnostic. Its artifacts remain failed. Fresh native02, run after
+the helper and other runtime finished, passes actual load/F5/F9/F5/quit and
+exact normal-final-save continuation. This does not diagnose the timeout cause.
+Separate completed launches25145/91231 and different run IDs/executables are
+recorded; namespace PIDs both12 are not identity evidence. Normal final save
+SHA256 `7aa4839ba916075e7efe4082aac5a48157880e2847becbc0100001384968a12d`
+links the continuation. Both instrumented final screenshots were viewed and
+hash-recorded. Actual runtime shared spell fields remain empty.
+
+Evidence under `build/oblivion-compat/m15/S3/`:
+`shared-base-ai-{normal,sanitized}-02`,
+`shared-base-ai-runtime-normal-01`, `shared-base-ai-runtime-sanitized-02`,
+`shared-base-ai-missing-acdt-normal-02`, `shared-base-ai-missing-acdt-sanitized-01`,
+`shared-base-ai-missing-acdt-reproduction-01`,
+`shared-base-ai-missing-acdt-sanitized-negative-01`.
+Runtime executable hashes: normal
+`1ccb937fc9cfdbf6309de9d6b00ce7300c9bacfe587072bb33629ccd80d2f73c`;
+instrumented `591b1fc8b228648707b39db2d865c89cec806941ea4f923adcceef7014dc2e43`.
+
+Full S3 remains open: other legacy base stats/spell/autocalculation/inventory,
+registry and scene/controller allocations and prior-World late-failure
+preservation still need work. Sound/leak checks are disabled; no audible or
+leak acceptance is claimed.
+
+## S3 prepare complete-stat shared actor custom data before World teardown — 2026-10-08
+
+NPC and creature factories now construct detached class custom data without
+registering an actor or attaching an inventory owner. WorldModel prepares those
+objects for admitted complete-stat actors against incoming/static definitions;
+creature Weapon flags select InventoryStore versus ContainerStore. StateManager
+collects owner-keyed objects before cleanup and publishes the map after clear.
+Class readers consume and bind the exact object once, retaining the ordinary
+fallback for other callers. Unused objects release on successful restore or
+WorldModel clear. Missing-ACDT and no-custom-state actors retain their separate
+base-initialization and skip paths. Missing bases reject during preparation.
+
+The existing actual NPC/creature detached-core test now asserts custom-data
+pointer identity and single consumption along with stat/spell/AI/effect reads.
+New tests cover no-custom-state/MissingACDT skips, unchanged outgoing Player
+and registry revision during preparation, success/clear release, absent bases,
+and incoming creature inventory kind through an actual class load. The prior
+actor-kind enum/integer warning is fixed with explicit integer conversions.
+
+Both01 helpers were deliberately stopped with exit130 before adding successful
+restore release; neither is a passing check. Fresh02 normal/instrumented checks pass all1305 tests/106 suites,
+with exact unfiltered inventory/XML and no failures/skips. Both helpers match
+dirty source fingerprint `841eb9fdd434ccb46b8b0cee407872472beb8412e52946f8b21a3ea7192e6da4`
+on parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`.
+
+Actual normal and instrumented load/F5/F9/F5/quit courses pass exact native
+load state, ten stable native groups, persistent item identities, shared
+inventory, NPC fields and all42 shared stat blocks. Separate completed process
+launches80345/63683 use distinct run IDs/executables. Unmodified normal final
+F5 input SHA256 `8dd3a42188815d1e3036a4b2988d9cb21f8516731d3ed9110e60109845972064`
+links the continuation; namespace PIDs both12 are not identity evidence.
+Both final prison/HUD/blade screenshots were viewed and hash-recorded.
+Runtime executable hashes: normal
+`0bbb31913d36f367996c4f9e20ef1174bc154b6acf0d9b41e711a70f0c898f67`;
+instrumented `783554bf86f03a92ab34d98ab88b63b2ccc1bdb08250e5304345a0a64b55f749`.
+Evidence under `build/oblivion-compat/m15/S3/`:
+`shared-actor-custom-data-{normal,sanitized}-02`,
+`shared-actor-custom-data-runtime-{normal,sanitized}-01`.
+Sound disabled; no audible or leak acceptance. Populated spells and both
+creature inventory kinds are class/unit evidence, not populated runtime proof.
+No whole actor/World transaction claim: registry binding, legacy base/AI/
+inventory initialization and scene/controller resources still happen later.
+
+## S3 prepare shared spell-list attachment before World teardown — 2026-10-08
+
+ESMStore now prepares shared list objects, cache entries and listener capacity
+for admitted NPC/creature bindings before cleanup. The move-only cache batch
+is bound to store identity and the next clear generation. Installation swaps
+owned cache/pin storage once; wrong-store, stale, moved-from and replay attempts
+are rejected. The first actual binding reports new, later bindings cached.
+Pins keep unbound prepared lists alive during restoration and are released on
+success or clear. Live actor listeners retain shared list ownership afterward.
+
+The class spell plan owns separate prepared base binding storage. NPC/creature
+class readers take their prepared core before list binding, attach once, then
+preserve the cached-list clear path. First bindings take the prepared base
+vector; cached bindings avoid the temporary base copy that would be cleared.
+Ordinary readers retain their existing path. StateManager collects base IDs,
+actor kinds and counts, rejects conflicting kinds, prepares cache before
+cleanup, forces the expected clear, installs after definitions and releases
+pins after successful restoration. Morrowind does not create this batch.
+
+Three new tests cover cancellation, wrong store, moved-from/replay/stale clear,
+invalid requests, unused pins, clear/destruction lifetime, and attachment replay.
+The actual first/cached class test now installs the prepared cache across clear
+and verifies shared removal propagates after pin release. Normal01/02 ran1303
+cases,1302 passed; their fixture injected a new static NPC after dynamic Player
+records, violating the store's static-prefix assumption during clear. An index
+rebuild did not fix that layout. Both failures are retained; instrumented01/02
+were stopped with exit130 before fixture edits. Fresh03 uses the existing
+static Player base and passes all1303/106 suites with exact inventory/XML,
+no failures/skips. No pre-fix implementation regression is claimed.
+
+Normal native and declaredv7 shared-only/noT4ST F5/F9/F5 courses pass. The native
+course uses the corrected complete NPC27/creature11/AI4 stat decoder and exact
+native/shared persistence checks. Both final screenshots were viewed and
+hash-recorded; the private fixture was reproduced from its editable hash-checked
+recipe. Instrumented actual load/F5/F9/F5/quit also passes, including exact
+normal-final-save continuation input and separately completed process launches
+89926 and78912. Namespace PIDs both12 are not process-identity evidence.
+The final instrumented prison/HUD/blade screenshot was viewed and hash-recorded.
+Fresh instrumented03 passes all1303 tests/106 suites, exact unfiltered
+inventory/XML, failed0/skipped0. ASan/UBSan halt on errors; leaks disabled.
+
+Evidence under `build/oblivion-compat/m15/S3/`:
+`shared-spell-attachment-{normal,sanitized}-03`,
+`shared-spell-attachment-runtime-{normal,sanitized}-01`, and
+`shared-spell-attachment-no-t4st-normal-01`. Both helpers match dirty source
+fingerprint `dda5612eb7863f29bbba112c13ed326e187e94a4461cca32501477cf88912aec`
+on parent `c29816aec81fc177d52fdfe736d86d75d29b0a87`. Runtime executable hashes:
+normal `e0721143940d15b5a24d6cbe334d3b4cbf321864d6c933a776ff709cb0eb4490`;
+instrumented `f1537878a762d3a6fd8caf2188c303295992648da41944dbe827ba62bf3f74f6`.
+Actual runtime spell subrecords are empty; populated spell proof is class/unit
+coverage. One new enum/integer selection warning remains for the next chunk.
+
+S3 remains open: actor custom-data construction, missing-ACDT base initialization,
+additional unplanned listener creation, legacy mutation, registry/scene resources
+and full late-failure rollback remain separate work. This cache batch reserves
+admitted bindings, not every future actor/listener. Runtime uses sound disabled;
+no audible or leak-check acceptance is claimed.
+
+
+## S3 prepare shared spell payload before World teardown — 2026-10-08
+
+`Spells::PreparedState` resolves saved/base spell definitions against incoming
+shared records plus immutable content before cleanup. Outgoing dynamic spells
+are excluded. It owns base-first and saved-first deduplicated vectors, used
+power timestamps, valid saved selection and legacy permanent effect data.
+WorldModel resolves the winning NPC/creature base spell list and carries this
+plan through the existing prepared creature-state handoff. Ordinary reads use
+a prepared snapshot of their existing spells/powers to preserve overlays.
+
+Installation swaps prepared vectors. Batch targets must be empty or contain
+only the expected base spells, with no existing used powers. Empty targets
+receive saved-first ordering; base-populated targets retain base-first ordering.
+This preserves actual first versus cached shared-list actor behavior: the
+class reader's cached-list path clears the instance vector before installation.
+Selection is changed only by a resolved saved spell; base-only/unavailable
+selection retains the old value. Existing ordinary used powers retain append
+semantics. Replay is rejected. Legacy permanent Fortify/Drain attribute data
+retains its ordering and actual Player-only conversion. Attribute mutations
+remain subject to existing native projection guards.
+
+Four new tests cover incoming spell override pointer stability through the
+shared-definition clear/commit, both orders, source DTO mutation, duplicate/
+missing IDs, timestamps/selection/replay, ordinary overlays, actual Player-only
+legacy conversion, and two actual NPC instances with a shared list whose
+first/cached ordering differs. The NPC/creature class test removes spell DTOs
+after preparation and verifies retained spells, selection and used-power time.
+These are new API checks; no pre-fix failing spell regression is claimed.
+
+Normal helper01 compiled and ran1300 tests;1299 passed. Its incoming generated
+spell902 fixture had counter0, and the existing shared-definition counter guard
+correctly rejected it. The instrumented helper01 was stopped with exit130
+before fixing the fixture's detached counter to903. Fresh normal02 passes all
+1300 tests/106 suites, exact inventory/XML, no failures/skips. Instrumented02
+also passes all1300 tests/106 suites, exact inventory/XML, no failures/skips.
+ASan leak checking was disabled. Tested source fingerprint:
+0fc77757d1dc5506c81cc9e7be1805e33b94436ea888a79d329177aa2e8c71ad;
+parent c29816aec81fc177d52fdfe736d86d75d29b0a87.
+
+The actual normal runtime course passes38 native initial/reload groups,
+10 stable groups, item keys, inventory/NPC fields and the corrected complete
+NPC27/creature11/AI4 stat comparison plus spell subrecords. Its runtimeSHA is
+f4b4cbf267c74f14b96868b70ebbb4c4580372e3fd1fe821ae852d7a1d6433f8.
+The separately launched instrumented continuation passes from the exact
+normal final F5 save. The shared-only noT4ST declaredv7 course also passes:
+F5 materializes currentnative46, F9 matches38 groups and F5 retains10 stable
+groups. Its private fixture was reproduced exactly by the editable hash-checked
+pure generator,382 GMSTs removed/76 records retained. Normal and shared-only
+final screenshots were viewed and hash-recorded. No removed native payload
+preservation is claimed. Runtime spell subrecords are empty; populated spell
+payload/legacy conversion coverage is from unit/class tests, not gameplay.
+
+The runtime verifier correction and immutable audit of10 earlier courses are
+recorded in the dedicated evidence-correction section: earlier first11/next4 labels were wrong and old
+health-control index8 was a skill. Corrected actual-health index35 controls
+reject changed/missing health data. These are verifier-only controls.
+
+S3 remains open. Shared SpellList cache/listener attachment and actor custom-data
+construction still allocate after cleanup. Legacy attribute conversion still
+executes during installation; registry/scene resources and the full late-load
+failure transaction remain open. This chunk stages the saved spell payload,
+not the entire actor/World transaction. No audible or leak-check acceptance is
+claimed. Evidence uses shared-spell-state under the S3 evidence root.
+
+The instrumented runtime executableSHA is
+`36065719a99dfddf3e5299bc37f5f93a7bc756612909101619bccdc379dee218`.
+Its exact normal final F5 inputSHA is
+`a87f2f503fde0fbbbd2e2038812b7360290f94acee85abfb98d92c3101d6c7a1`.
+The continuation report checks separately launched terminal sessions93701/13941,
+distinct run IDs/executable hashes and unchanged source input. Both sandbox
+namespace PIDs were12; no PID-inequality claim is made. Both runtime reports
+compare all42 real stat blocks and empty spell subrecords, and final screenshots
+were viewed/hash-recorded. Runtime uses sound disabled.
+
+Fresh evidence directories under the S3 root are `shared-spell-state-normal-02`,
+`shared-spell-state-sanitized-02`, `shared-spell-state-runtime-normal-01`,
+`shared-spell-state-runtime-sanitized-01` and
+`shared-spell-state-no-t4st-normal-01`. The failed normal01 and interrupted
+instrumented01 attempts remain; no passing result is claimed for them.
+
+## S3 correct shared stat-block runtime evidence — 2026-10-08
+
+The prior shared creature core runtime verifiers labelled the first11 STBA
+blocks as creature attributes/resources and the next4 as AI settings. Those
+labels were incorrect: `NpcState::save` writes `NpcStats` first, including27
+skill blocks, followed by CreatureStats'8 attributes and3 resources, then4 AI
+settings when AISE is true. The prior42-block count was valid but did not
+compare the actual creature/AI block contents. The old verifier-only control
+named changed-health-base mutated STBAindex8, an NPC skill, rather than health.
+Its rejection is evidence for a changed skill block; it is not health evidence.
+The direct health/stat guard unit tests are unaffected.
+
+A new independent immutable post-hoc audit,
+`S3/shared-spell-state-corrected-stat-audit-01`, compares every ordered block
+for all10 completed shared runtime courses, including27 NPC skill blocks,
+11 actual creature attribute/resource blocks and4 actual AI settings. All10
+input/firstF5/finalF5 comparisons pass. This new evidence validates the actual
+saved contents; the earlier reports retain their incorrect labels as history.
+The decoder also compares creature spell SPEL/USED/TIME/SLCT subrecords after
+block38, distinguishing NPC USED IDs before creature attributes. These courses'
+spell subrecords are empty; no populated gameplay-spell claim is made.
+
+Fresh verifier-only controls in
+`S3/shared-spell-state-corrected-stat-negative-01` change the actual health STBA
+at index35 (27 NPC skills +8 attributes) and separately remove that health base
+subrecord with a corrected PLAY length. Both fail with return1 and no passing
+report. The original completed game save remains unchanged. These copied-byte
+controls are not engine courses. The current spell-stage runtime verifier uses
+the corrected decoder. Full S3 transaction/gameplay acceptance remains open.
+
+## S3 prepare shared AI packages before World teardown — 2026-10-08
+
+`AiSequence::PreparedState` owns reconstructed saved AI packages and their
+vector before cleanup. `PreparedCreatureStats` carries it through shared NPC
+and creature class restoration. Ordinary AI reads use the same preparation.
+Saved Wander, Travel, internal/hidden Travel, Escort, Follow, Activate, Combat
+and Pursue constructors have an explicit deferred restore mode. The base
+package reaction timer stays detached from World PRNG until installation;
+Follow's global index is also assigned during installation. Draws and indices
+retain saved-package order. Cancellation consumes neither RNG nor Follow IDs.
+A detached timer rejects execution/reset before initialization, and rejects
+reinitialization. Ordinary immediate timer construction retains its draws.
+
+The prepared vector swaps into the destination after its existing packages
+are cleared. Empty source retains existing packages and updates last-run type;
+nonempty unknown-only source clears packages as before. Combat/pursuit counts
+are rebuilt. Legacy target conversion uses the runtime reader's converter
+against installed package-owned references; admission converter pointers are
+not retained. Replay is rejected. Converter fixup bookkeeping remains a late
+allocation, so this chunk does not establish full World rollback.
+
+Three new World tests cover all eight saved package paths, payload ownership
+after source removal, immediate/deferred target mapping, exact eight timer RNG
+draws, cancellation and Follow counter sequencing, replay rejection, empty
+retention/unknown replacement, and detached/immediate timer equivalence through
+updates/reset. The class test now clears the admission AI package list and
+checks prepared Travel installation for actual NPC and creature custom data.
+These are new API checks; no pre-fix failing AI regression is claimed.
+
+Normal helper01 built the runtime but failed compiling a test's unsupported
+ESM::Vector3 initializer. Both helper01 jobs were stopped with exit130 before
+fixing it; the failed compiler output remains. Fresh normal02 passed all1296
+tests/106 suites with exact inventory/XML, no failures/skips. Instrumented
+helper02 also passed all1296 tests/106 suites, exact inventory/XML, no failures
+or skips. ASan leak checking was disabled. Tested source fingerprint:
+d3ba822c12d5e21a1ad667b9e7118f1249b6e5c764e060a7812d85c123cf6445;
+parent c29816aec81fc177d52fdfe736d86d75d29b0a87.
+
+The actual normal idle-service load/F5/F9/F5 course passes38 exact native load
+groups,10 stable groups, persistent native item keys, shared inventory excluding
+reconstructedFRMR, NPC fields and42 core/AI stat blocks. Its input is the
+unmodified actual active-effect instrumented final save and expectations are
+decoded from that exact input. The final screenshot was viewed: prison/HUD/
+selected persistent blade, without an error dialog. Normal runtime executable
+SHA8989c7e1be8613207e7820e65569aef4e6e77da328a024b7535bd1dc7ba29347.
+Instrumented continuation passed from this course's actual final F5 save.
+These runtime courses have idle shared AI; populated shared AI data is covered
+by direct/class tests, not claimed as AI execution in gameplay.
+
+S3 remains open for spell-store/shared-list attachment, custom-data construction,
+registry and scene/resources, full late-load failure transaction and the wider
+adapter/migration closure audit. No audible or leak-checking acceptance is
+claimed. Evidence directories under build/oblivion-compat/m15/S3 use the
+shared-ai-packages prefix. Git staging will be attempted after these verified results are recorded.
+
+Instrumented runtime01 passed the same38 native load groups,10 stable
+groups, native item identities and shared inventory/NPC/core comparisons.
+Its executableSHA is
+`34fb57547f0a6d74620c50b12d27aeac058e7c1d6444302c4d6b8b1efd510cf6`.
+The exact normal final F5 inputSHA is
+`71de67486353906dd5d85bf177336a02c069aa0eb5163daec61196876bfad937`.
+`continuation-verification.json` checks distinct run IDs and binary hashes,
+separate terminal launch sessions66215/59561 and unchanged input. Both sandbox
+namespace PIDs were12; no PID inequality is claimed. Both screenshots were
+viewed and hash-recorded, and both courses use sound disabled.
+
+`shared-ai-packages-no-t4st-normal-01` also passed the actual declaredv7
+shared-only save (remove onlyT4ST, retain shared records and empty Player
+inventory), F5 materialization of currentnative46, F9 exact38 groups and
+F5 preservation of10 stable groups. This exercises the separate shared-only
+preparation handoff. It does not prove preservation of removed native data.
+The private fixture was reproduced by its editable hash-checked pure generator:
+382GMSTs removed,76 records retained, loaded plugin matches the recipe exactly.
+The final fixture/HUD/HandtoHand screenshot was viewed without an error dialog.
+The original S1 source and transformed input hashes remain verified unchanged.
+
+Fresh verification directories are `shared-ai-packages-normal-02`,
+`shared-ai-packages-sanitized-02`, `shared-ai-packages-runtime-normal-01`,
+`shared-ai-packages-runtime-sanitized-01`, and
+`shared-ai-packages-no-t4st-normal-01` under the S3 evidence root. Both helper01
+attempts remain with the compiler failure/interruption; no passing report is
+claimed for them.
+
+## S3 prepare shared active effects before World teardown — 2026-10-08
+
+`ActiveSpells::PreparedState` owns active list nodes, display names, effect
+vectors and the queued vector before cleanup. The existing creature-state plan
+now prepares this payload for shared NPCs and creatures and carries it through
+the class restore handoff. Ordinary `readState` uses the same preparation.
+Installation splices the active nodes and swaps an empty destination queue;
+it preserves the existing append behavior for populated destinations.
+
+Preparation neither generates IDs nor stores admission's raw actor converter.
+Installation retains the previous ordering of missing active-ID generation and
+caster/summon conversion through the runtime reader's converter. Queued spells
+retain missing IDs, and item references retain the existing reader behavior.
+The plan rejects replay. Unresolved caster/summon fixups point to installed
+storage; source DTO mutation and expired admission converters are covered.
+
+Two new World tests cover owned payloads, populated destination append,
+replay rejection, deferred legacy IDs, immediate/deferred actor mapping and
+unchanged item references. The actual NPC/creature class test now removes the
+DTO active/queued lists after preparation and verifies installation of their
+owned payload. These are new API tests; no pre-fix failure is claimed for them.
+Normal helper01 was interrupted before source edits to add the class check;
+its exit130 is retained. Normal helper02 passed all1293 tests/106 suites with
+exact inventory/XML, no failures or skips. Instrumented helper01 also passed all1293 tests/106 suites, exact inventory/XML, no failures or skips; ASan leak checks were disabled.
+Tested source fingerprint36b6a1ad1de86851231635aa096db6ee88021292767504a19a8e4bcc1873b8a9
+at parent c29816aec81fc177d52fdfe736d86d75d29b0a87.
+
+Normal actual runtime01 completed the engine actions but failed the verifier:
+its expected state had been copied from a prior input and disagreed with the
+new input's clocks/AI. The new input matched the first loaded live snapshot.
+This failed attempt is retained without successJSON. Fresh runtime02 derives
+expectations from its exact input and passes all38 native initial/reload
+groups,10 stable groups, persistent item keys, shared inventory excluding
+reconstructedFRMR, NPC fields and42 core/AI stat blocks. The original input
+remains unchanged. The viewed final screenshot shows prison/HUD/selected blade
+without an error dialog. These idle-effect courses do not demonstrate populated
+active effects executing in gameplay. Populated payload coverage is provided
+by the direct and class restore tests. Runtime executableSHA:
+8e60d866b6010e93d5d2359803098e0e1e22bd46652c2ab0104627229466793d.
+
+S3 remains open. Existing nonempty queue capacity and legacy converter fixup
+bookkeeping can allocate during installation. Spell-list/AI-package restoration,
+custom-data construction, registry publication and scene resources are still
+outside this chunk's detached preparation. StateManager retains late-failure
+cleanup; this is not a full World transaction. No audible or leak-checking
+acceptance is claimed. AI followup audit found both Follow's global index and
+AiPackage reaction timer PRNG draws must be deferred before detached preparation.
+
+Evidence is under `build/oblivion-compat/m15/S3/`:
+`shared-active-spells-normal-02`, `shared-active-spells-sanitized-01`,
+`shared-active-spells-runtime-normal-02` and
+`shared-active-spells-runtime-sanitized-02`. Instrumented runtime01 could not
+start because its SDL preload preceded ASan; it was stopped with exit130.
+Fresh instrumented runtime02 uses the previously verified ASan preload and
+passes the same exact state comparisons. The separate-process continuation
+report verifies the normal final save's hash, distinct run IDs/executable
+hashes and terminal launch sessions77100/24737. Both sandbox namespace PIDs
+were13; no PID-inequality claim is made. Instrumented runtime executableSHA:
+`f069aaa431cd5b5a7b50770900940be42f8864f52e9301190aef1399fddec94a`.
+Both runtime courses use sound disabled and both final screenshots were viewed.
+
+## S3 prepare core shared creature stats before World teardown — 2026-10-08
+
+Player/NPC/creature admission now owns prepared core attributes, resource inputs,
+aggregate magic effects, summon references, AI-setting inputs and consumed scalars.
+WorldModel retains plans by the saved owner key; actual NPC/creature class readers
+consume each plan once, and clear discards unused plans. Ordinary restoration
+uses the same core preparation/publication path. Attribute and aggregate-effect
+nodes transfer with legacy overlays; summon maps replace the prior map. MissingACDT
+retains its resource/attribute/gold/talked/attacked skips. Spell, active-effect and
+AI-package restoration still follows the core layer and remains unstaged.
+
+All relevant destination native guards are checked before any core map or scalar
+changes. The pre-fix `shared-creature-core-red-03` regression proves the original
+partial mutation: a later magicka/fatigue guard throws after health61 becomes23;
+the fatigue case also changes magicka47 to0. The final reader preserves all prior
+resources on that rejection. This synthetic projection fixture tests direct stat
+restoration; it is not an actual in-game failed-load course. No gameplay formulas
+change, and saved ESM timestamp copy behavior remains unchanged.
+
+Three added tests cover that regression, detached source ownership, MissingACDT
+and omitted-field overlays, nonzero resources/attributes/effects/summons/AI inputs,
+replay rejection, actual Player/NPC and creature class consumption, clear and
+custom-state skips. `build/oblivion-compat/m15/S3/shared-creature-core-normal-01`
+and `shared-creature-core-sanitized-01` each pass all **1291 engine tests**, exact
+unfiltered inventory/XML match, no failures or skips. Parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`; tested source fingerprint
+`97b137da545d69f041a209f09b5139063798210a9c655d2ad6a6cc1f5e7e779d`.
+The fingerprint includes the new untracked `creaturestatsrestore.hpp`. ASan/UBSan
+halt on errors; leak detection is disabled. Tests use offscreen SDL/null OpenAL.
+
+Earlier red01 used an incorrect timestamp-rejection assumption: the saved ESM
+constructor copies without validating, so the unattached test spell list was
+reached and the process faulted. That test was replaced. GDB could not trace in
+this sandbox; its ptrace denial is retained in the temporary diagnostic log.
+Red02 was stopped before assertions when its setup tried the gameplay setter,
+which correctly rejects native projections. Red03 installs a synthetic published
+view through the projection method and demonstrates the actual guard failure.
+These attempts remain retained and are not relabeled as acceptance passes.
+
+Actual `shared-creature-core-runtime-normal-01` and
+`shared-creature-core-runtime-sanitized-01` pass load → F5 → F9 → F5 → quit.
+Each verifies all38 native groups on both loads, ten stable groups through
+resaves, native persistent item keys, shared inventory bytes except reconstructed
+FRMR identities, and shared NPC BOUN/REPU/DRTI. They additionally compare the first
+11 shared attribute/resource stat blocks, four AI-setting blocks, core scalar
+subrecords and the total42 stat-block structure. Zero current values are omitted
+in this actual fixture; nonzero resource/effect/summon cases are established by
+the World tests, not inferred from screenshots. The fresh instrumented process
+loads the exact normal final save SHA-256
+`22141ce82b1a17b420491dfc6d6171dcbfc064270a2134c99ab3fb431801cfab`.
+Its continuation verifier compares exact input, distinct run IDs/executable
+hashes and separate terminal launch sessions. Both namespace-local PIDs are14;
+PID inequality is not used. Both resave screenshots were inspected: prison scene,
+HUD and persistent blade selection return without an error dialog. Sound is disabled.
+
+Runtime hashes: normal
+`58e243e1793251ec7cda4e596d9534b7e824024a5680d28ba6b68dbd497df965`;
+instrumented `c4466a3f645b4ad3726e7f7e5b62568948105599ce8519b9b7e7394e5184d9f8`.
+`shared-creature-core-verifier-negative-01` failed setup because it assumed a
+health STCU existed. Negative02 instead changes/removes the mandatory health STBA;
+both copied-artifact verifiers reject at core equality without a passing report.
+The strengthened total-block count catches missing records with identical adjacent
+values. The unchanged positive course was reverified with that check and AI blocks.
+These are verifier controls; original saves remain unchanged.
+
+`shared-creature-core-no-t4st-normal-01` also passes the accepted shared-only v7
+input, F5 materialization of schema46, exact38-group F9 reload and final F5.
+Its source and empty inventory are unchanged; removed native payload is not
+asserted as preserved. The private plugin reproduced exactly from its generator
+and manifest (382 GMST removals,76 retained records); its migrated scene/HUD was
+inspected. This verifies the core callback on the shared-only branch.
+
+**S3 remains open.** Core preparation and early guard checks reduce the late
+mutation/allocation boundary. Spells, active effects, AI packages, custom-data
+construction, registry and scene/resource publication still need their full
+transaction and acceptance scope. Commit staging remains blocked by read-only
+`.git`; these source/tests/reports remain in the worktree.
+
+## S3 prepare additional shared NPC stats before World teardown — 2026-10-08
+
+Admission now prepares the additional shared NPC fields for Player/NPC owners
+alongside their inventories. `PreparedNpcStats` owns decoded scalars and allocated
+skill, faction, expelled and used-ID containers. Factions resolve against static
+content; used IDs resolve against the accepted incoming/static definition policy,
+excluding outgoing-only dynamics. WorldModel retains plans by the existing saved
+owner key, consumes them once during actual NPC class restoration and discards
+unused plans on clear. Shared-only native-profile loads use the same callback.
+
+Publication transfers prepared map/set nodes and replaces the saved skill-use
+and specialization counters. It preserves the legacy overlay behavior for omitted
+skills, negative faction ranks, zero faction reputation and absent expelled/used
+IDs. CreatureStats remain separate. Skill assignment retains the existing native
+projection write guard; this is not a blanket no-throw publication contract.
+Ordinary NPC restoration uses the same preparation path with its ordinary live
+lookup policy. No gameplay formulas or native service authority change.
+
+Two new World tests cover static/generated incoming/outgoing dependencies,
+preparation without outgoing native state/registry changes, definition removal
+before publication, overlays and counters, unchanged creature health, replay
+rejection, actual ManualRef/class restoration, clear cancellation and custom-state
+skips. Final `build/oblivion-compat/m15/S3/shared-npc-stats-normal-03` and
+`shared-npc-stats-sanitized-03` each pass all **1288 engine tests**, exact unfiltered
+inventory/XML match, no failures or skips. Parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87`; tested source fingerprint
+`93ea371ff54718f2999f161914be3a9f25040633056a6188ba6c37d6ce50606c`.
+ASan/UBSan halt on errors, leaks are disabled; tests use offscreen SDL and the null
+OpenAL backend. No pre-fix staging assertion was run for this new preparation API.
+
+Retained normal01/02 attempts each passed1287/1288 tests. Normal01's new fixture
+incorrectly called whole-store clear without a Player record; corrected typed-store
+clear reaches the assertions. Normal02 expected an incoming faction and a new
+nongenerated Misc ID to survive, contrary to the established publication policy.
+The fixture now uses a static faction and a generated saved item. Corresponding
+instrumented01/02 builds were stopped after these concrete test failures. These
+were fixture mistakes; they are not claimed as production regression evidence.
+
+Actual `shared-npc-stats-runtime-normal-01` and
+`shared-npc-stats-runtime-sanitized-01` pass load → F5 → F9 → F5 → quit. Their
+verifiers compare all38 native groups on both loads, ten stable groups through
+resaves, persistent native item keys and exact shared inventory subrecords apart
+from reconstructed FRMR identities. Shared NPC BOUN/REPU/DRTI bytes remain exact.
+The actual input has no populated shared faction/USED fields; the World fixture
+covers those containers. The instrumented course loads the normal final save
+SHA-256 `87db37be4fa3e6e42a5d2c2022de177d2a66001d8eab6e98a9711c24f1e424ec`.
+Its continuation verifier checks exact input bytes, distinct run IDs/executable
+hashes and separate terminal launch sessions. Both namespace-local PIDs are14;
+PID inequality is not used as process separation evidence. Screenshots were
+inspected: prison scene, HUD and persistent blade selection are restored without
+an error dialog. Runtime sound is disabled.
+
+Runtime executable hashes: normal
+`c80dc4a04ef1ab6000314dcab7844f4a452449aad65ff3ac45bc4ba41225bccf`;
+instrumented `2780cafe239bf94d8b57e9bc761f21ea15efa5ba2f1ef016aa1dd1c65c844e60`.
+`shared-npc-stats-verifier-negative-01` rejects copied final saves with changed or
+removed DRTI at the shared-NPC assertion, without writing a passing report. The
+original course save is unchanged. These are verifier controls, not game runs.
+
+`shared-npc-stats-no-t4st-normal-01` also passes the accepted shared-only declared-v7
+load, F5 creation of schema46, exact38-group F9 reload and another F5. Its source
+and empty Player inventory are unchanged from the preceding shared-only course;
+removed native state is not asserted as preserved. Its fixture generator reproduced
+the loaded private plugin exactly, with the same382 GMST removals and76 retained
+records. The migrated fixture scene and HUD were inspected.
+
+**S3 remains open.** Additional NPC fields now join prepared inventories. Shared
+CreatureStats, spells/active effects, AI, custom-data construction, registry and
+later scene/resource allocations still require the complete restore transaction
+and acceptance audit. The requested commit remains blocked by read-only `.git`;
+source, tests and reports remain in the worktree.
+
+## S3 prepare shared inventories before World teardown — 2026-10-08
+
+Shared Player, NPC, creature and container inventories now construct detached
+item references and equipment selections during admission, using winning incoming
+and static definitions. Outgoing dynamic definitions cannot satisfy preparation.
+The plan preserves legacy restocking conversion, removed-item skips and selected
+enchantment items; equipment unstacking assigns fresh identities at publication.
+WorldModel matches admitted owners across legacy ActorId conversion, consumes each
+inventory once and discards unused plans on clear. Original save-item RefNums are
+reconciled after legacy spell conversion. Empty plans cannot replay or borrow an
+ordinary live store. Ordinary empty inventory construction remains lookup-free.
+
+Accepted native-profile shared-only saves without T4ST now retain and publish the
+same detached definition owner, so prepared item base pointers survive clear.
+This path does not create a native payload from removed saved fields. Player DTOs
+remain owned rather than moving their nonmovable AI sequence.
+
+Five new tests cover detached ownership/publication, owner keys and restocking,
+all47 native schema paths (absent T4ST and versions1–46) with preparation failure
+and ownership-handoff ordering, empty-plan replay and legacy unset ActorIds.
+`build/oblivion-compat/m15/S3/shared-inventory-normal-05` and
+`shared-inventory-sanitized-05` each pass all **1285 engine tests**, exact unfiltered
+inventory/XML match, no failures or skips. Both record parent
+`c29816aec81fc177d52fdfe736d86d75d29b0a87` and source fingerprint
+`fefecd93ba957a787b39bd82d68dea1d9a7c8cc52555af915720129af5e473ec`.
+ASan/UBSan halt on errors; leak detection is disabled. Engine tests use the null
+OpenAL backend and offscreen SDL; these are not audible playback evidence.
+
+Actual `shared-inventory-runtime-normal-02` and
+`shared-inventory-runtime-sanitized-02` courses pass load → F5 → F9 → F5 → quit.
+Each verifies all38 native groups against the input and actual first F5 save,
+ten stable groups through resaves and exact PLAY inventory subrecords excluding
+reconstructed FRMR identities. Persistent native item keys are compared exactly.
+The instrumented course loads the normal final save SHA-256
+`bce24264817541478ecea06d55215f81a5f94955ad5b6666a65cf909e720a25a`.
+Its `continuation-verification.json` checks byte identity, distinct run IDs and
+executable hashes, and separate terminal launcher sessions. Both namespace-local
+PIDs are13; PID inequality is not asserted. Runtime sound is disabled.
+Executable hashes: normal
+`986fb847eda8078d3eda017946dc1aecb20ab8dbc95c912f07f697171fada70b`;
+instrumented `2c2bce87fc87e08ffbb302ce96b58ad7ed180af0feeaa793dbef8c48bdc9bfa7`.
+
+`shared-inventory-no-t4st-normal-05` passes an actual declared-v7 shared-only
+load, F5 creating schema46, F9 matching all38 saved groups and another F5.
+Its source is the retained S1 ticks-restart save; only T4ST is removed and source
+bytes remain unchanged. Player inventory is empty. The private content manifest
+and `support/generate.py` reproduce the fixture with382 synthetic GMST records
+omitted and76 other records retained, avoiding ambiguous official-content GMSTs.
+The course does not claim preservation of the removed native payload.
+
+Failed attempts remain retained: normal/instrumented build01 exhausted compiler
+temporary storage; normal02 exposed nonmovable NpcState, normal03 exposed the
+empty-reader World dependency, and normal04 failed two existing audio tests
+without the required null backend. Corresponding instrumented attempts02–04
+were interrupted after those concrete failures. Runtime normal01's verifier
+incorrectly required reconstructed FRMR equality. Shared-only courses01–03
+exposed missing or ambiguous fixture dependencies; course04 copied the old save
+slot rather than the actual save-complete path. Corrected courses above pass.
+Unused instrumented runtime01 was not run.
+
+Follow-up review found that admission moved owner/item Lua state into its
+validation collection, leaving the retained inventory DTOs empty. Validation now
+copies those inputs. The new four-case regression checks both Lua record orders
+and T4ST present/absent, requiring exact owner/item script payloads, saved script
+IDs and timer callback data at inventory preparation. Corrected baseline
+`shared-inventory-lua-red-03` fails on missing scripts. Red01 failed to compile a
+mixed-const pointer list; red02 also exposed an empty test validator callback.
+Initial normal/instrumented01 were interrupted to correct that harness callback;
+normal02 failed an incorrect script-ID remapping assertion and instrumented02
+was interrupted. Saved IDs deliberately retain the incoming mapping until actual
+Lua restoration. Final `shared-inventory-lua-normal-03` and
+`shared-inventory-lua-sanitized-03` each pass all **1286 engine tests**, exact
+inventory/XML match, zero failures/skips, parent unchanged and source fingerprint
+`c43ab0cfa6aae3e0e460ffbdaae7c5aea53f4c39f0d7d2caa5419e32a3fdc150`.
+The runtime courses above precede this Lua preservation follow-up and retain their
+original fingerprint scope; they do not test scripted-item callbacks executing.
+
+Staging the tested chunk on2026-10-08 failed because `.git/index.lock` could not
+be created: the session filesystem makes `.git` read-only. No commit was created;
+source/tests/reports remain in the worktree and unrelated user content is intact.
+
+**S3 remains open.** Inventory construction is staged; pointer registration,
+shared stats/custom data and later scene/resource publication still allocate
+after cleanup. This chunk does not prove complete transactional restore or the
+remaining authority, migration and lifecycle acceptance gates.
+
 ## S3 stage canonical Player metadata with incoming definitions — 2026-10-08
 
 Prepared native saves now select and allocate the canonical Player NPC record

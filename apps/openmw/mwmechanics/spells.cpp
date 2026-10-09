@@ -1,5 +1,7 @@
 #include "spells.hpp"
 
+#include <stdexcept>
+
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/loadspel.hpp>
 #include <components/esm3/spellstate.hpp>
@@ -208,73 +210,181 @@ namespace MWMechanics
             it->second = timestamp;
     }
 
+    Spells::PreparedInstance::PreparedInstance(const PreparedInstance& other)
+        : mAdditions(other.mAdditions)
+        , mMerged(other.mMerged)
+        , mMissing(other.mMissing)
+        , mConsumed(other.mConsumed)
+    {
+        mMerged.reserve(other.mMerged.capacity());
+    }
+
+    Spells::PreparedInstance& Spells::PreparedInstance::operator=(const PreparedInstance& other)
+    {
+        if (this != &other)
+            *this = PreparedInstance(other);
+        return *this;
+    }
+
+    Spells::PreparedInstance Spells::prepareInstance(const std::vector<ESM::RefId>& ids,
+        const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, std::size_t priorCapacity)
+    {
+        PreparedInstance result;
+        result.mMerged.reserve(priorCapacity + ids.size());
+        for (const auto& id : ids)
+        {
+            const auto* spell = store.searchForRestore<ESM::Spell>(id, incoming);
+            if (!spell)
+                result.mMissing.push_back(id);
+            else if (std::find(result.mAdditions.begin(), result.mAdditions.end(), spell) == result.mAdditions.end())
+                result.mAdditions.push_back(spell);
+        }
+        return result;
+    }
+
+    void Spells::PreparedInstance::warnMissing() const
+    {
+        for (const auto& id : mMissing)
+            Log(Debug::Warning) << "Warning: ignoring nonexistent spell " << id;
+    }
+
+    void Spells::PreparedInstance::install(Spells& target)
+    {
+        if (mConsumed)
+            throw std::logic_error("Prepared instance spells already consumed");
+        // Validate the bound before changing the target; no allocation during merge.
+        if (target.mSpells.size() + mAdditions.size() > mMerged.capacity())
+            throw std::logic_error("Prepared instance spell capacity exceeded");
+        mMerged.insert(mMerged.end(), target.mSpells.begin(), target.mSpells.end());
+        for (const auto* spell : mAdditions)
+            if (std::find(mMerged.begin(), mMerged.end(), spell) == mMerged.end())
+                mMerged.push_back(spell);
+        target.mSpells.swap(mMerged);
+        mConsumed = true;
+        warnMissing();
+    }
+
+    bool Spells::PreparedInstance::bind(Spells& target, const ESM::RefId& actorId)
+    {
+        if (mConsumed || !target.mSpells.empty() || target.mSpellList)
+            throw std::logic_error("Prepared initial spell binding has unexpected target");
+        auto [list, initialized] = MWBase::Environment::get().getESMStore()->getSpellList(actorId);
+        target.mSpellList = std::move(list);
+        target.mSpellList->addListener(&target);
+        install(target); // Ordinary setSpells adds base spells even for cached lists.
+        return initialized;
+    }
+
+    std::unique_ptr<Spells::PreparedState> Spells::prepareReadState(const ESM::SpellState& state,
+        const MWWorld::ESMStore& store, const std::vector<ESM::RefId>& baseSpells,
+        const MWWorld::ESMStore* incoming, const Spells* existing)
+    {
+        auto prepared = std::unique_ptr<PreparedState>(new PreparedState);
+        const auto resolve = [&](const ESM::RefId& id) {
+            return incoming ? store.searchForRestore<ESM::Spell>(id, *incoming) : store.get<ESM::Spell>().search(id);
+        };
+        const auto append = [](Collection& spells, const ESM::Spell* spell) {
+            if (spell && std::find(spells.begin(), spells.end(), spell) == spells.end())
+                spells.push_back(spell);
+        };
+        for (const auto& id : baseSpells)
+            append(prepared->mExpectedBase, resolve(id));
+        prepared->mBindingBase = prepared->mExpectedBase;
+        prepared->mBaseFirst = existing ? existing->mSpells : prepared->mExpectedBase;
+        prepared->mExisting = existing != nullptr;
+        if (existing)
+            prepared->mUsedPowers = existing->mUsedPowers;
+        for (const auto& id : state.mSpells)
+        {
+            const auto* spell = resolve(id);
+            append(prepared->mBaseFirst, spell);
+            append(prepared->mSavedFirst, spell);
+            if (spell && id == state.mSelectedSpell)
+            {
+                prepared->mHasSelection = true;
+                prepared->mSelectedSpell = id;
+            }
+        }
+        for (const auto* spell : prepared->mExpectedBase)
+        {
+            append(prepared->mBaseFirst, spell);
+            append(prepared->mSavedFirst, spell);
+        }
+        for (const auto& [id, timestamp] : state.mUsedPowers)
+            if (const auto* spell = resolve(id))
+                prepared->mUsedPowers.emplace_back(spell, MWWorld::TimeStamp(timestamp));
+        for (const auto& [id, effects] : state.mPermanentSpellEffects)
+        {
+            if (!resolve(id)) continue;
+            prepared->mHasLegacyEffects = true;
+            for (const auto& info : effects)
+                prepared->mLegacyEffects.push_back({info.mId, info.mArg, info.mMagnitude});
+        }
+        return prepared;
+    }
+
+    bool Spells::PreparedState::attach(Spells& target, const ESM::RefId& actorId)
+    {
+        if (mConsumed || mAttached || mExisting)
+            throw std::logic_error("Spell restore attachment already consumed or not a class plan");
+        auto [list, initialized] = MWBase::Environment::get().getESMStore()->getSpellList(actorId);
+        if (!initialized && !target.mSpells.empty() && target.mSpells != mExpectedBase)
+            throw std::logic_error("First spell-list binding has unexpected instance spells");
+        if (target.mSpellList && target.mSpellList != list)
+            target.mSpellList->removeListener(&target);
+        target.mSpellList = std::move(list);
+        target.mSpellList->addListener(&target);
+        // Cached class readers clear immediately. First readers can take the
+        // prepared base vector without querying/copying the base record again.
+        if (!initialized)
+            target.mSpells.swap(mBindingBase);
+        mAttached = true;
+        return initialized;
+    }
+
+    void Spells::PreparedState::install(Spells& target, CreatureStats* creatureStats)
+    {
+        if (mConsumed)
+            throw std::logic_error("Spell restore plan already consumed");
+        if (!mExisting && ((!target.mSpells.empty() && target.mSpells != mExpectedBase) || !target.mUsedPowers.empty()))
+            throw std::logic_error("Spell restore target differs from prepared base state");
+        const bool baseFirst = mExisting || !target.mSpells.empty();
+        target.mSpells.swap(baseFirst ? mBaseFirst : mSavedFirst);
+        target.mUsedPowers.swap(mUsedPowers);
+        if (mHasSelection)
+            target.mSelectedSpell = mSelectedSpell;
+        mConsumed = true;
+        if (!mHasLegacyEffects)
+            return;
+        const MWWorld::Ptr player = getPlayer();
+        if (creatureStats != &player.getClass().getCreatureStats(player))
+            return;
+        // Preserve the old Player-only corprus conversion and its ordering.
+        for (const auto& info : mLegacyEffects)
+        {
+            if (info.mId == ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyAttribute))
+            {
+                auto id = ESM::Attribute::indexToRefId(info.mArg);
+                AttributeValue attr = creatureStats->getAttribute(id);
+                attr.setModifier(attr.getModifier() - info.mMagnitude);
+                attr.damage(-info.mMagnitude);
+                creatureStats->setAttribute(id, attr);
+            }
+            else if (info.mId == ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::DrainAttribute))
+            {
+                auto id = ESM::Attribute::indexToRefId(info.mArg);
+                AttributeValue attr = creatureStats->getAttribute(id);
+                attr.setModifier(attr.getModifier() + info.mMagnitude);
+                attr.damage(info.mMagnitude);
+                creatureStats->setAttribute(id, attr);
+            }
+        }
+    }
+
     void Spells::readState(const ESM::SpellState& state, CreatureStats* creatureStats)
     {
-        const auto& baseSpells = mSpellList->getSpells();
-
-        for (const ESM::RefId& id : state.mSpells)
-        {
-            // Discard spells that are no longer available due to changed content files
-            const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().search(id);
-            if (spell)
-            {
-                addSpell(spell);
-
-                if (id == state.mSelectedSpell)
-                    mSelectedSpell = id;
-            }
-        }
-        // Add spells from the base record
-        for (const ESM::RefId& id : baseSpells)
-        {
-            const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().search(id);
-            if (spell)
-                addSpell(spell);
-        }
-
-        for (auto it = state.mUsedPowers.begin(); it != state.mUsedPowers.end(); ++it)
-        {
-            const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().search(it->first);
-            if (!spell)
-                continue;
-            mUsedPowers.emplace_back(spell, MWWorld::TimeStamp(it->second));
-        }
-
-        // Permanent effects are used only to keep the custom magnitude of corprus spells effects (after cure too), and
-        // only in old saves. Convert data to the new approach.
-        for (auto it = state.mPermanentSpellEffects.begin(); it != state.mPermanentSpellEffects.end(); ++it)
-        {
-            const ESM::Spell* spell = MWBase::Environment::get().getESMStore()->get<ESM::Spell>().search(it->first);
-            if (!spell)
-                continue;
-
-            // Import data only for player, other actors should not suffer from corprus worsening.
-            MWWorld::Ptr player = getPlayer();
-            if (creatureStats != &player.getClass().getCreatureStats(player))
-                return;
-
-            // Note: if target actor has the Restore attribute effects, stats will be restored.
-            for (const ESM::SpellState::PermanentSpellEffectInfo& info : it->second)
-            {
-                // Applied corprus effects are already in loaded stats modifiers
-                if (info.mId == ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::FortifyAttribute))
-                {
-                    auto id = ESM::Attribute::indexToRefId(info.mArg);
-                    AttributeValue attr = creatureStats->getAttribute(id);
-                    attr.setModifier(attr.getModifier() - info.mMagnitude);
-                    attr.damage(-info.mMagnitude);
-                    creatureStats->setAttribute(id, attr);
-                }
-                else if (info.mId == ESM::MagicEffect::refIdToIndex(ESM::MagicEffect::DrainAttribute))
-                {
-                    auto id = ESM::Attribute::indexToRefId(info.mArg);
-                    AttributeValue attr = creatureStats->getAttribute(id);
-                    attr.setModifier(attr.getModifier() + info.mMagnitude);
-                    attr.damage(info.mMagnitude);
-                    creatureStats->setAttribute(id, attr);
-                }
-            }
-        }
+        prepareReadState(state, *MWBase::Environment::get().getESMStore(), mSpellList->getSpells(), nullptr, this)
+            ->install(*this, creatureStats);
     }
 
     void Spells::writeState(ESM::SpellState& state) const

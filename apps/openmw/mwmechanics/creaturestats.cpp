@@ -1,4 +1,5 @@
 #include "creaturestats.hpp"
+#include "creaturestatsrestore.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,9 +22,18 @@
 namespace MWMechanics
 {
     CreatureStats::CreatureStats()
+        : CreatureStats(nullptr)
     {
-        for (const ESM::Attribute& attribute : MWBase::Environment::get().getESMStore()->get<ESM::Attribute>())
+    }
+
+    CreatureStats::CreatureStats(const MWWorld::ESMStore* initializationStore)
+    {
+        const auto& attributes = initializationStore ? initializationStore->get<ESM::Attribute>()
+            : MWBase::Environment::get().getESMStore()->get<ESM::Attribute>();
+        for (const ESM::Attribute& attribute : attributes)
         {
+            if (initializationStore && attributes.searchStatic(attribute.mId) != &attribute)
+                continue;
             mAttributes.emplace(attribute.mId, AttributeValue{});
         }
     }
@@ -214,7 +224,7 @@ namespace MWMechanics
 
         if (index == 0 && mDynamic[index].getCurrent() < 1)
         {
-            if (!mDead)
+            if (!mDead && !mBaseInitializationStore)
                 mTimeOfDeath = MWBase::Environment::get().getWorld()->getTimeStamp();
 
             mDead = true;
@@ -436,15 +446,26 @@ namespace MWMechanics
 
     void CreatureStats::recalculateMagicka()
     {
-        auto world = MWBase::Environment::get().getWorld();
         float intelligence = getAttribute(ESM::Attribute::Intelligence).getModified();
-
-        float base = 1.f;
-        const auto& player = world->getPlayerPtr();
-        if (this == &player.getClass().getCreatureStats(player))
-            base = world->getStore().get<ESM::GameSetting>().find("fPCbaseMagickaMult")->mValue.getFloat();
+        float base;
+        if (mBaseInitializationStore)
+        {
+            const auto id = ESM::RefId::stringRefId(
+                mBaseInitializationIsPlayer ? "fPCbaseMagickaMult" : "fNPCbaseMagickaMult");
+            const auto* setting = mBaseInitializationStore->get<ESM::GameSetting>().searchStatic(id);
+            if (!setting)
+                throw std::runtime_error("Prepared actor magicka setting is unavailable");
+            base = setting->mValue.getFloat();
+        }
         else
-            base = world->getStore().get<ESM::GameSetting>().find("fNPCbaseMagickaMult")->mValue.getFloat();
+        {
+            auto world = MWBase::Environment::get().getWorld();
+            const auto& player = world->getPlayerPtr();
+            if (this == &player.getClass().getCreatureStats(player))
+                base = world->getStore().get<ESM::GameSetting>().find("fPCbaseMagickaMult")->mValue.getFloat();
+            else
+                base = world->getStore().get<ESM::GameSetting>().find("fNPCbaseMagickaMult")->mValue.getFloat();
+        }
 
         float magickaFactor = base
             + mMagicEffects.getOrDefault(EffectKey(ESM::MagicEffect::FortifyMaximumMagicka)).getMagnitude() * 0.1f;
@@ -596,54 +617,16 @@ namespace MWMechanics
         state.mMissingACDT = false;
     }
 
-    void CreatureStats::readState(const ESM::CreatureStats& state)
+    void CreatureStats::readState(const ESM::CreatureStats& state, PreparedCreatureStats* prepared)
     {
-        if (!state.mMissingACDT)
-        {
-            for (const auto& [attribute, value] : state.mAttributes)
-                mAttributes[attribute].readState(value);
+        auto owned = prepared ? nullptr : prepareCoreState(state);
+        (prepared ? prepared : owned.get())->install(*this);
 
-            for (size_t i = 0; i < state.mDynamic.size(); ++i)
-                mDynamic[i].readState(state.mDynamic[i]);
-
-            mGoldPool = state.mGoldPool;
-            mTalkedTo = state.mTalkedTo;
-            mAttacked = state.mAttacked;
-        }
-
-        mLastRestock = MWWorld::TimeStamp(state.mTradeTime);
-
-        mDead = state.mDead;
-        mDeathAnimationFinished = state.mDeathAnimationFinished;
-        mDied = state.mDied;
-        mMurdered = state.mMurdered;
-        mAlarmed = state.mAlarmed;
-        // TODO: rewrite. does this really need 3 separate bools?
-        mKnockdown = state.mKnockdown;
-        mKnockdownOneFrame = state.mKnockdownOneFrame;
-        mKnockdownOverOneFrame = state.mKnockdownOverOneFrame;
-        mHitRecovery = state.mHitRecovery;
-        mBlock = state.mBlock;
-        mMovementFlags = state.mMovementFlags;
-        mFallHeight = state.mFallHeight;
-        mLastHitObject = state.mLastHitObject;
-        mLastHitAttemptObject = state.mLastHitAttemptObject;
-        mDrawState = DrawState(state.mDrawState);
-        mLevel = state.mLevel;
-        mDeathAnimation = state.mDeathAnimation;
-        mTimeOfDeath = MWWorld::TimeStamp(state.mTimeOfDeath);
-        // mHitAttemptActor = state.mHitAttemptActor;
-
-        mSpells.readState(state.mSpells, this);
-        mActiveSpells.readState(state.mActiveSpells);
-        mAiSequence.readState(state.mAiSequence);
-        mMagicEffects.readState(state.mMagicEffects);
-
-        mSummonedCreatures = state.mSummonedCreatures;
-
-        if (state.mHasAiSettings)
-            for (size_t i = 0; i < state.mAiSettings.size(); ++i)
-                mAiSettings[i].readState(state.mAiSettings[i]);
+        auto& spellPlan = (prepared ? prepared : owned.get())->mSpells;
+        if (spellPlan) spellPlan->install(mSpells, this);
+        else mSpells.readState(state.mSpells, this);
+        (prepared ? prepared : owned.get())->mActiveSpells->install(mActiveSpells, state.mActiveSpells.mActorIdConverter);
+        (prepared ? prepared : owned.get())->mAiSequence->install(mAiSequence, state.mAiSequence.mActorIdConverter);
         if (state.mRecalcDynamicStats)
             recalculateMagicka();
         if (state.mAiSequence.mActorIdConverter)
@@ -653,6 +636,105 @@ namespace MWMechanics
             auto& graveyard = state.mAiSequence.mActorIdConverter->mGraveyard;
             graveyard.insert(graveyard.end(), state.mSummonGraveyard.begin(), state.mSummonGraveyard.end());
         }
+    }
+
+    std::unique_ptr<PreparedCreatureStats> CreatureStats::prepareCoreState(const ESM::CreatureStats& state,
+        std::unique_ptr<Spells::PreparedState> spells)
+    {
+        auto result = std::unique_ptr<PreparedCreatureStats>(new PreparedCreatureStats);
+        result->mSpells = std::move(spells);
+        result->mActiveSpells = ActiveSpells::prepareReadState(state.mActiveSpells);
+        result->mAiSequence = AiSequence::prepareReadState(state.mAiSequence);
+        result->mFields.mMissingACDT = state.mMissingACDT;
+        result->mFields.mDynamic = state.mDynamic;
+        result->mFields.mGoldPool = state.mGoldPool;
+        result->mFields.mTalkedTo = state.mTalkedTo;
+        result->mFields.mAttacked = state.mAttacked;
+        result->mFields.mTradeTime = state.mTradeTime;
+        result->mFields.mDead = state.mDead;
+        result->mFields.mDeathAnimationFinished = state.mDeathAnimationFinished;
+        result->mFields.mDied = state.mDied;
+        result->mFields.mMurdered = state.mMurdered;
+        result->mFields.mAlarmed = state.mAlarmed;
+        result->mFields.mKnockdown = state.mKnockdown;
+        result->mFields.mKnockdownOneFrame = state.mKnockdownOneFrame;
+        result->mFields.mKnockdownOverOneFrame = state.mKnockdownOverOneFrame;
+        result->mFields.mHitRecovery = state.mHitRecovery;
+        result->mFields.mBlock = state.mBlock;
+        result->mFields.mMovementFlags = state.mMovementFlags;
+        result->mFields.mFallHeight = state.mFallHeight;
+        result->mFields.mLastHitObject = state.mLastHitObject;
+        result->mFields.mLastHitAttemptObject = state.mLastHitAttemptObject;
+        result->mFields.mDrawState = state.mDrawState;
+        result->mFields.mLevel = state.mLevel;
+        result->mFields.mDeathAnimation = state.mDeathAnimation;
+        result->mFields.mTimeOfDeath = state.mTimeOfDeath;
+        result->mFields.mSummonedCreatures = state.mSummonedCreatures;
+        result->mFields.mHasAiSettings = state.mHasAiSettings;
+        result->mFields.mAiSettings = state.mAiSettings;
+        if (!state.mMissingACDT)
+            for (const auto& [id, value] : state.mAttributes)
+                result->mAttributes[id].readState(value);
+        result->mMagicEffects.readState(state.mMagicEffects);
+        return result;
+    }
+
+    void PreparedCreatureStats::install(CreatureStats& target)
+    {
+        if (mConsumed)
+            throw std::logic_error("Prepared shared creature stats already consumed");
+        // Every guarded destination is checked before any map or scalar changes.
+        if (!mFields.mMissingACDT)
+        {
+            for (const auto& [id, value] : mAttributes)
+                if (const auto found = target.mAttributes.find(id);
+                    found != target.mAttributes.end() && found->second.isNativeProjection())
+                    throw std::logic_error("native attribute projection requires authority mutation");
+            for (const auto& value : target.mDynamic)
+                if (value.isNativeProjection())
+                    throw std::logic_error("native dynamic projection requires authority mutation");
+        }
+        if (mFields.mHasAiSettings)
+            for (const auto& value : target.mAiSettings)
+                if (value.isNativeProjection())
+                    throw std::logic_error("native AI projection requires authority mutation");
+        mConsumed = true;
+        if (!mFields.mMissingACDT)
+        {
+            target.mAttributes.merge(mAttributes);
+            for (const auto& [id, value] : mAttributes)
+                target.mAttributes.at(id) = value;
+            mAttributes.clear();
+            for (std::size_t i = 0; i < mFields.mDynamic.size(); ++i)
+                target.mDynamic[i].readState(mFields.mDynamic[i]);
+            target.mGoldPool = mFields.mGoldPool;
+            target.mTalkedTo = mFields.mTalkedTo;
+            target.mAttacked = mFields.mAttacked;
+        }
+        target.mLastRestock = MWWorld::TimeStamp(mFields.mTradeTime);
+        target.mDead = mFields.mDead;
+        target.mDeathAnimationFinished = mFields.mDeathAnimationFinished;
+        target.mDied = mFields.mDied;
+        target.mMurdered = mFields.mMurdered;
+        target.mAlarmed = mFields.mAlarmed;
+        target.mKnockdown = mFields.mKnockdown;
+        target.mKnockdownOneFrame = mFields.mKnockdownOneFrame;
+        target.mKnockdownOverOneFrame = mFields.mKnockdownOverOneFrame;
+        target.mHitRecovery = mFields.mHitRecovery;
+        target.mBlock = mFields.mBlock;
+        target.mMovementFlags = mFields.mMovementFlags;
+        target.mFallHeight = mFields.mFallHeight;
+        target.mLastHitObject = mFields.mLastHitObject;
+        target.mLastHitAttemptObject = mFields.mLastHitAttemptObject;
+        target.mLevel = mFields.mLevel;
+        target.mDeathAnimation = mFields.mDeathAnimation;
+        target.mDrawState = DrawState(mFields.mDrawState);
+        target.mTimeOfDeath = MWWorld::TimeStamp(mFields.mTimeOfDeath);
+        target.mMagicEffects.installPreparedState(mMagicEffects);
+        target.mSummonedCreatures.swap(mFields.mSummonedCreatures);
+        if (mFields.mHasAiSettings)
+            for (std::size_t i = 0; i < mFields.mAiSettings.size(); ++i)
+                target.mAiSettings[i].readState(mFields.mAiSettings[i]);
     }
 
     void CreatureStats::setLastRestockTime(MWWorld::TimeStamp tradeTime)

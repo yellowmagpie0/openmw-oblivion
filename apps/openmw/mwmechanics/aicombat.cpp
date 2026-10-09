@@ -48,7 +48,8 @@ namespace MWMechanics
         mTargetActor = actor.getCellRef().getRefNum();
     }
 
-    AiCombat::AiCombat(const ESM::AiSequence::AiCombat* combat)
+    AiCombat::AiCombat(const ESM::AiSequence::AiCombat* combat, bool deferredRestore)
+        : TypedAiPackage<AiCombat>(makeDefaultOptions().withDeferredRestore(deferredRestore))
     {
         mTargetActor = combat->mTargetActor;
     }

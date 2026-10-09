@@ -154,6 +154,8 @@ namespace MWBase
         };
         virtual std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
             const ESM4::RuntimeState& state, std::unique_ptr<MWWorld::ESMStore> definitions = {}) = 0;
+        virtual std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSharedDefinitions(
+            std::unique_ptr<MWWorld::ESMStore> definitions) = 0;
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }

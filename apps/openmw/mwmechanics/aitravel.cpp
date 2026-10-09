@@ -33,8 +33,8 @@ namespace
 
 namespace MWMechanics
 {
-    AiTravel::AiTravel(float x, float y, float z, bool repeat, AiTravel*)
-        : TypedAiPackage<AiTravel>(repeat)
+    AiTravel::AiTravel(float x, float y, float z, bool repeat, AiTravel*, bool deferredRestore)
+        : TypedAiPackage<AiTravel>(makeDefaultOptions().withRepeat(repeat).withDeferredRestore(deferredRestore))
         , mX(x)
         , mY(y)
         , mZ(z)
@@ -43,8 +43,8 @@ namespace MWMechanics
     {
     }
 
-    AiTravel::AiTravel(float x, float y, float z, AiInternalTravel* derived)
-        : TypedAiPackage<AiTravel>(derived)
+    AiTravel::AiTravel(float x, float y, float z, AiInternalTravel* derived, bool deferredRestore)
+        : TypedAiPackage<AiTravel>(derived, derived->makeDefaultOptions().withDeferredRestore(deferredRestore))
         , mX(x)
         , mY(y)
         , mZ(z)
@@ -53,13 +53,13 @@ namespace MWMechanics
     {
     }
 
-    AiTravel::AiTravel(float x, float y, float z, bool repeat)
-        : AiTravel(x, y, z, repeat, this)
+    AiTravel::AiTravel(float x, float y, float z, bool repeat, bool deferredRestore)
+        : AiTravel(x, y, z, repeat, this, deferredRestore)
     {
     }
 
-    AiTravel::AiTravel(const ESM::AiSequence::AiTravel* travel)
-        : TypedAiPackage<AiTravel>(travel->mRepeat)
+    AiTravel::AiTravel(const ESM::AiSequence::AiTravel* travel, bool deferredRestore)
+        : TypedAiPackage<AiTravel>(makeDefaultOptions().withRepeat(travel->mRepeat).withDeferredRestore(deferredRestore))
         , mX(travel->mData.mX)
         , mY(travel->mData.mY)
         , mZ(travel->mData.mZ)
@@ -155,8 +155,8 @@ namespace MWMechanics
     {
     }
 
-    AiInternalTravel::AiInternalTravel(const ESM::AiSequence::AiTravel* travel)
-        : AiTravel(travel->mData.mX, travel->mData.mY, travel->mData.mZ, this)
+    AiInternalTravel::AiInternalTravel(const ESM::AiSequence::AiTravel* travel, bool deferredRestore)
+        : AiTravel(travel->mData.mX, travel->mData.mY, travel->mData.mZ, this, deferredRestore)
     {
     }
 

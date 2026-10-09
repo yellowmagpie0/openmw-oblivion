@@ -97,6 +97,7 @@ namespace ESM
 
 namespace ESM4
 {
+    struct RuntimeState;
     class Reader;
     struct Activator;
     struct ActorCharacter;
@@ -233,7 +234,14 @@ namespace MWWorld
         const std::shared_ptr<const char> mDynamicRestoreIdentity = std::make_shared<const char>();
         std::uint64_t mDynamicClearGeneration = 0;
 
-        mutable std::unordered_map<ESM::RefId, std::weak_ptr<MWMechanics::SpellList>> mSpellListCache;
+        struct SpellListCacheEntry
+        {
+            std::weak_ptr<MWMechanics::SpellList> mList;
+            bool mFirstBindingPending = false;
+        };
+        using SpellListCache = std::unordered_map<ESM::RefId, SpellListCacheEntry>;
+        mutable SpellListCache mSpellListCache;
+        std::vector<std::shared_ptr<MWMechanics::SpellList>> mPreparedSpellListPins;
 
         /// Validate entries in store after setup
         void validate();
@@ -314,6 +322,8 @@ namespace MWWorld
         // the next clearDynamic(); static definitions and incoming addresses
         // remain stable. No registry callbacks or record parsing at commit.
         PreparedDynamicRecords prepareDynamicRecords(std::unique_ptr<ESMStore> incoming);
+        ESM::NPC prepareRestoredPlayerMetadata(const ESM4::RuntimeState& state,
+            const ESMStore& incoming, const std::vector<std::string>& contentFiles) const;
         static bool isSavedDynamicRecord(std::uint32_t type);
 
         ESM::RefId generateId() { return ESM::RefId::generated(mDynamicCount++); }
@@ -448,6 +458,27 @@ namespace MWWorld
         /// Actors with the same ID share spells, abilities, etc.
         /// @return The shared spell list to use for this actor and whether or not it has already been initialized.
         std::pair<std::shared_ptr<MWMechanics::SpellList>, bool> getSpellList(const ESM::RefId& id) const;
+
+        using SpellListRequests = std::map<ESM::RefId, std::pair<int, std::size_t>>;
+        class PreparedSpellLists
+        {
+            friend class ESMStore;
+            std::weak_ptr<const char> mIdentity;
+            std::uint64_t mExpectedClear = 0;
+            SpellListCache mCache;
+            std::vector<std::shared_ptr<MWMechanics::SpellList>> mPins;
+            bool mConsumed = false;
+            PreparedSpellLists() = default;
+
+        public:
+            PreparedSpellLists(const PreparedSpellLists&) = delete;
+            PreparedSpellLists& operator=(const PreparedSpellLists&) = delete;
+            PreparedSpellLists(PreparedSpellLists&&) = default;
+            PreparedSpellLists& operator=(PreparedSpellLists&&) = default;
+            bool install(ESMStore& store);
+        };
+        PreparedSpellLists prepareSpellLists(const SpellListRequests& requests) const;
+        void finishSpellListRestore();
     };
     template <>
     const ESM::Cell* ESMStore::insert<ESM::Cell>(const ESM::Cell& cell);

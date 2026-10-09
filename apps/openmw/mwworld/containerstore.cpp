@@ -95,12 +95,14 @@ MWWorld::ResolutionListener::~ResolutionListener()
 
 template <typename T>
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::getState(
-    CellRefList<T>& collection, const ESM::ObjectState& state)
+    CellRefList<T>& collection, const ESM::ObjectState& state,
+    const ESMStore& content, const ESMStore* incoming)
 {
     if (!LiveCellRef<T>::checkState(state))
         return ContainerStoreIterator(this); // not valid anymore with current content files -> skip
 
-    const T* record = MWBase::Environment::get().getESMStore()->get<T>().search(state.mRef.mRefID);
+    const T* record = incoming ? content.searchForRestore<T>(state.mRef.mRefID, *incoming)
+                               : content.get<T>().search(state.mRef.mRefID);
 
     if (!record)
         return ContainerStoreIterator(this);
@@ -109,7 +111,10 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::getState(
     ref.load(state);
     collection.mList.push_back(std::move(ref));
     auto it = ContainerStoreIterator(this, --collection.mList.end());
-    MWBase::Environment::get().getWorldModel()->registerPtr(*it);
+    if (incoming)
+        mPreparedReadItems[mPreparedReadIndex] = *it;
+    else
+        MWBase::Environment::get().getWorldModel()->registerPtr(*it);
 
     return it;
 }
@@ -1282,6 +1287,66 @@ void MWWorld::ContainerStore::writeState(ESM::InventoryState& state) const
 
 void MWWorld::ContainerStore::readState(const ESM::InventoryState& inventory)
 {
+    // Detached native class construction also uses this empty path before
+    // Environment has a World. Match the old reader's lookup-free empty loop.
+    if (inventory.mItems.empty())
+    {
+        clear();
+        mModified = true;
+        mResolved = true;
+        return;
+    }
+    readStateImpl(inventory, *MWBase::Environment::get().getESMStore(), nullptr,
+        MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion);
+}
+
+std::unique_ptr<MWWorld::ContainerStore> MWWorld::ContainerStore::prepareReadState(
+    const ESM::InventoryState& state, const ESMStore& content, const ESMStore& incoming, bool equipment)
+{
+    std::unique_ptr<ContainerStore> result = equipment
+        ? std::make_unique<InventoryStore>() : std::make_unique<ContainerStore>();
+    result->mPreparedReadItems.resize(state.mItems.size());
+    result->mDetachedRestoreRead = true;
+    result->readStateImpl(state, content, &incoming, true);
+    return result; // Remains a detached, unconsumed plan until installation.
+}
+
+void MWWorld::ContainerStore::installPreparedContents(ContainerStore& prepared, const ESM::InventoryState& restored)
+{
+    if (!prepared.mDetachedRestoreRead || prepared.mPreparedReadItems.size() != restored.mItems.size())
+        throw std::logic_error("Prepared shared inventory no longer matches its admitted item count");
+    auto* equipment = dynamic_cast<InventoryStore*>(this);
+    auto* incoming = dynamic_cast<InventoryStore*>(&prepared);
+    if (bool(equipment) != bool(incoming))
+        throw std::logic_error("Prepared shared inventory has a different store kind");
+    // Legacy active-spell conversion may assign save-file RefNums between
+    // admission and class restoration. Keep those exact identities on the
+    // already constructed items, without reading their payloads again.
+    for (std::size_t i = 0; i < restored.mItems.size(); ++i)
+        if (!prepared.mPreparedReadItems[i].isEmpty())
+            prepared.mPreparedReadItems[i].getCellRef().setRefNum(restored.mItems[i].mRef.mRefNum);
+    prepared.mDetachedRestoreRead = false; // Empty and failed publications cannot replay.
+    if (equipment)
+        equipment->swapPreparedContents(*incoming);
+    else
+        swapPreparedContents(prepared);
+    auto& model = *MWBase::Environment::get().getWorldModel();
+    for (const auto& item : prepared.mPreparedReadItems)
+        if (!item.isEmpty())
+        {
+            Ptr bound(item.mRef);
+            bound.setContainerStore(this);
+            model.registerPtr(bound);
+        }
+    for (const auto& item : *this)
+        if (!item.mRef->mWorldModel)
+            model.registerPtr(item); // Newly split equipment stacks.
+    prepared.mPreparedReadItems.clear();
+}
+
+void MWWorld::ContainerStore::readStateImpl(const ESM::InventoryState& inventory,
+    const ESMStore& store, const ESMStore* incoming, bool oblivion)
+{
     clear();
     mModified = true;
     mResolved = true;
@@ -1289,14 +1354,29 @@ void MWWorld::ContainerStore::readState(const ESM::InventoryState& inventory)
     size_t index = 0;
     for (const ESM::ObjectState& state : inventory.mItems)
     {
-        const ESMStore& store = *MWBase::Environment::get().getESMStore();
         ESM::ObjectState projectedState;
         const ESM::ObjectState* itemState = &state;
-        int type = store.find(state.mRef.mRefID);
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        int type = incoming ? store.findForRestore(state.mRef.mRefID, *incoming) : store.find(state.mRef.mRefID);
+        if (oblivion)
         {
             const ESM::RefId sharedId = OblivionProfileServices::sharedItemId(store, state.mRef.mRefID);
-            const int sharedType = OblivionProfileServices::sharedItemType(store, sharedId);
+            // Match live projected-facade precedence, excluding outgoing
+            // overrides during preparation (including lockpick/repair facades).
+            const auto has = [&]<class T>() {
+                return incoming ? store.searchForRestore<T>(sharedId, *incoming) != nullptr
+                                : store.get<T>().search(sharedId) != nullptr;
+            };
+            const int sharedType = has.template operator()<ESM::Potion>() ? ESM::REC_ALCH
+                : has.template operator()<ESM::Apparatus>() ? ESM::REC_APPA
+                : has.template operator()<ESM::Armor>() ? ESM::REC_ARMO
+                : has.template operator()<ESM::Book>() ? ESM::REC_BOOK
+                : has.template operator()<ESM::Clothing>() ? ESM::REC_CLOT
+                : has.template operator()<ESM::Ingredient>() ? ESM::REC_INGR
+                : has.template operator()<ESM::Lockpick>() ? ESM::REC_LOCK
+                : has.template operator()<ESM::Repair>() ? ESM::REC_REPA
+                : has.template operator()<ESM::Light>() ? ESM::REC_LIGH
+                : has.template operator()<ESM::Weapon>() ? ESM::REC_WEAP
+                : has.template operator()<ESM::Miscellaneous>() ? ESM::REC_MISC : 0;
             if (sharedType != 0)
             {
                 projectedState = state;
@@ -1307,44 +1387,45 @@ void MWWorld::ContainerStore::readState(const ESM::InventoryState& inventory)
         }
 
         size_t thisIndex = index++;
+        mPreparedReadIndex = thisIndex;
 
         switch (type)
         {
             case ESM::REC_ALCH:
-                getState(mLists.mPotions, *itemState);
+                getState(mLists.mPotions, *itemState, store, incoming);
                 break;
             case ESM::REC_APPA:
-                getState(mLists.mAppas, *itemState);
+                getState(mLists.mAppas, *itemState, store, incoming);
                 break;
             case ESM::REC_ARMO:
-                readEquipmentState(getState(mLists.mArmors, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mArmors, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case ESM::REC_BOOK:
-                readEquipmentState(getState(mLists.mBooks, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mBooks, *itemState, store, incoming), thisIndex, inventory);
                 break; // not equipable as such, but for selectedEnchantItem
             case ESM::REC_CLOT:
-                readEquipmentState(getState(mLists.mClothes, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mClothes, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case ESM::REC_INGR:
-                getState(mLists.mIngreds, *itemState);
+                getState(mLists.mIngreds, *itemState, store, incoming);
                 break;
             case ESM::REC_LOCK:
-                readEquipmentState(getState(mLists.mLockpicks, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mLockpicks, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case ESM::REC_MISC:
-                getState(mLists.mMiscItems, *itemState);
+                getState(mLists.mMiscItems, *itemState, store, incoming);
                 break;
             case ESM::REC_PROB:
-                readEquipmentState(getState(mLists.mProbes, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mProbes, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case ESM::REC_REPA:
-                getState(mLists.mRepairs, *itemState);
+                getState(mLists.mRepairs, *itemState, store, incoming);
                 break;
             case ESM::REC_WEAP:
-                readEquipmentState(getState(mLists.mWeapons, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mWeapons, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case ESM::REC_LIGH:
-                readEquipmentState(getState(mLists.mLights, *itemState), thisIndex, inventory);
+                readEquipmentState(getState(mLists.mLights, *itemState, store, incoming), thisIndex, inventory);
                 break;
             case 0:
                 Log(Debug::Warning) << "Dropping inventory reference to '" << state.mRef.mRefID

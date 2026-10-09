@@ -6,6 +6,8 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/loadskil.hpp>
 #include <map>
+#include <memory>
+#include <components/esm3/npcstats.hpp>
 #include <optional>
 #include <set>
 #include <string>
@@ -17,13 +19,17 @@ namespace ESM
     struct NpcStats;
 }
 
+namespace MWWorld { class ESMStore; }
+
 namespace MWMechanics
 {
+    class PreparedNpcStats;
     /// \brief Additional stats for NPCs
 
     class NpcStats : public CreatureStats
     {
         friend class OblivionActorProjection;
+        friend class PreparedNpcStats;
         int mDisposition;
         int mCrimeDispositionModifier;
         std::map<ESM::RefId, SkillValue> mSkills; // SkillValue.mProgress used by the player only
@@ -57,6 +63,10 @@ namespace MWMechanics
 
     public:
         NpcStats();
+        explicit NpcStats(const MWWorld::ESMStore* initializationStore);
+
+        static std::unique_ptr<PreparedNpcStats> prepareReadState(const ESM::NpcStats& state,
+            const MWWorld::ESMStore& content, const MWWorld::ESMStore* incoming = nullptr);
 
         int getBaseDisposition() const;
         void setBaseDisposition(int disposition);
@@ -141,11 +151,34 @@ namespace MWMechanics
         void writeState(ESM::CreatureStats& state) const;
         void writeState(ESM::NpcStats& state) const;
 
-        void readState(const ESM::CreatureStats& state);
+        void readState(const ESM::CreatureStats& state, PreparedCreatureStats* prepared = nullptr);
         void readState(const ESM::NpcStats& state);
 
         const std::map<ESM::RefId, SkillValue>& getSkills() const { return mSkills; }
     };
+    // Owns only the additional NPC fields; publication preserves CreatureStats
+    // and fields omitted by old saves, matching ordinary readState overlays.
+    class PreparedNpcStats
+    {
+        friend class NpcStats;
+        ESM::NpcStats mState;
+        std::map<ESM::RefId, SkillValue> mSkills;
+        std::map<ESM::RefId, int> mFactionRank;
+        std::set<ESM::RefId> mExpelled;
+        std::map<ESM::RefId, int> mFactionReputation;
+        std::set<ESM::RefId> mUsedIds;
+        std::vector<int> mSpecIncreases;
+        bool mConsumed = false;
+
+    public:
+        PreparedNpcStats(const PreparedNpcStats&) = delete;
+        PreparedNpcStats& operator=(const PreparedNpcStats&) = delete;
+        void install(NpcStats& target);
+
+    private:
+        PreparedNpcStats() = default;
+    };
+
 }
 
 #endif

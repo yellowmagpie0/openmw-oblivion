@@ -5,6 +5,7 @@
 
 #include <format>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 
 #include <components/misc/constants.hpp>
@@ -40,6 +41,7 @@
 #include "../mwmechanics/combat.hpp"
 #include "../mwmechanics/creaturecustomdataresetter.hpp"
 #include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/creaturestatsrestore.hpp"
 #include "../mwmechanics/difficultyscaling.hpp"
 #include "../mwmechanics/disease.hpp"
 #include "../mwmechanics/inventory.hpp"
@@ -108,21 +110,64 @@ namespace
         return i + 1.f;
     }
 
-    void autoCalculateAttributes(const ESM::NPC* npc, MWMechanics::CreatureStats& creatureStats)
+    struct NpcFactionSettings
+    {
+        std::optional<int> mFaction;
+        std::optional<int> mLevel;
+    };
+
+    NpcFactionSettings& npcFactionSettings()
+    {
+        static NpcFactionSettings settings;
+        return settings;
+    }
+
+    struct PreparedNpcFactionReputation
+    {
+        int mFactionModifier;
+        int mLevelModifier;
+        int mRank;
+        int mLevel;
+
+        void install(MWMechanics::NpcStats& stats) const
+        {
+            auto& settings = npcFactionSettings();
+            // Preserve already initialized ordinary caches. Otherwise prime
+            // them only at the original restoration phase, without a lookup.
+            if (!settings.mFaction)
+                settings.mFaction = mFactionModifier;
+            if (!settings.mLevel)
+                settings.mLevel = mLevelModifier;
+            stats.setReputation(*settings.mFaction * (mRank + 1) + *settings.mLevel * (mLevel - 1));
+        }
+    };
+
+    void autoCalculateAttributes(const ESM::NPC* npc, MWMechanics::CreatureStats& creatureStats,
+        const ESM::Race* preparedRace = nullptr, const ESM::Class* preparedClass = nullptr,
+        const MWWorld::ESMStore* preparedStore = nullptr)
     {
         // race bonus
-        const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npc->mRace);
+        const ESM::Race* race = preparedRace ? preparedRace
+            : MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npc->mRace);
 
         bool male = (npc->mFlags & ESM::NPC::Female) == 0;
 
-        const auto& attributes = MWBase::Environment::get().getESMStore()->get<ESM::Attribute>();
+        const auto& attributes = preparedStore ? preparedStore->get<ESM::Attribute>()
+            : MWBase::Environment::get().getESMStore()->get<ESM::Attribute>();
+        const auto& skillStore = preparedStore ? preparedStore->get<ESM::Skill>()
+            : MWBase::Environment::get().getESMStore()->get<ESM::Skill>();
         int level = creatureStats.getLevel();
         for (const ESM::Attribute& attribute : attributes)
+        {
+            if (preparedStore && attributes.searchStatic(attribute.mId) != &attribute)
+                continue;
             creatureStats.setAttribute(
                 attribute.mId, static_cast<float>(race->mData.getAttribute(attribute.mId, male)));
+        }
 
         // class bonus
-        const ESM::Class* npcClass = MWBase::Environment::get().getESMStore()->get<ESM::Class>().find(npc->mClass);
+        const ESM::Class* npcClass = preparedClass ? preparedClass
+            : MWBase::Environment::get().getESMStore()->get<ESM::Class>().find(npc->mClass);
 
         for (const ESM::RefId& id : npcClass->mData.mAttribute)
         {
@@ -133,10 +178,14 @@ namespace
         // skill bonus
         for (const ESM::Attribute& attribute : attributes)
         {
+            if (preparedStore && attributes.searchStatic(attribute.mId) != &attribute)
+                continue;
             float modifierSum = 0;
 
-            for (const ESM::Skill& skill : MWBase::Environment::get().getESMStore()->get<ESM::Skill>())
+            for (const ESM::Skill& skill : skillStore)
             {
+                if (preparedStore && skillStore.searchStatic(skill.mId) != &skill)
+                    continue;
                 if (skill.mData.mAttribute != attribute.mId)
                     continue;
 
@@ -190,13 +239,17 @@ namespace
      * and by adding class, race, specialization bonus.
      */
     void autoCalculateSkills(
-        const ESM::NPC* npc, MWMechanics::NpcStats& npcStats, const MWWorld::Ptr& ptr, bool spellsInitialised)
+        const ESM::NPC* npc, MWMechanics::NpcStats& npcStats, bool spellsInitialised,
+        const ESM::Race* preparedRace = nullptr, const ESM::Class* preparedClass = nullptr,
+        const MWWorld::ESMStore* preparedStore = nullptr)
     {
-        const ESM::Class* npcClass = MWBase::Environment::get().getESMStore()->get<ESM::Class>().find(npc->mClass);
+        const ESM::Class* npcClass = preparedClass ? preparedClass
+            : MWBase::Environment::get().getESMStore()->get<ESM::Class>().find(npc->mClass);
 
         unsigned int level = npcStats.getLevel();
 
-        const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npc->mRace);
+        const ESM::Race* race = preparedRace ? preparedRace
+            : MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npc->mRace);
 
         for (int i = 0; i < 2; ++i)
         {
@@ -212,8 +265,12 @@ namespace
             }
         }
 
-        for (const ESM::Skill& skill : MWBase::Environment::get().getESMStore()->get<ESM::Skill>())
+        const auto& skillStore = preparedStore ? preparedStore->get<ESM::Skill>()
+            : MWBase::Environment::get().getESMStore()->get<ESM::Skill>();
+        for (const ESM::Skill& skill : skillStore)
         {
+            if (preparedStore && skillStore.searchStatic(skill.mId) != &skill)
+                continue;
             float majorMultiplier = 0.1f;
             float specMultiplier = 0.0f;
 
@@ -270,10 +327,151 @@ namespace MWClass
         MWMechanics::NpcStats mNpcStats;
         MWMechanics::Movement mMovement;
         MWWorld::InventoryStore mInventoryStore;
+        bool mBaseStatsPrepared = false;
+        bool mDeferredBaseDeathTime = false;
+        std::optional<PreparedNpcFactionReputation> mPreparedFactionReputation;
+        std::optional<MWMechanics::Spells::PreparedInstance> mPreparedBaseSpells;
+        std::optional<MWMechanics::Spells::PreparedInstance> mPreparedRaceSpells;
+        std::optional<MWMechanics::PreparedNpcSpells> mPreparedAutoSpells;
+
+        explicit NpcCustomData(const MWWorld::ESMStore* initializationStore)
+            : mNpcStats(initializationStore)
+        {
+        }
 
         NpcCustomData& asNpcCustomData() override { return *this; }
         const NpcCustomData& asNpcCustomData() const override { return *this; }
     };
+
+    std::unique_ptr<MWWorld::CustomData> Npc::prepareSavedCustomData(
+        const MWWorld::ESMStore* initializationStore)
+    {
+        return std::make_unique<NpcCustomData>(initializationStore);
+    }
+
+    namespace
+    {
+        void initializeNpcBaseStats(const ESM::NPC* base, MWMechanics::NpcStats& stats,
+            bool spellsInitialised, const ESM::Race* race = nullptr, const ESM::Class* npcClass = nullptr,
+            const MWWorld::ESMStore* preparedStore = nullptr)
+        {
+            if (base->mNpdtType != ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS)
+            {
+                for (const auto& [skill, value] : base->mNpdt.mSkills)
+                    stats.getSkill(skill).setBase(value);
+
+                for (const auto& [attribute, value] : base->mNpdt.mAttributes)
+                    stats.setAttribute(attribute, value);
+
+                stats.setHealth(base->mNpdt.mHealth);
+                stats.setMagicka(base->mNpdt.mMana);
+                stats.setFatigue(base->mNpdt.mFatigue);
+
+                stats.setLevel(base->mNpdt.mLevel);
+                stats.setBaseDisposition(base->mNpdt.mDisposition);
+                stats.setReputation(base->mNpdt.mReputation);
+            }
+            else
+            {
+                for (int i = 0; i < 3; ++i)
+                    stats.setDynamic(i, 10);
+
+                stats.setLevel(base->mNpdt.mLevel);
+                stats.setBaseDisposition(base->mNpdt.mDisposition);
+                stats.setReputation(base->mNpdt.mReputation);
+
+                autoCalculateAttributes(base, stats, race, npcClass, preparedStore);
+                autoCalculateSkills(base, stats, spellsInitialised, race, npcClass, preparedStore);
+            }
+        }
+
+        void initializeNpcBaseAiSettings(const ESM::NPC& base, MWMechanics::NpcStats& stats)
+        {
+            stats.setAiSetting(MWMechanics::AiSetting::Hello, base.mAiData.mHello);
+            stats.setAiSetting(MWMechanics::AiSetting::Fight, base.mAiData.mFight);
+            stats.setAiSetting(MWMechanics::AiSetting::Flee, base.mAiData.mFlee);
+            stats.setAiSetting(MWMechanics::AiSetting::Alarm, base.mAiData.mAlarm);
+        }
+
+        void initializeNpcFactionReputation(const ESM::NPC* base, MWMechanics::NpcStats& stats)
+        {
+            if (base->mFaction.empty())
+                return;
+            auto& settings = npcFactionSettings();
+            // Keep the ordinary first-use lookup order and partial cache state
+            // when the second setting lookup fails.
+            const auto& store = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
+            if (!settings.mFaction)
+                settings.mFaction = store.find("iAutoRepFacMod")->mValue.getInteger();
+            if (!settings.mLevel)
+                settings.mLevel = store.find("iAutoRepLevMod")->mValue.getInteger();
+            stats.setReputation(*settings.mFaction * (base->getFactionRank() + 1)
+                + *settings.mLevel * (stats.getLevel() - 1));
+        }
+
+        std::optional<PreparedNpcFactionReputation> prepareNpcFactionReputation(
+            const ESM::NPC& base, MWMechanics::NpcStats& stats, const MWWorld::ESMStore& store)
+        {
+            if (base.mFaction.empty())
+                return {};
+            const auto& settings = npcFactionSettings();
+            const auto resolve = [&](std::string_view name) {
+                const auto* setting = store.get<ESM::GameSetting>().searchStatic(ESM::RefId::stringRefId(name));
+                if (!setting)
+                    throw std::runtime_error("Prepared NPC faction setting is unavailable");
+                return setting->mValue.getInteger();
+            };
+            PreparedNpcFactionReputation result{
+                settings.mFaction ? *settings.mFaction : resolve("iAutoRepFacMod"),
+                settings.mLevel ? *settings.mLevel : resolve("iAutoRepLevMod"),
+                base.getFactionRank(), stats.getLevel()};
+            stats.setReputation(result.mFactionModifier * (result.mRank + 1)
+                + result.mLevelModifier * (result.mLevel - 1));
+            return result;
+        }
+    }
+
+    std::unique_ptr<MWWorld::CustomData> Npc::prepareLegacyCustomData(const ESM::NPC& base,
+        const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, bool isPlayer, bool spellsInitialized)
+    {
+        auto result = prepareSavedCustomData(&store);
+        auto& data = result->asNpcCustomData();
+        const ESM::Race* race = store.searchForRestore<ESM::Race>(base.mRace, incoming);
+        if (!race)
+            throw std::runtime_error("Prepared NPC race is unavailable");
+        data.mPreparedBaseSpells = MWMechanics::Spells::prepareInstance(base.mSpells.mList, store, incoming);
+        // Autocalculated spells are drawn from these two stores. This upper
+        // bound also covers base IDs without consulting outgoing definitions.
+        const auto priorCapacity = store.get<ESM::Spell>().getSize()
+            + incoming.get<ESM::Spell>().getSize() + base.mSpells.mList.size();
+        data.mPreparedRaceSpells = MWMechanics::Spells::prepareInstance(
+            race->mPowers.mList, store, incoming, priorCapacity);
+        const ESM::Class* npcClass = nullptr;
+        if (base.mNpdtType == ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS)
+        {
+            npcClass = store.searchForRestore<ESM::Class>(base.mClass, incoming);
+            if (!npcClass)
+                throw std::runtime_error("Prepared NPC class is unavailable");
+        }
+        data.mNpcStats.mBaseInitializationStore = &store;
+        data.mNpcStats.mBaseInitializationIsPlayer = isPlayer;
+        initializeNpcBaseStats(&base, data.mNpcStats, true, race, npcClass, &store);
+        if (base.mNpdtType == ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS && !spellsInitialized)
+            data.mPreparedAutoSpells = MWMechanics::prepareNpcSpells(data.mNpcStats.getSkills(),
+                data.mNpcStats.getAttributes(), race, store, incoming, base.mSpells.mList.size());
+        data.mPreparedFactionReputation = prepareNpcFactionReputation(base, data.mNpcStats, store);
+        initializeNpcBaseAiSettings(base, data.mNpcStats);
+        data.mNpcStats.setGoldPool(base.mNpdt.mGold);
+        if (data.mNpcStats.isDead())
+            data.mNpcStats.setDeathAnimationFinished((base.mRecordFlags & ESM::FLAG_Persistent) != 0);
+        if (base.mNpdtType == ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS)
+            data.mNpcStats.recalculateMagicka();
+        data.mNpcStats.mBaseInitializationStore = nullptr;
+        data.mNpcStats.mBaseInitializationIsPlayer = false;
+        data.mBaseStatsPrepared = true;
+        data.mDeferredBaseDeathTime = data.mNpcStats.isDead();
+        return result;
+    }
 
     const Npc::GMST& Npc::getGmst()
     {
@@ -309,96 +507,86 @@ namespace MWClass
         return staticGmst;
     }
 
-    void Npc::ensureCustomData(const MWWorld::Ptr& ptr) const
+    void Npc::ensureCustomData(const MWWorld::Ptr& ptr, MWMechanics::PreparedCreatureStats* prepared,
+        std::unique_ptr<MWWorld::CustomData> preparedData) const
     {
         if (!ptr.getRefData().getCustomData())
         {
             MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
             bool recalculate = false;
-            auto tempData = std::make_unique<NpcCustomData>();
-            NpcCustomData* data = tempData.get();
+            auto tempData = preparedData ? std::move(preparedData) : prepareSavedCustomData();
+            NpcCustomData* data = &tempData->asNpcCustomData();
             MWMechanics::CreatureCustomDataResetter resetter{ ptr };
             ptr.getRefData().setCustomData(std::move(tempData));
 
             MWWorld::LiveCellRef<ESM::NPC>* ref = ptr.get<ESM::NPC>();
 
-            bool spellsInitialised = data->mNpcStats.getSpells().setSpells(ref->mBase->mId);
+            bool spellsInitialised = data->mPreparedBaseSpells
+                ? data->mPreparedBaseSpells->bind(data->mNpcStats.getSpells(), ref->mBase->mId)
+                : data->mNpcStats.getSpells().setSpells(ref->mBase->mId);
 
-            // creature stats
-            int gold = 0;
-            if (ref->mBase->mNpdtType != ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS)
+            const bool basePrepared = data->mBaseStatsPrepared;
+            data->mBaseStatsPrepared = false;
+            if (basePrepared)
             {
-                gold = ref->mBase->mNpdt.mGold;
-
-                for (const auto& [skill, value] : ref->mBase->mNpdt.mSkills)
-                    data->mNpcStats.getSkill(skill).setBase(value);
-
-                for (const auto& [attribute, value] : ref->mBase->mNpdt.mAttributes)
-                    data->mNpcStats.setAttribute(attribute, value);
-
-                data->mNpcStats.setHealth(ref->mBase->mNpdt.mHealth);
-                data->mNpcStats.setMagicka(ref->mBase->mNpdt.mMana);
-                data->mNpcStats.setFatigue(ref->mBase->mNpdt.mFatigue);
-
-                data->mNpcStats.setLevel(ref->mBase->mNpdt.mLevel);
-                data->mNpcStats.setBaseDisposition(ref->mBase->mNpdt.mDisposition);
-                data->mNpcStats.setReputation(ref->mBase->mNpdt.mReputation);
+                if (data->mDeferredBaseDeathTime)
+                    data->mNpcStats.mTimeOfDeath = MWBase::Environment::get().getWorld()->getTimeStamp();
+                data->mDeferredBaseDeathTime = false;
+                if (ref->mBase->mNpdtType == ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS && !spellsInitialised)
+                {
+                    if (!data->mPreparedAutoSpells)
+                        throw std::logic_error("Prepared NPC spell binding order changed");
+                    data->mPreparedAutoSpells->install(data->mNpcStats.getSpells());
+                }
             }
             else
             {
-                gold = ref->mBase->mNpdt.mGold;
-
-                for (int i = 0; i < 3; ++i)
-                    data->mNpcStats.setDynamic(i, 10);
-
-                data->mNpcStats.setLevel(ref->mBase->mNpdt.mLevel);
-                data->mNpcStats.setBaseDisposition(ref->mBase->mNpdt.mDisposition);
-                data->mNpcStats.setReputation(ref->mBase->mNpdt.mReputation);
-
-                autoCalculateAttributes(ref->mBase, data->mNpcStats);
-                autoCalculateSkills(ref->mBase, data->mNpcStats, ptr, spellsInitialised);
-
-                recalculate = true;
+                initializeNpcBaseStats(ref->mBase, data->mNpcStats, spellsInitialised);
+                recalculate = ref->mBase->mNpdtType == ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS;
             }
 
+            data->mPreparedAutoSpells.reset();
+
             // Persistent actors with 0 health do not play death animation
-            if (data->mNpcStats.isDead())
+            if (!basePrepared && data->mNpcStats.isDead())
                 data->mNpcStats.setDeathAnimationFinished(isPersistent(ptr));
 
             // race powers
-            const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(ref->mBase->mRace);
-            data->mNpcStats.getSpells().addAllToInstance(race->mPowers.mList);
-
-            if (!ref->mBase->mFaction.empty())
+            if (data->mPreparedRaceSpells)
+                data->mPreparedRaceSpells->install(data->mNpcStats.getSpells());
+            else
             {
-                static const int iAutoRepFacMod = MWBase::Environment::get()
-                                                      .getESMStore()
-                                                      ->get<ESM::GameSetting>()
-                                                      .find("iAutoRepFacMod")
-                                                      ->mValue.getInteger();
-                static const int iAutoRepLevMod = MWBase::Environment::get()
-                                                      .getESMStore()
-                                                      ->get<ESM::GameSetting>()
-                                                      .find("iAutoRepLevMod")
-                                                      ->mValue.getInteger();
-                int rank = ref->mBase->getFactionRank();
+                const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(ref->mBase->mRace);
+                data->mNpcStats.getSpells().addAllToInstance(race->mPowers.mList);
+            }
+            data->mPreparedRaceSpells.reset();
 
-                data->mNpcStats.setReputation(
-                    iAutoRepFacMod * (rank + 1) + iAutoRepLevMod * (data->mNpcStats.getLevel() - 1));
+            if (!basePrepared)
+                initializeNpcFactionReputation(ref->mBase, data->mNpcStats);
+            else if (data->mPreparedFactionReputation)
+            {
+                data->mPreparedFactionReputation->install(data->mNpcStats);
+                data->mPreparedFactionReputation.reset();
             }
 
-            data->mNpcStats.getAiSequence().fill(ref->mBase->mAiPackage);
+            if (!prepared || !prepared->installBaseAiSequence(data->mNpcStats.getAiSequence()))
+                data->mNpcStats.getAiSequence().fill(ref->mBase->mAiPackage);
 
-            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Hello, ref->mBase->mAiData.mHello);
-            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Fight, ref->mBase->mAiData.mFight);
-            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Flee, ref->mBase->mAiData.mFlee);
-            data->mNpcStats.setAiSetting(MWMechanics::AiSetting::Alarm, ref->mBase->mAiData.mAlarm);
+            if (!basePrepared)
+                initializeNpcBaseAiSettings(*ref->mBase, data->mNpcStats);
 
             // spells
             if (!spellsInitialised)
-                data->mNpcStats.getSpells().addAllToInstance(ref->mBase->mSpells.mList);
+            {
+                if (data->mPreparedBaseSpells)
+                    data->mPreparedBaseSpells->warnMissing(); // Already bound; preserve duplicate warnings.
+                else
+                    data->mNpcStats.getSpells().addAllToInstance(ref->mBase->mSpells.mList);
+            }
+            data->mPreparedBaseSpells.reset();
 
-            data->mNpcStats.setGoldPool(gold);
+            if (!basePrepared)
+                data->mNpcStats.setGoldPool(ref->mBase->mNpdt.mGold);
 
             // store
             resetter.mPtr = {};
@@ -1247,29 +1435,37 @@ namespace MWClass
             return;
 
         const ESM::NpcState& npcState = state.asNpcState();
+        auto core = MWBase::Environment::get().getWorldModel()->takePreparedCreatureState(state);
 
         if (!ptr.getRefData().getCustomData())
         {
             if (npcState.mCreatureStats.mMissingACDT)
-                ensureCustomData(ptr);
+                ensureCustomData(ptr, core.get(),
+                    MWBase::Environment::get().getWorldModel()->takePreparedActorCustomData(state));
             else
             {
                 // Create a CustomData, but don't fill it from ESM records (not needed)
-                auto data = std::make_unique<NpcCustomData>();
+                auto data = MWBase::Environment::get().getWorldModel()->takePreparedActorCustomData(state);
+                if (!data)
+                    data = prepareSavedCustomData();
                 MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
-                data->mInventoryStore.setPtr(ptr);
+                data->asNpcCustomData().mInventoryStore.setPtr(ptr);
                 ptr.getRefData().setCustomData(std::move(data));
             }
         }
 
         NpcCustomData& customData = ptr.getRefData().getCustomData()->asNpcCustomData();
 
-        customData.mInventoryStore.readState(npcState.mInventory);
-        customData.mNpcStats.readState(npcState.mNpcStats);
-        bool spellsInitialised = customData.mNpcStats.getSpells().setSpells(ptr.get<ESM::NPC>()->mBase->mId);
+        if (!MWBase::Environment::get().getWorldModel()->readPreparedInventory(state, customData.mInventoryStore))
+            customData.mInventoryStore.readState(npcState.mInventory);
+        if (!MWBase::Environment::get().getWorldModel()->readPreparedNpcState(state, customData.mNpcStats))
+            customData.mNpcStats.readState(npcState.mNpcStats);
+        const auto& actorId = ptr.get<ESM::NPC>()->mBase->mId;
+        bool spellsInitialised = core ? core->attachSpells(customData.mNpcStats.getSpells(), actorId)
+                                     : customData.mNpcStats.getSpells().setSpells(actorId);
         if (spellsInitialised)
             customData.mNpcStats.getSpells().clear();
-        customData.mNpcStats.readState(npcState.mCreatureStats);
+        customData.mNpcStats.readState(npcState.mCreatureStats, core.get());
     }
 
     void Npc::writeAdditionalState(const MWWorld::ConstPtr& ptr, ESM::ObjectState& state) const

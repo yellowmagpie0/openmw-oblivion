@@ -294,6 +294,11 @@ namespace MWWorld
 
     protected:
         bool mRechargingItemsUpToDate = false;
+        bool mDetachedRestoreRead = false;
+        std::vector<Ptr> mPreparedReadItems;
+        std::size_t mPreparedReadIndex = 0;
+        void readStateImpl(const ESM::InventoryState& state, const ESMStore& content,
+            const ESMStore* incoming, bool oblivion);
 
         virtual void storeEquipmentState(
             const MWWorld::LiveCellRefBase& ref, size_t index, ESM::InventoryState& inventory) const;
@@ -314,7 +319,8 @@ namespace MWWorld
             bool topLevel = true);
 
         template <typename T>
-        ContainerStoreIterator getState(CellRefList<T>& collection, const ESM::ObjectState& state);
+        ContainerStoreIterator getState(CellRefList<T>& collection, const ESM::ObjectState& state,
+            const ESMStore& content, const ESMStore* incoming);
 
         template <typename T>
         void storeState(const LiveCellRef<T>& ref, ESM::ObjectState& state) const;
@@ -477,6 +483,13 @@ namespace MWWorld
         virtual void writeState(ESM::InventoryState& state) const;
 
         virtual void readState(const ESM::InventoryState& state);
+
+        // Detached native-profile construction. No registry entries, RNG,
+        // ownership changes or inventory/equipment observers are published.
+        static std::unique_ptr<ContainerStore> prepareReadState(const ESM::InventoryState& state,
+            const ESMStore& content, const ESMStore& incoming, bool equipment);
+        // Caller installs the final owner and registers items separately.
+        void installPreparedContents(ContainerStore& prepared, const ESM::InventoryState& restored);
 
         bool isResolved() const;
 
