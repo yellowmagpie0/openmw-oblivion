@@ -177,7 +177,8 @@ namespace MWMechanics
             bool mConsumed = false;
             PreparedFill() = default;
         public:
-            PreparedFill(const PreparedFill&) = delete;
+            PreparedFill(const PreparedFill& other);
+            PreparedFill(PreparedFill&& other) noexcept;
             PreparedFill& operator=(const PreparedFill&) = delete;
             void install(AiSequence& target);
         };

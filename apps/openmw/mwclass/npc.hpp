@@ -58,6 +58,8 @@ namespace MWClass
         static std::unique_ptr<MWWorld::CustomData> prepareLegacyCustomData(const ESM::NPC& base,
             const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, bool isPlayer,
             bool spellsInitialized = false);
+        static std::unique_ptr<MWWorld::CustomData> prepareImplicitPlayerCustomData(const ESM::NPC& base,
+            const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, bool spellsInitialized);
 
         void insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,
             MWRender::RenderingInterface& renderingInterface) const override;

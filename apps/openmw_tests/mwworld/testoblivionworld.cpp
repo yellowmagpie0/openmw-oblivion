@@ -15787,6 +15787,10 @@ TEST(OblivionWorldTest, PreparedAuthoredAiMatchesOrdinaryFillAndDefersRngAndFoll
         MWMechanics::AiFollow before(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
         const auto beforePrepare = rng;
         auto prepared = MWMechanics::AiSequence::prepareFill(source);
+        MWMechanics::AiSequence::PreparedFill cloned(*prepared);
+        MWMechanics::AiSequence::PreparedFill moved(std::move(cloned));
+        MWMechanics::AiSequence unused;
+        EXPECT_THROW(cloned.install(unused), std::logic_error);
         auto canceled = MWMechanics::AiSequence::prepareFill(source); canceled.reset();
         EXPECT_EQ(rng, beforePrepare);
         MWMechanics::AiFollow after(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
@@ -15800,6 +15804,23 @@ TEST(OblivionWorldTest, PreparedAuthoredAiMatchesOrdinaryFillAndDefersRngAndFoll
         MWMechanics::AiSequence restored; prepared->install(restored);
         EXPECT_EQ(rng, expectedRng); EXPECT_EQ(encode(restored), expectedState);
         EXPECT_THROW(prepared->install(restored), std::logic_error); EXPECT_EQ(rng, expectedRng);
+        rng = start;
+        MWMechanics::AiSequence restoredClone; moved.install(restoredClone);
+        EXPECT_EQ(rng, expectedRng); EXPECT_EQ(encode(restoredClone), expectedState);
+        auto originalIt = restored.begin(); auto clonedIt = restoredClone.begin();
+        for (; originalIt != restored.end(); ++originalIt, ++clonedIt)
+        {
+            EXPECT_NE(originalIt->get(), clonedIt->get());
+            const auto* originalFollow = dynamic_cast<const MWMechanics::AiFollow*>(originalIt->get());
+            const auto* clonedFollow = dynamic_cast<const MWMechanics::AiFollow*>(clonedIt->get());
+            if (originalFollow)
+            {
+                ASSERT_NE(clonedFollow, nullptr);
+                EXPECT_EQ(clonedFollow->getFollowIndex(), originalFollow->getFollowIndex() + 2);
+            }
+        }
+        MWMechanics::AiSequence::PreparedFill consumedCopy(*prepared);
+        EXPECT_THROW(consumedCopy.install(unused), std::logic_error);
         auto retry = MWMechanics::AiSequence::prepareFill({});
         MWMechanics::AiSequence empty; retry->install(empty); EXPECT_TRUE(empty.isEmpty());
         EXPECT_THROW(retry->install(empty), std::logic_error); EXPECT_EQ(rng, expectedRng);
@@ -17003,8 +17024,14 @@ TEST(OblivionWorldTest, PreparedPlayerInitializationBindsOnlyItsReferenceAndDrop
     auto& world = fixture.mWorld; auto& model = world.getWorldModel(); auto& store = world.getStore();
     MWWorld::ESMStore incoming;
     auto base = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
-    auto before = MWClass::Npc::prepareLegacyCustomData(base, store, incoming, true);
+    ESM::AIPackage follow{}; follow.mType = ESM::AI_Follow;
+    follow.mTarget.mId.assign("implicit-lifecycle-target");
+    base.mAiPackage.mList = {follow};
+    MWMechanics::AiFollow first(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+    const auto rng = world.getPrng();
+    auto before = MWClass::Npc::prepareImplicitPlayerCustomData(base, store, incoming, false);
     auto after = before->clone();
+    EXPECT_EQ(world.getPrng(), rng);
     auto* expectedBefore = before.get(); auto* expectedAfter = after.get();
     MWWorld::ManualRef alias(store, base.mId);
     model.setPreparedActorCustomData({}, std::move(before), std::move(after), world.getPlayerPtr());
@@ -17026,11 +17053,14 @@ TEST(OblivionWorldTest, PreparedPlayerInitializationBindsOnlyItsReferenceAndDrop
     model.beginPlayerRestore(world.getPlayerPtr());
     EXPECT_FALSE(model.takePreparedPlayerCustomData(world.getPlayerPtr()));
     EXPECT_THROW(model.setPreparedActorCustomData({}, taken->clone(), {}, {}), std::logic_error);
+    EXPECT_EQ(world.getPrng(), rng);
+    MWMechanics::AiFollow last(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+    EXPECT_EQ(last.getFollowIndex(), first.getFollowIndex() + 1);
 }
 
 namespace
 {
-    void implicitPlayerRestoreProbe(int mode)
+    void implicitPlayerRestoreProbe(int mode, bool authoredAi = false)
     {
         try
         {
@@ -17056,6 +17086,18 @@ namespace
             auto playerBase = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
             playerBase.mClass = characterClass.mId; playerBase.mNpdtType = ESM::NPC::NPC_WITH_AUTOCALCULATED_STATS;
             playerBase.mNpdt.mLevel = 1; playerBase.mInventory.mList.clear(); playerBase.mSpells.mList.clear();
+            std::optional<MWMechanics::AiFollow> followBefore;
+            if (authoredAi)
+            {
+                ESM::AIPackage travel{}; travel.mType = ESM::AI_Travel;
+                travel.mTravel = {31.f, 32.f, 33.f, 1};
+                ESM::AIPackage follow{}; follow.mType = ESM::AI_Follow;
+                follow.mTarget.mId.assign("implicit-follow-target"); follow.mCellName = "implicit owned cell";
+                follow.mTarget.mDuration = 17; follow.mTarget.mX = 41; follow.mTarget.mY = 42;
+                follow.mTarget.mZ = 43; follow.mTarget.mShouldRepeat = 1;
+                playerBase.mAiPackage.mList = {travel, follow};
+                followBefore.emplace(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+            }
             definitions->getWritable<ESM::NPC>().insert(playerBase);
             ESM::ItemLevList list{}; list.blank(); list.mId = ESM::RefId::stringRefId("implicit-player-list");
             list.mChanceNone = 100; // Player still initializes before this roll.
@@ -17096,6 +17138,12 @@ namespace
             auto spells = store.prepareSpellLists(initialization.spellListRequests());
             auto core = model.prepareCreatureState(owner, definitions.get());
             auto playerCore = model.prepareCreatureState(player.mObject, definitions.get());
+            if (authoredAi)
+            {
+                // Both implicit and explicit AI must own packages before publication.
+                playerBase.mAiPackage.mList.clear();
+                definitions->getWritable<ESM::NPC>().insert(playerBase);
+            }
             auto definitionPlan = world.prepareOblivionSharedDefinitions(std::move(definitions));
             world.clear(); if (!definitionPlan->install() || !spells.install(store)) std::_Exit(54);
             initialization.install(world.getPlayerPtr());
@@ -17126,12 +17174,37 @@ namespace
                 || caches.mEffectCost.mValue != 1.f || caches.mAlchemyCost.mValue != 1.f)
                 std::_Exit(55);
             if (model.takePreparedPlayerCustomData(world.getPlayerPtr())) std::_Exit(56);
-            auto expectedRng = rng; (void)Misc::Rng::roll0to99(expectedRng);
+            auto expectedRng = rng;
+            const auto advanceAi = [&] {
+                if (authoredAi)
+                    for (int i = 0; i < 2; ++i)
+                        (void)Misc::Rng::deviate(0, MWMechanics::AiReactionTimer::sDeviation, expectedRng);
+            };
+            advanceAi(); (void)Misc::Rng::roll0to99(expectedRng);
             if (world.getPrng() != expectedRng) std::_Exit(57);
+            if (authoredAi && mode != 4)
+            {
+                const auto& ai = world.getPlayerPtr().getClass().getNpcStats(world.getPlayerPtr()).getAiSequence();
+                if (std::distance(ai.begin(), ai.end()) != 2) std::_Exit(63);
+                const auto* follow = dynamic_cast<const MWMechanics::AiFollow*>(std::next(ai.begin())->get());
+                if (!follow || follow->getFollowIndex() != followBefore->getFollowIndex() + 1) std::_Exit(64);
+                ESM::AiSequence::AiSequence wire; ai.writeState(wire);
+                if (wire.mPackages[0].mType != ESM::AiSequence::Ai_Travel
+                    || wire.mPackages[1].mType != ESM::AiSequence::Ai_Follow) std::_Exit(65);
+            }
             if (mode != 4) readPlayer();
+            if (mode == 0 || mode == 1) advanceAi();
             if (model.takePreparedPlayerCustomData(world.getPlayerPtr())
                 || model.takePreparedActorCustomData(player.mObject)) std::_Exit(60);
             if (world.getPrng() != expectedRng) std::_Exit(61);
+            if (authoredAi)
+            {
+                if (!world.getPlayerPtr().getClass().getNpcStats(world.getPlayerPtr()).getAiSequence().isEmpty())
+                    std::_Exit(66); // PLAY always clears AI after its initialization query.
+                MWMechanics::AiFollow after(ESM::RefId::stringRefId("probe"), "", 0, 0, 0, 0, false);
+                if (after.getFollowIndex() != followBefore->getFollowIndex() + (mode == 0 || mode == 1 ? 3 : 2))
+                    std::_Exit(67);
+            }
             bool replayRejected = false;
             try { initialization.install(world.getPlayerPtr()); } catch (const std::logic_error&) { replayRejected = true; }
             if (!replayRejected) std::_Exit(62);
@@ -17161,4 +17234,21 @@ TEST(ImplicitPlayerRestoreDeathTest, FailedImplicitPlayerPreparationPreservesWor
 TEST(ImplicitPlayerRestoreDeathTest, NoCustomPlayFirstConsumesPreparedFirstBindingBeforeLaterInventoryQueries)
 {
     EXPECT_EXIT(implicitPlayerRestoreProbe(4), ::testing::ExitedWithCode(0), "");
+}
+
+TEST(ImplicitPlayerRestoreDeathTest, PreparedAiBeforeLegacyPlayPreservesBothInitializationPhases)
+{
+    EXPECT_EXIT(implicitPlayerRestoreProbe(0, true), ::testing::ExitedWithCode(0), "");
+}
+TEST(ImplicitPlayerRestoreDeathTest, PreparedAiBeforeNoCustomPlayPreservesBothInitializationPhases)
+{
+    EXPECT_EXIT(implicitPlayerRestoreProbe(1, true), ::testing::ExitedWithCode(0), "");
+}
+TEST(ImplicitPlayerRestoreDeathTest, PreparedAiBeforeFullPlayDoesNotReplayBasePackages)
+{
+    EXPECT_EXIT(implicitPlayerRestoreProbe(2, true), ::testing::ExitedWithCode(0), "");
+}
+TEST(ImplicitPlayerRestoreDeathTest, PreparedAiAfterNoCustomPlayRunsBeforeLaterLeveledInventory)
+{
+    EXPECT_EXIT(implicitPlayerRestoreProbe(4, true), ::testing::ExitedWithCode(0), "");
 }

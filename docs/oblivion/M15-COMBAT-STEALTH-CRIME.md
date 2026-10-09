@@ -6,6 +6,64 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare implicit Player authored AI — 2026-10-09
+
+Implicit Player and no-custom-state PLAY preparation now owns detached authored
+AI packages alongside its base stats/spells. Live NPC initialization consumes
+them at the original AI-fill phase, retaining reaction-timer RNG draws and
+Follow-index assignment there. PLAY still clears its live AI after restoration.
+Explicit legacy NPC/creature core plans keep their existing path.
+
+Prepared AI fills deep-copy packages for custom-data cloning without priming
+reaction timers or assigning Follow indices. Moving transfers the plan and
+invalidates its source; copies of consumed plans remain consumed. Six existing
+authored-package matrix combinations now also compare independent clones with
+ordinary fill/wire/RNG, distinct package pointers, Follow-index progression,
+and rejection of moved-from/consumed copies. Player lifecycle tests now clone
+and cancel authored Follow plans while preserving RNG/global indices.
+Four new isolated actual class/Player-codec probes verify both initialization
+phases before legacy/no-custom PLAY, full PLAY skipping the second base fill,
+and no-custom PLAY before later leveled inventory. Removing authored packages
+from incoming definitions before publication proves detached ownership; exact
+RNG and Follow-index checks prove consumption timing and PLAY AI clearing.
+
+`build/oblivion-compat/m15/S3/implicit-player-ai-{normal,sanitized}-02`
+build openmw/openmw-tests/esmtool and each pass **all 1,357 engine tests**,
+exact unfiltered inventory/XML agreement and zero failures/skips. Matching
+unchanged dirty-source fingerprint:
+`c2188d071e64e7b5cc7c28b2fa35c55329b6c9c355b009f847b6643adb753b09`
+at parent `49feb4493eed94827b3bca6307b728d5eb33908d`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`485395fcd623432648cf18f454a0981b54fc38a19d23cbc2848433a2575ae078`,
+`76a0e51a025e145b40e78565424fb1a8eee2420d3826308147f3c420122875e5`.
+ASan/UBSan halt on errors; leak checks are disabled. Normal-01 also passed all
+1357 cases but exposed an ambiguous-else test warning. Sanitized-01 was stopped
+before the explicit-brace/null-check correction; both attempts are retained.
+Final builds retain only existing warnings. Tested C++ is unchanged at closure.
+
+New runtime fixture `implicit-player-ai-runtime-nocustom-{normal,sanitized}-01`
+reproducibly replaces only the shared PLAY inventory/NPC/core payload with
+HCUS=false, preserving its native state and authored Player AI_T. Both actual
+load/F5/F9/F5/quit courses pass. Verifiers check exact initial/reloaded native
+state, stable native groups, first-resave shared-state materialization followed
+by exact inventory/NPC/core preservation, retained authored AI_T, and cleared
+live Player AI. Optional default NPC scalars may legitimately be absent.
+`implicit-player-ai-runtime-continuation-sanitized-01` runs in a fresh process
+from the exact final normal output and passes the same semantic continuation
+checks. Normal/instrumented openmw SHA256 respectively:
+`ac704706282c7c132f92232f2682884006a7f6e7fda16889d1f2a604bed9d6ea`,
+`2373452a74756b93efe7830a2ce5c154b4387e889cd687d6d92ec746f0abfa53`.
+Each final capture was inspected: Imperial Prison, HUD and persistent blade
+binding render without a load-error dialog. These runtime courses exercise
+no-custom PLAY; transient before-PLAY leveled initialization, RNG and Follow
+indices are verified by the isolated C++ probes, not inferred from final saves.
+Editable manifests/recipes/generators and hashes remain in each evidence folder.
+
+This closes the identified implicit/no-custom Player base-AI preparation gap.
+Full initial inventory fill/autoequip, registry/scene resources, late-failure
+prior-world preservation and the full S3 requirement audit remain open. S3 is
+not complete. The verified chunk is committed locally without push/publication.
+
 ## S3 prepare implicit Player stats and spell binding order — 2026-10-09
 
 Shared actor admission now predicts the Player level query performed by initial

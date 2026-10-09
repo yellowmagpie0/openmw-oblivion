@@ -353,6 +353,7 @@ namespace MWClass
         std::optional<MWMechanics::Spells::PreparedInstance> mPreparedBaseSpells;
         std::optional<MWMechanics::Spells::PreparedInstance> mPreparedRaceSpells;
         std::optional<MWMechanics::PreparedNpcSpells> mPreparedAutoSpells;
+        std::optional<MWMechanics::AiSequence::PreparedFill> mPreparedBaseAi;
 
         explicit NpcCustomData(const MWWorld::ESMStore* initializationStore)
             : mNpcStats(initializationStore)
@@ -493,6 +494,15 @@ namespace MWClass
         return result;
     }
 
+    std::unique_ptr<MWWorld::CustomData> Npc::prepareImplicitPlayerCustomData(const ESM::NPC& base,
+        const MWWorld::ESMStore& store, const MWWorld::ESMStore& incoming, bool spellsInitialized)
+    {
+        auto result = prepareLegacyCustomData(base, store, incoming, true, spellsInitialized);
+        auto ai = MWMechanics::AiSequence::prepareFill(base.mAiPackage);
+        result->asNpcCustomData().mPreparedBaseAi.emplace(std::move(*ai));
+        return result;
+    }
+
     const Npc::GMST& Npc::getGmst()
     {
         static const GMST staticGmst = [] {
@@ -591,7 +601,12 @@ namespace MWClass
                 data->mPreparedFactionReputation.reset();
             }
 
-            if (!prepared || !prepared->installBaseAiSequence(data->mNpcStats.getAiSequence()))
+            if (data->mPreparedBaseAi)
+            {
+                data->mPreparedBaseAi->install(data->mNpcStats.getAiSequence());
+                data->mPreparedBaseAi.reset();
+            }
+            else if (!prepared || !prepared->installBaseAiSequence(data->mNpcStats.getAiSequence()))
                 data->mNpcStats.getAiSequence().fill(ref->mBase->mAiPackage);
 
             if (!basePrepared)

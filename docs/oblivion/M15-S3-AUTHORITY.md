@@ -606,3 +606,18 @@ leveled path. See the newest ledger entry for hashes and retained failures.
 Implicit/no-custom Player base AI still needs detached resources while preserving
 RNG/Follow initialization timing; initial inventory/autoequip, registry/scene,
 full prior-world late-failure preservation and the S3 audit remain open.
+
+
+Implicit/no-custom Player initialization now owns prepared authored AI packages.
+Package copying retains detached reaction timers and Follow IDs; actual class
+initialization consumes them at the original AI-fill phase. Deep copies own
+independent packages, moves invalidate their source, and consumed copies reject
+reuse. Four new actual class/Player-codec probes plus expanded clone/lifecycle
+checks pass in both full 1357-case inventories with matching fingerprint.
+Normal/instrumented HCUS=false PLAY runtime courses and a fresh instrumented
+process continuing the exact normal final save pass native/shared semantic
+checks and visual review. Before-PLAY leveled transient RNG/Follow ordering is
+covered by C++ probes, not those runtime saves. See the newest ledger entry for
+binary/source hashes and retained preliminary builds. Initial inventory and
+autoequip, registry/scene resources, full late-failure prior-world preservation
+and the complete S3 audit remain open.

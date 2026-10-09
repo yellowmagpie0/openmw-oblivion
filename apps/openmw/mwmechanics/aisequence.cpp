@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/actoridconverter.hpp>
@@ -575,6 +576,20 @@ namespace MWMechanics
             prepared->mPackages.push_back(std::move(package));
         }
         return prepared;
+    }
+
+    AiSequence::PreparedFill::PreparedFill(const PreparedFill& other)
+        : mConsumed(other.mConsumed)
+    {
+        mPackages.reserve(other.mPackages.size());
+        for (const auto& package : other.mPackages)
+            mPackages.push_back(package->clone());
+    }
+
+    AiSequence::PreparedFill::PreparedFill(PreparedFill&& other) noexcept
+        : mPackages(std::move(other.mPackages))
+        , mConsumed(std::exchange(other.mConsumed, true))
+    {
     }
 
     void AiSequence::PreparedFill::install(AiSequence& target)

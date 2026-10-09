@@ -66,7 +66,7 @@ namespace MWWorld
         const auto* base = canonicalPlayer ? canonicalPlayer : mContent.searchForRestore<ESM::NPC>(id, incoming);
         if (!base || base->mId != id)
             throw std::runtime_error("Prepared implicit Player base is unavailable");
-        return MWClass::Npc::prepareLegacyCustomData(*base, mContent, incoming, true, spellsInitialized);
+        return MWClass::Npc::prepareImplicitPlayerCustomData(*base, mContent, incoming, spellsInitialized);
     }
 
     void SharedActorInitialization::prepare(
