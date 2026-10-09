@@ -91,7 +91,16 @@ S3 remains open for base inventory fill/autoequip, registry/scene resources,
 late-failure prior-world preservation and the final requirement audit. No S4,
 native spell gameplay, combat, audible or leak acceptance is claimed.
 
-Git staging/commit result follows.
+The targeted in-place git add failed exit 128 because .git/index.lock is
+read-only. Verified accumulated restore work was instead committed in the
+independent local checkout /tmp/openmw-m15-s3-verified-checkpoint as
+517f6ec93a9f6cce310c07f21c72a17df1c2e5de (parent c29816aec81fc177d52fdfe736d86d75d29b0a87).
+A verified Git bundle is retained under
+build/oblivion-compat/m15/S3/verified-restore-commits/. The commit's copied
+working files were compared byte-for-byte with this workspace; the unrelated
+tutorial handoff was excluded. Original protected Git metadata remains at the
+old parent. Nothing was pushed or published.
+
 
 ## S3 retain serialized actor preparation order — 2026-10-09
 

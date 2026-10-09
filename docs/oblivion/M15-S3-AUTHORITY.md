@@ -566,3 +566,10 @@ Player initialization from leveled initial inventory, base fill/autoequip,
 registry/scene resources or full prior-world late-failure preservation. The
 existing saved-owner prediction covers explicit record bindings; pending
 inventory work must preserve the earlier implicit Player level query.
+
+The verified accumulated restore checkpoint is committed locally as
+517f6ec93a9f6cce310c07f21c72a17df1c2e5de in the independent writable checkout
+/tmp/openmw-m15-s3-verified-checkpoint. A verified bundle lives under
+build/oblivion-compat/m15/S3/verified-restore-commits/. The original checkout's
+Git metadata remains read-only at c29816aec81fc177d52fdfe736d86d75d29b0a87;
+no push/publication occurred and the unrelated handoff is excluded.
