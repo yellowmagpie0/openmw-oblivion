@@ -573,3 +573,9 @@ The verified accumulated restore checkpoint is committed locally as
 build/oblivion-compat/m15/S3/verified-restore-commits/. The original checkout's
 Git metadata remains read-only at c29816aec81fc177d52fdfe736d86d75d29b0a87;
 no push/publication occurred and the unrelated handoff is excluded.
+
+On 2026-10-09, both recovery commits (517f6ec93a and a5a21a195a) were imported
+into the main repository's master branch with their history preserved. Git
+metadata writes succeeded in this session. The recovery follow-up also includes
+the tutorial handoff. No new build or runtime acceptance was performed, and
+the remaining S3 scope is unchanged. Nothing was pushed or published.

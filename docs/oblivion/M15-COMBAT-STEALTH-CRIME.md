@@ -101,6 +101,15 @@ working files were compared byte-for-byte with this workspace; the unrelated
 tutorial handoff was excluded. Original protected Git metadata remains at the
 old parent. Nothing was pushed or published.
 
+On 2026-10-09, a writable session imported both recovery commits (517f6ec93a
+and a5a21a195a) into the main repository's master branch, preserving their
+history. The staged main-checkout files matched the recovered tip exactly,
+apart from the tutorial handoff, which is now included in the recovery follow-up.
+The earlier Git write restriction no longer blocks this checkout. This recovery
+ran no new build, compiler/world validation, semantic reinspection or runtime
+acceptance; the checkpoint's existing evidence and remaining S3 scope still apply.
+Nothing was pushed or published.
+
 
 ## S3 retain serialized actor preparation order — 2026-10-09
 
