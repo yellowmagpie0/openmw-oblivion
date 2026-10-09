@@ -6,6 +6,54 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 validate consumed faction reputation arithmetic — 2026-10-09
+
+Detached legacy NPC faction preparation now checks each integer offset, product
+and final sum in widened arithmetic before setting reputation. Overflowing
+products reject even when their mathematical final sum would fit. Existing
+first-use cache values undergo the same validation; preparation never primes
+or replaces them. Deferred installation rechecks the effective cached values
+before priming unset caches or assigning reputation. Valid integer results
+retain the shared setter's existing 0–255 clamp. Ordinary unprepared NPC
+initialization is unchanged; this is shared legacy restore admission, not a
+new native TES4 reputation rule.
+
+Nine new process-isolated actual World/class probes cover positive/negative
+sum overflow, both signs of each product (including cancellation), existing
+cache overflow, and accepted INT_MIN/INT_MAX results with the original clamp.
+Rejected preparations preserve serialized native authority, registry revision,
+RNG and the outgoing Player custom-data pointer. Subsequent ordinary NPC
+initialization verifies absent caches remain unprimed and existing caches stay
+unchanged. The five prior faction cache/lifecycle probes also pass.
+
+`build/oblivion-compat/m15/S3/faction-reputation-domain-{normal,sanitized}-02`
+build openmw/openmw-tests/esmtool and each pass **all 1,346 engine tests** with
+exact unfiltered inventory/XML agreement, zero failures/skips, and unchanged
+matching tested dirty-source fingerprint:
+`9a6e60b6bf4b861e81c927bdad8a03f6fe6fe04b77245501e5424f446f664f61`
+at parent `ac61d2399a5ce63b233e591520c1ffe0f9b5c8fc`.
+The sanitizer run uses ASan/UBSan with halt-on-error, SDL offscreen and leak
+checks disabled. Normal openmw-tests SHA256:
+`4d11b9cd9cd9c1b4cb9898847f5e9629ca3a5b6cadae9db9240fbc0214bbc792`;
+instrumented openmw-tests SHA256:
+`5c229dbee990ed811ae7cf9f6afa2320b2fe484356f3c5a3ec05b7c93347175e`.
+
+Attempt normal-01 failed compilation when /tmp hit its disk quota; sanitized-01
+was deliberately stopped before editing the fixture. Both are retained and
+executed no tests. Before final retries, two fixture expectations were corrected
+to reflect the existing reputation clamp and three additional product/cache
+cases were added. Final builds place compiler temporary files in
+build/compiler-tmp on the workspace disk. The existing unused Lua context
+warning remains. Documentation was written after verification; tested C++ is
+unchanged at closure.
+
+This closes the identified faction arithmetic gap. It adds no fresh-process,
+normal-input, original-game, rendered UI or leak acceptance. Base inventory
+fill/autoequip and implicit Player initialization, registry/scene resources,
+late-failure prior-world preservation and the full requirement audit remain
+open; S3 is not complete. The verified chunk is committed locally after these
+checks, with no push or publication.
+
 ## S3 prepare autocalculated spells and consumed arithmetic — 2026-10-09
 
 Detached legacy NPC initialization now calculates its autocalculated spells

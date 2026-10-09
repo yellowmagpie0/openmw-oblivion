@@ -579,3 +579,14 @@ into the main repository's master branch with their history preserved. Git
 metadata writes succeeded in this session. The recovery follow-up also includes
 the tutorial handoff. No new build or runtime acceptance was performed, and
 the remaining S3 scope is unchanged. Nothing was pushed or published.
+
+
+Legacy faction reputation preparation now validates every consumed integer
+product and sum before teardown, retaining the shared 0–255 result clamp.
+Deferred installation checks current effective cache values before mutation.
+Nine new isolated World/class arithmetic probes plus five existing faction
+cache/lifecycle probes pass in both full 1346-case engine inventories. Matched
+fingerprint and retained failed/interrupted builds are in the faction arithmetic
+ledger entry. No new game-runtime acceptance is claimed; base inventory and
+implicit Player initialization, registry/scene resources and full late-failure
+prior-world preservation remain open.

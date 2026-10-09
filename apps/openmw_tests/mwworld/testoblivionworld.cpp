@@ -16306,6 +16306,59 @@ namespace
             auto& actor = ordinaryActors.emplace_back(std::make_unique<MWWorld::ManualRef>(store, npc.mId));
             return actor->getPtr().getClass().getNpcStats(actor->getPtr()).getReputation();
         };
+        if (mode >= 5)
+        {
+            const int maximum = std::numeric_limits<int>::max();
+            const int minimum = std::numeric_limits<int>::min();
+            base.mNpdt.mRank = 0; base.mNpdt.mLevel = 2;
+            int faction = maximum; int level = 1;
+            if (mode == 6) { faction = minimum; level = -1; }
+            if (mode == 7) { base.mNpdt.mRank = 1; level = -maximum; }
+            if (mode == 8) { faction = 0; level = minimum; base.mNpdt.mLevel = 3; }
+            if (mode == 9) { faction = maximum - 1; }
+            if (mode == 10) { faction = minimum + 1; level = -1; }
+            if (mode == 11) { faction = minimum; base.mNpdt.mRank = 1; level = maximum; base.mNpdt.mLevel = 3; }
+            if (mode == 12) { faction = 0; level = maximum; base.mNpdt.mLevel = 3; }
+            if (mode == 13) { level = 0; base.mNpdt.mLevel = 1; }
+            setting("iAutoRepFacMod", faction, true); setting("iAutoRepLevMod", level, true);
+            if (mode == 13)
+            {
+                if (ordinaryReputation(base) != 255) std::_Exit(45);
+                base.mNpdt.mRank = 1;
+            }
+            MWWorld::ESMStore incoming; incoming.getWritable<ESM::NPC>().insert(base);
+            ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true; owner.mRef.mRefID = base.mId;
+            owner.mCreatureStats.mMissingACDT = true; owner.mCreatureStats.mHasAiSettings = false;
+            owner.mCreatureStats.mRecalcDynamicStats = false;
+            const auto before = world.captureOblivionRuntimeState().serializeBinary();
+            const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+            const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
+            std::unique_ptr<MWWorld::CustomData> data;
+            bool rejected = false;
+            try { data = model.prepareActorCustomData(owner, incoming); }
+            catch (const std::runtime_error&) { rejected = true; }
+            if (rejected != (mode != 9 && mode != 10)) std::_Exit(41);
+            if (world.captureOblivionRuntimeState().serializeBinary() != before
+                || model.getPtrRegistryRevision() != revision || world.getPrng() != rng
+                || world.getPlayerPtr().getRefData().getCustomData() != outgoing) std::_Exit(42);
+            if (!rejected)
+            {
+                store.getWritable<ESM::NPC>().insert(base); store.rebuildIdsIndex();
+                MWWorld::ManualRef probe(store, base.mId);
+                probe.getPtr().getRefData().setCustomData(data->clone());
+                if (probe.getPtr().getClass().getNpcStats(probe.getPtr()).getReputation()
+                    != (mode == 9 ? 255 : 0)) std::_Exit(43);
+            }
+            else
+            {
+                // A rejected arithmetic plan must not prime either first-use cache.
+                setting("iAutoRepFacMod", 3, true); setting("iAutoRepLevMod", 4, true);
+                base.mNpdt.mRank = mode == 13 ? 0 : 2;
+                base.mNpdt.mLevel = mode == 13 ? 1 : 9;
+                if (ordinaryReputation(base) != (mode == 13 ? 255 : 41)) std::_Exit(44);
+            }
+            std::_Exit(0);
+        }
         setting("iAutoRepFacMod", 3, true); setting("iAutoRepLevMod", 4, true);
         if (mode == 3)
         {
@@ -16403,6 +16456,44 @@ TEST(NpcFactionRestoreDeathTest, ExistingOrdinaryCacheSkipsAbsentSettings)
 TEST(NpcFactionRestoreDeathTest, NoFactionSkipsBothAbsentSettings)
 {
     EXPECT_EXIT(npcFactionRestoreProbe(4), ::testing::ExitedWithCode(0), "");
+}
+
+TEST(NpcFactionRestoreDeathTest, ReputationSumOverflowRejectsWithoutPrimingCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(5), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, ReputationSumUnderflowRejectsWithoutPrimingCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(6), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, FactionProductOverflowRejectsEvenWhenSumWouldFit)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(7), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, LevelProductUnderflowRejectsWithoutPrimingCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(8), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, MaximumIntegerReputationRetainsSharedUpperClamp)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(9), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, MinimumIntegerReputationRetainsSharedLowerClamp)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(10), ::testing::ExitedWithCode(0), "");
+}
+
+TEST(NpcFactionRestoreDeathTest, FactionProductUnderflowRejectsEvenWhenSumWouldFit)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(11), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, LevelProductOverflowRejectsWithoutPrimingCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(12), ::testing::ExitedWithCode(0), "");
+}
+TEST(NpcFactionRestoreDeathTest, ExistingCacheArithmeticIsValidatedWithoutReplacingCache)
+{
+    EXPECT_EXIT(npcFactionRestoreProbe(13), ::testing::ExitedWithCode(0), "");
 }
 
 TEST(OblivionWorldTest, PreparedInstanceSpellsResolveSurvivingPointersAndBindFirstAndCachedLists)

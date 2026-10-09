@@ -3,7 +3,9 @@
 #include <MyGUI_TextIterator.h>
 #include <MyGUI_UString.h>
 
+#include <cstdint>
 #include <format>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -122,6 +124,22 @@ namespace
         return settings;
     }
 
+    int checkedNpcFactionReputation(int factionModifier, int levelModifier, int rank, int level)
+    {
+        const auto checked = [](std::int64_t value) {
+            if (value < std::numeric_limits<int>::min() || value > std::numeric_limits<int>::max())
+                throw std::runtime_error("Prepared NPC faction reputation arithmetic is out of range");
+            return static_cast<int>(value);
+        };
+        // Validate each consumed integer operation, including products that
+        // could cancel in the final sum. Widen before offsetting or multiplying.
+        const int rankFactor = checked(std::int64_t(rank) + 1);
+        const int levelFactor = checked(std::int64_t(level) - 1);
+        const int faction = checked(std::int64_t(factionModifier) * rankFactor);
+        const int levelReputation = checked(std::int64_t(levelModifier) * levelFactor);
+        return checked(std::int64_t(faction) + levelReputation);
+    }
+
     struct PreparedNpcFactionReputation
     {
         int mFactionModifier;
@@ -132,13 +150,15 @@ namespace
         void install(MWMechanics::NpcStats& stats) const
         {
             auto& settings = npcFactionSettings();
+            const int reputation = checkedNpcFactionReputation(settings.mFaction.value_or(mFactionModifier),
+                settings.mLevel.value_or(mLevelModifier), mRank, mLevel);
             // Preserve already initialized ordinary caches. Otherwise prime
             // them only at the original restoration phase, without a lookup.
             if (!settings.mFaction)
                 settings.mFaction = mFactionModifier;
             if (!settings.mLevel)
                 settings.mLevel = mLevelModifier;
-            stats.setReputation(*settings.mFaction * (mRank + 1) + *settings.mLevel * (mLevel - 1));
+            stats.setReputation(reputation);
         }
     };
 
@@ -425,8 +445,8 @@ namespace MWClass
                 settings.mFaction ? *settings.mFaction : resolve("iAutoRepFacMod"),
                 settings.mLevel ? *settings.mLevel : resolve("iAutoRepLevMod"),
                 base.getFactionRank(), stats.getLevel()};
-            stats.setReputation(result.mFactionModifier * (result.mRank + 1)
-                + result.mLevelModifier * (result.mLevel - 1));
+            stats.setReputation(checkedNpcFactionReputation(
+                result.mFactionModifier, result.mLevelModifier, result.mRank, result.mLevel));
             return result;
         }
     }
