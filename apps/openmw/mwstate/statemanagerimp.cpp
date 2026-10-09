@@ -3,7 +3,6 @@
 #include "saveinput.hpp"
 
 #include <filesystem>
-#include <set>
 
 #include <SDL_clipboard.h>
 
@@ -50,6 +49,7 @@
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/globals.hpp"
 #include "../mwworld/scene.hpp"
+#include "../mwworld/sharedactorinitialization.hpp"
 #include "../mwworld/worldmodel.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
@@ -501,9 +501,9 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
         MWWorld::WorldModel::PreparedNpcStates preparedNpcStats;
         MWWorld::WorldModel::PreparedCreatureStates preparedCreatureStats;
-        MWWorld::WorldModel::PreparedActorCustomData preparedActorCustomData;
-        MWWorld::ESMStore::SpellListRequests spellListRequests;
-        std::set<ESM::RefId> spellBindings;
+        MWWorld::SharedActorInitialization preparedActorCustomData(
+            *MWBase::Environment::get().getWorldModel(), world.getStore());
+        std::optional<ESM::NPC> canonicalPlayer;
         std::optional<MWWorld::ESMStore::PreparedSpellLists> preparedSpellLists;
         std::optional<ESM::ESM_Context> deferredQuickKeys;
         const auto admittedProfile = admitSave(reader, world.getGameProfile(), {}, &world.getStore(),
@@ -523,25 +523,10 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 if (owner.mRef.mRefID != "Player" && !reader.applyContentFileMapping(owner.mRef.mRefNum))
                     return; // Same removed-owner path as CellStore.
                 auto& model = *MWBase::Environment::get().getWorldModel();
-                const int spellType = dynamic_cast<const ESM::NpcState*>(&owner) ? int(ESM::REC_NPC_)
-                    : dynamic_cast<const ESM::CreatureState*>(&owner) ? int(ESM::REC_CREA) : 0;
-                if (spellType)
-                {
-                    auto [entry, inserted] = spellListRequests.try_emplace(owner.mRef.mRefID, spellType, 0);
-                    if (!inserted && entry->second.first != spellType)
-                        throw std::runtime_error("Conflicting shared spell-list actor kinds");
-                    ++entry->second.second;
-                }
-                const bool spellsInitialized = spellType && owner.mHasCustomState
-                    && !spellBindings.insert(owner.mRef.mRefID).second;
-                std::optional<ESM::NPC> canonicalPlayer;
-                if (owner.mRef.mRefID == "Player" && native)
+                if (native && !canonicalPlayer)
                     canonicalPlayer = world.getStore().prepareRestoredPlayerMetadata(
                         *native, incoming, world.getContentFiles());
-                auto data = model.prepareActorCustomData(owner, incoming,
-                    canonicalPlayer ? &*canonicalPlayer : nullptr, spellsInitialized);
-                if (data && !preparedActorCustomData.emplace(model.preparedInventoryKey(owner), std::move(data)).second)
-                    throw std::runtime_error("Duplicate shared actor custom-data owner");
+                preparedActorCustomData.prepare(owner, incoming, canonicalPlayer ? &*canonicalPlayer : nullptr);
                 auto core = model.prepareCreatureState(owner, &incoming);
                 if (core && !preparedCreatureStats.emplace(model.preparedInventoryKey(owner), std::move(core)).second)
                     throw std::runtime_error("Duplicate shared creature stats owner");
@@ -560,7 +545,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 return MWBase::Environment::get().getWorldModel()->canRestoreCell(cell);
             });
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
-            preparedSpellLists.emplace(world.getStore().prepareSpellLists(spellListRequests));
+            preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
         if (!missingFiles.empty() && !confirmLoading(missingFiles))
             return;
@@ -580,7 +565,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWBase::Environment::get().getWorldModel()->setPreparedInventoryStates(std::move(preparedInventories));
         MWBase::Environment::get().getWorldModel()->setPreparedNpcStates(std::move(preparedNpcStats));
         MWBase::Environment::get().getWorldModel()->setPreparedCreatureStates(std::move(preparedCreatureStats));
-        MWBase::Environment::get().getWorldModel()->setPreparedActorCustomData(std::move(preparedActorCustomData));
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+            preparedActorCustomData.install(world.getPlayerPtr());
 
         MWBase::Environment::get().getLuaManager()->setContentFileMapping(contentFileMap);
 

@@ -6,6 +6,70 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare implicit Player stats and spell binding order — 2026-10-09
+
+Shared actor admission now predicts the Player level query performed by initial
+legacy leveled-item inventory. That query can initialize Player before PLAY,
+even for empty lists or chance-none100. Preparation follows admitted owner order,
+uses incoming/surviving definitions and canonical Player metadata, and reserves
+the additional spell binding. Zero counts, outgoing-only/missing roots, plain
+items, LEVC roots and actors without initial inventory consumption skip it.
+PLAY discards the early instance; no-custom-state PLAY receives its own prepared
+base stats/spells because its AI-clear query forces initialization. First/cached
+spell selection preserves that actual order.
+
+Prepared Player custom data binds to the exact live reference, moves once, and
+is discarded by PLAY replacement, restore completion or world clear. Five
+process-isolated actual class/Player-codec probes exercise implicit initialization
+before legacy/full/no-custom PLAY, no-custom PLAY before leveled inventory, and
+missing consumed settings before teardown. They check outgoing native state,
+registry, RNG, custom-data identity and first-use caches; removing settings after
+preparation proves owned values are consumed. A 56-case NPC/creature/order/root
+matrix and exact-reference lifecycle test cover prediction and cancellation.
+
+`build/oblivion-compat/m15/S3/implicit-player-normal-04` and
+`implicit-player-sanitized-03` each build openmw/openmw-tests/esmtool and pass
+**all 1,353 engine tests**, exact inventory/XML agreement, zero failures/skips.
+Both retain unchanged dirty-source fingerprint
+`470dee180360b6faf20f0846d8cdcd27da8a23d71411308b008bbfb232dd1db1`
+at parent `d19b57f74425102086bd9cce59e6260b7e258574`.
+Normal openmw-tests SHA256:
+`59b1564c2dc52fe88073e26618e2ac08e7600de4260ee25df25de94f2df972a2`;
+instrumented openmw-tests SHA256:
+`96660e1cad02027b2aca6390ba44b7e8609b2b597ba15c28f4ba0546940e3d9b`.
+ASan/UBSan halt on errors; leak checks are disabled. Existing compiler warnings
+remain. Documentation was updated after verification; tested C++ is unchanged.
+
+Actual compatibility controls `implicit-player-runtime-native-normal-01` and
+`implicit-player-runtime-noac-normal-01` pass load/F5/F9/F5/quit. Fresh process
+`implicit-player-runtime-native-sanitized-02` starts from the exact final normal
+save and passes the same course. Verifiers compare all initial/reloaded native
+groups, ten stable groups, persistent item keys, shared inventory, NPC fields
+and core stats. Normal/instrumented openmw SHA256 respectively:
+`0d339411e183ef7f914a06e941a4668fa2ea74aae0a0438d517adb9f8591a3a2`,
+`5d861a642adffdd2666a34500f8a39a8ba486e0d50fb09d08451da898c2f83a2`.
+Final captures were inspected: Imperial Prison, HUD and persistent blade binding
+render correctly. These courses establish compatibility/restart controls;
+new implicit leveled initialization is exercised by C++ probes, not by these
+runtime saves.
+
+Retained attempts: direct preflight lacked complete record headers; normal-01
+failed on same-line SCOPED_TRACE declarations and sanitized-01 was interrupted.
+Normal-02 exposed fixture counter/static-setting omissions; sanitized-02 was
+stopped before fixes. Normal-03 exposed omitted Creature class registration.
+The NOAC runtime's initial verifier lacked copied source/recipe provenance;
+unchanged originals were copied and only verification rerun, disclosed in
+verification-recovery.json. Instrumented runtime-01 exited before game entry
+because libasan preload was omitted; runtime-02 uses the established preload
+before the SDL input shim. No failed attempt was overwritten.
+
+This closes stats/spell preparation and ordering for the identified implicit
+Player path. Its base AI still uses ordinary fill and needs detached preparation
+with RNG/Follow initialization at the existing phase. Full initial inventory
+fill/autoequip, registry/scene resources, late-failure prior-world preservation
+and the full requirement audit remain open. S3 is not complete. This verified
+chunk is committed locally; nothing is pushed or published.
+
 ## S3 validate consumed faction reputation arithmetic — 2026-10-09
 
 Detached legacy NPC faction preparation now checks each integer offset, product

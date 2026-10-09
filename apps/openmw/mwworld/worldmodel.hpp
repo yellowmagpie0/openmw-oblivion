@@ -225,8 +225,12 @@ namespace MWWorld
         using PreparedActorCustomData = std::map<PreparedInventoryKey, std::unique_ptr<CustomData>>;
         std::unique_ptr<CustomData> prepareActorCustomData(const ESM::ObjectState& state, const ESMStore& incoming,
             const ESM::NPC* canonicalPlayer = nullptr, bool spellsInitialized = false);
-        void setPreparedActorCustomData(PreparedActorCustomData states);
-        void finishActorCustomDataRestore() { mPreparedActorCustomData.clear(); }
+        void setPreparedActorCustomData(PreparedActorCustomData states,
+            std::unique_ptr<CustomData> beforePlayer = {}, std::unique_ptr<CustomData> afterPlayer = {},
+            const Ptr& player = {});
+        void beginPlayerRestore(const Ptr& player);
+        std::unique_ptr<CustomData> takePreparedPlayerCustomData(const Ptr& player);
+        void finishActorCustomDataRestore();
         std::unique_ptr<CustomData> takePreparedActorCustomData(const ESM::ObjectState& state);
         using PreparedCreatureStates = std::map<PreparedInventoryKey, std::unique_ptr<MWMechanics::PreparedCreatureStats>>;
         std::unique_ptr<MWMechanics::PreparedCreatureStats> prepareCreatureState(
@@ -240,6 +244,9 @@ namespace MWWorld
         PreparedNpcStates mPreparedNpcStates;
         PreparedCreatureStates mPreparedCreatureStates;
         PreparedActorCustomData mPreparedActorCustomData;
+        LiveCellRefBase* mPreparedPlayerRef = nullptr;
+        std::unique_ptr<CustomData> mPreparedPlayerCustomData;
+        std::unique_ptr<CustomData> mPreparedPlayerAfterRecord;
         struct GetCellStoreCallback;
 
         std::shared_ptr<const char> mPreparationIdentity;

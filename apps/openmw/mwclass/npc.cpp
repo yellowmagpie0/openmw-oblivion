@@ -534,6 +534,8 @@ namespace MWClass
         {
             MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
             bool recalculate = false;
+            if (!preparedData)
+                preparedData = MWBase::Environment::get().getWorldModel()->takePreparedPlayerCustomData(ptr);
             auto tempData = preparedData ? std::move(preparedData) : prepareSavedCustomData();
             NpcCustomData* data = &tempData->asNpcCustomData();
             MWMechanics::CreatureCustomDataResetter resetter{ ptr };

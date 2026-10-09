@@ -375,6 +375,7 @@ namespace MWWorld
             }
 
             MWBase::Environment::get().getWorldModel()->deregisterLiveCellRef(mPlayer);
+            MWBase::Environment::get().getWorldModel()->beginPlayerRestore(getPlayer());
             mPlayer.load(player.mObject);
             MWBase::Environment::get().getWorldModel()->registerPtr(getPlayer());
             if (reader.mActorIdConverter)

@@ -163,7 +163,7 @@ void MWWorld::WorldModel::clear()
     mPreparedInventoryStates.clear();
     mPreparedNpcStates.clear();
     mPreparedCreatureStates.clear();
-    mPreparedActorCustomData.clear();
+    finishActorCustomDataRestore();
     mPreparationIdentity.reset();
     mPtrRegistry.clear();
     mInteriors.clear();
@@ -889,9 +889,35 @@ std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::prepareActorCustomData
     return {};
 }
 
-void MWWorld::WorldModel::setPreparedActorCustomData(PreparedActorCustomData states)
+void MWWorld::WorldModel::setPreparedActorCustomData(PreparedActorCustomData states,
+    std::unique_ptr<CustomData> beforePlayer, std::unique_ptr<CustomData> afterPlayer, const Ptr& player)
 {
+    if ((beforePlayer || afterPlayer) && (player.isEmpty() || player.getCellRef().getRefId() != "Player"))
+        throw std::logic_error("Prepared Player initialization requires the canonical Player reference");
     mPreparedActorCustomData = std::move(states);
+    mPreparedPlayerRef = player.mRef;
+    mPreparedPlayerCustomData = std::move(beforePlayer);
+    mPreparedPlayerAfterRecord = std::move(afterPlayer);
+}
+
+void MWWorld::WorldModel::beginPlayerRestore(const Ptr& player)
+{
+    if (mPreparedPlayerRef != player.mRef) return;
+    mPreparedPlayerCustomData = std::move(mPreparedPlayerAfterRecord);
+}
+
+std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::takePreparedPlayerCustomData(const Ptr& player)
+{
+    if (mPreparedPlayerRef != player.mRef) return {};
+    return std::move(mPreparedPlayerCustomData);
+}
+
+void MWWorld::WorldModel::finishActorCustomDataRestore()
+{
+    mPreparedActorCustomData.clear();
+    mPreparedPlayerRef = nullptr;
+    mPreparedPlayerCustomData.reset();
+    mPreparedPlayerAfterRecord.reset();
 }
 
 std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::takePreparedActorCustomData(const ESM::ObjectState& state)

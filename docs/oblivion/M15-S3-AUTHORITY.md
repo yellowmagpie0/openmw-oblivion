@@ -590,3 +590,19 @@ fingerprint and retained failed/interrupted builds are in the faction arithmetic
 ledger entry. No new game-runtime acceptance is claimed; base inventory and
 implicit Player initialization, registry/scene resources and full late-failure
 prior-world preservation remain open.
+
+
+Admission now predicts implicit Player stats/spell initialization from consumed
+initial LEVI inventory before PLAY. It stages canonical Player data at the
+correct first/cached binding position, reserves extra spell binding capacity,
+and separately stages no-custom-state PLAY initialization. Exact-reference
+one-shot plans drop on replacement, finish or clear. Five isolated actual
+class/Player-codec probes, a 56-case order/root matrix and lifecycle tests pass
+in both complete 1353-case normal/ASan-UBSan inventories with matching source
+fingerprint. Native and NOAC runtime compatibility controls plus a fresh
+instrumented process continuing the exact normal output pass semantic save
+checks and visual review; those runtime saves do not exercise the new implicit
+leveled path. See the newest ledger entry for hashes and retained failures.
+Implicit/no-custom Player base AI still needs detached resources while preserving
+RNG/Follow initialization timing; initial inventory/autoequip, registry/scene,
+full prior-world late-failure preservation and the S3 audit remain open.
