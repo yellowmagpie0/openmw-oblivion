@@ -559,7 +559,8 @@ namespace MWState
             const ESM4::RuntimeState*)>& prepareInventory,
         const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions,
         const std::function<bool(const ESM::RefId&)>& restoreCell,
-        const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference)
+        const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference,
+        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference)
     {
         const auto start = reader.getContext();
         try
@@ -799,7 +800,7 @@ namespace MWState
                         }
                         legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
-                        if (prepareInventory)
+                        if (prepareInventory || preparePlayerReference)
                         {
                             inventoryOrder.push_back(&ownedPlayer->mObject);
                             inventoryPlayers.push_back(std::move(ownedPlayer));
@@ -996,6 +997,8 @@ namespace MWState
                     prepareQuickKeys(quickkeys, *shared, &native);
                 if (prepareCellReference && shared)
                     for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
+                if (preparePlayerReference)
+                    for (const auto& player : inventoryPlayers) preparePlayerReference(player->mObject);
                 if (prepareInventory)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, &native);
@@ -1015,6 +1018,8 @@ namespace MWState
                     prepareQuickKeys(quickkeys, *shared, nullptr);
                 if (prepareCellReference && shared)
                     for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
+                if (preparePlayerReference)
+                    for (const auto& player : inventoryPlayers) preparePlayerReference(player->mObject);
                 if (prepareInventory && shared)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, nullptr);

@@ -25,6 +25,23 @@ namespace MWWorld
     /// Used to create pointers to hold any type of LiveCellRef<> object.
     struct LiveCellRefBase
     {
+        // Own the reference strings and animation storage before restoration.
+        // Actor, local-script and Lua state still load at the ordinary call site.
+        class PreparedState
+        {
+            CellRef mRef;
+            RefData mData;
+            bool mConsumed = false;
+
+        public:
+            explicit PreparedState(const ESM::ObjectState& state);
+            PreparedState(const PreparedState&) = delete;
+            PreparedState& operator=(const PreparedState&) = delete;
+            PreparedState(PreparedState&& other);
+            PreparedState& operator=(PreparedState&&) = delete;
+            void install(LiveCellRefBase& target, const ESM::ObjectState& state);
+        };
+
         const Class* mClass;
 
         /** Information about this instance, such as 3D location and rotation
@@ -57,6 +74,8 @@ namespace MWWorld
         ///
         /// \attention Must not be called with an invalid \a state.
 
+        void loadPrepared(const ESM::ObjectState& state, PreparedState& prepared);
+
         virtual void save(ESM::ObjectState& state) const = 0;
         ///< Save LiveCellRef state into \a state.
 
@@ -75,6 +94,7 @@ namespace MWWorld
         bool isDeleted() const;
 
     protected:
+        void loadAdditionalState(const ESM::ObjectState& state);
         void loadImp(const ESM::ObjectState& state);
         ///< Load state into a LiveCellRef, that has already been initialised with base and
         /// class.

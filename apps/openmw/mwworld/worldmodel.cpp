@@ -941,7 +941,7 @@ std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::takePreparedActorCusto
 std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::WorldModel::prepareCellReference(
     const ESM::ObjectState& state, const ESMStore& incoming)
 {
-    return CellStore::prepareReference(mStore.findForRestore(state.mRef.mRefID, incoming), *this);
+    return CellStore::prepareReference(mStore.findForRestore(state.mRef.mRefID, incoming), *this, &state);
 }
 
 void MWWorld::WorldModel::setPreparedCellReferences(PreparedCellReferences references)
@@ -962,4 +962,21 @@ std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::WorldModel::take
 void MWWorld::WorldModel::finishCellReferenceRestore()
 {
     mPreparedCellReferences.clear();
+    mPreparedPlayerState.reset();
+    mPreparedPlayerStateRef = nullptr;
+}
+
+void MWWorld::WorldModel::setPreparedPlayerState(
+    std::unique_ptr<LiveCellRefBase::PreparedState> state, const Ptr& player)
+{
+    if (state && (player.isEmpty() || player.getCellRef().getRefId() != "Player"))
+        throw std::logic_error("Prepared Player state requires the canonical Player reference");
+    mPreparedPlayerState = std::move(state);
+    mPreparedPlayerStateRef = player.mRef;
+}
+
+std::unique_ptr<MWWorld::LiveCellRefBase::PreparedState> MWWorld::WorldModel::takePreparedPlayerState(const Ptr& player)
+{
+    if (player.mRef != mPreparedPlayerStateRef) return {};
+    return std::move(mPreparedPlayerState);
 }

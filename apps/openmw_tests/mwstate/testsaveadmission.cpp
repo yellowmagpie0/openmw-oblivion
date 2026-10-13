@@ -3405,3 +3405,43 @@ TEST(SaveAdmissionTest, CellReferenceStoragePreparesBeforeIdentityRemappingAndPu
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
 }
+
+TEST(SaveAdmissionTest, PlayerReferencePayloadPreparesBeforeInventoryAndPublication)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    for (bool native : {false, true}) for (bool inventoryCallback : {false, true})
+    for (bool reject : {false, true})
+    {
+        SCOPED_TRACE(native);
+        SCOPED_TRACE(inventoryCallback);
+        SCOPED_TRACE(reject);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mObject.mRef.mGlobalVariable = std::string(160, 'p');
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        const auto before = reader.getFileOffset();
+        int prepared = 0; bool published = false;
+        std::function<void(ESM::ObjectState&, const MWWorld::ESMStore&, const ESM4::RuntimeState*)> inventory;
+        if (inventoryCallback) inventory = [&](ESM::ObjectState& state, const auto&, const auto*) {
+            EXPECT_EQ(prepared, 1);
+            state.mRef.mGlobalVariable.clear();
+        };
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { published = true; }, {}, {}, {}, {}, {}, inventory,
+            [&](auto) { published = true; }, {}, {}, [&](const ESM::ObjectState& state) {
+                EXPECT_FALSE(published); ++prepared;
+                EXPECT_EQ(state.mRef.mRefID, ESM::RefId::stringRefId("Player"));
+                EXPECT_EQ(state.mRef.mGlobalVariable, std::string(160, 'p'));
+                if (reject) throw std::runtime_error("player payload preparation failed");
+            }); };
+        if (reject) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(prepared, 1); EXPECT_EQ(published, !reject);
+        EXPECT_EQ(reader.getFileOffset(), before); EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

@@ -6,6 +6,68 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare shared reference payloads — 2026-10-13
+
+Oblivion admission now owns shared CellRef strings and RefData animation storage
+before teardown. Move-only, one-shot payloads are consumed by the actual cell
+reader for new and overwritten references. A separate PLAY-only callback
+prepares the Player payload without allocating a cell node. Player ownership
+binds to the actual reference, so an alias cannot consume it; finish/clear drops
+unused plans. Installation preserves content-file deletion, uses the reader's
+mapped/generated RefNum and enabled correction, and retains the existing order
+of local-script, actor, soul-validation and Lua initialization.
+
+Four new regressions and extended cell/Player reader fixtures cover source-buffer
+release, move/replay/mismatch rejection, long strings, animation queues, activation
+flags, mapped identity, deleted content, callback ordering/failure, four Player
+initialization orders, aliases and cancellation. Both complete engine suites pass
+**1,403 tests**, exact inventory/XML agreement, no failures/skips, under
+`build/oblivion-compat/m15/S3/reference-payload-normal-01` and
+`reference-payload-sanitized-01`. Tested parent:
+`9f52089d2c4e799e67b62408d0c2748450db15eb`; matching before/after fingerprint:
+`22fe160b6d1d9cd1b64097a764808b0f645f94fb2562c73ae7013a773ab4b3b3`.
+ASan/UBSan halt on errors; leak checks are disabled; audio/SDL are null/offscreen.
+Exact test and engine hashes are in `reference-payload-followup-01/checkpoint-summary.json`.
+
+`reference-payload-allocation-control-01` links a copied production LiveCellRef
+object before the unchanged archive, disabling scalar/array/aligned C++ new only
+inside validated PreparedState installation. **Nine calls** pass: eight actual
+cell-reader installations and one moved-payload ownership case.
+`reference-payload-negative-01` replaces moves with copies; both selected tests
+fail with `std::bad_alloc` as required. This does not cover callback allocations,
+arbitrary old custom-data destructors, wire decoding or whole-load allocation.
+
+Actual load/F5/F9/F5/quit courses pass in `reference-payload-runtime-normal-01`
+(PID 116211) and `reference-payload-runtime-sanitized-01` (PID 118841).
+`reference-payload-runtime-continuation-sanitized-01` uses a fresh PID 118817 after
+the normal process exited and stages its exact final save, SHA256
+`875383e5049144b7a9a78a80b5a1d28b4c26778355ccbf8edffa59dd920c0f18`.
+The editable cell-reference recipes declare three disabled shared weapon
+references with long global strings and animation groups, time 2.5, absolute=true
+and a 64-bit loop count 4294967299, plus a long Player reference global string.
+Independent decoding requires exact identity/count/charge/position/enabled and
+payload preservation across every input and saved output. Native/shared Player
+inventory, actor fields and authored definitions retain their baseline checks.
+All six Oblivion captures were reviewed: prison scene, chains, reticle, HUD and
+retained blade are visible without an error dialog. Disabled injected references
+are not visible; these courses do not prove animation playback.
+`reference-payload-morrowind-01` passes the unchanged M14 startup/idle/F5 isolation
+course, independent native-record/marker exclusion and direct capture review.
+
+Retained attempts include `reference-payload-syntax-01` (two overbroad test edits,
+corrected before both builds), the fixture preflight correction for HCUS=false
+PLAY lacking ICNT, and a cancelled Morrowind prerequisite waiter whose inherited
+launcher-log path was fixed before launch. No engine-source fixes were needed
+after the complete normal test run passed.
+
+This removes the later reference-payload copies, **not the second wire decode**:
+CellStore state.load and Player.load still allocate after teardown. Legacy
+locals/Lua, other callbacks, cell maps/moved-reference tracking, scene/Player
+setup, other managers and consumed missing dependencies remain to be staged or
+validated. Full prior-world preservation after late failure and the complete S3
+audit remain open. `reference-payload-followup-01/remaining-load-boundaries.json`
+records the next decoded-state ownership/remapping/converter constraints.
+
 ## S3 prepare shared cell reference nodes — 2026-10-13
 
 Oblivion admission now prepares detached typed list nodes and registry insertion

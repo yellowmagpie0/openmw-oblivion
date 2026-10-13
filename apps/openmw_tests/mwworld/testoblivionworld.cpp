@@ -17066,7 +17066,8 @@ TEST(OblivionWorldTest, PreparedPlayerInitializationBindsOnlyItsReferenceAndDrop
 
 namespace
 {
-    void implicitPlayerRestoreProbe(int mode, bool authoredAi = false, bool changeInitialList = false)
+    void implicitPlayerRestoreProbe(int mode, bool authoredAi = false, bool changeInitialList = false,
+        bool preparedPayload = false)
     {
         try
         {
@@ -17118,6 +17119,11 @@ namespace
             player.mObject.mRef.mRefID = playerBase.mId; player.mObject.mCreatureStats.mMissingACDT = mode != 2;
             player.mObject.mCreatureStats.mRecalcDynamicStats = false;
             player.mCellId = ESM::RefId(ESM::FormId{1, 0}); player.mHasMark = false;
+            player.mObject.mRef.mGlobalVariable = std::string(160, 'p');
+            player.mObject.mAnimationState.mScriptedAnims.resize(1);
+            player.mObject.mAnimationState.mScriptedAnims[0].mGroup = std::string(160, 'a');
+            std::unique_ptr<MWWorld::LiveCellRefBase::PreparedState> payload;
+            if (preparedPayload) payload = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(player.mObject);
             const auto before = world.captureOblivionRuntimeState().serializeBinary();
             const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
             const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
@@ -17159,6 +17165,7 @@ namespace
             auto definitionPlan = world.prepareOblivionSharedDefinitions(std::move(definitions));
             world.clear(); if (!definitionPlan->install() || !spells.install(store)) std::_Exit(54);
             initialization.install(world.getPlayerPtr());
+            model.setPreparedPlayerState(std::move(payload), world.getPlayerPtr());
             MWWorld::WorldModel::PreparedCreatureStates cores;
             cores.emplace(model.preparedInventoryKey(owner), std::move(core));
             if (playerCore) cores.emplace(model.preparedInventoryKey(player.mObject), std::move(playerCore));
@@ -17178,6 +17185,12 @@ namespace
             if (reader.getRecName().toInt() != ESM::REC_PLAY) std::_Exit(58);
             reader.getRecHeader();
             if (!world.getPlayer().readRecord(reader, ESM::REC_PLAY)) std::_Exit(59);
+            const auto actual = world.getPlayerPtr();
+            if (!actual.getRefData().isEnabled() || model.takePreparedPlayerState(actual)
+                || actual.getCellRef().getGlobalVariable() != std::string(160, 'p')
+                || actual.getRefData().getAnimationState().mScriptedAnims.size() != 1
+                || actual.getRefData().getAnimationState().mScriptedAnims[0].mGroup != std::string(160, 'a'))
+                std::_Exit(69);
             if (!player.mObject.mHasCustomState && !converter.mMappings.empty()) std::_Exit(68);
             };
             if (mode == 4) readPlayer();
@@ -18434,6 +18447,12 @@ TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThr
         // This headless fixture has no scene; exercise storage/overwrite without
         // entering World::disable's separate scene transition.
         state.mEnabled = true;
+        state.mRef.mGlobalVariable = std::string(192, 'g');
+        state.mAnimationState.mScriptedAnims.resize(2);
+        state.mAnimationState.mScriptedAnims[0].mGroup = std::string(192, 'a');
+        state.mAnimationState.mScriptedAnims[1].mGroup = "idle";
+        state.mAnimationState.mScriptedAnims[1].mTime = 2.5f;
+        state.mAnimationState.mScriptedAnims[1].mLoopCount = 12;
         state.mRef.mCount = path == 4 ? 0 : 3;
         if (path == 1) state.mRef.mRefNum = {400, -1};
         if (path >= 2) state.mRef.mRefNum = {400, 0};
@@ -18466,6 +18485,7 @@ TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThr
         {
             MWWorld::LiveCellRef<ESM::Weapon> ref(state.mRef, world.getStore().get<ESM::Weapon>().find(base.mId));
             ref.mRef.setRefNum(key.first);
+            ref.mData.setDeletedByContentFile(true);
             existing = cell.insert(&ref);
             model.registerPtr(MWWorld::Ptr(existing, &cell));
         }
@@ -18485,6 +18505,14 @@ TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThr
             auto* actual = references().back().get<ESM::Weapon>();
             EXPECT_EQ(actual, path == 3 ? existing : node);
             EXPECT_EQ(actual->mBase->mData.mHealth, 73);
+            EXPECT_EQ(actual->mRef.getGlobalVariable(), state.mRef.mGlobalVariable);
+            EXPECT_EQ(actual->mData.isDeletedByContentFile(), path == 3);
+            const auto& animation = actual->mData.getAnimationState().mScriptedAnims;
+            ASSERT_EQ(animation.size(), 2u);
+            EXPECT_EQ(animation[0].mGroup, std::string(192, 'a'));
+            EXPECT_EQ(animation[1].mGroup, "idle");
+            EXPECT_EQ(animation[1].mTime, 2.5f);
+            EXPECT_EQ(animation[1].mLoopCount, 12u);
             EXPECT_EQ(actual->mRef.getCount(), 3);
             EXPECT_EQ(actual->mWorldModel, &model);
             EXPECT_EQ(model.getPtr(actual->mRef.getRefNum()), MWWorld::Ptr(actual, &cell));
@@ -18527,4 +18555,80 @@ TEST(OblivionWorldTest, PreparedCellReferenceCancellationDuplicatesAndNativeExcl
     EXPECT_FALSE(MWWorld::CellStore::prepareReference(0, model));
     state.mRef.mRefID = ESM::RefId::stringRefId("missing-cell-base");
     EXPECT_FALSE(model.prepareCellReference(state, incoming));
+}
+
+TEST(ImplicitPlayerRestoreDeathTest, PreparedReferencePayloadPreservesAllPlayerInitializationOrders)
+{
+    for (int mode : {0, 1, 2, 4})
+    {
+        SCOPED_TRACE(mode);
+        EXPECT_EXIT(implicitPlayerRestoreProbe(mode, true, false, true), ::testing::ExitedWithCode(0), "");
+    }
+}
+
+TEST(OblivionWorldTest, PreparedReferencePayloadOwnsStringsAnimationsAndPreservesRestoreFlags)
+{
+    PopulatedMigrationFixture fixture;
+    ESM::ObjectState state; state.blank();
+    state.mRef.mRefID = ESM::RefId::stringRefId("owned-reference-state");
+    state.mRef.mGlobalVariable = std::string(192, 'g');
+    state.mRef.mDestCell = std::string(192, 'd');
+    state.mRef.mCount = 17;
+    state.mFlags = 7; // SuppressActivate is cleared; OnActivate and ActivationBuffered survive.
+    state.mPosition.pos[0] = 42.f;
+    state.mAnimationState.mScriptedAnims.resize(2);
+    state.mAnimationState.mScriptedAnims[0].mGroup = std::string(192, 'a');
+    state.mAnimationState.mScriptedAnims[1].mGroup = "idle";
+    state.mAnimationState.mScriptedAnims[1].mAbsolute = true;
+    state.mAnimationState.mScriptedAnims[1].mTime = 2.5f;
+    state.mAnimationState.mScriptedAnims[1].mLoopCount = 0x100000003ull;
+    MWWorld::LiveCellRefBase::PreparedState original(state);
+    MWWorld::LiveCellRefBase::PreparedState prepared(std::move(original));
+    // Release every owned source buffer. Only late identity/enabled corrections
+    // are read during install; the rest must have been prepared independently.
+    state.mRef.mGlobalVariable.clear(); state.mRef.mGlobalVariable.shrink_to_fit();
+    state.mRef.mDestCell.clear(); state.mRef.mDestCell.shrink_to_fit();
+    state.mAnimationState.mScriptedAnims.clear(); state.mAnimationState.mScriptedAnims.shrink_to_fit();
+    state.mRef.mRefNum = {400, 3}; state.mEnabled = true;
+    MWWorld::LiveCellRef<ESM::Weapon> target(ESM::makeBlankCellRef());
+    target.mData.setDeletedByContentFile(true);
+    EXPECT_THROW(original.install(target, state), std::logic_error);
+    auto wrong = state; wrong.mRef.mRefID = ESM::RefId::stringRefId("wrong-base");
+    EXPECT_THROW(prepared.install(target, wrong), std::logic_error);
+    EXPECT_TRUE(target.mRef.getRefId().empty());
+    prepared.install(target, state);
+    EXPECT_EQ(target.mRef.getRefNum(), state.mRef.mRefNum);
+    EXPECT_EQ(target.mRef.getGlobalVariable(), std::string(192, 'g'));
+    EXPECT_EQ(target.mRef.getCount(), 17);
+    EXPECT_TRUE(target.mData.isDeletedByContentFile()); EXPECT_TRUE(target.mData.isEnabled());
+    EXPECT_TRUE(target.mData.hasChanged()); EXPECT_FALSE(target.mData.mPhysicsPostponed);
+    EXPECT_FALSE(target.mData.hasCustomData()); EXPECT_EQ(target.mData.getLuaScripts(), nullptr);
+    ESM::ObjectState output; output.blank(); target.mRef.writeState(output); target.mData.write(output);
+    EXPECT_EQ(output.mRef.mDestCell, std::string(192, 'd'));
+    EXPECT_EQ(output.mFlags, 6u); EXPECT_EQ(output.mPosition.pos[0], 42.f);
+    ASSERT_EQ(output.mAnimationState.mScriptedAnims.size(), 2u);
+    EXPECT_EQ(output.mAnimationState.mScriptedAnims[0].mGroup, std::string(192, 'a'));
+    EXPECT_TRUE(output.mAnimationState.mScriptedAnims[1].mAbsolute);
+    EXPECT_EQ(output.mAnimationState.mScriptedAnims[1].mTime, 2.5f);
+    EXPECT_EQ(output.mAnimationState.mScriptedAnims[1].mLoopCount, 0x100000003ull);
+    EXPECT_THROW(prepared.install(target, state), std::logic_error);
+    EXPECT_EQ(target.mRef.getCount(), 17);
+}
+
+TEST(OblivionWorldTest, PreparedPlayerReferencePayloadBindsToOneReferenceAndCancels)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    ESM::ObjectState state; state.blank(); state.mRef.mRefID = ESM::RefId::stringRefId("Player");
+    MWWorld::ManualRef alias(world.getStore(), state.mRef.mRefID);
+    const auto prepare = [&] { return std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(state); };
+    model.setPreparedPlayerState(prepare(), world.getPlayerPtr());
+    EXPECT_FALSE(model.takePreparedPlayerState(alias.getPtr()));
+    EXPECT_TRUE(model.takePreparedPlayerState(world.getPlayerPtr()));
+    EXPECT_FALSE(model.takePreparedPlayerState(world.getPlayerPtr()));
+    model.setPreparedPlayerState(prepare(), world.getPlayerPtr()); model.finishCellReferenceRestore();
+    EXPECT_FALSE(model.takePreparedPlayerState(world.getPlayerPtr()));
+    model.setPreparedPlayerState(prepare(), world.getPlayerPtr()); model.clear();
+    EXPECT_FALSE(model.takePreparedPlayerState(world.getPlayerPtr()));
+    EXPECT_THROW(model.setPreparedPlayerState(prepare(), {}), std::logic_error);
 }

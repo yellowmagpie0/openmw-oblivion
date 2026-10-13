@@ -61,11 +61,49 @@ namespace MWWorld
         return *this;
     }
 
+    LiveCellRefBase::PreparedState::PreparedState(const ESM::ObjectState& state)
+        : mRef(state.mRef)
+        , mData(state, false)
+    {
+    }
+
+    LiveCellRefBase::PreparedState::PreparedState(PreparedState&& other)
+        : mRef(std::move(other.mRef))
+        , mData(std::move(other.mData))
+        , mConsumed(std::exchange(other.mConsumed, true))
+    {
+    }
+
+    void LiveCellRefBase::PreparedState::install(LiveCellRefBase& target, const ESM::ObjectState& state)
+    {
+        if (mConsumed || mRef.getRefId() != state.mRef.mRefID)
+            throw std::logic_error("Prepared reference state is unavailable or belongs to another base");
+        // The reader maps content indices / legacy ActorIds and forces Player
+        // enabled after admission. Keep those decisions at their existing sites.
+        mRef.setRefNum(state.mRef.mRefNum);
+        if (state.mEnabled) mData.enable();
+        else mData.disable();
+        mData.setDeletedByContentFile(target.mData.isDeletedByContentFile());
+        target.mRef = std::move(mRef);
+        target.mData = std::move(mData);
+        mConsumed = true;
+    }
+
+    void LiveCellRefBase::loadPrepared(const ESM::ObjectState& state, PreparedState& prepared)
+    {
+        prepared.install(*this, state);
+        loadAdditionalState(state);
+    }
+
     void LiveCellRefBase::loadImp(const ESM::ObjectState& state)
     {
         mRef = CellRef(state.mRef);
         mData = RefData(state, mData.isDeletedByContentFile());
+        loadAdditionalState(state);
+    }
 
+    void LiveCellRefBase::loadAdditionalState(const ESM::ObjectState& state)
+    {
         Ptr ptr(this);
 
         if (state.mHasLocals)

@@ -161,10 +161,12 @@ namespace MWWorld
         public:
             virtual ~PreparedReference() = default;
             virtual LiveCellRefBase& reference() = 0;
+            virtual void load(LiveCellRefBase& target, const ESM::ObjectState& state) = 0;
             virtual void registerPtr(const Ptr& ptr, WorldModel& model) = 0;
             virtual void publish(CellRefListBase& target, WorldModel& model, CellStore* cell) = 0;
         };
-        static std::unique_ptr<PreparedReference> prepareReference(int type, WorldModel& model);
+        static std::unique_ptr<PreparedReference> prepareReference(
+            int type, WorldModel& model, const ESM::ObjectState* state = nullptr);
 
         void rest(double hours);
         void recharge(float duration);

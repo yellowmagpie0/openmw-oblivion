@@ -376,7 +376,10 @@ namespace MWWorld
 
             MWBase::Environment::get().getWorldModel()->deregisterLiveCellRef(mPlayer);
             MWBase::Environment::get().getWorldModel()->beginPlayerRestore(getPlayer());
-            mPlayer.load(player.mObject);
+            if (auto prepared = MWBase::Environment::get().getWorldModel()->takePreparedPlayerState(getPlayer()))
+                mPlayer.loadPrepared(player.mObject, *prepared);
+            else
+                mPlayer.load(player.mObject);
             MWBase::Environment::get().getWorldModel()->registerPtr(getPlayer());
             if (reader.mActorIdConverter && player.mObject.mHasCustomState)
                 reader.mActorIdConverter->mMappings.emplace(

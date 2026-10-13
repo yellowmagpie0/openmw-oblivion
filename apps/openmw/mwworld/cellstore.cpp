@@ -225,14 +225,16 @@ namespace
     {
         typename MWWorld::CellRefList<T>::List mNode;
         MWWorld::PtrRegistry::PreparedInsertions mRegistration;
+        std::optional<MWWorld::LiveCellRefBase::PreparedState> mState;
 
     public:
-        explicit PreparedCellReference(MWWorld::WorldModel& model)
+        PreparedCellReference(MWWorld::WorldModel& model, const ESM::ObjectState* state)
             : mRegistration(model.preparePtrInsertions(1))
         {
             // The winning base is bound by the reader, after incoming definitions
             // are installed. This detached node never borrows outgoing records.
             mNode.emplace_back(ESM::makeBlankCellRef(), nullptr);
+            if (state) mState.emplace(*state);
         }
         MWWorld::LiveCellRefBase& reference() override
         {
@@ -242,6 +244,12 @@ namespace
         void registerPtr(const MWWorld::Ptr& ptr, MWWorld::WorldModel& model) override
         {
             model.registerPreparedPtr(ptr, mRegistration);
+        }
+        void load(MWWorld::LiveCellRefBase& target, const ESM::ObjectState& state) override
+        {
+            if (!mState || target.getType() != T::sRecordId)
+                throw std::logic_error("Prepared cell reference has no matching state");
+            target.loadPrepared(state, *mState);
         }
         void publish(MWWorld::CellRefListBase& target, MWWorld::WorldModel& model, MWWorld::CellStore* cell) override
         {
@@ -320,7 +328,8 @@ namespace
                 {
                     // overwrite existing reference
                     float oldscale = iter->mRef.getScale();
-                    iter->load(state);
+                    if (prepared) prepared->load(*iter, state);
+                    else iter->load(state);
                     const ESM::Position& oldpos = iter->mRef.getPosition();
                     const ESM::Position& newpos = iter->mData.getPosition();
                     const MWWorld::Ptr ptr(&*iter, cellstore);
@@ -357,7 +366,7 @@ namespace
         {
             auto& ref = static_cast<MWWorld::LiveCellRef<T>&>(prepared->reference());
             ref.mBase = record;
-            ref.load(state);
+            prepared->load(ref, state);
             prepared->publish(collection, model, cellstore);
             return;
         }
@@ -1655,7 +1664,7 @@ namespace MWWorld
 }
 
 std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::CellStore::prepareReference(
-    int type, WorldModel& model)
+    int type, WorldModel& model, const ESM::ObjectState* state)
 {
     std::unique_ptr<PreparedReference> result;
     CellStoreTuple types;
@@ -1663,7 +1672,7 @@ std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::CellStore::prepa
         using T = std::remove_cv_t<std::remove_pointer_t<decltype(collection.mList.front().mBase)>>;
         if constexpr (!ESM::isESM4Rec(T::sRecordId))
             if (type == T::sRecordId)
-                result = std::make_unique<PreparedCellReference<T>>(model);
+                result = std::make_unique<PreparedCellReference<T>>(model, state);
     });
     return result;
 }

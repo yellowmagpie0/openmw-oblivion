@@ -807,3 +807,23 @@ The newest milestone entry records hashes, retained failures and scope. Referenc
 payloads, scripts/Lua, cell-map/move storage, scene/player setup, other shared managers,
 consumed missing-dependency admission, full late-failure outgoing-world preservation
 and the complete S3 audit remain open.
+
+Shared reference payload ownership now prepares CellRef strings and RefData
+animation storage before teardown. The actual cell reader consumes it for new
+and overwritten shared references; a PLAY-only admission callback prepares the
+Player payload and binds ownership to its actual LiveCellRef. Installation keeps
+mapped/generated identities, Player enabled correction and content deletion,
+without moving actor/script/Lua callbacks earlier. Source release, one-shot/move
+rejection, flags, aliases, cancellation, eight admission cases, ten cell-reader
+cases and four prepared Player initialization orders pass. Both complete engine
+suites pass 1403 tests. Nine C++-new-disabled payload installations pass; copying
+instead of moving fails both allocation controls. Normal/instrumented actual
+load/F5/F9/F5 courses and fresh instrumented continuation preserve long reference
+strings and exact animation group/time/absolute/64-bit loop count on three
+disabled shared references, plus the Player string. Morrowind startup/save
+isolation passes, and all seven captures were reviewed. Evidence lives under
+S3/reference-payload-*; the milestone entry records fingerprints and scope.
+The cell and Player readers still perform a second allocating wire decode after
+teardown. That boundary, locals/Lua and other callbacks/managers, cell tracking,
+scene setup, missing-dependency admission, full prior-world late-failure
+preservation and the full S3 audit remain open.

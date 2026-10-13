@@ -221,6 +221,8 @@ namespace MWWorld
         void setPreparedCellReferences(PreparedCellReferences references);
         std::unique_ptr<CellStore::PreparedReference> takePreparedCellReference(const ESM::ObjectState& state);
         void finishCellReferenceRestore();
+        void setPreparedPlayerState(std::unique_ptr<LiveCellRefBase::PreparedState> state, const Ptr& player);
+        std::unique_ptr<LiveCellRefBase::PreparedState> takePreparedPlayerState(const Ptr& player);
         using PreparedInventoryStates = std::map<PreparedInventoryKey, std::unique_ptr<ContainerStore>>;
         static PreparedInventoryKey preparedInventoryKey(const ESM::ObjectState& state);
         std::unique_ptr<ContainerStore> prepareInventoryState(const ESM::ObjectState& state, const ESMStore& incoming);
@@ -252,6 +254,8 @@ namespace MWWorld
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> mPreparedFogStates;
         PreparedInventoryStates mPreparedInventoryStates;
         PreparedCellReferences mPreparedCellReferences;
+        std::unique_ptr<LiveCellRefBase::PreparedState> mPreparedPlayerState;
+        LiveCellRefBase* mPreparedPlayerStateRef = nullptr;
         PreparedNpcStates mPreparedNpcStates;
         PreparedCreatureStates mPreparedCreatureStates;
         PreparedActorCustomData mPreparedActorCustomData;

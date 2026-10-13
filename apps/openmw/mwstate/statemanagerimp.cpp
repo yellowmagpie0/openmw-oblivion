@@ -500,6 +500,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
         MWWorld::WorldModel::PreparedCellReferences preparedCellReferences;
+        std::unique_ptr<MWWorld::LiveCellRefBase::PreparedState> preparedPlayerReference;
         MWWorld::WorldModel::PreparedNpcStates preparedNpcStats;
         MWWorld::WorldModel::PreparedCreatureStates preparedCreatureStats;
         MWWorld::SharedActorInitialization preparedActorCustomData(
@@ -552,6 +553,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 if (prepared)
                     preparedCellReferences.emplace(
                         MWWorld::WorldModel::PreparedInventoryKey{ref.mRefNum, ref.mRefID}, std::move(prepared));
+            }, [&](const ESM::ObjectState& state) {
+                preparedPlayerReference = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(state);
             });
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
@@ -573,6 +576,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWBase::Environment::get().getWorldModel()->setPreparedFogStates(std::move(preparedFog));
         MWBase::Environment::get().getWorldModel()->setPreparedInventoryStates(std::move(preparedInventories));
         MWBase::Environment::get().getWorldModel()->setPreparedCellReferences(std::move(preparedCellReferences));
+        MWBase::Environment::get().getWorldModel()->setPreparedPlayerState(
+            std::move(preparedPlayerReference), world.getPlayerPtr());
         MWBase::Environment::get().getWorldModel()->setPreparedNpcStates(std::move(preparedNpcStats));
         MWBase::Environment::get().getWorldModel()->setPreparedCreatureStates(std::move(preparedCreatureStats));
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)

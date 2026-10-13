@@ -37,7 +37,8 @@ namespace MWState
             const ESM4::RuntimeState*)>& prepareInventory = {},
         const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions = {},
         const std::function<bool(const ESM::RefId&)>& restoreCell = {},
-        const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference = {});
+        const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference = {},
+        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference = {});
 }
 
 #endif
