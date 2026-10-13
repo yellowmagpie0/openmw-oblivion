@@ -765,3 +765,52 @@ TEST(MWWorldPtrTest, InlineEquipmentAlternativesPreserveLegacyAndNativeSlotOrder
     check(nativeArmor,{I::Slot_Cuirass}); check(nativeClothing,{I::Slot_Shirt});
     nativeArmor.mArmorFlags=0; nativeClothing.mClothingFlags=0; check(nativeArmor,{}); check(nativeClothing,{});
 }
+
+TEST(MWWorldPtrTest, preparedCellPublicationRejectsBeforeMovingNodesAndCanRetry)
+{
+    MWClass::Weapon::registerSelf();
+    for (int failure : {0, 1, 2}) // foreign reservation owner, invalid namespace, exhausted namespace
+    {
+        SCOPED_TRACE(failure);
+        MWWorld::ESMStore store;
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(store, readers), foreign(store, readers);
+        auto plan = MWWorld::CellStore::prepareReference(ESM::REC_WEAP, model);
+        ASSERT_TRUE(plan);
+        auto* node = &plan->reference();
+        MWWorld::CellRefList<ESM::Weapon> target;
+        if (failure == 1) model.setLastGeneratedRefNum({1, 0});
+        if (failure == 2)
+            model.setLastGeneratedRefNum({std::numeric_limits<std::uint32_t>::max(),
+                std::numeric_limits<std::int32_t>::min()});
+        const auto serial = model.getLastGeneratedRefNum();
+        const auto revision = model.getPtrRegistryRevision();
+        const auto foreignRevision = foreign.getPtrRegistryRevision();
+        EXPECT_THROW(plan->publish(target, failure == 0 ? foreign : model, nullptr), std::exception);
+        EXPECT_TRUE(target.mList.empty());
+        ASSERT_NO_THROW(plan->reference());
+        EXPECT_EQ(&plan->reference(), node);
+        EXPECT_EQ(node->mWorldModel, nullptr);
+        EXPECT_FALSE(node->mRef.getRefNum().isSet());
+        EXPECT_EQ(model.pendingPtrInsertions(), 1u);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+        EXPECT_EQ(foreign.getPtrRegistryRevision(), foreignRevision);
+        model.setLastGeneratedRefNum({0, -1});
+        ASSERT_NO_THROW(plan->publish(target, model, nullptr));
+        ASSERT_EQ(target.mList.size(), 1u);
+        EXPECT_EQ(&target.mList.front(), node);
+        const ESM::RefNum id{1, -1};
+        EXPECT_EQ(node->mRef.getRefNum(), id);
+        EXPECT_EQ(model.getPtr(id), MWWorld::Ptr(node));
+        EXPECT_EQ(model.pendingPtrInsertions(), 0u);
+        EXPECT_THROW(plan->publish(target, model, nullptr), std::logic_error);
+        EXPECT_EQ(target.mList.size(), 1u);
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision + 1);
+        plan.reset();
+        EXPECT_EQ(model.getPtr(id), MWWorld::Ptr(node));
+        target.mList.clear();
+        EXPECT_TRUE(model.getPtr(id).isEmpty());
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision + 2);
+    }
+}

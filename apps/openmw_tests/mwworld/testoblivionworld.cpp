@@ -18411,3 +18411,120 @@ TEST(OblivionWorldTest, PreparedPlayerRegistrationConsumesBothImplicitInitializa
         model.finishActorCustomDataRestore();
     }
 }
+
+TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThroughTheCellReader)
+{
+    for (int path : {0, 1, 2, 3, 4}) // unset, generated, content, overwrite, empty content
+    for (bool incomingOnly : {false, true})
+    {
+        SCOPED_TRACE(path);
+        SCOPED_TRACE(incomingOnly);
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& model = world.getWorldModel();
+        auto& cell = *world.getPlayerPtr().getCell();
+        ESM::Weapon base{}; base.blank();
+        base.mId = ESM::RefId::stringRefId("prepared-cell-weapon");
+        base.mData.mHealth = 73;
+        MWWorld::ESMStore incoming;
+        if (incomingOnly) incoming.getWritable<ESM::Weapon>().insert(base);
+        else world.getStore().getWritable<ESM::Weapon>().insertStatic(base);
+        incoming.rebuildIdsIndex(); world.getStore().rebuildIdsIndex();
+        ESM::ObjectState state; state.blank(); state.mRef.mRefID = base.mId;
+        // This headless fixture has no scene; exercise storage/overwrite without
+        // entering World::disable's separate scene transition.
+        state.mEnabled = true;
+        state.mRef.mCount = path == 4 ? 0 : 3;
+        if (path == 1) state.mRef.mRefNum = {400, -1};
+        if (path >= 2) state.mRef.mRefNum = {400, 0};
+        const auto revision = model.getPtrRegistryRevision();
+        const auto serial = model.getLastGeneratedRefNum();
+        const auto pending = model.pendingPtrInsertions();
+        const auto references = [&] {
+            std::vector<MWWorld::Ptr> result;
+            cell.forEachType<ESM::Weapon>([&](const MWWorld::Ptr& ptr) { result.push_back(ptr); return true; }, true);
+            return result;
+        };
+        const auto count = references().size();
+        auto prepared = model.prepareCellReference(state, incoming); ASSERT_TRUE(prepared);
+        auto* node = &prepared->reference();
+        EXPECT_EQ(node->mWorldModel, nullptr);
+        EXPECT_FALSE(node->mRef.getRefNum().isSet());
+        EXPECT_EQ(references().size(), count);
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 1);
+        MWWorld::WorldModel::PreparedCellReferences plans;
+        auto key = model.preparedInventoryKey(state);
+        if (key.first.hasContentFile()) key.first.mContentFile = 3;
+        plans.emplace(key, std::move(prepared));
+        model.setPreparedCellReferences(std::move(plans));
+        if (incomingOnly) world.getStore().getWritable<ESM::Weapon>().insert(base);
+        world.getStore().rebuildIdsIndex();
+        MWWorld::LiveCellRefBase* existing = nullptr;
+        if (path == 3)
+        {
+            MWWorld::LiveCellRef<ESM::Weapon> ref(state.mRef, world.getStore().get<ESM::Weapon>().find(base.mId));
+            ref.mRef.setRefNum(key.first);
+            existing = cell.insert(&ref);
+            model.registerPtr(MWWorld::Ptr(existing, &cell));
+        }
+        auto stream = std::make_unique<std::stringstream>();
+        ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(*stream); writer.startRecord(ESM::REC_CSTA);
+        writer.writeHNT("OBJE", ESM::REC_WEAP); state.save(writer); writer.endRecord(ESM::REC_CSTA);
+        ESM::ESMReader reader; reader.open(std::move(stream), "prepared-cell-reference");
+        std::map<int, int> mapping{{0, 3}}; reader.setContentFileMapping(&mapping);
+        reader.getRecName(); reader.getRecHeader();
+        ASSERT_NO_THROW(cell.readReferences(reader, nullptr));
+        EXPECT_EQ(model.pendingPtrInsertions(), pending);
+        EXPECT_FALSE(model.takePreparedCellReference(state));
+        EXPECT_EQ(references().size(), count + (path != 4));
+        if (path != 4)
+        {
+            auto* actual = references().back().get<ESM::Weapon>();
+            EXPECT_EQ(actual, path == 3 ? existing : node);
+            EXPECT_EQ(actual->mBase->mData.mHealth, 73);
+            EXPECT_EQ(actual->mRef.getCount(), 3);
+            EXPECT_EQ(actual->mWorldModel, &model);
+            EXPECT_EQ(model.getPtr(actual->mRef.getRefNum()), MWWorld::Ptr(actual, &cell));
+            if (path != 0)
+            {
+                EXPECT_EQ(actual->mRef.getRefNum(), key.first);
+            }
+        }
+    }
+}
+
+TEST(OblivionWorldTest, PreparedCellReferenceCancellationDuplicatesAndNativeExclusion)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& model = world.getWorldModel();
+    ESM::Weapon base{}; base.blank(); base.mId = ESM::RefId::stringRefId("prepared-cell-cancel");
+    world.getStore().getWritable<ESM::Weapon>().insertStatic(base); world.getStore().rebuildIdsIndex();
+    ESM::ObjectState state; state.blank(); state.mRef.mRefID = base.mId;
+    MWWorld::ESMStore incoming;
+    const auto pending = model.pendingPtrInsertions();
+    const auto revision = model.getPtrRegistryRevision();
+    const auto serial = model.getLastGeneratedRefNum();
+    MWWorld::WorldModel::PreparedCellReferences plans;
+    auto first = model.prepareCellReference(state, incoming); auto* firstNode = &first->reference();
+    auto second = model.prepareCellReference(state, incoming); auto* secondNode = &second->reference();
+    plans.emplace(model.preparedInventoryKey(state), std::move(first));
+    plans.emplace(model.preparedInventoryKey(state), std::move(second));
+    model.setPreparedCellReferences(std::move(plans));
+    EXPECT_EQ(model.pendingPtrInsertions(), pending + 2);
+    auto taken = model.takePreparedCellReference(state);
+    EXPECT_EQ(&taken->reference(), firstNode); taken.reset();
+    EXPECT_EQ(model.pendingPtrInsertions(), pending + 1);
+    taken = model.takePreparedCellReference(state); EXPECT_EQ(&taken->reference(), secondNode); taken.reset();
+    EXPECT_EQ(model.pendingPtrInsertions(), pending);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+    plans.emplace(model.preparedInventoryKey(state), model.prepareCellReference(state, incoming));
+    model.setPreparedCellReferences(std::move(plans)); model.finishCellReferenceRestore();
+    EXPECT_EQ(model.pendingPtrInsertions(), pending);
+    EXPECT_FALSE(MWWorld::CellStore::prepareReference(ESM4::Weapon::sRecordId, model));
+    EXPECT_FALSE(MWWorld::CellStore::prepareReference(0, model));
+    state.mRef.mRefID = ESM::RefId::stringRefId("missing-cell-base");
+    EXPECT_FALSE(model.prepareCellReference(state, incoming));
+}

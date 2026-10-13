@@ -3352,3 +3352,56 @@ TEST(SaveAdmissionTest, SkippedCellOwnersDoNotPrepareButStillReceivePayloadValid
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
 }
+
+TEST(SaveAdmissionTest, CellReferenceStoragePreparesBeforeIdentityRemappingAndPublication)
+{
+    MWWorld::ESMStore content; installTimestampContent(content);
+    for (bool native : {false, true}) for (bool inventoryCallback : {false, true})
+    for (bool reject : {false, true})
+    {
+        SCOPED_TRACE(native);
+        SCOPED_TRACE(inventoryCallback);
+        SCOPED_TRACE(reject);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::Player player{}; player.mObject.blank();
+            player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
+            player.mCellId = ESM::RefId(ESM::FormId{1, 0});
+            writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY);
+            for (int index = 1; index <= 2; ++index)
+            {
+                ESM::NpcState actor{}; actor.blank(); actor.mRef.mRefID = timestampNpcId;
+                actor.mRef.mRefNum = {static_cast<std::uint32_t>(100 + index), -1};
+                writer.startRecord(ESM::REC_CSTA);
+                writer.writeCellId(ESM::RefId(ESM::FormId{static_cast<std::uint32_t>(index), 0}));
+                ESM::CellState cell{}; cell.mIsInterior = true; cell.save(writer);
+                writer.writeHNT("OBJE", std::uint32_t{0}); actor.save(writer);
+                writer.endRecord(ESM::REC_CSTA);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        const auto before = reader.getFileOffset();
+        std::vector<std::uint32_t> prepared;
+        bool published = false;
+        std::function<void(ESM::ObjectState&, const MWWorld::ESMStore&, const ESM4::RuntimeState*)> inventory;
+        if (inventoryCallback) inventory = [&](ESM::ObjectState& state, const auto&, const auto*) {
+            EXPECT_EQ(prepared, (std::vector<std::uint32_t>{102}));
+            state.mRef.mRefNum = {999, -1};
+        };
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { published = true; }, {}, {}, {}, {}, {}, inventory,
+            [&](auto) { published = true; },
+            [&](const ESM::RefId& cell) { return cell == ESM::RefId(ESM::FormId{2, 0}); },
+            [&](const ESM::ObjectState& state, const MWWorld::ESMStore&) {
+                EXPECT_FALSE(published);
+                EXPECT_EQ(state.mRef.mRefID, timestampNpcId); // PLAY must not allocate a cell node.
+                prepared.push_back(state.mRef.mRefNum.mIndex);
+                if (reject) throw std::runtime_error("cell storage preparation failed");
+            }); };
+        if (reject) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(prepared, (std::vector<std::uint32_t>{102}));
+        EXPECT_EQ(published, !reject); EXPECT_EQ(reader.getFileOffset(), before);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

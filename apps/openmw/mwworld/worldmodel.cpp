@@ -160,6 +160,7 @@ MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 void MWWorld::WorldModel::clear()
 {
     mPreparedFogStates.clear();
+    finishCellReferenceRestore();
     mPreparedInventoryStates.clear();
     mPreparedNpcStates.clear();
     mPreparedCreatureStates.clear();
@@ -935,4 +936,30 @@ std::unique_ptr<MWWorld::CustomData> MWWorld::WorldModel::takePreparedActorCusto
     auto result = std::move(found->second);
     mPreparedActorCustomData.erase(found);
     return result;
+}
+
+std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::WorldModel::prepareCellReference(
+    const ESM::ObjectState& state, const ESMStore& incoming)
+{
+    return CellStore::prepareReference(mStore.findForRestore(state.mRef.mRefID, incoming), *this);
+}
+
+void MWWorld::WorldModel::setPreparedCellReferences(PreparedCellReferences references)
+{
+    mPreparedCellReferences = std::move(references);
+}
+
+std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::WorldModel::takePreparedCellReference(
+    const ESM::ObjectState& state)
+{
+    const auto found = mPreparedCellReferences.find({state.mRef.mRefNum, state.mRef.mRefID});
+    if (found == mPreparedCellReferences.end()) return {};
+    auto result = std::move(found->second);
+    mPreparedCellReferences.erase(found);
+    return result;
+}
+
+void MWWorld::WorldModel::finishCellReferenceRestore()
+{
+    mPreparedCellReferences.clear();
 }

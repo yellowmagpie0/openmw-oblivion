@@ -6,6 +6,100 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare shared cell reference nodes — 2026-10-13
+
+Oblivion admission now prepares detached typed list nodes and registry insertion
+reservations for shared cell references. The callback runs before inventory
+preparation remaps owner identities; StateManager maps a copy for the plan key.
+PLAY is excluded, skipped cells do not prepare, and native ESM4 reference types
+retain their separate restoration path. Preparation assigns no identity, runs
+no reference/script callbacks and borrows no outgoing base record. The cell reader
+binds the installed winning base and consumes by mapped saved identity before
+legacy ActorId conversion. Duplicate saved keys retain encounter order.
+
+New references load into their owned nodes, register, then splice into the cell.
+Existing content references retain in-place overwrite and use the prepared
+registration; invalid content links/empty stacks retain their drop behavior.
+Unused plans release their nodes/credits on cancellation, restore completion or
+World clear. Registration validates reservation ownership and namespace before
+splice, so rejection leaves the node detached and available for retry. This
+last ordering was corrected after an independent production-library probe
+reproduced namespace exhaustion leaving the node in the target cell.
+
+Four new regressions cover ten real cell-reader cases (unset/generated/remapped
+content identities, overwrite and empty-content drop, with static or incoming-only
+bases), preparation/cancellation and duplicate-key ownership, native/missing-type
+exclusion, eight admission callback/failure cases, and three registration rejection
+and retry cases. Both complete engine inventories pass **1,399 tests**, exact
+inventory/XML agreement and no failures/skips, under
+`build/oblivion-compat/m15/S3/cell-reference-normal-03` and
+`cell-reference-sanitized-03`. Tested parent:
+`b7c225bcb922db6fc56245277de8e66674ee56b4`; matching before/after fingerprint:
+`7afcff888281c13cd51314a9fe216589edb72e893f134b98a222168d07dd75bc`.
+Normal/instrumented openmw-tests SHA256:
+`88d0f83d35f30a4bb1f73d63ab398440321f6343fabcab144c1033e332b3a28d`,
+`1da5f79038dc5d3f70594c3e8602395c186d386133eeb375deaef09db8586dab`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are null/offscreen.
+
+`cell-reference-allocation-control-02` links a copied instrumented CellStore
+object before the unchanged production archive. Scalar/array/aligned C++ new is
+disabled only during final registration and list publication. **27 calls** pass:
+six through the actual cell reader and one for each of the 21 shared reference
+types. The type matrix also checks cancellation and consumed-node rejection.
+`cell-reference-negative-02` replaces splice with allocating push_back; both
+selected tests fail with `std::bad_alloc` as required. These are publication
+probes, not allocation-free reference codecs, callbacks, rendering or whole loads.
+
+The earlier baseline runtime fixture had no shared CSTA OBJE entries. Its
+`cell-reference-runtime-normal-02` pass is compatibility evidence only. The
+extended editable `cell-reference-recipe.json` adds three disabled shared weapon
+references in Imperial Prison, using incoming generated base43 and RefNums
+(10000,-1), (10001,-1), (10002,-1). Counts are 3/7/1, integer charge 17/28/39,
+and enchantment charge 17.5/3.25/9.5; positions and disabled state are explicit.
+Extended input SHA256:
+`85e65c04fddfb3295ced8d4000de0d578d729eb2c4972576122aeab5d4b59484`.
+
+`cell-reference-objects-runtime-normal-01` (PID109958) and
+`cell-reference-objects-runtime-sanitized-01` (PID109974) pass actual
+load/F5/F9/F5/quit. The independent verifier decodes CSTA fields in the input,
+first save and final save, requiring exactly the three references and every
+listed field; extra matching-base references also fail. Existing native-state,
+shared Player inventory/NPC/core and authored-definition comparisons pass, as
+does the exact known script-warning baseline. Normal/instrumented openmw SHA256:
+`1ce480f29d752947243e220fe6b846887ee42a3990e3c0242d009f27e9e77357`,
+`4e1f2fbdad4a23764891fe79e59b7f8b1318b4c748d9b95e61ccb1a308252c43`.
+
+`cell-reference-objects-runtime-continuation-sanitized-01` starts fresh PID110075
+after the normal process exits, from its exact final save SHA256
+`d5e8845126c2215e21c10c477580b8d44e0678d9250a6c49906d1b12bb44d145`.
+Both load/save cycles, exact shared-reference and native-state checks, and clean
+exit pass. All six reviewed Oblivion captures show prison stone/chains, HUD and
+retained blade without error dialogs. The injected references are disabled;
+their persistence is established by saved fields, not visual appearance.
+`cell-reference-morrowind-02` passes unchanged M14 startup/idle/F5 save isolation
+and independent native-record/marker exclusion; its reviewed capture shows
+terrain/sky/reticle/HUD. These courses do not establish combat acceptance.
+
+Retained syntax -01 found test-only private-access and same-line trace macro
+errors; corrected -02 passes all six probes. Normal -01 crashed when the new
+headless overwrite fixture inherited a disabled ObjectState and entered
+World::disable without a scene; `cell-reference-debug-01` retains the backtrace.
+The fixture now explicitly enables that storage test, and its assertion braces
+were fixed. Sanitized -01 was deliberately stopped before editing, not rejected
+by a sanitizer finding. Normal/sanitized -02 pass 1398 tests, but the separate
+`cell-reference-publication-probe-01` exposed the transfer-before-registration
+failure; final -03 includes its fix and permanent retry regression. Earlier
+control/runtime evidence remains scoped to its tested source. Obsolete runtime
+waiters were cancelled before launch when prerequisites failed or coverage was
+replaced by the actual shared-reference fixture; interruption reasons are retained.
+
+S3 remains **in progress**. This prepares shared cell list nodes and final registry
+publication only. Reference/animation payload copies, general locals and Lua,
+cell-map/moved-reference storage, scene/player setup, consumed missing-dependency
+admission, other shared manager restoration, full outgoing-world preservation
+after late failure and the complete S3 audit remain open. Read-only payload/path
+findings are retained in `cell-reference-followup-01/reference-payload-notes.txt`.
+
 ## S3 preserve registry capacity during reference relocation — 2026-10-13
 
 Ordinary registration now reserves an additional identity slot only when the

@@ -91,6 +91,7 @@ namespace ESM4
 namespace MWWorld
 {
     class ESMStore;
+    class WorldModel;
     struct CellStoreImp;
 
     using CellStoreTuple = std::tuple<CellRefList<ESM::Activator>, CellRefList<ESM::Potion>,
@@ -152,6 +153,18 @@ namespace MWWorld
             bool commit() noexcept;
         };
         static PreparedMoves prepareMoves(std::span<const std::pair<Ptr, CellStore*>> moves);
+
+        // Detached storage only: no state load, registration or script callbacks
+        // run until the ordinary cell reader consumes this plan.
+        class PreparedReference
+        {
+        public:
+            virtual ~PreparedReference() = default;
+            virtual LiveCellRefBase& reference() = 0;
+            virtual void registerPtr(const Ptr& ptr, WorldModel& model) = 0;
+            virtual void publish(CellRefListBase& target, WorldModel& model, CellStore* cell) = 0;
+        };
+        static std::unique_ptr<PreparedReference> prepareReference(int type, WorldModel& model);
 
         void rest(double hours);
         void recharge(float duration);

@@ -788,3 +788,22 @@ The newest milestone entry records hashes and scope. This closes unnecessary
 reservation growth during pointer replacement only; cell storage, general reference
 and script restoration, scene publication, consumed missing-dependency admission,
 full late-failure outgoing-world preservation and the complete S3 audit remain open.
+
+
+Oblivion admission now owns typed shared cell-reference list nodes and final
+registry reservations, without loading state, assigning identities or borrowing
+outgoing bases. Real cell restoration binds winning bases, preserves overwrite/drop
+behavior and consumes plans before legacy ActorId conversion. Registration rejection
+leaves a node detached and retryable; this ordering was corrected after a production
+probe demonstrated partial publication on namespace exhaustion. Four new tests cover
+cell codecs, remapping/incoming bases, cancellation/duplicate keys, admission ordering
+and rejection/retry. Both full 1399-case normal and ASan/UBSan inventories pass with
+matching fingerprints. Twenty-seven guarded publications cover real codecs and all21
+shared types; an allocating splice replacement fails. Extended normal/instrumented
+runtime courses and exact normal-save fresh instrumented continuation preserve three
+shared weapon CSTA identities/counts/charge/disabled state/positions, alongside native
+and shared Player state. Morrowind save isolation and seven capture reviews pass.
+The newest milestone entry records hashes, retained failures and scope. Reference
+payloads, scripts/Lua, cell-map/move storage, scene/player setup, other shared managers,
+consumed missing-dependency admission, full late-failure outgoing-world preservation
+and the complete S3 audit remain open.

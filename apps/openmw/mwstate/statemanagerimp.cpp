@@ -499,6 +499,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::function<bool()> preparedProjectiles;
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
+        MWWorld::WorldModel::PreparedCellReferences preparedCellReferences;
         MWWorld::WorldModel::PreparedNpcStates preparedNpcStats;
         MWWorld::WorldModel::PreparedCreatureStates preparedCreatureStats;
         MWWorld::SharedActorInitialization preparedActorCustomData(
@@ -543,6 +544,14 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     throw std::runtime_error("World cannot prepare native-profile shared definitions");
             }, [&](const ESM::RefId& cell) {
                 return MWBase::Environment::get().getWorldModel()->canRestoreCell(cell);
+            }, [&](const ESM::ObjectState& state, const MWWorld::ESMStore& incoming) {
+                auto ref = state.mRef;
+                if (!reader.applyContentFileMapping(ref.mRefNum)) return;
+                auto& model = *MWBase::Environment::get().getWorldModel();
+                auto prepared = model.prepareCellReference(state, incoming);
+                if (prepared)
+                    preparedCellReferences.emplace(
+                        MWWorld::WorldModel::PreparedInventoryKey{ref.mRefNum, ref.mRefID}, std::move(prepared));
             });
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
@@ -563,6 +572,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             throw std::runtime_error("Shared spell lists no longer match the cleared World");
         MWBase::Environment::get().getWorldModel()->setPreparedFogStates(std::move(preparedFog));
         MWBase::Environment::get().getWorldModel()->setPreparedInventoryStates(std::move(preparedInventories));
+        MWBase::Environment::get().getWorldModel()->setPreparedCellReferences(std::move(preparedCellReferences));
         MWBase::Environment::get().getWorldModel()->setPreparedNpcStates(std::move(preparedNpcStats));
         MWBase::Environment::get().getWorldModel()->setPreparedCreatureStates(std::move(preparedCreatureStats));
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
@@ -822,6 +832,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         {
             world.getStore().finishSpellListRestore();
             MWBase::Environment::get().getWorldModel()->finishActorCustomDataRestore();
+            MWBase::Environment::get().getWorldModel()->finishCellReferenceRestore();
         }
     }
     catch (const SaveVersionTooNewError& e)

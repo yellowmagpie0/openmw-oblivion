@@ -220,6 +220,40 @@ namespace
         fixRestockingImpl(base, state);
     }
 
+    template <class T>
+    class PreparedCellReference final : public MWWorld::CellStore::PreparedReference
+    {
+        typename MWWorld::CellRefList<T>::List mNode;
+        MWWorld::PtrRegistry::PreparedInsertions mRegistration;
+
+    public:
+        explicit PreparedCellReference(MWWorld::WorldModel& model)
+            : mRegistration(model.preparePtrInsertions(1))
+        {
+            // The winning base is bound by the reader, after incoming definitions
+            // are installed. This detached node never borrows outgoing records.
+            mNode.emplace_back(ESM::makeBlankCellRef(), nullptr);
+        }
+        MWWorld::LiveCellRefBase& reference() override
+        {
+            if (mNode.empty()) throw std::logic_error("Prepared cell reference was already published");
+            return mNode.front();
+        }
+        void registerPtr(const MWWorld::Ptr& ptr, MWWorld::WorldModel& model) override
+        {
+            model.registerPreparedPtr(ptr, mRegistration);
+        }
+        void publish(MWWorld::CellRefListBase& target, MWWorld::WorldModel& model, MWWorld::CellStore* cell) override
+        {
+            auto& list = static_cast<MWWorld::CellRefList<T>&>(target).mList;
+            auto* ref = &reference();
+            // Reject an unavailable reservation or exhausted identity namespace
+            // while the node is still detached. Splice cannot allocate or throw.
+            registerPtr(MWWorld::Ptr(ref, cell), model);
+            list.splice(list.end(), mNode);
+        }
+    };
+
     template <typename T>
     void readReferenceCollection(ESM::ESMReader& reader, MWWorld::CellRefList<T>& collection, const ESM::CellRef& cref,
         const MWWorld::ESMStore& esmStore, MWWorld::CellStore* cellstore)
@@ -240,6 +274,12 @@ namespace
 
         if (!record)
             return;
+
+        auto& model = *MWBase::Environment::get().getWorldModel();
+        // Take by saved identity before legacy ActorId conversion can assign one.
+        auto prepared = model.takePreparedCellReference(state);
+        if (prepared && prepared->reference().getType() != T::sRecordId)
+            throw std::logic_error("Prepared cell reference type changed");
 
         if (state.mVersion <= ESM::MaxOldRestockingFormatVersion)
             fixRestocking(record, state);
@@ -294,7 +334,8 @@ namespace
                         iter->mData.enable();
                         MWBase::Environment::get().getWorld()->disable(ptr);
                     }
-                    MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
+                    if (prepared) prepared->registerPtr(ptr, model);
+                    else model.registerPtr(ptr);
                     return;
                 }
 
@@ -310,6 +351,15 @@ namespace
                                         << " (invalid content file link)";
                 return;
             }
+        }
+
+        if (prepared)
+        {
+            auto& ref = static_cast<MWWorld::LiveCellRef<T>&>(prepared->reference());
+            ref.mBase = record;
+            ref.load(state);
+            prepared->publish(collection, model, cellstore);
+            return;
         }
 
         // new reference
@@ -1602,4 +1652,18 @@ namespace MWWorld
 
         return Ptr();
     }
+}
+
+std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::CellStore::prepareReference(
+    int type, WorldModel& model)
+{
+    std::unique_ptr<PreparedReference> result;
+    CellStoreTuple types;
+    Misc::tupleForEach(types, [&](auto& collection) {
+        using T = std::remove_cv_t<std::remove_pointer_t<decltype(collection.mList.front().mBase)>>;
+        if constexpr (!ESM::isESM4Rec(T::sRecordId))
+            if (type == T::sRecordId)
+                result = std::make_unique<PreparedCellReference<T>>(model);
+    });
+    return result;
 }

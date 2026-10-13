@@ -558,7 +558,8 @@ namespace MWState
         const std::function<void(ESM::ObjectState&, const MWWorld::ESMStore&,
             const ESM4::RuntimeState*)>& prepareInventory,
         const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions,
-        const std::function<bool(const ESM::RefId&)>& restoreCell)
+        const std::function<bool(const ESM::RefId&)>& restoreCell,
+        const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference)
     {
         const auto start = reader.getContext();
         try
@@ -874,7 +875,7 @@ namespace MWState
                                     }
                                 }
                                 collectScripts(*state);
-                                if (prepareInventory && prepareOwners)
+                                if ((prepareInventory || prepareCellReference) && prepareOwners)
                                 {
                                     inventoryOrder.push_back(state.get());
                                     inventoryOwners.push_back(std::move(state));
@@ -993,6 +994,8 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys)
                     prepareQuickKeys(quickkeys, *shared, &native);
+                if (prepareCellReference && shared)
+                    for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
                 if (prepareInventory)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, &native);
@@ -1010,6 +1013,8 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys && shared)
                     prepareQuickKeys(quickkeys, *shared, nullptr);
+                if (prepareCellReference && shared)
+                    for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
                 if (prepareInventory && shared)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, nullptr);

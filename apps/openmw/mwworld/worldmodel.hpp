@@ -215,6 +215,12 @@ namespace MWWorld
         // Install admitted resources after clear and before CSTA restoration.
         void setPreparedFogStates(std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states);
         using PreparedInventoryKey = std::pair<ESM::RefNum, ESM::RefId>;
+        using PreparedCellReferences = std::multimap<PreparedInventoryKey, std::unique_ptr<CellStore::PreparedReference>>;
+        std::unique_ptr<CellStore::PreparedReference> prepareCellReference(
+            const ESM::ObjectState& state, const ESMStore& incoming);
+        void setPreparedCellReferences(PreparedCellReferences references);
+        std::unique_ptr<CellStore::PreparedReference> takePreparedCellReference(const ESM::ObjectState& state);
+        void finishCellReferenceRestore();
         using PreparedInventoryStates = std::map<PreparedInventoryKey, std::unique_ptr<ContainerStore>>;
         static PreparedInventoryKey preparedInventoryKey(const ESM::ObjectState& state);
         std::unique_ptr<ContainerStore> prepareInventoryState(const ESM::ObjectState& state, const ESMStore& incoming);
@@ -245,6 +251,7 @@ namespace MWWorld
     private:
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> mPreparedFogStates;
         PreparedInventoryStates mPreparedInventoryStates;
+        PreparedCellReferences mPreparedCellReferences;
         PreparedNpcStates mPreparedNpcStates;
         PreparedCreatureStates mPreparedCreatureStates;
         PreparedActorCustomData mPreparedActorCustomData;
