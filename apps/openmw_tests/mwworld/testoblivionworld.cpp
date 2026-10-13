@@ -18296,3 +18296,118 @@ TEST(OblivionWorldTest, PreparedInitialAutoEquipRegistersScriptedGoldSplitAfterS
         EXPECT_FALSE(scripts.getNext(entry)); scripts.clear();
     }
 }
+
+TEST(OblivionWorldTest, PreparedActorRegistrationOwnsCopiesAndPublishesOnlyAtCodecConsumption)
+{
+    for (int kind : {0, 1, 2}) // NPC, plain creature, inventory creature
+    for (bool legacy : {false, true})
+    for (int identity : {0, 1, 2}) // unassigned, saved generated, existing registration
+    {
+        SCOPED_TRACE(kind);
+        SCOPED_TRACE(legacy);
+        SCOPED_TRACE(identity);
+        MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+        fixture.mEnvironment.setWindowManager(windows);
+        auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+        MWWorld::ESMStore incoming;
+        std::unique_ptr<ESM::ObjectState> owner;
+        ESM::RefId id;
+        if (kind == 0)
+        {
+            auto prototype = initialAutoEquipActor(world); id = prototype->getPtr().getCellRef().getRefId();
+            auto state = std::make_unique<ESM::NpcState>(); state->blank();
+            state->mCreatureStats.mMissingACDT = legacy; owner = std::move(state);
+        }
+        else
+        {
+            ESM::Creature creature{}; creature.blank();
+            id = creature.mId = ESM::RefId::stringRefId("prepared-registry-creature");
+            creature.mData.mHealth = 50; creature.mData.mLevel = 1;
+            creature.mFlags = kind == 2 ? ESM::Creature::Weapon : 0;
+            store.getWritable<ESM::Creature>().insertStatic(creature); store.rebuildIdsIndex();
+            auto state = std::make_unique<ESM::CreatureState>(); state->blank();
+            state->mCreatureStats.mMissingACDT = legacy; owner = std::move(state);
+        }
+        owner->mHasCustomState = true; owner->mRef.mRefID = id;
+        if (identity != 0) owner->mRef.mRefNum = {910, -1};
+        auto prior = std::make_unique<MWWorld::ManualRef>(store, id);
+        MWWorld::ManualRef restored(store, id);
+        if (identity == 2)
+        {
+            prior->getPtr().mRef->mRef = MWWorld::CellRef(owner->mRef);
+            model.registerPtr(prior->getPtr());
+        }
+        const auto pending = model.pendingPtrInsertions();
+        const auto revision = model.getPtrRegistryRevision(); const auto generated = model.getLastGeneratedRefNum();
+        const auto rng = world.getPrng();
+        auto data = model.prepareActorCustomData(*owner, incoming); ASSERT_TRUE(data);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 1u);
+        auto copied = data->clone(); EXPECT_EQ(model.pendingPtrInsertions(), pending + 2u);
+        EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(model.getLastGeneratedRefNum(), generated);
+        EXPECT_EQ(world.getPrng(), rng);
+        auto core = model.prepareCreatureState(*owner, &incoming);
+        MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+        dataPlans.emplace(model.preparedInventoryKey(*owner), std::move(copied));
+        model.setPreparedActorCustomData(std::move(dataPlans));
+        MWWorld::WorldModel::PreparedCreatureStates corePlans;
+        corePlans.emplace(model.preparedInventoryKey(*owner), std::move(core));
+        model.setPreparedCreatureStates(std::move(corePlans));
+        restored.getPtr().mRef->load(*owner);
+        const auto actualId = restored.getPtr().getCellRef().getRefNum();
+        EXPECT_TRUE(actualId.isSet()); EXPECT_EQ(model.getPtr(actualId), restored.getPtr());
+        EXPECT_EQ(restored.getPtr().mRef->mWorldModel, &model);
+        if (identity != 0)
+        {
+            EXPECT_EQ(actualId, owner->mRef.mRefNum);
+        }
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 1u);
+        EXPECT_FALSE(model.takePreparedActorCustomData(*owner));
+        data.reset(); EXPECT_EQ(model.pendingPtrInsertions(), pending);
+        // Destroying the old holder must not unregister the replacement.
+        prior.reset();
+        model.finishActorCustomDataRestore();
+        EXPECT_EQ(model.getPtr(actualId), restored.getPtr());
+    }
+}
+
+TEST(OblivionWorldTest, PreparedPlayerRegistrationConsumesBothImplicitInitializationPhases)
+{
+    for (bool registered : {false, true})
+    {
+        SCOPED_TRACE(registered);
+        MWClass::registerClasses(); PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel(); auto& store = world.getStore();
+        const auto player = world.getPlayerPtr();
+        if (registered) model.registerPtr(player);
+        const auto originalId = player.getCellRef().getRefNum();
+        MWWorld::ESMStore incoming;
+        const auto pending = model.pendingPtrInsertions(); const auto generated = model.getLastGeneratedRefNum();
+        auto before = MWClass::Npc::prepareImplicitPlayerCustomData(*player.get<ESM::NPC>()->mBase, store, incoming, false);
+        auto after = before->clone();
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 2u);
+        EXPECT_EQ(model.getLastGeneratedRefNum(), generated);
+        model.setPreparedActorCustomData({}, std::move(before), std::move(after), player);
+        player.getRefData().setCustomData(nullptr);
+        (void)player.getClass().getCreatureStats(player);
+        const auto id = player.getCellRef().getRefNum();
+        EXPECT_TRUE(id.isSet());
+        if (registered)
+        {
+            EXPECT_EQ(id, originalId); EXPECT_EQ(model.getLastGeneratedRefNum(), generated);
+        }
+        else
+        {
+            EXPECT_NE(id, originalId); EXPECT_EQ(model.getLastGeneratedRefNum(), id);
+        }
+        const auto afterFirst = model.getLastGeneratedRefNum();
+        EXPECT_EQ(model.getPtr(id), player); EXPECT_EQ(model.pendingPtrInsertions(), pending + 1u);
+        model.beginPlayerRestore(player);
+        model.deregisterLiveCellRef(*player.mRef);
+        player.getRefData().setCustomData(nullptr);
+        (void)player.getClass().getCreatureStats(player);
+        EXPECT_EQ(player.getCellRef().getRefNum(), id); EXPECT_EQ(model.getPtr(id), player);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending); EXPECT_EQ(model.getLastGeneratedRefNum(), afterFirst);
+        EXPECT_FALSE(model.takePreparedPlayerCustomData(player));
+        model.finishActorCustomDataRestore();
+    }
+}

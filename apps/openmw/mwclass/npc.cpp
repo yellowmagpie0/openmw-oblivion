@@ -347,6 +347,7 @@ namespace MWClass
         MWMechanics::NpcStats mNpcStats;
         MWMechanics::Movement mMovement;
         MWWorld::InventoryStore mInventoryStore;
+        std::optional<MWWorld::PtrRegistry::PreparedInsertions> mPreparedRegistration;
         bool mBaseStatsPrepared = false;
         bool mDeferredBaseDeathTime = false;
         std::optional<PreparedNpcFactionReputation> mPreparedFactionReputation;
@@ -358,6 +359,20 @@ namespace MWClass
         explicit NpcCustomData(const MWWorld::ESMStore* initializationStore)
             : mNpcStats(initializationStore)
         {
+            if (initializationStore)
+                mPreparedRegistration.emplace(MWBase::Environment::get().getWorldModel()->preparePtrInsertions(1));
+        }
+
+        void registerActor(const MWWorld::Ptr& ptr)
+        {
+            auto& model = *MWBase::Environment::get().getWorldModel();
+            if (mPreparedRegistration)
+            {
+                model.registerPreparedPtr(ptr, *mPreparedRegistration);
+                mPreparedRegistration.reset();
+            }
+            else
+                model.registerPtr(ptr);
         }
 
         NpcCustomData& asNpcCustomData() override { return *this; }
@@ -543,10 +558,13 @@ namespace MWClass
     {
         if (!ptr.getRefData().getCustomData())
         {
-            MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
             bool recalculate = false;
             if (!preparedData)
                 preparedData = MWBase::Environment::get().getWorldModel()->takePreparedPlayerCustomData(ptr);
+            if (preparedData)
+                preparedData->asNpcCustomData().registerActor(ptr);
+            else
+                MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
             auto tempData = preparedData ? std::move(preparedData) : prepareSavedCustomData();
             NpcCustomData* data = &tempData->asNpcCustomData();
             MWMechanics::CreatureCustomDataResetter resetter{ ptr };
@@ -1486,7 +1504,7 @@ namespace MWClass
                 auto data = MWBase::Environment::get().getWorldModel()->takePreparedActorCustomData(state);
                 if (!data)
                     data = prepareSavedCustomData();
-                MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
+                data->asNpcCustomData().registerActor(ptr);
                 data->asNpcCustomData().mInventoryStore.setPtr(ptr);
                 ptr.getRefData().setCustomData(std::move(data));
             }

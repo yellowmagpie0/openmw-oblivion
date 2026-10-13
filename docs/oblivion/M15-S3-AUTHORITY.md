@@ -758,3 +758,18 @@ evidence. The milestone entry records hashes, failed attempts, exact baseline-wa
 comparison and scopes. General local-script restoration, actor/cell/scene publication,
 consumed missing-dependency admission, full late-failure prior-world preservation
 and the complete S3 audit remain open.
+
+
+Prepared legacy NPC/creature custom data now owns and consumes actor registry
+reservations, including copied plans, saved/missing-ACDT paths and both implicit
+Player initialization phases. Two new tests cover eighteen actor restore cases
+and four Player registrations without early identity/RNG/revision mutation.
+Both full 1394-case normal/ASan-UBSan inventories pass with matching fingerprints.
+Twenty-two actual registry insertions pass with C++ new disabled in copied class
+objects; ordinary insertion under the same guard fails the codec regressions.
+Normal/instrumented runtime save/reload, exact normal-save fresh instrumented
+continuation and Morrowind save isolation pass semantic checks and visual review.
+The newest milestone entry records hashes, scope and retained failed attempts.
+Cell reference storage/registration, general local-script restoration, scene
+publication, consumed missing-dependency admission, full late-failure prior-world
+preservation and the complete S3 audit remain open; this is not whole-load staging.

@@ -73,6 +73,7 @@ namespace MWClass
         MWMechanics::CreatureStats mCreatureStats;
         std::unique_ptr<MWWorld::ContainerStore> mContainerStore; // may be InventoryStore for some creatures
         MWMechanics::Movement mMovement;
+        std::optional<MWWorld::PtrRegistry::PreparedInsertions> mPreparedRegistration;
         bool mBaseStatsPrepared = false;
         bool mDeferredBaseDeathTime = false;
         std::optional<MWMechanics::Spells::PreparedInstance> mPreparedBaseSpells;
@@ -80,6 +81,20 @@ namespace MWClass
         explicit CreatureCustomData(const MWWorld::ESMStore* initializationStore = nullptr)
             : mCreatureStats(initializationStore)
         {
+            if (initializationStore)
+                mPreparedRegistration.emplace(MWBase::Environment::get().getWorldModel()->preparePtrInsertions(1));
+        }
+
+        void registerActor(const MWWorld::Ptr& ptr)
+        {
+            auto& model = *MWBase::Environment::get().getWorldModel();
+            if (mPreparedRegistration)
+            {
+                model.registerPreparedPtr(ptr, *mPreparedRegistration);
+                mPreparedRegistration.reset();
+            }
+            else
+                model.registerPtr(ptr);
         }
         CreatureCustomData(const CreatureCustomData& other);
         CreatureCustomData(CreatureCustomData&& other) = default;
@@ -92,6 +107,7 @@ namespace MWClass
         : mCreatureStats(other.mCreatureStats)
         , mContainerStore(other.mContainerStore->clone())
         , mMovement(other.mMovement)
+        , mPreparedRegistration(other.mPreparedRegistration)
         , mBaseStatsPrepared(other.mBaseStatsPrepared)
         , mDeferredBaseDeathTime(other.mDeferredBaseDeathTime)
         , mPreparedBaseSpells(other.mPreparedBaseSpells)
@@ -188,7 +204,10 @@ namespace MWClass
     {
         if (!ptr.getRefData().getCustomData())
         {
-            MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
+            if (preparedData)
+                preparedData->asCreatureCustomData().registerActor(ptr);
+            else
+                MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
             auto tempData = std::move(preparedData);
             if (!tempData)
                 tempData = std::make_unique<CreatureCustomData>();
@@ -846,7 +865,7 @@ namespace MWClass
                 if (!data)
                     data = prepareSavedCustomData(hasInventoryStore(ptr));
 
-                MWBase::Environment::get().getWorldModel()->registerPtr(ptr);
+                data->asCreatureCustomData().registerActor(ptr);
                 data->asCreatureCustomData().mContainerStore->setPtr(ptr);
 
                 ptr.getRefData().setCustomData(std::move(data));

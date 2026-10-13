@@ -6,6 +6,87 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare legacy actor registry publication — 2026-10-13
+
+Prepared legacy NPC/creature custom data now owns one registry insertion
+reservation. Copies reserve their own node; cancellation releases the credit.
+The missing-ACDT initialization path and saved-custom-data codec path consume
+that reservation at actor registration, then release any unused node when the
+identity was already present. Implicit Player initialization takes its prepared
+data before registration, covering both pre-PLAY and post-PLAY phases. Ordinary
+unprepared actors retain their registration path. Preparation does not assign
+identities, advance RNG or change registry revision; native FormKey registration
+continues through its separate existing path.
+
+Two new integration tests cover eighteen NPC/plain-creature/inventory-creature
+cases across missing/present ACDT and unassigned/saved/existing identities.
+They prove copied-plan ownership, cancellation, delayed publication, exact saved
+identity, one-shot consumption, registry ownership and safe destruction of the
+old holder after replacement. Four additional registrations cover both implicit
+Player phases, starting with either a registered or unregistered player and
+removing the first registration before the second phase. The first phase assigns
+an identity only when needed; the second preserves it and the generator position.
+
+Both full engine inventories pass **1,394 tests**, exact inventory/XML agreement,
+no failures or skips, under `build/oblivion-compat/m15/S3/actor-registration-normal-02`
+and `actor-registration-sanitized-02`. Tested parent:
+`5158269a5a731eecea9b80f0331b81c0a26f9183`; identical before/after fingerprint:
+`191ac66d890019c2b77f291f5f3f414aaf895ac2d49313a2748e32e579e8ce65`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`f14eeb25ba20f6abcfd2b9427a394d214539e1a455e346c732609f4b281b8e97`,
+`cb3245c9b99179775e4154104fcc9028d05728a17b7e7e5b8fb3bc9d34fa7947`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are explicitly
+null/offscreen. Unchanged component/Python production code was not retested.
+
+`actor-registration-allocation-control-03` links copied instrumented NPC/Creature
+objects before the unchanged production archive. Scalar/array/aligned C++ new
+is disabled only around the actual prepared registry insertion. All **22 calls**
+through the actor codecs and implicit Player initialization pass. The paired
+`actor-registration-negative-03` switches those calls to ordinary insertion
+under the same guard; the actual codec tests fail with `std::bad_alloc` as required.
+Production sources/binaries remain unchanged. This proves actor registry insertion,
+not whole-codec, cell/scene, arbitrary callback or whole-load allocation coverage.
+
+Normal/instrumented load/F5/F9/F5/quit courses pass in
+`actor-registration-runtime-normal-01` and `actor-registration-runtime-sanitized-01`.
+They retain the editable armor-bearing input recipe and declared test-only GMST
+plugin from the preceding checkpoints. Input SHA256:
+`a42670fc27728b225404c3d7c1df60ff981d4410f252d883c4824f1ffd52bb4a`.
+Native load states, stable fields, shared inventory/NPC/core fields and authored
+records are compared independently; existing missing-script warning IDs/counts
+are compared to the hashed baseline. Normal/instrumented openmw SHA256:
+`efe0f1fd55a2ef8b99816a05ec9afab2f82adfd867980aa8fb27da87ee8a43ce`,
+`cdb1826eda8a66b66ce5fd35e849e2292bac311349483bfaa2e5a6726f10d53d`.
+
+`actor-registration-runtime-continuation-sanitized-01` starts fresh PID90789
+from normal PID88848's exact final save after its clean exit. Staged input SHA256:
+`fb9e2a65e1d02aa762dede2df81f0228dbc9c0eb63b0b0e4f563dfcaf1284985`.
+Both load/save cycles, semantic checks and clean exit pass. All six reviewed
+Oblivion captures show Imperial Prison stonework/chains, HUD and retained blade,
+without loading/error dialogs. `actor-registration-morrowind-01` passes unchanged
+M14 startup/idle/F5 isolation and independent native-record/marker exclusion; its
+reviewed terrain-facing capture shows sky/ground/reticle/HUD. These courses do not
+establish combat acceptance or allocation-free rendering/whole-load restoration.
+
+Retained normal -01 executed all tests but exposed an incorrect new test expectation
+that the fixture Player was already registered. The corrected test explicitly
+covers both initial conditions; its assertion-bracing warning was also fixed.
+Sanitized -01 was stopped before editing, then rebuilt in fresh -02. Allocation
+control -01 failed because prepending declarations displaced the copied NPC source's
+UTF-8 BOM. Control -02 compiled but name-based archive replacement displaced Lua
+binding objects with the same basenames. Fresh -03 strips the BOM only in copied
+sources and links instrumented objects directly; the production archive is untouched.
+Negative controls -01/-02 were prepared but never run. Existing compiler diagnostics
+remain in the logs.
+
+S3 remains **in progress**. This closes prepared legacy actor custom-data registry
+publication, not every actor registration. Cell reference nodes/registration,
+general local-script restoration, scene publication, consumed missing-dependency
+admission, full prior-world preservation after late failures and the complete
+requirement audit remain open. Continue with cell restoration storage/publication
+and its remaining ordinary registry updates; do not infer a whole-load transaction
+from the scoped allocation probes.
+
 ## S3 prepare scripted initial split registration — 2026-10-13
 
 Prepared initial autoequip splits now own their legacy script definition,
