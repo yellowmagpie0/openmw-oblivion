@@ -723,3 +723,21 @@ records hashes, scope and retained failed/interrupted attempts. This closes
 storage preparation only: live autoequip GMST/race/armor-rating dependencies and
 callback resources, other actor/cell/scene publication, full late-failure
 prior-world preservation and the complete S3 audit remain open.
+
+
+Initial autoequip now owns immutable unarmored/armor GMST and NPC-race snapshots.
+Shared ordinary/prepared code preserves rating/eligibility, live skill queries
+and branch-specific missing-dependency timing; unsupported dynamic GMST/RACE
+impostors are excluded. Three new tests cover twelve selection/copy/source-removal
+cases, skipped/consumed dependencies and actual legacy actor codec consumption.
+Both complete 1390-case normal/ASan-UBSan inventories pass with matching source
+fingerprints. A copied-object live-lookup mutation fails the new regression;
+a separate allocation hook proves 24 prepared autoequip calls with plain
+unscripted items and counting headless callbacks require no C++ new. Declared
+armor-bearing runtime fixtures, exact normal-save fresh instrumented continuation
+and Morrowind save isolation pass semantic checks and visual review. The newest
+milestone entry records plugin/source/binary hashes, scope and retained failures.
+This closes dependency ownership and the tested healthy consumption path, not
+pre-teardown rejection of every missing dependency or all late-load failure
+handling. Scripted split/local-script resources, other actor/cell/scene publication,
+full prior-world preservation and the complete S3 audit remain open.

@@ -11,6 +11,7 @@
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/loadcont.hpp>
 #include <components/esm3/loadlevlist.hpp>
+#include <components/esm3/loadrace.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/actorutil.hpp"
@@ -46,14 +47,31 @@ namespace MWWorld
         ESM::RefId mOwner;
         std::map<ESM::RefId, Node> mNodes;
         std::unique_ptr<ManualRef> mGold;
+        std::unique_ptr<ESMStore> mEquipmentStore;
     };
 
     PreparedInitialInventory::PreparedInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-        const ESMStore& content, const ESMStore& incoming, bool equipment)
+        const ESMStore& content, const ESMStore& incoming, bool equipment, const ESM::RefId* race)
     {
         auto data = std::make_shared<Data>();
         data->mItems = items;
         data->mOwner = owner;
+        if (equipment)
+        {
+            data->mEquipmentStore = std::make_unique<ESMStore>();
+            // Own only restore-visible definitions. Missing or mistyped values
+            // remain deferred to the same consumed branch as ordinary autoequip.
+            for (const char* name : {"fUnarmoredBase1", "fUnarmoredBase2", "iHelmWeight", "iCuirassWeight",
+                     "iPauldronWeight", "iGreavesWeight", "iBootsWeight", "iGauntletWeight", "iShieldWeight",
+                     "fLightMaxMod", "fMedMaxMod", "iBaseArmorSkill"})
+                if (const auto* value = content.searchForRestore<ESM::GameSetting>(ESM::RefId::stringRefId(name), incoming))
+                    data->mEquipmentStore->getWritable<ESM::GameSetting>().insertStatic(*value);
+            if (!race)
+                if (const auto* npc = content.searchForRestore<ESM::NPC>(owner, incoming)) race = &npc->mRace;
+            if (race)
+                if (const auto* value = content.searchForRestore<ESM::Race>(*race, incoming))
+                    data->mEquipmentStore->getWritable<ESM::Race>().insertStatic(*value);
+        }
         std::size_t capacity = 0;
         bool gold = false;
         const std::function<void(const ESM::RefId&)> visit = [&](const ESM::RefId& id) {
@@ -223,6 +241,13 @@ namespace MWWorld
             *this = std::move(copy);
         }
         return *this;
+    }
+
+    const ESMStore& PreparedInitialInventory::autoEquipStore() const
+    {
+        if (!mData || !mData->mEquipmentStore)
+            throw std::logic_error("Prepared initial autoequip dependencies are unavailable");
+        return *mData->mEquipmentStore;
     }
 
     std::size_t PreparedInitialInventory::pendingStackCount() const

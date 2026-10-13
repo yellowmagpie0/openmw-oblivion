@@ -17977,16 +17977,16 @@ TEST(OblivionWorldTest, InitialAutoEquipFailureReleasesReservationsAndRestoresEq
     auto& inventory = ptr.getClass().getInventoryStore(ptr);
     auto items = initialAutoEquipItems(store); MWWorld::ESMStore incoming;
     const auto pending = model.pendingPtrInsertions();
+    const auto id = ESM::RefId::stringRefId("fUnarmoredBase1");
+    const auto setting = *store.get<ESM::GameSetting>().find(id);
+    store.getWritable<ESM::GameSetting>().eraseStatic(id);
     inventory.prepareInitialInventory(items, ptr.getCellRef().getRefId(), store, incoming);
     inventory.fill(items, ptr.getCellRef().getRefId(), world.getPrng());
     struct Observer : MWWorld::InventoryStoreListener { int changes = 0; void equipmentChanged() override { ++changes; } } observer;
     inventory.setInvListener(&observer);
-    const auto id = ESM::RefId::stringRefId("fUnarmoredBase1");
-    const auto setting = *store.get<ESM::GameSetting>().find(id);
-    store.getWritable<ESM::GameSetting>().eraseStatic(id);
+    store.getWritable<ESM::GameSetting>().insertStatic(setting); // Live repair must not replace the snapshot.
     EXPECT_THROW(inventory.autoEquip(), std::exception);
     EXPECT_EQ(model.pendingPtrInsertions(), pending); EXPECT_EQ(observer.changes, 0);
-    store.getWritable<ESM::GameSetting>().insertStatic(setting);
     inventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, inventory.begin(MWWorld::ContainerStore::Type_Weapon));
     EXPECT_EQ(observer.changes, 1);
     inventory.setInvListener(nullptr);
@@ -18017,4 +18017,186 @@ TEST(OblivionWorldTest, EquipmentSlotStorageRebindsCopyMoveSwapAndClear)
     swapped.clear();
     for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot) EXPECT_EQ(swapped.getSlot(slot), swapped.end());
     EXPECT_EQ(initialInventoryWire(source), expected);
+}
+
+namespace
+{
+    const std::array<const char*, 12> autoEquipDependencyNames = {"fUnarmoredBase1", "fUnarmoredBase2",
+        "iHelmWeight", "iCuirassWeight", "iPauldronWeight", "iGreavesWeight", "iBootsWeight", "iGauntletWeight",
+        "iShieldWeight", "fLightMaxMod", "fMedMaxMod", "iBaseArmorSkill"};
+
+    void autoEquipDependencySettings(MWWorld::ESMStore& store)
+    {
+        for (const char* name : autoEquipDependencyNames)
+        {
+            ESM::GameSetting setting{}; setting.mId = ESM::RefId::stringRefId(name);
+            const std::string_view id(name);
+            if (id == "iBaseArmorSkill") { setting.mValue.setType(ESM::VT_Int); setting.mValue.setInteger(30); }
+            else
+            {
+                setting.mValue.setType(ESM::VT_Float);
+                setting.mValue.setFloat(id.starts_with("fUnarmored") ? 0.1f
+                    : id == "fLightMaxMod" ? 0.5f : id == "fMedMaxMod" ? 1.f : 10.f);
+            }
+            store.getWritable<ESM::GameSetting>().insertStatic(setting);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, InitialAutoEquipOwnsWinningSettingsAndRaceWhileReadingSkillsAtConsumption)
+{
+    for (bool poisonIncoming : {false, true})
+    for (bool beast : {false, true})
+    for (float weight : {2.f, 7.f, 20.f})
+    {
+        SCOPED_TRACE(poisonIncoming);
+        SCOPED_TRACE(beast);
+        SCOPED_TRACE(weight);
+        MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+        fixture.mEnvironment.setWindowManager(windows);
+        auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+        auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+        auto& inventory = ptr.getClass().getInventoryStore(ptr); auto& stats = ptr.getClass().getNpcStats(ptr);
+        autoEquipDependencySettings(store);
+        const auto setSkills = [&](bool ready) {
+            stats.getSkill(ESM::Skill::LightArmor).setBase(ready ? 20 : 0);
+            stats.getSkill(ESM::Skill::MediumArmor).setBase(ready ? 40 : 0);
+            stats.getSkill(ESM::Skill::HeavyArmor).setBase(ready ? 80 : 0);
+            stats.getSkill(ESM::Skill::Unarmored).setBase(ready ? 20 : 100);
+        };
+        setSkills(true);
+        auto race = *store.get<ESM::Race>().find(ptr.get<ESM::NPC>()->mBase->mRace);
+        race.mData.mFlags = beast ? ESM::Race::Beast : 0;
+        store.getWritable<ESM::Race>().insertStatic(race);
+        auto items = initialAutoEquipItems(store);
+        for (int type : {ESM::Armor::Helmet, ESM::Armor::Boots, ESM::Armor::Cuirass, ESM::Armor::Shield})
+        {
+            ESM::Armor armor{}; armor.blank(); armor.mId = ESM::RefId::stringRefId("snapshot-armor-" + std::to_string(type));
+            armor.mData.mType = type; armor.mData.mHealth = 25; armor.mData.mArmor = 45; armor.mData.mWeight = weight;
+            if (type == ESM::Armor::Helmet) armor.mParts.mParts.push_back({ESM::PRT_Head, {}, {}});
+            if (type == ESM::Armor::Boots) armor.mParts.mParts.push_back({ESM::PRT_LFoot, {}, {}});
+            store.getWritable<ESM::Armor>().insertStatic(armor); items.mList.push_back({2, armor.mId});
+        }
+        ESM::Armor competitor{}; competitor.blank(); competitor.mId = ESM::RefId::stringRefId("snapshot-heavy-competitor");
+        competitor.mData.mType = ESM::Armor::Cuirass; competitor.mData.mHealth = 25;
+        competitor.mData.mArmor = 20; competitor.mData.mWeight = 20.f;
+        store.getWritable<ESM::Armor>().insertStatic(competitor); items.mList.push_back({2, competitor.mId});
+        store.rebuildIdsIndex(); const auto owner = ptr.getCellRef().getRefId();
+        Misc::Rng::Generator ordinaryRng(31), preparedRng(31);
+        inventory.fill(items, owner, ordinaryRng); inventory.autoEquip();
+        const auto expected = initialInventoryWire(inventory);
+        ASSERT_NE(inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass), inventory.end());
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass)->getCellRef().getRefId(),
+            weight == 2.f ? competitor.mId : items.mList[5].mItem);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_Boots) == inventory.end(), beast);
+        inventory.clear(); setSkills(false);
+        for (const char* name : autoEquipDependencyNames)
+        {
+            auto setting = *store.get<ESM::GameSetting>().find(name);
+            if (setting.mValue.getType() == ESM::VT_Int) setting.mValue.setInteger(1);
+            else setting.mValue.setFloat(1000.f);
+            // GMST/RACE are immutable dependencies, not supported saved overrides.
+            store.getWritable<ESM::GameSetting>().insert(setting);
+            if (poisonIncoming) incoming.getWritable<ESM::GameSetting>().insert(setting);
+        }
+        auto changedRace = race; changedRace.mData.mFlags ^= ESM::Race::Beast;
+        store.getWritable<ESM::Race>().insert(changedRace);
+        if (poisonIncoming) incoming.getWritable<ESM::Race>().insert(changedRace);
+        inventory.prepareInitialInventory(items, owner, store, incoming);
+        MWWorld::InventoryStore copied(inventory), moved(std::move(copied));
+        setSkills(true); // These live values must not have been captured by preparation.
+        for (const char* name : autoEquipDependencyNames)
+        {
+            const auto id = ESM::RefId::stringRefId(name);
+            store.getWritable<ESM::GameSetting>().erase(id); store.getWritable<ESM::GameSetting>().eraseStatic(id);
+            incoming.getWritable<ESM::GameSetting>().erase(id);
+        }
+        store.getWritable<ESM::Race>().erase(race.mId); store.getWritable<ESM::Race>().eraseStatic(race.mId);
+        incoming.getWritable<ESM::Race>().erase(race.mId);
+        for (auto* target : {&inventory, &moved})
+        {
+            target->fill(items, owner, preparedRng); target->autoEquip();
+            EXPECT_EQ(initialInventoryWire(*target), expected);
+            EXPECT_EQ(preparedRng, ordinaryRng);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, InitialAutoEquipDefersMissingArmorDependenciesUntilTheConsumedBranch)
+{
+    for (bool needsMedium : {false, true})
+    {
+        SCOPED_TRACE(needsMedium);
+        MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+        fixture.mEnvironment.setWindowManager(windows);
+        auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+        auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+        auto& inventory = ptr.getClass().getInventoryStore(ptr);
+        ptr.getClass().getNpcStats(ptr).getSkill(ESM::Skill::LightArmor).setBase(50);
+        autoEquipDependencySettings(store);
+        ESM::Armor armor{}; armor.blank(); armor.mId = ESM::RefId::stringRefId("branch-armor");
+        armor.mData.mType = ESM::Armor::Cuirass; armor.mData.mHealth = 10;
+        armor.mData.mArmor = 40; armor.mData.mWeight = needsMedium ? 7.f : 2.f;
+        store.getWritable<ESM::Armor>().insertStatic(armor); store.rebuildIdsIndex();
+        const auto id = ESM::RefId::stringRefId("fMedMaxMod");
+        const auto setting = *store.get<ESM::GameSetting>().find(id);
+        store.getWritable<ESM::GameSetting>().eraseStatic(id);
+        ESM::InventoryList items; items.mList = {{2, armor.mId}};
+        const auto owner = ptr.getCellRef().getRefId();
+        EXPECT_NO_THROW(inventory.prepareInitialInventory(items, owner, store, incoming));
+        store.getWritable<ESM::GameSetting>().insertStatic(setting); // Must not mask the missing snapshot.
+        inventory.fill(items, owner, world.getPrng());
+        const auto before = initialInventoryWire(inventory);
+        if (needsMedium)
+        {
+            EXPECT_THROW(inventory.autoEquip(), std::exception);
+            EXPECT_EQ(initialInventoryWire(inventory), before);
+        }
+        else
+        {
+            EXPECT_NO_THROW(inventory.autoEquip());
+            EXPECT_NE(inventory.getSlot(MWWorld::InventoryStore::Slot_Cuirass), inventory.end());
+        }
+    }
+}
+
+TEST(OblivionWorldTest, LegacyActorCodecConsumesAutoEquipDependenciesAfterSourceRemoval)
+{
+    MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    auto prototype = initialAutoEquipActor(world);
+    auto base = *prototype->getPtr().get<ESM::NPC>()->mBase;
+    base.mInventory = initialAutoEquipItems(store);
+    store.getWritable<ESM::NPC>().insertStatic(base); store.rebuildIdsIndex();
+    MWWorld::ManualRef ordinary(store, base.mId);
+    const auto ordinaryUpdates = windows.mInventoryUpdates;
+    auto& ordinaryInventory = ordinary.getPtr().getClass().getInventoryStore(ordinary.getPtr());
+    const auto expectedUpdates = windows.mInventoryUpdates - ordinaryUpdates;
+    ASSERT_EQ(std::distance(ordinaryInventory.begin(), ordinaryInventory.end()), 7);
+    ASSERT_GT(expectedUpdates, 0u);
+    ESM::NpcState owner; owner.blank(); owner.mHasCustomState = true;
+    owner.mRef.mRefID = base.mId; owner.mRef.mRefNum = {881, -1};
+    owner.mCreatureStats.mMissingACDT = true;
+    MWWorld::ESMStore incoming;
+    const auto pending = model.pendingPtrInsertions();
+    auto data = model.prepareActorCustomData(owner, incoming);
+    auto core = model.prepareCreatureState(owner, &incoming);
+    ASSERT_TRUE(data); ASSERT_TRUE(core);
+    EXPECT_GT(model.pendingPtrInsertions(), pending);
+    MWWorld::WorldModel::PreparedActorCustomData dataPlans;
+    dataPlans.emplace(model.preparedInventoryKey(owner), std::move(data));
+    model.setPreparedActorCustomData(std::move(dataPlans));
+    MWWorld::WorldModel::PreparedCreatureStates corePlans;
+    corePlans.emplace(model.preparedInventoryKey(owner), std::move(core));
+    model.setPreparedCreatureStates(std::move(corePlans));
+    for (const char* name : {"fUnarmoredBase1", "fUnarmoredBase2"})
+        store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId(name));
+    store.getWritable<ESM::Race>().eraseStatic(base.mRace);
+    const auto beforeLoadUpdates = windows.mInventoryUpdates;
+    MWWorld::ManualRef restored(store, base.mId);
+    EXPECT_NO_THROW(restored.getPtr().mRef->load(owner));
+    EXPECT_EQ(windows.mInventoryUpdates - beforeLoadUpdates, expectedUpdates);
+    EXPECT_EQ(model.pendingPtrInsertions(), pending);
+    EXPECT_FALSE(model.takePreparedActorCustomData(owner));
 }

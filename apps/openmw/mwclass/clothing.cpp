@@ -199,6 +199,12 @@ namespace MWClass
     std::pair<int, std::string_view> Clothing::canBeEquipped(
         const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& npc) const
     {
+        return canBeEquipped(ptr, npc, nullptr);
+    }
+
+    std::pair<int, std::string_view> Clothing::canBeEquipped(const MWWorld::ConstPtr& ptr,
+        const MWWorld::Ptr& npc, const MWWorld::ESMStore* dependencies) const
+    {
         // slots that this item can be equipped in
         std::pair<MWWorld::Class::EquipmentSlots, bool> slots = getEquipmentSlots(ptr);
 
@@ -212,7 +218,7 @@ namespace MWClass
             const ESM::RefId& npcRace = npc.get<ESM::NPC>()->mBase->mRace;
 
             // Beast races cannot equip shoes / boots, or full helms (head part vs hair part)
-            const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npcRace);
+            const ESM::Race* race = (dependencies ? *dependencies : *MWBase::Environment::get().getESMStore()).get<ESM::Race>().find(npcRace);
             if (race->mData.mFlags & ESM::Race::Beast)
             {
                 const auto& parts = ptr.get<ESM::Clothing>()->mBase->mParts.mParts;

@@ -36,7 +36,7 @@ namespace MWWorld
 
     public:
         PreparedInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-            const ESMStore& content, const ESMStore& incoming, bool equipment = false);
+            const ESMStore& content, const ESMStore& incoming, bool equipment = false, const ESM::RefId* race = nullptr);
         ~PreparedInitialInventory();
         PreparedInitialInventory(const PreparedInitialInventory&);
         PreparedInitialInventory& operator=(const PreparedInitialInventory&);
@@ -44,6 +44,7 @@ namespace MWWorld
         PreparedInitialInventory& operator=(PreparedInitialInventory&&) noexcept;
         std::size_t pendingStackCount() const;
         std::size_t pendingSplitCount() const;
+        const ESMStore& autoEquipStore() const;
         void fill(ContainerStore& target, const ESM::RefId& owner, Misc::Rng::Generator& prng);
     };
 }

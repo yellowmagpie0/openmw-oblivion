@@ -6,6 +6,97 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 own initial autoequip dependencies — 2026-10-13
+
+Prepared initial inventories now own the twelve unarmored/armor comparison
+GMST definitions and the applicable NPC race. NPC preparation supplies its
+canonical base race explicitly. GMST/RACE are immutable restore dependencies:
+unsupported incoming and outgoing dynamic impostors are excluded. Copies and
+moves retain shared immutable snapshots after source definitions disappear.
+Ordinary and prepared consumption share armor classification, rating arithmetic
+and race eligibility code; the ordinary Lua path remains intact. Actor skills,
+selection, RNG and callbacks are still read/run at their original phase.
+Missing dependencies retain branch-specific failure timing, so an unused medium
+armor threshold does not reject light armor. This prepares dependency ownership;
+it does not yet guarantee pre-teardown rejection of every consumed missing value.
+
+Three new engine tests include a twelve-case armor-class/beast-race/impostor
+matrix with competing cuirasses, changed-after-preparation actor skills,
+source deletion and copied/moved plans. Exact inventory wire/RNG matches the
+ordinary result. A missing-medium-setting probe distinguishes skipped and
+consumed lookup branches. Actual legacy actor codec restoration consumes its
+prepared initial autoequip after live unarmored settings and race deletion,
+with the expected inventory callback count and released registry reservations.
+The earlier exception-cleanup test now removes its setting before preparation
+and repairs only the live store, proving the snapshot governs consumption.
+
+Both complete engine inventories pass **1,390 tests**, exact inventory/XML
+agreement, no failures or skips, in
+`build/oblivion-compat/m15/S3/autoequip-dependencies-normal-01` and
+`autoequip-dependencies-sanitized-01`. Tested parent:
+`2051bfcd407fe825c43cab4881e9fcc085e8073b`; matching before/after fingerprint:
+`628b7b8e84131422a4c6f9dfbb3aaae1b20cc36d9ff7b2e577fe97e9081f15f3`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`3eec8b0b3ac06873e56c9d447222c27a7874d43715a4636d703c85ab04a50186`,
+`c599253795174fbf8522e7a67a18ab5a737e89119bafa335156deb7767f7da8c`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are explicitly
+null/offscreen. Unchanged component/Python production code was not retested.
+
+`autoequip-dependencies-negative-01` forces the copied InventoryStore object
+back to live dependency lookup in a separate archive/executable. The new matrix
+fails on the removed unarmored setting as required. Separately,
+`autoequip-dependencies-allocation-control-01` adds scalar/array/aligned C++ new
+failure hooks around the actual prepared autoequip call in a copied test object.
+All **24 calls** (twelve cases and their copied/moved plans) succeed with allocation
+disabled. Setup, fill and assertions remain outside the guard. This covers plain
+unscripted items with headless counting inventory-update callbacks; it does not
+cover local-script registration, arbitrary listeners, rendering or whole-load
+allocation failure. Both controls leave production sources/binaries unchanged.
+
+The editable runtime recipe now supplies stacked ARMO cuirass131/CLOT shirt133
+through direct and Each->LEVC inventory entries, retaining authored ENCH charge137.
+A test-only TES4 plugin declares iCuirassWeight10, fLightMaxMod0.5, fMedMaxMod1 and
+iBaseArmorSkill30. These are declared test inputs, not native-rule provenance.
+Typed esmtool reinspection confirms all four values and record structure;
+plugin SHA256: `696c93ac6d107a307292cfdc0870e64217b42b65a1d20eaf2d515aa54979100b`.
+Actual normal/instrumented load/F5/F9/F5/quit courses pass in
+`autoequip-dependencies-runtime-normal-02` and
+`autoequip-dependencies-runtime-sanitized-02`. The exact initial expected content
+list includes that independently hashed plugin; all native load fields, stable
+groups, shared inventory/NPC/core fields and authored definitions are compared.
+The initial legacy inventory is later replaced by the native inventory, so exact
+transient selection and source-removal behavior are C++ evidence, not final-save
+inventory evidence. Input SHA256:
+`a42670fc27728b225404c3d7c1df60ff981d4410f252d883c4824f1ffd52bb4a`.
+Normal/instrumented openmw SHA256 respectively:
+`60931a8db771a5e209aacdf67d755557ddf17ca01649a2d84a57639020f62dc2`,
+`444d1ceb2bebd2a71057a0282a0d9bd78790c6e80522e94b8ac5f31a3898a615`.
+
+`autoequip-dependencies-runtime-continuation-sanitized-02` launches fresh PID74757
+after normal PID72850 exited, from the exact final normal save SHA256
+`7430276ad8ad86dc00c4c460db20c224abde04d8b5381de2c7d5edf66300f792`.
+Both load/save cycles, semantic checks and clean exit pass. All six Oblivion
+captures show Imperial Prison geometry, HUD and retained blade without an error
+or loading dialog. `autoequip-dependencies-morrowind-01` passes the unchanged M14
+startup/idle/F5 course and independent native-record/marker exclusion; its reviewed
+terrain-facing Balmora capture shows sky/ground/HUD. This is save isolation, not
+combat acceptance. Per-course visual reviews retain image hashes and scope.
+
+Retained syntax probes caught an omitted race header and same-line SCOPED_TRACE
+identifiers before full builds. The raw-mode esmtool invocation was unsupported;
+typed dump is the accepted plugin reinspection. Normal runtime -01 completed
+its engine course but failed semantic verification because its expected content
+list omitted the new plugin; the unchanged failed expectation and diagnosis are
+retained. Fresh -02 adds only the independently derived plugin fingerprint and
+passes the full comparison. Sanitized runtime -01 was prepared but never run.
+Existing unrelated compiler diagnostics remain in the build logs.
+
+S3 remains **in progress**. Scripted split/local-script resources, other actor/
+cell/scene publication, full prior-world preservation for late failures and the
+complete requirement audit remain open. The next bounded implementation task
+is script registration/locals on prepared initial splits; the GUI inventory
+callbacks currently only mark models for a later refresh.
+
 ## S3 prepare initial autoequip storage — 2026-10-13
 
 Initial legacy autoequip now owns detached split nodes and registry reservations

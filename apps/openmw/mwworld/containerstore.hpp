@@ -473,7 +473,7 @@ namespace MWWorld
 
         void fill(const ESM::InventoryList& items, const ESM::RefId& owner, Misc::Rng::Generator& seed);
         void prepareInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-            const ESMStore& content, const ESMStore& incoming);
+            const ESMStore& content, const ESMStore& incoming, const ESM::RefId* race = nullptr);
         ///< Insert items into *this.
 
         void fillNonRandom(const ESM::InventoryList& items, const ESM::RefId& owner, unsigned int seed);

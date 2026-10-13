@@ -3,6 +3,8 @@
 
 #include "../mwworld/registeredclass.hpp"
 
+namespace MWWorld { class ESMStore; }
+
 namespace MWClass
 {
     class Clothing : public MWWorld::RegisteredClass<Clothing>
@@ -62,6 +64,10 @@ namespace MWClass
         ///< Return 0 if player cannot equip item. 1 if can equip. 2 if it's twohanded weapon. 3 if twohanded weapon
         ///< conflicts with that.
         ///  Second item in the pair specifies the error message
+
+        // The same eligibility path with immutable restore dependencies.
+        std::pair<int, std::string_view> canBeEquipped(const MWWorld::ConstPtr& ptr,
+            const MWWorld::Ptr& npc, const MWWorld::ESMStore* dependencies) const;
 
         std::unique_ptr<MWWorld::Action> use(const MWWorld::Ptr& ptr, bool force = false) const override;
         ///< Generate action for using via inventory menu

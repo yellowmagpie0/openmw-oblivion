@@ -128,6 +128,12 @@ namespace MWClass
 
         // Fallback to the old engine implementation when actors don't have their scripts attached yet.
 
+        return getEquipmentSkill(ptr, nullptr);
+    }
+
+    ESM::RefId Armor::getEquipmentSkill(
+        const MWWorld::ConstPtr& ptr, const MWWorld::ESMStore* dependencies) const
+    {
         const MWWorld::LiveCellRef<ESM::Armor>* ref = ptr.get<ESM::Armor>();
 
         std::string_view typeGmst;
@@ -166,8 +172,7 @@ namespace MWClass
         if (typeGmst.empty())
             return {};
 
-        const MWWorld::Store<ESM::GameSetting>& gmst
-            = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
+        const auto& gmst = (dependencies ? *dependencies : *MWBase::Environment::get().getESMStore()).get<ESM::GameSetting>();
 
         float iWeight = floor(gmst.find(typeGmst)->mValue.getFloat());
 
@@ -311,6 +316,21 @@ namespace MWClass
         return record->mId;
     }
 
+    namespace
+    {
+        float armorRating(const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& actor,
+            const ESM::RefId& armorSkillType, const MWWorld::ESMStore* dependencies)
+        {
+            const auto* ref = ptr.get<ESM::Armor>();
+            const float armorSkill = actor.getClass().getSkill(actor, armorSkillType);
+            const auto& store = dependencies ? *dependencies : *MWBase::Environment::get().getESMStore();
+            const int baseSkill = store.get<ESM::GameSetting>().find("iBaseArmorSkill")->mValue.getInteger();
+            if (ref->mBase->mData.mWeight == 0)
+                return static_cast<float>(ref->mBase->mData.mArmor);
+            return ref->mBase->mData.mArmor * armorSkill / static_cast<float>(baseSkill);
+        }
+    }
+
     float Armor::getSkillAdjustedArmorRating(
         const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& actor, bool useLuaInterfaceIfAvailable) const
     {
@@ -327,24 +347,22 @@ namespace MWClass
 
         // Fallback to the old engine implementation when actors don't have their scripts attached yet.
 
-        const MWWorld::LiveCellRef<ESM::Armor>* ref = ptr.get<ESM::Armor>();
+        return armorRating(ptr, actor, getEquipmentSkill(ptr, useLuaInterfaceIfAvailable), nullptr);
+    }
 
-        const ESM::RefId armorSkillType = getEquipmentSkill(ptr, useLuaInterfaceIfAvailable);
-        float armorSkill = actor.getClass().getSkill(actor, armorSkillType);
-
-        int iBaseArmorSkill = MWBase::Environment::get()
-                                  .getESMStore()
-                                  ->get<ESM::GameSetting>()
-                                  .find("iBaseArmorSkill")
-                                  ->mValue.getInteger();
-
-        if (ref->mBase->mData.mWeight == 0)
-            return static_cast<float>(ref->mBase->mData.mArmor);
-        else
-            return ref->mBase->mData.mArmor * armorSkill / static_cast<float>(iBaseArmorSkill);
+    float Armor::getSkillAdjustedArmorRating(const MWWorld::ConstPtr& ptr,
+        const MWWorld::Ptr& actor, const MWWorld::ESMStore* dependencies) const
+    {
+        return armorRating(ptr, actor, getEquipmentSkill(ptr, dependencies), dependencies);
     }
 
     std::pair<int, std::string_view> Armor::canBeEquipped(const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& npc) const
+    {
+        return canBeEquipped(ptr, npc, nullptr);
+    }
+
+    std::pair<int, std::string_view> Armor::canBeEquipped(const MWWorld::ConstPtr& ptr,
+        const MWWorld::Ptr& npc, const MWWorld::ESMStore* dependencies) const
     {
         const MWWorld::InventoryStore& invStore = npc.getClass().getInventoryStore(npc);
 
@@ -366,7 +384,7 @@ namespace MWClass
             const ESM::RefId& npcRace = npc.get<ESM::NPC>()->mBase->mRace;
 
             // Beast races cannot equip shoes / boots, or full helms (head part vs hair part)
-            const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npcRace);
+            const ESM::Race* race = (dependencies ? *dependencies : *MWBase::Environment::get().getESMStore()).get<ESM::Race>().find(npcRace);
             if (race->mData.mFlags & ESM::Race::Beast)
             {
                 const auto& parts = ptr.get<ESM::Armor>()->mBase->mParts.mParts;

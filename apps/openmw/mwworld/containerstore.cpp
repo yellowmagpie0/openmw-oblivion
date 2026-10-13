@@ -1005,11 +1005,11 @@ int MWWorld::ContainerStore::remove(const Ptr& item, int count, bool equipReplac
 }
 
 void MWWorld::ContainerStore::prepareInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-    const ESMStore& content, const ESMStore& incoming)
+    const ESMStore& content, const ESMStore& incoming, const ESM::RefId* race)
 {
     mPreparedInitialAutoEquip.reset();
     mPreparedInitialInventory = std::make_unique<PreparedInitialInventory>(
-        items, owner, content, incoming, dynamic_cast<InventoryStore*>(this) != nullptr);
+        items, owner, content, incoming, dynamic_cast<InventoryStore*>(this) != nullptr, race);
 }
 
 std::unique_ptr<MWWorld::PreparedInitialInventory> MWWorld::ContainerStore::takePreparedInitialAutoEquip()

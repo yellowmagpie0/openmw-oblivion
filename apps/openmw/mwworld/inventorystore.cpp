@@ -13,6 +13,8 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
+#include "../mwclass/armor.hpp"
+#include "../mwclass/clothing.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
@@ -455,6 +457,21 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInven
 {
     const Ptr& actor = getPtr();
 
+    const ESMStore* dependencies = prepared ? &prepared->autoEquipStore() : nullptr;
+    const auto armorRating = [&](const Ptr& item) {
+        const auto& cls = item.getClass();
+        return dependencies
+            ? static_cast<const MWClass::Armor&>(cls).getSkillAdjustedArmorRating(item, actor, dependencies)
+            : cls.getSkillAdjustedArmorRating(item, actor);
+    };
+    const auto canEquip = [&](const Ptr& item) {
+        const auto& cls = item.getClass();
+        if (!dependencies) return cls.canBeEquipped(item, actor);
+        if (item.getType() == ESM::REC_ARMO)
+            return static_cast<const MWClass::Armor&>(cls).canBeEquipped(item, actor, dependencies);
+        return static_cast<const MWClass::Clothing&>(cls).canBeEquipped(item, actor, dependencies);
+    };
+
     // Creatures only want shields and don't benefit from armor rating or unarmored skill
     const MWWorld::Class& actorCls = actor.getClass();
     const bool actorIsNpc = actorCls.isNpc();
@@ -464,7 +481,7 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInven
     if (actorIsNpc)
     {
         equipmentTypes |= ContainerStore::Type_Clothing;
-        const auto& store = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
+        const auto& store = (dependencies ? *dependencies : *MWBase::Environment::get().getESMStore()).get<ESM::GameSetting>();
         const float fUnarmoredBase1 = store.find("fUnarmoredBase1")->mValue.getFloat();
         const float fUnarmoredBase2 = store.find("fUnarmoredBase2")->mValue.getFloat();
         const float unarmoredSkill = actorCls.getSkill(actor, ESM::Skill::Unarmored);
@@ -483,7 +500,7 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInven
         {
             if (actorIsNpc)
             {
-                if (testCls.getSkillAdjustedArmorRating(test, actor) <= unarmoredRating)
+                if (armorRating(test) <= unarmoredRating)
                     continue;
             }
             else
@@ -494,7 +511,7 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInven
         }
 
         // Don't equip the item if it cannot be equipped
-        if (testCls.canBeEquipped(test, actor).first == 0)
+        if (canEquip(test).first == 0)
             continue;
 
         const auto [itemSlots, canStack] = testCls.getEquipmentSlots(test);
@@ -538,8 +555,8 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInven
                         // For NPCs, compare armor rating; for creatures, compare condition
                         if (actorIsNpc)
                         {
-                            const float rating = testCls.getSkillAdjustedArmorRating(test, actor);
-                            const float oldRating = oldCls.getSkillAdjustedArmorRating(old, actor);
+                            const float rating = armorRating(test);
+                            const float oldRating = armorRating(old);
                             if (rating <= oldRating)
                                 continue;
                         }
