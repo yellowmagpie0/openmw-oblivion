@@ -349,8 +349,10 @@ namespace MWWorld
     {
         if (type == ESM::REC_PLAY)
         {
-            ESM::Player player;
-            player.load(reader);
+            auto decoded = MWBase::Environment::get().getWorldModel()->takePreparedSavedPlayer(reader);
+            ESM::Player ordinary;
+            auto& player = decoded ? *decoded : ordinary;
+            if (!decoded) player.load(reader);
 
             if (!mPlayer.checkState(player.mObject))
             {
@@ -385,8 +387,8 @@ namespace MWWorld
                 reader.mActorIdConverter->mMappings.emplace(
                     player.mObject.mCreatureStats.mActorId, mPlayer.mRef.getRefNum());
 
-            mSaveAttributes = player.mSaveAttributes;
-            mSaveSkills = player.mSaveSkills;
+            mSaveAttributes = std::move(player.mSaveAttributes);
+            mSaveSkills = std::move(player.mSaveSkills);
 
             if (player.mObject.mHasCustomState && player.mObject.mNpcStats.mIsWerewolf)
             {
@@ -440,7 +442,7 @@ namespace MWWorld
 
             mTeleported = false;
 
-            mPreviousItems = player.mPreviousItems;
+            mPreviousItems = std::move(player.mPreviousItems);
 
             return true;
         }

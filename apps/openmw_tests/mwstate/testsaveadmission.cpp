@@ -1,3 +1,4 @@
+#include "apps/openmw/mwworld/preparedsaverecords.hpp"
 #include <gtest/gtest.h>
 #include <fstream>
 #include <components/testing/util.hpp>
@@ -3357,11 +3358,12 @@ TEST(SaveAdmissionTest, CellReferenceStoragePreparesBeforeIdentityRemappingAndPu
 {
     MWWorld::ESMStore content; installTimestampContent(content);
     for (bool native : {false, true}) for (bool inventoryCallback : {false, true})
-    for (bool reject : {false, true})
+    for (bool reject : {false, true}) for (bool decoded : {false, true})
     {
         SCOPED_TRACE(native);
         SCOPED_TRACE(inventoryCallback);
         SCOPED_TRACE(reject);
+        SCOPED_TRACE(decoded);
         const auto records = worldRecords([&](ESM::ESMWriter& writer) {
             ESM::Player player{}; player.mObject.blank();
             player.mObject.mRef.mRefID = ESM::RefId::stringRefId("Player");
@@ -3380,6 +3382,8 @@ TEST(SaveAdmissionTest, CellReferenceStoragePreparesBeforeIdentityRemappingAndPu
         });
         ESM::ESMReader reader;
         openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        std::unique_ptr<MWWorld::PreparedSaveRecords> decodedRecords;
+        if (decoded) decodedRecords = std::make_unique<MWWorld::PreparedSaveRecords>(reader);
         const auto before = reader.getFileOffset();
         std::vector<std::uint32_t> prepared;
         bool published = false;
@@ -3397,9 +3401,10 @@ TEST(SaveAdmissionTest, CellReferenceStoragePreparesBeforeIdentityRemappingAndPu
                 EXPECT_EQ(state.mRef.mRefID, timestampNpcId); // PLAY must not allocate a cell node.
                 prepared.push_back(state.mRef.mRefNum.mIndex);
                 if (reject) throw std::runtime_error("cell storage preparation failed");
-            }); };
+            }, {}, decodedRecords.get()); };
         if (reject) { EXPECT_THROW(admit(), std::runtime_error); }
         else { EXPECT_NO_THROW(admit()); }
+        if (decodedRecords) { EXPECT_EQ(decodedRecords->size(), 2u); } // PLAY plus the retained second cell.
         EXPECT_EQ(prepared, (std::vector<std::uint32_t>{102}));
         EXPECT_EQ(published, !reject); EXPECT_EQ(reader.getFileOffset(), before);
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);

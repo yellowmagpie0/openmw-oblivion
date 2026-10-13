@@ -168,11 +168,12 @@ void ESM::LuaScripts::load(ESMReader& esm)
     while (esm.isNextSub("LUAS"))
     {
         int32_t id = -1;
+        std::optional<VFS::Path::Normalized> legacyPath;
         if (esm.getFormatVersion() <= ESM::MaxLuaScriptPathFormatVersion)
         {
-            VFS::Path::Normalized name(esm.getHString());
+            legacyPath.emplace(esm.getHString());
             if (esm.mScriptsConfiguration)
-                id = esm.mScriptsConfiguration->findId(name).value_or(-1);
+                id = esm.mScriptsConfiguration->findId(*legacyPath).value_or(-1);
         }
         else
             esm.getHT(id);
@@ -198,7 +199,7 @@ void ESM::LuaScripts::load(ESMReader& esm)
             timer.mCallbackArgument = loadLuaBinaryData(esm);
             timers.push_back(std::move(timer));
         }
-        mScripts.push_back({ id, std::move(data), std::move(timers) });
+        mScripts.push_back({ id, std::move(data), std::move(timers), std::move(legacyPath) });
     }
 }
 

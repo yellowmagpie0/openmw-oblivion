@@ -6,6 +6,87 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 consume admission's decoded cell and Player records — 2026-10-13
+
+Oblivion admission now retains its decoded typed CSTA owners and complete PLAY
+record in a reader-bound PreparedSaveRecords plan. The runtime readers advance
+through validated subrecord framing and consume those owned DTOs, eliminating
+the second allocating object/Player decode after teardown. Plans retain cached
+lookahead boundaries, reject foreign readers and identity/type mismatches, and
+reject replay. Removed cells retain their skip behavior. Unused plans release
+on restore completion or World clear. Actor/script/Lua callbacks and typed
+migrations remain at their existing runtime call sites.
+
+Admission inventory preparation can map owners in place; consumption restores
+the raw saved owner RefNum before the cell reader maps it exactly once. Already
+mapped inventory identities are retained. Object/item, AI and active-spell
+converter pointers are rebound to the runtime converter; absent custom actor
+state retains its blank/null converter fields. Player saved attribute/skill and
+previous-item maps move into place and survive actual Player read/resave checks
+across all four initialization orders.
+
+An isolated codec comparison exposed a legacy Lua mismatch: admission resolved
+an old path to ID 0, while the ordinary restore reader with no configuration
+produced ID -1. `decoded-records-legacy-lua-probe-01` retains that failing comparison.
+The decoder now owns optional legacy path metadata in LuaScript, and consumption
+resolves it against the restore reader's configuration for root and inventory
+scripts. Current saves still serialize only the existing ID/data/timer fields;
+the save schema is unchanged. Six old/current-format cases compare staged and
+ordinary decoding with absent, unchanged and reordered/expanded configurations,
+including a previously unknown path becoming available. The original isolated
+comparison passes in `decoded-records-legacy-lua-probe-02`.
+
+Both complete component inventories pass **2,598 tests**, and both complete
+engine inventories pass **1,407 tests**, exact inventory/XML agreement with no
+failures/skips. Evidence: `build/oblivion-compat/m15/S3/decoded-records-normal-02`
+and `decoded-records-sanitized-02`. Tested parent:
+`f4549901d045427665db2a012f2b84754b8f3a92`; matched before/after fingerprint:
+`253a26025e73c75ca0eda8ef014f06d7181ba601ab1ee6e6fa557c24100c5d93`.
+ASan/UBSan halt on errors, with leaks disabled; audio/SDL are null/offscreen.
+Four new engine tests cover typed ownership/cursors, identity rejection, complete
+Player state and Lua equivalence; existing admission/cell/Player fixtures now
+exercise retained DTOs as well. Exact binary/cache/evidence hashes are in
+`decoded-records-followup-02/checkpoint-summary.json`.
+
+`decoded-records-allocation-control-02` links a copied production record-plan
+object before the unchanged archive. Scalar/array/aligned C++ new is disabled
+only during validated framing advancement, rebinding and ownership transfer.
+**25 consumptions** pass: ten actual cell-reader calls and fifteen direct
+reference/Player calls, including the six Lua configuration cases.
+`decoded-records-negative-02` inserts ordinary DTO decoding inside that guard;
+all five selected tests fail with `std::bad_alloc` as required. This does not
+cover all reader framing, class callbacks, scene setup or whole-load allocation.
+
+Actual load/F5/F9/F5/quit passes in `decoded-records-runtime-normal-02`
+(PID 130752) and `decoded-records-runtime-sanitized-02` (PID 133443). Fresh
+`decoded-records-runtime-continuation-sanitized-02` (PID 133422) loads the exact
+normal final save after its process exited, SHA256
+`403368f9f8ee496479864bf3ad515cc5ac5ac3a03cb5f88a0f2a51cf0ab26121`.
+Independent binary inspection requires exact native/shared actor/inventory views
+and all fields of three disabled shared weapon references, including long
+strings and animation group/time/absolute/64-bit loop count, plus the Player
+reference string. All six Oblivion captures were reviewed: prison, chains,
+reticle, HUD and retained blade are visible without an error dialog. Disabled
+references do not render; animation playback is not established.
+`decoded-records-morrowind-02` passes unchanged M14 startup/idle/F5 isolation,
+independent native-record/marker exclusion and direct capture review.
+
+Retained earlier evidence includes syntax01 test field/name errors, corrected
+syntax02/03/04, both baseline01 suites (1,406 engine tests before the Lua fix),
+the failing Lua probe, and cancelled baseline prerequisite waiters. Runtime01
+courses were inadvertently launched by inherited formatted paths while latest02
+builds were pending; duplicate launches also overwrote some 01 files and were
+rejected. Those courses are excluded from acceptance. The remaining owned
+process group was terminated, both formatted paths were fixed, and accepted02
+courses ran only after the latest checks passed. See
+`decoded-records-followup-02/runtime-launch-interruption.json`.
+
+General locals/Lua initialization, cell/moved-reference bookkeeping, remaining
+manager records, scene/Player setup and consumed missing dependencies still
+have fallible work after teardown. Full prior-world late-failure preservation
+and the complete S3 audit remain open. This checkpoint stages decoded cell and
+Player data; it does not establish whole-load transactionality.
+
 ## S3 prepare shared reference payloads — 2026-10-13
 
 Oblivion admission now owns shared CellRef strings and RefData animation storage

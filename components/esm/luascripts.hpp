@@ -5,6 +5,7 @@
 #include <components/vfs/pathutil.hpp>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -91,6 +92,9 @@ namespace ESM
         int32_t mScriptId;
         std::string mData; // Serialized Lua table. It is a binary data. Can contain '\0'.
         std::vector<LuaTimer> mTimers;
+        // Legacy path identity retained for staged restoration. Current saves
+        // continue to serialize mScriptId, without this decoding metadata.
+        std::optional<VFS::Path::Normalized> mLegacyPath = std::nullopt;
     };
 
     struct LuaScripts

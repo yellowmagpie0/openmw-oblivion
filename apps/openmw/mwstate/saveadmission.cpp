@@ -1,4 +1,5 @@
 #include "saveadmission.hpp"
+#include "../mwworld/preparedsaverecords.hpp"
 
 #include <algorithm>
 #include <optional>
@@ -560,7 +561,8 @@ namespace MWState
         const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions,
         const std::function<bool(const ESM::RefId&)>& restoreCell,
         const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference,
-        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference)
+        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference,
+        MWWorld::PreparedSaveRecords* decodedRecords)
     {
         const auto start = reader.getContext();
         try
@@ -623,6 +625,8 @@ namespace MWState
             std::vector<std::pair<std::uint32_t, ESM::ESM_Context>> worldRecords;
             std::vector<std::unique_ptr<ESM::ObjectState>> inventoryOwners;
             std::vector<std::unique_ptr<ESM::Player>> inventoryPlayers;
+            std::vector<ESM::ObjectState*> cellOwners;
+            std::vector<ESM::Player*> players;
             // Pointees stay stable when the owning vectors grow. Preserve wire
             // encounter order across cell owners and Player, as restoration does.
             std::vector<ESM::ObjectState*> inventoryOrder;
@@ -769,6 +773,7 @@ namespace MWState
                         hasPlayer = true;
                         auto ownedPlayer = std::make_unique<ESM::Player>();
                         auto& player = *ownedPlayer;
+                        const auto playerBegin = reader.getFileOffset();
                         player.load(reader);
                         validatePosition(player.mObject.mPosition);
                         validateSharedActorState(player.mObject, *shared, content, true);
@@ -800,10 +805,12 @@ namespace MWState
                         }
                         legacyPlayerItems = generatedItems(player.mObject.mInventory);
                         collectScripts(player.mObject);
-                        if (prepareInventory || preparePlayerReference)
+                        if (prepareInventory || preparePlayerReference || decodedRecords)
                         {
                             inventoryOrder.push_back(&ownedPlayer->mObject);
-                            inventoryPlayers.push_back(std::move(ownedPlayer));
+                            players.push_back(ownedPlayer.get());
+                            if (decodedRecords) decodedRecords->addPlayer(reader, playerBegin, std::move(ownedPlayer));
+                            else inventoryPlayers.push_back(std::move(ownedPlayer));
                         }
                     }
                     else
@@ -839,6 +846,7 @@ namespace MWState
                                 referenceType = content->findStatic(reference.mRefID);
                             if (referenceType)
                             {
+                                const auto referenceBegin = reader.getFileOffset();
                                 auto state = MWWorld::readSavedReferenceState(reader, reference, referenceType);
                                 validatePosition(state->mPosition);
                                 validateSharedActorState(*state, *shared, content);
@@ -876,10 +884,13 @@ namespace MWState
                                     }
                                 }
                                 collectScripts(*state);
-                                if ((prepareInventory || prepareCellReference) && prepareOwners)
+                                if ((prepareInventory || prepareCellReference || decodedRecords) && prepareOwners)
                                 {
                                     inventoryOrder.push_back(state.get());
-                                    inventoryOwners.push_back(std::move(state));
+                                    cellOwners.push_back(state.get());
+                                    if (decodedRecords)
+                                        decodedRecords->addReference(reader, referenceBegin, referenceType, std::move(state));
+                                    else inventoryOwners.push_back(std::move(state));
                                 }
                             }
                             else
@@ -996,9 +1007,9 @@ namespace MWState
                 if (prepareQuickKeys)
                     prepareQuickKeys(quickkeys, *shared, &native);
                 if (prepareCellReference && shared)
-                    for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
+                    for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)
-                    for (const auto& player : inventoryPlayers) preparePlayerReference(player->mObject);
+                    for (const auto* player : players) preparePlayerReference(player->mObject);
                 if (prepareInventory)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, &native);
@@ -1017,9 +1028,9 @@ namespace MWState
                 if (prepareQuickKeys && shared)
                     prepareQuickKeys(quickkeys, *shared, nullptr);
                 if (prepareCellReference && shared)
-                    for (const auto& owner : inventoryOwners) prepareCellReference(*owner, *shared);
+                    for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)
-                    for (const auto& player : inventoryPlayers) preparePlayerReference(player->mObject);
+                    for (const auto* player : players) preparePlayerReference(player->mObject);
                 if (prepareInventory && shared)
                 {
                     for (auto* owner : inventoryOrder) prepareInventory(*owner, *shared, nullptr);

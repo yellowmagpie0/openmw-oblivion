@@ -267,9 +267,15 @@ namespace
         const MWWorld::ESMStore& esmStore, MWWorld::CellStore* cellstore)
     {
         using StateType = typename RecordToState<T>::StateType;
-        StateType state;
-        state.mRef = cref;
-        state.load(reader);
+        auto& model = *MWBase::Environment::get().getWorldModel();
+        auto decoded = model.takePreparedSavedReference(reader, cref, T::sRecordId);
+        StateType ordinary;
+        auto& state = decoded ? dynamic_cast<StateType&>(*decoded) : ordinary;
+        if (!decoded)
+        {
+            state.mRef = cref;
+            state.load(reader);
+        }
 
         // If the reference came from a content file, make sure this content file is loaded
         if (!reader.applyContentFileMapping(state.mRef.mRefNum))
@@ -283,7 +289,6 @@ namespace
         if (!record)
             return;
 
-        auto& model = *MWBase::Environment::get().getWorldModel();
         // Take by saved identity before legacy ActorId conversion can assign one.
         auto prepared = model.takePreparedCellReference(state);
         if (prepared && prepared->reference().getType() != T::sRecordId)

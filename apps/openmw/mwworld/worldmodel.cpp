@@ -15,6 +15,7 @@
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/npcstate.hpp>
+#include <components/esm3/player.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadcrea.hpp>
 #include <components/esm3/loadcont.hpp>
@@ -34,6 +35,7 @@
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/creaturestatsrestore.hpp"
 #include "esmstore.hpp"
+#include "preparedsaverecords.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
@@ -962,8 +964,25 @@ std::unique_ptr<MWWorld::CellStore::PreparedReference> MWWorld::WorldModel::take
 void MWWorld::WorldModel::finishCellReferenceRestore()
 {
     mPreparedCellReferences.clear();
+    mPreparedSaveRecords.reset();
     mPreparedPlayerState.reset();
     mPreparedPlayerStateRef = nullptr;
+}
+
+void MWWorld::WorldModel::setPreparedSaveRecords(std::unique_ptr<PreparedSaveRecords> records)
+{
+    mPreparedSaveRecords = std::move(records);
+}
+
+std::unique_ptr<ESM::ObjectState> MWWorld::WorldModel::takePreparedSavedReference(
+    ESM::ESMReader& reader, const ESM::CellRef& reference, std::uint32_t type)
+{
+    return mPreparedSaveRecords ? mPreparedSaveRecords->takeReference(reader, reference, type) : nullptr;
+}
+
+std::unique_ptr<ESM::Player> MWWorld::WorldModel::takePreparedSavedPlayer(ESM::ESMReader& reader)
+{
+    return mPreparedSaveRecords ? mPreparedSaveRecords->takePlayer(reader) : nullptr;
 }
 
 void MWWorld::WorldModel::setPreparedPlayerState(

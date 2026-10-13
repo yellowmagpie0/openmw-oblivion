@@ -43,6 +43,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/preparedsaverecords.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/class.hpp"
 #include "../mwworld/datetimemanager.hpp"
@@ -501,6 +502,9 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
         MWWorld::WorldModel::PreparedCellReferences preparedCellReferences;
         std::unique_ptr<MWWorld::LiveCellRefBase::PreparedState> preparedPlayerReference;
+        std::unique_ptr<MWWorld::PreparedSaveRecords> decodedRecords;
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+            decodedRecords = std::make_unique<MWWorld::PreparedSaveRecords>(reader);
         MWWorld::WorldModel::PreparedNpcStates preparedNpcStats;
         MWWorld::WorldModel::PreparedCreatureStates preparedCreatureStats;
         MWWorld::SharedActorInitialization preparedActorCustomData(
@@ -555,7 +559,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                         MWWorld::WorldModel::PreparedInventoryKey{ref.mRefNum, ref.mRefID}, std::move(prepared));
             }, [&](const ESM::ObjectState& state) {
                 preparedPlayerReference = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(state);
-            });
+            }, decodedRecords.get());
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
@@ -576,6 +580,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWBase::Environment::get().getWorldModel()->setPreparedFogStates(std::move(preparedFog));
         MWBase::Environment::get().getWorldModel()->setPreparedInventoryStates(std::move(preparedInventories));
         MWBase::Environment::get().getWorldModel()->setPreparedCellReferences(std::move(preparedCellReferences));
+        MWBase::Environment::get().getWorldModel()->setPreparedSaveRecords(std::move(decodedRecords));
         MWBase::Environment::get().getWorldModel()->setPreparedPlayerState(
             std::move(preparedPlayerReference), world.getPlayerPtr());
         MWBase::Environment::get().getWorldModel()->setPreparedNpcStates(std::move(preparedNpcStats));

@@ -1,3 +1,5 @@
+#include "apps/openmw/mwworld/preparedsaverecords.hpp"
+#include "apps/openmw/mwworld/savedreference.hpp"
 #include "apps/openmw/mwscript/scriptmanagerimp.hpp"
 #include "apps/openmw/mwscript/compilercontext.hpp"
 #include <components/esm3/loadscpt.hpp>
@@ -17123,7 +17125,13 @@ namespace
             player.mObject.mAnimationState.mScriptedAnims.resize(1);
             player.mObject.mAnimationState.mScriptedAnims[0].mGroup = std::string(160, 'a');
             std::unique_ptr<MWWorld::LiveCellRefBase::PreparedState> payload;
-            if (preparedPayload) payload = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(player.mObject);
+            if (preparedPayload)
+            {
+                payload = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(player.mObject);
+                player.mSaveAttributes[ESM::Attribute::Speed] = 42.f;
+                player.mSaveSkills[ESM::Skill::LongBlade] = 17.f;
+                player.mPreviousItems[ESM::RefId::stringRefId("decoded-bound")] = ESM::RefId::stringRefId("decoded-previous");
+            }
             const auto before = world.captureOblivionRuntimeState().serializeBinary();
             const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
             const auto* outgoing = world.getPlayerPtr().getRefData().getCustomData();
@@ -17184,6 +17192,14 @@ namespace
             ESM::ActorIdConverter converter; reader.mActorIdConverter = &converter;
             if (reader.getRecName().toInt() != ESM::REC_PLAY) std::_Exit(58);
             reader.getRecHeader();
+            if (preparedPayload)
+            {
+                const auto start = reader.getContext();
+                auto decoded = std::make_unique<ESM::Player>(); decoded->load(reader);
+                auto records = std::make_unique<MWWorld::PreparedSaveRecords>(reader);
+                records->addPlayer(reader, start.filePos, std::move(decoded));
+                reader.restoreContext(start); model.setPreparedSaveRecords(std::move(records));
+            }
             if (!world.getPlayer().readRecord(reader, ESM::REC_PLAY)) std::_Exit(59);
             const auto actual = world.getPlayerPtr();
             if (!actual.getRefData().isEnabled() || model.takePreparedPlayerState(actual)
@@ -17192,6 +17208,18 @@ namespace
                 || actual.getRefData().getAnimationState().mScriptedAnims[0].mGroup != std::string(160, 'a'))
                 std::_Exit(69);
             if (!player.mObject.mHasCustomState && !converter.mMappings.empty()) std::_Exit(68);
+            if (preparedPayload)
+            {
+                auto output = std::make_unique<std::stringstream>(); ESM::ESMWriter saved;
+                saved.setFormatVersion(ESM::CurrentSaveGameFormatVersion); saved.save(*output);
+                Loading::Listener listener; world.getPlayer().write(saved, listener); saved.close();
+                ESM::ESMReader check; check.open(std::move(output), "decoded-player-resave");
+                check.getRecName(); check.getRecHeader(); ESM::Player result; result.load(check);
+                if (result.mSaveAttributes.at(ESM::Attribute::Speed) != 42.f
+                    || result.mSaveSkills.at(ESM::Skill::LongBlade) != 17.f
+                    || result.mPreviousItems.at(ESM::RefId::stringRefId("decoded-bound"))
+                        != ESM::RefId::stringRefId("decoded-previous")) std::_Exit(70);
+            }
             };
             if (mode == 4) readPlayer();
             MWWorld::ManualRef restored(store, creature.mId);
@@ -18429,9 +18457,11 @@ TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThr
 {
     for (int path : {0, 1, 2, 3, 4}) // unset, generated, content, overwrite, empty content
     for (bool incomingOnly : {false, true})
+    for (bool decodedMode : {false, true})
     {
         SCOPED_TRACE(path);
         SCOPED_TRACE(incomingOnly);
+        SCOPED_TRACE(decodedMode);
         PopulatedMigrationFixture fixture;
         auto& world = fixture.mWorld;
         auto& model = world.getWorldModel();
@@ -18496,7 +18526,20 @@ TEST(OblivionWorldTest, PreparedCellReferencesPreserveIdentityAndConsumeNodesThr
         ESM::ESMReader reader; reader.open(std::move(stream), "prepared-cell-reference");
         std::map<int, int> mapping{{0, 3}}; reader.setContentFileMapping(&mapping);
         reader.getRecName(); reader.getRecHeader();
+        MWWorld::PreparedSaveRecords* decoded = nullptr;
+        if (decodedMode)
+        {
+            auto records = std::make_unique<MWWorld::PreparedSaveRecords>(reader); decoded = records.get();
+            const auto start = reader.getContext();
+            ASSERT_TRUE(reader.isNextSub("OBJE")); reader.skipHT<std::uint32_t>();
+            ESM::CellRef saved; saved.loadId(reader, true);
+            const auto begin = reader.getFileOffset();
+            auto object = MWWorld::readSavedReferenceState(reader, saved, ESM::REC_WEAP);
+            records->addReference(reader, begin, ESM::REC_WEAP, std::move(object));
+            reader.restoreContext(start); model.setPreparedSaveRecords(std::move(records));
+        }
         ASSERT_NO_THROW(cell.readReferences(reader, nullptr));
+        if (decoded) EXPECT_EQ(decoded->size(), 0u);
         EXPECT_EQ(model.pendingPtrInsertions(), pending);
         EXPECT_FALSE(model.takePreparedCellReference(state));
         EXPECT_EQ(references().size(), count + (path != 4));

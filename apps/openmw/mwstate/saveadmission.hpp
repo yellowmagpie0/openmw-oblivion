@@ -10,7 +10,7 @@
 
 namespace ESM { class ESMReader; class RefId; struct ObjectState; struct QuickKeys; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
 namespace ESM4 { struct RuntimeState; }
-namespace MWWorld { class ESMStore; }
+namespace MWWorld { class ESMStore; class PreparedSaveRecords; }
 
 namespace MWState
 {
@@ -38,7 +38,8 @@ namespace MWState
         const std::function<void(std::unique_ptr<MWWorld::ESMStore>)>& prepareSharedDefinitions = {},
         const std::function<bool(const ESM::RefId&)>& restoreCell = {},
         const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference = {},
-        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference = {});
+        const std::function<void(const ESM::ObjectState&)>& preparePlayerReference = {},
+        MWWorld::PreparedSaveRecords* decodedRecords = nullptr);
 }
 
 #endif

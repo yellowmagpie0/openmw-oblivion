@@ -827,3 +827,23 @@ The cell and Player readers still perform a second allocating wire decode after
 teardown. That boundary, locals/Lua and other callbacks/managers, cell tracking,
 scene setup, missing-dependency admission, full prior-world late-failure
 preservation and the full S3 audit remain open.
+
+Admission now owns decoded typed shared cell and complete Player DTOs until the
+ordinary runtime readers consume them. Reader-bound offsets and lookahead
+framing avoid a second DTO decode, reject identity/reader/type mismatches and
+replay, and preserve skipped-cell behavior. Owner RefNums return to raw saved
+identity before runtime mapping; inventory indices remain mapped. Runtime
+converter pointers rebind through objects/items, AI and active spells. Player
+saved-stat/previous-item maps move and survive actual read/resave. Legacy Lua
+paths are now owned decoding metadata, re-resolved against the restore reader
+configuration; an independent red/green codec probe and six old/current-format
+configuration pairs cover the corrected ID semantics without changing the save
+wire format. Both complete component suites pass 2598 and engine suites pass 1407
+cases. Twenty-five C++-new-disabled decoded consumptions pass; ordinary decoding
+fails all five negative-control tests. Latest normal/instrumented reload courses
+and fresh instrumented continuation preserve exact native/shared fields and
+three populated shared references. Morrowind isolation passes; all seven
+captures were reviewed. Evidence is S3/decoded-records-*02. Runtime01 mixed
+provenance is explicitly excluded. Class/script/Lua initialization, cell tracking,
+remaining manager records, scene setup, missing dependencies, full prior-world
+late-failure preservation and the full S3 audit remain open.
