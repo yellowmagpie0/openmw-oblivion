@@ -6,6 +6,90 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare inventory registry publication — 2026-10-13
+
+Both initial inventory and saved shared inventory now reserve registry nodes
+and hash capacity before teardown, including saved equipment splits. Nodes
+receive their RefNums at the original live registration point; repeat/alias
+registrations reuse the existing entry. Detached spare buckets keep admission
+and cancellation from rehashing the live index or changing its iteration order.
+Publication transfers existing nodes to the spare table if needed, then consumes
+a prepared node without allocating. Ordinary registrations retain capacity for
+outstanding plans. Clear retains the reservation; copies own independent nodes,
+moves transfer them, and cancellation releases their credits. A reservation
+outliving its registry cannot be copied or consumed through another registry.
+
+Prepared native registry replacement snapshots retain sufficient reservation
+capacity. A later reservation that exceeds the snapshot's capacity invalidates
+its commit before mutation. Generated-namespace exhaustion and wrong-owner
+consumption reject before changing reference identity, serial or registry.
+This prepares inventory registration only: ordinary actor/cell publication can
+still allocate, and it is not whole-load rollback or allocation-failure coverage.
+
+Five new registry tests cover singleton bucket materialization, 64 prepared
+registrations after 300 ordinary insertions, clear/copy/move/cancellation,
+namespace rollover/exhaustion, aliases, orphan/foreign plans, replacement and
+exact outgoing iteration/node identity. Existing initial inventory and saved
+shared inventory tests now assert reservation acquisition/consumption through
+actual class/World code. Both complete engine inventories pass **1,382 tests**,
+exact inventory/XML agreement, no failures or skips, in
+`build/oblivion-compat/m15/S3/inventory-registry-normal-03` and
+`inventory-registry-sanitized-03`. Tested parent (preceding stack checkpoint):
+`a99b60cb8999cde17dcf28aa9fcf80336e07b790`; identical before/after fingerprint:
+`60a41e901e81e1a38f64e35708183be07511b81eb42a33b5cb367805876e3240`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`8c45de8d81648b80bcc852a3dd4b80447f68dc78a8020dc8364d0cdf162bfab1`,
+`9b0a0a2fb4d760d83b04ff93448b312a811659979ca61ac5faec1aa4c22cbe6d`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are explicitly
+null/offscreen. Unchanged component/Python production code was not retested.
+
+`inventory-registry-allocation-control-01` adds a separate test object to a
+separate normal test executable and overrides scalar/array/aligned C++ new.
+With allocation disabled only around publication, singleton and 64-node batches
+succeed after clear and after ordinary growth; ordinary registration fails under
+the same hook. Production binaries are unchanged. This establishes the narrow
+registry insertion property, not allocation freedom of all inventory/World code.
+`inventory-registry-consumption-negative-01` separately disables only initial
+prepared registration in a copied object/archive. The nested-selection test
+fails its reservation-consumption assertion as required. This is a mutation
+control, not an old whole-tree baseline build.
+
+`inventory-registry-runtime-normal-01` passes actual load/F5/F9/F5/quit with the
+editable initial LEVI Each->LEVC/authored BOOK fixture. Native load fields,
+stable groups, shared inventory/NPC/core fields and authored definitions pass
+independent comparison. Transient legacy initial inventory is replaced by the
+native inventory; its internal allocation/selection behavior is established by
+C++ probes. Both normal captures show the Imperial Prison scene/HUD and retained
+blade, with no loading/error dialog. Input SHA256:
+`13ca749c21f3553341124f846ad12076dae6ec31a9e04d1e6702ab0e4d374da9`.
+Normal openmw SHA256: `a0110f70c33cdb78de62adc0cea6f655e8bf5b205e1d4327863a7bcaa02b8d10`.
+`inventory-registry-runtime-sanitized-01` and
+`inventory-registry-runtime-continuation-sanitized-01` also pass both load/save
+cycles, semantic comparisons and clean exit. The continuation starts PID53457
+after normal PID51218 exited and reads its exact final save, SHA256
+`c3f7236dea58bcc2c8716d0423a5aae0a91d3ca63feceb1103c7e07ad60081c8`.
+Instrumented openmw SHA256:
+`d47c9105199e238dad505234ddc70e49372c75fff753021393ffa2c29d4573ce`.
+All six Oblivion captures were reviewed; per-course visual-review records retain
+their hashes and scope.
+
+`inventory-registry-morrowind-01` passes the unchanged M14 startup/idle/F5
+manifest and independent exclusion of native save records/markers. Its reviewed
+terrain-facing Balmora capture shows sky, ground and HUD without a loading/error
+dialog. This is startup/save isolation, not combat gameplay acceptance.
+
+Normal/sanitized attempts -01 were stopped before tests to fix the empty
+unordered_map sentinel-bucket assumption; the standalone failed check remains
+in `inventory-registry-bucket-probe-01`. Attempts -02 were stopped before tests
+to preserve outgoing iteration order with detached capacity. All four interrupted
+attempts are retained; only -03 counts as automated acceptance. Existing unrelated
+compiler diagnostics are retained in the build logs.
+
+S3 remains **in progress**. Initial autoequip/resource dependencies, remaining
+actor/cell/scene registration, full prior-world preservation after late failures
+and the complete requirement audit remain open. The next bounded task is initial
+autoequip preparation and its consumed resource dependencies.
+
 ## S3 reserve initial inventory stack nodes — 2026-10-13
 
 Initial inventory preparation now owns detached stack nodes for every selectable

@@ -478,3 +478,163 @@ TEST(MWWorldPtrTest, NativeConditionSurvivesCopyObjectStateAndLegacyDisplayWitho
     EXPECT_FALSE(ptr.getCellRef().getNativeItemCondition());
     EXPECT_EQ(ptr.getClass().getItemHealth(ptr), 51);
 }
+
+
+TEST(MWWorldPtrTest, preparedRegistrationsOwnNodesAcrossClearCopiesMovesAndOrdinaryGrowth)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-registry-weapon"); store.insertStatic(base);
+    MWWorld::PtrRegistry registry;
+    const auto revision = registry.getRevision(); const auto serial = registry.getLastGenerated();
+    auto pool = registry.prepareInsertions(64);
+    EXPECT_EQ(registry.pendingInsertions(), 64u);
+    EXPECT_EQ(registry.getRevision(), revision); EXPECT_EQ(registry.getLastGenerated(), serial);
+    {
+        auto copy = pool;
+        EXPECT_EQ(registry.pendingInsertions(), 128u);
+        auto moved = std::move(copy);
+        EXPECT_EQ(moved.size(), 64u); EXPECT_EQ(copy.size(), 0u);
+        auto& self = moved; moved = std::move(self);
+        EXPECT_EQ(moved.size(), 64u);
+        MWWorld::PtrRegistry::PreparedInsertions assigned; assigned = moved;
+        EXPECT_EQ(registry.pendingInsertions(), 192u);
+    }
+    EXPECT_EQ(registry.pendingInsertions(), 64u);
+    registry.clear();
+    std::vector<std::unique_ptr<MWWorld::ManualRef>> refs;
+    for (unsigned i = 0; i < 300; ++i)
+    {
+        refs.push_back(std::make_unique<MWWorld::ManualRef>(store, base.mId));
+        registry.insert(refs.back()->getPtr());
+    }
+    const auto buckets = registry.bucketCount();
+    const auto before = registry.getLastGenerated();
+    for (unsigned i = 0; i < 64; ++i)
+    {
+        refs.push_back(std::make_unique<MWWorld::ManualRef>(store, base.mId));
+        auto ptr = refs.back()->getPtr();
+        registry.insertPrepared(ptr, pool);
+        EXPECT_EQ(ptr.getCellRef().getRefNum(), (ESM::RefNum{before.mIndex + i + 1, before.mContentFile}));
+        EXPECT_EQ(registry.getOrEmpty(ptr.getCellRef().getRefNum()), ptr);
+        EXPECT_EQ(pool.size(), 63u - i); EXPECT_EQ(registry.pendingInsertions(), 63u - i);
+        EXPECT_EQ(registry.bucketCount(), buckets);
+        registry.insertPrepared(ptr, pool); // Repeat registration consumes no node or serial.
+        EXPECT_EQ(pool.size(), 63u - i); EXPECT_EQ(registry.bucketCount(), buckets);
+    }
+    MWWorld::ManualRef exhausted(store, base.mId);
+    const auto finalSerial = registry.getLastGenerated(); const auto finalRevision = registry.getRevision();
+    EXPECT_THROW(registry.insertPrepared(exhausted.getPtr(), pool), std::logic_error);
+    EXPECT_FALSE(exhausted.getPtr().getCellRef().getRefNum().isSet());
+    EXPECT_EQ(registry.getLastGenerated(), finalSerial); EXPECT_EQ(registry.getRevision(), finalRevision);
+}
+
+TEST(MWWorldPtrTest, preparedRegistrationsRejectForeignOwnersAndNamespaceFailureBeforeMutation)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-registry-errors"); store.insertStatic(base);
+    MWWorld::PtrRegistry registry, foreign;
+    auto pool = registry.prepareInsertions(3);
+    MWWorld::ManualRef ref(store, base.mId);
+    EXPECT_THROW(foreign.insertPrepared(ref.getPtr(), pool), std::logic_error);
+    EXPECT_FALSE(ref.getPtr().getCellRef().getRefNum().isSet());
+    for (const auto serial : {ESM::RefNum{2, 0}, ESM::RefNum{std::numeric_limits<std::uint32_t>::max(),
+             std::numeric_limits<std::int32_t>::min()}})
+    {
+        registry.setLastGenerated(serial); const auto revision = registry.getRevision();
+        EXPECT_THROW(registry.insertPrepared(ref.getPtr(), pool), std::exception);
+        EXPECT_EQ(registry.getLastGenerated(), serial); EXPECT_EQ(registry.getRevision(), revision);
+        EXPECT_FALSE(ref.getPtr().getCellRef().getRefNum().isSet()); EXPECT_EQ(pool.size(), 3u);
+    }
+    registry.setLastGenerated({std::numeric_limits<std::uint32_t>::max(), -2});
+    registry.insertPrepared(ref.getPtr(), pool);
+    EXPECT_EQ(ref.getPtr().getCellRef().getRefNum(), (ESM::RefNum{0, -3}));
+    EXPECT_EQ(pool.size(), 2u);
+    MWWorld::ManualRef alias(store, base.mId); alias.getPtr().getCellRef().setRefNum({0, -3});
+    registry.insertPrepared(alias.getPtr(), pool);
+    EXPECT_EQ(registry.getOrEmpty({0, -3}), alias.getPtr()); EXPECT_EQ(pool.size(), 2u);
+    MWWorld::PtrRegistry::PreparedInsertions orphan;
+    { MWWorld::PtrRegistry dead; orphan = dead.prepareInsertions(1); }
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions copy(orphan), std::logic_error);
+    EXPECT_THROW(registry.insertPrepared(ref.getPtr(), orphan), std::logic_error);
+}
+
+TEST(MWWorldPtrTest, preparedRegistryReplacementRetainsReservationsAndRejectsUnreservedGrowth)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-registry-replacement"); store.insertStatic(base);
+    ESM::ReadersCache readers; MWWorld::WorldModel model(store, readers);
+    MWWorld::ManualRef old(store, base.mId), inserted(store, base.mId), later(store, base.mId);
+    model.registerPtr(old.getPtr());
+    auto pool = model.preparePtrInsertions(1);
+    auto replacement = model.preparePtrReplacement(std::array{old.getPtr()}, std::array{inserted.getPtr()});
+    replacement.commit();
+    model.registerPreparedPtr(later.getPtr(), pool);
+    EXPECT_EQ(model.getPtr(later.getPtr().getCellRef().getRefNum()), later.getPtr());
+    EXPECT_EQ(later.getPtr().mRef->mWorldModel, &model); EXPECT_EQ(model.pendingPtrInsertions(), 0u);
+    auto stale = model.preparePtrReplacement({}, {});
+    const auto revision = model.getPtrRegistryRevision();
+    auto large = model.preparePtrInsertions(1024);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+    EXPECT_FALSE(stale.isValid()); EXPECT_THROW(stale.commit(), std::logic_error);
+    EXPECT_EQ(model.getPtr(later.getPtr().getCellRef().getRefNum()), later.getPtr());
+    auto fresh = model.preparePtrReplacement({}, {}); fresh.commit();
+    MWWorld::ManualRef after(store, base.mId); model.registerPreparedPtr(after.getPtr(), large);
+    EXPECT_EQ(model.pendingPtrInsertions(), 1023u);
+}
+
+
+TEST(MWWorldPtrTest, singletonPreparedRegistrationMaterializesTheFirstHashTableBeforeConsumption)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-singleton"); store.insertStatic(base);
+    MWWorld::ManualRef ref(store, base.mId);
+    MWWorld::PtrRegistry registry;
+    auto pool = registry.prepareInsertions(1);
+    EXPECT_EQ(registry.bucketCount(), 1u); // The live table is untouched by preparation.
+    const auto reservedBuckets = registry.preparedBucketCount();
+    EXPECT_GT(reservedBuckets, 1u);
+    registry.insertPrepared(ref.getPtr(), pool);
+    EXPECT_EQ(registry.bucketCount(), reservedBuckets);
+    EXPECT_EQ(registry.pendingInsertions(), 0u);
+    EXPECT_EQ(registry.getOrEmpty(ref.getPtr().getCellRef().getRefNum()), ref.getPtr());
+}
+
+
+TEST(MWWorldPtrTest, registryPreparationAndCancellationPreserveLiveIterationAndReferences)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-order"); store.insertStatic(base);
+    MWWorld::PtrRegistry registry;
+    std::vector<std::unique_ptr<MWWorld::ManualRef>> refs;
+    for (unsigned i = 0; i < 64; ++i)
+    {
+        refs.push_back(std::make_unique<MWWorld::ManualRef>(store, base.mId));
+        registry.insert(refs.back()->getPtr());
+    }
+    const auto order = [&]() {
+        std::vector<ESM::RefNum> ids;
+        for (const auto& [id, ptr] : registry) ids.push_back(id);
+        return ids;
+    };
+    const auto before = order(); const auto buckets = registry.bucketCount();
+    const auto* first = &*registry.begin(); const auto revision = registry.getRevision();
+    {
+        auto huge = registry.prepareInsertions(1024);
+        auto copy = huge;
+        EXPECT_EQ(order(), before); EXPECT_EQ(registry.bucketCount(), buckets);
+        EXPECT_EQ(&*registry.begin(), first); EXPECT_EQ(registry.getRevision(), revision);
+    }
+    EXPECT_EQ(order(), before); EXPECT_EQ(registry.bucketCount(), buckets);
+    EXPECT_EQ(&*registry.begin(), first); EXPECT_EQ(registry.pendingInsertions(), 0u);
+    auto pool = registry.prepareInsertions(1024);
+    const auto reservedBuckets = registry.preparedBucketCount();
+    MWWorld::ManualRef inserted(store, base.mId); registry.insertPrepared(inserted.getPtr(), pool);
+    EXPECT_EQ(registry.bucketCount(), reservedBuckets);
+    for (const auto& ref : refs)
+        EXPECT_EQ(registry.getOrEmpty(ref->getPtr().getCellRef().getRefNum()), ref->getPtr());
+}

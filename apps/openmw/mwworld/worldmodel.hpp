@@ -184,6 +184,10 @@ namespace MWWorld
         std::size_t getPtrRegistryRevision() const { return mPtrRegistry.getRevision(); }
 
         void registerPtr(const Ptr& ptr);
+        PtrRegistry::PreparedInsertions preparePtrInsertions(std::size_t count)
+        { return mPtrRegistry.prepareInsertions(count); }
+        void registerPreparedPtr(const Ptr& ptr, PtrRegistry::PreparedInsertions& prepared);
+        std::size_t pendingPtrInsertions() const { return mPtrRegistry.pendingInsertions(); }
 
         void deregisterLiveCellRef(LiveCellRefBase& ref) noexcept;
 

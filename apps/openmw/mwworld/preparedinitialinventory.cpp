@@ -168,6 +168,7 @@ namespace MWWorld
             for (std::size_t i = 0; i < counts[node.mPool]; ++i) pool->addNewStack(prototype, 1);
             mStacks[node.mPool] = std::move(pool);
         }
+        mRegistrations = MWBase::Environment::get().getWorldModel()->preparePtrInsertions(pendingStackCount());
         mCandidates.resize(capacity); // Copies retain full workspace, even before first selection.
         mData = std::move(data);
     }
@@ -181,13 +182,15 @@ namespace MWWorld
             mData = std::move(other.mData);
             mCandidates = std::move(other.mCandidates);
             mStacks = std::move(other.mStacks);
+            mRegistrations = std::move(other.mRegistrations);
             mConsumed = std::exchange(other.mConsumed, true);
         }
         return *this;
     }
 
     PreparedInitialInventory::PreparedInitialInventory(const PreparedInitialInventory& other)
-        : mData(other.mData), mCandidates(other.mCandidates), mConsumed(other.mConsumed)
+        : mData(other.mData), mCandidates(other.mCandidates), mRegistrations(other.mRegistrations)
+        , mConsumed(other.mConsumed)
     {
         mStacks.reserve(other.mStacks.size());
         for (const auto& pool : other.mStacks)
@@ -249,7 +252,7 @@ namespace MWWorld
             const auto add = [&](int quantity) {
                 auto item = target.addImp(node.mRef->getPtr(), quantity, false, &gold, &node.mCharge,
                     mStacks[node.mPool].get());
-                MWBase::Environment::get().getWorldModel()->registerPtr(*item);
+                MWBase::Environment::get().getWorldModel()->registerPreparedPtr(*item, mRegistrations);
             };
             if (node.mScripted)
                 for (int i = 0; i < std::abs(count); ++i) add(count < 0 ? -1 : 1);

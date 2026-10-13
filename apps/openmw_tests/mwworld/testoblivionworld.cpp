@@ -14853,6 +14853,7 @@ TEST(OblivionWorldTest, PreparedSharedInventoryOwnsIncomingItemsAcrossClearAndCo
         const auto rngBefore = Misc::Rng::serialize(world.getPrng());
         auto prepared = MWWorld::ContainerStore::prepareReadState(state, world.getStore(), *definitions, equipment);
         ASSERT_TRUE(prepared);
+        EXPECT_GT(model.pendingPtrInsertions(), 0u);
         EXPECT_EQ(model.getLastGeneratedRefNum(), registryBefore);
         EXPECT_TRUE(model.getPtr(item.mRef.mRefNum).isEmpty());
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), nativeBefore);
@@ -14870,6 +14871,7 @@ TEST(OblivionWorldTest, PreparedSharedInventoryOwnsIncomingItemsAcrossClearAndCo
         // Simulate the legacy active-spell converter's identity assignment.
         state.mItems[0].mRef.mRefNum = {201, -1};
         target->installPreparedContents(*prepared, state);
+        EXPECT_EQ(model.pendingPtrInsertions(), 0u);
         EXPECT_TRUE(prepared->begin() == prepared->end());
         EXPECT_EQ(target->count(itemId), 2);
         EXPECT_FALSE(model.getPtr({201, -1}).isEmpty());
@@ -17788,6 +17790,7 @@ TEST(OblivionWorldTest, PreparedInitialStackPoolsBoundNestedScriptedSelectionAnd
     const auto owner = ESM::RefId::stringRefId("pooled-owner");
     const auto revision = world.getWorldModel().getPtrRegistryRevision(); const auto rng = world.getPrng();
     MWWorld::PreparedInitialInventory original(items, owner, store, incoming);
+    EXPECT_EQ(world.getWorldModel().pendingPtrInsertions(), 9u);
     EXPECT_EQ(original.pendingStackCount(), 9u); // Eight possible scripted units and one plain stack.
     EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
     for (unsigned seed = 0; seed < 32; ++seed)
@@ -17802,7 +17805,10 @@ TEST(OblivionWorldTest, PreparedInitialStackPoolsBoundNestedScriptedSelectionAnd
         MWWorld::ContainerStore actual, ordinary;
         Misc::Rng::Generator expectedRng(seed), actualRng(seed);
         EXPECT_THROW(assigned.fill(actual, owner, actualRng), std::logic_error);
-        ordinary.fill(items, owner, expectedRng); moved.fill(actual, owner, actualRng);
+        ordinary.fill(items, owner, expectedRng);
+        const auto pending = world.getWorldModel().pendingPtrInsertions();
+        moved.fill(actual, owner, actualRng);
+        EXPECT_EQ(world.getWorldModel().pendingPtrInsertions(), pending - std::distance(actual.begin(), actual.end()));
         EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary)); EXPECT_EQ(actualRng, expectedRng);
         EXPECT_EQ(moved.pendingStackCount(), 9u - std::distance(actual.begin(), actual.end()));
         EXPECT_EQ(copy.pendingStackCount(), 9u); EXPECT_EQ(original.pendingStackCount(), 9u);

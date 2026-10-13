@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <components/misc/rng.hpp>
+#include "ptrregistry.hpp"
 
 namespace ESM
 {
@@ -25,6 +26,7 @@ namespace MWWorld
         std::shared_ptr<const Data> mData;
         std::vector<std::size_t> mCandidates;
         std::vector<std::unique_ptr<ContainerStore>> mStacks;
+        PtrRegistry::PreparedInsertions mRegistrations;
         bool mConsumed = false;
 
     public:

@@ -1391,6 +1391,10 @@ std::unique_ptr<MWWorld::ContainerStore> MWWorld::ContainerStore::prepareReadSta
     result->mPreparedReadItems.resize(state.mItems.size());
     result->mDetachedRestoreRead = true;
     result->readStateImpl(state, content, &incoming, true);
+    // Includes original save entries (even zero-count references) and any
+    // additional equipment splits. Duplicate registrations reuse their node.
+    const auto count = state.mItems.size() + std::size_t(std::distance(result->begin(), result->end()));
+    result->mPreparedReadRegistrations = MWBase::Environment::get().getWorldModel()->preparePtrInsertions(count);
     return result; // Remains a detached, unconsumed plan until installation.
 }
 
@@ -1419,12 +1423,13 @@ void MWWorld::ContainerStore::installPreparedContents(ContainerStore& prepared, 
         {
             Ptr bound(item.mRef);
             bound.setContainerStore(this);
-            model.registerPtr(bound);
+            model.registerPreparedPtr(bound, prepared.mPreparedReadRegistrations);
         }
     for (const auto& item : *this)
         if (!item.mRef->mWorldModel)
-            model.registerPtr(item); // Newly split equipment stacks.
+            model.registerPreparedPtr(item, prepared.mPreparedReadRegistrations); // Newly split equipment stacks.
     prepared.mPreparedReadItems.clear();
+    prepared.mPreparedReadRegistrations = {};
 }
 
 void MWWorld::ContainerStore::readStateImpl(const ESM::InventoryState& inventory,

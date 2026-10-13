@@ -450,7 +450,8 @@ namespace MWWorld
         const auto identity = mIdentity.lock();
         if (!identity || !mWorld || identity != mWorld->mPreparationIdentity
             || mWorld->getPtrRegistryRevision() != mRevision
-            || mWorld->getLastGeneratedRefNum() != mLastGenerated)
+            || mWorld->getLastGeneratedRefNum() != mLastGenerated
+            || !mWorld->mPtrRegistry.canSwap(mRegistry))
             return false;
         for (const Ptr& ptr : mInserted)
             if (ptr.mRef->mWorldModel != nullptr || mRegistry.getOrEmpty(ptr.getCellRef().getRefNum()) != ptr)
@@ -484,6 +485,13 @@ namespace MWWorld
         if (ptr.mRef == nullptr)
             throw std::logic_error("Ptr with nullptr mRef is not allowed to be registered");
         mPtrRegistry.insert(ptr);
+        ptr.mRef->mWorldModel = this;
+    }
+
+    void WorldModel::registerPreparedPtr(const Ptr& ptr, PtrRegistry::PreparedInsertions& prepared)
+    {
+        if (!ptr.mRef) throw std::logic_error("Cannot register an empty prepared pointer");
+        mPtrRegistry.insertPrepared(ptr, prepared);
         ptr.mRef->mWorldModel = this;
     }
 

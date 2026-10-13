@@ -687,3 +687,21 @@ checks and visual review. The newest milestone entry records exact hashes and
 retained interrupted/failed attempts. This closes stack-node allocation only;
 registry publication, autoequip/resource dependencies, full late-failure
 prior-world preservation and the complete S3 audit remain open.
+
+
+Initial and saved shared inventory registration now owns detached registry nodes
+and spare hash capacity, including saved equipment splits. Preparation/cancellation
+preserve outgoing registry iteration and node addresses; RefNums are assigned at
+the original publication phase. Copies/moves/clear retain bounded ownership, aliases
+reuse entries, and native registry replacements check outstanding capacity before
+commit. Five new registry tests and expanded inventory probes pass in both full
+1382-case normal/ASan-UBSan inventories with matching fingerprints. A separate
+normal allocation hook proves singleton/batch registry publication works with C++
+new disabled while ordinary insertion fails; a copied-object mutation disabling
+initial prepared registration fails its consumption regression. Normal/instrumented
+save/reload courses, exact normal-save fresh instrumented continuation and Morrowind
+startup/save isolation pass semantic checks and visual review. The newest milestone
+entry records hashes, capture scope and retained interrupted attempts. This closes prepared inventory registry
+publication, not all registry work or whole-load allocation failure handling.
+Initial autoequip/resources, other actor/cell/scene publication, full late-failure
+prior-world preservation and the complete S3 audit remain open.

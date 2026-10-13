@@ -24,6 +24,7 @@
 
 #include "cellreflist.hpp"
 #include "ptr.hpp"
+#include "ptrregistry.hpp"
 
 namespace ESM
 {
@@ -300,6 +301,7 @@ namespace MWWorld
         bool mRechargingItemsUpToDate = false;
         bool mDetachedRestoreRead = false;
         std::vector<Ptr> mPreparedReadItems;
+        PtrRegistry::PreparedInsertions mPreparedReadRegistrations;
         std::size_t mPreparedReadIndex = 0;
         void readStateImpl(const ESM::InventoryState& state, const ESMStore& content,
             const ESMStore* incoming, bool oblivion);
