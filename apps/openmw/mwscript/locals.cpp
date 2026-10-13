@@ -29,14 +29,45 @@ namespace MWScript
     {
     }
 
-    bool Locals::configure(const ESM::Script& script)
+    Locals Locals::prepareConfiguration(const ESM::RefId& script)
+    {
+        const auto& layout = MWBase::Environment::get().getScriptManager()->getLocals(script);
+        Locals result;
+        result.mScriptId = script;
+        result.mShorts.resize(layout.get('s').size());
+        result.mLongs.resize(layout.get('l').size());
+        result.mFloats.resize(layout.get('f').size());
+        return result;
+    }
+
+    bool Locals::configure(const ESM::Script& script, Locals* prepared)
     {
         if (mInitialised)
             return false;
 
         const GlobalScriptDesc* global
             = MWBase::Environment::get().getScriptManager()->getGlobalScripts().getScriptIfPresent(script.mId);
-        if (global)
+        if (prepared)
+        {
+            if (prepared == this || prepared->mInitialised || prepared->mScriptId != script.mId)
+                throw std::logic_error("Prepared local variables do not match the script");
+            if (global)
+            {
+                const auto& source = global->mLocals;
+                if (source.mShorts.size() > prepared->mShorts.size()
+                    || source.mLongs.size() > prepared->mLongs.size()
+                    || source.mFloats.size() > prepared->mFloats.size())
+                    throw std::logic_error("Global variables exceed the prepared script layout");
+                prepared->mShorts.assign(source.mShorts.begin(), source.mShorts.end());
+                prepared->mLongs.assign(source.mLongs.begin(), source.mLongs.end());
+                prepared->mFloats.assign(source.mFloats.begin(), source.mFloats.end());
+            }
+            mShorts.swap(prepared->mShorts);
+            mLongs.swap(prepared->mLongs);
+            mFloats.swap(prepared->mFloats);
+            prepared->mInitialised = true;
+        }
+        else if (global)
         {
             mShorts = global->mLocals.mShorts;
             mLongs = global->mLocals.mLongs;

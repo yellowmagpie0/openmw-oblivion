@@ -7,6 +7,7 @@
 
 #include <components/misc/rng.hpp>
 #include "ptrregistry.hpp"
+#include "localscripts.hpp"
 
 namespace ESM
 {
@@ -30,7 +31,9 @@ namespace MWWorld
         std::vector<std::size_t> mCandidates;
         std::vector<std::unique_ptr<ContainerStore>> mStacks;
         std::map<ESM::RefId, std::unique_ptr<ContainerStore>> mSplitStacks;
+        std::map<ESM::RefId, std::list<LocalScripts::PreparedRegistration>> mSplitScripts;
         PtrRegistry::PreparedInsertions mRegistrations;
+        void addSplitScript(const Ptr& ptr);
         bool mConsumed = false;
         ContainerStoreIteratorBase<Ptr> takeSplitStack(ContainerStore& target, const Ptr& source, int count);
 

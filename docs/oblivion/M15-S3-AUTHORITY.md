@@ -741,3 +741,20 @@ This closes dependency ownership and the tested healthy consumption path, not
 pre-teardown rejection of every missing dependency or all late-load failure
 handling. Scripted split/local-script resources, other actor/cell/scene publication,
 full prior-world preservation and the complete S3 audit remain open.
+
+
+Prepared initial splits now own legacy script definitions, compiled local-variable
+storage and detached registration nodes. Values are configured at consumption
+from current globals or zero defaults; copying/moving does not publish scripts.
+Two real-script-manager regressions cover source removal, copies, live values,
+ordered/one-shot registration and scripted gold-normalization splits for positive
+and restocking counts. Both full 1392-case normal/ASan-UBSan inventories pass with
+matching fingerprints. A copied-object live-lookup mutation fails the regression;
+four actual registration/autoequip calls pass with C++ new disabled and script values
+intact. Normal/instrumented runtime save/reload, exact normal-save fresh instrumented
+continuation and Morrowind save isolation pass semantic checks and visual review.
+Runtime courses reuse the armor fixture; transient scripted split acceptance is C++
+evidence. The milestone entry records hashes, failed attempts, exact baseline-warning
+comparison and scopes. General local-script restoration, actor/cell/scene publication,
+consumed missing-dependency admission, full late-failure prior-world preservation
+and the complete S3 audit remain open.

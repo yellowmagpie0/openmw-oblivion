@@ -6,6 +6,89 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare scripted initial split registration — 2026-10-13
+
+Prepared initial autoequip splits now own their legacy script definition,
+compiled short/long/float layout storage and detached local-script list node.
+Copies own separate consumable storage; moves transfer it. Registration splices
+that node at the ordinary registration point and configures locals there, using
+current global-script values when present or zero defaults otherwise. Preparation
+neither captures those values nor publishes a running script. Already configured
+locals retain the ordinary behavior. Exhausted/mismatched registration plans are
+rejected before publication; global arrays exceeding the prepared layout are
+checked before local storage changes. Ordinary unprepared registration is unchanged.
+
+Two new integration tests use the real legacy script manager. They cover source
+script removal, copied/moved plans, changed global values after preparation,
+global removal before consumption, one-shot consumption and ordered registration.
+The initial-inventory probe exercises gold normalization into a scripted weapon:
+that valid shared-record path can produce a stack requiring an autoequip split,
+unlike ordinary scripted initial items inserted one unit at a time. Positive and
+restocking counts match ordinary inventory wire, RNG, script membership and locals.
+This establishes the transient legacy split behavior in C++, not native ObScript
+execution or rendered scripted-item gameplay.
+
+Both complete engine inventories pass **1,392 tests**, exact inventory/XML
+agreement, no failures or skips, under
+`build/oblivion-compat/m15/S3/initial-split-scripts-normal-02` and
+`initial-split-scripts-sanitized-01`. Parent:
+`eee673de08e5f8cca44cae78bfb50d5019fb7217`; identical before/after fingerprint:
+`82e0ed3519d5f129fbec3eaa99cd801a7638cd994ce04a9d865b6d03c62969d8`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`c497a32d8035cb1d3a00a94085a967a7eff3dab9182dd39241df60b5d465d051`,
+`b4ef5faf64ae688370aaa88c4ebaf14275cddcde763255c8b1f1e4d1aca6636b`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are explicitly
+null/offscreen. Unchanged component/Python production code was not retested.
+
+`initial-split-scripts-negative-01` replaces only prepared split registration
+with ordinary live lookup in a copied ContainerStore object/archive/executable.
+The new source-removal regression fails as required. Separately,
+`initial-split-scripts-allocation-control-01` disables scalar/array/aligned C++ new
+around two actual prepared registrations and two scripted initial autoequip calls.
+All **four calls** pass with script membership and values intact. Assertions/setup
+are outside the guard; headless inventory callbacks count updates. This is not
+arbitrary listener/rendering or whole-load allocation coverage. Production test
+binary hashes remain unchanged by both controls.
+
+Actual normal/instrumented load/F5/F9/F5/quit regression courses pass in
+`initial-split-scripts-runtime-normal-02` and
+`initial-split-scripts-runtime-sanitized-02`, using the preceding entry's unchanged
+editable armor-bearing fixture and declared test-only GMST plugin. Initial input
+SHA256: `a42670fc27728b225404c3d7c1df60ff981d4410f252d883c4824f1ffd52bb4a`.
+Native load states, stable fields, shared inventory/NPC/core fields and authored
+records are compared independently; transient scripted splits remain C++ evidence.
+Normal/instrumented openmw SHA256 respectively:
+`bbb5c04e4bca96e68e541fa1f1c0091cd32c2129367652188d8e517ce68d0a1d`,
+`f1fbedac023005c12dcb1b7eabcc19c2fa255eb24787f3adb59fa1d4eaa6e03b`.
+
+`initial-split-scripts-runtime-continuation-sanitized-01` starts fresh PID83661
+from normal PID81303's final save, after its clean exit. Exact staged input SHA256:
+`8763e580148ad2d93a8a1f76fe3a9877cb221cb1071d94fae4de814a163a04db`.
+Both load/save cycles, semantic comparisons and clean exit pass. All six reviewed
+Oblivion captures show Imperial Prison stonework/chains, HUD and retained blade,
+without loading/error dialogs. `initial-split-scripts-morrowind-01` passes the
+unchanged M14 startup/idle/F5 isolation course and independent native-record/marker
+exclusion. Its reviewed terrain-facing capture shows sky/ground/reticle/HUD.
+That course proves save isolation, not combat or scripted-split gameplay.
+
+Retained syntax probes found the missing complete World include; normal build -01
+was deliberately stopped before editing and restarted in fresh -02. Normal runtime
+-01 completed all actions and exited zero but failed a newly added blanket ban on
+missing local-script warnings. Its exact warning IDs and counts match the preceding
+accepted baseline. Fresh runtime -02 compares the complete warning counter to that
+hashed baseline and still forbids new prepared-resource errors; no warning is merely
+silenced. Sanitized runtime -01 was prepared but never run. Waiting follow-up workers
+were stopped before replacing the recipes. Existing compiler warnings remain logged.
+
+S3 remains **in progress**. This closes resource preparation for the tested initial
+scripted splits, not general local-script restoration, actor/cell/scene publication,
+all consumed missing-dependency admission, or preservation of the prior world after
+late load failure. The read-only restoration audit in
+`initial-split-scripts-followup-01/remaining-restoration-audit.json` identifies the
+ordinary actor registration calls and destructive late-error cleanup still present.
+The next implementation step is owned actor registration storage, followed by the
+remaining restoration staging and full requirement audit.
+
 ## S3 own initial autoequip dependencies — 2026-10-13
 
 Prepared initial inventories now own the twelve unarmored/armor comparison

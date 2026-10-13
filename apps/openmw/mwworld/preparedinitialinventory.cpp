@@ -14,6 +14,7 @@
 #include <components/esm3/loadrace.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/spellutil.hpp"
@@ -195,7 +196,13 @@ namespace MWWorld
                 if (!stackable && !slots.empty() && !mSplitStacks.contains(prototype.getCellRef().getRefId()))
                 {
                     auto splits = std::make_unique<ContainerStore>();
-                    for (std::size_t i = 0; i < slots.size(); ++i) splits->addNewStack(prototype, 1);
+                    for (std::size_t i = 0; i < slots.size(); ++i)
+                    {
+                        splits->addNewStack(prototype, 1);
+                        const auto& script = prototype.getClass().getScript(prototype);
+                        if (!script.empty())
+                            mSplitScripts[prototype.getCellRef().getRefId()].emplace_back(script, content, incoming);
+                    }
                     mSplitStacks.emplace(prototype.getCellRef().getRefId(), std::move(splits));
                 }
             }
@@ -216,6 +223,7 @@ namespace MWWorld
             mCandidates = std::move(other.mCandidates);
             mStacks = std::move(other.mStacks);
             mSplitStacks = std::move(other.mSplitStacks);
+            mSplitScripts = std::move(other.mSplitScripts);
             mRegistrations = std::move(other.mRegistrations);
             mConsumed = std::exchange(other.mConsumed, true);
         }
@@ -223,7 +231,7 @@ namespace MWWorld
     }
 
     PreparedInitialInventory::PreparedInitialInventory(const PreparedInitialInventory& other)
-        : mData(other.mData), mCandidates(other.mCandidates), mRegistrations(other.mRegistrations)
+        : mData(other.mData), mCandidates(other.mCandidates), mSplitScripts(other.mSplitScripts), mRegistrations(other.mRegistrations)
         , mConsumed(other.mConsumed)
     {
         mStacks.reserve(other.mStacks.size());
@@ -272,6 +280,17 @@ namespace MWWorld
         if (!mConsumed || source.getContainerStore() != &target || found == mSplitStacks.end())
             throw std::logic_error("Prepared initial autoequip split is unavailable");
         return target.movePreparedStack(source, count, *found->second);
+    }
+
+    void PreparedInitialInventory::addSplitScript(const Ptr& ptr)
+    {
+        const auto& script = ptr.getClass().getScript(ptr);
+        if (script.empty()) return;
+        auto found = mSplitScripts.find(ptr.getCellRef().getRefId());
+        if (found == mSplitScripts.end() || found->second.empty())
+            throw std::logic_error("Prepared initial split script is unavailable");
+        MWBase::Environment::get().getWorld()->getLocalScripts().add(script, ptr, &found->second.front());
+        found->second.pop_front();
     }
 
     void PreparedInitialInventory::fill(ContainerStore& target, const ESM::RefId& owner, Misc::Rng::Generator& prng)

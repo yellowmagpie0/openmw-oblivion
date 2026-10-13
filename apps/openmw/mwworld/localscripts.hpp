@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_LOCALSCRIPTS_H
 
 #include <list>
+#include <memory>
 #include <string>
 
 #include "ptr.hpp"
@@ -20,6 +21,20 @@ namespace MWWorld
         const MWWorld::ESMStore& mStore;
 
     public:
+        class PreparedRegistration
+        {
+            friend class LocalScripts;
+            struct Data;
+            std::unique_ptr<Data> mData;
+        public:
+            PreparedRegistration(const ESM::RefId& script, const ESMStore& content, const ESMStore& incoming);
+            ~PreparedRegistration();
+            PreparedRegistration(const PreparedRegistration&);
+            PreparedRegistration& operator=(const PreparedRegistration&);
+            PreparedRegistration(PreparedRegistration&&) noexcept;
+            PreparedRegistration& operator=(PreparedRegistration&&) noexcept;
+        };
+
         LocalScripts(const MWWorld::ESMStore& store);
 
         void startIteration();
@@ -29,7 +44,7 @@ namespace MWWorld
         ///< Get next local script
         /// @return Did we get a script?
 
-        void add(const ESM::RefId& scriptName, const Ptr& ptr);
+        void add(const ESM::RefId& scriptName, const Ptr& ptr, PreparedRegistration* prepared = nullptr);
         ///< Add script to collection of active local scripts.
 
         void addCell(CellStore* cell);

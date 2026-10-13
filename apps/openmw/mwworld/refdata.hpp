@@ -103,7 +103,7 @@ namespace MWWorld
         /// Set base node (can be a null pointer).
         void setBaseNode(osg::ref_ptr<SceneUtil::PositionAttitudeTransform> base);
 
-        void setLocals(const ESM::Script& script);
+        void setLocals(const ESM::Script& script, MWScript::Locals* prepared = nullptr);
 
         MWLua::LocalScripts* getLuaScripts() const { return mLuaScripts.get(); }
         void setLuaScripts(std::shared_ptr<MWLua::LocalScripts>&&);

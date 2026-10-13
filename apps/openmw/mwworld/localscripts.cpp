@@ -68,6 +68,37 @@ namespace
 
 }
 
+struct MWWorld::LocalScripts::PreparedRegistration::Data
+{
+    ESM::RefId mName;
+    std::shared_ptr<const ESM::Script> mScript;
+    MWScript::Locals mLocals;
+    std::list<std::pair<ESM::RefId, Ptr>> mNode;
+};
+
+MWWorld::LocalScripts::PreparedRegistration::PreparedRegistration(
+    const ESM::RefId& name, const ESMStore& content, const ESMStore& incoming)
+    : mData(std::make_unique<Data>())
+{
+    mData->mName = name;
+    if (const auto* script = content.searchForRestore<ESM::Script>(name, incoming))
+    {
+        mData->mScript = std::make_shared<const ESM::Script>(*script);
+        mData->mLocals = MWScript::Locals::prepareConfiguration(name);
+        mData->mNode.emplace_back(name, Ptr{});
+    }
+}
+MWWorld::LocalScripts::PreparedRegistration::~PreparedRegistration() = default;
+MWWorld::LocalScripts::PreparedRegistration::PreparedRegistration(PreparedRegistration&&) noexcept = default;
+MWWorld::LocalScripts::PreparedRegistration& MWWorld::LocalScripts::PreparedRegistration::operator=(PreparedRegistration&&) noexcept = default;
+MWWorld::LocalScripts::PreparedRegistration::PreparedRegistration(const PreparedRegistration& other)
+    : mData(other.mData ? std::make_unique<Data>(*other.mData) : nullptr) {}
+MWWorld::LocalScripts::PreparedRegistration& MWWorld::LocalScripts::PreparedRegistration::operator=(const PreparedRegistration& other)
+{
+    if (this != &other) { PreparedRegistration copy(other); *this = std::move(copy); }
+    return *this;
+}
+
 MWWorld::LocalScripts::LocalScripts(const MWWorld::ESMStore& store)
     : mStore(store)
 {
@@ -90,13 +121,17 @@ bool MWWorld::LocalScripts::getNext(std::pair<ESM::RefId, Ptr>& script)
     return false;
 }
 
-void MWWorld::LocalScripts::add(const ESM::RefId& scriptName, const Ptr& ptr)
+void MWWorld::LocalScripts::add(const ESM::RefId& scriptName, const Ptr& ptr, PreparedRegistration* prepared)
 {
-    if (const ESM::Script* script = mStore.get<ESM::Script>().search(scriptName))
+    if (prepared && (!prepared->mData || prepared->mData->mName != scriptName
+        || (prepared->mData->mScript && prepared->mData->mNode.empty())))
+        throw std::logic_error("Prepared local script registration is unavailable");
+    const ESM::Script* script = prepared ? prepared->mData->mScript.get() : mStore.get<ESM::Script>().search(scriptName);
+    if (script)
     {
         try
         {
-            ptr.getRefData().setLocals(*script);
+            ptr.getRefData().setLocals(*script, prepared ? &prepared->mData->mLocals : nullptr);
 
             for (auto iter = mScripts.begin(); iter != mScripts.end(); ++iter)
                 if (iter->second == ptr)
@@ -106,7 +141,14 @@ void MWWorld::LocalScripts::add(const ESM::RefId& scriptName, const Ptr& ptr)
                     break;
                 }
 
-            mScripts.emplace_back(scriptName, ptr);
+            if (prepared)
+            {
+                auto& node = prepared->mData->mNode;
+                node.front().second = ptr;
+                mScripts.splice(mScripts.end(), node);
+            }
+            else
+                mScripts.emplace_back(scriptName, ptr);
         }
         catch (const std::exception& exception)
         {

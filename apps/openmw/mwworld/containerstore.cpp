@@ -394,7 +394,9 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::unstack(
         MWBase::Environment::get().getWorldModel()->registerPtr(newPtr);
 
     const ESM::RefId& script = it->getClass().getScript(*it);
-    if (!script.empty())
+    if (prepared)
+        prepared->addSplitScript(*it);
+    else if (!script.empty())
         MWBase::Environment::get().getWorld()->getLocalScripts().add(script, *it);
 
     remove(ptr, ptr.getCellRef().getCount() - count);

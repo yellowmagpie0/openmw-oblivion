@@ -1,3 +1,6 @@
+#include "apps/openmw/mwscript/scriptmanagerimp.hpp"
+#include "apps/openmw/mwscript/compilercontext.hpp"
+#include <components/esm3/loadscpt.hpp>
 #include "inventorywindowmanager.hpp"
 #include <cstdlib>
 #include "apps/openmw/mwmechanics/autocalcspell.hpp"
@@ -18199,4 +18202,97 @@ TEST(OblivionWorldTest, LegacyActorCodecConsumesAutoEquipDependenciesAfterSource
     EXPECT_EQ(windows.mInventoryUpdates - beforeLoadUpdates, expectedUpdates);
     EXPECT_EQ(model.pendingPtrInsertions(), pending);
     EXPECT_FALSE(model.takePreparedActorCustomData(owner));
+}
+
+namespace
+{
+    ESM::Script initialSplitScript()
+    {
+        ESM::Script script; script.blank();
+        script.mId = ESM::RefId::stringRefId("initial_split_script");
+        script.mScriptText = "begin initial_split_script\nshort s\nlong l\nfloat f\nend\n";
+        return script;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedLocalRegistrationOwnsLayoutAndUsesGlobalValuesAtConsumption)
+{
+    MWClass::registerClasses(); PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    MWScript::CompilerContext context(MWScript::CompilerContext::Type_Full);
+    MWScript::ScriptManager manager(store, context, 0); fixture.mEnvironment.setScriptManager(manager);
+    const auto script = initialSplitScript(); store.getWritable<ESM::Script>().insertStatic(script);
+    auto actor = initialAutoEquipActor(world);
+    auto items = initialAutoEquipItems(store);
+    MWWorld::ManualRef first(store, items.mList.front().mItem), second(store, items.mList.front().mItem);
+    MWWorld::LocalScripts::PreparedRegistration prepared(script.mId, store, incoming);
+    auto copy = prepared; auto moved = std::move(copy);
+    auto& globals = manager.getGlobalScripts().getLocals(script.mId);
+    ASSERT_EQ(globals.mShorts.size(), 1u); ASSERT_EQ(globals.mLongs.size(), 1u); ASSERT_EQ(globals.mFloats.size(), 1u);
+    globals.mShorts[0] = 7; globals.mLongs[0] = 123456; globals.mFloats[0] = 2.5f;
+    store.getWritable<ESM::Script>().eraseStatic(script.mId);
+    auto& scripts = world.getLocalScripts();
+    scripts.add(script.mId, first.getPtr(), &prepared);
+    EXPECT_TRUE(scripts.isRunning(script.mId, first.getPtr()));
+    EXPECT_EQ(first.getPtr().getRefData().getLocals().mShorts, globals.mShorts);
+    EXPECT_EQ(first.getPtr().getRefData().getLocals().mLongs, globals.mLongs);
+    EXPECT_EQ(first.getPtr().getRefData().getLocals().mFloats, globals.mFloats);
+    EXPECT_THROW(scripts.add(script.mId, second.getPtr(), &prepared), std::logic_error);
+    manager.clear(); // A copied plan uses zero defaults after the globals disappear.
+    scripts.add(script.mId, second.getPtr(), &moved);
+    EXPECT_TRUE(scripts.isRunning(script.mId, second.getPtr()));
+    EXPECT_EQ(second.getPtr().getRefData().getLocals().mShorts, std::vector<Interpreter::Type_Short>{0});
+    EXPECT_EQ(second.getPtr().getRefData().getLocals().mLongs, std::vector<Interpreter::Type_Integer>{0});
+    EXPECT_EQ(second.getPtr().getRefData().getLocals().mFloats, std::vector<Interpreter::Type_Float>{0});
+    scripts.startIteration(); std::pair<ESM::RefId, MWWorld::Ptr> entry;
+    ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.second, first.getPtr());
+    ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.second, second.getPtr()); EXPECT_FALSE(scripts.getNext(entry));
+    scripts.clear();
+}
+
+TEST(OblivionWorldTest, PreparedInitialAutoEquipRegistersScriptedGoldSplitAfterSourceRemoval)
+{
+    for (int sign : {1, -1})
+    {
+        SCOPED_TRACE(sign);
+        MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+        fixture.mEnvironment.setWindowManager(windows);
+        auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+        MWScript::CompilerContext context(MWScript::CompilerContext::Type_Full);
+        MWScript::ScriptManager manager(store, context, 0); fixture.mEnvironment.setScriptManager(manager);
+        const auto script = initialSplitScript(); store.getWritable<ESM::Script>().insertStatic(script);
+        auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+        auto& inventory = ptr.getClass().getInventoryStore(ptr);
+        ESM::Miscellaneous pile{}; pile.blank(); pile.mId = ESM::RefId::stringRefId("gold_100");
+        store.getWritable<ESM::Miscellaneous>().insertStatic(pile);
+        store.getWritable<ESM::Miscellaneous>().eraseStatic(MWWorld::ContainerStore::sGoldId);
+        ESM::Weapon gold{}; gold.blank(); gold.mId = MWWorld::ContainerStore::sGoldId;
+        gold.mData.mType = ESM::Weapon::LongBladeOneHand; gold.mData.mHealth = 25;
+        gold.mData.mChop[1] = 20; gold.mScript = script.mId;
+        store.getWritable<ESM::Weapon>().insertStatic(gold); store.rebuildIdsIndex();
+        ESM::InventoryList items; items.mList = {{3 * sign, pile.mId}};
+        Misc::Rng::Generator ordinaryRng(17), preparedRng(17);
+        auto& globals = manager.getGlobalScripts().getLocals(script.mId);
+        globals.mShorts[0] = 9; globals.mLongs[0] = 87654; globals.mFloats[0] = 4.25f;
+        inventory.fill(items, ptr.getCellRef().getRefId(), ordinaryRng); inventory.autoEquip();
+        const auto expected = initialInventoryWire(inventory);
+        auto& scripts = world.getLocalScripts();
+        std::pair<ESM::RefId, MWWorld::Ptr> entry; scripts.startIteration();
+        ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.first, script.mId);
+        EXPECT_EQ(entry.second.getCellRef().getCount(false), 2 * sign);
+        EXPECT_FALSE(scripts.getNext(entry)); scripts.clear(); inventory.clear();
+        globals.mShorts[0] = 0; globals.mLongs[0] = 0; globals.mFloats[0] = 0;
+        inventory.prepareInitialInventory(items, ptr.getCellRef().getRefId(), store, incoming);
+        globals.mShorts[0] = 9; globals.mLongs[0] = 87654; globals.mFloats[0] = 4.25f;
+        store.getWritable<ESM::Script>().eraseStatic(script.mId);
+        inventory.fill(items, ptr.getCellRef().getRefId(), preparedRng);
+        inventory.autoEquip();
+        EXPECT_EQ(initialInventoryWire(inventory), expected); EXPECT_EQ(ordinaryRng, preparedRng);
+        scripts.startIteration(); ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.first, script.mId);
+        EXPECT_EQ(entry.second.getCellRef().getCount(false), 2 * sign);
+        EXPECT_EQ(entry.second.getRefData().getLocals().mShorts, globals.mShorts);
+        EXPECT_EQ(entry.second.getRefData().getLocals().mLongs, globals.mLongs);
+        EXPECT_EQ(entry.second.getRefData().getLocals().mFloats, globals.mFloats);
+        EXPECT_FALSE(scripts.getNext(entry)); scripts.clear();
+    }
 }

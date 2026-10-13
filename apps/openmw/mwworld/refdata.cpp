@@ -198,9 +198,9 @@ namespace MWWorld
         return mBaseNode;
     }
 
-    void RefData::setLocals(const ESM::Script& script)
+    void RefData::setLocals(const ESM::Script& script, MWScript::Locals* prepared)
     {
-        if (mLocals.configure(script) && !mLocals.isEmpty())
+        if (mLocals.configure(script, prepared) && !mLocals.isEmpty())
             mChanged = true;
     }
 

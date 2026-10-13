@@ -39,7 +39,10 @@ namespace MWScript
         bool isEmpty() const;
 
         /// \return Did the state of *this change from uninitialised to initialised?
-        bool configure(const ESM::Script& script);
+        bool configure(const ESM::Script& script, Locals* prepared = nullptr);
+
+        // Allocate the compiled layout without capturing live global values.
+        static Locals prepareConfiguration(const ESM::RefId& script);
 
         /// @note var needs to be in lowercase
         ///
