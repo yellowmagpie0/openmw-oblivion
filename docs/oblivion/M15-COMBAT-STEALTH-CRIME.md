@@ -6,6 +6,153 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare initial inventory enchantment comparisons — 2026-10-13
+
+Initial inventory preparation now owns the charge result or failure needed for
+an enchanted stack comparison. It resolves ENCH through incoming/static lookup,
+uses the existing detached spell-calculation context for effects/settings, and
+retains no store pointers in the resulting callback. Both ContainerStore and
+InventoryStore consume the callback at the original comparison phase. A first
+insertion does not evaluate an unused comparison; missing definitions retain
+the ordinary warning/skip behavior. Copies can consume the same immutable
+snapshot after the source definitions are removed.
+
+The four legacy charge-multiplier caches now support detached preparation.
+Preparation/cancellation does not prime them. Actual consumption publishes
+only the cache effects the ordinary calculation would have reached, including
+partial initialization before a failure. A conflicting intervening first-use
+value rejects the comparison before publishing any captured values. Rounded
+charge conversion and integer multiplication now reject values outside their
+integer domains. Authored charges and unknown-type authored fallback remain
+unchanged. This stages initial stacking only; it is not complete initial
+inventory allocation/publication, autoequip or general enchantment restoration.
+
+Seven new isolated actual class/cache tests cover cancellation, incoming versus
+outgoing definitions, source removal, clone consumption, partial failures,
+missing definitions, cache conflicts, all four charge modes, authored fallback,
+and rounded/product/effect arithmetic domains. Both complete engine inventories
+pass **1,373 tests**, with exact XML/inventory agreement, no failures and no
+skips, in `build/oblivion-compat/m15/S3/initial-enchantment-normal-01` and
+`initial-enchantment-sanitized-01`. Both record the same tested source at parent
+`d6b1db7fd8e6e1f7de1665b8e04545740acc24d0`, fingerprint
+`89c7c1975072ef229a2ecc1e8f1c3578515b36d76f18f26406db58d56220fc9d`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`6b1ae54a83c24dd6147699136a1a84e27f6657a0af32d8fff9694519ec3f4c97`,
+`77b925e8078bd9398567006684aede8374307743ef5b77b64e578652bcae4b1f`.
+ASan/UBSan halt on errors; leak checks are disabled. Null audio/offscreen SDL
+are explicit. Unchanged component/Python production code was not retested.
+
+`initial-enchantment-consumption-negative-01` compiles a separate copied object,
+archive and test executable with only prepared-charge consumption disabled.
+The source-removal/clone regression then fails with exit18 (count1 instead of3),
+while the production version passes. Its verifier requires exactly that failing
+test; production sources and binary hashes remain unchanged. This is a mutation
+control, not a historical whole-tree baseline build.
+
+Actual authored-charge courses `initial-enchantment-runtime-normal-02` and
+`initial-enchantment-runtime-sanitized-01` pass load/F5/F9/F5/quit. Editable
+recipes/generators add two ENCH/BOOK pairs and duplicate initial NPCO entries
+to no-custom PLAY. Input SHA256:
+`80b3a03b68feafcbd2222c97093875519b1327ab9649aba928f3827a4e103001`.
+Independent comparisons preserve native groups, shared inventory/NPC/core
+fields and exact additional definitions. Transient initial stack counts and
+cache timing are proved by the C++ probes, not the rendered native inventory
+that replaces the temporary legacy Player inventory.
+
+`initial-enchantment-runtime-continuation-sanitized-01` starts PID35590 after
+normal PID33103 exited, loading its exact final save (SHA256
+`939250f18112451c79c0f7f37916f24640f7ac0a357095fb446eaebd8ab24614`).
+Initial and resaved shared fields plus native state comparisons pass.
+Normal/instrumented openmw SHA256 respectively:
+`5725458fbeccd70e1d40f133e8d69ea6e6d18fb0b58c9cd88dd1bbf41e452535`,
+`71e4a33f3fdb71aa5c38d067f93226f6f3617779b7af666c904d44d48660705d`.
+All six positive-course captures were reviewed: prison scene/HUD and no
+loading/error dialog.
+
+The native fixture lacks legacy iMagicItemChargeUse. The original
+`initial-enchantment-runtime-normal-01` therefore failed its no-warning
+expectation for an autocalculated item; that failure is retained. The corrected
+missing-setting control is `initial-enchantment-runtime-normal-missing-01`.
+`initial-enchantment-runtime-baseline-sanitized-02` runs the identical input
+against the independently hash-checked preceding engine, SHA256
+`c8e172c6835dd365038001bdf5e76dc94605785e0c32660052e5ecdb553adcc1`,
+retained in `initial-enchantment-legacy-baseline`. Both warn/skip and preserve
+matching native groups, shared inventory/NPC/core fields and definitions;
+`baseline-comparison.json` records the assertions. Their four captures were
+reviewed. Baseline attempt -01 lacked defaults.bin beside the copied executable
+and exited before loading; -02 supplies the original defaults/config files.
+No failed attempt is counted as passing acceptance.
+
+`initial-enchantment-morrowind-01` passes the unchanged Morrowind M14 regression
+manifest, actual F5 save and independent native-marker exclusion. The reviewed
+terrain-facing Balmora capture proves startup/save isolation only, not combat
+or enchanted-item gameplay. Existing missing snow/blizzard meshes match the
+manifest's reviewed diagnostics.
+
+Initial insertion allocation, autoequip and its resource/charge dependencies,
+registry/scene resources, full prior-world preservation on late restore failure,
+and the full S3 requirement audit remain open. The preceding count fix is
+included in this tested checkpoint. Nothing has been pushed or published.
+
+## S3 guard inventory stack count arithmetic — 2026-10-13
+
+Initial inventory insertion could overflow signed count addition, including
+restocking stacks and normalized gold. `ContainerStore::addItems` now rejects
+unrepresentable magnitudes and sums before changing the destination stack;
+`subtractItems` rejects INT_MIN before taking its absolute value. Representable
+results retain the existing infectious restocking sign. Initial fill retains
+its warning/skip contract and continues with later entries. This is an arithmetic
+safety fix, not detached inventory publication or pre-teardown rejection of the
+whole save.
+
+Two new engine tests cover 81 operand pairs against widened arithmetic, and
+four actual ordinary/prepared fill cases (weapon/gold, positive/restocking).
+The fill cases insert MAX-1, skip an overflowing +2, then successfully add +1;
+wire state and RNG agree, and both signed and magnitude counts are checked.
+All **1,366 engine tests** pass in each normal and ASan/UBSan configuration,
+with exact inventory/XML agreement and no failures/skips. Evidence:
+`build/oblivion-compat/m15/S3/initial-inventory-count-normal-02` and
+`initial-inventory-count-sanitized-02`. Source fingerprint at parent
+`d6b1db7fd8e6e1f7de1665b8e04545740acc24d0`:
+`b6745bdc289fce753a76240665851e786b4d1a2f4467fd17b03c3e9b58941468`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`ec30b2e57531574937b545339b9927a6d9c76b9118a2e49001524343f75d8821`,
+`5ec8f387c61cbd90939e59c1f71bdf023e9113a546792770e65cef5c52e15765`.
+ASan/UBSan halt on errors; leak checking is disabled. Null audio/offscreen SDL
+are explicit. Unchanged component/Python suites were not rerun.
+
+Actual courses `initial-count-runtime-normal-01` and
+`initial-count-runtime-sanitized-02` pass load/F5/F9/F5/quit, observing the
+specific overflow warning during no-custom PLAY initialization. Their editable
+recipes/generators add generated MISC130 and NPCO counts MAX-1/2/1 to the
+previous initial-list fixture. Input SHA256:
+`df4638baa60a24472ea5bf8c359a1fc7700529332fa4a9fc3908c43407ea76c5`.
+Native state, shared resave inventory/NPC/core fields, authored lists/NPCO and
+the generated MISC definition pass independent comparisons. Transient stack
+counts are proven by C++ tests; native Player inventory replacement means the
+final rendered save is not an observation of that transient stack.
+
+`initial-count-runtime-continuation-sanitized-01` loads the exact normal final
+save in a fresh process and passes the same native/shared comparisons, including
+initial shared state. Source SHA256:
+`e93d828b5f581fc42ecc4fef0d0148e95d00b56aa6f8a0474befaaf1c3dc8c27`.
+Normal PID27114 ended before continuation PID27755 started. All six captures
+were inspected: Imperial Prison scene/HUD, no loading or error dialog.
+Normal/instrumented openmw SHA256 respectively:
+`a236eb02ca22945b85e62ed5afa5bbef8aa3b18cd77cc2ffa1b89c5656252b6e`,
+`c8e172c6835dd365038001bdf5e76dc94605785e0c32660052e5ecdb553adcc1`.
+
+Retained failed attempts: both `initial-inventory-count-*-01` builds rejected
+two SCOPED_TRACE macros on one source line; corrected tests pass in -02.
+`initial-count-runtime-sanitized-01` exited before loading because ASan was not
+preloaded ahead of the SDL input shim; -02 corrects the manifest. No failed
+attempt is counted as acceptance.
+
+Full initial inventory insertion/enchantment preparation and autoequip,
+registry/scene resources, full prior-world preservation on late restore failure,
+and the complete S3 requirement audit remain open. Stack arithmetic guards do
+not establish safety of every inventory aggregate or every count entry point.
+
 ## S3 prepare initial inventory definitions and reset omitted actor payloads — 2026-10-12
 
 Legacy NPC/creature initialization now stages owned initial inventory definitions,

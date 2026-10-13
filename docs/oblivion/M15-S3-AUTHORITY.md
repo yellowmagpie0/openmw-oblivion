@@ -641,3 +641,31 @@ full prior-world late-failure preservation and the full S3 audit remain open.
 The originating session could not commit because its environment made `.git`
 read-only; the authorized local commit was completed in a follow-up session.
 Nothing was pushed or published.
+
+
+Inventory stack addition/subtraction now guard unrepresentable magnitudes and
+addition overflow before stack mutation. Initial fill retains warning/skip and
+later-entry processing. Two added tests cover 81 arithmetic pairs plus actual
+weapon/gold and positive/restocking insertion; all 1366 normal/instrumented
+engine tests pass. Normal/instrumented no-custom PLAY overflow courses and a
+fresh instrumented continuation from the exact normal save pass semantic and
+visual review. The milestone ledger records fingerprints, hashes and failures.
+This fixes count arithmetic, not complete pre-teardown inventory preparation:
+enchantment lookups, insertion resources, autoequip, registry/scene resources,
+late-failure preservation and the full S3 audit remain open.
+
+
+Initial enchanted stack comparisons now consume detached ENCH charge/failure
+snapshots. Incoming/static lookup, effect/setting preparation and deferred
+first-use caches preserve the ordinary comparison phase, including unused and
+missing-data skips. Cache conflicts reject before captured values publish;
+rounded charge/product arithmetic is checked. Seven isolated actual class/cache
+probes pass in both complete 1373-case engine inventories. A copied-binary
+mutation disabling consumption fails the source-removal regression as expected.
+Normal/instrumented authored-charge save/reload courses, exact normal-save fresh
+instrumented continuation, a hash-identified old/new missing-setting control,
+and Morrowind startup/save isolation pass. See the newest ledger for hashes,
+reviewed captures and retained failed fixture/baseline attempts. This closes
+initial-stack charge lookup preparation only. Initial insertion allocations,
+autoequip/resource dependencies, registry/scene resources, full late-failure
+prior-world preservation and the full S3 audit remain open.

@@ -229,7 +229,8 @@ namespace MWWorld
         void autoEquip();
         ///< Auto equip items according to stats and item value.
 
-        bool stacks(const ConstPtr& ptr1, const ConstPtr& ptr2) const override;
+        bool stacks(const ConstPtr& ptr1, const ConstPtr& ptr2,
+            const std::function<float()>* preparedCharge = nullptr) const override;
         ///< @return true if the two specified objects can stack with each other
 
         using ContainerStore::remove;

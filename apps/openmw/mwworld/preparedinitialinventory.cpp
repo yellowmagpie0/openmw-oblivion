@@ -13,6 +13,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
+#include "../mwmechanics/spellutil.hpp"
 #include "class.hpp"
 #include "containerstore.hpp"
 #include "esmstore.hpp"
@@ -35,6 +36,7 @@ namespace MWWorld
             std::vector<ESM::LevelledListBase::LevelItem> mItems;
             std::unique_ptr<ManualRef> mRef;
             std::string mError;
+            std::function<float()> mCharge;
         };
         ESM::InventoryList mItems;
         ESM::RefId mOwner;
@@ -83,6 +85,9 @@ namespace MWWorld
                 node.mScripted = !ptr.getClass().getScript(ptr).empty();
                 gold = gold || ptr.getClass().isGold(ptr);
                 ptr.getCellRef().setOwner(owner);
+                const auto& enchantment = ptr.getClass().getEnchantment(ptr);
+                if (!enchantment.empty())
+                    node.mCharge = MWMechanics::prepareEnchantmentCharge(enchantment, content, incoming);
             }
             catch (const std::logic_error& error)
             {
@@ -151,7 +156,7 @@ namespace MWWorld
         const auto insert = [&](const Data::Node& node, int count) {
             if (!node.mRef) throw std::logic_error(node.mError.empty() ? "Initial item is not storable" : node.mError);
             const auto add = [&](int quantity) {
-                auto item = target.addImp(node.mRef->getPtr(), quantity, false, &gold);
+                auto item = target.addImp(node.mRef->getPtr(), quantity, false, &gold, &node.mCharge);
                 MWBase::Environment::get().getWorldModel()->registerPtr(*item);
             };
             if (node.mScripted)

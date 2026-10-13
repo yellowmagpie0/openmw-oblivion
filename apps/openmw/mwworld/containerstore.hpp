@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_CONTAINERSTORE_H
 
 #include <iterator>
+#include <functional>
 #include <map>
 #include <memory>
 #include <utility>
@@ -316,7 +317,7 @@ namespace MWWorld
 
     private:
         ContainerStoreIterator addImp(const ConstPtr& ptr, int count, bool markModified = true,
-            const Ptr* preparedGold = nullptr);
+            const Ptr* preparedGold = nullptr, const std::function<float()>* preparedCharge = nullptr);
         void addInitialItem(
             const ESM::RefId& id, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng, bool topLevel = true);
         void addInitialItemImp(const MWWorld::Ptr& ptr, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng,
@@ -460,7 +461,8 @@ namespace MWWorld
         static int subtractItems(int count1, int count2);
 
     public:
-        virtual bool stacks(const ConstPtr& ptr1, const ConstPtr& ptr2) const;
+        virtual bool stacks(const ConstPtr& ptr1, const ConstPtr& ptr2,
+            const std::function<float()>* preparedCharge = nullptr) const;
         ///< @return true if the two specified objects can stack with each other
 
         void fill(const ESM::InventoryList& items, const ESM::RefId& owner, Misc::Rng::Generator& seed);

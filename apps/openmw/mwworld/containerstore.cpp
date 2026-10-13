@@ -418,7 +418,8 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::restack(const MWWorld::
     return retval;
 }
 
-bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2) const
+bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2,
+    const std::function<float()>* preparedCharge) const
 {
     const MWWorld::Class& cls1 = ptr1.getClass();
     const MWWorld::Class& cls2 = ptr2.getClass();
@@ -429,9 +430,10 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2)
     // If it has an enchantment, don't stack when some of the charge is already used
     if (!ptr1.getClass().getEnchantment(ptr1).empty())
     {
-        const ESM::Enchantment* enchantment = MWBase::Environment::get().getESMStore()->get<ESM::Enchantment>().find(
-            ptr1.getClass().getEnchantment(ptr1));
-        const float maxCharge = static_cast<float>(MWMechanics::getEnchantmentCharge(*enchantment));
+        const float maxCharge = preparedCharge ? (*preparedCharge)()
+            : static_cast<float>(MWMechanics::getEnchantmentCharge(
+                *MWBase::Environment::get().getESMStore()->get<ESM::Enchantment>().find(
+                    ptr1.getClass().getEnchantment(ptr1))));
         float enchantCharge1
             = ptr1.getCellRef().getEnchantmentCharge() == -1 ? maxCharge : ptr1.getCellRef().getEnchantmentCharge();
         float enchantCharge2
@@ -704,7 +706,8 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
 }
 
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addImp(
-    const ConstPtr& ptr, int count, bool markModified, const Ptr* preparedGold)
+    const ConstPtr& ptr, int count, bool markModified, const Ptr* preparedGold,
+    const std::function<float()>* preparedCharge)
 {
     if (markModified)
         resolve();
@@ -749,7 +752,7 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addImp(
             if (inventoryStore->isEquipped(*iter))
                 continue;
 
-        if (stacks(*iter, ptr))
+        if (stacks(*iter, ptr, preparedCharge))
         {
             // stack
             iter->getCellRef().setCount(addItems(iter->getCellRef().getCount(false), count));
@@ -1281,7 +1284,15 @@ MWWorld::Ptr MWWorld::ContainerStore::search(const ESM::RefId& id)
 
 int MWWorld::ContainerStore::addItems(int count1, int count2)
 {
-    int sum = std::abs(count1) + std::abs(count2);
+    // Negative counts mark restocking stacks. Their magnitude must still fit
+    // in int: CellRef::getCount() exposes that magnitude to inventory callers.
+    if (count1 == std::numeric_limits<int>::min() || count2 == std::numeric_limits<int>::min())
+        throw std::overflow_error("Inventory stack count has no representable magnitude");
+    const int magnitude1 = std::abs(count1);
+    const int magnitude2 = std::abs(count2);
+    if (magnitude1 > std::numeric_limits<int>::max() - magnitude2)
+        throw std::overflow_error("Inventory stack count addition overflow");
+    const int sum = magnitude1 + magnitude2;
     if (count1 < 0 || count2 < 0)
         return -sum;
     return sum;
@@ -1289,6 +1300,8 @@ int MWWorld::ContainerStore::addItems(int count1, int count2)
 
 int MWWorld::ContainerStore::subtractItems(int count1, int count2)
 {
+    if (count1 == std::numeric_limits<int>::min() || count2 == std::numeric_limits<int>::min())
+        throw std::overflow_error("Inventory stack count has no representable magnitude");
     int sum = std::abs(count1) - std::abs(count2);
     if (count1 < 0 || count2 < 0)
         return -sum;

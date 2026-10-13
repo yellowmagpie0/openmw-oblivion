@@ -31,6 +31,10 @@ namespace MWMechanics
         SpellCalculationSetting<float> mWeakestSchoolCost{"fEffectCostMult", {}};
         SpellCalculationSetting<float> mEffectCost{"fEffectCostMult", {}};
         SpellCalculationSetting<float> mAlchemyCost{"iAlchemyMod", {}};
+        SpellCalculationSetting<int> mChargeOnce{"iMagicItemChargeOnce", {}};
+        SpellCalculationSetting<int> mChargeStrike{"iMagicItemChargeStrike", {}};
+        SpellCalculationSetting<int> mChargeUse{"iMagicItemChargeUse", {}};
+        SpellCalculationSetting<int> mChargeConst{"iMagicItemChargeConst", {}};
     };
 
     inline SpellCalculationCaches& spellCalculationCaches()
@@ -114,6 +118,22 @@ namespace MWMechanics
             if (mIncoming)
                 for (const auto& record : mIncoming->get<ESM::Spell>())
                     result.push_back(&record);
+            return result;
+        }
+
+        std::vector<std::function<void()>> cacheChecks() const
+        {
+            std::vector<std::function<void()>> result;
+            result.reserve(mCaptured.size());
+            for (const auto& captured : mCaptured)
+                std::visit([&](auto* target) {
+                    using T = typename std::decay_t<decltype(*target)>::value_type;
+                    const auto value = std::get<T>(captured.mValue);
+                    result.emplace_back([target, value] {
+                        if (*target && **target != value)
+                            throw std::logic_error("Prepared spell calculation cache changed before consumption");
+                    });
+                }, captured.mTarget);
             return result;
         }
 

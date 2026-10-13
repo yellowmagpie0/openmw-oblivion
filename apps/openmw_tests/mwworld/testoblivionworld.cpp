@@ -17485,3 +17485,234 @@ TEST(OblivionWorldTest, PreparedInitialGoldKeepsMissingAndUnusableNormalizationT
         EXPECT_EQ(actual.begin(), actual.end()); EXPECT_EQ(world.getPrng(), before);
     }
 }
+
+namespace
+{
+    struct InventoryCountProbe : MWWorld::ContainerStore
+    {
+        using ContainerStore::addItems;
+        using ContainerStore::subtractItems;
+    };
+}
+
+TEST(OblivionWorldTest, InventoryCountArithmeticPreservesRestockingSignsAndRejectsOverflow)
+{
+    constexpr int max = std::numeric_limits<int>::max();
+    constexpr int min = std::numeric_limits<int>::min();
+    for (int first : {0, 1, -1, 27, -27, max, -max, min})
+        for (int second : {0, 1, -1, 27, -27, max, -max, min})
+        {
+            SCOPED_TRACE(first);
+            SCOPED_TRACE(second);
+            const auto magnitude = [](int value) { return std::abs(static_cast<std::int64_t>(value)); };
+            const auto sum = magnitude(first) + magnitude(second);
+            const auto difference = magnitude(first) - magnitude(second);
+            const int sign = first < 0 || second < 0 ? -1 : 1;
+            if (first == min || second == min || sum > max)
+                EXPECT_THROW(InventoryCountProbe::addItems(first, second), std::overflow_error);
+            else
+                EXPECT_EQ(InventoryCountProbe::addItems(first, second), sign * sum);
+            if (first == min || second == min)
+                EXPECT_THROW(InventoryCountProbe::subtractItems(first, second), std::overflow_error);
+            else
+                EXPECT_EQ(InventoryCountProbe::subtractItems(first, second), sign * difference);
+        }
+}
+
+TEST(OblivionWorldTest, InitialInventoryOverflowSkipsOnlyFailingAdditionAndPreservesExistingStack)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    MWClass::Miscellaneous::registerSelf();
+    ESM::Miscellaneous gold{}; gold.blank(); gold.mId = MWWorld::ContainerStore::sGoldId;
+    store.getWritable<ESM::Miscellaneous>().insertStatic(gold);
+    ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId::stringRefId("initial-count-limit");
+    weapon.mData.mHealth = 25; weapon.mData.mType = ESM::Weapon::LongBladeOneHand;
+    store.getWritable<ESM::Weapon>().insertStatic(weapon); store.rebuildIdsIndex();
+    const auto owner = ESM::RefId::stringRefId("initial-count-owner");
+    constexpr int max = std::numeric_limits<int>::max();
+    for (const auto& id : {gold.mId, weapon.mId})
+        for (int sign : {-1, 1})
+        {
+            SCOPED_TRACE(id);
+            SCOPED_TRACE(sign);
+            // The middle entry cannot fit. The later valid entry must still be
+            // processed through the ordinary initial-fill warning/skip path.
+            ESM::InventoryList items; items.mList = {{sign * (max - 1), id}, {2, id}, {1, id}};
+            MWWorld::ContainerStore ordinary, actual;
+            actual.prepareInitialInventory(items, owner, store, incoming);
+            const auto rng = world.getPrng();
+            ordinary.fill(items, owner, world.getPrng()); actual.fill({}, owner, world.getPrng());
+            EXPECT_EQ(world.getPrng(), rng);
+            EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
+            ASSERT_EQ(std::distance(actual.begin(), actual.end()), 1);
+            EXPECT_EQ(actual.begin()->getCellRef().getCount(false), sign * max);
+            EXPECT_EQ(actual.begin()->getCellRef().getCount(), max);
+        }
+}
+
+namespace
+{
+    void enchantmentRestoreProbe(int mode)
+    {
+        try
+        {
+            PopulatedMigrationFixture fixture;
+            auto& world = fixture.mWorld;
+            auto& store = world.getStore();
+            MWWorld::ESMStore incoming;
+            installSpellCalculationSettings(store);
+            auto& caches = MWMechanics::spellCalculationCaches();
+            if (caches.mEffectCost.mValue || caches.mAlchemyCost.mValue || caches.mChargeUse.mValue
+                || caches.mChargeOnce.mValue || caches.mChargeStrike.mValue || caches.mChargeConst.mValue)
+                std::_Exit(10);
+            const auto setting = [&](const char* name, int value) {
+                ESM::GameSetting record{}; record.mId = ESM::RefId::stringRefId(name);
+                record.mValue.setType(ESM::VT_Int); record.mValue.setInteger(value);
+                store.getWritable<ESM::GameSetting>().insertStatic(record);
+            };
+            setting("iMagicItemChargeOnce", 2); setting("iMagicItemChargeStrike", 3);
+            setting("iMagicItemChargeUse", 4); setting("iMagicItemChargeConst", 5);
+            ESM::Enchantment enchantment{}; enchantment.blank(); enchantment.mId = ESM::RefId::generated(95000);
+            enchantment.mData.mFlags = ESM::Enchantment::Autocalc;
+            enchantment.mData.mType = ESM::Enchantment::WhenUsed; enchantment.mData.mCharge = 137;
+            enchantment.mEffects = calculationSpell("charge-effects", 20).mEffects;
+            incoming.getWritable<ESM::Enchantment>().insert(enchantment);
+            auto outgoing = enchantment; outgoing.mData.mFlags = 0; outgoing.mData.mCharge = 999;
+            store.getWritable<ESM::Enchantment>().insert(outgoing);
+            ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId::stringRefId("initial-charge-weapon");
+            weapon.mData.mType = ESM::Weapon::LongBladeOneHand; weapon.mData.mHealth = 25;
+            weapon.mEnchant = enchantment.mId;
+            store.getWritable<ESM::Weapon>().insertStatic(weapon); store.rebuildIdsIndex();
+            const auto owner = ESM::RefId::stringRefId("initial-charge-owner");
+            const auto revision = world.getWorldModel().getPtrRegistryRevision();
+            const auto rng = world.getPrng();
+            if (mode == 2)
+                store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId("iAlchemyMod"));
+            if (mode == 3) incoming.getWritable<ESM::Enchantment>().erase(enchantment.mId);
+            if (mode == 5)
+            {
+                for (const auto& [type, expected] : std::array<std::pair<int, int>, 5>{{
+                    {ESM::Enchantment::CastOnce, 40}, {ESM::Enchantment::WhenStrikes, 60},
+                    {ESM::Enchantment::WhenUsed, 80}, {ESM::Enchantment::ConstantEffect, 100}, {99, 137}}})
+                {
+                    enchantment.mData.mType = type;
+                    incoming.getWritable<ESM::Enchantment>().insert(enchantment);
+                    auto prepared = MWMechanics::prepareEnchantmentCharge(enchantment.mId, store, incoming);
+                    if (prepared() != expected || MWMechanics::getEnchantmentCharge(enchantment) != expected)
+                        std::_Exit(11);
+                }
+                enchantment.mData.mFlags = 0; enchantment.mData.mCharge = -19;
+                incoming.getWritable<ESM::Enchantment>().insert(enchantment);
+                if (MWMechanics::prepareEnchantmentCharge(enchantment.mId, store, incoming)() != -19)
+                    std::_Exit(12);
+                std::_Exit(0);
+            }
+            if (mode == 6)
+            {
+                // Both rounded float conversion and the following integer
+                // multiplication have independent domains.
+                for (int fault : {0, 1, 2})
+                {
+                    auto invalid = enchantment;
+                    if (fault == 0)
+                    {
+                        invalid.mEffects.mList.front().mData.mMagnMin = 50000;
+                        invalid.mEffects.mList.front().mData.mMagnMax = 50000;
+                        invalid.mEffects.mList.front().mData.mDuration = 100000;
+                    }
+                    else if (fault == 1) setting("iMagicItemChargeUse", std::numeric_limits<int>::max());
+                    else
+                    {
+                        invalid.mEffects.mList.front().mData.mMagnMin = std::numeric_limits<int>::max();
+                        invalid.mEffects.mList.front().mData.mMagnMax = std::numeric_limits<int>::max();
+                    }
+                    incoming.getWritable<ESM::Enchantment>().insert(invalid);
+                    auto prepared = MWMechanics::prepareEnchantmentCharge(invalid.mId, store, incoming);
+                    bool rejected = false;
+                    try { (void)prepared(); } catch (const std::runtime_error&) { rejected = true; }
+                    if (!rejected) std::_Exit(13);
+                    if (fault < 2)
+                    {
+                        rejected = false;
+                        try { (void)MWMechanics::getEnchantmentCharge(invalid); }
+                        catch (const std::runtime_error&) { rejected = true; }
+                        if (!rejected) std::_Exit(14);
+                    }
+                }
+                std::_Exit(0);
+            }
+            ESM::InventoryList items; items.mList = {{1, weapon.mId}, {2, weapon.mId}};
+            MWWorld::InventoryStore target;
+            target.prepareInitialInventory(items, owner, store, incoming);
+            auto clone = target;
+            if (world.getWorldModel().getPtrRegistryRevision() != revision || world.getPrng() != rng
+                || caches.mEffectCost.mValue || caches.mAlchemyCost.mValue || caches.mChargeUse.mValue)
+                std::_Exit(15);
+            if (mode == 0 || mode == 4)
+            {
+                auto changed = *store.get<ESM::GameSetting>().find("fEffectCostMult");
+                changed.mValue.setFloat(3.f); store.getWritable<ESM::GameSetting>().insertStatic(changed);
+                if (mode == 0)
+                {
+                    target.clear(); clone.clear();
+                    if (MWMechanics::getEnchantmentCharge(enchantment) != 240) std::_Exit(16);
+                    std::_Exit(0);
+                }
+                if (MWMechanics::getEnchantmentCharge(enchantment) != 240) std::_Exit(17);
+            }
+            // The completed plan must no longer resolve any store definitions.
+            incoming.getWritable<ESM::Enchantment>().erase(enchantment.mId);
+            store.getWritable<ESM::Enchantment>().erase(enchantment.mId);
+            store.getWritable<ESM::MagicEffect>().eraseStatic(ESM::MagicEffect::Paralyze);
+            for (const char* name : {"fEffectCostMult", "iAlchemyMod", "iMagicItemChargeUse"})
+                store.getWritable<ESM::GameSetting>().eraseStatic(ESM::RefId::stringRefId(name));
+            for (auto* inventory : {&target, &clone})
+            {
+                inventory->fill({}, owner, world.getPrng());
+                if (std::distance(inventory->begin(), inventory->end()) != 1
+                    || inventory->begin()->getCellRef().getCount() != (mode == 1 ? 3 : 1))
+                    std::_Exit(18);
+            }
+            if (world.getPrng() != rng) std::_Exit(19);
+            if (mode == 1 && (caches.mEffectCost.mValue != 1.f || caches.mAlchemyCost.mValue != 1.f
+                || caches.mChargeUse.mValue != 4)) std::_Exit(20);
+            if (mode == 2 && (caches.mEffectCost.mValue != 1.f || caches.mAlchemyCost.mValue
+                || caches.mChargeUse.mValue)) std::_Exit(21);
+            if (mode == 3 && (caches.mEffectCost.mValue || caches.mAlchemyCost.mValue || caches.mChargeUse.mValue))
+                std::_Exit(22);
+            if (mode == 4 && caches.mEffectCost.mValue != 3.f) std::_Exit(23);
+            std::_Exit(0);
+        }
+        catch (const std::exception& error) { std::cerr << error.what(); std::_Exit(99); }
+    }
+}
+
+TEST(EnchantmentRestoreDeathTest, CancellationLeavesChargeCachesUnprimed)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(0), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, InitialInventoryConsumesIncomingChargeAfterSourceRemovalAndClone)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(1), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, ConsumedFailureRetainsOnlyEarlierOrdinaryCacheEffects)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(2), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, MissingIncomingEnchantmentPreservesFirstInsertionAndSkipsComparison)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(3), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, ChangedCacheRejectsPreparedComparisonWithoutOverwritingLiveValue)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(4), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, AllChargeModesMatchOrdinaryCalculationAndAuthoredFallback)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(5), ::testing::ExitedWithCode(0), "");
+}
+TEST(EnchantmentRestoreDeathTest, RoundedProductAndEffectArithmeticRejectOutOfDomainValues)
+{
+    EXPECT_EXIT(enchantmentRestoreProbe(6), ::testing::ExitedWithCode(0), "");
+}

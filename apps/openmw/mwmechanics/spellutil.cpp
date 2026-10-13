@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <exception>
 #include <limits>
 
 #include <components/esm3/loadalch.hpp>
@@ -137,38 +138,61 @@ namespace MWMechanics
         return getEffectiveEnchantmentCastCost(castCost, actor);
     }
 
-    int getEnchantmentCharge(const ESM::Enchantment& enchantment)
+    int getEnchantmentCharge(const ESM::Enchantment& enchantment, SpellCalculationContext* context)
     {
         if (enchantment.mData.mFlags & ESM::Enchantment::Autocalc)
         {
-            int charge
-                = static_cast<int>(std::round(getTotalCost(enchantment.mEffects, EffectCostMethod::GameEnchantment)));
-            const auto& store = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
+            std::optional<SpellCalculationContext> ordinary;
+            if (!context) ordinary.emplace(*MWBase::Environment::get().getESMStore());
+            auto& calculation = context ? *context : *ordinary;
+            const float rounded = std::round(
+                getTotalCost(enchantment.mEffects, EffectCostMethod::GameEnchantment, &calculation));
+            if (!std::isfinite(rounded) || rounded < -0x1p31f || rounded >= 0x1p31f)
+                throw std::runtime_error("Enchantment charge exceeds the integer domain");
+            const int charge = static_cast<int>(rounded);
+            SpellCalculationSetting<int>* multiplier = nullptr;
+            auto& caches = spellCalculationCaches();
             switch (enchantment.mData.mType)
             {
-                case ESM::Enchantment::CastOnce:
-                {
-                    static const int iMagicItemChargeOnce = store.find("iMagicItemChargeOnce")->mValue.getInteger();
-                    return charge * iMagicItemChargeOnce;
-                }
-                case ESM::Enchantment::WhenStrikes:
-                {
-                    static const int iMagicItemChargeStrike = store.find("iMagicItemChargeStrike")->mValue.getInteger();
-                    return charge * iMagicItemChargeStrike;
-                }
-                case ESM::Enchantment::WhenUsed:
-                {
-                    static const int iMagicItemChargeUse = store.find("iMagicItemChargeUse")->mValue.getInteger();
-                    return charge * iMagicItemChargeUse;
-                }
-                case ESM::Enchantment::ConstantEffect:
-                {
-                    static const int iMagicItemChargeConst = store.find("iMagicItemChargeConst")->mValue.getInteger();
-                    return charge * iMagicItemChargeConst;
-                }
+                case ESM::Enchantment::CastOnce: multiplier = &caches.mChargeOnce; break;
+                case ESM::Enchantment::WhenStrikes: multiplier = &caches.mChargeStrike; break;
+                case ESM::Enchantment::WhenUsed: multiplier = &caches.mChargeUse; break;
+                case ESM::Enchantment::ConstantEffect: multiplier = &caches.mChargeConst; break;
+            }
+            if (multiplier)
+            {
+                const auto result = std::int64_t(charge) * calculation.setting(*multiplier);
+                if (result < std::numeric_limits<int>::min() || result > std::numeric_limits<int>::max())
+                    throw std::runtime_error("Enchantment charge multiplication exceeds the integer domain");
+                return static_cast<int>(result);
             }
         }
         return enchantment.mData.mCharge;
+    }
+
+    std::function<float()> prepareEnchantmentCharge(const ESM::RefId& id,
+        const MWWorld::ESMStore& content, const MWWorld::ESMStore& incoming)
+    {
+        SpellCalculationContext calculation(content, &incoming);
+        float charge = 0;
+        std::exception_ptr error;
+        try
+        {
+            const auto* enchantment = content.searchForRestore<ESM::Enchantment>(id, incoming);
+            if (!enchantment)
+                throw std::runtime_error("Prepared initial inventory enchantment is unavailable: " + id.toDebugString());
+            charge = static_cast<float>(getEnchantmentCharge(*enchantment, &calculation));
+        }
+        catch (const std::runtime_error&) { error = std::current_exception(); }
+        catch (const std::logic_error&) { error = std::current_exception(); }
+        // Even a failed ordinary calculation can initialize earlier caches.
+        // Defer those effects, and the error, until this comparison is used.
+        return [charge, error, checks = calculation.cacheChecks(), commits = calculation.cacheCommits()] {
+            for (const auto& check : checks) check();
+            for (const auto& commit : commits) commit();
+            if (error) std::rethrow_exception(error);
+            return charge;
+        };
     }
 
     int getPotionValue(const ESM::Potion& potion)

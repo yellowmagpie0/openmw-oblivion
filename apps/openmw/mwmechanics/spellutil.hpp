@@ -4,6 +4,7 @@
 #include <components/esm3/loadskil.hpp>
 
 #include <optional>
+#include <functional>
 
 namespace ESM
 {
@@ -19,6 +20,7 @@ namespace ESM
 namespace MWWorld
 {
     class Ptr;
+    class ESMStore;
 }
 
 namespace MWMechanics
@@ -39,7 +41,12 @@ namespace MWMechanics
 
     int getEffectiveEnchantmentCastCost(float castCost, const MWWorld::Ptr& actor);
     int getEffectiveEnchantmentCastCost(const ESM::Enchantment& enchantment, const MWWorld::Ptr& actor);
-    int getEnchantmentCharge(const ESM::Enchantment& enchantment);
+    int getEnchantmentCharge(const ESM::Enchantment& enchantment, SpellCalculationContext* context = nullptr);
+
+    // Owns the result/failure and defers first-use cache publication until an
+    // actual stack comparison consumes it. Repeated comparisons may reuse it.
+    std::function<float()> prepareEnchantmentCharge(const ESM::RefId& id,
+        const MWWorld::ESMStore& content, const MWWorld::ESMStore& incoming);
 
     int getPotionValue(const ESM::Potion& potion);
     std::optional<ESM::EffectList> rollIngredientEffect(
