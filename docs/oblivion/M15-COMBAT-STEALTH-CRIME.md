@@ -6,6 +6,80 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare initial inventory definitions and reset omitted actor payloads — 2026-10-12
+
+Legacy NPC/creature initialization now stages owned initial inventory definitions,
+leveled-list snapshots and candidate workspace before teardown. Incoming/static
+lookup excludes outgoing-only definitions. Copies retain independent workspace;
+clear/replacement cancels plans. Consumption preserves the original Player-level
+query, selection RNG, Each/AllLevels rules, scripted-item splitting, restocking
+counts, gold normalization and warning/skip behavior. Cycles are visited once
+while preparing definitions; live selection retains ordinary behavior.
+
+Seven additional engine tests include 240 ordinary/prepared level/flag/count/seed
+comparisons, incoming/static ownership and clone checks, invalid-count rejection,
+gold normalization, and an actual class probe that changes a list after preparing
+it. The class probe verifies the captured list and original implicit Player query
+phase. These are shared legacy inventory rules, not newly implemented TES4 lists.
+
+A sanitized runtime with HCUS=false PLAY exposed an uninitialized werewolf flag.
+Absent NPC/creature payloads now reset their omitted fields, including owned AI
+packages. Player initializes its optional legacy werewolf flag; absent payloads
+do not enter legacy stat conversions, actor-ID mapping or werewolf restoration.
+Two component tests cover supported format versions, stale fields and omitted
+legacy Player tails. The actual Player reader probe rejects phantom ID mappings.
+Earlier passing no-custom runtime courses did not detect this undefined behavior.
+
+Final checks in `build/oblivion-compat/m15/S3/initial-inventory-resolution-normal-10`
+and `initial-inventory-resolution-sanitized-05` each pass **all 2,598 component
+and 1,364 engine tests**, exact inventory/XML agreement and no failures/skips.
+Matching dirty-source fingerprint at parent `1dbffdb3b490ef3fad568d66209c8e9dbfd10685`:
+`2d123a777235468911bd9fcd13453cd7762661e3e89d1a5b3960db6749f3de9f`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`e816c79df35e90cacd6d0fc6e2879d5b42828cbfb1bcad6f778015d5bffbfca5`,
+`035799776e521de394c433835e616a955e1f580056fbfdd568474fe8d0f692bb`.
+ASan/UBSan halt on errors; leak detection is disabled. Both runners explicitly
+supply `ALSOFT_DRIVERS=null` and `SDL_VIDEODRIVER=offscreen`.
+
+Runtime courses `initial-inventory-runtime-normal-03` and
+`initial-inventory-runtime-sanitized-02` pass actual load/F5/F9/F5/quit.
+The reproducible fixture preserves native state and adds generated LEVI Each ->
+LEVC chance-none100 initial inventory to no-custom PLAY. Verifiers compare
+native fields, shared inventory/NPC/core materialization followed by stable
+resaves, and exact list/NPCO records. Input SHA256:
+`959939c035c3986071ed8e7d67b0a412f8f63e5504213f45ef9a66179565bd9d`.
+Recipes/generators/manifests, independent reproduction and retained outputs
+remain in the evidence folders. Before-PLAY transient Player query/RNG behavior
+is covered by the class probe, not inferred from these rendered courses.
+
+`initial-inventory-runtime-continuation-sanitized-02` starts a fresh instrumented
+process from the exact normal final save, SHA256
+`20af2f457d90f1943ae90a598d0efa59f9c17934eccde1be109efadb92310360`,
+and passes the same checks including unchanged initial shared payloads.
+The normal process exited before continuation launched. Run IDs and epochs
+are distinct; namespace-local PID12 is reused across isolated tool processes.
+All final captures were inspected: Imperial Prison, HUD and persistent blade,
+without an error/loading dialog. No sanitizer finding recurred.
+Normal/instrumented openmw SHA256 respectively:
+`d5469d83a5d63c66ba798ce5c0db7b29332eb795a113513100b2c71e623c0cdc`,
+`c847f14539e3dbc0fdb6c671f09dd9fdbe5f8a74cab3c9bd540329920a7fecd4`.
+
+Retained attempts include incomplete-type and nonmovable-state build errors,
+a test RefId type correction, deliberate source-fix interruptions, a compiler
+OOM, an invalid non-generated-ID fixture, and the actual UBSan finding. Later
+session visibility loss caused overlapping archives in normal-07/08; both
+failed before the clean retry. Normal-09 executed 1,364 tests but lacked the
+required ALSOFT_DRIVERS=null: two audio tests failed and teardown stalled.
+Normal-10 supplies the null backend explicitly and passes. No failed evidence
+is counted as final verification.
+
+This prepares selection/definition resources only. Live item-node allocation,
+stacking/enchantment lookup and arithmetic, autoequip, registry/scene resources,
+full late-failure preservation of the prior world and the full S3 audit remain
+open. The originating session could not commit because its environment made
+`.git` read-only; the authorized local commit was completed in a follow-up
+session. Nothing was pushed/published.
+
 ## S3 prepare implicit Player authored AI — 2026-10-09
 
 Implicit Player and no-custom-state PLAY preparation now owns detached authored

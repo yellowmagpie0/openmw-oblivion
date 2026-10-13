@@ -179,6 +179,7 @@ namespace MWClass
             data.mDeferredBaseDeathTime = true;
         }
         data.mBaseStatsPrepared = true;
+        data.mContainerStore->prepareInitialInventory(base.mInventory, base.mId, store, incoming ? *incoming : store);
         return prepared;
     }
 

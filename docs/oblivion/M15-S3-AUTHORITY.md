@@ -621,3 +621,23 @@ covered by C++ probes, not those runtime saves. See the newest ledger entry for
 binary/source hashes and retained preliminary builds. Initial inventory and
 autoequip, registry/scene resources, full late-failure prior-world preservation
 and the complete S3 audit remain open.
+
+
+Initial legacy inventory preparation now owns leveled-list snapshots, leaf/gold
+reference prototypes and selection workspace. Consumption retains Player-level
+query/RNG timing, scripted splitting and restocking behavior. Seven engine tests
+include 240 ordinary/prepared combinations, detached-list class consumption and
+pre-teardown count rejection. An actual sanitized no-custom PLAY load exposed
+an uninitialized werewolf flag; omitted NPC/creature payloads now reset their
+fields, Player initializes its optional flag, and readers skip absent-payload
+conversions/mapping. Two format/stale-state component regressions cover this.
+All 2,598 component and 1,364 engine cases pass in normal and ASan/UBSan builds
+with a matching source fingerprint. Normal/instrumented no-custom initial-list
+courses and a fresh instrumented process from the exact final normal save pass
+semantic checks and visual review. See the newest milestone entry for hashes,
+reproduction and retained failures. Leak checking is disabled. Item insertion,
+stack/enchantment lookup and arithmetic, autoequip, registry/scene resources,
+full prior-world late-failure preservation and the full S3 audit remain open.
+The originating session could not commit because its environment made `.git`
+read-only; the authorized local commit was completed in a follow-up session.
+Nothing was pushed or published.

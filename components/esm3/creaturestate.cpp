@@ -13,6 +13,12 @@ namespace ESM
 
             mCreatureStats.load(esm);
         }
+        else
+        {
+            mInventory = InventoryState{};
+            mCreatureStats = CreatureStats{};
+            mCreatureStats.blank();
+        }
     }
 
     void CreatureState::save(ESMWriter& esm, bool inInventory) const

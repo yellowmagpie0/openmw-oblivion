@@ -17060,7 +17060,7 @@ TEST(OblivionWorldTest, PreparedPlayerInitializationBindsOnlyItsReferenceAndDrop
 
 namespace
 {
-    void implicitPlayerRestoreProbe(int mode, bool authoredAi = false)
+    void implicitPlayerRestoreProbe(int mode, bool authoredAi = false, bool changeInitialList = false)
     {
         try
         {
@@ -17144,6 +17144,12 @@ namespace
                 playerBase.mAiPackage.mList.clear();
                 definitions->getWritable<ESM::NPC>().insert(playerBase);
             }
+            if (changeInitialList)
+            {
+                list.mChanceNone = 0;
+                list.mList = {{ESM::RefId(ESM::FormId{0x940, 0}), 1}};
+                store.getWritable<ESM::ItemLevList>().insertStatic(list);
+            }
             auto definitionPlan = world.prepareOblivionSharedDefinitions(std::move(definitions));
             world.clear(); if (!definitionPlan->install() || !spells.install(store)) std::_Exit(54);
             initialization.install(world.getPlayerPtr());
@@ -17162,9 +17168,11 @@ namespace
                 writer.startRecord(ESM::REC_PLAY); player.save(writer); writer.endRecord(ESM::REC_PLAY); writer.close();
             }
             ESM::ESMReader reader; reader.open(path);
+            ESM::ActorIdConverter converter; reader.mActorIdConverter = &converter;
             if (reader.getRecName().toInt() != ESM::REC_PLAY) std::_Exit(58);
             reader.getRecHeader();
             if (!world.getPlayer().readRecord(reader, ESM::REC_PLAY)) std::_Exit(59);
+            if (!player.mObject.mHasCustomState && !converter.mMappings.empty()) std::_Exit(68);
             };
             if (mode == 4) readPlayer();
             MWWorld::ManualRef restored(store, creature.mId);
@@ -17251,4 +17259,229 @@ TEST(ImplicitPlayerRestoreDeathTest, PreparedAiBeforeFullPlayDoesNotReplayBasePa
 TEST(ImplicitPlayerRestoreDeathTest, PreparedAiAfterNoCustomPlayRunsBeforeLaterLeveledInventory)
 {
     EXPECT_EXIT(implicitPlayerRestoreProbe(4, true), ::testing::ExitedWithCode(0), "");
+}
+
+#include "apps/openmw/mwworld/preparedinitialinventory.hpp"
+#include "apps/openmw/mwclass/creaturelevlist.hpp"
+
+namespace
+{
+    std::string initialInventoryWire(const MWWorld::ContainerStore& store)
+    {
+        ESM::InventoryState state; store.writeState(state);
+        for (auto& item : state.mItems) item.mRef.mRefNum = {};
+        std::stringstream stream; ESM::ESMWriter writer;
+        writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(stream);
+        writer.startRecord(ESM::REC_CSTA); state.save(writer); writer.endRecord(ESM::REC_CSTA);
+        return stream.str();
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInitialInventoryMatchesOrdinaryNestedSelectionCountsAndRng)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    MWClass::ItemLevList::registerSelf(); MWClass::CreatureLevList::registerSelf();
+    const auto owner = ESM::RefId::stringRefId("initial-owner");
+    ESM::Weapon plain{}; plain.blank(); plain.mId = ESM::RefId::stringRefId("initial-plain");
+    plain.mData.mHealth = 25; plain.mData.mType = ESM::Weapon::LongBladeOneHand;
+    auto scripted = plain; scripted.mId = ESM::RefId::stringRefId("initial-scripted");
+    scripted.mScript = ESM::RefId::stringRefId("initial-script");
+    store.getWritable<ESM::Weapon>().insertStatic(plain); store.getWritable<ESM::Weapon>().insertStatic(scripted);
+    ESM::CreatureLevList nested{}; nested.blank(); nested.mId = ESM::RefId::stringRefId("initial-nested-creature-list");
+    nested.mFlags = ESM::CreatureLevList::AllLevels;
+    nested.mList = {{plain.mId, 1}, {scripted.mId, 3}, {plain.mId, 3}};
+    store.getWritable<ESM::CreatureLevList>().insertStatic(nested);
+    ESM::ItemLevList cycle{}; cycle.blank(); cycle.mId = ESM::RefId::stringRefId("initial-safe-cycle");
+    cycle.mChanceNone = 100; cycle.mList = {{cycle.mId, 1}};
+    store.getWritable<ESM::ItemLevList>().insertStatic(cycle);
+    ESM::ItemLevList root{}; root.blank(); root.mId = ESM::RefId::stringRefId("initial-root");
+    root.mList = {{nested.mId, 1}, {scripted.mId, 5}, {plain.mId, 5}, {plain.mId, 5},
+        {ESM::RefId::stringRefId("initial-missing"), 5}, {cycle.mId, 1}};
+    MWWorld::ESMStore incoming;
+    for (int level : {0, 3, 8}) for (int flags : {0, 1, 2, 3}) for (int count : {0, 1, -3, 4})
+    {
+        SCOPED_TRACE(level);
+        SCOPED_TRACE(flags);
+        SCOPED_TRACE(count);
+        world.getPlayerPtr().getClass().getNpcStats(world.getPlayerPtr()).setLevel(level);
+        root.mFlags = flags; root.mChanceNone = flags == 3 ? 37 : 0;
+        store.getWritable<ESM::ItemLevList>().insertStatic(root); store.rebuildIdsIndex();
+        ESM::InventoryList items; items.mList = {{count, root.mId}, {2, plain.mId}, {-1, scripted.mId},
+            {0, ESM::RefId::stringRefId("unused-missing")}, {1, nested.mId}};
+        const auto revision = world.getWorldModel().getPtrRegistryRevision(); const auto globalRng = world.getPrng();
+        MWWorld::PreparedInitialInventory prepared(items, owner, store, incoming);
+        auto canceled = std::make_unique<MWWorld::PreparedInitialInventory>(prepared); canceled.reset();
+        EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), globalRng);
+        for (unsigned seed : {1, 7, 29, 113, 65537})
+        {
+            SCOPED_TRACE(seed);
+            MWWorld::ContainerStore ordinary, actual;
+            Misc::Rng::Generator expectedRng(seed), actualRng(seed);
+            ordinary.fill(items, owner, expectedRng);
+            auto copy = prepared; copy.fill(actual, owner, actualRng);
+            EXPECT_EQ(actualRng, expectedRng);
+            EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
+            EXPECT_THROW(copy.fill(actual, owner, actualRng), std::logic_error);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInitialInventoryUsesIncomingAndStaticSnapshotsAndOwnsCloneWorkspace)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    MWClass::ItemLevList::registerSelf();
+    ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId::stringRefId("initial-surviving-item");
+    item.mData.mHealth = 25; item.mData.mType = ESM::Weapon::LongBladeOneHand;
+    store.getWritable<ESM::Weapon>().insertStatic(item);
+    ESM::ItemLevList root{}; root.blank(); root.mId = ESM::RefId::generated(94030);
+    root.mFlags = ESM::ItemLevList::Each; root.mList = {{item.mId, 0}, {item.mId, 0}};
+    MWWorld::ESMStore incoming; incoming.getWritable<ESM::ItemLevList>().insert(root);
+    auto outgoing = root; outgoing.mChanceNone = 100;
+    store.getWritable<ESM::ItemLevList>().insert(outgoing);
+    auto missing = outgoing; missing.mId = ESM::RefId::stringRefId("initial-outgoing-only");
+    store.getWritable<ESM::ItemLevList>().insert(missing); store.rebuildIdsIndex();
+    ESM::InventoryList items; items.mList = {{3, root.mId}, {1, missing.mId}};
+    const auto owner = ESM::RefId::stringRefId("initial-snapshot-owner");
+    MWWorld::ContainerStore prepared; prepared.prepareInitialInventory(items, owner, store, incoming);
+    MWWorld::ContainerStore copied(prepared), assigned; assigned = prepared;
+    MWWorld::ContainerStore moved(std::move(copied)), moveAssigned; moveAssigned = std::move(assigned);
+    // Lists are value snapshots. Source definitions can be discarded after preparation.
+    incoming.getWritable<ESM::ItemLevList>().erase(root.mId);
+    for (auto* target : {&prepared, &moved, &moveAssigned})
+    {
+        Misc::Rng::Generator actualRng(7), expectedRng(7);
+        for (int i = 0; i < 3; ++i)
+        {
+            (void)Misc::Rng::roll0to99(expectedRng); (void)Misc::Rng::rollDice(std::size_t(2), expectedRng);
+        }
+        target->fill({}, owner, actualRng);
+        EXPECT_EQ(actualRng, expectedRng);
+        ASSERT_EQ(std::distance(target->begin(), target->end()), 1);
+        EXPECT_EQ(target->begin()->getCellRef().getCount(false), 3);
+        EXPECT_EQ(target->begin()->getCellRef().getOwner(), owner);
+    }
+    MWWorld::ContainerStore canceled;
+    canceled.prepareInitialInventory(items, owner, store, store); canceled.clear();
+    Misc::Rng::Generator rng(7); const auto before = rng;
+    canceled.fill({}, owner, rng); EXPECT_EQ(rng, before); EXPECT_EQ(canceled.begin(), canceled.end());
+}
+
+TEST(OblivionWorldTest, PreparedInitialInventoryRejectsUnrepresentableCountsAndWrongOwnerBeforePublication)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    ESM::InventoryList items; items.mList = {{std::numeric_limits<int>::min(), ESM::RefId::stringRefId("missing")}};
+    const auto owner = ESM::RefId::stringRefId("initial-domain-owner");
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = world.getWorldModel().getPtrRegistryRevision(); const auto rng = world.getPrng();
+    EXPECT_NO_THROW(MWWorld::PreparedInitialInventory(items, owner, store, incoming)); // Missing roots never use count.
+    ESM::ItemLevList list{}; list.blank(); list.mId = ESM::RefId::stringRefId("initial-domain-list");
+    store.getWritable<ESM::ItemLevList>().insertStatic(list); store.rebuildIdsIndex();
+    items.mList.front().mItem = list.mId;
+    EXPECT_THROW(MWWorld::PreparedInitialInventory(items, owner, store, incoming), std::runtime_error);
+    MWWorld::PreparedInitialInventory empty({}, owner, store, incoming); MWWorld::ContainerStore target;
+    EXPECT_THROW(empty.fill(target, ESM::RefId::stringRefId("wrong"), world.getPrng()), std::logic_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    empty.fill(target, owner, world.getPrng()); EXPECT_EQ(target.begin(), target.end());
+}
+
+TEST(ImplicitPlayerRestoreDeathTest, InitialCreatureInventoryConsumesOwnedListSnapshotAtOriginalPlayerQuery)
+{
+    EXPECT_EXIT(implicitPlayerRestoreProbe(0, false, true), ::testing::ExitedWithCode(0), "");
+}
+
+#include "apps/openmw/mwclass/misc.hpp"
+
+TEST(OblivionWorldTest, PreparedInitialInventoryGoldNormalizationMatchesOrdinaryFill)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    MWClass::Miscellaneous::registerSelf();
+    ESM::Miscellaneous gold{}; gold.blank(); gold.mId = MWWorld::ContainerStore::sGoldId;
+    store.getWritable<ESM::Miscellaneous>().insertStatic(gold);
+    auto pile = gold; pile.mId = ESM::RefId::stringRefId("gold_100"); pile.mData.mValue = 100;
+    store.getWritable<ESM::Miscellaneous>().insertStatic(pile); store.rebuildIdsIndex();
+    const auto owner = ESM::RefId::stringRefId("initial-gold-owner");
+    for (bool reverse : {false, true})
+    {
+        ESM::InventoryList items; items.mList = {{2, pile.mId}, {-3, gold.mId}, {1, pile.mId}};
+        if (reverse) std::reverse(items.mList.begin(), items.mList.end());
+        MWWorld::ContainerStore ordinary, actual;
+        actual.prepareInitialInventory(items, owner, store, incoming);
+        const auto before = world.getPrng();
+        ordinary.fill(items, owner, world.getPrng()); actual.fill({}, owner, world.getPrng());
+        EXPECT_EQ(world.getPrng(), before); EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
+        ASSERT_EQ(std::distance(actual.begin(), actual.end()), 1);
+        EXPECT_EQ(actual.begin()->getCellRef().getRefId(), gold.mId);
+        EXPECT_EQ(actual.begin()->getCellRef().getCount(false), -6);
+        EXPECT_TRUE(actual.begin()->getCellRef().getOwner().empty());
+    }
+}
+
+TEST(OblivionWorldTest, LegacyActorInitialInventoryDomainFailurePreservesOutgoingWorld)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    installSpellCalculationSettings(store);
+    ESM::ItemLevList list{}; list.blank(); list.mId = ESM::RefId::stringRefId("initial-actor-domain-list");
+    store.getWritable<ESM::ItemLevList>().insertStatic(list); store.rebuildIdsIndex();
+    MWWorld::ESMStore incoming;
+    auto npc = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    npc.mId = ESM::RefId::generated(94031); npc.mNpdtType = ESM::NPC::NPC_DEFAULT;
+    npc.mInventory.mList = {{std::numeric_limits<int>::min(), list.mId}};
+    incoming.getWritable<ESM::NPC>().insert(npc);
+    ESM::Creature creature{}; creature.blank(); creature.mId = ESM::RefId::generated(94032);
+    creature.mData.mHealth = 25; creature.mInventory = npc.mInventory;
+    incoming.getWritable<ESM::Creature>().insert(creature);
+    ESM::NpcState npcState; npcState.blank(); npcState.mRef.mRefID = npc.mId;
+    npcState.mCreatureStats.mMissingACDT = true;
+    ESM::CreatureState creatureState; creatureState.blank(); creatureState.mRef.mRefID = creature.mId;
+    creatureState.mCreatureStats.mMissingACDT = true;
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto revision = model.getPtrRegistryRevision(); const auto rng = world.getPrng();
+    const auto* playerData = world.getPlayerPtr().getRefData().getCustomData();
+    const auto expectCountFailure = [&](const ESM::ObjectState& state) {
+        try
+        {
+            (void)model.prepareActorCustomData(state, incoming);
+            FAIL() << "Initial count was accepted";
+        }
+        catch (const std::runtime_error& error)
+        {
+            EXPECT_EQ(std::string(error.what()), "Prepared initial inventory count has no representable magnitude");
+        }
+    };
+    expectCountFailure(npcState); expectCountFailure(creatureState);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getCustomData(), playerData);
+}
+
+TEST(OblivionWorldTest, PreparedInitialGoldKeepsMissingAndUnusableNormalizationTargetsRecoverable)
+{
+    for (bool wrongType : {false, true})
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+        MWClass::Miscellaneous::registerSelf();
+        ESM::Miscellaneous pile{}; pile.blank(); pile.mId = ESM::RefId::stringRefId("gold_100");
+        store.getWritable<ESM::Miscellaneous>().insertStatic(pile);
+        if (wrongType)
+        {
+            ESM::Class unusable{}; unusable.blank(); unusable.mId = MWWorld::ContainerStore::sGoldId;
+            store.getWritable<ESM::Class>().insertStatic(unusable);
+        }
+        store.rebuildIdsIndex();
+        ESM::InventoryList items; items.mList = {{3, pile.mId}};
+        const auto owner = ESM::RefId::stringRefId("initial-gold-failure-owner");
+        MWWorld::ContainerStore ordinary, actual;
+        EXPECT_NO_THROW(actual.prepareInitialInventory(items, owner, store, incoming));
+        const auto before = world.getPrng();
+        ordinary.fill(items, owner, world.getPrng()); actual.fill({}, owner, world.getPrng());
+        EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
+        EXPECT_EQ(actual.begin(), actual.end()); EXPECT_EQ(world.getPrng(), before);
+    }
 }

@@ -243,14 +243,14 @@ namespace
 
         if (state.mVersion <= ESM::MaxOldRestockingFormatVersion)
             fixRestocking(record, state);
-        if (state.mVersion <= ESM::MaxClearModifiersFormatVersion)
+        if (state.mHasCustomState && state.mVersion <= ESM::MaxClearModifiersFormatVersion)
         {
             if constexpr (std::is_same_v<T, ESM::Creature>)
                 MWWorld::convertMagicEffects(state.mCreatureStats, state.mInventory);
             else if constexpr (std::is_same_v<T, ESM::NPC>)
                 MWWorld::convertMagicEffects(state.mCreatureStats, state.mInventory, &state.mNpcStats);
         }
-        else if (state.mVersion <= ESM::MaxOldCreatureStatsFormatVersion)
+        else if (state.mHasCustomState && state.mVersion <= ESM::MaxOldCreatureStatsFormatVersion)
         {
             if constexpr (std::is_same_v<T, ESM::Creature> || std::is_same_v<T, ESM::NPC>)
             {
@@ -258,7 +258,7 @@ namespace
                 MWWorld::convertEnchantmentSlots(state.mCreatureStats, state.mInventory);
             }
         }
-        else if (state.mVersion <= ESM::MaxActiveSpellSlotIndexFormatVersion)
+        else if (state.mHasCustomState && state.mVersion <= ESM::MaxActiveSpellSlotIndexFormatVersion)
         {
             if constexpr (std::is_same_v<T, ESM::Creature> || std::is_same_v<T, ESM::NPC>)
                 MWWorld::convertEnchantmentSlots(state.mCreatureStats, state.mInventory);

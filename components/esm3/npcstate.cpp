@@ -15,6 +15,14 @@ namespace ESM
 
             mCreatureStats.load(esm);
         }
+        else
+        {
+            mInventory = InventoryState{};
+            mNpcStats = NpcStats{};
+            mNpcStats.blank();
+            mCreatureStats = CreatureStats{};
+            mCreatureStats.blank();
+        }
     }
 
     void NpcState::save(ESMWriter& esm, bool inInventory) const

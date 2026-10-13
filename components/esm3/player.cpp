@@ -8,6 +8,7 @@ namespace ESM
 
     void Player::load(ESMReader& esm)
     {
+        mSetWerewolfAcrobatics = false;
         mObject.mRef.loadId(esm, true);
         mObject.load(esm);
 
@@ -75,7 +76,6 @@ namespace ESM
         }
         else
         {
-            mSetWerewolfAcrobatics = false;
             float saveAttributes[ESM::Attribute::Length];
             esm.getHNT(saveAttributes, "WWAT");
             for (int i = 0; i < ESM::Attribute::Length; ++i)

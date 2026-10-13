@@ -2,6 +2,7 @@
 #include <components/esm3/aipackage.hpp>
 #include <components/esm3/aisequence.hpp>
 #include <components/esm3/effectlist.hpp>
+#include <components/esm3/creaturestate.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/loadcont.hpp>
@@ -906,6 +907,120 @@ namespace ESM
             EXPECT_EQ(result.mLandData->mTextures, record.mLandData->mTextures);
             EXPECT_EQ(result.mLandData->mColours, record.mLandData->mColours);
             EXPECT_EQ(result.mLandData->mDataLoaded, record.mLandData->mDataLoaded);
+        }
+
+        template <class State>
+        struct NoCustomActorRecord
+        {
+            State mState;
+            void save(ESMWriter& writer) const { mState.save(writer); }
+            void load(ESMReader& reader)
+            {
+                mState.mRef.loadId(reader, true);
+                mState.load(reader);
+            }
+        };
+
+        TEST(Esm3SaveLoadNoCustomState, ActorPayloadDefaultsReplaceUnwrittenAndPreviouslyLoadedFields)
+        {
+            const auto check = []<class State>() {
+                for (const auto version : getFormats())
+                {
+                    SCOPED_TRACE(version);
+                    NoCustomActorRecord<State> source{}, restored{};
+                    source.mState.blank();
+                    source.mState.mHasCustomState = false;
+                    source.mState.mRef.mRefID = RefId::stringRefId("no-custom-actor");
+                    auto& state = restored.mState;
+                    state.blank();
+                    state.mInventory.mItems.resize(1);
+                    state.mInventory.mEquipmentSlots[0] = 1;
+                    state.mInventory.mSelectedEnchantItem = 0;
+                    auto& stats = state.mCreatureStats;
+                    stats.mActorId = 77;
+                    stats.mDead = true;
+                    stats.mHasAiSettings = true;
+                    stats.mLevel = 55;
+                    stats.mDrawState = 3;
+                    stats.mAttributes[Attribute::Strength].mBase = 123;
+                    stats.mSummonGraveyard = { 42 };
+                    stats.mAiSequence.mPackages.push_back({ ESM::AiSequence::Ai_Travel,
+                        std::make_unique<ESM::AiSequence::AiTravel>() });
+                    stats.mAiSequence.mLastAiPackage = 7;
+                    if constexpr (std::is_same_v<State, NpcState>)
+                    {
+                        state.mNpcStats.mIsWerewolf = true;
+                        state.mNpcStats.mBounty = 91;
+                        state.mNpcStats.mFactions[RefId::stringRefId("stale-faction")].mRank = 2;
+                        state.mNpcStats.mSkills[RefId::stringRefId("stale-skill")].mBase = 73;
+                        state.mNpcStats.mUsedIds.push_back(RefId::stringRefId("stale-used"));
+                    }
+                    saveAndLoadRecord(source, version, restored);
+                    EXPECT_FALSE(state.mHasCustomState);
+                    EXPECT_EQ(state.mRef.mRefID, source.mState.mRef.mRefID);
+                    EXPECT_TRUE(state.mInventory.mItems.empty());
+                    EXPECT_TRUE(state.mInventory.mEquipmentSlots.empty());
+                    EXPECT_FALSE(state.mInventory.mSelectedEnchantItem);
+                    EXPECT_EQ(stats.mActorId, -1);
+                    EXPECT_EQ(stats.mLevel, 1);
+                    EXPECT_FALSE(stats.mDead);
+                    EXPECT_FALSE(stats.mHasAiSettings);
+                    EXPECT_EQ(stats.mDrawState, 0);
+                    EXPECT_TRUE(stats.mAttributes.empty());
+                    EXPECT_TRUE(stats.mSummonGraveyard.empty());
+                    EXPECT_TRUE(stats.mAiSequence.mPackages.empty());
+                    EXPECT_EQ(stats.mAiSequence.mLastAiPackage, -1);
+                    if constexpr (std::is_same_v<State, NpcState>)
+                    {
+                        EXPECT_FALSE(state.mNpcStats.mIsWerewolf);
+                        EXPECT_EQ(state.mNpcStats.mBounty, 0);
+                        EXPECT_TRUE(state.mNpcStats.mFactions.empty());
+                        EXPECT_TRUE(state.mNpcStats.mSkills.empty());
+                        EXPECT_TRUE(state.mNpcStats.mUsedIds.empty());
+                    }
+                }
+            };
+            check.template operator()<NpcState>();
+            check.template operator()<CreatureState>();
+        }
+
+        struct NoCustomPlayerRecord
+        {
+            Player mPlayer;
+            bool mLegacy = false;
+            void save(ESMWriter& writer) const
+            {
+                if (!mLegacy) return mPlayer.save(writer);
+                // Old Player tails may omit saved werewolf skill/attribute arrays.
+                mPlayer.mObject.save(writer);
+                writer.writeCellId(mPlayer.mCellId);
+                writer.writeHNT("LKEP", mPlayer.mLastKnownExteriorPosition);
+                writer.writeHNRefId("SIGN", mPlayer.mBirthsign);
+            }
+            void load(ESMReader& reader) { mPlayer.load(reader); }
+        };
+
+        TEST(Esm3SaveLoadNoCustomState, PlayerHasDefinedWerewolfFlagsWithModernAndOptionalLegacyTails)
+        {
+            for (bool legacy : {false, true})
+            {
+                NoCustomPlayerRecord source{}, restored{};
+                source.mLegacy = legacy;
+                source.mPlayer.mObject.blank();
+                source.mPlayer.mObject.mHasCustomState = false;
+                source.mPlayer.mObject.mRef.mRefID = RefId::stringRefId("Player");
+                source.mPlayer.mCellId = RefId::stringRefId("no-custom-cell");
+                restored.mPlayer.mObject.blank();
+                restored.mPlayer.mObject.mNpcStats.mIsWerewolf = true;
+                restored.mPlayer.mSetWerewolfAcrobatics = true;
+                saveAndLoadRecord(source, legacy ? MaxOldSkillsAndAttributesFormatVersion : CurrentSaveGameFormatVersion,
+                    restored);
+                EXPECT_FALSE(restored.mPlayer.mObject.mHasCustomState);
+                EXPECT_FALSE(restored.mPlayer.mObject.mNpcStats.mIsWerewolf);
+                EXPECT_FALSE(restored.mPlayer.mSetWerewolfAcrobatics);
+                EXPECT_EQ(restored.mPlayer.mObject.mCreatureStats.mActorId, -1);
+                EXPECT_EQ(restored.mPlayer.mCellId, source.mPlayer.mCellId);
+            }
         }
 
         INSTANTIATE_TEST_SUITE_P(FormatVersions, Esm3SaveLoadRecordTest, ValuesIn(getFormats()));

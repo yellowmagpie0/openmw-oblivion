@@ -491,6 +491,7 @@ namespace MWClass
         data.mNpcStats.mBaseInitializationIsPlayer = false;
         data.mBaseStatsPrepared = true;
         data.mDeferredBaseDeathTime = data.mNpcStats.isDead();
+        data.mInventoryStore.prepareInitialInventory(base.mInventory, base.mId, store, incoming);
         return result;
     }
 

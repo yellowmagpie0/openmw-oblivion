@@ -357,15 +357,15 @@ namespace MWWorld
                 // this is the one object we can not silently drop.
                 throw std::runtime_error("invalid player state record (object state)");
             }
-            if (reader.getFormatVersion() <= ESM::MaxClearModifiersFormatVersion)
+            if (player.mObject.mHasCustomState && reader.getFormatVersion() <= ESM::MaxClearModifiersFormatVersion)
                 convertMagicEffects(
                     player.mObject.mCreatureStats, player.mObject.mInventory, &player.mObject.mNpcStats);
-            else if (reader.getFormatVersion() <= ESM::MaxOldCreatureStatsFormatVersion)
+            else if (player.mObject.mHasCustomState && reader.getFormatVersion() <= ESM::MaxOldCreatureStatsFormatVersion)
             {
                 convertStats(player.mObject.mCreatureStats);
                 convertEnchantmentSlots(player.mObject.mCreatureStats, player.mObject.mInventory);
             }
-            else if (reader.getFormatVersion() <= ESM::MaxActiveSpellSlotIndexFormatVersion)
+            else if (player.mObject.mHasCustomState && reader.getFormatVersion() <= ESM::MaxActiveSpellSlotIndexFormatVersion)
                 convertEnchantmentSlots(player.mObject.mCreatureStats, player.mObject.mInventory);
 
             if (!player.mObject.mEnabled)
@@ -378,14 +378,14 @@ namespace MWWorld
             MWBase::Environment::get().getWorldModel()->beginPlayerRestore(getPlayer());
             mPlayer.load(player.mObject);
             MWBase::Environment::get().getWorldModel()->registerPtr(getPlayer());
-            if (reader.mActorIdConverter)
+            if (reader.mActorIdConverter && player.mObject.mHasCustomState)
                 reader.mActorIdConverter->mMappings.emplace(
                     player.mObject.mCreatureStats.mActorId, mPlayer.mRef.getRefNum());
 
             mSaveAttributes = player.mSaveAttributes;
             mSaveSkills = player.mSaveSkills;
 
-            if (player.mObject.mNpcStats.mIsWerewolf)
+            if (player.mObject.mHasCustomState && player.mObject.mNpcStats.mIsWerewolf)
             {
                 if (reader.getFormatVersion() <= ESM::MaxOldSkillsAndAttributesFormatVersion)
                 {

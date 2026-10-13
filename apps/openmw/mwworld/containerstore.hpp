@@ -38,6 +38,7 @@ namespace MWClass
 namespace MWWorld
 {
     class ContainerStore;
+    class PreparedInitialInventory;
 
     template <class PtrType>
     class ContainerStoreIteratorBase;
@@ -281,6 +282,8 @@ namespace MWWorld
 
     private:
         Lists mLists;
+        std::unique_ptr<PreparedInitialInventory> mPreparedInitialInventory;
+        friend class PreparedInitialInventory;
         std::shared_ptr<const char> mPreparedAdditionIdentity;
 
         mutable float mCachedWeight = 0;
@@ -312,7 +315,8 @@ namespace MWWorld
         void swapPreparedContents(ContainerStore& other) noexcept;
 
     private:
-        ContainerStoreIterator addImp(const ConstPtr& ptr, int count, bool markModified = true);
+        ContainerStoreIterator addImp(const ConstPtr& ptr, int count, bool markModified = true,
+            const Ptr* preparedGold = nullptr);
         void addInitialItem(
             const ESM::RefId& id, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng, bool topLevel = true);
         void addInitialItemImp(const MWWorld::Ptr& ptr, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng,
@@ -339,7 +343,7 @@ namespace MWWorld
         ContainerStore& operator=(const ContainerStore&);
         ContainerStore& operator=(ContainerStore&&);
 
-        virtual ~ContainerStore() = default;
+        virtual ~ContainerStore();
 
         virtual std::unique_ptr<ContainerStore> clone()
         {
@@ -460,6 +464,8 @@ namespace MWWorld
         ///< @return true if the two specified objects can stack with each other
 
         void fill(const ESM::InventoryList& items, const ESM::RefId& owner, Misc::Rng::Generator& seed);
+        void prepareInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
+            const ESMStore& content, const ESMStore& incoming);
         ///< Insert items into *this.
 
         void fillNonRandom(const ESM::InventoryList& items, const ESM::RefId& owner, unsigned int seed);
