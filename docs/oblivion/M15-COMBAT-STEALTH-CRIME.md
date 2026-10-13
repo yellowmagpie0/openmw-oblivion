@@ -6,6 +6,79 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 reserve initial inventory stack nodes — 2026-10-13
+
+Initial inventory preparation now owns detached stack nodes for every selectable
+leaf. The bound accounts for scripted splitting, Each lists, shared/cyclic
+sublists, restocking counts and mismatched gold normalization types. Plain
+pristine items reserve one node per leaf regardless of count; chanceNone100
+branches reserve none. Preparation does not draw RNG or query Player level.
+Consumption splices nodes into the destination store at the existing insertion
+phase, preserving reference addresses, count/ownership and selection timing.
+Copies own independent reservoirs; moves and replay guards preserve one-shot
+consumption, including self-move assignment.
+
+Four new tests cover all twelve storable families, destination binding after
+reservoir destruction, 32 nested scripted-selection seeds with full ordinary/
+prepared inventory and RNG comparison, copy/move isolation, INT_MAX plain and
+unreachable counts, and non-Misc gold normalization. Existing 240 selection
+combinations and actual class/restore probes remain in the complete inventory.
+Both normal and ASan/UBSan engine runs pass **1,377 tests**, exact inventory/XML
+agreement, no failures or skips:
+`build/oblivion-compat/m15/S3/initial-stack-storage-normal-02` and
+`initial-stack-storage-sanitized-02`. Tested parent:
+`4326762639b65772c2a4483b1b2fff240e6c0b94` (the preceding charge checkpoint);
+matching before/after source fingerprint:
+`c507a1976a435b43412ced3a2e4dd999f5d09cd6d4b1a64c8635e1d8aea895a9`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`9a7da9386c81f95d0a55de0254c59fa92b1678e80f613b1d804d23cfa85440c8`,
+`a93e464460d7112c4e691595cf2ec413cf98882283c0818c9189acfd28f8e7e5`.
+Sanitizers halt on errors; leak detection is disabled. Offscreen SDL and null
+audio are explicit. Unchanged component/Python code was not retested.
+
+`initial-stack-storage-consumption-negative-02` builds a copied object/archive
+and executable with only reservoir consumption disabled. The final nested
+selection regression fails as required because reserved nodes remain unused;
+production source/binaries are unchanged. This is a mutation control, not a
+historical whole-tree baseline build. Address-identity probes separately verify
+that actual publication transfers the original nodes.
+
+Actual normal/instrumented courses `initial-stack-storage-runtime-normal-02`
+and `initial-stack-storage-runtime-sanitized-01` pass load/F5/F9/F5/quit.
+Editable recipes/generators preserve native state while adding an incoming
+LEVI Each->LEVC selecting two authored-charge BOOKs, followed by direct entries
+that exercise stacking. Input SHA256:
+`13ca749c21f3553341124f846ad12076dae6ec31a9e04d1e6702ab0e4d374da9`.
+Independent semantic checks preserve exact native load groups, stable state,
+shared inventory/NPC/core fields and authored definitions/NPCO entries. The
+native inventory replaces the temporary legacy inventory; transient stack
+counts and RNG timing are established by C++ probes, not rendered captures.
+Normal/instrumented openmw SHA256 respectively:
+`ef116dc8b5d5c0eb0e8a9ebec0b6b49886d6f5946cdeadb14d521c587b093c0d`,
+`7f6cdc226715d6ffeb1167a51085536b4f77128c8b3aa513f8c02873f6b77d06`.
+
+`initial-stack-storage-runtime-continuation-sanitized-04` starts PID45805 after
+normal PID41793 exited and loads its exact final save, SHA256
+`59fa7e09ad5ca99a738d4508d6db1a417a58f696f019dd8b35b1ee23fdf3599e`.
+Its native/shared semantic comparisons and F5/F9/F5/quit pass. All six final
+positive-course captures were reviewed: Imperial Prison scene/HUD with the
+persistent blade and no loading/error dialog. Per-course visual-review records
+retain capture hashes.
+
+Preliminary `initial-stack-storage-normal-01`, runtime-normal-01 and negative-01
+precede the self-move correction and are retained separately. Sanitized-01 was
+interrupted during linking, before tests, to make that correction; only -02
+counts as final automated evidence. Continuation-sanitized-01 was prepared but
+not run. Continuation-sanitized-02 launched before its manifest was ready;
+-03 omitted the launch-slot save and reached explicit file-not-found rejection.
+Both failed fixture attempts are retained and excluded from acceptance.
+
+This closes initial stack-node allocation only. Registry publication, autoequip
+and other resources still do work during loading; full prior-world preservation
+on late failure and the complete S3 audit remain open. The next bounded task is
+registry publication preparation, preserving RefNum generation and registration
+order. S3 remains **in progress**.
+
 ## S3 prepare initial inventory enchantment comparisons — 2026-10-13
 
 Initial inventory preparation now owns the charge result or failure needed for

@@ -669,3 +669,21 @@ reviewed captures and retained failed fixture/baseline attempts. This closes
 initial-stack charge lookup preparation only. Initial insertion allocations,
 autoequip/resource dependencies, registry/scene resources, full late-failure
 prior-world preservation and the full S3 audit remain open.
+
+
+Initial inventory preparation now reserves detached stack nodes and transfers
+them by splice at the original insertion phase. Bounds cover scripted splitting,
+Each selection, duplicate/cyclic sublists and gold normalization; plain counts
+and chanceNone100 branches avoid unnecessary expansion. Selection RNG/Player
+queries remain live. Deep copies own independent reservoirs and moved/consumed
+plans reject replay. Four new probes cover all twelve storable families,
+reference-address stability, 32 seeded nested selections, ownership/lifetime,
+copy/move/self-move, extreme counts and wrong-type gold. Both full 1377-case
+normal/ASan-UBSan engine inventories pass with matching source fingerprints;
+a copied-binary mutation disabling reservoir consumption fails as required.
+Actual normal/instrumented initial-list save/reload courses and a fresh
+instrumented process continuing the exact normal final save pass semantic
+checks and visual review. The newest milestone entry records exact hashes and
+retained interrupted/failed attempts. This closes stack-node allocation only;
+registry publication, autoequip/resource dependencies, full late-failure
+prior-world preservation and the complete S3 audit remain open.

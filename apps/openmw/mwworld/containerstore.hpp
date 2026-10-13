@@ -317,7 +317,8 @@ namespace MWWorld
 
     private:
         ContainerStoreIterator addImp(const ConstPtr& ptr, int count, bool markModified = true,
-            const Ptr* preparedGold = nullptr, const std::function<float()>* preparedCharge = nullptr);
+            const Ptr* preparedGold = nullptr, const std::function<float()>* preparedCharge = nullptr,
+            ContainerStore* preparedStacks = nullptr);
         void addInitialItem(
             const ESM::RefId& id, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng, bool topLevel = true);
         void addInitialItemImp(const MWWorld::Ptr& ptr, const ESM::RefId& owner, int count, Misc::Rng::Generator* prng,
@@ -451,6 +452,7 @@ namespace MWWorld
 
     protected:
         ContainerStoreIterator addNewStack(const ConstPtr& ptr, int count);
+        ContainerStoreIterator movePreparedStack(const ConstPtr& prototype, int count, ContainerStore& source);
         ///< Add the item to this container (do not try to stack it onto existing items)
 
         virtual void flagAsModified();

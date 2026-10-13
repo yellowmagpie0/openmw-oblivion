@@ -4,7 +4,9 @@
 #include <functional>
 #include <limits>
 #include <map>
+#include <set>
 #include <stdexcept>
+#include <utility>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/loadcont.hpp>
@@ -32,6 +34,8 @@ namespace MWWorld
             bool mEach = false;
             bool mAllLevels = false;
             bool mScripted = false;
+            bool mGold = false;
+            std::size_t mPool = 0;
             int mChanceNone = 0;
             std::vector<ESM::LevelledListBase::LevelItem> mItems;
             std::unique_ptr<ManualRef> mRef;
@@ -56,6 +60,7 @@ namespace MWWorld
             auto [entry, inserted] = data->mNodes.try_emplace(id);
             if (!inserted) return; // Shared sublists and cycles have one snapshot.
             auto& node = entry->second;
+            node.mPool = data->mNodes.size() - 1;
             const int type = content.findForRestore(id, incoming);
             node.mExists = type != 0;
             const ESM::LevelledListBase* list = nullptr;
@@ -83,7 +88,8 @@ namespace MWWorld
                 node.mRef = std::make_unique<ManualRef>(content, id, 1, &incoming);
                 const auto& ptr = node.mRef->getPtr();
                 node.mScripted = !ptr.getClass().getScript(ptr).empty();
-                gold = gold || ptr.getClass().isGold(ptr);
+                node.mGold = ptr.getClass().isGold(ptr);
+                gold = gold || node.mGold;
                 ptr.getCellRef().setOwner(owner);
                 const auto& enchantment = ptr.getClass().getEnchantment(ptr);
                 if (!enchantment.empty())
@@ -117,13 +123,98 @@ namespace MWWorld
                 // normalization target only if that branch is consumed.
             }
         }
+        // Reserve stack nodes for every selectable leaf without drawing RNG or
+        // querying the Player. Pristine unscripted items share a single stack;
+        // scripted items need a node per possible unit. A mismatched gold
+        // normalization type cannot be found by the ordinary gold stacking scan.
+        std::vector<std::size_t> counts(data->mNodes.size());
+        for (const auto& item : items.mList)
+        {
+            if (!item.mCount) continue;
+            const auto& root = data->mNodes.at(item.mItem);
+            std::set<ESM::RefId> visited;
+            const std::function<void(const ESM::RefId&, bool)> reserve = [&](const ESM::RefId& id, bool select) {
+                if (!visited.insert(id).second) return;
+                const auto& node = data->mNodes.at(id);
+                if (node.mList)
+                {
+                    if (select && node.mChanceNone < 100)
+                        for (const auto& entry : node.mItems) reserve(entry.mId, true);
+                    return;
+                }
+                const auto* prototype = node.mGold ? data->mGold.get() : node.mRef.get();
+                if (!prototype || !ContainerStore::isStorableType(prototype->getPtr().getType())) return;
+                const bool goldStacks = node.mGold && node.mRef
+                    && prototype->getPtr().getType() == node.mRef->getPtr().getType();
+                auto& count = counts[node.mPool];
+                if (goldStacks || (!node.mGold && !node.mScripted))
+                    count = 1;
+                else
+                {
+                    const auto extra = (root.mEach || node.mScripted) ? std::size_t(std::abs(item.mCount)) : 1;
+                    if (extra > std::numeric_limits<std::size_t>::max() - count)
+                        throw std::length_error("Prepared initial inventory stack capacity overflow");
+                    count += extra;
+                }
+            };
+            reserve(item.mItem, root.mItemList);
+        }
+        mStacks.resize(counts.size());
+        for (const auto& [id, node] : data->mNodes)
+        {
+            if (!counts[node.mPool]) continue;
+            const auto& prototype = node.mGold ? data->mGold->getPtr() : node.mRef->getPtr();
+            auto pool = std::make_unique<ContainerStore>();
+            for (std::size_t i = 0; i < counts[node.mPool]; ++i) pool->addNewStack(prototype, 1);
+            mStacks[node.mPool] = std::move(pool);
+        }
         mCandidates.resize(capacity); // Copies retain full workspace, even before first selection.
         mData = std::move(data);
     }
 
+    PreparedInitialInventory::~PreparedInitialInventory() = default;
+    PreparedInitialInventory::PreparedInitialInventory(PreparedInitialInventory&&) noexcept = default;
+    PreparedInitialInventory& PreparedInitialInventory::operator=(PreparedInitialInventory&& other) noexcept
+    {
+        if (this != &other)
+        {
+            mData = std::move(other.mData);
+            mCandidates = std::move(other.mCandidates);
+            mStacks = std::move(other.mStacks);
+            mConsumed = std::exchange(other.mConsumed, true);
+        }
+        return *this;
+    }
+
+    PreparedInitialInventory::PreparedInitialInventory(const PreparedInitialInventory& other)
+        : mData(other.mData), mCandidates(other.mCandidates), mConsumed(other.mConsumed)
+    {
+        mStacks.reserve(other.mStacks.size());
+        for (const auto& pool : other.mStacks)
+            mStacks.push_back(pool ? std::make_unique<ContainerStore>(*pool) : nullptr);
+    }
+
+    PreparedInitialInventory& PreparedInitialInventory::operator=(const PreparedInitialInventory& other)
+    {
+        if (this != &other)
+        {
+            PreparedInitialInventory copy(other);
+            *this = std::move(copy);
+        }
+        return *this;
+    }
+
+    std::size_t PreparedInitialInventory::pendingStackCount() const
+    {
+        std::size_t result = 0;
+        for (const auto& pool : mStacks)
+            if (pool) result += std::distance(pool->begin(), pool->end());
+        return result;
+    }
+
     void PreparedInitialInventory::fill(ContainerStore& target, const ESM::RefId& owner, Misc::Rng::Generator& prng)
     {
-        if (mConsumed || owner != mData->mOwner)
+        if (!mData || mConsumed || owner != mData->mOwner)
             throw std::logic_error("Prepared initial inventory consumed or bound to a different owner");
         mConsumed = true;
         const auto select = [&](ESM::RefId id) -> const Data::Node* {
@@ -156,7 +247,8 @@ namespace MWWorld
         const auto insert = [&](const Data::Node& node, int count) {
             if (!node.mRef) throw std::logic_error(node.mError.empty() ? "Initial item is not storable" : node.mError);
             const auto add = [&](int quantity) {
-                auto item = target.addImp(node.mRef->getPtr(), quantity, false, &gold, &node.mCharge);
+                auto item = target.addImp(node.mRef->getPtr(), quantity, false, &gold, &node.mCharge,
+                    mStacks[node.mPool].get());
                 MWBase::Environment::get().getWorldModel()->registerPtr(*item);
             };
             if (node.mScripted)

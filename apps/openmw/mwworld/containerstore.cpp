@@ -707,11 +707,14 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
 
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addImp(
     const ConstPtr& ptr, int count, bool markModified, const Ptr* preparedGold,
-    const std::function<float()>* preparedCharge)
+    const std::function<float()>* preparedCharge, ContainerStore* preparedStacks)
 {
     if (markModified)
         resolve();
     int type = getType(ptr);
+    const auto newStack = [&](const ConstPtr& prototype) {
+        return preparedStacks ? movePreparedStack(prototype, count, *preparedStacks) : addNewStack(prototype, count);
+    };
 
     const MWWorld::ESMStore& esmStore = *MWBase::Environment::get().getESMStore();
 
@@ -738,10 +741,10 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addImp(
         {
             if (preparedGold->isEmpty())
                 throw std::logic_error("Prepared initial inventory gold definition is unavailable");
-            return addNewStack(*preparedGold, count);
+            return newStack(*preparedGold);
         }
         MWWorld::ManualRef ref(esmStore, MWWorld::ContainerStore::sGoldId, count);
-        return addNewStack(ref.getPtr(), count);
+        return newStack(ref.getPtr());
     }
 
     // determine whether to stack or not
@@ -762,7 +765,7 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addImp(
         }
     }
     // if we got here, this means no stacking
-    return addNewStack(ptr, count);
+    return newStack(ptr);
 }
 
 MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addNewStack(const ConstPtr& ptr, int count)
@@ -829,6 +832,44 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::addNewStack(const Const
 
     flagAsModified();
     return it;
+}
+
+MWWorld::ContainerStoreIterator MWWorld::ContainerStore::movePreparedStack(
+    const ConstPtr& prototype, int count, ContainerStore& source)
+{
+    if (&source == this)
+        throw std::logic_error("Prepared stack storage cannot be its own destination");
+    ContainerStoreIterator result = end();
+#define OPENMW_MOVE_INITIAL_STACK(Type, Member) \
+    case Type: \
+    { \
+        auto& pending = source.mLists.Member.mList; \
+        if (pending.empty() || pending.front().mRef.getRefId() != prototype.getCellRef().getRefId()) \
+            throw std::logic_error("Prepared initial inventory stack storage is unavailable"); \
+        auto it = pending.begin(); \
+        mLists.Member.mList.splice(mLists.Member.mList.end(), pending, it); \
+        result = ContainerStoreIterator(this, it); \
+        break; \
+    }
+    switch (getType(prototype))
+    {
+        OPENMW_MOVE_INITIAL_STACK(Type_Potion, mPotions)
+        OPENMW_MOVE_INITIAL_STACK(Type_Apparatus, mAppas)
+        OPENMW_MOVE_INITIAL_STACK(Type_Armor, mArmors)
+        OPENMW_MOVE_INITIAL_STACK(Type_Book, mBooks)
+        OPENMW_MOVE_INITIAL_STACK(Type_Clothing, mClothes)
+        OPENMW_MOVE_INITIAL_STACK(Type_Ingredient, mIngreds)
+        OPENMW_MOVE_INITIAL_STACK(Type_Light, mLights)
+        OPENMW_MOVE_INITIAL_STACK(Type_Lockpick, mLockpicks)
+        OPENMW_MOVE_INITIAL_STACK(Type_Miscellaneous, mMiscItems)
+        OPENMW_MOVE_INITIAL_STACK(Type_Probe, mProbes)
+        OPENMW_MOVE_INITIAL_STACK(Type_Repair, mRepairs)
+        OPENMW_MOVE_INITIAL_STACK(Type_Weapon, mWeapons)
+    }
+#undef OPENMW_MOVE_INITIAL_STACK
+    result->getCellRef().setCount(count);
+    flagAsModified();
+    return result;
 }
 
 void MWWorld::ContainerStore::setSelectedEnchantItem(const ContainerStoreIterator& iterator)

@@ -17716,3 +17716,146 @@ TEST(EnchantmentRestoreDeathTest, RoundedProductAndEffectArithmeticRejectOutOfDo
 {
     EXPECT_EXIT(enchantmentRestoreProbe(6), ::testing::ExitedWithCode(0), "");
 }
+
+#include "apps/openmw/mwclass/classes.hpp"
+
+namespace
+{
+    struct InitialStackStorageProbe : MWWorld::ContainerStore
+    {
+        using ContainerStore::addNewStack;
+        using ContainerStore::movePreparedStack;
+    };
+}
+
+TEST(OblivionWorldTest, PreparedInitialStackSpliceRetainsReferenceIdentityAcrossAllItemFamilies)
+{
+    MWClass::registerClasses();
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    const auto revision = world.getWorldModel().getPtrRegistryRevision();
+    unsigned serial = 95100;
+    const auto check = [&]<class T>() {
+        T record{}; record.blank(); record.mId = ESM::RefId::generated(serial++);
+        store.getWritable<T>().insert(record); store.rebuildIdsIndex();
+        MWWorld::ManualRef prototype(store, record.mId);
+        const auto owner = ESM::RefId::stringRefId("splice-owner");
+        prototype.getPtr().getCellRef().setOwner(owner);
+        InitialStackStorageProbe target;
+        MWWorld::Ptr published;
+        {
+            InitialStackStorageProbe source;
+            auto staged = *source.addNewStack(prototype.getPtr(), 1);
+            const auto* address = staged.getBase();
+            EXPECT_THROW(source.movePreparedStack(prototype.getPtr(), 2, source), std::logic_error);
+            published = *target.movePreparedStack(prototype.getPtr(), -3, source);
+            EXPECT_EQ(published.getBase(), address);
+            EXPECT_EQ(published.getContainerStore(), &target);
+            EXPECT_EQ(source.begin(), source.end());
+            EXPECT_THROW(target.movePreparedStack(prototype.getPtr(), 2, source), std::logic_error);
+        }
+        EXPECT_EQ(published.getCellRef().getCount(false), -3);
+        EXPECT_EQ(published.getCellRef().getOwner(), owner);
+        EXPECT_EQ(published.mRef->mWorldModel, nullptr);
+        EXPECT_EQ(std::distance(target.begin(), target.end()), 1);
+    };
+    check.template operator()<ESM::Potion>(); check.template operator()<ESM::Apparatus>();
+    check.template operator()<ESM::Armor>(); check.template operator()<ESM::Book>();
+    check.template operator()<ESM::Clothing>(); check.template operator()<ESM::Ingredient>();
+    check.template operator()<ESM::Light>(); check.template operator()<ESM::Lockpick>();
+    check.template operator()<ESM::Miscellaneous>(); check.template operator()<ESM::Probe>();
+    check.template operator()<ESM::Repair>(); check.template operator()<ESM::Weapon>();
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+}
+
+TEST(OblivionWorldTest, PreparedInitialStackPoolsBoundNestedScriptedSelectionAndOwnCopyMoveResources)
+{
+    MWClass::registerClasses();
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    ESM::Weapon plain{}; plain.blank(); plain.mId = ESM::RefId::stringRefId("pooled-plain");
+    plain.mData.mType = ESM::Weapon::LongBladeOneHand; plain.mData.mHealth = 25;
+    auto scripted = plain; scripted.mId = ESM::RefId::stringRefId("pooled-scripted");
+    scripted.mScript = ESM::RefId::stringRefId("pooled-script");
+    store.getWritable<ESM::Weapon>().insertStatic(plain); store.getWritable<ESM::Weapon>().insertStatic(scripted);
+    ESM::CreatureLevList nested{}; nested.blank(); nested.mId = ESM::RefId::stringRefId("pooled-nested");
+    nested.mList = {{plain.mId, 0}, {scripted.mId, 0}, {scripted.mId, 0}};
+    store.getWritable<ESM::CreatureLevList>().insertStatic(nested);
+    ESM::ItemLevList root{}; root.blank(); root.mId = ESM::RefId::stringRefId("pooled-root");
+    root.mFlags = ESM::ItemLevList::Each; root.mList = {{nested.mId, 0}, {nested.mId, 0}};
+    store.getWritable<ESM::ItemLevList>().insertStatic(root); store.rebuildIdsIndex();
+    ESM::InventoryList items; items.mList = {{-5, root.mId}, {3, scripted.mId}};
+    const auto owner = ESM::RefId::stringRefId("pooled-owner");
+    const auto revision = world.getWorldModel().getPtrRegistryRevision(); const auto rng = world.getPrng();
+    MWWorld::PreparedInitialInventory original(items, owner, store, incoming);
+    EXPECT_EQ(original.pendingStackCount(), 9u); // Eight possible scripted units and one plain stack.
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision); EXPECT_EQ(world.getPrng(), rng);
+    for (unsigned seed = 0; seed < 32; ++seed)
+    {
+        SCOPED_TRACE(seed);
+        auto copy = original;
+        auto& self = copy;
+        copy = std::move(self);
+        ASSERT_EQ(copy.pendingStackCount(), 9u);
+        MWWorld::PreparedInitialInventory assigned({}, owner, store, incoming); assigned = copy;
+        auto moved = std::move(assigned);
+        MWWorld::ContainerStore actual, ordinary;
+        Misc::Rng::Generator expectedRng(seed), actualRng(seed);
+        EXPECT_THROW(assigned.fill(actual, owner, actualRng), std::logic_error);
+        ordinary.fill(items, owner, expectedRng); moved.fill(actual, owner, actualRng);
+        EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary)); EXPECT_EQ(actualRng, expectedRng);
+        EXPECT_EQ(moved.pendingStackCount(), 9u - std::distance(actual.begin(), actual.end()));
+        EXPECT_EQ(copy.pendingStackCount(), 9u); EXPECT_EQ(original.pendingStackCount(), 9u);
+        EXPECT_THROW(moved.fill(actual, owner, actualRng), std::logic_error);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInitialStackReservationDoesNotExpandPlainCountsOrUnreachableLists)
+{
+    MWClass::registerClasses();
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId::stringRefId("pooled-large");
+    item.mData.mType = ESM::Weapon::LongBladeOneHand; item.mData.mHealth = 25;
+    auto scripted = item; scripted.mId = ESM::RefId::stringRefId("pooled-unreachable-script");
+    scripted.mScript = ESM::RefId::stringRefId("pooled-script");
+    store.getWritable<ESM::Weapon>().insertStatic(item); store.getWritable<ESM::Weapon>().insertStatic(scripted);
+    ESM::ItemLevList root{}; root.blank(); root.mId = ESM::RefId::stringRefId("pooled-never");
+    root.mFlags = ESM::ItemLevList::Each; root.mChanceNone = 100;
+    root.mList = {{scripted.mId, 0}, {root.mId, 0}};
+    store.getWritable<ESM::ItemLevList>().insertStatic(root); store.rebuildIdsIndex();
+    const auto owner = ESM::RefId::stringRefId("pooled-large-owner");
+    ESM::InventoryList items; items.mList = {{std::numeric_limits<int>::max(), item.mId}};
+    MWWorld::PreparedInitialInventory plain(items, owner, store, incoming);
+    EXPECT_EQ(plain.pendingStackCount(), 1u);
+    MWWorld::ContainerStore target; plain.fill(target, owner, world.getPrng());
+    EXPECT_EQ(target.begin()->getCellRef().getCount(), std::numeric_limits<int>::max());
+    EXPECT_EQ(plain.pendingStackCount(), 0u);
+    items.mList.front().mItem = root.mId;
+    MWWorld::PreparedInitialInventory unreachable(items, owner, store, incoming);
+    EXPECT_EQ(unreachable.pendingStackCount(), 0u); // Do not run two billion ordinary Each RNG draws.
+}
+
+TEST(OblivionWorldTest, PreparedInitialStackCapacityPreservesNonMiscGoldNormalization)
+{
+    MWClass::registerClasses();
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore(); MWWorld::ESMStore incoming;
+    ESM::Miscellaneous pile{}; pile.blank(); pile.mId = ESM::RefId::stringRefId("gold_100");
+    store.getWritable<ESM::Miscellaneous>().insertStatic(pile);
+    store.getWritable<ESM::Miscellaneous>().eraseStatic(MWWorld::ContainerStore::sGoldId);
+    ESM::Weapon replacement{}; replacement.blank(); replacement.mId = MWWorld::ContainerStore::sGoldId;
+    replacement.mData.mType = ESM::Weapon::LongBladeOneHand; replacement.mData.mHealth = 25;
+    store.getWritable<ESM::Weapon>().insertStatic(replacement);
+    ESM::ItemLevList root{}; root.blank(); root.mId = ESM::RefId::stringRefId("pooled-gold-root");
+    root.mFlags = ESM::ItemLevList::Each; root.mList = {{pile.mId, 0}};
+    store.getWritable<ESM::ItemLevList>().insertStatic(root); store.rebuildIdsIndex();
+    ESM::InventoryList items; items.mList = {{2, pile.mId}, {-3, pile.mId}, {4, root.mId}};
+    const auto owner = ESM::RefId::stringRefId("pooled-gold-owner");
+    MWWorld::PreparedInitialInventory prepared(items, owner, store, incoming);
+    EXPECT_EQ(prepared.pendingStackCount(), 6u);
+    MWWorld::ContainerStore actual, ordinary; Misc::Rng::Generator actualRng(7), expectedRng(7);
+    ordinary.fill(items, owner, expectedRng); prepared.fill(actual, owner, actualRng);
+    EXPECT_EQ(actualRng, expectedRng); EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
+    EXPECT_EQ(std::distance(actual.begin(), actual.end()), 6); EXPECT_EQ(prepared.pendingStackCount(), 0u);
+}
