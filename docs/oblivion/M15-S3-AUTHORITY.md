@@ -847,3 +847,21 @@ captures were reviewed. Evidence is S3/decoded-records-*02. Runtime01 mixed
 provenance is explicitly excluded. Class/script/Lua initialization, cell tracking,
 remaining manager records, scene setup, missing dependencies, full prior-world
 late-failure preservation and the full S3 audit remain open.
+
+Admission now prepares decoded dialogue topics/reactions, stolen owner/faction
+maps and filtered death-count maps before teardown. One-clear, lifetime and
+one-shot guards reject invalid application; original record-position union,
+replacement and count-overwrite behavior remains. DIAL filtering is content-only;
+death lookup sees incoming/static winning signatures, not outgoing dynamics.
+Three new tests include eight admission ordering/rejection cases; both full
+normal and ASan/UBSan engine inventories pass 1410 cases. Four guarded production
+map applications pass with C++ new disabled; ordinary insertion/copying fails
+both selected negative-control tests. Normal/instrumented reload and fresh
+instrumented continuation preserve exact nonempty auxiliary maps alongside the
+prior native/shared state fixtures; Morrowind isolation and seven capture reviews
+pass. Evidence is S3/manager-maps-*02, with fingerprints and retained fixture
+failure/interrupted build recorded in the milestone entry. Journal/global scripts,
+locals/Lua callbacks, cell tracking, scene setup, other managers, consumed missing
+dependencies, full prior-world late-failure preservation and complete S3 acceptance
+remain open. These checks establish map persistence, not crime/death gameplay or
+whole-load transactionality.

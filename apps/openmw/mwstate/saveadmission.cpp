@@ -278,7 +278,9 @@ namespace
         const std::function<void(const ESM::GlobalMap&)>& prepareGlobalMap,
         const std::function<void(const ESM::WeatherState&)>& prepareWeather,
         std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems, ESM::QuickKeys& quickkeys,
-        std::vector<ESM::ProjectileState>& projectiles, std::vector<ESM::MagicBoltState>& bolts)
+        std::vector<ESM::ProjectileState>& projectiles, std::vector<ESM::MagicBoltState>& bolts,
+        std::optional<ESM::DialogueState>& dialogue, std::optional<ESM::StolenItems>& stolen,
+        std::optional<std::map<ESM::RefId, int>>& deaths)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -323,9 +325,11 @@ namespace
                 break;
             }
             case ESM::REC_DIAS:
+            {
                 singleton();
-                readSharedState<ESM::DialogueState>(reader);
+                dialogue.emplace(readSharedState<ESM::DialogueState>(reader));
                 break;
+            }
             case ESM::REC_JOUR:
             {
                 const auto state = readSharedState<ESM::JournalEntry>(reader);
@@ -395,17 +399,19 @@ namespace
             case ESM::REC_STLN:
             {
                 singleton();
-                const auto state = readSharedState<ESM::StolenItems>(reader);
+                auto state = readSharedState<ESM::StolenItems>(reader);
                 for (const auto& [id, owners] : state.mStolenItems)
                     for (const auto& [owner, count] : owners)
                         if (count < 0)
                             throw std::runtime_error("Saved game stolen item count is negative");
+                stolen.emplace(std::move(state));
                 break;
             }
             case ESM::REC_DCOU:
             {
                 singleton();
                 std::set<ESM::RefId> actors;
+                deaths.emplace();
                 while (reader.isNextSub("ID__"))
                 {
                     const auto id = reader.getRefId();
@@ -413,6 +419,7 @@ namespace
                     reader.getHNT(count, "COUN");
                     if (count < 0 || !actors.insert(id).second)
                         throw std::runtime_error("Saved game death count is negative or duplicated");
+                    deaths->emplace(id, count);
                 }
                 break;
             }
@@ -562,7 +569,10 @@ namespace MWState
         const std::function<bool(const ESM::RefId&)>& restoreCell,
         const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference,
         const std::function<void(const ESM::ObjectState&)>& preparePlayerReference,
-        MWWorld::PreparedSaveRecords* decodedRecords)
+        MWWorld::PreparedSaveRecords* decodedRecords,
+        const std::function<void(ESM::DialogueState&&, const MWWorld::ESMStore&)>& prepareDialogue,
+        const std::function<void(ESM::StolenItems&&)>& prepareStolen,
+        const std::function<void(std::map<ESM::RefId, int>&&, const MWWorld::ESMStore&)>& prepareDeaths)
     {
         const auto start = reader.getContext();
         try
@@ -638,6 +648,9 @@ namespace MWState
             std::map<ESM::FormKey, SharedBounty> sharedBounties;
             std::optional<int> sharedPlayerFame;
             ESM::QuickKeys quickkeys;
+            std::optional<ESM::DialogueState> dialogue;
+            std::optional<ESM::StolenItems> stolen;
+            std::optional<std::map<ESM::RefId, int>> deaths;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -688,7 +701,8 @@ namespace MWState
                         decoded = true;
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
-                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, quickkeys, projectiles, bolts))
+                                 prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, quickkeys, projectiles, bolts,
+                                 dialogue, stolen, deaths))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -1006,6 +1020,9 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys)
                     prepareQuickKeys(quickkeys, *shared, &native);
+                if (prepareDialogue && dialogue) prepareDialogue(std::move(*dialogue), *shared);
+                if (prepareStolen && stolen) prepareStolen(std::move(*stolen));
+                if (prepareDeaths && deaths) prepareDeaths(std::move(*deaths), *shared);
                 if (prepareCellReference && shared)
                     for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)
@@ -1027,6 +1044,9 @@ namespace MWState
                     prepareProjectiles(projectiles, bolts, *shared);
                 if (prepareQuickKeys && shared)
                     prepareQuickKeys(quickkeys, *shared, nullptr);
+                if (prepareDialogue && dialogue && shared) prepareDialogue(std::move(*dialogue), *shared);
+                if (prepareStolen && stolen) prepareStolen(std::move(*stolen));
+                if (prepareDeaths && deaths && shared) prepareDeaths(std::move(*deaths), *shared);
                 if (prepareCellReference && shared)
                     for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)

@@ -106,6 +106,7 @@ namespace MWMechanics
         ///< Simulate the passing of time
 
         int countDeaths(const ESM::RefId& id) const;
+        void mergeDeathCounts(std::map<ESM::RefId, int>& counts);
         ///< Return the number of deaths for actors with the given ID.
 
         bool isAttackPreparing(const MWWorld::Ptr& ptr) const;

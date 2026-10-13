@@ -2,6 +2,7 @@
 #define GAME_MWMECHANICS_MECHANICSMANAGERIMP_H
 
 #include <components/settings/settings.hpp>
+#include <memory>
 
 #include "../mwbase/mechanicsmanager.hpp"
 
@@ -37,6 +38,8 @@ namespace MWMechanics
         typedef std::map<Owner, int> OwnerMap; // < Owner, number of stolen items with this id from this owner >
         typedef std::map<ESM::RefId, OwnerMap> StolenItemsMap;
         StolenItemsMap mStolenItems;
+        std::shared_ptr<const char> mRestoreLifetime = std::make_shared<const char>();
+        std::uint64_t mRestoreEpoch = 0;
 
     public:
         void buildPlayer();
@@ -189,6 +192,9 @@ namespace MWMechanics
         void write(ESM::ESMWriter& writer, Loading::Listener& listener) const override;
 
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
+        std::function<bool()> prepareStolenItems(ESM::StolenItems&& state) override;
+        std::function<bool()> prepareDeathCounts(
+            std::map<ESM::RefId, int>&& counts, const MWWorld::ESMStore& incoming) override;
 
         void clear() override;
 

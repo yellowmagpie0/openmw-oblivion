@@ -15,6 +15,8 @@
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/objectstate.hpp>
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/stolenitems.hpp>
 #include <components/esm3/npcstate.hpp>
 #include <components/esm3/creaturestate.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -498,6 +500,9 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::function<void()> preparedGlobalMap;
         std::function<bool()> preparedWeather;
         std::function<bool()> preparedProjectiles;
+        std::function<bool()> preparedDialogue;
+        std::function<bool()> preparedStolen;
+        std::function<bool()> preparedDeaths;
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
         MWWorld::WorldModel::PreparedCellReferences preparedCellReferences;
@@ -559,7 +564,18 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                         MWWorld::WorldModel::PreparedInventoryKey{ref.mRefNum, ref.mRefID}, std::move(prepared));
             }, [&](const ESM::ObjectState& state) {
                 preparedPlayerReference = std::make_unique<MWWorld::LiveCellRefBase::PreparedState>(state);
-            }, decodedRecords.get());
+            }, decodedRecords.get(), [&](ESM::DialogueState&& state, const MWWorld::ESMStore& incoming) {
+                preparedDialogue = MWBase::Environment::get().getDialogueManager()->prepareDialogueState(
+                    std::move(state), incoming);
+                if (!preparedDialogue) throw std::runtime_error("Dialogue manager cannot prepare saved state");
+            }, [&](ESM::StolenItems&& state) {
+                preparedStolen = MWBase::Environment::get().getMechanicsManager()->prepareStolenItems(std::move(state));
+                if (!preparedStolen) throw std::runtime_error("Mechanics manager cannot prepare stolen items");
+            }, [&](std::map<ESM::RefId, int>&& state, const MWWorld::ESMStore& incoming) {
+                preparedDeaths = MWBase::Environment::get().getMechanicsManager()->prepareDeathCounts(
+                    std::move(state), incoming);
+                if (!preparedDeaths) throw std::runtime_error("Mechanics manager cannot prepare death counts");
+            });
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
@@ -635,8 +651,13 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     break;
 
                 case ESM::REC_DIAS:
-
-                    MWBase::Environment::get().getDialogueManager()->readRecord(reader, n.toInt());
+                    if (preparedDialogue)
+                    {
+                        reader.skipRecord();
+                        auto apply = std::move(preparedDialogue);
+                        if (!apply()) throw std::runtime_error("Prepared dialogue no longer matches cleared manager");
+                    }
+                    else MWBase::Environment::get().getDialogueManager()->readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_ALCH:
@@ -734,9 +755,23 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     break;
 
                 case ESM::REC_DCOU:
-                case ESM::REC_STLN:
-
+                    if (preparedDeaths)
+                    {
+                        reader.skipRecord();
+                        auto apply = std::move(preparedDeaths);
+                        if (!apply()) throw std::runtime_error("Prepared deaths no longer match cleared manager");
+                        break;
+                    }
                     MWBase::Environment::get().getMechanicsManager()->readRecord(reader, n.toInt());
+                    break;
+                case ESM::REC_STLN:
+                    if (preparedStolen)
+                    {
+                        reader.skipRecord();
+                        auto apply = std::move(preparedStolen);
+                        if (!apply()) throw std::runtime_error("Prepared stolen items no longer match cleared manager");
+                    }
+                    else MWBase::Environment::get().getMechanicsManager()->readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_INPU:

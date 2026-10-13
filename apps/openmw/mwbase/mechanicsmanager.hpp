@@ -2,6 +2,7 @@
 #define GAME_MWBASE_MECHANICSMANAGER_H
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
@@ -22,6 +23,7 @@ namespace ESM
     class RefId;
     class ESMReader;
     class ESMWriter;
+    struct StolenItems;
 }
 
 namespace MWMechanics
@@ -34,6 +36,7 @@ namespace MWWorld
     class Ptr;
     class CellStore;
     class CellRef;
+    class ESMStore;
 }
 
 namespace Loading
@@ -255,6 +258,9 @@ namespace MWBase
         virtual void write(ESM::ESMWriter& writer, Loading::Listener& listener) const = 0;
 
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
+        virtual std::function<bool()> prepareStolenItems(ESM::StolenItems&& state) { return {}; }
+        virtual std::function<bool()> prepareDeathCounts(
+            std::map<ESM::RefId, int>&& counts, const MWWorld::ESMStore& incoming) { return {}; }
 
         virtual void clear() = 0;
 

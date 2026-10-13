@@ -3450,3 +3450,53 @@ TEST(SaveAdmissionTest, PlayerReferencePayloadPreparesBeforeInventoryAndPublicat
         EXPECT_EQ(reader.getFileOffset(), before); EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
 }
+
+TEST(SaveAdmissionTest, ManagerMapPreparationSeesAllDefinitionsBeforePublicationAndRewindsOnFailure)
+{
+    MWWorld::ESMStore content;
+    for (bool native : {false, true}) for (int reject : {0, 1, 2, 3})
+    {
+        SCOPED_TRACE(native);
+        SCOPED_TRACE(reject);
+        const auto id = ESM::RefId(ESM::GeneratedRefId{150});
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            ESM::DialogueState dialogue;
+            dialogue.mKnownTopics = {ESM::RefId::stringRefId("known"), ESM::RefId::stringRefId("removed")};
+            dialogue.mChangedFactionReaction[ESM::RefId::stringRefId("faction")][ESM::RefId::stringRefId("other")] = -7;
+            writer.startRecord(ESM::REC_DIAS); dialogue.save(writer); writer.endRecord(ESM::REC_DIAS);
+            ESM::StolenItems stolen; stolen.mStolenItems[id][{ESM::RefId::stringRefId("owner"), false}] = 5;
+            writer.startRecord(ESM::REC_STLN); stolen.write(writer); writer.endRecord(ESM::REC_STLN);
+            writer.startRecord(ESM::REC_DCOU); writer.writeHNCRefId("ID__", id); writer.writeHNT("COUN", 9);
+            writer.endRecord(ESM::REC_DCOU);
+            // Definition intentionally follows its auxiliary consumers.
+            ESM::Weapon base{}; base.blank(); base.mId = id;
+            writer.startRecord(ESM::REC_WEAP); base.save(writer, false); writer.endRecord(ESM::REC_WEAP);
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        const auto before = reader.getFileOffset(); bool published = false;
+        std::vector<int> prepared;
+        const auto callback = [&](int step) {
+            EXPECT_FALSE(published); prepared.push_back(step);
+            if (reject == step) throw std::runtime_error("manager preparation rejected");
+        };
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { published = true; }, {}, {}, {}, {}, {}, {},
+            [&](auto) { published = true; }, {}, {}, {}, nullptr,
+            [&](ESM::DialogueState&& state, const MWWorld::ESMStore& incoming) {
+                EXPECT_EQ(state.mKnownTopics.size(), 2u); EXPECT_TRUE(incoming.get<ESM::Weapon>().search(id));
+                EXPECT_EQ(state.mChangedFactionReaction.at(ESM::RefId::stringRefId("faction")).at(ESM::RefId::stringRefId("other")), -7);
+                callback(1);
+            }, [&](ESM::StolenItems&& state) {
+                EXPECT_EQ(state.mStolenItems.at(id).at({ESM::RefId::stringRefId("owner"), false}), 5);
+                callback(2);
+            }, [&](std::map<ESM::RefId, int>&& state, const MWWorld::ESMStore& incoming) {
+                EXPECT_EQ(state.at(id), 9); EXPECT_TRUE(incoming.get<ESM::Weapon>().search(id)); callback(3);
+            }); };
+        if (reject) { EXPECT_THROW(admit(), std::runtime_error); }
+        else { EXPECT_NO_THROW(admit()); }
+        EXPECT_EQ(prepared.size(), reject ? static_cast<std::size_t>(reject) : 3u);
+        EXPECT_EQ(published, reject == 0); EXPECT_EQ(reader.getFileOffset(), before);
+        EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <list>
+#include <limits>
 #include <optional>
 #include <sstream>
 
@@ -72,6 +73,7 @@ namespace MWDialogue
 
     void DialogueManager::clear()
     {
+        ++mRestoreEpoch;
         mKnownTopics.clear();
         mTalkedTo = false;
         mOriginalDisposition = 0;
@@ -697,6 +699,37 @@ namespace MWDialogue
 
             mChangedFactionReaction = state.mChangedFactionReaction;
         }
+    }
+
+    std::function<bool()> DialogueManager::prepareDialogueState(
+        ESM::DialogueState&& state, const MWWorld::ESMStore& incoming)
+    {
+        if (mRestoreEpoch == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("Dialogue restore epoch exhausted");
+        struct Plan
+        {
+            std::set<ESM::RefId> mTopics;
+            ModFactionReactionMap mReactions;
+            std::weak_ptr<const char> mLifetime;
+            std::uint64_t mEpoch;
+            bool mUsed = false;
+        };
+        auto plan = std::make_shared<Plan>();
+        const auto& store = *MWBase::Environment::get().getESMStore();
+        // This specialized store contains content dialogues only; saved
+        // dynamic definitions do not include DIAL records.
+        for (const auto& topic : state.mKnownTopics)
+            if (store.get<ESM::Dialogue>().search(topic)) plan->mTopics.insert(topic);
+        plan->mReactions = std::move(state.mChangedFactionReaction);
+        plan->mLifetime = mRestoreLifetime;
+        plan->mEpoch = mRestoreEpoch + 1;
+        return [this, plan] {
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch) return false;
+            plan->mUsed = true;
+            mKnownTopics.merge(plan->mTopics);
+            mChangedFactionReaction.swap(plan->mReactions);
+            return true;
+        };
     }
 
     void DialogueManager::modFactionReaction(const ESM::RefId& faction1, const ESM::RefId& faction2, int diff)

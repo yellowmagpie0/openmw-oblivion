@@ -2566,6 +2566,13 @@ namespace MWMechanics
         }
     }
 
+    void Actors::mergeDeathCounts(std::map<ESM::RefId, int>& counts)
+    {
+        for (const auto& [id, count] : counts)
+            if (auto found = mDeathCount.find(id); found != mDeathCount.end()) found->second = count;
+        mDeathCount.merge(counts);
+    }
+
     void Actors::clear()
     {
         mIndex.clear();

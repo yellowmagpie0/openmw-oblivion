@@ -4,6 +4,7 @@
 #include "../mwbase/dialoguemanager.hpp"
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <unordered_map>
@@ -39,6 +40,8 @@ namespace MWDialogue
         // Modified faction reactions. <Faction1, <Faction2, Difference> >
         typedef std::map<ESM::RefId, std::map<ESM::RefId, int>> ModFactionReactionMap;
         ModFactionReactionMap mChangedFactionReaction;
+        std::shared_ptr<const char> mRestoreLifetime = std::make_shared<const char>();
+        std::uint64_t mRestoreEpoch = 0;
 
         std::map<ESM::RefId, ActorKnownTopicInfo> mActorKnownTopics;
 
@@ -122,6 +125,7 @@ namespace MWDialogue
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const override;
 
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
+        std::function<bool()> prepareDialogueState(ESM::DialogueState&& state, const MWWorld::ESMStore& incoming) override;
 
         /// Changes faction1's opinion of faction2 by \a diff.
         void modFactionReaction(const ESM::RefId& faction1, const ESM::RefId& faction2, int diff) override;

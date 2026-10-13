@@ -2,6 +2,7 @@
 #define GAME_MWBASE_DIALOGUEMANAGER_H
 
 #include <list>
+#include <functional>
 #include <map>
 #include <string>
 #include <string_view>
@@ -19,11 +20,13 @@ namespace ESM
     class ESMReader;
     class ESMWriter;
     class RefId;
+    struct DialogueState;
 }
 
 namespace MWWorld
 {
     class Ptr;
+    class ESMStore;
 }
 
 namespace MWBase
@@ -105,6 +108,8 @@ namespace MWBase
         virtual void write(ESM::ESMWriter& writer, Loading::Listener& progress) const = 0;
 
         virtual void readRecord(ESM::ESMReader& reader, uint32_t type) = 0;
+        virtual std::function<bool()> prepareDialogueState(ESM::DialogueState&& state, const MWWorld::ESMStore& incoming)
+        { return {}; }
 
         /// Changes faction1's opinion of faction2 by \a diff.
         virtual void modFactionReaction(const ESM::RefId& faction1, const ESM::RefId& faction2, int diff) = 0;

@@ -3,12 +3,13 @@
 
 #include <functional>
 #include <memory>
+#include <map>
 #include <vector>
 
 #include <components/esm/gameprofile.hpp>
 #include <components/esm3/savedgame.hpp>
 
-namespace ESM { class ESMReader; class RefId; struct ObjectState; struct QuickKeys; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; }
+namespace ESM { class ESMReader; class RefId; struct ObjectState; struct QuickKeys; struct FogState; struct GlobalMap; struct WeatherState; struct ProjectileState; struct MagicBoltState; struct DialogueState; struct StolenItems; }
 namespace ESM4 { struct RuntimeState; }
 namespace MWWorld { class ESMStore; class PreparedSaveRecords; }
 
@@ -39,7 +40,10 @@ namespace MWState
         const std::function<bool(const ESM::RefId&)>& restoreCell = {},
         const std::function<void(const ESM::ObjectState&, const MWWorld::ESMStore&)>& prepareCellReference = {},
         const std::function<void(const ESM::ObjectState&)>& preparePlayerReference = {},
-        MWWorld::PreparedSaveRecords* decodedRecords = nullptr);
+        MWWorld::PreparedSaveRecords* decodedRecords = nullptr,
+        const std::function<void(ESM::DialogueState&&, const MWWorld::ESMStore&)>& prepareDialogue = {},
+        const std::function<void(ESM::StolenItems&&)>& prepareStolen = {},
+        const std::function<void(std::map<ESM::RefId, int>&&, const MWWorld::ESMStore&)>& prepareDeaths = {});
 }
 
 #endif

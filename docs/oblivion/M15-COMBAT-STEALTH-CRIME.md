@@ -6,6 +6,62 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare dialogue and mechanics maps before teardown — 2026-10-13
+
+Admission now retains decoded DIAS, STLN and DCOU data and prepares their final
+map nodes before cleanup. At the original record positions, dialogue topics
+merge, faction reactions and stolen-item maps replace, and saved death counts
+overwrite matching entries while preserving unmentioned counts. Topic filtering
+uses the content-only DIAL store; death filtering uses the incoming/static
+winning signature view, excluding outgoing-only dynamic definitions. Empty
+records still apply. Missing records retain ordinary behavior. Plans require
+exactly one manager clear and reject replay, copied-plan reuse, stale epochs and
+destroyed managers before mutation. Unsupported preparation fails before cleanup.
+
+Three new engine tests cover real manager read/write semantics and lifecycle,
+incoming definition ownership, and eight admission ordering/rejection cases in
+native and shared-only saves. Both full engine inventories pass **1,410 tests**,
+with exact XML/inventory agreement and no failures/skips in
+`build/oblivion-compat/m15/S3/manager-maps-normal-02` and
+`manager-maps-sanitized-02`. Tested parent is
+`3ad1b2d0a0f57840385104cd497380739afc26d6`; matching source fingerprint is
+`0af782d2b88ccb5a500375bfb4dcc2597fb35bd893807a08faf4c63f83148998`.
+ASan/UBSan halt on errors, leaks disabled; SDL/audio are offscreen/null. Component
+code is unchanged from the previous checkpoint. Exact executable/test/cache and
+verification hashes are in `manager-maps-followup-02/checkpoint-summary.json`.
+
+`manager-maps-allocation-control-02` passes four accepted map applications with
+scalar/array/aligned C++ new disabled in copied production manager objects after
+plan validation. `manager-maps-negative-02` restores allocating insertion/copying
+under that guard; both selected tests fail with bad_alloc as required. This
+covers map application only, not decoding, arbitrary callbacks or whole loads.
+
+Actual load/F5/F9/F5/quit passes in `manager-maps-runtime-normal-02` (PID 140324)
+and `manager-maps-runtime-sanitized-02` (PID 142301). Fresh instrumented
+`manager-maps-runtime-continuation-sanitized-02` (PID 142282) loads the exact
+normal final save after process exit, SHA256
+`170a2cb26cf14716eae7692f026fd54007443d27e31b8f61131d6314bc99fe0f`.
+Independent resave inspection requires two exact faction reactions, stolen
+owner/faction counts 4/8 for generated item 43, death count 9, and omission of an
+intentionally missing topic. Prior native/shared Player, inventory, three CSTA
+references and long string/animation assertions remain active. These authored
+manager fields establish persistence, not theft/death gameplay. Morrowind
+startup/idle/F5 isolation passes in `manager-maps-morrowind-02`; all seven captures
+were reviewed with hashes in the per-course visual-review files.
+
+Retained normal01 evidence ran 1,410 cases with one fixture failure: inserting a
+static weapon after dynamic records violated the store's static-prefix convention
+and clearDynamic removed the intended retained base. Corrected fixture ordering
+and pre-application assertions pass in 02; no production change was needed for
+that failure. Sanitized01 was deliberately stopped during build after identifying
+the fixture defect, not due to a sanitizer finding. Failed syntax attempts and
+unlaunched prerequisite-dependent 01 courses remain recorded in followup metadata.
+
+Journal/global scripts, locals/Lua callbacks, cell tracking, scene/player setup,
+remaining managers and consumed missing-dependency admission still need audit.
+Full prior-world preservation after late failures and complete S3 acceptance
+remain open; this checkpoint does not make the entire load transactional.
+
 ## S3 consume admission's decoded cell and Player records — 2026-10-13
 
 Oblivion admission now retains its decoded typed CSTA owners and complete PLAY

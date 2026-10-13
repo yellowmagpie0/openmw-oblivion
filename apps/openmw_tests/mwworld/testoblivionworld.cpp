@@ -1,3 +1,8 @@
+#include <components/compiler/extensions.hpp>
+#include "apps/openmw/mwdialogue/dialoguemanagerimp.hpp"
+#include <components/esm3/dialoguestate.hpp>
+#include <components/esm3/stolenitems.hpp>
+#include <components/esm3/loaddial.hpp>
 #include "apps/openmw/mwworld/preparedsaverecords.hpp"
 #include "apps/openmw/mwworld/savedreference.hpp"
 #include "apps/openmw/mwscript/scriptmanagerimp.hpp"
@@ -18674,4 +18679,124 @@ TEST(OblivionWorldTest, PreparedPlayerReferencePayloadBindsToOneReferenceAndCanc
     model.setPreparedPlayerState(prepare(), world.getPlayerPtr()); model.clear();
     EXPECT_FALSE(model.takePreparedPlayerState(world.getPlayerPtr()));
     EXPECT_THROW(model.setPreparedPlayerState(prepare(), {}), std::logic_error);
+}
+
+namespace
+{
+    void loadDialogueContent(MWWorld::ESMStore& store, std::string name)
+    {
+        ESM::Dialogue data{}; data.blank(); data.mStringId = name;
+        data.mId = ESM::RefId::stringRefId(name); data.mType = ESM::Dialogue::Topic;
+        auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        writer.startRecord(ESM::REC_DIAL); data.save(writer, false); writer.endRecord(ESM::REC_DIAL); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "manager-dialogue-content");
+        reader.getRecName(); reader.getRecHeader(); store.getWritable<ESM::Dialogue>().load(reader);
+        store.getWritable<ESM::Dialogue>().setUp();
+    }
+
+    void readDialogueState(MWDialogue::DialogueManager& manager, const ESM::DialogueState& state)
+    {
+        auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        writer.startRecord(ESM::REC_DIAS); state.save(writer); writer.endRecord(ESM::REC_DIAS); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "manager-dialogue-state");
+        reader.getRecName(); reader.getRecHeader(); manager.readRecord(reader, ESM::REC_DIAS);
+    }
+
+    ESM::DialogueState dialogueState(MWDialogue::DialogueManager& manager)
+    {
+        auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        Loading::Listener listener; manager.write(writer, listener); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "manager-dialogue-output");
+        reader.getRecName(); reader.getRecHeader(); ESM::DialogueState state; state.load(reader); return state;
+    }
+
+    void readDeathCounts(MWMechanics::MechanicsManager& manager, const std::map<ESM::RefId, int>& counts)
+    {
+        auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        writer.startRecord(ESM::REC_DCOU);
+        for (const auto& [id, count] : counts) { writer.writeHNCRefId("ID__", id); writer.writeHNT("COUN", count); }
+        writer.endRecord(ESM::REC_DCOU); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "manager-deaths");
+        reader.getRecName(); reader.getRecHeader(); manager.readRecord(reader, ESM::REC_DCOU);
+    }
+
+    ESM::StolenItems stolenState(MWMechanics::MechanicsManager& manager)
+    {
+        auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        Loading::Listener listener; manager.write(writer, listener); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "manager-stolen-output"); ESM::StolenItems state;
+        while (reader.hasMoreRecs())
+        {
+            auto type = reader.getRecName(); reader.getRecHeader();
+            if (type == ESM::REC_STLN) state.load(reader); else reader.skipRecord();
+        }
+        return state;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedDialoguePreservesMergeReplacementAndLifecycleSemantics)
+{
+    NativeWorldFixture fixture;
+    loadDialogueContent(fixture.mWorld.getStore(), "prepared-topic");
+    Compiler::Extensions extensions; Translation::Storage translation;
+    auto manager = std::make_unique<MWDialogue::DialogueManager>(extensions, translation);
+    ESM::DialogueState old; old.mChangedFactionReaction[ESM::RefId::stringRefId("a")][ESM::RefId::stringRefId("b")] = 11;
+    readDialogueState(*manager, old);
+    ESM::DialogueState state; state.mKnownTopics = {ESM::RefId::stringRefId("prepared-topic"),
+        ESM::RefId::stringRefId("missing-topic"), ESM::RefId::stringRefId("prepared-topic")};
+    state.mChangedFactionReaction[ESM::RefId::stringRefId("a")][ESM::RefId::stringRefId("b")] = 13;
+    state.mChangedFactionReaction[ESM::RefId::stringRefId("removed-faction")][ESM::RefId::stringRefId("other")] = -17;
+    const auto expected = state.mChangedFactionReaction; MWWorld::ESMStore incoming;
+    auto apply = manager->prepareDialogueState(std::move(state), incoming); auto copy = apply;
+    EXPECT_FALSE(apply()); EXPECT_EQ(dialogueState(*manager).mChangedFactionReaction, old.mChangedFactionReaction);
+    manager->clear(); manager->addTopic(ESM::RefId::stringRefId("added-during-restore"));
+    ASSERT_TRUE(apply()); EXPECT_FALSE(copy());
+    auto actual = dialogueState(*manager); EXPECT_EQ(actual.mChangedFactionReaction, expected);
+    EXPECT_EQ(actual.mKnownTopics, (std::vector<ESM::RefId>{ESM::RefId::stringRefId("added-during-restore"),
+        ESM::RefId::stringRefId("prepared-topic")}));
+    ESM::DialogueState empty; apply = manager->prepareDialogueState(std::move(empty), incoming);
+    manager->clear(); manager->clear(); EXPECT_FALSE(apply());
+    apply = manager->prepareDialogueState(ESM::DialogueState{}, incoming); manager.reset(); EXPECT_FALSE(apply());
+}
+
+TEST(OblivionWorldTest, PreparedMechanicsMapsOwnIncomingDefinitionsAndPreserveRecordSemantics)
+{
+    NativeWorldFixture fixture; auto& store = fixture.mWorld.getStore();
+    MWWorld::ESMStore incoming;
+    const auto native = ESM::RefId(ESM::FormId{0x800, 0});
+    const auto missing = ESM::RefId::stringRefId("missing-death-base");
+    ESM::Weapon saved{}; saved.blank(); saved.mId = incoming.generateId();
+    incoming.getWritable<ESM::Weapon>().insert(saved); incoming.rebuildIdsIndex();
+    // Content records must precede the dynamic suffix in the store's shared list.
+    const auto kept = ESM::RefId::stringRefId("kept-death-base");
+    auto immutable = saved; immutable.mId = kept; store.getWritable<ESM::Weapon>().insertStatic(immutable);
+    auto transient = saved; transient.mId = ESM::RefId::stringRefId("outgoing-only-death-base");
+    store.getWritable<ESM::Weapon>().insert(transient); store.rebuildIdsIndex();
+    auto manager = std::make_unique<MWMechanics::MechanicsManager>();
+    readDeathCounts(*manager, {{native, 9}});
+    auto deaths = manager->prepareDeathCounts({{native, 3}, {saved.mId, 7}, {missing, 5}, {transient.mId, 6}}, incoming);
+    ESM::StolenItems items; const auto item = ESM::RefId::stringRefId("owned-stolen-item");
+    items.mStolenItems[item][{ESM::RefId::stringRefId("owner"), false}] = 4;
+    items.mStolenItems[item][{ESM::RefId::stringRefId("faction"), true}] = 8;
+    const auto expected = items.mStolenItems; auto stolen = manager->prepareStolenItems(std::move(items));
+    auto copy = stolen; EXPECT_FALSE(deaths()); EXPECT_FALSE(stolen()); EXPECT_EQ(manager->countDeaths(native), 9);
+    store.clearDynamic(); store.getWritable<ESM::Weapon>().insert(saved); store.rebuildIdsIndex();
+    ASSERT_TRUE(store.find(kept));
+    manager->clear(); readDeathCounts(*manager, {{native, 99}, {saved.mId, 42}, {kept, 12}});
+    ASSERT_EQ(manager->countDeaths(kept), 12);
+    ESM::StolenItems intervening;
+    intervening.mStolenItems[ESM::RefId::stringRefId("intervening-item")][{kept, false}] = 99;
+    auto stream = std::make_unique<std::stringstream>(); ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+    writer.startRecord(ESM::REC_STLN); intervening.write(writer); writer.endRecord(ESM::REC_STLN); writer.close();
+    ESM::ESMReader reader; reader.open(std::move(stream), "intervening-stolen"); reader.getRecName(); reader.getRecHeader();
+    manager->readRecord(reader, ESM::REC_STLN);
+    ASSERT_TRUE(deaths()); ASSERT_TRUE(stolen()); EXPECT_FALSE(copy()); EXPECT_FALSE(deaths());
+    EXPECT_EQ(manager->countDeaths(native), 3); EXPECT_EQ(manager->countDeaths(saved.mId), 7);
+    EXPECT_EQ(manager->countDeaths(kept), 12);
+    EXPECT_EQ(manager->countDeaths(missing), 0); EXPECT_EQ(manager->countDeaths(transient.mId), 0);
+    EXPECT_EQ(stolenState(*manager).mStolenItems, expected);
+    auto empty = manager->prepareStolenItems(ESM::StolenItems{}); manager->clear(); ASSERT_TRUE(empty());
+    EXPECT_TRUE(stolenState(*manager).mStolenItems.empty());
+    auto stale = manager->prepareDeathCounts({}, incoming); manager->clear(); manager->clear(); EXPECT_FALSE(stale());
+    auto dead = manager->prepareStolenItems(ESM::StolenItems{}); manager.reset(); EXPECT_FALSE(dead());
 }

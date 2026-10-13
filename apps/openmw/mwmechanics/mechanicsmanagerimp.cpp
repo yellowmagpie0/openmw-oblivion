@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <limits>
 
 #include <osg/Stats>
 
@@ -1944,10 +1945,62 @@ namespace MWMechanics
 
     void MechanicsManager::clear()
     {
+        ++mRestoreEpoch;
         mActors.clear();
         mStolenItems.clear();
         mClassSelected = false;
         mRaceSelected = false;
+    }
+
+    std::function<bool()> MechanicsManager::prepareStolenItems(ESM::StolenItems&& state)
+    {
+        if (mRestoreEpoch == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("Mechanics restore epoch exhausted");
+        struct Plan
+        {
+            StolenItemsMap mItems;
+            std::weak_ptr<const char> mLifetime;
+            std::uint64_t mEpoch;
+            bool mUsed = false;
+        };
+        auto plan = std::make_shared<Plan>();
+        plan->mItems = std::move(state.mStolenItems);
+        plan->mLifetime = mRestoreLifetime;
+        plan->mEpoch = mRestoreEpoch + 1;
+        return [this, plan] {
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch) return false;
+            plan->mUsed = true;
+            mStolenItems.swap(plan->mItems);
+            return true;
+        };
+    }
+
+    std::function<bool()> MechanicsManager::prepareDeathCounts(
+        std::map<ESM::RefId, int>&& counts, const MWWorld::ESMStore& incoming)
+    {
+        if (mRestoreEpoch == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("Mechanics restore epoch exhausted");
+        struct Plan
+        {
+            std::map<ESM::RefId, int> mCounts;
+            std::weak_ptr<const char> mLifetime;
+            std::uint64_t mEpoch;
+            bool mUsed = false;
+        };
+        const auto& store = *MWBase::Environment::get().getESMStore();
+        for (auto iter = counts.begin(); iter != counts.end();)
+            if (!store.findForRestore(iter->first, incoming)) iter = counts.erase(iter);
+            else ++iter;
+        auto plan = std::make_shared<Plan>();
+        plan->mCounts = std::move(counts);
+        plan->mLifetime = mRestoreLifetime;
+        plan->mEpoch = mRestoreEpoch + 1;
+        return [this, plan] {
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch) return false;
+            plan->mUsed = true;
+            mActors.mergeDeathCounts(plan->mCounts);
+            return true;
+        };
     }
 
     void MechanicsManager::resurrect(const MWWorld::Ptr& ptr)
