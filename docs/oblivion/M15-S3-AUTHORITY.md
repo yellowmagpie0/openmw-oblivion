@@ -705,3 +705,21 @@ entry records hashes, capture scope and retained interrupted attempts. This clos
 publication, not all registry work or whole-load allocation failure handling.
 Initial autoequip/resources, other actor/cell/scene publication, full late-failure
 prior-world preservation and the complete S3 audit remain open.
+
+
+Initial legacy autoequip now owns detached split nodes and registry reservations;
+inline alternative-slot storage and a fixed inventory-slot array remove the
+corresponding allocations. Consumption preserves ordinary split/registration,
+RNG and callback timing; copies/moves, exhaustion and exception cleanup are
+covered. Five new tests pass in both complete 1387-case normal/ASan-UBSan engine
+inventories with matching fingerprints. A slot-query allocation hook fails the
+old implementation and passes the corrected query/empty-inventory lifecycle;
+a copied-object split-consumption mutation fails its reservoir regression.
+Normal/instrumented stacked CLOT initial-inventory save/reload courses, exact
+normal-save fresh instrumented continuation and Morrowind startup/save isolation
+pass semantic checks and visual review. Transient initial split details are C++
+probe evidence, not visible final native inventory. The newest milestone entry
+records hashes, scope and retained failed/interrupted attempts. This closes
+storage preparation only: live autoequip GMST/race/armor-rating dependencies and
+callback resources, other actor/cell/scene publication, full late-failure
+prior-world preservation and the complete S3 audit remain open.

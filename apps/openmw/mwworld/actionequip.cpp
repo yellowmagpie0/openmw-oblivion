@@ -46,7 +46,7 @@ namespace MWWorld
         }
 
         // slots that this item can be equipped in
-        std::pair<std::vector<int>, bool> slots = getTarget().getClass().getEquipmentSlots(getTarget());
+        std::pair<MWWorld::Class::EquipmentSlots, bool> slots = getTarget().getClass().getEquipmentSlots(getTarget());
         if (slots.first.empty())
             return;
 
@@ -64,7 +64,7 @@ namespace MWWorld
             throw std::runtime_error("ActionEquip can't find item " + object.getCellRef().getRefId().toDebugString());
 
         // equip the item in the first free slot
-        std::vector<int>::const_iterator slot = slots.first.begin();
+        auto slot = slots.first.begin();
         for (; slot != slots.first.end(); ++slot)
         {
             // if the item is equipped already, nothing to do

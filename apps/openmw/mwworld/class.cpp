@@ -206,9 +206,9 @@ namespace MWWorld
         return osg::Vec3f(0, 0, 0);
     }
 
-    std::pair<std::vector<int>, bool> Class::getEquipmentSlots(const ConstPtr& ptr) const
+    std::pair<MWWorld::Class::EquipmentSlots, bool> Class::getEquipmentSlots(const ConstPtr& ptr) const
     {
-        return std::make_pair(std::vector<int>(), false);
+        return std::make_pair(EquipmentSlots(), false);
     }
 
     ESM::RefId Class::getEquipmentSkill(const ConstPtr& ptr, bool useLuaInterfaceIfAvailable) const

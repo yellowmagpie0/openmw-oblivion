@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/container/static_vector.hpp>
 
 #include <osg/Vec4f>
 
@@ -206,7 +207,10 @@ namespace MWWorld
         virtual osg::Vec3f getRotationVector(const Ptr& ptr) const;
         ///< Return desired rotations, as euler angles. Sets getMovementSettings(ptr).mRotation to zero.
 
-        virtual std::pair<std::vector<int>, bool> getEquipmentSlots(const ConstPtr& ptr) const;
+        // Alternative slots: one for ordinary equipment, two for rings. Native
+        // multi-part coverage is a separate biped mask, not extra alternatives.
+        using EquipmentSlots = boost::container::static_vector<int, 2>;
+        virtual std::pair<EquipmentSlots, bool> getEquipmentSlots(const ConstPtr& ptr) const;
         ///< \return first: Return IDs of the slot this object can be equipped in; second: can object
         /// stay stacked when equipped?
         ///

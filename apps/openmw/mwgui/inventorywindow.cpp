@@ -54,7 +54,7 @@ namespace
     {
         if (item.getClass().getType() != ESM::Weapon::sRecordId)
             return false;
-        std::vector<int> equipmentSlots = item.getClass().getEquipmentSlots(item).first;
+        auto equipmentSlots = item.getClass().getEquipmentSlots(item).first;
         return (!equipmentSlots.empty() && equipmentSlots.front() == MWWorld::InventoryStore::Slot_CarriedRight);
     }
 

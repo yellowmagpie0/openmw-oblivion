@@ -29,7 +29,7 @@ namespace MWClass
         ESM::RefId getScript(const MWWorld::ConstPtr& ptr) const override;
         ///< Return name of the script attached to ptr
 
-        std::pair<std::vector<int>, bool> getEquipmentSlots(const MWWorld::ConstPtr& ptr) const override;
+        std::pair<MWWorld::Class::EquipmentSlots, bool> getEquipmentSlots(const MWWorld::ConstPtr& ptr) const override;
         ///< \return first: Return IDs of the slot this object can be equipped in; second: can object
         /// stay stacked when equipped?
 

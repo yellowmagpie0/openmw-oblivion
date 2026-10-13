@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_INVENTORYSTORE_H
 
 #include "containerstore.hpp"
+#include <array>
 
 namespace ESM
 {
@@ -63,13 +64,14 @@ namespace MWWorld
 
         bool mFirstAutoEquip = true;
 
-        typedef std::vector<ContainerStoreIterator> TSlots;
+        using TSlots = std::array<ContainerStoreIterator, Slots>;
 
-        TSlots mSlots;
+        TSlots makeEmptySlots();
+        TSlots mSlots = makeEmptySlots();
         std::shared_ptr<const char> mPreparedAmmunitionIdentity;
 
-        void autoEquipWeapon(TSlots& slots);
-        void autoEquipArmor(TSlots& slots);
+        void autoEquipWeapon(TSlots& slots, PreparedInitialInventory* prepared = nullptr);
+        void autoEquipArmor(TSlots& slots, PreparedInitialInventory* prepared = nullptr);
 
         void copySlots(const InventoryStore& store);
 

@@ -269,6 +269,7 @@ namespace MWWorld
         // Expires when storage is cleared, replaced, moved, rebound or destroyed.
         // Prepared mutations never keep their owner alive through this guard.
         std::weak_ptr<const char> prepareStorageIdentity();
+        std::unique_ptr<PreparedInitialInventory> takePreparedInitialAutoEquip();
         ContainerStoreListener* mListener = nullptr;
 
         // Used in clone() to unset refnums of copies.
@@ -285,6 +286,7 @@ namespace MWWorld
     private:
         Lists mLists;
         std::unique_ptr<PreparedInitialInventory> mPreparedInitialInventory;
+        std::unique_ptr<PreparedInitialInventory> mPreparedInitialAutoEquip;
         friend class PreparedInitialInventory;
         std::shared_ptr<const char> mPreparedAdditionIdentity;
 
@@ -435,7 +437,7 @@ namespace MWWorld
         void rechargeItems(float duration);
         ///< Restore charge on enchanted items. Note this should only be done for the player.
 
-        ContainerStoreIterator unstack(const Ptr& ptr, int count = 1);
+        ContainerStoreIterator unstack(const Ptr& ptr, int count = 1, PreparedInitialInventory* prepared = nullptr);
         ///< Unstack an item in this container. The item's count will be set to count, then a new stack will be added
         ///< with (origCount-count).
         ///

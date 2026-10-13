@@ -1059,7 +1059,7 @@ namespace MWWorld
         struct Candidate
         {
             ESM::RefId mSharedId;
-            std::vector<int> mSharedSlots;
+            Class::EquipmentSlots mSharedSlots;
             std::uint32_t mNativeSlots = 0;
             std::int32_t mValue = 0;
             bool mChooseOneSlot = false;
@@ -1077,7 +1077,7 @@ namespace MWWorld
                                    && definition->mType != ESM4::InventoryItemType::Clothing)
                 || definition->mSlots == 0)
                 continue;
-            const std::vector<int> sharedSlots = item.getClass().getEquipmentSlots(item).first;
+            const auto sharedSlots = item.getClass().getEquipmentSlots(item).first;
             if (sharedSlots.empty())
                 continue;
             candidates.push_back({ item.getCellRef().getRefId(), sharedSlots, definition->mSlots,

@@ -2,6 +2,7 @@
 #define OPENMW_MWWORLD_PREPAREDINITIALINVENTORY_H
 
 #include <memory>
+#include <map>
 #include <vector>
 
 #include <components/misc/rng.hpp>
@@ -16,28 +17,33 @@ namespace ESM
 namespace MWWorld
 {
     class ContainerStore;
+    template <class> class ContainerStoreIteratorBase;
     class ESMStore;
 
     // Owns initial-item prototypes, selection workspace and detached stack nodes.
     // Selection, registry publication and autoequip remain at their live phase.
     class PreparedInitialInventory
     {
+        friend class ContainerStore;
         struct Data;
         std::shared_ptr<const Data> mData;
         std::vector<std::size_t> mCandidates;
         std::vector<std::unique_ptr<ContainerStore>> mStacks;
+        std::map<ESM::RefId, std::unique_ptr<ContainerStore>> mSplitStacks;
         PtrRegistry::PreparedInsertions mRegistrations;
         bool mConsumed = false;
+        ContainerStoreIteratorBase<Ptr> takeSplitStack(ContainerStore& target, const Ptr& source, int count);
 
     public:
         PreparedInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-            const ESMStore& content, const ESMStore& incoming);
+            const ESMStore& content, const ESMStore& incoming, bool equipment = false);
         ~PreparedInitialInventory();
         PreparedInitialInventory(const PreparedInitialInventory&);
         PreparedInitialInventory& operator=(const PreparedInitialInventory&);
         PreparedInitialInventory(PreparedInitialInventory&&) noexcept;
         PreparedInitialInventory& operator=(PreparedInitialInventory&&) noexcept;
         std::size_t pendingStackCount() const;
+        std::size_t pendingSplitCount() const;
         void fill(ContainerStore& target, const ESM::RefId& owner, Misc::Rng::Generator& prng);
     };
 }

@@ -331,7 +331,7 @@ namespace MWWorld
             oblivionPlayerEquipmentChanged();
             return true;
         }
-        const std::vector<int> slots = (*found).getClass().getEquipmentSlots(*found).first;
+        const auto slots = (*found).getClass().getEquipmentSlots(*found).first;
         if (slots.empty())
             return false;
         int selectedSlot = slots.front();

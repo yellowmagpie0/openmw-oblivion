@@ -49,7 +49,7 @@ namespace MWWorld
     };
 
     PreparedInitialInventory::PreparedInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
-        const ESMStore& content, const ESMStore& incoming)
+        const ESMStore& content, const ESMStore& incoming, bool equipment)
     {
         auto data = std::make_shared<Data>();
         data->mItems = items;
@@ -167,8 +167,23 @@ namespace MWWorld
             auto pool = std::make_unique<ContainerStore>();
             for (std::size_t i = 0; i < counts[node.mPool]; ++i) pool->addNewStack(prototype, 1);
             mStacks[node.mPool] = std::move(pool);
+            // Initial autoequip can split a plain item once per alternative
+            // slot (twice for rings). It may later replace that candidate, so
+            // reserve for all reachable leaves, not only eventual winners.
+            const auto type = prototype.getType();
+            if (equipment && (type == ESM::REC_WEAP || type == ESM::REC_ARMO || type == ESM::REC_CLOT))
+            {
+                const auto [slots, stackable] = prototype.getClass().getEquipmentSlots(prototype);
+                if (!stackable && !slots.empty() && !mSplitStacks.contains(prototype.getCellRef().getRefId()))
+                {
+                    auto splits = std::make_unique<ContainerStore>();
+                    for (std::size_t i = 0; i < slots.size(); ++i) splits->addNewStack(prototype, 1);
+                    mSplitStacks.emplace(prototype.getCellRef().getRefId(), std::move(splits));
+                }
+            }
         }
-        mRegistrations = MWBase::Environment::get().getWorldModel()->preparePtrInsertions(pendingStackCount());
+        mRegistrations = MWBase::Environment::get().getWorldModel()->preparePtrInsertions(
+            pendingStackCount() + pendingSplitCount());
         mCandidates.resize(capacity); // Copies retain full workspace, even before first selection.
         mData = std::move(data);
     }
@@ -182,6 +197,7 @@ namespace MWWorld
             mData = std::move(other.mData);
             mCandidates = std::move(other.mCandidates);
             mStacks = std::move(other.mStacks);
+            mSplitStacks = std::move(other.mSplitStacks);
             mRegistrations = std::move(other.mRegistrations);
             mConsumed = std::exchange(other.mConsumed, true);
         }
@@ -195,6 +211,8 @@ namespace MWWorld
         mStacks.reserve(other.mStacks.size());
         for (const auto& pool : other.mStacks)
             mStacks.push_back(pool ? std::make_unique<ContainerStore>(*pool) : nullptr);
+        for (const auto& [id, pool] : other.mSplitStacks)
+            mSplitStacks.emplace(id, std::make_unique<ContainerStore>(*pool));
     }
 
     PreparedInitialInventory& PreparedInitialInventory::operator=(const PreparedInitialInventory& other)
@@ -213,6 +231,22 @@ namespace MWWorld
         for (const auto& pool : mStacks)
             if (pool) result += std::distance(pool->begin(), pool->end());
         return result;
+    }
+
+    std::size_t PreparedInitialInventory::pendingSplitCount() const
+    {
+        std::size_t result = 0;
+        for (const auto& [id, pool] : mSplitStacks) result += std::distance(pool->begin(), pool->end());
+        return result;
+    }
+
+    ContainerStoreIterator PreparedInitialInventory::takeSplitStack(
+        ContainerStore& target, const Ptr& source, int count)
+    {
+        const auto found = mSplitStacks.find(source.getCellRef().getRefId());
+        if (!mConsumed || source.getContainerStore() != &target || found == mSplitStacks.end())
+            throw std::logic_error("Prepared initial autoequip split is unavailable");
+        return target.movePreparedStack(source, count, *found->second);
     }
 
     void PreparedInitialInventory::fill(ContainerStore& target, const ESM::RefId& owner, Misc::Rng::Generator& prng)

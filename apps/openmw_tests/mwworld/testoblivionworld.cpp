@@ -1,3 +1,4 @@
+#include "inventorywindowmanager.hpp"
 #include <cstdlib>
 #include "apps/openmw/mwmechanics/autocalcspell.hpp"
 #include "apps/openmw/mwmechanics/spellcalculation.hpp"
@@ -17864,4 +17865,156 @@ TEST(OblivionWorldTest, PreparedInitialStackCapacityPreservesNonMiscGoldNormaliz
     ordinary.fill(items, owner, expectedRng); prepared.fill(actual, owner, actualRng);
     EXPECT_EQ(actualRng, expectedRng); EXPECT_EQ(initialInventoryWire(actual), initialInventoryWire(ordinary));
     EXPECT_EQ(std::distance(actual.begin(), actual.end()), 6); EXPECT_EQ(prepared.pendingStackCount(), 0u);
+}
+
+namespace
+{
+    std::unique_ptr<MWWorld::ManualRef> initialAutoEquipActor(MWWorld::World& world)
+    {
+        ESM::GameSetting magicka{}; magicka.mId = ESM::RefId::stringRefId("fNPCbaseMagickaMult");
+        magicka.mValue.setType(ESM::VT_Float); magicka.mValue.setFloat(3.f);
+        world.getStore().getWritable<ESM::GameSetting>().insertStatic(magicka);
+        auto npc = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+        npc.mId = ESM::RefId::stringRefId("initial-autoequip-actor");
+        npc.mInventory.mList.clear(); npc.mNpdtType = ESM::NPC::NPC_DEFAULT;
+        npc.mNpdt.mSkills[ESM::Skill::LongBlade] = 100;
+        npc.mNpdt.mSkills[ESM::Skill::Unarmored] = 0;
+        world.getStore().getWritable<ESM::NPC>().insertStatic(npc); world.getStore().rebuildIdsIndex();
+        return std::make_unique<MWWorld::ManualRef>(world.getStore(), npc.mId);
+    }
+
+    ESM::InventoryList initialAutoEquipItems(MWWorld::ESMStore& store, int sign = 1)
+    {
+        ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId::stringRefId("initial-split-weapon");
+        weapon.mData.mType = ESM::Weapon::LongBladeOneHand; weapon.mData.mHealth = 25;
+        weapon.mData.mChop[1] = 20; store.getWritable<ESM::Weapon>().insertStatic(weapon);
+        ESM::Clothing ring{}; ring.blank(); ring.mId = ESM::RefId::stringRefId("initial-split-ring");
+        ring.mData.mType = ESM::Clothing::Ring; ring.mData.mValue = 20;
+        auto shirt = ring; shirt.mId = ESM::RefId::stringRefId("initial-split-shirt"); shirt.mData.mType = ESM::Clothing::Shirt;
+        store.getWritable<ESM::Clothing>().insertStatic(ring); store.getWritable<ESM::Clothing>().insertStatic(shirt);
+        store.rebuildIdsIndex(); ESM::InventoryList items;
+        items.mList = {{3 * sign, weapon.mId}, {5 * sign, ring.mId}, {2 * sign, shirt.mId}};
+        return items;
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInitialAutoEquipMatchesOrdinarySplitsSlotsAndRegistrationForRestockingCounts)
+{
+    for (int sign : {1, -1})
+    {
+        SCOPED_TRACE(sign); MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+        fixture.mEnvironment.setWindowManager(windows);
+        auto& world = fixture.mWorld; auto& model = world.getWorldModel(); auto& store = world.getStore();
+        auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+        auto& inventory = ptr.getClass().getInventoryStore(ptr);
+        auto items = initialAutoEquipItems(store, sign); const auto owner = ptr.getCellRef().getRefId();
+        Misc::Rng::Generator ordinaryRng(17), preparedRng(17); MWWorld::ESMStore incoming;
+        const auto initialUpdates = windows.mInventoryUpdates;
+        inventory.fill(items, owner, ordinaryRng); inventory.autoEquip();
+        const auto expectedUpdates = windows.mInventoryUpdates - initialUpdates;
+        EXPECT_GT(expectedUpdates, 0u);
+        const auto expected = initialInventoryWire(inventory);
+        ASSERT_EQ(std::distance(inventory.begin(), inventory.end()), 7);
+        inventory.autoEquip();
+        const auto expectedRepeated = initialInventoryWire(inventory);
+        inventory.clear(); const auto pending = model.pendingPtrInsertions();
+        inventory.prepareInitialInventory(items, owner, store, incoming);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 7u);
+        const auto preparedUpdates = windows.mInventoryUpdates;
+        inventory.fill(items, owner, preparedRng);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending + 4u);
+        inventory.autoEquip();
+        EXPECT_EQ(windows.mInventoryUpdates - preparedUpdates, expectedUpdates);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending);
+        EXPECT_EQ(initialInventoryWire(inventory), expected); EXPECT_EQ(ordinaryRng, preparedRng);
+        for (const int slot : {MWWorld::InventoryStore::Slot_CarriedRight, MWWorld::InventoryStore::Slot_LeftRing,
+                 MWWorld::InventoryStore::Slot_RightRing, MWWorld::InventoryStore::Slot_Shirt})
+        {
+            const auto equipped = inventory.getSlot(slot); ASSERT_NE(equipped, inventory.end());
+            EXPECT_EQ(equipped->getCellRef().getCount(false), sign);
+            EXPECT_EQ(model.getPtr(equipped->getCellRef().getRefNum()), *equipped);
+        }
+        inventory.autoEquip();
+        EXPECT_EQ(initialInventoryWire(inventory), expectedRepeated);
+        EXPECT_EQ(model.pendingPtrInsertions(), pending);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedInitialAutoEquipSplitReservoirOwnsCopiesAndRejectsExhaustionBeforeMutation)
+{
+    MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+    ptr.getClass().getInventoryStore(ptr); // Complete unrelated actor initialization before measuring reservations.
+    auto items = initialAutoEquipItems(store); MWWorld::ESMStore incoming;
+    const auto owner = ptr.getCellRef().getRefId(); const auto pending = model.pendingPtrInsertions();
+    MWWorld::PreparedInitialInventory original(items, owner, store, incoming, true);
+    EXPECT_EQ(original.pendingSplitCount(), 4u); EXPECT_EQ(original.pendingStackCount(), 3u);
+    auto copy = original; auto moved = std::move(copy);
+    MWWorld::ContainerStore target; target.setPtr(ptr); Misc::Rng::Generator rng(1);
+    moved.fill(target, owner, rng);
+    auto ring = target.begin(MWWorld::ContainerStore::Type_Clothing);
+    ASSERT_EQ(ring->getCellRef().getRefId(), items.mList[1].mItem);
+    auto remainder = target.unstack(*ring, 1, &moved);
+    ASSERT_NE(remainder, target.end()); EXPECT_EQ(moved.pendingSplitCount(), 3u);
+    remainder = target.unstack(*remainder, 1, &moved);
+    ASSERT_NE(remainder, target.end()); EXPECT_EQ(moved.pendingSplitCount(), 2u);
+    const auto before = initialInventoryWire(target); const auto revision = model.getPtrRegistryRevision();
+    const auto serial = model.getLastGeneratedRefNum();
+    EXPECT_THROW(target.unstack(*remainder, 1, &moved), std::logic_error);
+    EXPECT_EQ(initialInventoryWire(target), before); EXPECT_EQ(model.getPtrRegistryRevision(), revision);
+    EXPECT_EQ(model.getLastGeneratedRefNum(), serial); EXPECT_EQ(original.pendingSplitCount(), 4u);
+    EXPECT_EQ(model.pendingPtrInsertions(), pending + 9u); // Seven untouched and two unconsumed split nodes.
+}
+
+TEST(OblivionWorldTest, InitialAutoEquipFailureReleasesReservationsAndRestoresEquipmentNotifications)
+{
+    MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld; auto& store = world.getStore(); auto& model = world.getWorldModel();
+    auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+    auto& inventory = ptr.getClass().getInventoryStore(ptr);
+    auto items = initialAutoEquipItems(store); MWWorld::ESMStore incoming;
+    const auto pending = model.pendingPtrInsertions();
+    inventory.prepareInitialInventory(items, ptr.getCellRef().getRefId(), store, incoming);
+    inventory.fill(items, ptr.getCellRef().getRefId(), world.getPrng());
+    struct Observer : MWWorld::InventoryStoreListener { int changes = 0; void equipmentChanged() override { ++changes; } } observer;
+    inventory.setInvListener(&observer);
+    const auto id = ESM::RefId::stringRefId("fUnarmoredBase1");
+    const auto setting = *store.get<ESM::GameSetting>().find(id);
+    store.getWritable<ESM::GameSetting>().eraseStatic(id);
+    EXPECT_THROW(inventory.autoEquip(), std::exception);
+    EXPECT_EQ(model.pendingPtrInsertions(), pending); EXPECT_EQ(observer.changes, 0);
+    store.getWritable<ESM::GameSetting>().insertStatic(setting);
+    inventory.equip(MWWorld::InventoryStore::Slot_CarriedRight, inventory.begin(MWWorld::ContainerStore::Type_Weapon));
+    EXPECT_EQ(observer.changes, 1);
+    inventory.setInvListener(nullptr);
+}
+
+TEST(OblivionWorldTest, EquipmentSlotStorageRebindsCopyMoveSwapAndClear)
+{
+    MWClass::registerClasses(); TestingOpenMW::InventoryWindowManager windows; PopulatedMigrationFixture fixture;
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld; auto actor = initialAutoEquipActor(world); const auto ptr = actor->getPtr();
+    auto& source = ptr.getClass().getInventoryStore(ptr); auto items = initialAutoEquipItems(world.getStore());
+    source.fill(items, ptr.getCellRef().getRefId(), world.getPrng()); source.autoEquip();
+    const auto expected = initialInventoryWire(source);
+    MWWorld::InventoryStore copy(source); MWWorld::InventoryStore assigned; assigned = copy;
+    MWWorld::InventoryStore moved(std::move(assigned)); MWWorld::InventoryStore destination; destination = std::move(moved);
+    EXPECT_EQ(initialInventoryWire(destination), expected);
+    const auto check = [&](const MWWorld::InventoryStore& inventory) {
+        for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+        {
+            const auto it = inventory.getSlot(slot);
+            if (it != inventory.end()) { EXPECT_EQ(it->getContainerStore(), &inventory); }
+        }
+    };
+    check(copy); check(destination);
+    MWWorld::InventoryStore swapped; destination.swapPreparedContents(swapped);
+    EXPECT_EQ(initialInventoryWire(swapped), expected); check(swapped);
+    for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot) EXPECT_EQ(destination.getSlot(slot), destination.end());
+    swapped.clear();
+    for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot) EXPECT_EQ(swapped.getSlot(slot), swapped.end());
+    EXPECT_EQ(initialInventoryWire(source), expected);
 }

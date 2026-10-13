@@ -6,6 +6,90 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare initial autoequip storage — 2026-10-13
+
+Initial legacy autoequip now owns detached split nodes and registry reservations
+before teardown. Preparation reserves one node per alternative equipment slot
+for every reachable candidate (two for rings), without preselecting leveled
+results or consuming RNG. The first autoequip consumes those nodes at the
+ordinary split/registration phase; later calls retain ordinary behavior.
+Copies own independent reservoirs, moves transfer ownership, and cancellation
+or exceptions release unused registry credits. Exhaustion rejects before the
+next split mutates inventory or reference identity.
+
+Equipment alternatives now use fixed-capacity inline storage, preserving legacy
+and native slot order. The nineteen inventory slots use an explicitly initialized
+array; copy/move/clear and prepared swaps rebind iterators to their destination.
+Armor/clothing eligibility borrows body-part lists instead of copying them.
+Autoequip restores the previous equipment-notification setting even on exception.
+This closes these storage allocations only: live GMST/race/armor-rating lookups,
+other callback resources and whole-load failure handling remain open.
+
+Five new engine tests cover all equipment families/slot ordering, positive and
+restocking counts, weapon/shirt/two-ring splitting, exact ordinary/prepared
+inventory wire/RNG/callback agreement, repeated ordinary selection behavior,
+registry consumption, reservoir ownership/exhaustion, exception cleanup and
+slot rebinding. A headless window-manager test double counts real inventory
+update callbacks and rejects other UI calls. Both complete engine inventories
+pass **1,387 tests**, exact inventory/XML agreement, no failures or skips:
+`build/oblivion-compat/m15/S3/autoequip-storage-normal-06` and
+`autoequip-storage-sanitized-06`. Tested parent:
+`8ed6cfb5968b97d03ef69c88fcf42d359c186537`; matching before/after source fingerprint:
+`af869fc5a14798db933d28e9a878bfdf0b12ea2141e49d43a1eb6876d21818df`.
+Normal/instrumented openmw-tests SHA256 respectively:
+`ae4d8eca9895c257c0dadd8b48df9e370b5e97a7e5449f0d00795af2e86c850b`,
+`1d404c15f3a6151b7fe5616f6e05bb68c815d06baaa60a0f566a8c9165737839`.
+ASan/UBSan halt on errors; leak checks are disabled. Audio/SDL are explicitly
+null/offscreen. Unchanged component/Python production code was not retested.
+
+`autoequip-storage-baseline-01` proves the old slot-query implementation fails
+with scalar/array/aligned C++ new disabled. The separate corrected executable in
+`autoequip-storage-allocation-control-01` passes the same slot-query case plus
+an empty InventoryStore construction/copy/move/swap/clear case. Allocation is
+disabled only inside those operations; this does not prove full autoequip or
+whole-load allocation freedom. `autoequip-storage-split-negative-01` disables
+only prepared split-node consumption in a copied object/archive; the reservoir
+regression fails as required. Production binaries remain unchanged.
+
+Actual normal/instrumented load/F5/F9/F5/quit courses pass in
+`autoequip-storage-runtime-normal-01` and
+`autoequip-storage-runtime-sanitized-01`. Their editable recipe now uses authored
+CLOT ring/shirt definitions with stacked direct and LEVI Each->LEVC entries,
+retaining authored ENCH charge137. Native load fields, stable groups, shared
+inventory/NPC/core subrecords and authored definitions pass independent semantic
+comparison. The native inventory replaces the transient initial legacy contents;
+exact transient split counts and callback behavior are established by C++ tests,
+not by the final runtime inventory. Input SHA256:
+`ec48a16a462d0f96875ee0878882fac9763fb63148cdf39bd3454e24683add9c`.
+Normal/instrumented openmw SHA256 respectively:
+`10ca13771ed441f8c6bc3aa11559149abc750ffe82b0250abe1f421e720e01ff`,
+`00a2b1d4663ee51a616f8b59672ab36ad1512e424ceaddc56f84486776a0c727`.
+
+`autoequip-storage-runtime-continuation-sanitized-01` launches a fresh process
+(PID68530) after normal PID66599 exited, from its exact final save SHA256
+`378fa94ca3234a1a132307df58a77b6bfff7d6a841241869506c6364f2ce74f1`.
+Both continuation load/save cycles, semantic comparisons and clean exit pass.
+All six Oblivion captures were reviewed: Imperial Prison scene/HUD and retained
+blade, without loading/error dialog. Per-course visual-review records retain
+hashes and scope. `autoequip-storage-morrowind-01` passes the unchanged M14
+startup/idle/F5 course and independent native-record/marker exclusion. Its
+reviewed terrain-facing Balmora capture shows sky/ground/HUD; this is save
+isolation, not Morrowind combat acceptance.
+
+Retained normal attempts -01/-02 failed compilation (array initialization and
+old vector callers); -03 ran all tests with four new fixtures failing on a
+missing NPC magicka GMST; -04 crashed because ordinary splitting required a
+window-manager callback absent from the new fixture (gdb backtrace retained);
+-05 ran all tests with only an incorrect repeated-autoequip idempotence
+assertion failing. The corrected comparison preserves ordinary equal-weapon
+selection/splitting. Corresponding sanitizer attempts were stopped before tests
+except -04, which was stopped during early tests. Only -06 is automated
+acceptance. Existing unrelated compiler diagnostics remain in the logs.
+
+S3 remains **in progress**. The next bounded task is detached autoequip resource
+dependencies. Other actor/cell/scene publication, complete prior-world preservation
+after late failures and the full S3 requirement audit remain open.
+
 ## S3 prepare inventory registry publication — 2026-10-13
 
 Both initial inventory and saved shared inventory now reserve registry nodes

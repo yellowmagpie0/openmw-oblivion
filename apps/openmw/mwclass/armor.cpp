@@ -81,11 +81,11 @@ namespace MWClass
         return ref->mBase->mScript;
     }
 
-    std::pair<std::vector<int>, bool> Armor::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
+    std::pair<MWWorld::Class::EquipmentSlots, bool> Armor::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Armor>* ref = ptr.get<ESM::Armor>();
 
-        std::vector<int> slots;
+        MWWorld::Class::EquipmentSlots slots;
 
         const int size = 11;
 
@@ -352,7 +352,7 @@ namespace MWClass
             return { 0, "#{sInventoryMessage1}" };
 
         // slots that this item can be equipped in
-        std::pair<std::vector<int>, bool> slots = getEquipmentSlots(ptr);
+        std::pair<MWWorld::Class::EquipmentSlots, bool> slots = getEquipmentSlots(ptr);
 
         if (slots.first.empty())
             return { 0, {} };
@@ -369,9 +369,9 @@ namespace MWClass
             const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npcRace);
             if (race->mData.mFlags & ESM::Race::Beast)
             {
-                std::vector<ESM::PartReference> parts = ptr.get<ESM::Armor>()->mBase->mParts.mParts;
+                const auto& parts = ptr.get<ESM::Armor>()->mBase->mParts.mParts;
 
-                for (std::vector<ESM::PartReference>::iterator itr = parts.begin(); itr != parts.end(); ++itr)
+                for (auto itr = parts.begin(); itr != parts.end(); ++itr)
                 {
                     if ((*itr).mPart == ESM::PRT_Head)
                         return { 0, "#{sNotifyMessage13}" };
@@ -381,7 +381,7 @@ namespace MWClass
             }
         }
 
-        for (std::vector<int>::const_iterator slot = slots.first.begin(); slot != slots.first.end(); ++slot)
+        for (auto slot = slots.first.begin(); slot != slots.first.end(); ++slot)
         {
             // If equipping a shield, check if there's a twohanded weapon conflicting with it
             if (*slot == MWWorld::InventoryStore::Slot_CarriedLeft)

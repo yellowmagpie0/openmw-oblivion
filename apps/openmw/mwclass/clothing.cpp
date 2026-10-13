@@ -62,11 +62,11 @@ namespace MWClass
         return ref->mBase->mScript;
     }
 
-    std::pair<std::vector<int>, bool> Clothing::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
+    std::pair<MWWorld::Class::EquipmentSlots, bool> Clothing::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Clothing>* ref = ptr.get<ESM::Clothing>();
 
-        std::vector<int> slots;
+        MWWorld::Class::EquipmentSlots slots;
 
         if (ref->mBase->mData.mType == ESM::Clothing::Ring)
         {
@@ -200,7 +200,7 @@ namespace MWClass
         const MWWorld::ConstPtr& ptr, const MWWorld::Ptr& npc) const
     {
         // slots that this item can be equipped in
-        std::pair<std::vector<int>, bool> slots = getEquipmentSlots(ptr);
+        std::pair<MWWorld::Class::EquipmentSlots, bool> slots = getEquipmentSlots(ptr);
 
         if (slots.first.empty())
             return { 0, {} };
@@ -215,9 +215,9 @@ namespace MWClass
             const ESM::Race* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(npcRace);
             if (race->mData.mFlags & ESM::Race::Beast)
             {
-                std::vector<ESM::PartReference> parts = ptr.get<ESM::Clothing>()->mBase->mParts.mParts;
+                const auto& parts = ptr.get<ESM::Clothing>()->mBase->mParts.mParts;
 
-                for (std::vector<ESM::PartReference>::iterator itr = parts.begin(); itr != parts.end(); ++itr)
+                for (auto itr = parts.begin(); itr != parts.end(); ++itr)
                 {
                     if ((*itr).mPart == ESM::PRT_Head)
                         return { 0, "#{sNotifyMessage13}" };

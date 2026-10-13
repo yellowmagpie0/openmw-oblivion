@@ -638,3 +638,73 @@ TEST(MWWorldPtrTest, registryPreparationAndCancellationPreserveLiveIterationAndR
     for (const auto& ref : refs)
         EXPECT_EQ(registry.getOrEmpty(ref->getPtr().getCellRef().getRefNum()), ref->getPtr());
 }
+
+#include "apps/openmw/mwclass/classes.hpp"
+#include <components/esm3/loadarmo.hpp>
+#include <components/esm3/loadclot.hpp>
+#include <components/esm3/loadligh.hpp>
+#include <components/esm3/loadlock.hpp>
+#include <components/esm3/loadprob.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadclot.hpp>
+#include "apps/openmw/mwworld/inventorystore.hpp"
+
+TEST(MWWorldPtrTest, InlineEquipmentAlternativesPreserveLegacyAndNativeSlotOrdering)
+{
+    MWClass::registerClasses(); using I = MWWorld::InventoryStore;
+    const auto check = [&]<class T>(const T& record, std::initializer_list<int> expected, bool stack = false) {
+        ESM::CellRef cell; cell.blank(); MWWorld::LiveCellRef<T> live(cell, &record); MWWorld::Ptr ptr(&live);
+        const auto result = ptr.getClass().getEquipmentSlots(ptr);
+        EXPECT_THAT(result.first, ::testing::ElementsAreArray(expected)); EXPECT_EQ(result.second, stack);
+    };
+    ESM::Armor armor{}; armor.blank();
+    const std::pair<int,int> armorSlots[] = {{ESM::Armor::Helmet,I::Slot_Helmet}, {ESM::Armor::Cuirass,I::Slot_Cuirass},
+        {ESM::Armor::LPauldron,I::Slot_LeftPauldron}, {ESM::Armor::RPauldron,I::Slot_RightPauldron},
+        {ESM::Armor::Greaves,I::Slot_Greaves}, {ESM::Armor::Boots,I::Slot_Boots},
+        {ESM::Armor::LGauntlet,I::Slot_LeftGauntlet}, {ESM::Armor::RGauntlet,I::Slot_RightGauntlet},
+        {ESM::Armor::Shield,I::Slot_CarriedLeft}, {ESM::Armor::LBracer,I::Slot_LeftGauntlet},
+        {ESM::Armor::RBracer,I::Slot_RightGauntlet}};
+    for (const auto& [type,slot] : armorSlots) { armor.mData.mType=type; check(armor,{slot}); }
+    armor.mData.mType=999; check(armor,{});
+    ESM::Clothing clothing{}; clothing.blank();
+    const std::pair<int,int> clothingSlots[] = {{ESM::Clothing::Shirt,I::Slot_Shirt}, {ESM::Clothing::Belt,I::Slot_Belt},
+        {ESM::Clothing::Robe,I::Slot_Robe}, {ESM::Clothing::Pants,I::Slot_Pants}, {ESM::Clothing::Shoes,I::Slot_Boots},
+        {ESM::Clothing::LGlove,I::Slot_LeftGauntlet}, {ESM::Clothing::RGlove,I::Slot_RightGauntlet},
+        {ESM::Clothing::Skirt,I::Slot_Skirt}, {ESM::Clothing::Amulet,I::Slot_Amulet}};
+    for (const auto& [type,slot] : clothingSlots) { clothing.mData.mType=type; check(clothing,{slot}); }
+    clothing.mData.mType=ESM::Clothing::Ring; check(clothing,{I::Slot_LeftRing,I::Slot_RightRing});
+    clothing.mData.mType=999; check(clothing,{});
+    ESM::Weapon weapon{}; weapon.blank();
+    for (int type=ESM::Weapon::ShortBladeOneHand;type<=ESM::Weapon::Last;++type)
+    {
+        weapon.mData.mType=type;
+        check(weapon,{type==ESM::Weapon::Arrow || type==ESM::Weapon::Bolt ? I::Slot_Ammunition : I::Slot_CarriedRight},
+            type==ESM::Weapon::Arrow || type==ESM::Weapon::Bolt || type==ESM::Weapon::MarksmanThrown);
+    }
+    ESM::Light light{}; light.blank(); light.mData.mFlags=0; check(light,{});
+    light.mData.mFlags=ESM::Light::Carry; check(light,{I::Slot_CarriedLeft});
+    ESM::Lockpick pick{}; pick.blank(); check(pick,{I::Slot_CarriedRight});
+    ESM::Probe probe{}; probe.blank(); check(probe,{I::Slot_CarriedRight});
+    ESM4::Armor nativeArmor{}; ESM4::Clothing nativeClothing{};
+    for (const auto& [flag,slot] : std::initializer_list<std::pair<unsigned,int>>{
+        {ESM4::Armor::TES4_Head,I::Slot_Helmet}, {ESM4::Armor::TES4_LowerBody,I::Slot_Greaves},
+        {ESM4::Armor::TES4_Hands,I::Slot_LeftGauntlet}, {ESM4::Armor::TES4_Feet,I::Slot_Boots},
+        {ESM4::Armor::TES4_LeftRing,I::Slot_LeftRing}, {ESM4::Armor::TES4_RightRing,I::Slot_RightRing},
+        {ESM4::Armor::TES4_Amulet,I::Slot_Amulet}, {ESM4::Armor::TES4_Shield,I::Slot_CarriedLeft}})
+    {
+        nativeArmor.mArmorFlags=flag; check(nativeArmor,{slot});
+        if (flag!=ESM4::Armor::TES4_Shield)
+        {
+            nativeClothing.mClothingFlags=flag;
+            check(nativeClothing,{flag==ESM4::Armor::TES4_LowerBody ? I::Slot_Pants : slot});
+        }
+    }
+    nativeArmor.mArmorFlags=ESM4::Armor::TES4_RightRing|ESM4::Armor::TES4_LeftRing;
+    nativeClothing.mClothingFlags=nativeArmor.mArmorFlags;
+    check(nativeArmor,{I::Slot_RightRing,I::Slot_LeftRing}); check(nativeClothing,{I::Slot_RightRing,I::Slot_LeftRing});
+    nativeArmor.mArmorFlags|=ESM4::Armor::TES4_Head; nativeClothing.mClothingFlags=nativeArmor.mArmorFlags;
+    check(nativeArmor,{I::Slot_Helmet}); check(nativeClothing,{I::Slot_Helmet});
+    nativeArmor.mArmorFlags=ESM4::Armor::TES4_UpperBody; nativeClothing.mClothingFlags=nativeArmor.mArmorFlags;
+    check(nativeArmor,{I::Slot_Cuirass}); check(nativeClothing,{I::Slot_Shirt});
+    nativeArmor.mArmorFlags=0; nativeClothing.mClothingFlags=0; check(nativeArmor,{}); check(nativeClothing,{});
+}

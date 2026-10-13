@@ -6,6 +6,7 @@
 #include <exception>
 #include <iterator>
 #include <stdexcept>
+#include <utility>
 
 #include <components/esm3/inventorystate.hpp>
 
@@ -18,6 +19,7 @@
 #include "../mwmechanics/weapontype.hpp"
 
 #include "class.hpp"
+#include "preparedinitialinventory.hpp"
 #include "worldimp.hpp"
 
 namespace
@@ -33,25 +35,24 @@ namespace
 
 void MWWorld::InventoryStore::copySlots(const InventoryStore& store)
 {
-    for (const MWWorld::ContainerStoreIterator& it : store.mSlots)
+    for (std::size_t i = 0; i < mSlots.size(); ++i)
     {
-        const std::ptrdiff_t distance = store.index(it);
-        if (distance == -1)
-        {
-            mSlots.push_back(end());
-            continue;
-        }
-        ContainerStoreIterator slot = begin();
-        std::advance(slot, distance);
-        mSlots.push_back(slot);
+        const auto distance = store.index(store.mSlots[i]);
+        mSlots[i] = distance == -1 ? end() : begin();
+        if (distance != -1) std::advance(mSlots[i], distance);
     }
+}
+
+MWWorld::InventoryStore::TSlots MWWorld::InventoryStore::makeEmptySlots()
+{
+    return [this]<std::size_t... I>(std::index_sequence<I...>) {
+        return TSlots{ (static_cast<void>(I), end())... };
+    }(std::make_index_sequence<Slots>{});
 }
 
 void MWWorld::InventoryStore::initSlots(TSlots& slots)
 {
-    slots.reserve(Slots);
-    for (int i = 0; i < Slots; ++i)
-        slots.push_back(end());
+    slots.fill(end());
 }
 
 void MWWorld::InventoryStore::storeEquipmentState(
@@ -79,7 +80,7 @@ void MWWorld::InventoryStore::readEquipmentState(
 
         // make sure the item can actually be equipped in this slot
         int32_t slot = found->second;
-        std::pair<std::vector<int>, bool> allowedSlots = iter->getClass().getEquipmentSlots(*iter);
+        std::pair<MWWorld::Class::EquipmentSlots, bool> allowedSlots = iter->getClass().getEquipmentSlots(*iter);
         if (!allowedSlots.first.size())
             return;
         if (std::find(allowedSlots.first.begin(), allowedSlots.first.end(), slot) == allowedSlots.first.end())
@@ -105,10 +106,7 @@ void MWWorld::InventoryStore::readEquipmentState(
     }
 }
 
-MWWorld::InventoryStore::InventoryStore()
-{
-    initSlots(mSlots);
-}
+MWWorld::InventoryStore::InventoryStore() = default;
 
 MWWorld::InventoryStore::InventoryStore(const MWWorld::InventoryStore& store)
     : ContainerStore(store)
@@ -133,7 +131,6 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(const InventoryStore
     mInventoryListener = store.mInventoryListener;
     mUpdatesEnabled = store.mUpdatesEnabled;
     mFirstAutoEquip = store.mFirstAutoEquip;
-    mSlots.clear();
     copySlots(store);
     return *this;
 }
@@ -146,7 +143,6 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(InventoryStore&& sto
     mInventoryListener = store.mInventoryListener;
     mUpdatesEnabled = store.mUpdatesEnabled;
     mFirstAutoEquip = store.mFirstAutoEquip;
-    mSlots.clear();
     std::array<std::ptrdiff_t, Slots> distances;
     for (int i = 0; i < Slots; ++i)
     {
@@ -156,9 +152,12 @@ MWWorld::InventoryStore& MWWorld::InventoryStore::operator=(InventoryStore&& sto
     for (int i = 0; i < Slots; ++i)
     {
         if (distances[i] == -1)
-            mSlots.push_back(end());
+            mSlots[i] = end();
         else
-            std::advance(mSlots.emplace_back(begin()), distances[i]);
+        {
+            mSlots[i] = begin();
+            std::advance(mSlots[i], distances[i]);
+        }
     }
     return *this;
 }
@@ -212,7 +211,7 @@ void MWWorld::InventoryStore::equip(int slot, const ContainerStoreIterator& iter
     if (iterator.getContainerStore() != this)
         throw std::runtime_error("attempt to equip an item that is not in the inventory");
 
-    std::pair<std::vector<int>, bool> slots;
+    std::pair<MWWorld::Class::EquipmentSlots, bool> slots;
 
     slots = iterator->getClass().getEquipmentSlots(*iterator);
 
@@ -295,7 +294,7 @@ MWWorld::ContainerStoreIterator MWWorld::InventoryStore::findSlot(int slot) cons
     return mSlots[slot];
 }
 
-void MWWorld::InventoryStore::autoEquipWeapon(TSlots& slots)
+void MWWorld::InventoryStore::autoEquipWeapon(TSlots& slots, PreparedInitialInventory* prepared)
 {
     const Ptr& actor = getPtr();
     if (!actor.getClass().isNpc())
@@ -425,7 +424,7 @@ void MWWorld::InventoryStore::autoEquipWeapon(TSlots& slots)
 
             if (hasAmmo)
             {
-                std::pair<std::vector<int>, bool> itemsSlots = weapon->getClass().getEquipmentSlots(*weapon);
+                std::pair<MWWorld::Class::EquipmentSlots, bool> itemsSlots = weapon->getClass().getEquipmentSlots(*weapon);
 
                 if (!itemsSlots.first.empty())
                 {
@@ -433,7 +432,7 @@ void MWWorld::InventoryStore::autoEquipWeapon(TSlots& slots)
                     {
                         if (weapon->getCellRef().getCount() > 1)
                         {
-                            unstack(*weapon);
+                            unstack(*weapon, 1, prepared);
                         }
                     }
 
@@ -452,7 +451,7 @@ void MWWorld::InventoryStore::autoEquipWeapon(TSlots& slots)
     }
 }
 
-void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots)
+void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots, PreparedInitialInventory* prepared)
 {
     const Ptr& actor = getPtr();
 
@@ -558,7 +557,7 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots)
             // unstack the item if required
             if (!canStack && test.getCellRef().getCount() > 1)
             {
-                unstack(test);
+                unstack(test, 1, prepared);
             }
 
             // if we are here it means item can be equipped or swapped
@@ -570,16 +569,24 @@ void MWWorld::InventoryStore::autoEquipArmor(TSlots& slots)
 
 void MWWorld::InventoryStore::autoEquip()
 {
-    TSlots slots;
-    initSlots(slots);
+    auto prepared = takePreparedInitialAutoEquip();
+    TSlots slots = makeEmptySlots();
 
-    // Disable model update during auto-equip
-    mUpdatesEnabled = false;
-
-    // Autoequip clothing, armor and weapons.
-    // Equipping lights is handled in Actors::updateEquippedLight based on environment light.
-    autoEquipWeapon(slots);
-    autoEquipArmor(slots);
+    // Restore update delivery even if a definition or eligibility check fails.
+    // This guard owns no heap storage and preserves an enclosing suppression.
+    const bool updatesEnabled = mUpdatesEnabled;
+    {
+        struct RestoreUpdates
+        {
+            bool& mTarget;
+            bool mPrevious;
+            ~RestoreUpdates() { mTarget = mPrevious; }
+        } restore{mUpdatesEnabled, updatesEnabled};
+        mUpdatesEnabled = false;
+        // Lights are handled separately by Actors::updateEquippedLight.
+        autoEquipWeapon(slots, prepared.get());
+        autoEquipArmor(slots, prepared.get());
+    }
 
     bool changed = false;
 
@@ -591,8 +598,6 @@ void MWWorld::InventoryStore::autoEquip()
             break;
         }
     }
-    mUpdatesEnabled = true;
-
     if (changed)
     {
         mSlots.swap(slots);
@@ -603,8 +608,7 @@ void MWWorld::InventoryStore::autoEquip()
 
 MWWorld::ContainerStoreIterator MWWorld::InventoryStore::getPreferredShield()
 {
-    TSlots slots;
-    initSlots(slots);
+    TSlots slots = makeEmptySlots();
     autoEquipArmor(slots);
     return slots[Slot_CarriedLeft];
 }
@@ -781,7 +785,6 @@ void MWWorld::InventoryStore::fireEquipmentChangedEvent()
 void MWWorld::InventoryStore::clear()
 {
     mPreparedAmmunitionIdentity.reset();
-    mSlots.clear();
     initSlots(mSlots);
     ContainerStore::clear();
 }

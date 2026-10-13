@@ -82,12 +82,12 @@ namespace MWClass
         return ref->mBase->mScript;
     }
 
-    std::pair<std::vector<int>, bool> Weapon::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
+    std::pair<MWWorld::Class::EquipmentSlots, bool> Weapon::getEquipmentSlots(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Weapon>* ref = ptr.get<ESM::Weapon>();
         ESM::WeaponType::Class weapClass = MWMechanics::getWeaponType(ref->mBase->mData.mType)->mWeaponClass;
 
-        std::vector<int> slots;
+        MWWorld::Class::EquipmentSlots slots;
         bool stack = false;
 
         if (weapClass == ESM::WeaponType::Ammo)
@@ -302,7 +302,7 @@ namespace MWClass
         if (hasItemHealth(ptr) && getItemHealth(ptr) == 0)
             return { 0, "#{sInventoryMessage1}" };
 
-        std::pair<std::vector<int>, bool> slots = getEquipmentSlots(ptr);
+        std::pair<MWWorld::Class::EquipmentSlots, bool> slots = getEquipmentSlots(ptr);
 
         if (slots.first.empty())
             return { 0, {} };

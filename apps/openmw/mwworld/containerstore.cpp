@@ -180,6 +180,8 @@ MWWorld::ContainerStore::ContainerStore(const MWWorld::ContainerStore& store)
     , mLists(store.mLists)
     , mPreparedInitialInventory(store.mPreparedInitialInventory
           ? std::make_unique<PreparedInitialInventory>(*store.mPreparedInitialInventory) : nullptr)
+    , mPreparedInitialAutoEquip(store.mPreparedInitialAutoEquip
+          ? std::make_unique<PreparedInitialInventory>(*store.mPreparedInitialAutoEquip) : nullptr)
     , mCachedWeight(store.mCachedWeight)
     , mSeed(store.mSeed)
     , mPtr(store.mPtr)
@@ -213,6 +215,7 @@ MWWorld::ContainerStore::ContainerStore(MWWorld::ContainerStore&& store)
     store.mPreparedAdditionIdentity.reset();
     mLists = std::move(store.mLists);
     mPreparedInitialInventory = std::move(store.mPreparedInitialInventory);
+    mPreparedInitialAutoEquip = std::move(store.mPreparedInitialAutoEquip);
     if (distance != -1)
     {
         mSelectedEnchantItem = begin();
@@ -229,6 +232,8 @@ MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(const ContainerStore
     mLists = store.mLists;
     mPreparedInitialInventory = store.mPreparedInitialInventory
         ? std::make_unique<PreparedInitialInventory>(*store.mPreparedInitialInventory) : nullptr;
+    mPreparedInitialAutoEquip = store.mPreparedInitialAutoEquip
+        ? std::make_unique<PreparedInitialInventory>(*store.mPreparedInitialAutoEquip) : nullptr;
     mCachedWeight = store.mCachedWeight;
     mSeed = store.mSeed;
     mPtr = store.mPtr;
@@ -257,6 +262,7 @@ MWWorld::ContainerStore& MWWorld::ContainerStore::operator=(ContainerStore&& sto
     mListener = store.mListener;
     mLists = std::move(store.mLists);
     mPreparedInitialInventory = std::move(store.mPreparedInitialInventory);
+    mPreparedInitialAutoEquip = std::move(store.mPreparedInitialAutoEquip);
     mCachedWeight = store.mCachedWeight;
     mSeed = store.mSeed;
     mPtr = store.mPtr;
@@ -288,7 +294,9 @@ void MWWorld::ContainerStore::swapPreparedContents(ContainerStore& other) noexce
     mPreparedAdditionIdentity.reset();
     other.mPreparedAdditionIdentity.reset();
     mPreparedInitialInventory.reset();
+    mPreparedInitialAutoEquip.reset();
     other.mPreparedInitialInventory.reset();
+    other.mPreparedInitialAutoEquip.reset();
     static_assert(std::is_nothrow_swappable_v<Lists>);
     using std::swap;
     swap(mLists, other.mLists);
@@ -367,17 +375,23 @@ void MWWorld::ContainerStore::setContListener(MWWorld::ContainerStoreListener* l
     mListener = listener;
 }
 
-MWWorld::ContainerStoreIterator MWWorld::ContainerStore::unstack(const Ptr& ptr, int count)
+MWWorld::ContainerStoreIterator MWWorld::ContainerStore::unstack(
+    const Ptr& ptr, int count, PreparedInitialInventory* prepared)
 {
     resolve();
     if (ptr.getCellRef().getCount() <= count)
         return end();
-    MWWorld::ContainerStoreIterator it = addNewStack(ptr, subtractItems(ptr.getCellRef().getCount(false), count));
+    const int remainder = subtractItems(ptr.getCellRef().getCount(false), count);
+    MWWorld::ContainerStoreIterator it = prepared
+        ? prepared->takeSplitStack(*this, ptr, remainder) : addNewStack(ptr, remainder);
 
     MWWorld::Ptr newPtr = *it;
     newPtr.getCellRef().unsetRefNum();
     newPtr.getRefData().setLuaScripts(nullptr);
-    MWBase::Environment::get().getWorldModel()->registerPtr(newPtr);
+    if (prepared)
+        MWBase::Environment::get().getWorldModel()->registerPreparedPtr(newPtr, prepared->mRegistrations);
+    else
+        MWBase::Environment::get().getWorldModel()->registerPtr(newPtr);
 
     const ESM::RefId& script = it->getClass().getScript(*it);
     if (!script.empty())
@@ -993,7 +1007,14 @@ int MWWorld::ContainerStore::remove(const Ptr& item, int count, bool equipReplac
 void MWWorld::ContainerStore::prepareInitialInventory(const ESM::InventoryList& items, const ESM::RefId& owner,
     const ESMStore& content, const ESMStore& incoming)
 {
-    mPreparedInitialInventory = std::make_unique<PreparedInitialInventory>(items, owner, content, incoming);
+    mPreparedInitialAutoEquip.reset();
+    mPreparedInitialInventory = std::make_unique<PreparedInitialInventory>(
+        items, owner, content, incoming, dynamic_cast<InventoryStore*>(this) != nullptr);
+}
+
+std::unique_ptr<MWWorld::PreparedInitialInventory> MWWorld::ContainerStore::takePreparedInitialAutoEquip()
+{
+    return std::move(mPreparedInitialAutoEquip);
 }
 
 void MWWorld::ContainerStore::fill(const ESM::InventoryList& items, const ESM::RefId& owner, Misc::Rng::Generator& prng)
@@ -1002,6 +1023,7 @@ void MWWorld::ContainerStore::fill(const ESM::InventoryList& items, const ESM::R
     {
         auto prepared = std::move(mPreparedInitialInventory);
         prepared->fill(*this, owner, prng);
+        if (dynamic_cast<InventoryStore*>(this)) mPreparedInitialAutoEquip = std::move(prepared);
     }
     else
         for (const ESM::ContItem& iter : items.mList)
@@ -1082,6 +1104,7 @@ void MWWorld::ContainerStore::addInitialItemImp(
 void MWWorld::ContainerStore::clear()
 {
     mPreparedInitialInventory.reset();
+    mPreparedInitialAutoEquip.reset();
     mPreparedAdditionIdentity.reset();
     for (auto&& iter : *this)
         iter.getCellRef().setCount(0);

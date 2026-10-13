@@ -66,9 +66,9 @@ namespace MWClass
     public:
         bool isItem(const MWWorld::ConstPtr&) const override { return true; }
 
-        std::pair<std::vector<int>, bool> getEquipmentSlots(const MWWorld::ConstPtr& ptr) const override
+        std::pair<MWWorld::Class::EquipmentSlots, bool> getEquipmentSlots(const MWWorld::ConstPtr& ptr) const override
         {
-            std::vector<int> slots;
+            MWWorld::Class::EquipmentSlots slots;
             if constexpr (std::is_same_v<Record, ESM4::Armor>)
             {
                 const std::uint32_t flags = ptr.get<Record>()->mBase->mArmorFlags;
