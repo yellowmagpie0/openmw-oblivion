@@ -529,6 +529,63 @@ TEST(MWWorldPtrTest, preparedRegistrationsOwnNodesAcrossClearCopiesMovesAndOrdin
     EXPECT_EQ(registry.getLastGenerated(), finalSerial); EXPECT_EQ(registry.getRevision(), finalRevision);
 }
 
+TEST(MWWorldPtrTest, ordinaryRegistrationUpdatesPreserveFullyReservedCapacity)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store;
+    ESM::Weapon base{};
+    base.blank();
+    base.mId = ESM::RefId::stringRefId("reserved-registry-update");
+    store.insertStatic(base);
+    for (bool detached : {false, true})
+    {
+        SCOPED_TRACE(detached);
+        MWWorld::PtrRegistry registry;
+        MWWorld::ManualRef original(store, base.mId), relocated(store, base.mId);
+        registry.insert(original.getPtr());
+        const auto id = original.getPtr().getCellRef().getRefNum();
+        relocated.getPtr().getCellRef().setRefNum(id);
+        auto pool = registry.prepareInsertions(detached ? registry.bucketCount() : 1);
+        const auto capacity = std::max(registry.bucketCount(), registry.preparedBucketCount());
+        auto remainder = registry.prepareInsertions(capacity - 1 - registry.pendingInsertions());
+        ASSERT_EQ(registry.pendingInsertions() + 1, capacity);
+        const auto buckets = registry.bucketCount();
+        const auto spareBuckets = registry.preparedBucketCount();
+        const auto pending = registry.pendingInsertions();
+        const auto revision = registry.getRevision();
+        const auto serial = registry.getLastGenerated();
+        // Cell restoration repeats registration after moving an actor from a
+        // temporary reference into its stable list node. Also cover a repeat
+        // registration of that same node while every spare slot is reserved.
+        for (unsigned repeat = 0; repeat < 2; ++repeat)
+        {
+            registry.insert(relocated.getPtr());
+            EXPECT_EQ(registry.getOrEmpty(id), relocated.getPtr());
+            EXPECT_EQ(registry.bucketCount(), buckets);
+            EXPECT_EQ(registry.preparedBucketCount(), spareBuckets);
+            EXPECT_EQ(registry.pendingInsertions(), pending);
+            EXPECT_EQ(registry.getRevision(), revision + repeat + 1);
+            EXPECT_EQ(registry.getLastGenerated(), serial);
+        }
+        registry.remove(*original.getPtr().mRef);
+        EXPECT_EQ(registry.getOrEmpty(id), relocated.getPtr());
+        std::vector<std::unique_ptr<MWWorld::ManualRef>> refs;
+        for (auto* reservations : {&pool, &remainder})
+        {
+            while (reservations->size())
+            {
+                refs.push_back(std::make_unique<MWWorld::ManualRef>(store, base.mId));
+                registry.insertPrepared(refs.back()->getPtr(), *reservations);
+                EXPECT_EQ(registry.getOrEmpty(refs.back()->getPtr().getCellRef().getRefNum()), refs.back()->getPtr());
+                EXPECT_EQ(registry.bucketCount(), capacity);
+            }
+        }
+        EXPECT_EQ(registry.pendingInsertions(), 0u);
+        EXPECT_EQ(refs.size(), pending);
+        EXPECT_EQ(registry.getOrEmpty(id), relocated.getPtr());
+    }
+}
+
 TEST(MWWorldPtrTest, preparedRegistrationsRejectForeignOwnersAndNamespaceFailureBeforeMutation)
 {
     MWClass::Weapon::registerSelf();

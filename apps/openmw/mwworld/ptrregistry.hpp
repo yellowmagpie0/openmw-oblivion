@@ -183,8 +183,11 @@ namespace MWWorld
                     preparedNative = prepared.extract(prepared.begin());
                 }
             }
-            // Ordinary insertions must leave capacity for every outstanding plan.
-            if (mReservations->mPending) reserveCapacity(1);
+            // New identities must leave capacity for every outstanding plan.
+            // Re-registering a moved reference only replaces its Ptr: reserving
+            // another slot here can allocate at the reservation boundary.
+            if (mReservations->mPending && !mIndex.contains(ptr.getCellRef().getRefNum()))
+                reserveCapacity(1);
             const auto id = ptr.getCellRef().getOrAssignRefNum(mLastGenerated);
             // Restored references can already have a generated identity. Keep
             // subsequent allocation beyond it, including a retained Player

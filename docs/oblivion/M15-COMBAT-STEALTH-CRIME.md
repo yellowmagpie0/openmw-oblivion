@@ -6,6 +6,65 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 preserve registry capacity during reference relocation — 2026-10-13
+
+Ordinary registration now reserves an additional identity slot only when the
+RefNum is absent from the registry. Cell restoration registers an actor during
+its codec load, then re-registers its final list-node address. That second call
+replaces an existing pointer; previously it could allocate another bucket table
+when outstanding insertion reservations exactly filled the available capacity.
+New identities retain their existing reservation-growth path. Revision updates,
+identity generation and native-index handling are unchanged.
+
+The new regression covers fully reserved live and detached bucket tables,
+replacement by another holder, repeat registration, unchanged generator and
+pending credits, safe old-holder removal, and subsequent consumption of every
+reserved node. Both full engine inventories pass **1,395 tests**, exact inventory
+agreement and no failures/skips, under `build/oblivion-compat/m15/S3/registry-update-normal-01`
+and `registry-update-sanitized-01`. Tested parent:
+`944f304ff5c9c6cbedc2e39c23561f659be64229`; matching before/after fingerprint:
+`e28bc3999092d1d900d313f2c3606306104b0d69f5b794620f0f41de6298395b`.
+Normal/instrumented openmw-tests SHA256:
+`026d05b7367c55e08693cad6456cc1b5cc643b78a2af25fb5d7ff7cc4d6f39f7`,
+`9bc6ac28fa25e8bfb101b9a46b24300a66c1c40cf674ca8b0d6142613507c7f5`.
+ASan/UBSan halt on errors; leak checking is disabled. Audio/SDL are null/offscreen.
+Existing compiler warnings remain in the logs; no failed build attempts occurred.
+
+`registry-update-allocation-control-01` uses a class-renamed copy of the production
+registry header, avoiding ODR interference from the linked engine. It disables
+scalar/array/aligned C++ new only during the four existing-identity update calls;
+all pass. `registry-update-negative-01` restores the former unconditional reserve
+condition and fails with `std::bad_alloc` on the first guarded update, as required.
+This proves the scoped legacy pointer update, not arbitrary native registration,
+whole reference restoration or allocation-free loading.
+
+Normal/instrumented load/F5/F9/F5/quit courses pass in
+`registry-update-runtime-normal-01` and `registry-update-runtime-sanitized-01`.
+The retained editable armor-bearing recipe and test-only GMST plugin produce input
+SHA256 `a42670fc27728b225404c3d7c1df60ff981d4410f252d883c4824f1ffd52bb4a`.
+Native states, shared inventory/NPC/core fields and authored records are compared;
+existing missing-script warning IDs/counts match the hashed baseline.
+Normal/instrumented openmw SHA256:
+`6135ef112881dee95bc06b9de5c6567b138ba7e1b9e5838c72309791ee06ae17`,
+`91c50821540f9c8c2c136e2fd053ff2c362ce5fede294559b923ecefda9982d9`.
+
+`registry-update-runtime-continuation-sanitized-01` starts fresh PID96960 after
+normal PID94817 exits, from its exact final save SHA256
+`4a848c452a02a969d3def1a6446464168249a3efa8bce92d1ded2c30770e1254`.
+Both load/save cycles, semantic comparisons and clean exit pass. Instrumented
+initial-input PID96968 passes the same course. All six reviewed Oblivion captures
+show prison stone/chains, HUD and retained blade without error dialogs.
+`registry-update-morrowind-01` passes unchanged M14 startup/idle/F5 save isolation,
+including independent native-record/marker exclusion; its reviewed terrain-facing
+capture shows sky/ground/reticle/HUD. These are runtime/restart regression checks,
+not combat acceptance or a whole-load allocation probe.
+
+S3 remains **in progress**. Cell-node storage, reference/animation and general
+local-script restoration, scene publication, consumed missing-dependency admission,
+full outgoing-world preservation after late failure and the complete requirement
+audit remain open. The read-only cell path findings are retained in
+`registry-update-followup-01/cell-staging-notes.txt` under the evidence root.
+
 ## S3 prepare legacy actor registry publication — 2026-10-13
 
 Prepared legacy NPC/creature custom data now owns one registry insertion

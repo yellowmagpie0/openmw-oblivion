@@ -773,3 +773,18 @@ The newest milestone entry records hashes, scope and retained failed attempts.
 Cell reference storage/registration, general local-script restoration, scene
 publication, consumed missing-dependency admission, full late-failure prior-world
 preservation and the complete S3 audit remain open; this is not whole-load staging.
+
+
+Ordinary existing-RefNum registry updates no longer reserve another identity slot.
+This removes a bucket allocation when cell restoration relocates an already
+registered actor while pending reservations exactly fill live or detached capacity.
+The new regression checks replacement/repeat updates, identities, credits, old-holder
+removal and complete later reservation consumption. Both full 1395-case normal and
+ASan/UBSan engine inventories pass with matching fingerprints. Four guarded pointer
+updates pass with C++ new disabled; restoring the old condition fails the first call.
+Normal/instrumented runtime save/reload, exact normal-save fresh instrumented
+continuation and Morrowind save isolation pass semantic checks and visual review.
+The newest milestone entry records hashes and scope. This closes unnecessary
+reservation growth during pointer replacement only; cell storage, general reference
+and script restoration, scene publication, consumed missing-dependency admission,
+full late-failure outgoing-world preservation and the complete S3 audit remain open.
