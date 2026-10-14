@@ -28,6 +28,9 @@ namespace LuaUtil
         ScriptsContainer* mContainer = nullptr;
         int mIndex = -1; // index in LuaUtil::ScriptsConfiguration
     };
+    class LuaState;
+    LuaState* beginScriptDispatch(ScriptId id);
+    void endScriptDispatch(LuaState* state) noexcept;
 
     struct LuaStateSettings
     {
@@ -140,6 +143,7 @@ namespace LuaUtil
         // Makes no sense if called not from Lua code.
         // Note: It is a slow function, should be used for debug purposes only.
         std::string debugTraceback() { return mSol["debug"]["traceback"]().get<std::string>(); }
+        bool hasActiveScript() const noexcept { return mRuntimeDispatchDepth || !mActiveScriptIdStack.empty(); }
 
         // Registers a package that will be available from every sandbox via `require(name)`.
         // The package can be either a sol::table with an API or a sol::function. If it is a function,
@@ -186,6 +190,9 @@ namespace LuaUtil
         static sol::protected_function_result throwIfError(sol::protected_function_result&&);
 
     private:
+        friend LuaState* beginScriptDispatch(ScriptId);
+        friend void endScriptDispatch(LuaState*) noexcept;
+        unsigned mRuntimeDispatchDepth = 0;
         template <typename... Args>
         friend sol::protected_function_result call(const sol::protected_function& fn, Args&&... args);
         template <typename... Args>
@@ -255,6 +262,11 @@ namespace LuaUtil
     template <typename... Args>
     sol::protected_function_result call(ScriptId scriptId, const sol::protected_function& fn, Args&&... args)
     {
+        struct DispatchGuard
+        {
+            LuaState* mState;
+            ~DispatchGuard() { endScriptDispatch(mState); }
+        } dispatchGuard{beginScriptDispatch(scriptId)};
         LuaState* luaState = nullptr;
         if (LuaState::sProfilerEnabled && scriptId.mContainer)
         {

@@ -1095,3 +1095,22 @@ with reviewed captures. Failed headless Player setup and unlaunched dependent 01
 probe remain recorded. Nonempty incoming-controller retirement, complete
 mechanics/World composition, Lua/UI/audio/other managers and StateManager rollback
 remain unverified; these tests do not close full S3 acceptance.
+
+Lua ScriptsContainer retention now preserves actual sandboxes/upvalues/interface
+tables/handlers/timers and loaded/unloaded data without save/load/init replay.
+Prepared packages/serializer pointers, callback counter, memory stats and weak
+ownership anchors follow selection; existing ScriptId userdata contexts retarget
+in place. Parked dispatch is blocked and an independent dispatch-depth counter
+enforces VM idleness even without profiling. Owner death clears archived Lua
+registry references before VM destruction. Tracked containers remain rejected
+pending aggregate tracker retention. Eighteen selected and full 2,601 component/
+1,454 engine cases pass in normal and ASan/UBSan builds at fingerprint
+`3a67a10b23c509553882e88932abc3f1c1bf2e293212429f213325aed428238d`.
+The `lua-container-retention-*01` evidence includes actual copied LuaManager
+normal/instrumented global-container courses preserving eight loaded globals and
+weak domains, rejecting parked execution, then normal Lua updates/render/F5 with
+selected decoded persistence and reviewed captures. Whole LuaManager events,
+storage direct section views, local-script/tracker domains, input registries and
+GUI ownership remain absent. No allocation-denial or full failed-load transaction
+acceptance is claimed. World/manager composition and StateManager rollback remain
+open; full S3 acceptance is still unproven.

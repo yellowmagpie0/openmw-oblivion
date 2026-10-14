@@ -6,6 +6,36 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain live Lua script containers — 2026-10-14
+
+ScriptsContainer now retains actual loaded/unloaded data, sandboxes, interface
+tables, handler vectors, both timer queues, packages/serializer pointers, callback
+counter, memory accounting and lifetime anchors without onSave/onLoad/onInit
+replay. Prepared handler layouts remain fixed; detach/exchange move original
+weak-reference ownership and retarget existing ScriptId userdata in place.
+Parked/frozen dispatch is rejected. VM dispatch depth is tracked even when the
+profiler is disabled; top-level initialization also uses that guarded dispatch.
+Rollback/discard/scope/move/owner death retire the correct Lua objects before
+their VM dies. Tracked containers are rejected until tracker retention is composed.
+
+All 18 selected Lua container cases and full 2,601 component plus 1,454 engine
+inventories pass in normal and ASan/UBSan configurations at fingerprint
+`3a67a10b23c509553882e88932abc3f1c1bf2e293212429f213325aed428238d`.
+Evidence: `S3/lua-container-retention-{normal,sanitized,full-normal,full-sanitized}-01`
+and `lua-container-retention-engine-{normal,sanitized}-01`. Actual normal
+`lua-container-retention-runtime-01` (PID 246700) and instrumented
+`lua-container-retention-runtime-sanitized-01` (PID 249200) use a copied LuaManager
+update probe to park/exchange/restore its eight real global scripts, reject parked
+dispatch and verify weak ownership before regular updates/render/F5. Selected
+decoded crime/base/action/counter fields match; scene/HUD captures are reviewed.
+Component tests verify retained upvalues, unsavable timers, interfaces and lifetime
+behavior. Leak checking is disabled; allocation-denial controls are not claimed.
+
+Whole LuaManager event queues, storage views, tracker/local-script domains, input
+registries and actual GUI/resource ownership still require retention. World/backend/
+other-manager composition and StateManager late-failure rollback remain missing.
+**S3 and M15 are incomplete.**
+
 ## S3 retained live mechanics runtime — 2026-10-14
 
 MechanicsManager now retains/exchanges actual Actor and animated-object controller

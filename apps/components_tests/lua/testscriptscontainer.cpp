@@ -701,4 +701,81 @@ CUSTOM: test1.lua
         EXPECT_EQ(newScriptId, 2);
         EXPECT_TRUE(scripts2.hasScript(newScriptId));
     }
+    TEST_F(LuaScriptsContainerTest, RetentionPreservesLiveUpvaluesTimersWeakDomainsWithoutReplay)
+    {
+        LuaUtil::ScriptsContainer scripts(&mLua, "Test");
+        const int id = getId(loadSave2Path);
+        ASSERT_TRUE(scripts.addCustomScript(id));
+        sol::state_view lua = mLua.unsafeState();
+        scripts.receiveEvent("Set", LuaUtil::serialize(lua.create_table_with("n",1,"x",7,"y",11)));
+        int fired = 0;
+        sol::function timer = sol::make_object(lua, [&] { ++fired; });
+        scripts.setupUnsavableTimer(LuaUtil::ScriptsContainer::TimerType::SIMULATION_TIME, 10, id, timer);
+        auto originalWeak = scripts.getWeakPointer();
+        testing::internal::CaptureStdout();
+        auto retained = scripts.retainRuntime();
+        EXPECT_THROW(scripts.removeAllScripts(), std::logic_error);
+        EXPECT_THROW(scripts.update(0), std::logic_error);
+        ASSERT_TRUE(retained.detach());
+        EXPECT_NE(*originalWeak, &scripts);
+        EXPECT_THROW((*originalWeak)->receiveEvent("Print", ""), std::logic_error);
+        EXPECT_FALSE(scripts.hasScript(id));
+        scripts.processTimers(20,20); EXPECT_EQ(fired,0);
+        ASSERT_TRUE(scripts.addCustomScript(id));
+        scripts.receiveEvent("Set", LuaUtil::serialize(lua.create_table_with("n",1,"x",31,"y",41)));
+        auto incomingWeak = scripts.getWeakPointer();
+        ASSERT_TRUE(retained.exchange());
+        EXPECT_EQ(*originalWeak, &scripts); EXPECT_NE(*incomingWeak, &scripts);
+        ASSERT_TRUE(retained.restore());
+        EXPECT_EQ(*incomingWeak, nullptr);
+        EXPECT_EQ(internal::GetCapturedStdout(), "");
+        testing::internal::CaptureStdout();
+        scripts.receiveEvent("Print", "");
+        EXPECT_EQ(internal::GetCapturedStdout(), "Test[loadsave2.lua]:\t7\t11\n");
+        scripts.processTimers(10,0); EXPECT_EQ(fired,1);
+        scripts.processTimers(20,20); EXPECT_EQ(fired,1);
+        EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange());
+    }
+
+    TEST_F(LuaScriptsContainerTest, RetentionRestoresInterfaceTablesAndScopeCommitDomains)
+    {
+        LuaUtil::ScriptsContainer scripts(&mLua, "Test");
+        ASSERT_TRUE(scripts.addCustomScript(getId(testInterfacePath)));
+        ASSERT_TRUE(scripts.addCustomScript(getId(useInterfacePath)));
+        {
+            auto retained = scripts.retainRuntime(); ASSERT_TRUE(retained.detach());
+            ASSERT_TRUE(scripts.addCustomScript(getId(test1Path)));
+        }
+        EXPECT_FALSE(scripts.hasScript(getId(test1Path)));
+        testing::internal::CaptureStdout(); scripts.update(1);
+        EXPECT_EQ(internal::GetCapturedStdout(), "Test[testinterface.lua]:\tFN\t3.5\n");
+        auto retained = scripts.retainRuntime(); ASSERT_TRUE(retained.detach());
+        ASSERT_TRUE(scripts.addCustomScript(getId(test1Path)));
+        auto incomingWeak = scripts.getWeakPointer();
+        ASSERT_TRUE(retained.exchange());
+        auto moved = std::move(retained); moved.discard();
+        EXPECT_EQ(*incomingWeak,&scripts);
+        EXPECT_TRUE(scripts.hasScript(getId(test1Path)));
+        EXPECT_FALSE(scripts.hasScript(getId(testInterfacePath)));
+    }
+
+    TEST_F(LuaScriptsContainerTest, RetentionRejectsTrackerAndLiveDispatchAndInvalidatesBeforeLuaDies)
+    {
+        LuaUtil::ScriptTracker tracker;
+        LuaUtil::ScriptsContainer tracked(&mLua,"Tracked",&tracker);
+        EXPECT_THROW(tracked.retainRuntime(), std::logic_error);
+        auto scripts = std::make_unique<LuaUtil::ScriptsContainer>(&mLua,"Test");
+        const int id=getId(test1Path); ASSERT_TRUE(scripts->addCustomScript(id));
+        sol::function fn=sol::make_object(mLua.unsafeState(), [&] {
+            EXPECT_TRUE(mLua.hasActiveScript());
+            EXPECT_THROW(scripts->retainRuntime(),std::logic_error);
+        });
+        scripts->setupUnsavableTimer(LuaUtil::ScriptsContainer::TimerType::GAME_TIME,1,id,fn);
+        scripts->processTimers(0,1); EXPECT_FALSE(mLua.hasActiveScript());
+        auto retained=scripts->retainRuntime(); ASSERT_TRUE(retained.detach());
+        auto originalWeak=(*scripts).getWeakPointer();
+        scripts.reset(); EXPECT_EQ(*originalWeak,nullptr);
+        EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange()); retained.discard();
+    }
+
 }

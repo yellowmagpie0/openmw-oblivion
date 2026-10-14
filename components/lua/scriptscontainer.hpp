@@ -98,6 +98,25 @@ namespace LuaUtil
     class ScriptsContainer
     {
     public:
+        class RetainedRuntime
+        {
+            friend class ScriptsContainer;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        /// Preserve live sandboxes/interfaces/timers without onSave/onLoad/onInit replay.
+        /// Requires an idle Lua VM and an untracked container; tracker retention is coordinated separately.
+        RetainedRuntime retainRuntime();
         // ScriptId of each script is stored with this key in Script::mHiddenData.
         // Removed from mHiddenData when the script if removed.
         constexpr static std::string_view sScriptIdKey = "_id";
@@ -120,7 +139,8 @@ namespace LuaUtil
 
         // `conf` specifies the list of scripts that should be autostarted in this container; the script
         // names themselves are stored in ScriptsConfiguration.
-        void setAutoStartConf(ScriptIdsWithInitializationData conf) { mAutoStartScripts = std::move(conf); }
+        void setAutoStartConf(ScriptIdsWithInitializationData conf)
+        { requireMutableRuntime(); mAutoStartScripts = std::move(conf); }
         const ScriptIdsWithInitializationData& getAutoStartConf() const { return mAutoStartScripts; }
 
         // Adds package that will be available (via `require`) for all scripts in the container.
@@ -272,6 +292,10 @@ namespace LuaUtil
         LuaUtil::LuaState& mLua;
 
     private:
+        friend LuaState* beginScriptDispatch(ScriptId);
+        void requireMutableRuntime() const;
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        bool mParkedRuntime = false;
         struct Script
         {
             std::optional<sol::main_function> mOnSave;
@@ -279,6 +303,7 @@ namespace LuaUtil
             std::optional<sol::main_table> mInterface;
             std::string mInterfaceName;
             sol::main_table mHiddenData;
+            ScriptId* mContext = nullptr; // rooted userdata; retargeted in place during runtime selection
             std::map<std::string, sol::main_protected_function> mRegisteredCallbacks;
             std::map<int64_t, sol::main_protected_function> mTemporaryCallbacks;
             VFS::Path::Normalized mPath;

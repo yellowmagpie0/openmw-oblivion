@@ -28,6 +28,132 @@ namespace LuaUtil
 
     int64_t ScriptsContainer::sInstanceCount = 0;
 
+    LuaState* beginScriptDispatch(ScriptId id)
+    {
+        if (!id.mContainer) return nullptr;
+        id.mContainer->requireMutableRuntime();
+        auto* state = &id.mContainer->mLua;
+        ++state->mRuntimeDispatchDepth;
+        return state;
+    }
+    void endScriptDispatch(LuaState* state) noexcept
+    {
+        if (state) --state->mRuntimeDispatchDepth;
+    }
+
+    struct ScriptsContainer::RetainedRuntime::Data
+    {
+        ScriptsContainer* mOwner;
+        std::vector<std::unique_ptr<EngineHandlerList>> mHandlers;
+        std::unique_ptr<ScriptsContainer> mArchive;
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(ScriptsContainer& owner) : mOwner(&owner)
+        {
+            mArchive = std::make_unique<ScriptsContainer>(&owner.mLua, owner.mNamePrefix, nullptr,
+                std::holds_alternative<LoadedData>(owner.mData));
+            auto interfaces = mArchive->mAPI.find("openmw.interfaces");
+            std::optional<sol::main_object> freshInterfaces;
+            if (interfaces != mArchive->mAPI.end()) freshInterfaces = interfaces->second;
+            mArchive->mAPI = owner.mAPI;
+            if (freshInterfaces) mArchive->mAPI.insert_or_assign("openmw.interfaces", std::move(*freshInterfaces));
+            mArchive->mAutoStartScripts = owner.mAutoStartScripts;
+            mArchive->mSerializer = owner.mSerializer;
+            mArchive->mSavedDataDeserializer = owner.mSavedDataDeserializer;
+            for (const auto& [name, list] : owner.mEngineHandlers)
+            {
+                if (name == "onUpdate") continue;
+                auto handlers = std::make_unique<EngineHandlerList>(list->mName);
+                mArchive->registerEngineHandlers({handlers.get()});
+                mHandlers.push_back(std::move(handlers));
+            }
+        }
+        void swap() noexcept
+        {
+            static_assert(std::is_nothrow_swappable_v<decltype(mOwner->mData)>);
+            using std::swap;
+            swap(mOwner->mData, mArchive->mData);
+            swap(mOwner->mAPI, mArchive->mAPI);
+            swap(mOwner->mAutoStartScripts, mArchive->mAutoStartScripts);
+            swap(mOwner->mSerializer, mArchive->mSerializer);
+            swap(mOwner->mSavedDataDeserializer, mArchive->mSavedDataDeserializer);
+            swap(mOwner->mTemporaryCallbackCounter, mArchive->mTemporaryCallbackCounter);
+            swap(mOwner->mRemovedScriptsMemoryUsage, mArchive->mRemovedScriptsMemoryUsage);
+            swap(mOwner->mRequiredLoading, mArchive->mRequiredLoading);
+            for (const auto& [name, handlers] : mOwner->mEngineHandlers)
+                handlers->mList.swap(mArchive->mEngineHandlers.find(name)->second->mList);
+            swap(mOwner->mThis, mArchive->mThis);
+            *mOwner->mThis = mOwner;
+            *mArchive->mThis = mArchive.get();
+            for (auto* container : {mOwner, mArchive.get()})
+                if (auto* loaded = std::get_if<LoadedData>(&container->mData))
+                    for (auto& [id, script] : loaded->mScripts)
+                        if (script.mContext) script.mContext->mContainer = container;
+            mArchive->mParkedRuntime = true;
+        }
+        void ownerDestroyed() noexcept
+        {
+            mArchive.reset();
+            mHandlers.clear();
+            mOwner = nullptr;
+        }
+    };
+    void ScriptsContainer::requireMutableRuntime() const
+    {
+        if (mParkedRuntime || (mRetainedRuntime && !mRetainedRuntime->mDetached))
+            throw std::logic_error("Lua runtime is parked or frozen before detachment");
+    }
+    ScriptsContainer::RetainedRuntime ScriptsContainer::retainRuntime()
+    {
+        if (mRetainedRuntime || mParkedRuntime || mTracker || mLua.hasActiveScript())
+            throw std::logic_error("Lua retention requires an idle untracked container");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    ScriptsContainer::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    ScriptsContainer::RetainedRuntime::~RetainedRuntime()
+    { if (mData && mData->mOwner && !restore()) std::terminate(); }
+    ScriptsContainer::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    ScriptsContainer::RetainedRuntime& ScriptsContainer::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool ScriptsContainer::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mLua.hasActiveScript()) return false;
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool ScriptsContainer::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mLua.hasActiveScript()) return false;
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool ScriptsContainer::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mOwner->mLua.hasActiveScript()) return false;
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->ownerDestroyed(); mData.reset();
+        return true;
+    }
+    void ScriptsContainer::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOwner->mLua.hasActiveScript()) std::terminate();
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->ownerDestroyed(); mData.reset();
+    }
+
     ScriptsContainer::ScriptsContainer(
         LuaUtil::LuaState* lua, std::string_view namePrefix, ScriptTracker* tracker, bool load)
         : mNamePrefix(namePrefix)
@@ -54,6 +180,7 @@ namespace LuaUtil
 
     void ScriptsContainer::addPackage(std::string packageName, sol::main_object package)
     {
+        requireMutableRuntime();
         if (!package.is<sol::userdata>())
             throw std::logic_error("Expected package to be read-only: " + packageName);
         mAPI.insert_or_assign(std::move(packageName), std::move(package));
@@ -105,6 +232,7 @@ namespace LuaUtil
         Script& script = data.mScripts[scriptId];
         script.mHiddenData = view.newTable();
         script.mHiddenData[sScriptIdKey] = ScriptId{ this, scriptId };
+        script.mContext = script.mHiddenData[sScriptIdKey].get<ScriptId*>();
         script.mHiddenData[sScriptDebugNameKey] = debugName;
         script.mPath = path;
         script.mStats.mAvgInstructionCount = 0;
@@ -385,6 +513,7 @@ namespace LuaUtil
 
     void ScriptsContainer::registerEngineHandlers(std::initializer_list<EngineHandlerList*> handlers)
     {
+        if (mRetainedRuntime || mParkedRuntime) throw std::logic_error("Retained Lua handler layout is immutable");
         for (EngineHandlerList* h : handlers)
             mEngineHandlers[h->mName] = h;
     }
@@ -529,6 +658,7 @@ namespace LuaUtil
 
     ScriptsContainer::LoadedData& ScriptsContainer::ensureLoaded()
     {
+        requireMutableRuntime();
         mRequiredLoading = true;
         if (LoadedData* data = std::get_if<LoadedData>(&mData))
             return *data;
@@ -633,6 +763,7 @@ namespace LuaUtil
 
     ScriptsContainer::~ScriptsContainer()
     {
+        if (mRetainedRuntime) { mRetainedRuntime->ownerDestroyed(); mRetainedRuntime = nullptr; }
         sInstanceCount--;
         *mThis = nullptr;
     }
@@ -641,6 +772,7 @@ namespace LuaUtil
     // external objects that are already removed during child class destruction.
     void ScriptsContainer::removeAllScripts()
     {
+        requireMutableRuntime();
         std::visit(
             [&](auto&& variant) {
                 using T = std::decay_t<decltype(variant)>;
