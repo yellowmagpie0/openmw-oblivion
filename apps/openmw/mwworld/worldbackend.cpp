@@ -7,6 +7,7 @@
 #include <components/settings/values.hpp>
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/mechanicsmanager.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwrender/renderingmanager.hpp"
 #include "../mwrender/runtimeviewer.hpp"
@@ -92,12 +93,15 @@ namespace MWWorld
             mReady = true;
         }
 
-        void dispose() noexcept
+        void dispose(bool restoreOriginal = true) noexcept
         {
-            if (mExchanged && !exchange()) std::terminate();
+            if (restoreOriginal && mExchanged && !exchange()) std::terminate();
             restoreSelection();
             mReady = false;
-            mScene.reset(); // empty Scene; abort/wait its own preload users first
+            // Scene destruction only stops preload work. Its live objects must be unloaded
+            // through clearSelectedScene while the corresponding service owners are selected.
+            if (mScene && !mScene->getActiveCells().empty()) std::terminate();
+            mScene.reset();
             if (mProjectiles) mProjectiles->clear();
             mProjectiles.reset();
             mWeather.reset();
@@ -197,6 +201,40 @@ namespace MWWorld
     }
     bool World::PreparedBackend::ready() const noexcept { return mData && mData->mOwner && mData->mReady; }
     bool World::PreparedBackend::exchange() noexcept { return mData && mData->exchange(); }
+    bool World::PreparedBackend::clearSelectedScene()
+    {
+        if (!ready() || mData->mSelected || mData->mViewer->areThreadsRunning()
+            || MWBase::Environment::get().getWorld() != mData->mOwner)
+            return false;
+        // The caller selects the matching cells, player, Lua, mechanics, UI and sound owners
+        // before entry. Unload callbacks must run before any of those owners are released.
+        auto& owner = *mData->mOwner;
+        auto& scene = *owner.mWorldScene;
+        if (owner.mPlayer)
+        {
+            const auto player = owner.getPlayerPtr();
+            // Normal cell changes preserve the player's controller. Whole-backend retirement
+            // must detach it while its renderer-owned animation is still alive. An empty
+            // prepared scene does not own the outgoing simulation's player.
+            if (player.isInCell() && scene.getActiveCells().contains(player.getCell()))
+                MWBase::Environment::get().getMechanicsManager()->remove(player, false);
+        }
+        scene.clear();
+        return true;
+    }
+    bool World::PreparedBackend::discard() noexcept
+    {
+        if (!ready() || !mData->mExchanged || mData->mSelected || mData->mViewer->areThreadsRunning()
+            || MWBase::Environment::get().getWorld() != mData->mOwner
+            || !mData->mScene->getActiveCells().empty())
+            return false;
+        auto* owner = mData->mOwner;
+        mData->dispose(false);
+        owner->mPreparedBackend = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
     void World::PreparedBackend::cancel() noexcept
     {
         if (!mData) return;

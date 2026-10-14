@@ -138,7 +138,9 @@ namespace MWWorld
         /// Empty backend candidate for the load transaction. Preparation/cancellation preserves
         /// the original backend. Exchange requires stopped viewer threads and external actor/Lua
         /// users; the caller must select matching cells, Player and managers before resuming them.
-        /// Cancellation restores the original backend. Commit is not exposed yet.
+        /// Retire a loaded scene while its matching simulation and external managers are selected,
+        /// before switching away from it. Cancellation restores the original backend; discard
+        /// keeps the incoming backend after the caller has retired the outgoing scene.
         class PreparedBackend
         {
             friend class World;
@@ -152,6 +154,8 @@ namespace MWWorld
             PreparedBackend(const PreparedBackend&) = delete;
             bool ready() const noexcept;
             bool exchange() noexcept;
+            bool clearSelectedScene();
+            bool discard() noexcept;
             void cancel() noexcept;
         };
         PreparedBackend prepareBackend();

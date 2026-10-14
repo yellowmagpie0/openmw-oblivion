@@ -6,6 +6,37 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 loaded scene retirement and backend commit — 2026-10-14
+
+PreparedBackend now exposes clearSelectedScene and discard. Retirement runs cell
+unload callbacks under the selected World/backend and caller-selected Lua,
+mechanics, UI and sound owners. It removes the matching player controller before
+unloading cells: ordinary Scene clearing deliberately preserves that controller,
+whose animation belongs to the renderer. Commit requires incoming selection,
+stopped viewer threads and an empty outgoing Scene. It keeps incoming viewer,
+resource and Environment selection, releases outgoing backend owners and
+invalidates the handle. Cancellation requires the candidate scene to be retired;
+disposal terminates rather than silently destroy a Scene containing active cells.
+
+Full 1,458 engine tests pass normally and under ASan/UBSan at fingerprint
+`7d264cd55312c8170b8b4121ee2b0da9b06a59f89d1168b716529d7e05912668`:
+`S3/backend-scene-retirement-{normal,sanitized}-02`. Copied Engine probes in
+`backend-scene-retirement-runtime-{normal,sanitized}-03` (PIDs 340483/342381)
+verify exchange/cancellation, reject commit of a live outgoing scene, render,
+F5-save, join the Lua worker, retire the loaded original scene, commit an empty
+incoming backend and quit cleanly. Captures, four lifecycle events with zero
+errors, selected decoded native save fields and binary/dependency provenance
+are audited in each verification.json. Earlier runtime fixtures failed content
+admission; the first instrumented retirement course exposed the player-controller
+use-after-free. Those attempts remain recorded; the controller retirement fix
+passes both fresh courses. Leak detection is disabled, not other ASan checks.
+
+This is backend retirement at shutdown with current store/player/managers,
+not a full loaded incoming simulation or an accepted load transaction. World
+still rejects initialized-backend simulation retention. Aggregate World/backend/
+manager ownership, candidate startup, rollback and StateManager late-load
+prior-world preservation remain outstanding. S3 and M15 remain incomplete.
+
 ## S3 select native window bundles and construct incoming frontend — 2026-10-14
 
 WindowManager now retains the actual native Runtime bundle together with its

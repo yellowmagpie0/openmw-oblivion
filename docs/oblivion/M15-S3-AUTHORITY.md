@@ -1247,3 +1247,25 @@ and superseded pre-launch driver remain recorded. These probes use one loaded
 World/backend; distinct-backend commit/discard/owner death, real dialog loading,
 aggregate loaded-world/backend/service selection and StateManager prior-world
 failed-load restoration remain incomplete and unverified.
+
+PreparedBackend now retires selected loaded scenes explicitly and commits incoming
+backend selection only after outgoing active cells are gone. Player controller
+removal precedes cell unloading and renderer destruction. The first instrumented
+shutdown commit (`backend-scene-retirement-runtime-sanitized-02`) caught a real
+CharacterController::detachAnimation use-after-free because Scene::clear preserves
+the player controller; the corrected code removes that controller only when its
+cell belongs to the selected Scene. Empty-candidate clearing preserves the
+outgoing controller. Disposal rejects an unretired active Scene by termination.
+At fingerprint
+`7d264cd55312c8170b8b4121ee2b0da9b06a59f89d1168b716529d7e05912668`, full
+1,458 normal and ASan/UBSan engine inventories pass in
+`backend-scene-retirement-{normal,sanitized}-02`. Copied Engine runtime courses
+`backend-scene-retirement-runtime-{normal,sanitized}-03` pass exchange/cancel,
+live-outgoing commit rejection, normal render/F5 and shutdown retirement/commit
+with PIDs 340483/342381. Reviewed captures, lifecycle events, selected decoded
+native fields and binary/MyGUI hashes are recorded. Runtime-01 fixtures used an
+incompatible older Lua manifest and were stopped; the failed ASan course remains
+available. This proves backend retirement with stopped users at shutdown, not
+full incoming loaded-world construction, external manager retention or failed-load
+restoration. World simulation retention still rejects initialized backends;
+StateManager's late-load cleanup and full S3 acceptance remain open.
