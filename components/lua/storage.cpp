@@ -19,6 +19,114 @@ namespace LuaUtil
 {
     LuaStorage::Value LuaStorage::Section::sEmpty;
 
+    struct LuaStorage::RetainedRuntime::Data
+    {
+        LuaStorage* mOwner;
+        std::unique_ptr<LuaStorage> mArchive = std::make_unique<LuaStorage>();
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+
+        explicit Data(LuaStorage& owner) : mOwner(&owner)
+        {
+            mArchive->mActive = owner.mActive;
+            mArchive->mListener = owner.mListener;
+            for (const auto& [name, section] : owner.mData)
+            {
+                if (section->mLifeTime == Section::Temporary) continue;
+                auto copy = std::make_shared<Section>(mArchive.get(), std::string(name));
+                copy->mValues = section->mValues;
+                copy->mLifeTime = section->mLifeTime;
+                mArchive->mData.emplace(copy->mSectionName, copy);
+            }
+        }
+        void swap() noexcept
+        {
+            using std::swap;
+            mOwner->mData.swap(mArchive->mData);
+            swap(mOwner->mActive, mArchive->mActive);
+            swap(mOwner->mListener, mArchive->mListener);
+            swap(mOwner->mThis, mArchive->mThis);
+            *mOwner->mThis = mOwner;
+            *mArchive->mThis = mArchive.get();
+            mArchive->mParkedRuntime = true;
+        }
+        void release() noexcept
+        {
+            mArchive.reset();
+            mOwner = nullptr;
+        }
+    };
+
+    LuaStorage::~LuaStorage()
+    {
+        *mThis = nullptr;
+        if (mRetainedRuntime) mRetainedRuntime->release();
+    }
+
+    void LuaStorage::requireMutableRuntime() const
+    {
+        if (mParkedRuntime || (mRetainedRuntime && !mRetainedRuntime->mDetached))
+            throw std::logic_error("Lua storage is parked or frozen before detachment");
+    }
+
+    LuaStorage::RetainedRuntime LuaStorage::retainRuntime()
+    {
+        if (mRetainedRuntime || mParkedRuntime || !mRunningCallbacks.empty())
+            throw std::logic_error("Lua storage retention requires an idle storage owner");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+
+    LuaStorage::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    LuaStorage::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
+    LuaStorage::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    LuaStorage::RetainedRuntime& LuaStorage::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool LuaStorage::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || !mData->mOwner->mRunningCallbacks.empty()) return false;
+        mData->swap();
+        mData->mDetached = true;
+        return true;
+    }
+    bool LuaStorage::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || !mData->mOwner->mRunningCallbacks.empty()) return false;
+        mData->swap();
+        mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool LuaStorage::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mOwner->mRunningCallbacks.empty()) return false;
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->release();
+        mData.reset();
+        return true;
+    }
+    void LuaStorage::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { if (!restore()) std::terminate(); return; }
+        if (!mData->mOwner->mRunningCallbacks.empty()) std::terminate();
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->release();
+        mData.reset();
+    }
+
     void LuaStorage::registerLifeTime(LuaUtil::LuaView& view, sol::table& res)
     {
         res["LIFE_TIME"] = LuaUtil::makeStrictReadOnly(tableFromPairs<std::string_view, Section::LifeTime>(view.sol(),
@@ -53,7 +161,7 @@ namespace LuaUtil
 
     void LuaStorage::Section::runCallbacks(sol::optional<std::string_view> changedKey)
     {
-        mStorage->mRunningCallbacks.insert(this);
+        storage().mRunningCallbacks.insert(this);
         mCallbacks.erase(std::remove_if(mCallbacks.begin(), mCallbacks.end(),
                              [&](const Callback& callback) {
                                  bool valid = callback.isValid();
@@ -70,15 +178,15 @@ namespace LuaUtil
                                             return !valid;
                                         }),
             mMenuScriptsCallbacks.end());
-        mStorage->mRunningCallbacks.erase(this);
+        storage().mRunningCallbacks.erase(this);
     }
 
     void LuaStorage::Section::throwIfCallbackRecursionIsTooDeep()
     {
-        if (mStorage->mRunningCallbacks.count(this) > 0)
+        if (storage().mRunningCallbacks.count(this) > 0)
             throw std::runtime_error(
                 "Storage handler shouldn't change the storage section it handles (leads to an infinite recursion)");
-        if (mStorage->mRunningCallbacks.size() > 10)
+        if (storage().mRunningCallbacks.size() > 10)
             throw std::runtime_error(
                 "Too many subscribe callbacks triggering in a chain, likely an infinite recursion");
     }
@@ -95,8 +203,8 @@ namespace LuaUtil
             if (it != mValues.end())
                 mValues.erase(it);
         }
-        if (mStorage->mListener)
-            mStorage->mListener->valueChanged(mSectionName, key, value);
+        if (storage().mListener)
+            storage().mListener->valueChanged(mSectionName, key, value);
         runCallbacks(key);
     }
 
@@ -110,8 +218,8 @@ namespace LuaUtil
             for (const auto& [k, v] : *values)
                 mValues[cast<std::string>(k)] = Value(v);
         }
-        if (mStorage->mListener)
-            mStorage->mListener->sectionReplaced(mSectionName, values);
+        if (storage().mListener)
+            storage().mListener->sectionReplaced(mSectionName, values);
         runCallbacks(sol::nullopt);
     }
 
@@ -136,6 +244,7 @@ namespace LuaUtil
         sview["asTable"]
             = [](sol::this_state lua, const SectionView& section) { return section.mSection->asTable(lua); };
         sview["subscribe"] = [](const SectionView& section, const sol::table& callback) {
+            section.mSection->storage().requireMutableRuntime();
             std::vector<Callback>& callbacks
                 = section.mForMenuScripts ? section.mSection->mMenuScriptsCallbacks : section.mSection->mCallbacks;
             if (!callbacks.empty() && callbacks.size() == callbacks.capacity())
@@ -152,11 +261,13 @@ namespace LuaUtil
             section.mSection->setAll(newValues);
         };
         sview["removeOnExit"] = [](const SectionView& section) {
+            section.mSection->storage().requireMutableRuntime();
             if (section.mReadOnly)
                 throw std::runtime_error("Access to storage is read only");
             section.mSection->mLifeTime = Section::Temporary;
         };
         sview["setLifeTime"] = [](const SectionView& section, Section::LifeTime lifeTime) {
+            section.mSection->storage().requireMutableRuntime();
             if (section.mReadOnly)
                 throw std::runtime_error("Access to storage is read only");
             section.mSection->mLifeTime = lifeTime;
@@ -235,6 +346,7 @@ namespace LuaUtil
 
     void LuaStorage::clearTemporaryAndRemoveCallbacks()
     {
+        requireMutableRuntime();
         auto it = mData.begin();
         while (it != mData.end())
         {
@@ -254,6 +366,7 @@ namespace LuaUtil
 
     void LuaStorage::load(lua_State* state, const std::filesystem::path& path)
     {
+        requireMutableRuntime();
         assert(mData.empty()); // Shouldn't be used before loading
         try
         {
@@ -280,6 +393,7 @@ namespace LuaUtil
 
     void LuaStorage::save(lua_State* state, const std::filesystem::path& path) const
     {
+        requireMutableRuntime();
         sol::table data(state, sol::create);
         for (const auto& [sectionName, section] : mData)
         {

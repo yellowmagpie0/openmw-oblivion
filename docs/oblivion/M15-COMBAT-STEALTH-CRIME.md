@@ -6,6 +6,36 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain live Lua storage — 2026-10-14
+
+LuaStorage now retains actual section nodes, cached values, callback lists and
+lifetime anchors. The incoming baseline copies non-temporary values without
+outgoing callbacks. Selection redirects existing section views to their parked
+owner, including erased temporary sections still held by scripts. Rollback
+restores original view/cache identity without callback replay; discard and owner
+death invalidate retired views. Preparation freezes mutations and retention is
+rejected during storage callbacks. Existing inactive-storage subscription and
+lifetime operations remain supported.
+
+Four added retention tests and all 2,605 component/1,454 engine cases pass in
+normal and ASan/UBSan builds at tested source fingerprint
+`8e6d028392af86f5160e8786c0cf31a4fb9ed8985584bcd9ee7c0672732b7ddf`.
+Final evidence: `S3/lua-storage-retention-final-{normal,sanitized}-01`.
+The copied LuaManager gameplay probes in `lua-storage-retention-runtime-02`
+(PID 258100) and `lua-storage-retention-runtime-sanitized-02` (PID 260174)
+exercise its actual global/player storage, inactive metadata compatibility,
+selection/rollback, callback silence/resumption and retired view rejection.
+Regular Lua updates, reviewed Prison scene/HUD captures, F5 save and peaceful
+shutdown pass; selected decoded crime/base/action/counter fields match the
+comparison course. Earlier 01 evidence remains recorded before the compatibility
+correction. Leak checks are disabled; allocation-denial coverage is not claimed.
+
+This is storage retention, not aggregate LuaManager acceptance. Shared object-list
+package references, local-script/tracker domains, event/action queues, input
+registries and real UI ownership remain to be composed. World backend/other-manager
+composition and StateManager late-load rollback remain missing.
+**S3 and M15 are incomplete.**
+
 ## S3 retain live Lua script containers — 2026-10-14
 
 ScriptsContainer now retains actual loaded/unloaded data, sandboxes, interface

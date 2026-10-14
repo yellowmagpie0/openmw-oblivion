@@ -15,6 +15,26 @@ namespace LuaUtil
     class LuaStorage
     {
     public:
+        // Prepared at an idle boundary. Detach selects a callback-free baseline;
+        // exchange preserves original section/view identity without dispatching Lua.
+        // The Lua state must outlive both the owner and its retained runtime.
+        class RetainedRuntime
+        {
+            friend class LuaStorage;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
         static void initLuaBindings(LuaUtil::LuaView& view);
         static sol::table initGlobalPackage(LuaUtil::LuaView& view, LuaStorage* globalStorage);
         static sol::table initLocalPackage(LuaUtil::LuaView& view, LuaStorage* globalStorage);
@@ -24,6 +44,9 @@ namespace LuaUtil
         static sol::table initLoadPackage(LuaUtil::LuaView& view, LuaStorage* playerStorage);
 
         explicit LuaStorage() {}
+        ~LuaStorage();
+        LuaStorage(const LuaStorage&) = delete;
+        LuaStorage& operator=(const LuaStorage&) = delete;
 
         void clearTemporaryAndRemoveCallbacks();
         void load(lua_State* state, const std::filesystem::path& path);
@@ -59,8 +82,8 @@ namespace LuaUtil
                 std::string_view section, std::string_view key, const sol::object& value) const = 0;
             virtual void sectionReplaced(std::string_view section, const sol::optional<sol::table>& values) const = 0;
         };
-        void setListener(const Listener* listener) { mListener = listener; }
-        void setActive(bool active) { mActive = active; }
+        void setListener(const Listener* listener) { requireMutableRuntime(); mListener = listener; }
+        void setActive(bool active) { requireMutableRuntime(); mActive = active; }
 
     private:
         class Value
@@ -89,7 +112,7 @@ namespace LuaUtil
             };
 
             explicit Section(LuaStorage* storage, std::string name)
-                : mStorage(storage)
+                : mOwner(storage->mThis)
                 , mSectionName(std::move(name))
             {
             }
@@ -100,7 +123,7 @@ namespace LuaUtil
             void runCallbacks(sol::optional<std::string_view> changedKey);
             void throwIfCallbackRecursionIsTooDeep();
 
-            LuaStorage* mStorage;
+            std::shared_ptr<LuaStorage*> mOwner;
             std::string mSectionName;
             std::map<std::string, Value, std::less<>> mValues;
             std::vector<Callback> mCallbacks;
@@ -109,7 +132,12 @@ namespace LuaUtil
             LifeTime mLifeTime = Persistent;
             static Value sEmpty;
 
-            void checkIfActive() const { mStorage->checkIfActive(); }
+            LuaStorage& storage() const
+            {
+                if (!mOwner || !*mOwner) throw std::logic_error("Storage section owner was destroyed");
+                return **mOwner;
+            }
+            void checkIfActive() const { storage().checkIfActive(); }
         };
         struct SectionView
         {
@@ -124,8 +152,13 @@ namespace LuaUtil
         const Listener* mListener = nullptr;
         std::set<const Section*> mRunningCallbacks;
         bool mActive = false;
+        std::shared_ptr<LuaStorage*> mThis = std::make_shared<LuaStorage*>(this);
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        bool mParkedRuntime = false;
+        void requireMutableRuntime() const;
         void checkIfActive() const
         {
+            requireMutableRuntime();
             if (!mActive)
                 throw std::logic_error("Trying to access inactive storage");
         }

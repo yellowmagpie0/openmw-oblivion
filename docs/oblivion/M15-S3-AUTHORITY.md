@@ -1114,3 +1114,19 @@ storage direct section views, local-script/tracker domains, input registries and
 GUI ownership remain absent. No allocation-denial or full failed-load transaction
 acceptance is claimed. World/manager composition and StateManager rollback remain
 open; full S3 acceptance is still unproven.
+
+LuaStorage retention now preserves actual section nodes, value caches and callback
+lists with ownership anchors for direct section views, including erased temporary
+sections. Incoming non-temporary values have isolated callback lists. Parked,
+frozen and retired views reject access; rollback restores original view/cache
+identity without callback replay, and owner death invalidates both domains.
+Inactive metadata operations retain their existing semantics. Four new cases and
+full 2,605 component/1,454 engine inventories pass in normal and ASan/UBSan builds
+at fingerprint `8e6d028392af86f5160e8786c0cf31a4fb9ed8985584bcd9ee7c0672732b7ddf`.
+`lua-storage-retention-final-{normal,sanitized}-01` and actual copied LuaManager
+`lua-storage-retention-runtime{,-sanitized}-02` courses verify global/player
+storage selection and callback/view behavior, then normal Lua updates/render/F5,
+selected decoded persistence and reviewed captures. This does not retain aggregate
+LuaManager object-list/package references, events, tracker/local domains, input or
+UI ownership. Whole World/service selection and StateManager late-load rollback
+remain open; full S3 acceptance is still unproven.
