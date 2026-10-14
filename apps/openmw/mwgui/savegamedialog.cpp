@@ -343,7 +343,7 @@ namespace MWGui
         else
         {
             assert(mCurrentCharacter && mCurrentSlot);
-            MWBase::Environment::get().getStateManager()->loadGame(mCurrentCharacter, mCurrentSlot->mPath);
+            MWBase::Environment::get().getStateManager()->requestLoad(mCurrentCharacter, mCurrentSlot->mPath);
         }
     }
 

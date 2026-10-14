@@ -19,6 +19,15 @@ namespace SDLUtil
     class SDLCursorManager
     {
     public:
+        struct RuntimeState
+        {
+            std::string mCurrentCursor;
+            bool mEnabled = false;
+            bool mInitialized = false;
+        };
+        RuntimeState prepareRuntimeState() const;
+        void exchangeRuntimeState(RuntimeState& state) noexcept;
+
         SDLCursorManager();
         virtual ~SDLCursorManager();
 

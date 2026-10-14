@@ -1230,3 +1230,20 @@ captures/lifecycle/decoded native fields. Failed fixture, missing frame-delegate
 retention, missing build archive and incomplete probe allocator attempts remain
 recorded. Native frontend selection, SDL process input/cursor state, candidate
 startup, World/backend/other services and StateManager rollback are still open.
+
+Native WindowManager now selects actual window Runtime bundles with their retained
+MyGUI graph and builds fresh native frontend windows/adapters. LuaManager can
+retain core/elements without swapping original adapters. SDL cursor-manager and
+physical cursor/visibility/text-input state plus viewer masks restore with the
+bundle. Video widgets are bundle-owned; dialog loading uses requestLoad. Full
+1,458 engine tests pass normally and under ASan/UBSan at fingerprint
+`af3caf4481b8d462e712633d64dacfed64494894e5f2e9b7ec0812dad41e8509` in
+`native-window-retention-{normal,sanitized}-01`. Actual copied WindowManager
+runtime-03/-04 and runtime-sanitized-02 construct 38 fresh windows, start incoming
+Lua menu, verify original identities, allocation-denied selection, scope/move
+rollback and deliberate SDL state restoration, then render/F5/clean shutdown with
+reviewed captures/lifecycle/selected decoded field audit. Fixture compile failures
+and superseded pre-launch driver remain recorded. These probes use one loaded
+World/backend; distinct-backend commit/discard/owner death, real dialog loading,
+aggregate loaded-world/backend/service selection and StateManager prior-world
+failed-load restoration remain incomplete and unverified.

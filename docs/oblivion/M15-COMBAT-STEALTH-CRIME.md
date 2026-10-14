@@ -6,6 +6,50 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 select native window bundles and construct incoming frontend — 2026-10-14
+
+WindowManager now retains the actual native Runtime bundle together with its
+MyGUI graph. Incoming construction creates separate native windows, loading and
+video widgets, map renderer, stats watcher, navigation, markers and adapters.
+Original adapters stay with original windows through LuaManager's new
+retainAdapters=false mode. Rollback retires candidate Lua elements under their
+selected GUI before native window retirement, then restores actual original
+owners. Scope/move restoration, commit/discard and owner invalidation APIs are
+implemented; callers must stop UI/input/viewer users and select matching backend
+ownership during construction and retirement.
+
+SDL cursor-manager name/enabled/initialized state, actual cursor/visibility,
+text-input activity and viewer update/cull masks follow native frontend selection.
+User UI preferences seed the fresh bundle. Video playback rejects retention;
+coordinate callbacks tolerate retiring/partially built bundles. Video widgets are
+now owned by their native bundle. SaveGameDialog queues requestLoad instead of
+loading inside its widget callback, matching the existing quickload boundary.
+
+Full 1,458 engine tests pass normally and under ASan/UBSan at fingerprint
+`af3caf4481b8d462e712633d64dacfed64494894e5f2e9b7ec0812dad41e8509`:
+`S3/native-window-retention-{normal,sanitized}-01`. Actual copied WindowManager
+courses `native-window-retention-runtime-03` (PID 330268), stronger runtime-04
+(PID 330657) and runtime-sanitized-02 (PID 332392) construct 38 fresh native
+windows, start the incoming Lua menu and preserve checked original bundle/window/
+marker/map-renderer/watcher/navigation/video/loading/geometry/mode identities.
+The stronger courses deliberately change SDL cursor-manager name, visibility and
+text-input state, then verify restoration. Selection passes thread-local C++
+allocation denial; scope/move rollback is exercised. Ordinary render/F5/clean
+shutdown, reviewed Prison/HUD captures, four lifecycle events and selected decoded
+native field equality pass. Leak checks are disabled. Retirement allocation-denial
+and new component-test coverage are not claimed.
+
+Fixture compile failures runtime-01/-02 remain recorded: Environment's NotNullPtr
+needed dereferencing for dynamic_cast and has no get() method. Runtime-03 corrected
+this after header inspection. Sanitized runtime-01 was superseded before launch
+by the stronger SDL matrix; no observation timeout caused a restart.
+
+These positive probes reuse the same loaded World/backend. Commit/discard/owner
+death under distinct loaded backends, actual menu-driven load acceptance, loaded
+World/backend/simulation/service composition and outgoing Scene retirement remain
+unverified. StateManager late-load cleanup still destroys the prior game.
+**S3 and M15 remain incomplete.**
+
 ## S3 retain actual MyGUI runtime graphs — 2026-10-14
 
 GuiRuntime now retains actual layer objects/node trees, GUI/pointer root vectors,

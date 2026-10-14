@@ -134,6 +134,29 @@ namespace MWGui
             Files::ConfigurationManager& cfgMgr);
         virtual ~WindowManager();
 
+        class RetainedRuntime
+        {
+            friend class WindowManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            // Build incoming native UI under its matching selected World/backend.
+            void initialiseIncoming();
+            // Retire candidate Lua elements first, with the candidate GUI selected.
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        // Requires stopped viewer/UI/input users. LuaManager must separately retain
+        // elements/core without swapping adapters; backend ownership remains caller-owned.
+        RetainedRuntime retainRuntime();
+
         /// Set the ESMStore to use for retrieving of GUI-related strings.
         void setStore(const MWWorld::ESMStore& store);
 
@@ -494,6 +517,8 @@ namespace MWGui
             // Views refer to the actual windows in this bundle.
             std::map<std::string_view, WindowBase*> mLuaIdToWindow;
             std::unique_ptr<CharacterCreation> mCharGen;
+            MyGUI::ImageBox* mVideoBackground = nullptr;
+            VideoWidget* mVideoWidget = nullptr;
             MyGUI::Widget* mInputBlocker = nullptr;
             bool mHudEnabled = true;
             bool mCursorVisible = true;
@@ -514,6 +539,12 @@ namespace MWGui
             Misc::ScopeGuarded<std::vector<ScheduledMessageBox>> mScheduledMessageBoxes;
         };
         std::unique_ptr<Runtime> mRuntime;
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        bool mPlayingVideo = false;
+        bool mRetiringRuntime = false;
+        bool runtimeIdle() const noexcept;
+        void requireMutableRuntime() const;
+        void initialiseRuntimeSupport();
 
         const MWWorld::ESMStore* mStore;
         Resource::ResourceSystem* mResourceSystem;
@@ -529,8 +560,6 @@ namespace MWGui
         void trackWindow(Layout* layout, const WindowSettingValues& settings);
         void onWindowChangeCoord(MyGUI::Window* sender);
 
-        MyGUI::ImageBox* mVideoBackground;
-        VideoWidget* mVideoWidget;
 
         Translation::Storage& mTranslationDataStorage;
 

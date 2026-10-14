@@ -46,6 +46,22 @@ namespace SDLUtil
         mCursorMap.clear();
     }
 
+    SDLCursorManager::RuntimeState SDLCursorManager::prepareRuntimeState() const
+    {
+        return { mCurrentCursor, mEnabled, mInitialized };
+    }
+
+    void SDLCursorManager::exchangeRuntimeState(RuntimeState& state) noexcept
+    {
+        mCurrentCursor.swap(state.mCurrentCursor);
+        std::swap(mEnabled, state.mEnabled);
+        std::swap(mInitialized, state.mInitialized);
+        if (mEnabled)
+            _setGUICursor(mCurrentCursor);
+        else
+            SDL_ShowCursor(SDL_FALSE);
+    }
+
     void SDLCursorManager::setEnabled(bool enabled)
     {
         if (mInitialized && enabled == mEnabled)

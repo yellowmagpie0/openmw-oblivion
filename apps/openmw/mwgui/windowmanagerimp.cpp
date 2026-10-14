@@ -159,9 +159,165 @@ namespace MWGui
         mCharGen.reset();
         mSoulgemDialog.reset();
         mGarbageDialogs.clear();
-        mKeyboardNavigation.reset();
+        if (mVideoBackground)
+            MyGUI::Gui::getInstance().destroyWidget(mVideoBackground);
         if (mInputBlocker)
             MyGUI::Gui::getInstance().destroyWidget(mInputBlocker);
+        mKeyboardNavigation.reset();
+    }
+
+    struct WindowManager::RetainedRuntime::Data
+    {
+        WindowManager* mOwner;
+        std::unique_ptr<Runtime> mArchive = std::make_unique<Runtime>();
+        MyGUIPlatform::GuiRuntime::RetainedRuntime mGui;
+        SDLUtil::SDLCursorManager::RuntimeState mCursor;
+        SDL_Cursor* mActualCursor;
+        int mCursorVisible;
+        bool mTextInput;
+        unsigned int mUpdateMask;
+        unsigned int mCullMask;
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+
+        explicit Data(WindowManager& owner)
+            : mOwner(&owner), mGui(MyGUIPlatform::GuiRuntime::retain())
+            , mCursor(owner.mCursorManager->prepareRuntimeState())
+            , mActualCursor(SDL_GetCursor()), mCursorVisible(SDL_ShowCursor(SDL_QUERY))
+            , mTextInput(SDL_IsTextInputActive() == SDL_TRUE)
+            , mUpdateMask(owner.mViewer->getUpdateVisitor()->getTraversalMask())
+            , mCullMask(owner.getCullMask())
+        {
+            // User preferences persist into the incoming native frontend. Actual
+            // outgoing windows, selections and transient queues stay in their bundle.
+            const auto& original = *owner.mRuntime;
+            mArchive->mHudEnabled = original.mHudEnabled;
+            mArchive->mCursorVisible = original.mCursorVisible;
+            mArchive->mCursorActive = original.mCursorActive;
+            mArchive->mShown = original.mShown;
+            mArchive->mAllowed = original.mAllowed;
+            mArchive->mControllerTooltipEnabled = original.mControllerTooltipEnabled;
+        }
+        bool idle() const noexcept { return mOwner && mOwner->runtimeIdle(); }
+        void exchangeFields() noexcept
+        {
+            const auto cursor = SDL_GetCursor();
+            const int visible = SDL_ShowCursor(SDL_QUERY);
+            const bool text = SDL_IsTextInputActive() == SDL_TRUE;
+            const auto updateMask = mOwner->mViewer->getUpdateVisitor()->getTraversalMask();
+            const auto cullMask = mOwner->getCullMask();
+            mOwner->mRuntime.swap(mArchive);
+            mOwner->mCursorManager->exchangeRuntimeState(mCursor);
+            if (mActualCursor) SDL_SetCursor(mActualCursor);
+            SDL_ShowCursor(mCursorVisible);
+            if (mTextInput) SDL_StartTextInput(); else SDL_StopTextInput();
+            mOwner->mViewer->getUpdateVisitor()->setTraversalMask(mUpdateMask);
+            mOwner->setCullMask(mCullMask);
+            mActualCursor = cursor; mCursorVisible = visible; mTextInput = text;
+            mUpdateMask = updateMask; mCullMask = cullMask;
+        }
+        void retireSelected() noexcept
+        {
+            mOwner->mRetiringRuntime = true;
+            mOwner->mRuntime.reset();
+            mOwner->mRetiringRuntime = false;
+        }
+        void release() noexcept
+        {
+            mOwner->mRetainedRuntime = nullptr;
+            mOwner = nullptr;
+        }
+        void ownerDestroyed() noexcept
+        {
+            if (mDetached)
+            {
+                // All external Lua/widget owners must already be retired by the
+                // aggregate owner. Retire both bundles while their GUI is selected.
+                retireSelected();
+                if (!mGui.exchange()) std::terminate();
+                exchangeFields();
+                retireSelected();
+                mGui.discard();
+            }
+            else mGui.restore();
+            release();
+        }
+    };
+
+    bool WindowManager::runtimeIdle() const noexcept
+    {
+        return !mPlayingVideo && !mRetiringRuntime && !mViewer->areThreadsRunning();
+    }
+    void WindowManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Native window runtime is frozen before detachment");
+    }
+    WindowManager::RetainedRuntime WindowManager::retainRuntime()
+    {
+        if (mRetainedRuntime || !mRuntime || !mRuntime->mHud || !runtimeIdle())
+            throw std::logic_error("Native window retention requires initialized UI and idle users");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    WindowManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    WindowManager::RetainedRuntime::~RetainedRuntime()
+    { if (mData && mData->mOwner && !restore()) std::terminate(); }
+    WindowManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    WindowManager::RetainedRuntime& WindowManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool WindowManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->idle() || mData->mDetached || !mData->mGui.detach()) return false;
+        mData->exchangeFields(); mData->mDetached = true; return true;
+    }
+    bool WindowManager::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->idle() || !mData->mDetached || !mData->mGui.exchange()) return false;
+        mData->exchangeFields(); mData->mOriginalSelected = !mData->mOriginalSelected; return true;
+    }
+    void WindowManager::RetainedRuntime::initialiseIncoming()
+    {
+        if (!mData || !mData->idle() || !mData->mDetached || mData->mOriginalSelected
+            || mData->mOwner->mRuntime->mLoadingScreen)
+            throw std::logic_error("Incoming native frontend is unavailable or already initialized");
+        MyGUI::ResourceManager::getInstance().load("openmw_layers.xml");
+        auto& pointer = MyGUI::PointerManager::getInstance();
+        pointer.setLayerName(pointer.getLayerName());
+        pointer.setVisible(false);
+        mData->mOwner->initialiseRuntimeSupport();
+        mData->mOwner->initUI();
+    }
+    bool WindowManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->idle()) return false;
+        if (mData->mDetached)
+        {
+            if (mData->mOriginalSelected && !exchange()) return false;
+            mData->retireSelected();
+            if (!mData->mGui.restore()) std::terminate();
+            mData->exchangeFields();
+        }
+        else if (!mData->mGui.restore()) std::terminate();
+        mData->release(); mData.reset(); return true;
+    }
+    void WindowManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->idle()) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (!mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->retireSelected();
+        mData->mGui.discard();
+        mData->exchangeFields();
+        mData->release(); mData.reset();
     }
 
     WindowManager::WindowManager(SDL_Window* window, osgViewer::Viewer* viewer, osg::Group* guiRoot,
@@ -174,8 +330,6 @@ namespace MWGui
         , mWorkQueue(workQueue)
         , mViewer(viewer)
         , mConsoleOnlyScripts(consoleOnlyScripts)
-        , mVideoBackground(nullptr)
-        , mVideoWidget(nullptr)
         , mTranslationDataStorage(translationDataStorage)
         , mEncoding(encoding)
         , mVersionDescription(versionDescription)
@@ -232,14 +386,7 @@ namespace MWGui
             "Resource", "AutoSizedResourceSkin");
         MyGUI::ResourceManager::getInstance().load("core.xml");
 
-        const bool keyboardNav = Settings::gui().mKeyboardNavigation;
-        mRuntime->mKeyboardNavigation = std::make_unique<KeyboardNavigation>();
-        mRuntime->mKeyboardNavigation->setEnabled(keyboardNav);
-        Gui::ImageButton::setDefaultNeedKeyFocus(keyboardNav);
-
-        auto loadingScreen = std::make_unique<LoadingScreen>(mResourceSystem, mViewer);
-        mRuntime->mLoadingScreen = loadingScreen.get();
-        mRuntime->mWindows.push_back(std::move(loadingScreen));
+        initialiseRuntimeSupport();
 
         // set up the hardware cursor manager
         mCursorManager = std::make_unique<SDLUtil::SDLCursorManager>();
@@ -258,18 +405,6 @@ namespace MWGui
         // hide mygui's pointer
         MyGUI::PointerManager::getInstance().setVisible(false);
 
-        mVideoBackground = MyGUI::Gui::getInstance().createWidgetReal<MyGUI::ImageBox>(
-            "ImageBox", 0, 0, 1, 1, MyGUI::Align::Default, "Video");
-        mVideoBackground->setImageTexture("black");
-        mVideoBackground->setVisible(false);
-        mVideoBackground->setNeedMouseFocus(true);
-        mVideoBackground->setNeedKeyFocus(true);
-
-        mVideoWidget = mVideoBackground->createWidgetReal<VideoWidget>("ImageBox", 0, 0, 1, 1, MyGUI::Align::Default);
-        mVideoWidget->setNeedMouseFocus(true);
-        mVideoWidget->setNeedKeyFocus(true);
-        mVideoWidget->setVFS(resourceSystem->getVFS());
-
         // Removes default MyGUI system clipboard implementation, which supports windows only
         MyGUI::ClipboardManager::getInstance().eventClipboardChanged.clear();
         MyGUI::ClipboardManager::getInstance().eventClipboardRequested.clear();
@@ -284,11 +419,37 @@ namespace MWGui
 
         mGuiPlatform->getRenderManagerPtr()->enableShaders(mResourceSystem->getSceneManager()->getShaderManager());
 
+    }
+
+    void WindowManager::initialiseRuntimeSupport()
+    {
+        const bool keyboardNav = Settings::gui().mKeyboardNavigation;
+        mRuntime->mKeyboardNavigation = std::make_unique<KeyboardNavigation>();
+        mRuntime->mKeyboardNavigation->setEnabled(keyboardNav);
+        Gui::ImageButton::setDefaultNeedKeyFocus(keyboardNav);
+
+        auto loadingScreen = std::make_unique<LoadingScreen>(mResourceSystem, mViewer);
+        mRuntime->mLoadingScreen = loadingScreen.get();
+        mRuntime->mWindows.push_back(std::move(loadingScreen));
+
+        mRuntime->mVideoBackground = MyGUI::Gui::getInstance().createWidgetReal<MyGUI::ImageBox>(
+            "ImageBox", 0, 0, 1, 1, MyGUI::Align::Default, "Video");
+        mRuntime->mVideoBackground->setImageTexture("black");
+        mRuntime->mVideoBackground->setVisible(false);
+        mRuntime->mVideoBackground->setNeedMouseFocus(true);
+        mRuntime->mVideoBackground->setNeedKeyFocus(true);
+
+        mRuntime->mVideoWidget = mRuntime->mVideoBackground->createWidgetReal<VideoWidget>("ImageBox", 0, 0, 1, 1, MyGUI::Align::Default);
+        mRuntime->mVideoWidget->setNeedMouseFocus(true);
+        mRuntime->mVideoWidget->setNeedKeyFocus(true);
+        mRuntime->mVideoWidget->setVFS(mResourceSystem->getVFS());
+
         mRuntime->mStatsWatcher = std::make_unique<StatsWatcher>();
     }
 
     void WindowManager::initUI()
     {
+        requireMutableRuntime();
         // Get size info from the Gui object
         int w = MyGUI::RenderManager::getInstance().getViewSize().width;
         int h = MyGUI::RenderManager::getInstance().getViewSize().height;
@@ -528,6 +689,7 @@ namespace MWGui
 
     void WindowManager::setNewGame(bool newgame)
     {
+        requireMutableRuntime();
         if (newgame)
         {
             disallowAll();
@@ -555,6 +717,7 @@ namespace MWGui
             MyGUI::ClipboardManager::getInstance().eventClipboardChanged.clear();
             MyGUI::ClipboardManager::getInstance().eventClipboardRequested.clear();
 
+            if (mRetainedRuntime) mRetainedRuntime->ownerDestroyed();
             mRuntime.reset();
 
             mFontLoader.reset();
@@ -966,6 +1129,7 @@ namespace MWGui
 
     void WindowManager::update(float frameDuration)
     {
+        requireMutableRuntime();
         handleScheduledMessageBoxes();
 
         bool gameRunning
@@ -1955,11 +2119,12 @@ namespace MWGui
 
     void WindowManager::onWindowChangeCoord(MyGUI::Window* window)
     {
+        if (!mRuntime || mRetiringRuntime) return;
         // If using controller menus, don't persist changes to size of the stats or magic
         // windows.
         if (Settings::gui().mControllerMenus
-            && (window == mRuntime->mStatsWindow->mMainWidget->castType<MyGUI::Window>()
-                || window == mRuntime->mSpellWindow->mMainWidget->castType<MyGUI::Window>()))
+            && ((mRuntime->mStatsWindow && window == mRuntime->mStatsWindow->mMainWidget->castType<MyGUI::Window>())
+                || (mRuntime->mSpellWindow && window == mRuntime->mSpellWindow->mMainWidget->castType<MyGUI::Window>())))
             return;
 
         const auto it = mRuntime->mTrackedWindows.find(window);
@@ -1981,6 +2146,7 @@ namespace MWGui
 
     void WindowManager::clear()
     {
+        requireMutableRuntime();
         mRuntime->mPlayerBounty = -1;
 
         for (const auto& window : mRuntime->mWindows)
@@ -2078,14 +2244,22 @@ namespace MWGui
 
     void WindowManager::playVideo(std::string_view name, bool allowSkipping, bool overrideSounds)
     {
-        mVideoWidget->playVideo("video\\" + std::string{ name });
+        requireMutableRuntime();
+        struct Activity
+        {
+            bool& mFlag;
+            Activity(bool& flag) : mFlag(flag) { mFlag = true; }
+            ~Activity() { mFlag = false; }
+        } activity(mPlayingVideo);
 
-        mVideoWidget->eventKeyButtonPressed.clear();
-        mVideoBackground->eventKeyButtonPressed.clear();
+        mRuntime->mVideoWidget->playVideo("video\\" + std::string{ name });
+
+        mRuntime->mVideoWidget->eventKeyButtonPressed.clear();
+        mRuntime->mVideoBackground->eventKeyButtonPressed.clear();
         if (allowSkipping)
         {
-            mVideoWidget->eventKeyButtonPressed += MyGUI::newDelegate(this, &WindowManager::onVideoKeyPressed);
-            mVideoBackground->eventKeyButtonPressed += MyGUI::newDelegate(this, &WindowManager::onVideoKeyPressed);
+            mRuntime->mVideoWidget->eventKeyButtonPressed += MyGUI::newDelegate(this, &WindowManager::onVideoKeyPressed);
+            mRuntime->mVideoBackground->eventKeyButtonPressed += MyGUI::newDelegate(this, &WindowManager::onVideoKeyPressed);
         }
 
         enableScene(false);
@@ -2094,9 +2268,9 @@ namespace MWGui
         sizeVideo(screenSize.width, screenSize.height);
 
         MyGUI::Widget* oldKeyFocus = MyGUI::InputManager::getInstance().getKeyFocusWidget();
-        setKeyFocusWidget(mVideoWidget);
+        setKeyFocusWidget(mRuntime->mVideoWidget);
 
-        mVideoBackground->setVisible(true);
+        mRuntime->mVideoBackground->setVisible(true);
 
         if (mRuntime->mInputBlocker)
             mRuntime->mInputBlocker->setVisible(false);
@@ -2104,13 +2278,13 @@ namespace MWGui
         bool cursorWasVisible = mRuntime->mCursorVisible;
         setCursorVisible(false);
 
-        if (overrideSounds && mVideoWidget->hasAudioStream())
+        if (overrideSounds && mRuntime->mVideoWidget->hasAudioStream())
             MWBase::Environment::get().getSoundManager()->pauseSounds(
                 MWSound::VideoPlayback, ~MWSound::Type::Movie & MWSound::Type::Mask);
 
         Misc::FrameRateLimiter frameRateLimiter
             = Misc::makeFrameRateLimiter(MWBase::Environment::get().getFrameRateLimit());
-        while (mVideoWidget->update() && !MWBase::Environment::get().getStateManager()->hasQuitRequest())
+        while (mRuntime->mVideoWidget->update() && !MWBase::Environment::get().getStateManager()->hasQuitRequest())
         {
             const float dt
                 = std::chrono::duration_cast<std::chrono::duration<float>>(frameRateLimiter.getLastFrameDuration())
@@ -2120,15 +2294,15 @@ namespace MWGui
 
             if (!mWindowVisible)
             {
-                mVideoWidget->pause();
+                mRuntime->mVideoWidget->pause();
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
             else
             {
-                if (mVideoWidget->isPaused())
-                    mVideoWidget->resume();
+                if (mRuntime->mVideoWidget->isPaused())
+                    mRuntime->mVideoWidget->resume();
 
-                mVideoWidget->commitFrame();
+                mRuntime->mVideoWidget->commitFrame();
 
                 mViewer->eventTraversal();
                 mViewer->updateTraversal();
@@ -2141,7 +2315,7 @@ namespace MWGui
 
             frameRateLimiter.limit();
         }
-        mVideoWidget->stop();
+        mRuntime->mVideoWidget->stop();
 
         MWBase::Environment::get().getSoundManager()->resumeSounds(MWSound::VideoPlayback);
 
@@ -2152,14 +2326,14 @@ namespace MWGui
         // Restore normal rendering
         updateVisible();
 
-        mVideoBackground->setVisible(false);
+        mRuntime->mVideoBackground->setVisible(false);
     }
 
     void WindowManager::sizeVideo(int screenWidth, int screenHeight)
     {
         // Use black bars to correct aspect ratio
-        mVideoBackground->setSize(screenWidth, screenHeight);
-        mVideoWidget->autoResize(Settings::gui().mStretchMenuBackground);
+        mRuntime->mVideoBackground->setSize(screenWidth, screenHeight);
+        mRuntime->mVideoWidget->autoResize(Settings::gui().mStretchMenuBackground);
     }
 
     void WindowManager::exitCurrentModal()
@@ -2218,7 +2392,7 @@ namespace MWGui
     void WindowManager::onVideoKeyPressed(MyGUI::Widget* /*sender*/, MyGUI::KeyCode key, MyGUI::Char value)
     {
         if (key == MyGUI::KeyCode::Escape)
-            mVideoWidget->stop();
+            mRuntime->mVideoWidget->stop();
     }
 
     void WindowManager::updatePinnedWindows()

@@ -55,7 +55,8 @@ namespace MWLua
         };
         // Requires idle users and separately retained cell, native window/layer/adapter and backend domains.
         // Retains the Lua VM's runtime selection, containers, packages and pending core state.
-        RetainedRuntime retainRuntime();
+        // Use retainAdapters=false when a separate native frontend owns/parks adapters.
+        RetainedRuntime retainRuntime(bool retainAdapters = true);
         void startPreparedRuntime();
         LuaManager(const VFS::Manager* vfs, const std::filesystem::path& libsDir);
         LuaManager(const LuaManager&) = delete;

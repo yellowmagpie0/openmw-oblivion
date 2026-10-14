@@ -112,7 +112,7 @@ namespace MWLua
         std::optional<LuaUtil::ScriptTracker::RetainedRuntime> mTracker;
         std::optional<ObjectLists::RetainedRuntime> mLists;
 
-        explicit Data(LuaManager& owner)
+        explicit Data(LuaManager& owner, bool retainAdapters)
             : mOwner(&owner)
             , mConfiguration(owner.mConfiguration.cloneRuntime())
             , mLocalPackages(owner.mLocalPackages)
@@ -126,7 +126,8 @@ namespace MWLua
         {
             mInputActions.clear();
             mInputTriggers.clear();
-            for (auto* adapter : LuaUi::LuaAdapter::instances()) mAdapters.push_back(adapter->retainRuntime());
+            if (retainAdapters)
+                for (auto* adapter : LuaUi::LuaAdapter::instances()) mAdapters.push_back(adapter->retainRuntime());
             mInterface.emplace(LuaUi::Element::retainRuntime());
             mDomain.emplace(owner.mLua.retainDomain());
             mLoad.emplace(owner.mLoadScripts.retainRuntime());
@@ -272,11 +273,11 @@ namespace MWLua
         if (mRetainedRuntime && !mRetainedRuntime->mDetached)
             throw std::logic_error("Lua manager is frozen before runtime detachment");
     }
-    LuaManager::RetainedRuntime LuaManager::retainRuntime()
+    LuaManager::RetainedRuntime LuaManager::retainRuntime(bool retainAdapters)
     {
         if (mRetainedRuntime || !runtimeIdle())
             throw std::logic_error("Lua manager retention requires idle users");
-        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        auto data = std::make_unique<RetainedRuntime::Data>(*this, retainAdapters);
         mRetainedRuntime = data.get();
         return RetainedRuntime(std::move(data));
     }
