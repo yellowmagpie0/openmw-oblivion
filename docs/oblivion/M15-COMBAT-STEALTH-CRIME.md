@@ -6,6 +6,83 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepare global-script records and repair legacy local indexing — 2026-10-13
+
+Admission now owns decoded GSCR records in save order, including duplicate IDs,
+and prepares global-script descriptors, map nodes, owned script metadata and
+compiled local-variable storage before cleanup. Applications remain at their
+original record positions: existing targets and unmentioned locals are preserved,
+running state and saved locals update, and missing content scripts drop. Saved
+target RefNums are mapped once during admission; target resolution stays deferred.
+Plans require one clear and reject replay, copied-callback reuse, stale clears
+and destroyed targets. Saved-local conversion/error handling stays at runtime.
+
+The new legacy comparison found a pre-existing migration defect: range-for
+conversion in `bcad4a7fd5c` lost the saved-position increment. All unnamed locals
+therefore wrote slot zero. Position now advances before each iteration, including
+named-variable continue paths, restoring the preceding implementation's behavior.
+Two shorts, two longs and two floats survive actual ordinary GSCR decoding and
+prepared application. `legacy-locals-probe-01` first linked a copied production
+Locals object with the increment restored; both selected real-manager tests passed.
+The tests now live in the script test file with real Environment/Store/ScriptManager
+objects, without requiring native World construction.
+
+Both complete engine inventories pass **1,413 tests**, exact XML/inventory
+agreement and no failures/skips, in
+`build/oblivion-compat/m15/S3/global-scripts-normal-03` and
+`global-scripts-sanitized-03`. Tested parent:
+`0d005697ac2516d47d20cc2c32c2f1cb609f5ed1`; matching before/after fingerprint:
+`a839298a61967afb88adac8128972a588a22491319f539d4411d0748232e9148`.
+ASan/UBSan halt on errors with leaks disabled; SDL/audio are offscreen/null.
+Component code is unchanged. Three new tests cover manager semantics/lifecycle,
+legacy locals/source ownership and four admission ordering/mapping/rejection cases.
+Exact executable, test, cache and evidence hashes are in
+`global-scripts-followup-03/checkpoint-summary.json`.
+
+`global-scripts-allocation-control-03` passes five accepted applications with
+scalar/array/aligned C++ new disabled in a copied production GlobalScripts object
+through descriptor publication, local configuration and successful saved-local
+application. `global-scripts-negative-03` copies the saved DTO under the same
+guard; both selected tests fail with bad_alloc. Error/log paths, arbitrary
+callbacks and whole-load allocation are outside this control's scope.
+
+Actual load/F5/F9/F5/quit passes in `global-scripts-runtime-normal-03` (PID 151150)
+and `global-scripts-runtime-sanitized-03` (PID 153193). Fresh instrumented
+`global-scripts-runtime-continuation-sanitized-03` (PID 153166) loads the exact
+normal final save after process exit, SHA256
+`c84decbc12be0fd73d82859c789fccd1c1a644232774ed12409c4081a5fa4af6`.
+Two authored duplicate GSCR records for an intentionally missing content script
+are omitted on resave, as required. Prior exact native/shared Player, inventory,
+nonempty auxiliary manager maps and three populated CSTA assertions remain active.
+Compiled real-script target/local semantics are C++ evidence, not script execution
+gameplay. Morrowind startup/idle/F5 save isolation passes in
+`global-scripts-morrowind-03`; all seven course captures were reviewed.
+
+Retained 01 builds were deliberately stopped before invalid fixture tests: integer
+variants used VT_Long instead of the save-local VT_Int. Both full 02 inventories
+ran 1,413 cases with 1,412 passing, exposing the legacy index defect; this was not
+a sanitizer finding. Normal03's engine course completed successfully, but its
+verifier initially lacked the copied immutable warning baseline. Restoring the
+unchanged baseline from the accepted manager-map fixture and rerunning the
+unchanged verifier against that same completed course passes in
+`global-scripts-runtime-normal-03/verifier-retry-01`. No engine relaunch or
+acceptance-assertion changes were used for that recovery.
+
+`late-load-preservation-probe-02` is an **expected negative, not acceptance**.
+A copied StateManager object throws after setupPlayer on the second actual
+load/F5/F9 course (PID 153237). Existing error handling clears the game:
+Running (2) becomes NoGame (0), and the reviewed capture shows the main menu and
+error dialog. Original/copied source and binary hashes are recorded with the
+same tested fingerprint. Probe01 never loaded a game because its private binary
+lacked defaults.bin; that startup failure and explicitly stopped waiters remain
+retained. Probe02 supplies the original defaults.bin/openmw.cfg.
+
+This real failure reproduction contradicts full prior-world preservation after
+late failures. Journal, general locals/Lua callbacks, cell tracking, scene setup,
+remaining managers and missing-dependency admission still require audit; complete
+S3 acceptance remains open. Further record preparation alone cannot establish
+that the outgoing world survives scene/Player finalization failure.
+
 ## S3 prepare dialogue and mechanics maps before teardown — 2026-10-13
 
 Admission now retains decoded DIAS, STLN and DCOU data and prepares their final

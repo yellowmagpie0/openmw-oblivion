@@ -1,3 +1,12 @@
+#include "apps/openmw/mwbase/environment.hpp"
+#include "apps/openmw/mwworld/esmstore.hpp"
+#include "apps/openmw/mwscript/compilercontext.hpp"
+#include "apps/openmw/mwscript/scriptmanagerimp.hpp"
+#include <components/esm3/globalscript.hpp>
+#include <components/esm3/loadscpt.hpp>
+#include <components/esm3/esmreader.hpp>
+#include <components/esm3/esmwriter.hpp>
+
 #include <gtest/gtest.h>
 
 #include <array>
@@ -1053,4 +1062,115 @@ End)mwscript";
         registerExtensions();
         EXPECT_FALSE(!compile(sIssue8990));
     }
+}
+
+namespace
+{
+    class PreparedGlobalScriptsTest : public ::testing::Test
+    {
+    protected:
+        MWBase::Environment mEnvironment;
+        MWWorld::ESMStore mStore;
+        Compiler::Extensions mExtensions;
+        MWScript::CompilerContext mContext{MWScript::CompilerContext::Type_Full};
+        MWScript::ScriptManager mManager{mStore, mContext, 0};
+
+        PreparedGlobalScriptsTest()
+        {
+            mContext.setExtensions(&mExtensions);
+            mEnvironment.setESMStore(mStore);
+            mEnvironment.setScriptManager(mManager);
+        }
+    };
+
+    ESM::Script savedGlobalScriptDefinition()
+    {
+        ESM::Script script; script.blank(); script.mId = ESM::RefId::stringRefId("saved_global_script");
+        script.mScriptText = "begin saved_global_script\nshort s\nlong l\nfloat f\nend\n";
+        return script;
+    }
+
+    ESM::Variant savedLocalInt(int value)
+    {
+        ESM::Variant result; result.setType(ESM::VT_Int); result.setInteger(value); return result;
+    }
+
+    void readGlobalScript(MWScript::GlobalScripts& scripts, const ESM::GlobalScript& state)
+    {
+        std::stringstream stream;
+        ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion);
+        writer.save(stream); writer.startRecord(ESM::REC_GSCR); state.save(writer); writer.endRecord(ESM::REC_GSCR);
+        ESM::ESMReader reader;
+        reader.open(std::make_unique<std::istringstream>(stream.str()), "global-script.omwsave");
+        EXPECT_EQ(reader.getRecName(), ESM::REC_GSCR); reader.getRecHeader();
+        EXPECT_TRUE(scripts.readRecord(reader, ESM::REC_GSCR));
+    }
+}
+
+TEST_F(PreparedGlobalScriptsTest, PreparedGlobalScriptsPreserveRecordOrderTargetsAndUnmentionedLocals)
+{
+    auto& store = mStore; auto& manager = mManager;
+    auto script = savedGlobalScriptDefinition(); store.getWritable<ESM::Script>().insertStatic(script);
+    auto& scripts = manager.getGlobalScripts();
+    ESM::GlobalScript first{}; first.mId = script.mId; first.mRunning = true;
+    first.mTargetId = ESM::RefId::stringRefId("saved_target"); first.mTargetRef = {731, -1};
+    first.mLocals.mVariables = {{"s", savedLocalInt(7)}, {"l", savedLocalInt(123456)}, {"f", ESM::Variant(2.5f)},
+        {"removed", savedLocalInt(99)}};
+    ESM::GlobalScript second{}; second.mId = script.mId; second.mRunning = false;
+    second.mTargetId = ESM::RefId::stringRefId("ignored_second_target");
+    second.mLocals.mVariables = {{"s", savedLocalInt(13)}};
+    // Establish the ordinary reader result, including duplicate GSCR behavior.
+    readGlobalScript(scripts, first); readGlobalScript(scripts, second);
+    const auto* ordinary = scripts.getScriptIfPresent(script.mId); ASSERT_TRUE(ordinary);
+    const auto expectedTarget = ordinary->mTarget; const auto expectedLocals = ordinary->mLocals;
+    scripts.getLocals(script.mId).mLongs[0] = -900; // Outgoing values must not leak.
+    auto a = scripts.prepareRecord(ESM::GlobalScript(first)); auto duplicate = a;
+    auto b = scripts.prepareRecord(ESM::GlobalScript(second));
+    EXPECT_FALSE(a()); EXPECT_EQ(scripts.getLocals(script.mId).mLongs[0], -900);
+    scripts.clear(); ASSERT_TRUE(a()); ASSERT_TRUE(b()); EXPECT_FALSE(duplicate());
+    const auto* restored = scripts.getScriptIfPresent(script.mId); ASSERT_TRUE(restored);
+    EXPECT_FALSE(restored->mRunning); EXPECT_EQ(restored->mTarget, expectedTarget);
+    EXPECT_EQ(restored->mLocals.mShorts, expectedLocals.mShorts);
+    EXPECT_EQ(restored->mLocals.mLongs, expectedLocals.mLongs);
+    EXPECT_EQ(restored->mLocals.mFloats, expectedLocals.mFloats);
+
+    auto existingPlan = scripts.prepareRecord(ESM::GlobalScript(second)); scripts.clear();
+    ESM::GlobalScript intervening = first; intervening.mTargetId = ESM::RefId::stringRefId("intervening_target");
+    intervening.mLocals.mVariables[1].second = savedLocalInt(654321);
+    readGlobalScript(scripts, intervening); ASSERT_TRUE(existingPlan());
+    restored = scripts.getScriptIfPresent(script.mId); ASSERT_TRUE(restored);
+    EXPECT_EQ(restored->getId(), intervening.mTargetId); EXPECT_EQ(restored->mLocals.mLongs[0], 654321);
+    auto stale = scripts.prepareRecord(ESM::GlobalScript(first)); scripts.clear(); scripts.clear(); EXPECT_FALSE(stale());
+
+    ESM::GlobalScript removed{}; removed.mId = ESM::RefId::stringRefId("removed_script");
+    auto absent = scripts.prepareRecord(std::move(removed)); scripts.clear(); EXPECT_TRUE(absent());
+    EXPECT_TRUE(scripts.getScripts().empty());
+    std::function<bool()> destroyed;
+    { MWScript::GlobalScripts temporary(store); destroyed = temporary.prepareRecord(ESM::GlobalScript(first)); }
+    EXPECT_FALSE(destroyed());
+}
+
+TEST_F(PreparedGlobalScriptsTest, PreparedGlobalScriptLegacyLocalsMatchOrdinaryDecodeAndOwnLayout)
+{
+    auto& store = mStore; auto& manager = mManager;
+    auto script = savedGlobalScriptDefinition();
+    script.mScriptText = "begin saved_global_script\nshort s\nshort s2\nlong l\nlong l2\nfloat f\nfloat f2\nend\n";
+    store.getWritable<ESM::Script>().insertStatic(script);
+    ESM::Variant shortValue; shortValue.setType(ESM::VT_Short); shortValue.setInteger(17);
+    ESM::Variant longValue; longValue.setType(ESM::VT_Int); longValue.setInteger(765432);
+    ESM::GlobalScript state{}; state.mId = script.mId;
+    state.mLocals.mVariables = {{"", shortValue}, {"", shortValue}, {"", longValue}, {"", longValue},
+        {"", ESM::Variant(4.25f)}, {"", ESM::Variant(6.5f)}};
+    auto& scripts = manager.getGlobalScripts(); readGlobalScript(scripts, state);
+    const auto expected = scripts.getScriptIfPresent(script.mId)->mLocals;
+    auto apply = scripts.prepareRecord(std::move(state));
+    // The compiled declarations and descriptor/layout are already owned/cached.
+    store.getWritable<ESM::Script>().eraseStatic(script.mId); scripts.clear(); ASSERT_TRUE(apply());
+    const auto* restored = scripts.getScriptIfPresent(script.mId); ASSERT_TRUE(restored);
+    EXPECT_EQ(restored->mLocals.mShorts, expected.mShorts);
+    EXPECT_EQ(restored->mLocals.mLongs, expected.mLongs);
+    EXPECT_EQ(restored->mLocals.mFloats, expected.mFloats);
+    EXPECT_EQ(restored->mLocals.mShorts, (std::vector<Interpreter::Type_Short>{17, 17}));
+    EXPECT_EQ(restored->mLocals.mLongs, (std::vector<Interpreter::Type_Integer>{765432, 765432}));
+    EXPECT_EQ(restored->mLocals.mFloats, (std::vector<Interpreter::Type_Float>{4.25f, 6.5f}));
 }

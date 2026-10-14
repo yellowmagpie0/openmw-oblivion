@@ -2,6 +2,7 @@
 #define GAME_SCRIPT_GLOBALSCRIPTS_H
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -20,6 +21,7 @@ namespace ESM
 {
     class ESMWriter;
     class ESMReader;
+    struct GlobalScript;
     struct FormId;
     using RefNum = FormId;
 }
@@ -54,6 +56,8 @@ namespace MWScript
     class GlobalScripts
     {
         const MWWorld::ESMStore& mStore;
+        std::shared_ptr<const char> mRestoreLifetime = std::make_shared<const char>();
+        std::uint64_t mRestoreEpoch = 0;
         std::map<ESM::RefId, std::shared_ptr<GlobalScriptDesc>> mScripts;
 
     public:
@@ -83,6 +87,10 @@ namespace MWScript
         ///< Records for variables that do not exist are dropped silently.
         ///
         /// \return Known type?
+
+        // Own decoding, descriptor/map storage and compiled local layout before clear.
+        // Apply at the original GSCR position; existing targets remain unchanged.
+        std::function<bool()> prepareRecord(ESM::GlobalScript&& script);
 
         Locals& getLocals(const ESM::RefId& name);
         ///< If the script \a name has not been added as a global script yet, it is added

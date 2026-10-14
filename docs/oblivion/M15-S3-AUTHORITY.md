@@ -865,3 +865,27 @@ locals/Lua callbacks, cell tracking, scene setup, other managers, consumed missi
 dependencies, full prior-world late-failure preservation and complete S3 acceptance
 remain open. These checks establish map persistence, not crime/death gameplay or
 whole-load transactionality.
+
+Admission now owns decoded GSCR records in original save order and prepares
+script descriptors, map nodes, owned script metadata and compiled local storage.
+Applications preserve existing targets/unmentioned locals, update running/saved
+local state, drop missing scripts and require one clear with lifetime/replay
+checks. Target RefNums map once; resolution remains deferred. A real ordinary/
+prepared legacy comparison exposed the lost saved-position increment from
+bcad4a7fd5c; restoring it preserves two shorts/two longs/two floats. Both full
+normal and ASan/UBSan engine inventories pass1413 tests, including three new
+manager/legacy/admission regressions. Five guarded successful applications pass
+with C++ new disabled; copied DTOs fail both negative tests. Actual normal and
+instrumented reload, fresh instrumented continuation and Morrowind isolation
+pass semantic checks and seven capture reviews. Evidence is S3/global-scripts-*03;
+the milestone entry records the failed02 regression and normal03 verifier's
+unchanged-baseline recovery. This is not general script execution or whole-load
+allocation coverage.
+
+The separate expected-negative late-load-preservation-probe-02 throws after
+Player setup during actual second quickload. The existing catch changes real
+StateManager state from Running2 to NoGame0; the reviewed capture shows main menu
+and the failure dialog. This directly contradicts the full late-failure
+prior-world preservation contract. Record staging is insufficient to close it.
+Journal/local/Lua/cell tracking/scene and other-manager audits, missing dependencies,
+complete outgoing-world preservation and complete S3 acceptance remain open.

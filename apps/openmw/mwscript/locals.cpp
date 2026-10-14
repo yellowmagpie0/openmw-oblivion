@@ -229,17 +229,18 @@ namespace MWScript
 
         for (const auto& [name, value] : locals.mVariables)
         {
+            const int savedIndex = index++;
             if (name.empty())
             {
                 // no variable names available (this will happen for legacy, i.e. ESS-imported savegames only)
                 try
                 {
-                    if (index >= numshorts + numlongs)
-                        mFloats.at(index - (numshorts + numlongs)) = value.getFloat();
-                    else if (index >= numshorts)
-                        mLongs.at(index - numshorts) = value.getInteger();
+                    if (savedIndex >= numshorts + numlongs)
+                        mFloats.at(savedIndex - (numshorts + numlongs)) = value.getFloat();
+                    else if (savedIndex >= numshorts)
+                        mLongs.at(savedIndex - numshorts) = value.getInteger();
                     else
-                        mShorts.at(index) = static_cast<Interpreter::Type_Short>(value.getInteger());
+                        mShorts.at(savedIndex) = static_cast<Interpreter::Type_Short>(value.getInteger());
                 }
                 catch (std::exception& e)
                 {

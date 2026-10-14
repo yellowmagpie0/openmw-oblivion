@@ -280,7 +280,7 @@ namespace
         std::vector<ESM::RefId>& quickkeySpells, std::vector<ESM::RefId>& quickkeyItems, ESM::QuickKeys& quickkeys,
         std::vector<ESM::ProjectileState>& projectiles, std::vector<ESM::MagicBoltState>& bolts,
         std::optional<ESM::DialogueState>& dialogue, std::optional<ESM::StolenItems>& stolen,
-        std::optional<std::map<ESM::RefId, int>>& deaths)
+        std::optional<std::map<ESM::RefId, int>>& deaths, std::vector<ESM::GlobalScript>& globalScripts)
     {
         const auto singleton = [&] {
             if (!singletons.insert(type).second)
@@ -341,7 +341,7 @@ namespace
                 readSharedState<ESM::QuestState>(reader);
                 break;
             case ESM::REC_GSCR:
-                readSharedState<ESM::GlobalScript>(reader);
+                globalScripts.emplace_back(readSharedState<ESM::GlobalScript>(reader));
                 break;
             case ESM::REC_KEYS:
             {
@@ -572,7 +572,8 @@ namespace MWState
         MWWorld::PreparedSaveRecords* decodedRecords,
         const std::function<void(ESM::DialogueState&&, const MWWorld::ESMStore&)>& prepareDialogue,
         const std::function<void(ESM::StolenItems&&)>& prepareStolen,
-        const std::function<void(std::map<ESM::RefId, int>&&, const MWWorld::ESMStore&)>& prepareDeaths)
+        const std::function<void(std::map<ESM::RefId, int>&&, const MWWorld::ESMStore&)>& prepareDeaths,
+        const std::function<void(ESM::GlobalScript&&)>& prepareGlobalScript)
     {
         const auto start = reader.getContext();
         try
@@ -651,6 +652,7 @@ namespace MWState
             std::optional<ESM::DialogueState> dialogue;
             std::optional<ESM::StolenItems> stolen;
             std::optional<std::map<ESM::RefId, int>> deaths;
+            std::vector<ESM::GlobalScript> globalScripts;
             if (activeProfile == ESM::GameProfile::Oblivion)
             {
                 // Framing alone does not prove that shared dynamic records can
@@ -702,7 +704,7 @@ namespace MWState
                     }
                     else if (validateAuxiliaryRecord(reader, type.toInt(), auxiliarySingletons,
                                  prepareGlobalMap, prepareWeather, quickkeySpells, quickkeyItems, quickkeys, projectiles, bolts,
-                                 dialogue, stolen, deaths))
+                                 dialogue, stolen, deaths, globalScripts))
                         decoded = true;
                     else
                         decoded = shared->readRecord(reader, type.toInt(), false);
@@ -1023,6 +1025,8 @@ namespace MWState
                 if (prepareDialogue && dialogue) prepareDialogue(std::move(*dialogue), *shared);
                 if (prepareStolen && stolen) prepareStolen(std::move(*stolen));
                 if (prepareDeaths && deaths) prepareDeaths(std::move(*deaths), *shared);
+                if (prepareGlobalScript)
+                    for (auto& script : globalScripts) prepareGlobalScript(std::move(script));
                 if (prepareCellReference && shared)
                     for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)
@@ -1047,6 +1051,8 @@ namespace MWState
                 if (prepareDialogue && dialogue && shared) prepareDialogue(std::move(*dialogue), *shared);
                 if (prepareStolen && stolen) prepareStolen(std::move(*stolen));
                 if (prepareDeaths && deaths && shared) prepareDeaths(std::move(*deaths), *shared);
+                if (prepareGlobalScript)
+                    for (auto& script : globalScripts) prepareGlobalScript(std::move(script));
                 if (prepareCellReference && shared)
                     for (const auto* owner : cellOwners) prepareCellReference(*owner, *shared);
                 if (preparePlayerReference)

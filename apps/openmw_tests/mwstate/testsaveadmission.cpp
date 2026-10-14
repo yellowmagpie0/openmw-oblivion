@@ -3500,3 +3500,43 @@ TEST(SaveAdmissionTest, ManagerMapPreparationSeesAllDefinitionsBeforePublication
         EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
     }
 }
+
+TEST(SaveAdmissionTest, GlobalScriptPreparationOwnsMappedRecordsInOrderAndRewindsOnRejection)
+{
+    MWWorld::ESMStore content;
+    for (bool native : {false, true}) for (bool reject : {false, true})
+    {
+        SCOPED_TRACE(native);
+        SCOPED_TRACE(reject);
+        const auto records = worldRecords([&](ESM::ESMWriter& writer) {
+            for (int value : {7, 13})
+            {
+                ESM::GlobalScript script{}; script.mId = ESM::RefId::stringRefId("same_script");
+                script.mRunning = value == 7; script.mTargetId = ESM::RefId::stringRefId("target");
+                script.mTargetRef = {123, 0};
+                ESM::Variant localValue; localValue.setType(ESM::VT_Int); localValue.setInteger(value);
+                script.mLocals.mVariables = {{"value", localValue}};
+                writer.startRecord(ESM::REC_GSCR); script.save(writer); writer.endRecord(ESM::REC_GSCR);
+            }
+        });
+        ESM::ESMReader reader;
+        openBytes(reader, saveBytes(ESM::GameProfile::Oblivion, ESM4::CurrentRuntimeStateVersion, 1, native ? 1 : 0) + records);
+        std::map<int, int> mapping{{0, 2}}; reader.setContentFileMapping(&mapping);
+        const auto before = reader.getFileOffset(); bool published = false;
+        std::vector<ESM::GlobalScript> prepared;
+        const auto admit = [&] { MWState::admitSave(reader, ESM::GameProfile::Oblivion, {}, &content,
+            [&](const auto&, auto) { published = true; }, {}, {}, {}, {}, {}, {},
+            [&](auto) { published = true; }, {}, {}, {}, nullptr, {}, {}, {},
+            [&](ESM::GlobalScript&& script) {
+                EXPECT_FALSE(published); prepared.push_back(std::move(script));
+                if (reject && prepared.size() == 2) throw std::runtime_error("global preparation rejected");
+            }); };
+        if (reject) { EXPECT_THROW(admit(), std::runtime_error); } else { EXPECT_NO_THROW(admit()); }
+        ASSERT_EQ(prepared.size(), 2u); EXPECT_EQ(published, !reject);
+        EXPECT_EQ(prepared[0].mTargetRef, (ESM::RefNum{123, 2}));
+        EXPECT_TRUE(prepared[0].mRunning); EXPECT_FALSE(prepared[1].mRunning);
+        EXPECT_EQ(prepared[0].mLocals.mVariables[0].second.getInteger(), 7);
+        EXPECT_EQ(prepared[1].mLocals.mVariables[0].second.getInteger(), 13);
+        EXPECT_EQ(reader.getFileOffset(), before); EXPECT_EQ(reader.getRecName(), ESM::REC_SAVE);
+    }
+}

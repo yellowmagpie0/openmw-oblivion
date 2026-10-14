@@ -17,6 +17,7 @@
 #include <components/esm3/objectstate.hpp>
 #include <components/esm3/dialoguestate.hpp>
 #include <components/esm3/stolenitems.hpp>
+#include <components/esm3/globalscript.hpp>
 #include <components/esm3/npcstate.hpp>
 #include <components/esm3/creaturestate.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -503,6 +504,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         std::function<bool()> preparedDialogue;
         std::function<bool()> preparedStolen;
         std::function<bool()> preparedDeaths;
+        std::vector<std::function<bool()>> preparedGlobalScripts;
+        std::size_t nextPreparedGlobalScript = 0;
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> preparedFog;
         MWWorld::WorldModel::PreparedInventoryStates preparedInventories;
         MWWorld::WorldModel::PreparedCellReferences preparedCellReferences;
@@ -575,6 +578,9 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                 preparedDeaths = MWBase::Environment::get().getMechanicsManager()->prepareDeathCounts(
                     std::move(state), incoming);
                 if (!preparedDeaths) throw std::runtime_error("Mechanics manager cannot prepare death counts");
+            }, [&](ESM::GlobalScript&& state) {
+                preparedGlobalScripts.push_back(
+                    MWBase::Environment::get().getScriptManager()->getGlobalScripts().prepareRecord(std::move(state)));
             });
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
@@ -588,7 +594,8 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         restorationStarted = true;
         // Prepared native and weather plans require one reset for both initial
         // menu loads and in-game loads. Other shared-only loads retain their lifecycle.
-        cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles) || bool(preparedSpellLists));
+        cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles) || bool(preparedSpellLists)
+            || !preparedGlobalScripts.empty());
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
         if (preparedSpellLists && !preparedSpellLists->install(world.getStore()))
@@ -703,7 +710,15 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
 
                 case ESM::REC_GSCR:
 
-                    MWBase::Environment::get().getScriptManager()->getGlobalScripts().readRecord(reader, n.toInt());
+                    if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+                    {
+                        reader.skipRecord();
+                        if (nextPreparedGlobalScript >= preparedGlobalScripts.size())
+                            throw std::runtime_error("Global script record has no admitted plan");
+                        auto apply = std::move(preparedGlobalScripts[nextPreparedGlobalScript++]);
+                        if (!apply()) throw std::runtime_error("Prepared global script no longer matches cleared manager");
+                    }
+                    else MWBase::Environment::get().getScriptManager()->getGlobalScripts().readRecord(reader, n.toInt());
                     break;
 
                 case ESM::REC_PROJ:

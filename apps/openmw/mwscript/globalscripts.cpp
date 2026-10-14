@@ -1,5 +1,8 @@
 #include "globalscripts.hpp"
 
+#include <limits>
+#include <optional>
+
 #include <components/debug/debuglog.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm3/globalscript.hpp>
@@ -186,6 +189,7 @@ namespace MWScript
 
     void GlobalScripts::clear()
     {
+        ++mRestoreEpoch;
         mScripts.clear();
     }
 
@@ -285,6 +289,56 @@ namespace MWScript
         }
 
         return false;
+    }
+
+    std::function<bool()> GlobalScripts::prepareRecord(ESM::GlobalScript&& script)
+    {
+        if (mRestoreEpoch == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("Global script restore epoch exhausted");
+        struct Plan
+        {
+            ESM::GlobalScript mState;
+            std::optional<ESM::Script> mScript;
+            Locals mLayout;
+            std::map<ESM::RefId, std::shared_ptr<GlobalScriptDesc>> mNode;
+            std::weak_ptr<const char> mLifetime;
+            std::uint64_t mEpoch;
+            bool mUsed = false;
+        };
+        auto plan = std::make_shared<Plan>();
+        plan->mState = std::move(script);
+        // SCPT is content-only in the save definition store. Never configure
+        // against the outgoing global descriptor, whose values disappear on clear.
+        if (const auto* record = mStore.get<ESM::Script>().search(plan->mState.mId))
+        {
+            plan->mScript = *record;
+            plan->mLayout = Locals::prepareConfiguration(record->mId);
+            auto desc = std::make_shared<GlobalScriptDesc>();
+            if (!plan->mState.mTargetId.empty() || plan->mState.mTargetRef.isSet())
+                desc->mTarget = std::make_pair(plan->mState.mTargetRef, plan->mState.mTargetId);
+            plan->mNode.emplace(record->mId, std::move(desc));
+        }
+        plan->mLifetime = mRestoreLifetime;
+        plan->mEpoch = mRestoreEpoch + 1;
+        return [this, plan] {
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch)
+                return false;
+            plan->mUsed = true;
+            auto iter = mScripts.find(plan->mState.mId);
+            if (iter == mScripts.end())
+            {
+                if (!plan->mScript) return true; // Removed content script.
+                auto& desc = plan->mNode.begin()->second;
+                desc->mLocals.configure(*plan->mScript, &plan->mLayout);
+                mScripts.merge(plan->mNode);
+                iter = mScripts.find(plan->mState.mId);
+            }
+            iter->second->mRunning = plan->mState.mRunning;
+            // Keep this at record position: unsaved variables and an existing
+            // target retain values established by earlier restoration callbacks.
+            iter->second->mLocals.read(plan->mState.mLocals, plan->mState.mId);
+            return true;
+        };
     }
 
     Locals& GlobalScripts::getLocals(const ESM::RefId& name)
