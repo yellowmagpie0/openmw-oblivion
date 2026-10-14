@@ -297,6 +297,121 @@ namespace MWMechanics
         }
     }
 
+    struct OblivionAiService::RetainedRuntime::Data
+    {
+        OblivionAiService* mOwner;
+        std::map<ESM::FormKey, LiveActor> mActors;
+        OblivionPackageDoneQueue mEvents;
+        decltype(OblivionAiService::mDetectionVectors) mDetection;
+        std::uint64_t mNextGeneration = 1;
+        std::optional<ESM4::CalendarInstant> mSimulationNow;
+        const std::uint64_t mExpectedGeneration;
+        bool mDetached = false;
+        bool mRetainedSelected = false;
+
+        explicit Data(OblivionAiService& owner)
+            : mOwner(&owner)
+            , mExpectedGeneration(owner.mNextEvaluationGeneration)
+        {
+            owner.seedActors(mActors);
+        }
+
+        void swap(OblivionAiService& owner) noexcept
+        {
+            mActors.swap(owner.mActors);
+            mDetection.swap(owner.mDetectionVectors);
+            mEvents.mPending.swap(owner.mPendingPackageDone.mPending);
+            std::swap(mEvents.mEpoch, owner.mPendingPackageDone.mEpoch);
+            std::swap(mNextGeneration, owner.mNextEvaluationGeneration);
+            std::swap(mSimulationNow, owner.mSimulationNow);
+        }
+    };
+
+    void OblivionAiService::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Native AI runtime is retained but not detached");
+    }
+
+    OblivionAiService::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data)
+        : mData(std::move(data))
+    {
+    }
+    OblivionAiService::RetainedRuntime::~RetainedRuntime() { restore(); }
+    OblivionAiService::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    OblivionAiService::RetainedRuntime&
+    OblivionAiService::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            restore();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+
+    OblivionAiService::RetainedRuntime OblivionAiService::retainRuntime()
+    {
+        if (mRetainedRuntime)
+            throw std::logic_error("Native AI runtime is already retained");
+        if (mPendingPackageDone.mDispatching || mSimulationNow)
+            throw std::logic_error("Native AI dispatch or simulation is active");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+
+    bool OblivionAiService::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached)
+            return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mPendingPackageDone.mDispatching || owner.mSimulationNow
+            || owner.mNextEvaluationGeneration != mData->mExpectedGeneration)
+            return false;
+        mData->swap(owner);
+        mData->mDetached = true;
+        return true;
+    }
+
+    bool OblivionAiService::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached)
+            return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mPendingPackageDone.mDispatching || owner.mSimulationNow)
+            return false;
+        mData->swap(owner);
+        mData->mRetainedSelected = !mData->mRetainedSelected;
+        return true;
+    }
+
+    bool OblivionAiService::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner)
+            return false;
+        if (mData->mDetached && !mData->mRetainedSelected)
+            mData->swap(*mData->mOwner);
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData.reset();
+        return true;
+    }
+
+    void OblivionAiService::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner)
+            return;
+        if (!mData->mDetached)
+        {
+            restore();
+            return;
+        }
+        if (mData->mRetainedSelected)
+            mData->swap(*mData->mOwner);
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData.reset();
+    }
+
     OblivionAiService::OblivionAiService(MWWorld::World& world)
         : mWorld(world)
     {
@@ -322,6 +437,8 @@ namespace MWMechanics
 
     OblivionAiService::~OblivionAiService()
     {
+        if (mRetainedRuntime)
+            mRetainedRuntime->mOwner = nullptr;
         flushDiagnosticCounters();
     }
 
@@ -340,6 +457,7 @@ namespace MWMechanics
 
     void OblivionAiService::clear()
     {
+        requireMutableRuntime();
         for (auto& [_, live] : mActors)
             releasePhysicalDoorCollision(loadedPtrFor(live.mState.mActor), live);
         mPendingPackageDone.restore({});
@@ -588,6 +706,7 @@ namespace MWMechanics
 
     OblivionAiService::LiveActor& OblivionAiService::ensure(const MWWorld::ConstPtr& actor)
     {
+        requireMutableRuntime();
         const ESM::FormKey key = actorKey(actor);
         if (key.isNull())
             throw std::runtime_error("Native TES4 actor has no stable reference key");
@@ -3903,6 +4022,7 @@ namespace MWMechanics
 
     void OblivionAiService::updateUnloaded(float duration)
     {
+        requireMutableRuntime();
         if (!std::isfinite(duration) || duration <= 0.f)
             return;
         const float elapsed = std::clamp(duration, 0.f, 5.f);
@@ -5319,6 +5439,7 @@ namespace MWMechanics
 
     void OblivionAiService::update(const MWWorld::Ptr& actor, float duration, bool highProcess)
     {
+        requireMutableRuntime();
         if (!handles(actor) || actor == mWorld.getPlayerPtr())
             return;
         if (!std::isfinite(duration))
@@ -5386,6 +5507,7 @@ namespace MWMechanics
 
     void OblivionAiService::commitPendingTransitions()
     {
+        requireMutableRuntime();
         // mActors is ordered by stable key, which makes simultaneous door
         // requests deterministic and keeps this pass independent of the
         // order in which the scene enumerated actors.
@@ -5563,6 +5685,7 @@ namespace MWMechanics
 
     void OblivionAiService::dispatchPendingPackageDone()
     {
+        requireMutableRuntime();
         MWWorld::OblivionScriptManager* scripts = mWorld.getOblivionScriptManager();
         if (scripts == nullptr || !mWorld.mScriptsEnabled)
             return;
@@ -5588,6 +5711,7 @@ namespace MWMechanics
 
     void OblivionAiService::fastForward(float gameHours)
     {
+        requireMutableRuntime();
         if (!std::isfinite(gameHours) || gameHours < 0.f)
             return;
         const float seconds = gameHours * 3600.f;
@@ -5705,6 +5829,7 @@ namespace MWMechanics
 
     bool OblivionAiService::evaluatePackage(const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
         if (!handles(actor))
             return false;
         LiveActor& live = ensure(actor);
@@ -5716,6 +5841,7 @@ namespace MWMechanics
 
     bool OblivionAiService::addScriptPackage(const MWWorld::Ptr& actor, const ESM::FormKey& packageKey)
     {
+        requireMutableRuntime();
         if (!handles(actor))
             return false;
         const auto candidate = packageCandidate(packageKey);
@@ -5734,6 +5860,7 @@ namespace MWMechanics
 
     bool OblivionAiService::forceFlee(const MWWorld::Ptr& actor, const ESM::FormKey& threat, float durationHours)
     {
+        requireMutableRuntime();
         if (!handles(actor) || threat.isNull() || !std::isfinite(durationHours) || durationHours < 0.f
             || durationHours > static_cast<float>(std::numeric_limits<std::int32_t>::max()))
             return false;
@@ -5763,6 +5890,7 @@ namespace MWMechanics
 
     bool OblivionAiService::setRestrained(const MWWorld::Ptr& actor, bool restrained)
     {
+        requireMutableRuntime();
         if (!handles(actor))
             return false;
         LiveActor& live = ensure(actor);
@@ -5786,6 +5914,7 @@ namespace MWMechanics
 
     bool OblivionAiService::mountHorse(const MWWorld::Ptr& rider, const MWWorld::Ptr& horse)
     {
+        requireMutableRuntime();
         if (!handles(rider) || !handles(horse) || rider == horse || !isHorse(horse)
             || !rider.isInCell() || !horse.isInCell() || cellKey(rider) != cellKey(horse))
             return false;
@@ -5844,6 +5973,7 @@ namespace MWMechanics
 
     bool OblivionAiService::dismountHorse(const MWWorld::Ptr& rider)
     {
+        requireMutableRuntime();
         if (!handles(rider))
             return false;
         LiveActor& riderState = ensure(rider);
@@ -5908,6 +6038,7 @@ namespace MWMechanics
 
     bool OblivionAiService::setPathPoint(const ESM::FormKey& pathgrid, std::uint32_t node, bool enabled)
     {
+        requireMutableRuntime();
         const bool changed = mWorld.mStore.getOblivionPathgridService().setNodeEnabled({ pathgrid, node }, enabled);
         if (changed)
         {
@@ -5932,6 +6063,7 @@ namespace MWMechanics
 
     bool OblivionAiService::setLinkedPathPoints(const ESM::FormKey& object, bool enabled)
     {
+        requireMutableRuntime();
         if (object.isNull())
             return false;
         ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
@@ -6011,6 +6143,7 @@ namespace MWMechanics
     ESM4::DetectionResult OblivionAiService::detection(
         const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const
     {
+        requireMutableRuntime();
         if (observer.isEmpty() || target.isEmpty())
             return { 0.0, false, false };
         const osg::Vec3f observerPosition = observer.getRefData().getPosition().asVec3();
@@ -6298,6 +6431,8 @@ namespace MWMechanics
         if (!mImpl || !mImpl->mTarget)
             return false;
         auto& target = *mImpl->mTarget;
+        if (target.mRetainedRuntime && !target.mRetainedRuntime->mDetached)
+            return false;
         // Removing an existing ignored pair uses erase and Bullet removal,
         // neither insertion nor allocation. Registrations are borrowed until commit.
         for (const auto& [actor, door] : mImpl->mCollisionExceptions)
@@ -6483,6 +6618,7 @@ namespace MWMechanics
 
     void OblivionAiService::restore(const ESM4::RuntimeState& state)
     {
+        requireMutableRuntime();
         auto plan = prepareRestore(state);
         plan.commit();
     }

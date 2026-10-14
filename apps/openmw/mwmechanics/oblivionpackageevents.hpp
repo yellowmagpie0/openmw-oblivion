@@ -38,6 +38,7 @@ namespace MWMechanics
     // even when a native callback saves, changes packages, or replaces the game.
     class OblivionPackageDoneQueue
     {
+        friend class OblivionAiService;
         std::deque<ESM4::RuntimePackageDoneEvent> mPending;
         std::uint64_t mEpoch = 0;
         bool mDispatching = false;

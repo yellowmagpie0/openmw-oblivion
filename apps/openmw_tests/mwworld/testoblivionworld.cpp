@@ -140,7 +140,8 @@ namespace
         std::unique_ptr<MWLua::LuaManager> mLuaManager;
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
 
-        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false)
+        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false,
+            const std::string& scriptSource = {})
         {
             mEnvironment.setResourceSystem(mResources);
             mEnvironment.setWorld(mWorld);
@@ -188,8 +189,9 @@ namespace
                         subrecord(ESM::fourCC("EDID"), std::string("ActivationReceiver\0", 19))
                         + subrecord(ESM::fourCC("SLSD"), bytes(local))
                         + subrecord(ESM::fourCC("SCVR"), std::string("calls\0", 6))
-                        + subrecord(ESM::fourCC("SCTX"), "scn ActivationReceiver\nshort calls\n"
-                            "Begin OnActivate\nset calls to calls + 1\nEnd\n"));
+                        + subrecord(ESM::fourCC("SCTX"), scriptSource.empty()
+                            ? "scn ActivationReceiver\nshort calls\nBegin OnActivate\nset calls to calls + 1\nEnd\n"
+                            : scriptSource));
                 }
                 if (!stream)
                     throw std::runtime_error("failed to write native world fixture");
@@ -12305,8 +12307,8 @@ namespace
     struct PopulatedMigrationFixture : NativeWorldFixture
     {
         MWWorld::Ptr mActor;
-        explicit PopulatedMigrationFixture(bool activationScript = false)
-            : NativeWorldFixture(false, false, activationScript)
+        explicit PopulatedMigrationFixture(bool activationScript = false, const std::string& scriptSource = {})
+            : NativeWorldFixture(false, false, activationScript, scriptSource)
         {
             MWClass::Npc::registerSelf();
             MWClass::Weapon::registerSelf();
@@ -18828,6 +18830,13 @@ TEST(OblivionWorldTest, NativeScriptRetentionRestoresActualInstancesWithoutDispa
     scripts.capture(candidate);
     EXPECT_EQ(candidate.mScriptInstances, incoming.mScriptInstances);
     ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    ASSERT_TRUE(retained.exchange());
+    ESM4::RuntimeState selected;
+    scripts.capture(selected);
+    EXPECT_EQ(selected.mScriptInstances, before.mScriptInstances);
+    ASSERT_TRUE(retained.exchange());
+    scripts.capture(selected);
+    EXPECT_EQ(std::get<std::int64_t>(selected.mScriptInstances.front().mLocals.front()), 42);
     ASSERT_TRUE(retained.restore());
     EXPECT_FALSE(retained.restore());
     ESM4::RuntimeState restored;
@@ -18886,6 +18895,8 @@ TEST(OblivionWorldTest, NativeScriptRetentionRestoresQuestNodesAndCommitsReplace
         EXPECT_EQ(fresh->mStage, 0);
         EXPECT_TRUE(fresh->mCompletedStages.empty());
         EXPECT_TRUE(fresh->mRunning);
+        ASSERT_TRUE(moved.exchange());
+        EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
     }
     EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
     EXPECT_EQ(*original, completed);
@@ -18894,6 +18905,8 @@ TEST(OblivionWorldTest, NativeScriptRetentionRestoresQuestNodesAndCommitsReplace
     scripts.restore(snapshot);
     const auto* replacement = scripts.findQuestState(quest.mFormKey);
     EXPECT_NE(replacement, original);
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
     retained.discard();
     EXPECT_FALSE(retained.restore());
     EXPECT_EQ(scripts.findQuestState(quest.mFormKey), replacement);
@@ -18909,6 +18922,163 @@ TEST(OblivionWorldTest, NativeScriptRetentionInvalidatesAfterManagerDestruction)
         auto& scripts = *fixture.mWorld.getOblivionScriptManager();
         ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", fixture.mWorld.getPlayerPtr()));
         retained.emplace(scripts.retainRuntime());
+        ASSERT_TRUE(retained->detach());
+    }
+    EXPECT_FALSE(retained->detach());
+    EXPECT_FALSE(retained->restore());
+    retained->discard();
+}
+
+
+TEST(OblivionWorldTest, NativeAiRetentionRestoresOriginalActorNodesAndCompletionFifoWithoutDispatch)
+{
+    PopulatedMigrationFixture fixture(true, "scn ActivationReceiver\nshort calls\n"
+        "Begin OnPackageDone\nset calls to calls + 1\nEnd\n");
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    auto saved = populatedAiRestore(fixture);
+    ai.restore(saved);
+    ESM4::RuntimeState before;
+    ai.capture(before);
+    const auto key = saved.mActorAi.front().mActor;
+    const auto* original = ai.state(key);
+    ASSERT_NE(original, nullptr);
+    auto incoming = saved;
+    incoming.mActorAi.front().mLastValidPosition.pos[0] = 53;
+    incoming.mAiRngState += 7;
+    incoming.mPendingPackageDone.clear();
+    incoming.mDetectionVectors.front().mScore = 23;
+    auto install = ai.prepareRestore(incoming);
+    auto retained = ai.retainRuntime();
+    EXPECT_THROW(ai.clear(), std::logic_error);
+    EXPECT_THROW(ai.updateUnloaded(0), std::logic_error);
+    EXPECT_THROW(ai.commitPendingTransitions(), std::logic_error);
+    EXPECT_THROW(ai.detection(fixture.mActor, world.getPlayerConstPtr()), std::logic_error);
+    EXPECT_FALSE(install.commit());
+    ASSERT_TRUE(retained.detach());
+    EXPECT_FALSE(retained.detach());
+    EXPECT_EQ(*original, before.mActorAi.front());
+    ASSERT_TRUE(install.commit());
+    const auto* replacement = ai.state(key);
+    EXPECT_NE(replacement, original);
+    ASSERT_TRUE(ai.setRestrained(fixture.mActor, true));
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(ai.state(key), original);
+    EXPECT_EQ(*original, before.mActorAi.front());
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(ai.state(key), replacement);
+    ASSERT_TRUE(retained.restore());
+    EXPECT_FALSE(retained.restore());
+    EXPECT_EQ(ai.state(key), original);
+    ESM4::RuntimeState restored;
+    ai.capture(restored);
+    EXPECT_EQ(restored.mActorAi, before.mActorAi);
+    EXPECT_EQ(restored.mAiRngState, before.mAiRngState);
+    EXPECT_EQ(restored.mPendingPackageDone, before.mPendingPackageDone);
+    EXPECT_EQ(restored.mDetectionVectors, before.mDetectionVectors);
+    ESM4::RuntimeState scripts;
+    world.getOblivionScriptManager()->capture(scripts);
+    EXPECT_TRUE(scripts.mScriptInstances.empty());
+    ai.commitPendingTransitions();
+    ai.capture(restored);
+    EXPECT_TRUE(restored.mPendingPackageDone.empty());
+    world.getOblivionScriptManager()->capture(scripts);
+    ASSERT_EQ(scripts.mScriptInstances.size(), 1u);
+    EXPECT_EQ(std::get<std::int64_t>(scripts.mScriptInstances.front().mLocals.front()), 2);
+}
+
+TEST(OblivionWorldTest, NativeAiRetentionScopeMovesAndCommitPreserveServiceIdentity)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    auto saved = populatedAiRestore(fixture);
+    ai.restore(saved);
+    const auto key = saved.mActorAi.front().mActor;
+    const auto* original = ai.state(key);
+    ASSERT_NE(original, nullptr);
+    {
+        auto cancelled = ai.retainRuntime();
+        EXPECT_EQ(ai.state(key), original);
+        EXPECT_THROW(ai.retainRuntime(), std::logic_error);
+    }
+    {
+        auto retained = ai.retainRuntime();
+        auto moved = std::move(retained);
+        EXPECT_FALSE(retained.detach());
+        ASSERT_TRUE(moved.detach());
+        ASSERT_TRUE(moved.exchange());
+        EXPECT_EQ(ai.state(key), original);
+    }
+    EXPECT_EQ(ai.state(key), original);
+    auto retained = ai.retainRuntime();
+    ASSERT_TRUE(retained.detach());
+    ai.restore(saved);
+    const auto* replacement = ai.state(key);
+    ASSERT_NE(replacement, nullptr);
+    EXPECT_NE(replacement, original);
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(ai.state(key), original);
+    retained.discard(); // select incoming before releasing outgoing actor nodes
+    EXPECT_FALSE(retained.restore());
+    EXPECT_EQ(ai.state(key), replacement);
+    EXPECT_EQ(world.getOblivionAiService(), &ai);
+    EXPECT_NO_THROW(ai.setRestrained(fixture.mActor, true));
+}
+
+TEST(OblivionWorldTest, NativeAiRetentionRejectsActualPackageCallbackDispatch)
+{
+    PopulatedMigrationFixture fixture(true, "scn ActivationReceiver\nshort calls\n"
+        "Begin OnPackageDone\nset calls to calls + 1\nMessageBox \"retention-probe\"\nEnd\n");
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    TestingOpenMW::InventoryWindowManager window;
+    int calls = 0;
+    std::optional<MWMechanics::OblivionAiService::RetainedRuntime> aiArchive;
+    std::optional<MWWorld::OblivionScriptManager::RetainedRuntime> scriptArchive;
+    window.mMessageCallback = [&](std::string_view message, MWGui::ShowInDialogueMode) {
+        EXPECT_EQ(message, "retention-probe");
+        ++calls;
+        EXPECT_THROW(ai.retainRuntime(), std::logic_error);
+        EXPECT_THROW(world.getOblivionScriptManager()->retainRuntime(), std::logic_error);
+        if (aiArchive)
+        {
+            EXPECT_FALSE(aiArchive->exchange());
+        }
+        if (scriptArchive)
+        {
+            EXPECT_FALSE(scriptArchive->exchange());
+        }
+    };
+    fixture.mEnvironment.setWindowManager(window);
+    ai.restore(populatedAiRestore(fixture));
+    ai.commitPendingTransitions();
+    EXPECT_EQ(calls, 2);
+    ESM4::RuntimeState captured;
+    ai.capture(captured);
+    EXPECT_TRUE(captured.mPendingPackageDone.empty());
+    EXPECT_NO_THROW(ai.retainRuntime());
+    EXPECT_NO_THROW(world.getOblivionScriptManager()->retainRuntime());
+    ai.restore(populatedAiRestore(fixture));
+    aiArchive.emplace(ai.retainRuntime());
+    scriptArchive.emplace(world.getOblivionScriptManager()->retainRuntime());
+    ASSERT_TRUE(aiArchive->detach());
+    ASSERT_TRUE(scriptArchive->detach());
+    ai.restore(populatedAiRestore(fixture));
+    ai.commitPendingTransitions();
+    EXPECT_EQ(calls, 4);
+    ASSERT_TRUE(aiArchive->restore());
+    ASSERT_TRUE(scriptArchive->restore());
+}
+
+TEST(OblivionWorldTest, NativeAiRetentionInvalidatesAfterServiceDestruction)
+{
+    std::optional<MWMechanics::OblivionAiService::RetainedRuntime> retained;
+    {
+        PopulatedMigrationFixture fixture;
+        auto& ai = *fixture.mWorld.getOblivionAiService();
+        ai.restore(populatedAiRestore(fixture));
+        retained.emplace(ai.retainRuntime());
         ASSERT_TRUE(retained->detach());
     }
     EXPECT_FALSE(retained->detach());

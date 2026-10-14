@@ -51,6 +51,30 @@ namespace MWMechanics
         explicit OblivionAiService(MWWorld::World& world);
         ~OblivionAiService();
 
+        // Retain actual live actors/routes and event FIFO while World retains
+        // their original cells, pathgrid runtime and physics graph. No callbacks or collision
+        // projections run during detach/rollback. Diagnostic streams remain
+        // process-wide. All retention operations belong between simulation/dispatch passes.
+        class RetainedRuntime
+        {
+            friend class OblivionAiService;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            // Coordinator-only temporary selection for outgoing graph disposal.
+            // World must exchange its other services/graphs at the same boundary.
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
         void clear();
 
         bool handles(const MWWorld::ConstPtr& actor) const;
@@ -212,6 +236,8 @@ namespace MWMechanics
         mutable std::uint64_t mNextEvaluationGeneration = 1;
         mutable std::ofstream mEventStream;
         std::optional<ESM4::CalendarInstant> mSimulationNow;
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        void requireMutableRuntime() const;
 
         ESM::FormKey actorKey(const MWWorld::ConstPtr& actor) const;
         ESM::FormKey baseKey(const MWWorld::ConstPtr& actor) const;

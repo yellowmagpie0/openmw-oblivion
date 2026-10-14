@@ -6,6 +6,64 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain native AI and select parked services for disposal — 2026-10-13
+
+Native AI now retains actual LiveActor map nodes and their owned route/observed/
+fixed-step state, detection vectors, evaluation generation, package-completion
+FIFO/epoch and virtual simulation clock. Candidate actors are seeded during
+preparation. Detach/rollback swap ownership without package callbacks or physical
+collision projection. Report streams, diagnostic counters and immutable unloaded
+content indexes remain in the existing service; creating a second service would
+truncate its process report. Mutating entry points and prepared-restore commit
+are blocked before detach. Active package dispatch or virtual simulation rejects
+retention; scope/move/one-shot and destroyed-owner behavior are supported.
+
+AI and native-script retention also provide a reversible `exchange` phase for
+coordinated discarded-runtime disposal. Original/incoming tables remain alive;
+World must select its other services and graph at the same idle boundary.
+Exchange rejects active AI callback dispatch or a native VM frame. Restore and
+discard handle either selected phase, preserving the appropriate original or
+candidate node identities. This is necessary because scene/controller cleanup
+consults World getters and must not release old users against candidate physics.
+It is not yet an integrated World or StateManager transaction.
+
+Four new AI regressions and expanded three native-script regressions verify
+original actor/quest addresses, exact local and event-FIFO restoration, original/
+incoming selection, scope/move/commit/death, deferred prepared installation and
+frozen mutations. A real `OnPackageDone` fixture proves rollback dispatches no
+queued work; the next ordinary dispatch executes both outstanding events once.
+A MessageBox callback inside actual AI/native VM dispatch rejects retention and
+exchange, including candidate dispatch with both archives alive. The strict UI
+fixture allows an explicit message callback; default unexpected UI calls still
+reject. The content fixture permits an explicit script source with unchanged
+ordinary defaults.
+
+Both targeted inventories pass **7 tests** and both full engine inventories pass
+**1,433 tests**, exact XML/inventory agreement with no failures/skips, in
+`build/oblivion-compat/m15/S3/native-service-selection-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `4a4295e6f68370e751dc9f4873218feec16790e0`; matching before/after
+fingerprint: `2b5423e850dc619739500df75b4df776f04b70335cdbffb1f1e7bd4aa8c391b6`.
+ASan/UBSan halt on errors; leak checks disabled; audio/SDL null/offscreen.
+`native-service-selection-allocation-control-01` links a copied test object to
+the tested production archive: **46 explicit detach/exchange/restore/discard
+operations** pass with C++ scalar/array/aligned new disabled. Forced vector
+allocation fails all **seven tests** at their first guarded operation in
+`native-service-selection-negative-01`. Preparation, implicit scope/move rollback,
+full World/graph teardown and callback execution outside the guarded operation
+are excluded. Full reports/hashes are in
+`native-service-selection-followup-01/checkpoint-summary.json`.
+
+An ignored, renamed registry-selection draft passes a standalone credits/node/
+move/rollback/discard probe in `registry-selection-prototype-03`; earlier attempts
+had a missing LiveCellRef constructor argument and missing NPC class registration.
+Those draft results are not production registry or runtime acceptance evidence.
+Registry/model/record selection must preserve both reservation domains and mixed
+legacy cell nodes before World can safely dispose outgoing users. Player, stable
+clock/global/local-script state, pathgrid/scene/render/physics, actual Lua/storage/
+UI/audio and other managers still require aggregate retention. StateManager does
+not call these APIs yet, and the earlier actual late-load probe still contradicts
+prior-world preservation. Complete S3 acceptance remains open.
+
 ## S3 retain native script runtime without replaying callbacks — 2026-10-13
 
 OblivionScriptManager now retains actual instance/local and quest map nodes,

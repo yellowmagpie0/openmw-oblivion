@@ -500,6 +500,7 @@ namespace MWWorld
         decltype(OblivionScriptManager::mSuppressedActivations) mSuppressedActivations{};
         decltype(OblivionScriptManager::mIgnoreFriendlyHits) mIgnoreFriendlyHits{};
         bool mDetached = false;
+        bool mRetainedSelected = false;
         std::uint64_t mExpectedSequence;
         double mExpectedElapsed;
         explicit Data(OblivionScriptManager& owner)
@@ -590,11 +591,20 @@ namespace MWWorld
         return true;
     }
 
+    bool OblivionScriptManager::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mDepth != 0)
+            return false;
+        mData->swap(*mData->mOwner);
+        mData->mRetainedSelected = !mData->mRetainedSelected;
+        return true;
+    }
+
     bool OblivionScriptManager::RetainedRuntime::restore() noexcept
     {
         if (!mData || !mData->mOwner)
             return false;
-        if (mData->mDetached)
+        if (mData->mDetached && !mData->mRetainedSelected)
             mData->swap(*mData->mOwner);
         mData->mOwner->mRetainedRuntime = nullptr;
         mData.reset();
@@ -610,6 +620,8 @@ namespace MWWorld
             restore();
             return;
         }
+        if (mData->mRetainedSelected)
+            mData->swap(*mData->mOwner);
         mData->mOwner->mRetainedRuntime = nullptr;
         mData.reset();
     }

@@ -47,6 +47,9 @@ namespace MWWorld
             RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
             RetainedRuntime(const RetainedRuntime&) = delete;
             bool detach() noexcept;
+            // Coordinator-only selection during discarded-runtime disposal.
+            // Exchange the other World services at the same idle boundary.
+            bool exchange() noexcept;
             bool restore() noexcept;
             void discard() noexcept;
         };

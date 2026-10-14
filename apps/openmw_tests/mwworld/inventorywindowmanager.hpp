@@ -2,6 +2,7 @@
 #define OPENMW_TESTS_INVENTORYWINDOWMANAGER_H
 
 #include <stdexcept>
+#include <functional>
 #include "apps/openmw/mwbase/windowmanager.hpp"
 #include "apps/openmw/mwworld/ptr.hpp"
 
@@ -12,6 +13,7 @@ namespace TestingOpenMW
     struct InventoryWindowManager final : MWBase::WindowManager
     {
         mutable std::size_t mInventoryUpdates = 0;
+        std::function<void(std::string_view, MWGui::ShowInDialogueMode)> mMessageCallback;
         void playVideo(std::string_view, bool, bool) override { throw std::logic_error("Unexpected WindowManager::playVideo call"); }
         void setNewGame(bool) override { throw std::logic_error("Unexpected WindowManager::setNewGame call"); }
         void pushGuiMode(MWGui::GuiMode, const MWWorld::Ptr&) override { throw std::logic_error("Unexpected WindowManager::pushGuiMode call"); }
@@ -86,7 +88,13 @@ namespace TestingOpenMW
         void addVisitedLocation(const std::string&, int, int) override { throw std::logic_error("Unexpected WindowManager::addVisitedLocation call"); }
         void removeDialog(std::unique_ptr<MWGui::Layout>&&) override { throw std::logic_error("Unexpected WindowManager::removeDialog call"); }
         void exitCurrentGuiMode() override { throw std::logic_error("Unexpected WindowManager::exitCurrentGuiMode call"); }
-        void messageBox(std::string_view, enum MWGui::ShowInDialogueMode) override { throw std::logic_error("Unexpected WindowManager::messageBox call"); }
+        void messageBox(std::string_view message, MWGui::ShowInDialogueMode mode) override
+        {
+            if (mMessageCallback)
+                mMessageCallback(message, mode);
+            else
+                throw std::logic_error("Unexpected WindowManager::messageBox call");
+        }
         void scheduleMessageBox(std::string, enum MWGui::ShowInDialogueMode) override { throw std::logic_error("Unexpected WindowManager::scheduleMessageBox call"); }
         void staticMessageBox(std::string_view) override { throw std::logic_error("Unexpected WindowManager::staticMessageBox call"); }
         void removeStaticMessageBox() override { throw std::logic_error("Unexpected WindowManager::removeStaticMessageBox call"); }

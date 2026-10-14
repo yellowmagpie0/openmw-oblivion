@@ -935,3 +935,18 @@ integration is claimed. Stable clock pointers, AI report streams, candidate came
 scene roots, actual Lua closures/storage/UI and other-manager state still need
 aggregate retention. The actual late-failure preservation gate and full S3
 acceptance remain open.
+
+Native AI retention now preserves actual actor/route nodes, detection/generation,
+completion FIFO/epoch and virtual clock without callbacks or collision projection;
+process reports and immutable indexes stay shared. AI/native-script handles can
+exchange parked original/incoming state for coordinated old-user disposal and
+reject active callback/VM selection. Restore/discard work from either phase.
+Four new AI tests and expanded three script tests include real OnPackageDone FIFO
+consumption and MessageBox callbacks rejecting retention/exchange during dispatch.
+Both targeted 7 and full 1,433 normal/ASan-UBSan inventories pass with matching
+source fingerprints. Forty-six explicit operations pass with C++ new disabled;
+forced allocation fails all seven negative cases. Evidence is
+S3/native-service-selection-*01. World must retain/select the corresponding
+cells/pathgrids/physics and other managers; StateManager is not wired yet. A renamed
+ignored registry draft has standalone evidence only. Actual full late-failure
+world preservation and complete S3 acceptance remain open.
