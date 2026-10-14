@@ -6,6 +6,7 @@
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/settings/values.hpp>
 
+#include "../mwbase/environment.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwrender/renderingmanager.hpp"
 #include "../mwrender/runtimeviewer.hpp"
@@ -40,6 +41,7 @@ namespace MWWorld
         std::unique_ptr<Scene> mScene;
         bool mSelected = false;
         bool mReady = false;
+        bool mExchanged = false;
 
         explicit Data(World& owner)
             : mOwner(&owner)
@@ -92,6 +94,7 @@ namespace MWWorld
 
         void dispose() noexcept
         {
+            if (mExchanged && !exchange()) std::terminate();
             restoreSelection();
             mReady = false;
             mScene.reset(); // empty Scene; abort/wait its own preload users first
@@ -119,6 +122,29 @@ namespace MWWorld
             mRoot = nullptr;
             mOriginalBindings = MWRender::RuntimeViewer::Bindings{};
             mViewer = nullptr;
+        }
+
+        bool exchange() noexcept
+        {
+            if (!mOwner || !mReady || mSelected || !mCandidateBindings || mViewer->areThreadsRunning()
+                || MWBase::Environment::get().getWorld() != mOwner)
+                return false;
+            osg::ref_ptr<osg::Camera> outgoingCamera = mViewer->getCamera();
+            if (!mViewer->selectBindings(mExchanged ? mOriginalBindings : *mCandidateBindings))
+                return false;
+            using std::swap;
+            swap(mOwner->mPhysics, mPhysics);
+            swap(mOwner->mNavigator, mNavigator);
+            swap(mOwner->mRendering, mRendering);
+            swap(mOwner->mProjectileManager, mProjectiles);
+            swap(mOwner->mWeatherManager, mWeather);
+            swap(mOwner->mWorldScene, mScene);
+            swap(mOwner->mBackendConfiguration->mRoot, mRoot);
+            mCamera = std::move(outgoingCamera);
+            mOwner->mRendering->selectRuntimeResources();
+            if (!MWBase::Environment::selectWorldScene(*mOwner, *mOwner->mWorldScene)) std::terminate();
+            mExchanged = !mExchanged;
+            return true;
         }
     };
 
@@ -170,6 +196,7 @@ namespace MWWorld
         return *this;
     }
     bool World::PreparedBackend::ready() const noexcept { return mData && mData->mOwner && mData->mReady; }
+    bool World::PreparedBackend::exchange() noexcept { return mData && mData->exchange(); }
     void World::PreparedBackend::cancel() noexcept
     {
         if (!mData) return;

@@ -1060,3 +1060,20 @@ preparation and cancellation against a running World, not installation, candidat
 load, retained loaded Scene disposal, external-manager selection or late-failure
 load rollback. Backend archive composition and StateManager wiring still remain
 open, alongside Lua/UI/audio/other-manager retention; full S3 acceptance is absent.
+
+PreparedBackend now supports reversible exchange of actual six-subsystem owners,
+root/camera/viewer/resource bindings and checked Environment Scene selection.
+Selected-candidate cancellation restores original ownership before disposal.
+Caller must stop viewer threads and external actor/Lua users and coordinate
+matching cells/Player/managers before any game update. Five targeted and full
+1,451 normal/ASan-UBSan inventories pass at fingerprint
+`01cc29de9ae1dcb0339bde6a7a256f58a2980341d19fb68f4818e4e41f2bf152` in
+`world-backend-exchange-{normal,sanitized}-02` and
+`world-backend-exchange-full-{normal,sanitized}-01`. Loaded normal/instrumented
+`world-backend-exchange-runtime{-sanitized}-01` courses verify three pairs plus
+explicit/scope cancellation from incoming-selected state, exact original native
+binary/RNG and identities, Environment restoration and continued render/F5.
+Selected decoded fields match and captures are reviewed. No candidate frame,
+cells/Player/manager installation, committed backend or loaded outgoing Scene
+disposal is covered. Whole World/manager composition and StateManager wiring are
+still missing, and the prior-world late-load failure contract remains unproven.

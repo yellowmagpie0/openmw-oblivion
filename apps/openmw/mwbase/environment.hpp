@@ -73,6 +73,8 @@ namespace MWBase
         void setWorld(World& value) { mWorld = &value; }
         void setWorldModel(MWWorld::WorldModel& value) { mWorldModel = &value; }
         void setWorldScene(MWWorld::Scene& value) { mWorldScene = &value; }
+        /// Runtime selection between idle frames; reject a backend from another World.
+        static bool selectWorldScene(const World& expectedWorld, MWWorld::Scene& value) noexcept;
         void setESMStore(MWWorld::ESMStore& value) { mESMStore = &value; }
 
         void setSoundManager(SoundManager& value) { mSoundManager = &value; }

@@ -136,8 +136,9 @@ namespace MWWorld
         RetainedSimulation retainSimulation();
 
         /// Empty backend candidate for the load transaction. Preparation/cancellation preserves
-        /// the selected World and requires stopped viewer threads. Installation is not exposed
-        /// until backend ownership is composed with cell and external-manager retention.
+        /// the original backend. Exchange requires stopped viewer threads and external actor/Lua
+        /// users; the caller must select matching cells, Player and managers before resuming them.
+        /// Cancellation restores the original backend. Commit is not exposed yet.
         class PreparedBackend
         {
             friend class World;
@@ -150,6 +151,7 @@ namespace MWWorld
             PreparedBackend& operator=(PreparedBackend&&) noexcept;
             PreparedBackend(const PreparedBackend&) = delete;
             bool ready() const noexcept;
+            bool exchange() noexcept;
             void cancel() noexcept;
         };
         PreparedBackend prepareBackend();

@@ -6,6 +6,36 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 reversible World backend selection — 2026-10-14
+
+`PreparedBackend::exchange` now reversibly selects the prepared graph by swapping
+actual physics/navigation/rendering/projectile/weather/Scene owners and root/
+camera bindings. Environment Scene selection follows the backend through a
+checked World identity. Cancellation from incoming-selected state restores the
+original graph before candidate disposal. Exchange requires stopped viewer
+threads and external actor/Lua users; matching cells/Player/managers must be
+selected before resuming them. Commit/discard of a loaded outgoing graph remains
+unexposed, and RetainedSimulation still rejects initialized backends.
+
+Five targeted and full 1,451 normal/ASan-UBSan engine inventories pass at
+fingerprint `01cc29de9ae1dcb0339bde6a7a256f58a2980341d19fb68f4818e4e41f2bf152`
+in `S3/world-backend-exchange-{normal,sanitized}-02` and
+`world-backend-exchange-full-{normal,sanitized}-01`. Actual loaded-game courses
+`world-backend-exchange-runtime-01` (PID 230484) and
+`world-backend-exchange-runtime-sanitized-01` (PID 233631) exercise three exchange
+pairs, explicit and scope cancellation while incoming is selected, Environment
+restoration and rejection after cancellation. Exact native binary/RNG and
+Player/node/backend/camera/scene/start-tick identities resume before subsequent
+game updates; actual rendering/F5, decoded crime/base/action/counter checks and
+reviewed Prison scene/HUD captures pass. The short exchanges render no candidate
+frame and install no candidate cells/Player/managers. Leak checking is disabled.
+Failed first syntax/build attempts used a non-const Environment setter through
+the const global accessor; the checked selector resolves that without const-cast.
+
+World/manager archive composition, loaded outgoing Scene disposal, StateManager
+wiring and real late-load prior-world preservation remain open. **S3 and M15
+are incomplete.**
+
 ## S3 World-owned empty backend preparation — 2026-10-14
 
 `World::prepareBackend` now prepares a separate empty physics/navigation/rendering/

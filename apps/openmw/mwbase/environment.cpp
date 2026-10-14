@@ -6,6 +6,14 @@
 
 MWBase::Environment* MWBase::Environment::sThis = nullptr;
 
+bool MWBase::Environment::selectWorldScene(const World& expectedWorld, MWWorld::Scene& value) noexcept
+{
+    if (!sThis || sThis->mWorld != &expectedWorld)
+        return false;
+    sThis->mWorldScene = &value;
+    return true;
+}
+
 MWBase::Environment::Environment()
 {
     assert(sThis == nullptr);
