@@ -35,6 +35,7 @@
 #include "pingpongcull.hpp"
 #include "renderbin.hpp"
 #include "renderingmanager.hpp"
+#include "runtimeviewer.hpp"
 #include "sky.hpp"
 #include "transparentpass.hpp"
 #include "vismask.hpp"
@@ -114,7 +115,8 @@ namespace
 namespace MWRender
 {
     PostProcessor::PostProcessor(
-        RenderingManager& rendering, osgViewer::Viewer* viewer, osg::Group* rootNode, const VFS::Manager* vfs)
+        RenderingManager& rendering, osgViewer::Viewer* viewer, osg::Group* rootNode, const VFS::Manager* vfs,
+        bool preserveProcessClock)
         : osg::Group()
         , mRootNode(rootNode)
         , mHUDCamera(new osg::Camera)
@@ -126,6 +128,7 @@ namespace MWRender
         , mPingPongCull(new PingPongCull(this))
         , mDistortionCallback(new DistortionCallback)
     {
+        mPreparingRuntime = preserveProcessClock;
         auto& shaderManager = mRendering.getResourceSystem()->getSceneManager()->getShaderManager();
 
         std::shared_ptr<LuminanceCalculator> luminanceCalculator = std::make_shared<LuminanceCalculator>(shaderManager);
@@ -153,8 +156,15 @@ namespace MWRender
                 Settings::postProcessing().mTransparentPostpass);
         osgUtil::RenderBin::getRenderBinPrototype("DepthSortedBin")->setDrawCallback(mTransparentDepthPostPass);
 
-        osg::ref_ptr<osgUtil::RenderBin> distortionRenderBin
-            = new osgUtil::RenderBin(osgUtil::RenderBin::SORT_BACK_TO_FRONT);
+        osg::ref_ptr<osgUtil::RenderBin> distortionRenderBin;
+        if (mPreparingRuntime)
+        {
+            distortionRenderBin = osgUtil::RenderBin::getRenderBinPrototype("Distortion");
+            if (!distortionRenderBin)
+                throw std::logic_error("Candidate postprocessor requires the existing distortion bin");
+        }
+        else
+            distortionRenderBin = new osgUtil::RenderBin(osgUtil::RenderBin::SORT_BACK_TO_FRONT);
         // This is silly to have to do, but if nothing is drawn then the drawcallback is never called and the distortion
         // texture will never be cleared
         osg::ref_ptr<osg::Node> dummyNodeToClear = new osg::Node;
@@ -162,19 +172,20 @@ namespace MWRender
         dummyNodeToClear->getOrCreateStateSet()->setRenderBinDetails(RenderBin_Distortion, "Distortion");
         rootNode->addChild(dummyNodeToClear);
         distortionRenderBin->setDrawCallback(mDistortionCallback);
-        distortionRenderBin->getStateSet()->setDefine("DISTORTION", "1", osg::StateAttribute::ON);
+        if (!mPreparingRuntime)
+        {
+            distortionRenderBin->getStateSet()->setDefine("DISTORTION", "1", osg::StateAttribute::ON);
 
-        // Give the renderbin access to the opaque depth sampler so it can write its occlusion
-        // Distorted geometry is drawn with ALWAYS depth function and depths writes disbled.
-        const int unitSoftEffect
-            = shaderManager.reserveGlobalTextureUnits(Shader::ShaderManager::Slot::OpaqueDepthTexture);
-        distortionRenderBin->getStateSet()->addUniform(new osg::Uniform("opaqueDepthTex", unitSoftEffect));
+            // Give the renderbin access to the opaque depth sampler so it can write its occlusion.
+            const int unitSoftEffect
+                = shaderManager.reserveGlobalTextureUnits(Shader::ShaderManager::Slot::OpaqueDepthTexture);
+            distortionRenderBin->getStateSet()->addUniform(new osg::Uniform("opaqueDepthTex", unitSoftEffect));
+            osgUtil::RenderBin::addRenderBinPrototype("Distortion", distortionRenderBin);
 
-        osgUtil::RenderBin::addRenderBinPrototype("Distortion", distortionRenderBin);
-
-        auto defines = shaderManager.getGlobalDefines();
-        defines["distorionRTRatio"] = std::to_string(DistortionRatio);
-        shaderManager.setGlobalDefines(defines);
+            auto defines = shaderManager.getGlobalDefines();
+            defines["distorionRTRatio"] = std::to_string(DistortionRatio);
+            shaderManager.setGlobalDefines(defines);
+        }
 
         createObjectsForFrame(0);
         createObjectsForFrame(1);
@@ -211,7 +222,10 @@ namespace MWRender
         addChild(mHUDCamera);
         addChild(mRootNode);
 
-        mViewer->setSceneData(this);
+        if (preserveProcessClock)
+            dynamic_cast<RuntimeViewer&>(*mViewer).prepareSceneData(this);
+        else
+            mViewer->setSceneData(this);
         mViewer->getCamera()->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
         mViewer->getCamera()->getGraphicsContext()->setResizedCallback(new ResizedCallback(this));
         mViewer->getCamera()->setUserData(this);
@@ -227,6 +241,19 @@ namespace MWRender
         if (auto* bin = osgUtil::RenderBin::getRenderBinPrototype("DepthSortedBin");
             bin && bin->getDrawCallback() == mTransparentDepthPostPass.get())
             bin->setDrawCallback(nullptr);
+        if (auto* bin = osgUtil::RenderBin::getRenderBinPrototype("Distortion");
+            bin && bin->getDrawCallback() == mDistortionCallback.get())
+            bin->setDrawCallback(nullptr);
+    }
+
+    void PostProcessor::finishRuntimePreparation()
+    {
+        if (!mPreparingRuntime)
+            return;
+        mPreparingRuntime = false;
+        // Reapply this runtime's shader configuration on its next ordinary frame.
+        mPrevNormals = !mNormals;
+        mPrevPassLights = !mPassLights;
     }
 
     void PostProcessor::resize()
@@ -411,7 +438,7 @@ namespace MWRender
 
             mViewer->stopThreading();
 
-            if (mNormalsSupported)
+            if (mNormalsSupported && !mPreparingRuntime)
             {
                 auto& shaderManager
                     = MWBase::Environment::get().getResourceSystem()->getSceneManager()->getShaderManager();

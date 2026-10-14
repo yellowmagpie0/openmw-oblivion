@@ -99,9 +99,14 @@ namespace MWRender
         };
 
         PostProcessor(
-            RenderingManager& rendering, osgViewer::Viewer* viewer, osg::Group* rootNode, const VFS::Manager* vfs);
+            RenderingManager& rendering, osgViewer::Viewer* viewer, osg::Group* rootNode, const VFS::Manager* vfs,
+            bool preserveProcessClock = false);
 
         ~PostProcessor();
+
+        /// Call only after committing the candidate runtime, when rollback is no longer allowed.
+        /// Preparation keeps the outgoing renderer's shared shader objects unchanged.
+        void finishRuntimePreparation();
 
         void traverse(osg::NodeVisitor& nv) override;
 
@@ -253,6 +258,7 @@ namespace MWRender
         bool mNormals = false;
         bool mUnderwater = false;
         bool mPassLights = false;
+        bool mPreparingRuntime = false;
         bool mPrevNormals = false;
         bool mExteriorFlag = false;
         bool mNormalsSupported = false;

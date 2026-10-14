@@ -24,11 +24,16 @@ namespace MWRender
             osg::ref_ptr<osg::GraphicsContext::ResizedCallback> mResizeCallback;
             osg::ref_ptr<osgUtil::RenderBin> mTransparentBin;
             osg::ref_ptr<osgUtil::RenderBin::DrawCallback> mTransparentCallback;
+            osg::ref_ptr<osgUtil::RenderBin> mDistortionBin;
+            osg::ref_ptr<osgUtil::RenderBin::DrawCallback> mDistortionCallback;
         };
 
         /// Capture after the scene and camera have been installed and their renderer prepared.
         /// The caller must keep backend callback targets alive until these bindings are released.
         Bindings captureBindings();
+
+        /// Allocation is allowed during preparation, but the process clock must keep running.
+        void prepareSceneData(osg::Node* node);
 
         /// Requires stopped viewer threads and an idle engine frame. Does not traverse the scene,
         /// allocate a renderer, or reset the process start tick. Backend ownership stays with the caller.

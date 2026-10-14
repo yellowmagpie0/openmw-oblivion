@@ -1012,3 +1012,30 @@ it is retained as failed evidence. Normal rendering/restart does not exercise
 prepared backend exchange. World still rejects initialized backend retention,
 and StateManager, Lua/UI/audio/other-manager ownership and actual late-load
 prior-world preservation remain open; S3 and M15 are incomplete.
+
+Candidate RenderingManager preparation now reuses process resource configuration
+and the existing ICO rather than rewriting shared shader objects. ShadowManager
+supports detached preparation and explicit selection; its selected owner clears
+the singleton/stereo technique on disposal, while parked disposal preserves the
+selected owner. Viewer bindings include the distortion-bin callback. Candidate
+PostProcessor reuses that prototype, preserves the start tick, and suppresses
+shared shader rewrites until `finishRuntimePreparation` after commit. Original
+viewer/resource selection must be restored before candidate teardown; backend
+callback targets remain caller-owned. Four targeted and full 1,450 normal and
+ASan/UBSan engine inventories pass at source fingerprint
+`c1b0c2f6334937e6c9b61d88f056e60c33be5b381044627ed9facf1e81b009af`.
+Evidence is `candidate-renderer-{normal,sanitized}-03` and
+`candidate-renderer-full-{normal,sanitized}-01`. Copied Engine startup probes
+construct a second production renderer with separate camera/root and shared GUI,
+check defines/shader source/ICO identity, select both prepared binding/resource
+sets with main-thread C++ allocation disabled, restore original before disposal,
+and then perform actual native load/render/F5. Normal `candidate-renderer-runtime-03`
+and instrumented `candidate-renderer-runtime-sanitized-04` pass, preserving decoded
+crime/base/action/counter authorities with reviewed scene/HUD captures.
+`candidate-renderer-allocation-negative-01` forces allocating selection and
+requires bad_alloc termination. Failed 01/02 tests and runtime/ASan setup attempts
+remain recorded; no sanitizer suppression was added to resolve the test-hook
+allocation mismatch. These probes do not render a candidate frame, activate a
+committed candidate, or retain a loaded actor Scene. World backend archive/factory,
+Lua/UI/audio/other-manager retention, StateManager wiring and real late-failure
+preservation still remain open; complete S3 acceptance is unproven.

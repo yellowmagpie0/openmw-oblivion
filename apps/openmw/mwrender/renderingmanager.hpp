@@ -110,11 +110,18 @@ namespace MWRender
     class RenderingManager : public MWRender::RenderingInterface
     {
     public:
+        enum class ResourceConfiguration { Initialize, Reuse };
+
         RenderingManager(osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
             Resource::ResourceSystem* resourceSystem, SceneUtil::WorkQueue* workQueue,
             DetourNavigator::Navigator& navigator, const MWWorld::GroundcoverStore& groundcoverStore,
-            SceneUtil::UnrefQueue& unrefQueue);
+            SceneUtil::UnrefQueue& unrefQueue,
+            ResourceConfiguration configuration = ResourceConfiguration::Initialize);
         ~RenderingManager();
+
+        /// Select prepared renderer resource bindings between frames with viewer threads stopped.
+        /// Reuse construction requires a separate root/camera and an outgoing renderer retained by the caller.
+        void selectRuntimeResources() noexcept;
 
         osgUtil::IncrementalCompileOperation* getIncrementalCompileOperation();
 

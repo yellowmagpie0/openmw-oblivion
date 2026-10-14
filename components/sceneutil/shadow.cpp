@@ -13,7 +13,7 @@ namespace SceneUtil
 {
     using namespace osgShadow;
 
-    ShadowManager* ShadowManager::sInstance = nullptr;
+    const ShadowManager* ShadowManager::sInstance = nullptr;
 
     const ShadowManager& ShadowManager::instance()
     {
@@ -109,19 +109,16 @@ namespace SceneUtil
 
     ShadowManager::ShadowManager(osg::ref_ptr<osg::Group> sceneRoot, osg::ref_ptr<osg::Group> rootNode,
         unsigned int outdoorShadowCastingMask, unsigned int indoorShadowCastingMask, unsigned int worldMask,
-        const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager)
+        const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager, Installation installation)
         : mShadowedScene(new osgShadow::ShadowedScene)
         , mShadowTechnique(new MWShadowTechnique)
         , mOutdoorShadowCastingMask(outdoorShadowCastingMask)
         , mIndoorShadowCastingMask(indoorShadowCastingMask)
     {
-        if (sInstance)
+        if (installation == Installation::Initial && sInstance)
             throw std::logic_error("A ShadowManager already exists");
 
         mShadowedScene->setShadowTechnique(mShadowTechnique);
-
-        if (Stereo::getStereo())
-            Stereo::Manager::instance().setShadowTechnique(mShadowTechnique);
 
         mShadowedScene->addChild(sceneRoot);
         rootNode->addChild(mShadowedScene);
@@ -135,13 +132,24 @@ namespace SceneUtil
 
         enableOutdoorMode();
 
-        sInstance = this;
+        if (installation == Installation::Initial)
+            select();
     }
 
     ShadowManager::~ShadowManager()
     {
+        if (sInstance != this)
+            return;
+        sInstance = nullptr;
         if (Stereo::getStereo())
             Stereo::Manager::instance().setShadowTechnique(nullptr);
+    }
+
+    void ShadowManager::select() const noexcept
+    {
+        sInstance = this;
+        if (Stereo::getStereo())
+            Stereo::Manager::instance().setShadowTechnique(mShadowTechnique);
     }
 
     Shader::ShaderManager::DefineMap ShadowManager::getShadowDefines(const Settings::ShadowsCategory& settings) const

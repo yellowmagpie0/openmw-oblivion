@@ -6,6 +6,39 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 candidate renderer preparation and resource selection — 2026-10-14
+
+RenderingManager now has a Reuse configuration for a separately owned candidate
+camera/root. It preserves shared process shader configuration and the existing
+incremental compile queue. Detached ShadowManagers can be prepared alongside the
+original and selected explicitly; disposal clears only the selected singleton,
+including its stereo binding. Viewer bindings also retain the shared distortion
+callback. Candidate PostProcessor preparation reuses that render-bin prototype,
+preserves the process start tick, and defers shared shader mutation. Its
+`finishRuntimePreparation` must be called after committing a candidate, when
+rollback is no longer allowed. Callers must restore original viewer/resource
+bindings before disposing a cancelled candidate and keep callback targets alive.
+
+Four targeted and all 1,450 normal/ASan-UBSan engine cases pass at fingerprint
+`c1b0c2f6334937e6c9b61d88f056e60c33be5b381044627ed9facf1e81b009af`:
+`S3/candidate-renderer-{normal,sanitized}-03` and
+`candidate-renderer-full-{normal,sanitized}-01`. Real copied-Engine startup probes
+use production constructors and selectors, switch both prepared renderers with
+main-thread C++ allocation disabled, restore original resources, dispose the
+candidate, and then load/render/F5 native content. Normal runtime-03 (PID 212062)
+and sanitized runtime-04 (PID 214218) pass, with reviewed Prison scene/HUD captures
+and equal decoded crime/base/action/counter authorities. A forced-allocation
+copied Viewer selector terminates with bad_alloc in
+`candidate-renderer-allocation-negative-01`. ASan/UBSan checks remain enabled;
+leak checking is disabled. Failed fixtures, compilation, missing thread stop,
+preload setup and incomplete test allocator attempts are retained with reasons.
+
+This proves idle startup renderer preparation/selection/disposal followed by real
+rendering, not candidate-frame/commit activation or loaded actor Scene rollback.
+World still rejects initialized backend retention. World backend archive/factory,
+Lua/UI/audio/other-manager retention, StateManager wiring and actual late-failure
+prior-world preservation remain open. **S3 and M15 are incomplete.**
+
 ## S3 prepared viewer binding selection — 2026-10-13
 
 The engine uses `RuntimeViewer` with normal bootstrap behavior. Prepared binding

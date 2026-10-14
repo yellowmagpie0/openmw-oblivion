@@ -30,10 +30,19 @@ namespace SceneUtil
 
         static const ShadowManager& instance();
 
+        enum class Installation { Initial, Detached };
+
         explicit ShadowManager(osg::ref_ptr<osg::Group> sceneRoot, osg::ref_ptr<osg::Group> rootNode,
             unsigned int outdoorShadowCastingMask, unsigned int indoorShadowCastingMask, unsigned int worldMask,
-            const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager);
+            const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager,
+            Installation installation = Installation::Initial);
         ~ShadowManager();
+        ShadowManager(const ShadowManager&) = delete;
+        ShadowManager& operator=(const ShadowManager&) = delete;
+
+        /// Select an already prepared manager between frames with viewer threads stopped.
+        /// The caller keeps the outgoing manager alive and restores selection before disposing it.
+        void select() const noexcept;
 
         void setupShadowSettings(const Settings::ShadowsCategory& settings, Shader::ShaderManager& shaderManager);
 
@@ -46,7 +55,7 @@ namespace SceneUtil
         void enableOutdoorMode();
 
     protected:
-        static ShadowManager* sInstance;
+        static const ShadowManager* sInstance;
 
         bool mEnableShadows;
 

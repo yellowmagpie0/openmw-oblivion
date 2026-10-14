@@ -80,6 +80,7 @@
 #include "objectpaging.hpp"
 #include "pathgrid.hpp"
 #include "postprocessor.hpp"
+#include "runtimeviewer.hpp"
 #include "recastmesh.hpp"
 #include "screenshotmanager.hpp"
 #include "sky.hpp"
@@ -175,7 +176,7 @@ namespace MWRender
     RenderingManager::RenderingManager(osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
         Resource::ResourceSystem* resourceSystem, SceneUtil::WorkQueue* workQueue,
         DetourNavigator::Navigator& navigator, const MWWorld::GroundcoverStore& groundcoverStore,
-        SceneUtil::UnrefQueue& unrefQueue)
+        SceneUtil::UnrefQueue& unrefQueue, ResourceConfiguration configuration)
         : mSkyBlending(Settings::fog().mSkyBlending)
         , mViewer(viewer)
         , mRootNode(rootNode)
@@ -194,16 +195,22 @@ namespace MWRender
         , mGroundCoverStore(groundcoverStore)
     {
         bool reverseZ = SceneUtil::AutoDepth::isReversed();
+        const bool reuse = configuration == ResourceConfiguration::Reuse;
+        if (reuse && (viewer->areThreadsRunning() || !dynamic_cast<RuntimeViewer*>(viewer)))
+            throw std::logic_error("Candidate rendering requires RuntimeViewer and stopped threads");
 
-        resourceSystem->getSceneManager()->setParticleSystemMask(MWRender::Mask_ParticleSystem);
-        resourceSystem->getSceneManager()->setAutoUseNormalMaps(Settings::shaders().mAutoUseObjectNormalMaps);
-        resourceSystem->getSceneManager()->setNormalMapPattern(Settings::shaders().mNormalMapPattern);
-        resourceSystem->getSceneManager()->setNormalHeightMapPattern(Settings::shaders().mNormalHeightMapPattern);
-        resourceSystem->getSceneManager()->setAutoUseSpecularMaps(Settings::shaders().mAutoUseObjectSpecularMaps);
-        resourceSystem->getSceneManager()->setSpecularMapPattern(Settings::shaders().mSpecularMapPattern);
-        resourceSystem->getSceneManager()->setConvertAlphaTestToAlphaToCoverage(shouldAddMSAAIntermediateTarget());
-        resourceSystem->getSceneManager()->setAdjustCoverageForAlphaTest(
-            Settings::shaders().mAdjustCoverageForAlphaTest);
+        if (!reuse)
+        {
+            resourceSystem->getSceneManager()->setParticleSystemMask(MWRender::Mask_ParticleSystem);
+            resourceSystem->getSceneManager()->setAutoUseNormalMaps(Settings::shaders().mAutoUseObjectNormalMaps);
+            resourceSystem->getSceneManager()->setNormalMapPattern(Settings::shaders().mNormalMapPattern);
+            resourceSystem->getSceneManager()->setNormalHeightMapPattern(Settings::shaders().mNormalHeightMapPattern);
+            resourceSystem->getSceneManager()->setAutoUseSpecularMaps(Settings::shaders().mAutoUseObjectSpecularMaps);
+            resourceSystem->getSceneManager()->setSpecularMapPattern(Settings::shaders().mSpecularMapPattern);
+            resourceSystem->getSceneManager()->setConvertAlphaTestToAlphaToCoverage(shouldAddMSAAIntermediateTarget());
+            resourceSystem->getSceneManager()->setAdjustCoverageForAlphaTest(
+                Settings::shaders().mAdjustCoverageForAlphaTest);
+        }
 
         // Let LightManager choose which backend to use based on our hint.
         // Ultimately dependent on support for various OpenGL extensions.
@@ -217,10 +224,13 @@ namespace MWRender
             },
             resourceSystem);
 
-        resourceSystem->getSceneManager()->setSupportsClusteredLighting(sceneRoot->isClusteredSupported());
+        if (!reuse)
+        {
+            resourceSystem->getSceneManager()->setSupportsClusteredLighting(sceneRoot->isClusteredSupported());
 
-        // Sync clustered lighting setting so it's more intuitive when viewed in the in-game setting panel
-        Settings::shaders().mClusteredLighting.set(sceneRoot->getClusteredLighting());
+            // Sync clustered lighting setting so it's more intuitive when viewed in the in-game setting panel
+            Settings::shaders().mClusteredLighting.set(sceneRoot->getClusteredLighting());
+        }
 
         sceneRoot->setLightingMask(Mask_Lighting);
         mSceneRoot = sceneRoot;
@@ -241,7 +251,9 @@ namespace MWRender
 
         mShadowManager = std::make_unique<SceneUtil::ShadowManager>(sceneRoot, mRootNode, shadowCastingTraversalMask,
             indoorShadowCastingTraversalMask, Mask_Terrain | Mask_Object | Mask_Static, Settings::shadows(),
-            mResourceSystem->getSceneManager()->getShaderManager());
+            mResourceSystem->getSceneManager()->getShaderManager(),
+            reuse ? SceneUtil::ShadowManager::Installation::Detached : SceneUtil::ShadowManager::Installation::Initial);
+        mShadowManager->select();
 
         Shader::ShaderManager::DefineMap globalDefines = Shader::getDefaultDefines();
         Shader::ShaderManager::DefineMap shadowDefines = mShadowManager->getShadowDefines(Settings::shadows());
@@ -273,7 +285,8 @@ namespace MWRender
         globalDefines["reverseZ"] = reverseZ ? "1" : "0";
 
         // It is unnecessary to stop/start the viewer as no frames are being rendered yet.
-        mResourceSystem->getSceneManager()->getShaderManager().setGlobalDefines(globalDefines);
+        if (!reuse)
+            mResourceSystem->getSceneManager()->getShaderManager().setGlobalDefines(globalDefines);
 
         mNavMesh = std::make_unique<NavMesh>(mRootNode, mWorkQueue, Settings::navigator().mEnableNavMeshRender,
             Settings::navigator().mNavMeshRenderMode);
@@ -283,7 +296,7 @@ namespace MWRender
 
         mObjects = std::make_unique<Objects>(mResourceSystem, sceneRoot, unrefQueue);
 
-        if (getenv("OPENMW_DONT_PRECOMPILE") == nullptr)
+        if (!reuse && getenv("OPENMW_DONT_PRECOMPILE") == nullptr)
         {
             mViewer->setIncrementalCompileOperation(new osgUtil::IncrementalCompileOperation);
             mViewer->getIncrementalCompileOperation()->setTargetFrameRate(Settings::cells().mTargetFramerate);
@@ -293,7 +306,8 @@ namespace MWRender
         mDebugDraw->setNodeMask(Mask_Debug);
         sceneRoot->addChild(mDebugDraw);
 
-        mResourceSystem->getSceneManager()->setIncrementalCompileOperation(mViewer->getIncrementalCompileOperation());
+        if (!reuse)
+            mResourceSystem->getSceneManager()->setIncrementalCompileOperation(mViewer->getIncrementalCompileOperation());
 
         mEffectManager = std::make_unique<EffectManager>(sceneRoot, mResourceSystem);
 
@@ -322,12 +336,8 @@ namespace MWRender
                 Shader::ShaderManager::Slot::OpaqueDepthTexture));
         rootNode->addCullCallback(mPerViewUniformStateUpdater);
 
-        mPostProcessor = new PostProcessor(*this, viewer, mRootNode, resourceSystem->getVFS());
-        resourceSystem->getSceneManager()->setOpaqueDepthTex(
-            mPostProcessor->getTexture(PostProcessor::Tex_OpaqueDepth, 0),
-            mPostProcessor->getTexture(PostProcessor::Tex_OpaqueDepth, 1));
-        resourceSystem->getSceneManager()->setSupportsNormalsRT(mPostProcessor->getSupportsNormalsRT());
-        resourceSystem->getSceneManager()->setWeatherParticleOcclusion(Settings::shaders().mWeatherParticleOcclusion);
+        mPostProcessor = new PostProcessor(*this, viewer, mRootNode, resourceSystem->getVFS(), reuse);
+        selectRuntimeResources();
 
         // water goes after terrain for correct waterculling order
         mWater = std::make_unique<Water>(
@@ -415,6 +425,16 @@ namespace MWRender
         updateProjectionMatrix();
 
         mViewer->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    }
+
+    void RenderingManager::selectRuntimeResources() noexcept
+    {
+        mShadowManager->select();
+        auto* sceneManager = mResourceSystem->getSceneManager();
+        sceneManager->setOpaqueDepthTex(mPostProcessor->getTexture(PostProcessor::Tex_OpaqueDepth, 0),
+            mPostProcessor->getTexture(PostProcessor::Tex_OpaqueDepth, 1));
+        sceneManager->setSupportsNormalsRT(mPostProcessor->getSupportsNormalsRT());
+        sceneManager->setWeatherParticleOcclusion(Settings::shaders().mWeatherParticleOcclusion);
     }
 
     RenderingManager::~RenderingManager()

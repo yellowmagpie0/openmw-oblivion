@@ -4,6 +4,13 @@
 
 namespace MWRender
 {
+    void RuntimeViewer::prepareSceneData(osg::Node* node)
+    {
+        if (areThreadsRunning())
+            throw std::logic_error("Scene preparation requires stopped viewer threads");
+        osgViewer::View::setSceneData(node);
+    }
+
     RuntimeViewer::Bindings RuntimeViewer::captureBindings()
     {
         auto* camera = getCamera();
@@ -21,6 +28,9 @@ namespace MWRender
         result.mResizeCallback = result.mContext->getResizedCallback();
         result.mTransparentBin = bin;
         result.mTransparentCallback = bin->getDrawCallback();
+        result.mDistortionBin = osgUtil::RenderBin::getRenderBinPrototype("Distortion");
+        if (result.mDistortionBin)
+            result.mDistortionCallback = result.mDistortionBin->getDrawCallback();
         return result;
     }
 
@@ -39,6 +49,8 @@ namespace MWRender
         mSelectingBindings = false;
         bindings.mContext->setResizedCallback(bindings.mResizeCallback);
         bindings.mTransparentBin->setDrawCallback(bindings.mTransparentCallback);
+        if (bindings.mDistortionBin)
+            bindings.mDistortionBin->setDrawCallback(bindings.mDistortionCallback);
         return true;
     }
 
