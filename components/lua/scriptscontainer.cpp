@@ -100,6 +100,11 @@ namespace LuaUtil
     };
     void ScriptsContainer::requireMutableRuntime() const
     {
+        if (mTrackerLifetime)
+        {
+            if (!*mTrackerLifetime) throw std::logic_error("Lua script tracker was destroyed");
+            (*mTrackerLifetime)->requireMutableRuntime();
+        }
         if (mParkedRuntime || (mRetainedRuntime && !mRetainedRuntime->mDetached))
             throw std::logic_error("Lua runtime is parked or frozen before detachment");
     }
@@ -160,6 +165,7 @@ namespace LuaUtil
         , mLua(*lua)
         , mThis(std::make_shared<ScriptsContainer*>(this))
         , mTracker(tracker)
+        , mTrackerLifetime(tracker ? tracker->getLifetime(mLua) : nullptr)
     {
         sInstanceCount++;
         registerEngineHandlers({ &mUpdateHandlers });

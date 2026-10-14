@@ -1130,3 +1130,23 @@ selected decoded persistence and reviewed captures. This does not retain aggrega
 LuaManager object-list/package references, events, tracker/local domains, input or
 UI ownership. Whole World/service selection and StateManager late-load rollback
 remain open; full S3 acceptance is still unproven.
+
+ScriptTracker now retains actual queue/frame and a bound-VM lifetime anchor.
+Tracked cell-owned local containers keep their addresses, reject parked/dead-domain
+dispatch and resume original unload age without lifecycle replay. ObjectLists
+retains actual shared vectors, membership sets, player list and pending-update
+flags; incoming vectors can be captured into packages before detachment.
+Three tracker/two list cases and full 2,608 component/1,456 engine tests pass in
+normal and ASan/UBSan builds at fingerprint
+`4a1c226b1447df19d51fe3cc842c9765d28aec3677515dff1c0f7ace5cea2f06`.
+`lua-list-tracker-retention-{normal,sanitized}-01` and actual copied LuaManager
+`runtime{,-sanitized}-04` courses retain one custom local container on native NPC
+0x1014a30, a separate untracked player base container and nine actor list IDs,
+reject parked dispatch, preserve package-vector identities across 200 incoming
+tracker frames, then update/render/F5. Normal restart-02 and sanitized restart-01
+load update counter 9 without init replay and resave. Captures, lifecycle events
+and selected decoded fields are audited; failed fixture attempts remain recorded.
+This leaves aggregate configuration/string views, active-local ordered-set
+selection, events/actions, input and actual UI ownership unimplemented. World
+backend/other-manager composition and StateManager prior-world rollback remain
+open; full S3 acceptance is still unproven.

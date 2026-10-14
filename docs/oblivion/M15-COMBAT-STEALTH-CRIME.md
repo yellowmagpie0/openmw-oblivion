@@ -6,6 +6,62 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain Lua object lists and script tracker — 2026-10-14
+
+ScriptTracker now retains its actual unload queue, frame and runtime lifetime
+anchor. Tracked local containers stay attached to retained cells at their original
+addresses; their anchor rejects dispatch while parked and after domain retirement,
+including unloaded containers absent from the queue. Selection preserves unload
+age and required-loading flags without onSave/onLoad/onInit replay. Preparation
+requires the bound VM and tracker to be idle. Scope/move/rollback/discard/owner
+invalidation select and retire the intended domain.
+
+ObjectLists retains actual shared vectors, membership sets, player list and
+pending-update flags. Incoming lists are available before detachment so incoming
+world/nearby packages can capture fresh vectors. Binding contexts now expose the
+lists as const. Existing package vectors preserve their identity and contents;
+rollback also preserves an unpublished membership update.
+
+Three new tracker and two object-list cases pass, including 21 selected script
+container tests and full 2,608 component/1,456 engine inventories in normal and
+ASan/UBSan builds at fingerprint
+`4a1c226b1447df19d51fe3cc842c9765d28aec3677515dff1c0f7ace5cea2f06`.
+Evidence: `S3/lua-tracker-retention-normal-03` and
+`lua-list-tracker-retention-{normal,sanitized}-01`. Initial selected 01/02 failures
+and GDB traces remain recorded: the new callback fixture incorrectly converted
+callable userdata to a function; explicit set_function bindings correct it.
+
+Actual copied LuaManager probes in `lua-list-tracker-retention-runtime-04`
+(PID 267717) and `lua-list-tracker-retention-runtime-sanitized-04` (PID 267719)
+attach an isolated custom script to native NPC 0x1014a30, retain its tracker domain,
+separately retain the untracked player base container, and preserve nine actor IDs
+and original package-list pointers. Parked dispatch is rejected; 200 incoming
+tracker frames do not age the outgoing queue. Exchange/restore/scoped rollback
+precede regular Lua updates, reviewed scene/HUD captures and F5 saves. The custom
+script initializes once, with no retention-triggered load replay.
+
+Separate-process F5-save/load/resave courses in
+`lua-list-tracker-retention-restart-runtime-02` (PID 267946) and
+`lua-list-tracker-retention-restart-runtime-sanitized-01` (PID 268003) restore the
+local update counter as 9, reject init replay, repeat the probe and resave. Selected
+decoded crime/base/action/counter fields match throughout; lifecycle logs contain
+one load/save and clean run end. Leak checking is disabled.
+
+Runtime attempts 01/02 exposed fixture assumptions about first-frame queue
+population and intentionally untracked PlayerScripts. Attempt 03 correctly
+rejected changed .omwscripts fingerprints. The 04 private save changes only that
+fixture fingerprint; provenance retains the original input and verifies no other
+decoded state changes. The first normal restart verifier incorrectly expected a
+space rather than Lua print's tab; corrected 02 passes. Failed/cancelled evidence
+is preserved with reasons.
+
+This does not select aggregate LuaManager configuration/packages, queued events
+and actions, input registries, real UI/resource ownership or World/backend/other
+managers. Active-local ordered sets must be parked before untracked container
+anchors retarget; saved-ID/configuration string views need their own retained
+ownership. StateManager still destroys the previous world after late load errors.
+**S3 and M15 are incomplete.**
+
 ## S3 retain live Lua storage — 2026-10-14
 
 LuaStorage now retains actual section nodes, cached values, callback lists and

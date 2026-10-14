@@ -28,7 +28,7 @@ namespace MWLua
         LuaManager* mLuaManager = nullptr;
         LuaUtil::LuaState* mLua = nullptr;
         LuaUtil::UserdataSerializer* mSerializer = nullptr;
-        ObjectLists* mObjectLists = nullptr;
+        const ObjectLists* mObjectLists = nullptr;
         LuaEvents* mLuaEvents = nullptr;
 
         std::string_view typeName() const

@@ -67,7 +67,7 @@ namespace MWLua
     {
         sol::state_view lua = context.sol();
         sol::table api(lua, sol::create);
-        ObjectLists* objectLists = context.mObjectLists;
+        const ObjectLists* objectLists = context.mObjectLists;
 
         sol::usertype<MWPhysics::RayCastingResult> rayResult
             = lua.new_usertype<MWPhysics::RayCastingResult>("RayCastingResult");

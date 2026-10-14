@@ -12,6 +12,7 @@
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwlua/localscripts.hpp"
+#include "apps/openmw/mwlua/objectlists.hpp"
 #include "apps/openmw/mwlua/luamanagerimp.hpp"
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/livecellref.hpp"
@@ -110,4 +111,70 @@ namespace
             EXPECT_EQ(self.getCachedStat(key), nullptr);
         });
     }
+    TEST(LuaObjectListsTest, RetentionPreservesPackageVectorsMembershipAndPendingUpdates)
+    {
+        withScripts([](auto&, auto&, auto&, auto&, auto& live) {
+            MWWorld::Ptr ptr(&live);
+            MWLua::ObjectLists lists;
+            lists.objectAddedToScene(ptr);
+            lists.setPlayer(ptr);
+            const auto originalActors = lists.getActorsInScene();
+            const auto originalPlayers = lists.getPlayers();
+            EXPECT_TRUE(originalActors->empty()); // Pending update must remain pending while parked.
+            auto retained = lists.retainRuntime();
+            const auto incomingActors = retained.incomingLists().getActorsInScene();
+            const auto incomingPlayers = retained.incomingLists().getPlayers();
+            EXPECT_NE(originalActors, incomingActors);
+            EXPECT_NE(originalPlayers, incomingPlayers);
+            EXPECT_THROW(lists.update(), std::logic_error);
+            EXPECT_THROW(lists.objectAddedToScene(ptr), std::logic_error);
+            ASSERT_TRUE(retained.detach());
+            EXPECT_EQ(lists.getActorsInScene(), incomingActors);
+            EXPECT_EQ(lists.getPlayers(), incomingPlayers);
+            EXPECT_THROW(retained.incomingLists(), std::logic_error);
+            EXPECT_TRUE(incomingPlayers->empty());
+            lists.objectAddedToScene(ptr);
+            lists.update();
+            EXPECT_EQ(*incomingActors, (std::vector<MWLua::ObjectId>{ MWLua::getId(ptr) }));
+            lists.clear();
+            EXPECT_TRUE(originalActors->empty());
+            EXPECT_EQ(originalPlayers->size(), 1);
+            ASSERT_TRUE(retained.exchange());
+            EXPECT_EQ(lists.getActorsInScene(), originalActors);
+            EXPECT_TRUE(originalActors->empty());
+            ASSERT_TRUE(retained.restore());
+            lists.update();
+            EXPECT_EQ(*originalActors, (std::vector<MWLua::ObjectId>{ MWLua::getId(ptr) }));
+            EXPECT_TRUE(incomingActors->empty());
+            lists.objectRemovedFromScene(ptr);
+            lists.update();
+            EXPECT_TRUE(originalActors->empty());
+        });
+    }
+
+    TEST(LuaObjectListsTest, RetentionScopeDiscardAndOwnerDeathKeepSelectedLists)
+    {
+        auto lists = std::make_unique<MWLua::ObjectLists>();
+        const auto original = lists->getActorsInScene();
+        {
+            auto retained = lists->retainRuntime();
+            ASSERT_TRUE(retained.detach());
+            auto moved = std::move(retained);
+            EXPECT_FALSE(retained.restore());
+        }
+        EXPECT_EQ(lists->getActorsInScene(), original);
+        auto retained = lists->retainRuntime();
+        const auto incoming = retained.incomingLists().getActorsInScene();
+        ASSERT_TRUE(retained.detach());
+        ASSERT_TRUE(retained.exchange());
+        retained.discard();
+        EXPECT_EQ(lists->getActorsInScene(), incoming);
+        auto orphan = lists->retainRuntime();
+        ASSERT_TRUE(orphan.detach());
+        lists.reset();
+        EXPECT_FALSE(orphan.restore());
+        EXPECT_FALSE(orphan.exchange());
+        EXPECT_THROW(orphan.incomingLists(), std::logic_error);
+    }
+
 }

@@ -12,6 +12,29 @@ namespace MWLua
     class ObjectLists
     {
     public:
+        class RetainedRuntime
+        {
+            friend class ObjectLists;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            const ObjectLists& incomingLists() const;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        ObjectLists() = default;
+        ~ObjectLists();
+        ObjectLists(const ObjectLists&) = delete;
+        ObjectLists& operator=(const ObjectLists&) = delete;
+        // Scripts and both World domains must be retained separately and idle.
+        RetainedRuntime retainRuntime();
         void update(); // Should be called every frame.
         void clear(); // Should be called every time before starting or loading a new game.
 
@@ -25,7 +48,7 @@ namespace MWLua
         void objectAddedToScene(const MWWorld::Ptr& ptr);
         void objectRemovedFromScene(const MWWorld::Ptr& ptr);
 
-        void setPlayer(const MWWorld::Ptr& player) { *mPlayers = { getId(player) }; }
+        void setPlayer(const MWWorld::Ptr& player) { requireMutableRuntime(); *mPlayers = { getId(player) }; }
 
     private:
         struct ObjectGroup
@@ -48,6 +71,10 @@ namespace MWLua
         ObjectGroup mDoorsInScene;
         ObjectGroup mItemsInScene;
         ObjectIdList mPlayers = std::make_shared<std::vector<ObjectId>>();
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        bool mParkedRuntime = false;
+        void requireMutableRuntime() const;
+        void swapRuntime(ObjectLists& other) noexcept;
     };
 
 }

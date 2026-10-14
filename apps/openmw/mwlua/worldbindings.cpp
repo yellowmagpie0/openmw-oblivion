@@ -164,7 +164,7 @@ namespace MWLua
         addCellGetters(api, context);
         api["mwscript"] = initMWScriptBindings(context);
 
-        ObjectLists* objectLists = context.mObjectLists;
+        const ObjectLists* objectLists = context.mObjectLists;
         api["activeActors"] = GObjectList{ objectLists->getActorsInScene() };
         api["players"] = GObjectList{ objectLists->getPlayers() };
 

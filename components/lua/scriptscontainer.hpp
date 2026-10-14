@@ -385,6 +385,7 @@ namespace LuaUtil
         ScriptsContainerLifetime mThis; // used by LuaState to track ownership of memory allocations
 
         ScriptTracker* mTracker;
+        std::shared_ptr<ScriptTracker*> mTrackerLifetime;
         bool mRequiredLoading = false;
         friend class ScriptTracker;
 

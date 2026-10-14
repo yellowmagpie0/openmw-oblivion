@@ -778,4 +778,114 @@ CUSTOM: test1.lua
         EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange()); retained.discard();
     }
 
+    TEST_F(LuaScriptsContainerTest, TrackerRetentionPreservesQueueFrameAndLiveStateWithoutReplay)
+    {
+        LuaUtil::ScriptTracker tracker;
+        LuaUtil::ScriptsContainer original(&mLua, "Original", &tracker, false);
+        ASSERT_TRUE(original.addCustomScript(getId(unloadPath)));
+        mLua.protectedCall([&](LuaUtil::LuaView& view) {
+            original.receiveEvent("Set", LuaUtil::serialize(view.sol().create_table_with("x", 3, "y", 2, "z", 1)));
+            for (int i = 0; i < 20; ++i) tracker.unloadInactiveScripts(view);
+            auto weak = original.getWeakPointer();
+            testing::internal::CaptureStdout();
+            auto retained = tracker.retainRuntime(mLua);
+            EXPECT_THROW(original.receiveEvent("Set", ""), std::logic_error);
+            EXPECT_THROW(tracker.unloadInactiveScripts(view), std::logic_error);
+            ASSERT_TRUE(retained.detach());
+            EXPECT_EQ(*weak, &original);
+            EXPECT_EQ(tracker.size(), 0);
+            EXPECT_THROW(original.update(0), std::logic_error);
+            // An unloaded container is guarded by its domain too, despite having no queue entry.
+            LuaUtil::ScriptsContainer incoming(&mLua, "Incoming", &tracker, false);
+            ASSERT_TRUE(incoming.addCustomScript(getId(loadSave2Path)));
+            for (int i = 0; i < 200; ++i) tracker.unloadInactiveScripts(view);
+            ASSERT_TRUE(retained.exchange());
+            EXPECT_EQ(tracker.size(), 1);
+            EXPECT_THROW(incoming.receiveEvent("Print", ""), std::logic_error);
+            ASSERT_TRUE(retained.exchange());
+            ASSERT_TRUE(retained.restore());
+            EXPECT_EQ(internal::GetCapturedStdout(), "");
+            EXPECT_THROW(incoming.removeAllScripts(), std::logic_error);
+            // Original TTL is 60, original frame is 20; incoming frames must not age it.
+            testing::internal::CaptureStdout();
+            for (int i = 0; i < 41; ++i) tracker.unloadInactiveScripts(view);
+            EXPECT_EQ(tracker.size(), 1);
+            tracker.unloadInactiveScripts(view);
+            EXPECT_EQ(tracker.size(), 0);
+            EXPECT_EQ(internal::GetCapturedStdout(), "Original[unload.lua]:\tsaving\t3\t2\t1\n");
+        });
+    }
+
+    TEST_F(LuaScriptsContainerTest, TrackerRetentionGuardsCallbacksAndRejectsLiveDispatch)
+    {
+        LuaUtil::ScriptTracker tracker;
+        LuaUtil::ScriptsContainer original(&mLua, "Original", &tracker, false);
+        const int id = getId(loadSave2Path);
+        ASSERT_TRUE(original.addCustomScript(id));
+        int calls = 0;
+        auto callback = [&] {
+            ++calls;
+            EXPECT_THROW(tracker.retainRuntime(mLua), std::logic_error);
+        };
+        sol::state_view lua = mLua.unsafeState();
+        lua.set_function("trackerRetentionCallback", callback);
+        sol::function fn = lua["trackerRetentionCallback"];
+        original.setupUnsavableTimer(LuaUtil::ScriptsContainer::TimerType::SIMULATION_TIME, 10, id, fn);
+        auto retained = tracker.retainRuntime(mLua);
+        EXPECT_THROW(tracker.retainRuntime(mLua), std::logic_error);
+        ASSERT_TRUE(retained.detach());
+        EXPECT_FALSE(retained.detach());
+        EXPECT_THROW(original.processTimers(10, 0), std::exception);
+        EXPECT_EQ(calls, 0);
+        LuaUtil::ScriptsContainer incoming(&mLua, "Incoming", &tracker, false);
+        ASSERT_TRUE(incoming.addCustomScript(id));
+        auto selectedCallback = [&] {
+            EXPECT_FALSE(retained.exchange());
+            EXPECT_FALSE(retained.restore());
+        };
+        lua.set_function("trackerRetentionSelectedCallback", selectedCallback);
+        sol::function selectedFn = lua["trackerRetentionSelectedCallback"];
+        incoming.setupUnsavableTimer(LuaUtil::ScriptsContainer::TimerType::SIMULATION_TIME, 1, id, selectedFn);
+        incoming.processTimers(1, 0);
+        ASSERT_TRUE(retained.restore());
+        original.processTimers(10, 0);
+        original.processTimers(20, 0);
+        EXPECT_EQ(calls, 1);
+        LuaUtil::LuaState other{ nullptr, nullptr };
+        EXPECT_THROW(tracker.retainRuntime(other), std::logic_error);
+    }
+
+    TEST_F(LuaScriptsContainerTest, TrackerRetentionScopeDiscardAndOwnerDeathInvalidateDomains)
+    {
+        auto tracker = std::make_unique<LuaUtil::ScriptTracker>();
+        LuaUtil::ScriptsContainer original(&mLua, "Original", tracker.get(), false);
+        ASSERT_TRUE(original.addCustomScript(getId(loadSave2Path)));
+        LuaUtil::ScriptsContainer unloaded(&mLua, "Unloaded", tracker.get(), false);
+        {
+            auto retained = tracker->retainRuntime(mLua);
+            ASSERT_TRUE(retained.detach());
+            EXPECT_THROW(unloaded.addCustomScript(getId(loadSave2Path)), std::exception);
+            auto moved = std::move(retained);
+            EXPECT_FALSE(retained.restore());
+        }
+        EXPECT_NO_THROW(original.update(0));
+        auto retained = tracker->retainRuntime(mLua);
+        ASSERT_TRUE(retained.detach());
+        LuaUtil::ScriptsContainer incoming(&mLua, "Incoming", tracker.get(), false);
+        ASSERT_TRUE(incoming.addCustomScript(getId(loadSave2Path)));
+        ASSERT_TRUE(retained.exchange());
+        retained.discard();
+        EXPECT_THROW(original.removeAllScripts(), std::logic_error);
+        EXPECT_THROW(unloaded.removeAllScripts(), std::logic_error);
+        EXPECT_NO_THROW(incoming.update(0));
+        auto orphan = tracker->retainRuntime(mLua);
+        ASSERT_TRUE(orphan.detach());
+        LuaUtil::ScriptsContainer newest(&mLua, "Newest", tracker.get(), false);
+        tracker.reset();
+        EXPECT_FALSE(orphan.restore());
+        EXPECT_FALSE(orphan.exchange());
+        EXPECT_THROW(incoming.update(0), std::logic_error);
+        EXPECT_THROW(newest.removeAllScripts(), std::logic_error);
+    }
+
 }
