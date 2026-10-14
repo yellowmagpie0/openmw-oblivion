@@ -6,6 +6,52 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain dynamic record bases and secondary indexes for rollback — 2026-10-13
+
+ESMStore now retains actual dynamic record nodes across typed families, specialized
+legacy cell nodes, native FormKey maps, cell name/exterior indexes and land position
+indexes. Candidate views start from immutable static definitions, including static
+land entries hidden by outgoing dynamics. Rollback returns original base/cell
+addresses and lookup indexes, dynamic-ID counter, Player preparation state,
+spell-list cache/pins and clear/publication generations. Scope exit rolls back;
+commit keeps the candidate and releases outgoing records. Handles reject repeated
+operations, nested retention and destroyed owners. Record read, clear and ID
+generation are blocked before detach; source sizes, generations, counter and
+Player flag are checked at detach. Direct family access still requires the caller
+to freeze runtime mutation and preserve immutable content definitions.
+
+Seven regressions exercise original typed/legacy/native record addresses, native
+keys, persistent exterior filtering, old land positions, source-change rejection,
+moves/scope rollback/owner destruction, ordinary prepared definition installation,
+pinned spell-list identity and coordinated WorldModel/base rollback. Candidate
+cell/reference users are released before candidate bases; original CellStore,
+LiveCellRef and base pointers return together. Both targeted inventories pass
+**7 tests**, and both complete engine inventories pass **1,426 tests**, exact
+XML/inventory agreement with no failures/skips. Evidence is
+`build/oblivion-compat/m15/S3/store-retention-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `8955a2673c6537ab61ab10583e1e0a4e81d757df`; matching before/after
+fingerprint: `873b70881d08037e7af6c46ee18082a4de38b8c76ff6db4ec8ccdb40db47819b`.
+ASan/UBSan halt on errors, leaks disabled; audio/SDL are null/offscreen.
+
+`store-retention-allocation-control-01` links a copied teststore object against
+the tested production archive. **22 explicit detach/restore/discard operations**
+pass with C++ scalar/array/aligned new disabled. `store-retention-negative-01`
+inserts a vector allocation inside the guard; all **seven tests** fail on their
+first guarded operation. Preparation, implicit scope rollback and whole-world
+scene/manager work are outside that allocation control. Prototype and syntax
+attempts remain separate; no standalone prototype is substituted for these
+production-linked tests. Full reports/hashes are in
+`store-retention-followup-01/checkpoint-summary.json`.
+
+This API is not yet called by StateManager. Record users must be stopped before
+candidate or outgoing bases are released; old scene/physics/rendering, Player,
+Lua instances/closures, native services and other managers still need aggregate
+retention and publication. The real `late-load-preservation-probe-02` remains
+expected-negative evidence: current late-error cleanup loses the running world.
+Complete prior-world preservation and full S3 acceptance remain open. Native
+script retention is being developed in ignored `native-script-retention-prototype-*`;
+its syntax checks and proposed tests are not runtime acceptance evidence.
+
 ## S3 retain registry and cell nodes for rollback — 2026-10-13
 
 PtrRegistry now has a two-phase retention handle. Preparation keeps the outgoing

@@ -167,6 +167,27 @@ namespace MWWorld
     {
         friend struct ESMStoreImp; // This allows StoreImp to extend esmstore without beeing included everywhere
     public:
+        // Retain dynamic record nodes and their lookup/cache state. Immutable
+        // content and pathgrid overlays remain owned by the store/world layer.
+        // Stop users of candidate bases before rollback; stop outgoing users
+        // before discard releases their records.
+        class RetainedRuntime
+        {
+            friend class ESMStore;
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit RetainedRuntime(std::unique_ptr<Impl> impl);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
         using StoreTuple = std::tuple<Store<ESM::Activator>, Store<ESM::Potion>, Store<ESM::Apparatus>,
             Store<ESM::Armor>, Store<ESM::BodyPart>, Store<ESM::Book>, Store<ESM::BirthSign>, Store<ESM::Class>,
             Store<ESM::Clothing>, Store<ESM::Container>, Store<ESM::Creature>, Store<ESM::Dialogue>, Store<ESM::Door>,
@@ -242,6 +263,9 @@ namespace MWWorld
         using SpellListCache = std::unordered_map<ESM::RefId, SpellListCacheEntry>;
         mutable SpellListCache mSpellListCache;
         std::vector<std::shared_ptr<MWMechanics::SpellList>> mPreparedSpellListPins;
+        RetainedRuntime::Impl* mRetainedRuntime = nullptr;
+
+        void requireMutableRuntime() const;
 
         /// Validate entries in store after setup
         void validate();
@@ -326,7 +350,7 @@ namespace MWWorld
             const ESMStore& incoming, const std::vector<std::string>& contentFiles) const;
         static bool isSavedDynamicRecord(std::uint32_t type);
 
-        ESM::RefId generateId() { return ESM::RefId::generated(mDynamicCount++); }
+        ESM::RefId generateId() { requireMutableRuntime(); return ESM::RefId::generated(mDynamicCount++); }
 
         class PreparedPlayerRecord
         {

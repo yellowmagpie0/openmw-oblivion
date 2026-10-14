@@ -1,3 +1,9 @@
+#include "apps/openmw/mwworld/worldmodel.hpp"
+#include <components/esm3/readerscache.hpp>
+#include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadland.hpp>
+#include "apps/openmw/mwmechanics/spelllist.hpp"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -1733,4 +1739,170 @@ TEST(MWWorldStoreTest, RestoreLookupIncludesLateFacadesAndDoesNotBorrowOutgoingN
             EXPECT_EQ(staticTool.getPtr().get<ESM::Lockpick>()->mBase, projected);
         }
     }
+}
+
+TEST(MWWorldStoreRetentionTest, TypedRecordsKeepOriginalAddressesAndCounters)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player"); player.mName = "outgoing player";
+    store.getWritable<ESM::NPC>().insertStatic(player); store.getWritable<ESM::NPC>().insert(player);
+    ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId(ESM::GeneratedRefId{200}); item.mName = "outgoing weapon";
+    const auto* outgoing = store.getWritable<ESM::Weapon>().insert(item);
+    const auto* outgoingPlayer = store.get<ESM::NPC>().search(player.mId);
+    const auto oldCounter = store.generateId().getIf<ESM::GeneratedRefId>()->getValue() + 1;
+    store.rebuildIdsIndex();
+    auto runtime = store.retainRuntime();
+    EXPECT_THROW(store.clearDynamic(), std::logic_error);
+    EXPECT_THROW(store.generateId(), std::logic_error);
+    EXPECT_THROW(store.retainRuntime(), std::logic_error);
+    ASSERT_TRUE(runtime.detach());
+    EXPECT_FALSE(store.get<ESM::Weapon>().search(item.mId));
+    EXPECT_EQ(outgoing->mName, "outgoing weapon"); EXPECT_EQ(outgoingPlayer->mName, "outgoing player");
+    item.mName = "candidate"; store.getWritable<ESM::Weapon>().insert(item);
+    player.mName = "candidate player"; store.getWritable<ESM::NPC>().insert(player);
+    store.rebuildIdsIndex(); store.generateId();
+    ASSERT_TRUE(runtime.restore()); EXPECT_FALSE(runtime.restore());
+    EXPECT_EQ(store.get<ESM::Weapon>().search(item.mId), outgoing);
+    EXPECT_EQ(store.get<ESM::NPC>().search(player.mId), outgoingPlayer);
+    EXPECT_EQ(store.find(item.mId), ESM::REC_WEAP);
+    EXPECT_EQ(store.generateId().getIf<ESM::GeneratedRefId>()->getValue(), oldCounter);
+}
+
+TEST(MWWorldStoreRetentionTest, LegacyAndNativeCellIndexesReturnOriginalNodes)
+{
+    MWWorld::ESMStore store;
+    ESM::Cell cell{}; cell.mData.mX = 10; cell.mData.mY = 20; cell.updateId(); cell.mName = "old exterior";
+    auto* old = store.getWritable<ESM::Cell>().insert(cell);
+    ESM4::Cell native{}; native.mId = ESM::RefId(ESM::FormId{0x800, 0}); native.mCellFlags = ESM4::CELL_Interior; native.mEditorId = "retained-room";
+    store.getWritable<ESM4::Cell>().insertStatic(native);
+    native.mFullName = "outgoing interior";
+    auto* oldNative = store.getWritable<ESM4::Cell>().insert(native);
+    auto runtime = store.retainRuntime(); ASSERT_TRUE(runtime.detach());
+    EXPECT_FALSE(store.get<ESM::Cell>().search(cell.mId));
+    EXPECT_NE(store.get<ESM4::Cell>().searchCellName("retained-room"), oldNative);
+    cell.mName = "candidate exterior"; store.getWritable<ESM::Cell>().insert(cell);
+    native.mFullName = "candidate interior"; store.getWritable<ESM4::Cell>().insert(native);
+    ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(store.get<ESM::Cell>().search(cell.mId), old);
+    EXPECT_EQ(store.get<ESM::Cell>().search(10, 20), old);
+    EXPECT_EQ(store.get<ESM4::Cell>().searchCellName("retained-room"), oldNative);
+    EXPECT_EQ(old->mName, "old exterior"); EXPECT_EQ(oldNative->mFullName, "outgoing interior");
+}
+
+TEST(MWWorldStoreRetentionTest, CommitAndOwnerDestructionInvalidateHandles)
+{
+    auto store = std::make_unique<MWWorld::ESMStore>();
+    ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId(ESM::GeneratedRefId{201}); item.mName = "old";
+    store->getWritable<ESM::Weapon>().insert(item);
+    auto runtime = store->retainRuntime(); ASSERT_TRUE(runtime.detach());
+    item.mName = "new"; auto* current = store->getWritable<ESM::Weapon>().insert(item);
+    runtime.discard(); EXPECT_FALSE(runtime.restore()); EXPECT_EQ(store->get<ESM::Weapon>().search(item.mId), current);
+    auto destroyed = store->retainRuntime(); ASSERT_TRUE(destroyed.detach()); store.reset();
+    EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.detach());
+}
+
+TEST(MWWorldStoreRetentionTest, RestoresRecordsAndSpellCacheAfterAdmittedDefinitionInstall)
+{
+    MWWorld::ESMStore store; ESM::NPC player{}; player.blank();
+    player.mId = ESM::RefId::stringRefId("Player"); player.mName = "outgoing";
+    store.insertStatic(player); store.getWritable<ESM::NPC>().insert(player); store.rebuildIdsIndex();
+    const auto* oldPlayer = store.get<ESM::NPC>().search(player.mId);
+    const auto oldSpells = store.getSpellList(player.mId).first;
+    const auto oldNext = store.generateId().getIf<ESM::GeneratedRefId>()->getValue() + 1;
+    auto runtime = store.retainRuntime();
+    auto definitions = std::make_unique<MWWorld::ESMStore>();
+    ESM::Weapon item{}; item.blank(); item.mId = ESM::RefId(ESM::GeneratedRefId{77});
+    definitions->getWritable<ESM::Weapon>().insert(item);
+    for (int i = 0; i < 78; ++i) definitions->generateId();
+    auto prepared = store.prepareDynamicRecords(std::move(definitions));
+    ASSERT_TRUE(runtime.detach()); store.clearDynamic(); ASSERT_TRUE(prepared.commit());
+    const auto newSpells = store.getSpellList(player.mId).first;
+    EXPECT_NE(oldSpells, newSpells); EXPECT_NE(store.get<ESM::NPC>().search(player.mId), oldPlayer);
+    ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(store.get<ESM::NPC>().search(player.mId), oldPlayer);
+    EXPECT_EQ(store.getSpellList(player.mId).first, oldSpells);
+    EXPECT_EQ(store.getSpellList(player.mId).first, oldSpells);
+    EXPECT_FALSE(store.get<ESM::Weapon>().search(item.mId));
+    EXPECT_EQ(store.generateId().getIf<ESM::GeneratedRefId>()->getValue(), oldNext);
+    // Restored generations allow the next ordinary one-clear admission lifecycle.
+    auto again = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    store.clearDynamic(); EXPECT_TRUE(again.commit());
+}
+
+TEST(MWWorldStoreRetentionTest, NativeFormKeysCellFilteringAndLandPositionsSurviveRollback)
+{
+    MWWorld::ESMStore store;
+    ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{0x810, 0});
+    cell.mX = 7; cell.mY = 9; cell.mParent = ESM::RefId(ESM::FormId{0x820, 0}); cell.mEditorId = "native-retained-cell";
+    const auto* immutable = store.getWritable<ESM4::Cell>().insertStatic(cell);
+    const auto location = cell.getExteriorCellLocation();
+    ESM4::Cell persistent = cell; persistent.mId = ESM::RefId(ESM::FormId{0x811, 0});
+    persistent.mX = 80; persistent.mEditorId = "persistent-cell"; persistent.mFlags = ESM4::Rec_Persistent;
+    store.getWritable<ESM4::Cell>().insertStatic(persistent);
+    const auto* oldCell = store.getWritable<ESM4::Cell>().insert(cell);
+    ESM4::Land land{}; land.mId = {0x830, 0}; land.mCell = {0x810, 0};
+    const auto* staticLand = store.getWritable<ESM4::Land>().insertStatic(land);
+    const auto* oldLand = store.getWritable<ESM4::Land>().insert(land);
+    store.getWritable<ESM4::Land>().updateLandPositions(store.get<ESM4::Cell>());
+    ESM4::Weapon weapon{}; weapon.mId = {0x840, 0};
+    const auto key = ESM::FormKey::dynamic("retained-weapon", 3);
+    const auto* oldWeapon = store.getWritable<ESM4::Weapon>().insert(weapon, key);
+    auto runtime = store.retainRuntime(); ASSERT_TRUE(runtime.detach());
+    EXPECT_EQ(store.get<ESM4::Cell>().searchExterior(location), immutable);
+    EXPECT_FALSE(store.get<ESM4::Cell>().searchExterior(persistent.getExteriorCellLocation()));
+    EXPECT_EQ(store.get<ESM4::Land>().search(location), staticLand);
+    EXPECT_FALSE(store.get<ESM4::Weapon>().search(key));
+    cell.mX = 30; cell.mY = 31; store.getWritable<ESM4::Cell>().insert(cell);
+    store.getWritable<ESM4::Land>().insert(land);
+    store.getWritable<ESM4::Land>().updateLandPositions(store.get<ESM4::Cell>());
+    store.getWritable<ESM4::Weapon>().insert(weapon, key);
+    ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(store.get<ESM4::Cell>().searchExterior(location), oldCell);
+    EXPECT_EQ(store.get<ESM4::Land>().search(location), oldLand);
+    EXPECT_FALSE(store.get<ESM4::Land>().search(cell.getExteriorCellLocation()));
+    EXPECT_EQ(store.get<ESM4::Weapon>().search(key), oldWeapon);
+    EXPECT_EQ(store.get<ESM4::Weapon>().findFormKey(ESM::RefId(weapon.mId)), key);
+}
+
+TEST(MWWorldStoreRetentionTest, RejectsSourceChangesAndRollsBackPreparationOnScopeExit)
+{
+    MWWorld::ESMStore store; ESM::Weapon item{}; item.blank();
+    item.mId = ESM::RefId(ESM::GeneratedRefId{200});
+    const auto* original = store.getWritable<ESM::Weapon>().insert(item);
+    {
+        auto runtime = store.retainRuntime(); auto moved = std::move(runtime);
+        EXPECT_FALSE(runtime.detach()); EXPECT_EQ(store.get<ESM::Weapon>().search(item.mId), original);
+    }
+    {
+        auto changed = store.retainRuntime();
+        item.mId = ESM::RefId(ESM::GeneratedRefId{201}); store.getWritable<ESM::Weapon>().insert(item);
+        EXPECT_FALSE(changed.detach()); EXPECT_TRUE(changed.restore());
+        EXPECT_EQ(store.get<ESM::Weapon>().search(ESM::RefId(ESM::GeneratedRefId{200})), original);
+        EXPECT_TRUE(store.get<ESM::Weapon>().search(item.mId));
+    }
+    EXPECT_NO_THROW(store.generateId());
+}
+
+TEST(MWWorldStoreRetentionTest, CoordinatesBaseAndCellRollbackWithoutRecreatingReferences)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store;
+    ESM::Weapon weapon{}; weapon.blank(); weapon.mId = ESM::RefId(ESM::GeneratedRefId{200}); weapon.mName = "old base";
+    const auto* oldBase = store.getWritable<ESM::Weapon>().insert(weapon);
+    ESM::ReadersCache readers; MWWorld::WorldModel model(store, readers);
+    auto* oldCell = &model.getDraftCell();
+    ESM::CellRef reference{}; reference.blank(); reference.mRefID = weapon.mId; reference.mRefNum = {101, -1};
+    MWWorld::LiveCellRef<ESM::Weapon> original(reference, oldBase);
+    MWWorld::Ptr old(oldCell->insert(&original), oldCell); model.registerPtr(old);
+    auto cells = model.retainRuntime(); auto bases = store.retainRuntime();
+    ASSERT_TRUE(cells.detach()); ASSERT_TRUE(bases.detach());
+    weapon.mName = "candidate base"; const auto* newBase = store.getWritable<ESM::Weapon>().insert(weapon);
+    auto* newCell = &model.getDraftCell(); MWWorld::LiveCellRef<ESM::Weapon> candidate(reference, newBase);
+    MWWorld::Ptr incoming(newCell->insert(&candidate), newCell); model.registerPtr(incoming);
+    EXPECT_EQ(old.get<ESM::Weapon>()->mBase, oldBase); EXPECT_EQ(oldBase->mName, "old base");
+    EXPECT_EQ(model.getPtr(reference.mRefNum), incoming);
+    // Dispose candidate reference users before their base records are released.
+    ASSERT_TRUE(cells.restore()); ASSERT_TRUE(bases.restore());
+    EXPECT_EQ(&model.getDraftCell(), oldCell); EXPECT_EQ(model.getPtr(reference.mRefNum), old);
+    EXPECT_EQ(old.get<ESM::Weapon>()->mBase, store.get<ESM::Weapon>().search(weapon.mId));
+    EXPECT_EQ(old.get<ESM::Weapon>()->mBase->mName, "old base");
 }

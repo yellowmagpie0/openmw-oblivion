@@ -297,6 +297,7 @@ namespace MWWorld
     template <>
     class Store<ESM4::Cell> : public TypedDynamicStore<ESM4::Cell>
     {
+        friend class ESMStore;
         std::unordered_map<std::string, ESM4::Cell*, Misc::StringUtils::CiHash, Misc::StringUtils::CiEqual>
             mCellNameIndex;
         std::unordered_map<ESM::ExteriorCellLocation, ESM4::Cell*> mExteriors;
@@ -318,6 +319,7 @@ namespace MWWorld
     template <>
     class Store<ESM4::Land> : public TypedDynamicStore<ESM4::Land>
     {
+        friend class ESMStore;
         std::unordered_map<ESM::ExteriorCellLocation, const ESM4::Land*> mLands;
 
     public:
@@ -375,6 +377,7 @@ namespace MWWorld
     template <>
     class Store<ESM::Cell> : public DynamicStore
     {
+        friend class ESMStore;
         typedef std::unordered_map<std::string, ESM::Cell*, Misc::StringUtils::CiHash, Misc::StringUtils::CiEqual>
             DynamicInt;
 

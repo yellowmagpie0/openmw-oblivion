@@ -537,7 +537,235 @@ namespace MWWorld
         getWritable<ESM::Pathgrid>().setCells(getWritable<ESM::Cell>());
     }
 
-    ESMStore::~ESMStore() = default;
+    struct ESMStore::RetainedRuntime::Impl
+    {
+        struct Binding
+        {
+            virtual ~Binding() = default;
+            virtual bool isUnchanged() const noexcept = 0;
+            virtual void swap() noexcept = 0;
+        };
+        template <class StoreType> struct TypedBinding : Binding
+        {
+            StoreType* mTarget;
+            decltype(StoreType::mDynamic) mDynamic;
+            decltype(StoreType::mDynamicFormKeys) mKeys;
+            decltype(StoreType::mDynamicIdsToFormKeys) mIdsToKeys;
+            decltype(StoreType::mShared) mShared;
+            std::size_t mStaticSize;
+            std::size_t mDynamicSize;
+            std::size_t mSharedSize;
+            explicit TypedBinding(StoreType& target)
+                : mTarget(&target), mStaticSize(target.mStatic.size())
+                , mDynamicSize(target.mDynamic.size()), mSharedSize(target.mShared.size())
+            {
+                if (mSharedSize < mStaticSize)
+                    throw std::logic_error("Invalid shared record ordering during retention");
+                mShared.assign(target.mShared.begin(), target.mShared.begin() + mStaticSize);
+            }
+            bool isUnchanged() const noexcept override
+            {
+                return mTarget->mStatic.size() == mStaticSize && mTarget->mDynamic.size() == mDynamicSize
+                    && mTarget->mShared.size() == mSharedSize;
+            }
+            void swap() noexcept override
+            {
+                mDynamic.swap(mTarget->mDynamic); mKeys.swap(mTarget->mDynamicFormKeys);
+                mIdsToKeys.swap(mTarget->mDynamicIdsToFormKeys); mShared.swap(mTarget->mShared);
+            }
+        };
+        struct NativeCellBinding final : TypedBinding<Store<ESM4::Cell>>
+        {
+            decltype(Store<ESM4::Cell>::mCellNameIndex) mNames;
+            decltype(Store<ESM4::Cell>::mExteriors) mExteriors;
+            explicit NativeCellBinding(Store<ESM4::Cell>& target) : TypedBinding(target)
+            {
+                for (auto* cell : mShared)
+                {
+                    if (cell->isExterior() && (cell->mFlags & ESM4::Rec_Persistent)) continue;
+                    if (!cell->mEditorId.empty()) mNames.insert_or_assign(cell->mEditorId, cell);
+                    if (cell->isExterior()) mExteriors.insert_or_assign(cell->getExteriorCellLocation(), cell);
+                }
+            }
+            void swap() noexcept override
+            {
+                TypedBinding::swap(); mNames.swap(mTarget->mCellNameIndex); mExteriors.swap(mTarget->mExteriors);
+            }
+        };
+        struct NativeLandBinding final : TypedBinding<Store<ESM4::Land>>
+        {
+            decltype(Store<ESM4::Land>::mLands) mLands;
+            NativeLandBinding(Store<ESM4::Land>& target, const Store<ESM4::Cell>& cells) : TypedBinding(target)
+            {
+                // Rebuild the candidate baseline from immutable definitions.
+                // An outgoing dynamic land may have hidden its static entry.
+                for (const auto& [_, land] : target.mStatic)
+                    if (const auto* cell = cells.searchStatic(ESM::RefId(land.mCell)))
+                        mLands.insert_or_assign(cell->getExteriorCellLocation(), &land);
+            }
+            void swap() noexcept override { TypedBinding::swap(); mLands.swap(mTarget->mLands); }
+        };
+        struct CellBinding final : Binding
+        {
+            Store<ESM::Cell>* mTarget;
+            decltype(Store<ESM::Cell>::mCells) mCells;
+            decltype(Store<ESM::Cell>::mDynamicInt) mInteriors;
+            decltype(Store<ESM::Cell>::mDynamicExt) mExteriors;
+            decltype(Store<ESM::Cell>::mSharedInt) mSharedInt;
+            decltype(Store<ESM::Cell>::mSharedExt) mSharedExt;
+            bool mDetached = false;
+            std::size_t mCellCount;
+            std::size_t mInteriorCount;
+            std::size_t mExteriorCount;
+            explicit CellBinding(Store<ESM::Cell>& target) : mTarget(&target)
+                , mSharedInt(target.mSharedInt.begin(), target.mSharedInt.begin()+target.mInt.size())
+                , mSharedExt(target.mSharedExt.begin(), target.mSharedExt.begin()+target.mExt.size())
+                , mCellCount(target.mCells.size()), mInteriorCount(target.mDynamicInt.size())
+                , mExteriorCount(target.mDynamicExt.size())
+            {
+                mCells.reserve(mInteriorCount + mExteriorCount);
+            }
+            bool isUnchanged() const noexcept override
+            {
+                return mTarget->mCells.size() == mCellCount && mTarget->mDynamicInt.size() == mInteriorCount
+                    && mTarget->mDynamicExt.size() == mExteriorCount;
+            }
+            void swap() noexcept override
+            {
+                if (!mDetached)
+                {
+                    for (const auto& [_, cell] : mTarget->mDynamicInt) mCells.insert(mTarget->mCells.extract(cell->mId));
+                    for (const auto& [_, cell] : mTarget->mDynamicExt) mCells.insert(mTarget->mCells.extract(cell->mId));
+                }
+                else
+                {
+                    // Candidate records must be released before the original nodes return.
+                    mTarget->clearDynamic();
+                    while (!mCells.empty()) mTarget->mCells.insert(mCells.extract(mCells.begin()));
+                }
+                mInteriors.swap(mTarget->mDynamicInt); mExteriors.swap(mTarget->mDynamicExt);
+                mSharedInt.swap(mTarget->mSharedInt); mSharedExt.swap(mTarget->mSharedExt);
+                mDetached = !mDetached;
+            }
+        };
+        ESMStore* mOwner;
+        std::vector<std::unique_ptr<Binding>> mBindings;
+        IDMap mIds;
+        std::uint64_t mDynamicCount;
+        std::uint64_t mClearGeneration;
+        std::uint64_t mPublicationGeneration;
+        bool mPlayerPrepared;
+        SpellListCache mSpellLists;
+        std::vector<std::shared_ptr<MWMechanics::SpellList>> mSpellPins;
+        bool mDetached = false;
+        std::uint64_t mExpectedDynamicCount;
+        bool mExpectedPlayerPrepared;
+        explicit Impl(ESMStore& owner) : mOwner(&owner), mIds(owner.mStoreImp->mStaticIds)
+            , mDynamicCount(0), mClearGeneration(owner.mDynamicClearGeneration)
+            , mPublicationGeneration(owner.mStoreImp->mDynamicPublicationGeneration), mPlayerPrepared(false)
+            , mExpectedDynamicCount(owner.mDynamicCount), mExpectedPlayerPrepared(owner.mPlayerRecordPrepared)
+        {
+            const auto bind = [&]<class S>(S& store) {
+                if constexpr (std::is_same_v<S, Store<ESM::Cell>>) mBindings.push_back(std::make_unique<CellBinding>(store));
+                else if constexpr (std::is_same_v<S, Store<ESM4::Cell>>) mBindings.push_back(std::make_unique<NativeCellBinding>(store));
+                else if constexpr (std::is_same_v<S, Store<ESM4::Land>>) mBindings.push_back(std::make_unique<NativeLandBinding>(store, owner.get<ESM4::Cell>()));
+                else if constexpr (requires { store.mDynamic; store.mShared; })
+                    mBindings.push_back(std::make_unique<TypedBinding<S>>(store));
+            };
+            std::apply([&](auto&... stores) { (bind(stores), ...); }, owner.mStoreImp->mStores);
+        }
+        void swap() noexcept
+        {
+            for (auto& binding : mBindings) binding->swap();
+            mIds.swap(mOwner->mStoreImp->mIds);
+            std::swap(mDynamicCount,mOwner->mDynamicCount);
+            std::swap(mPlayerPrepared,mOwner->mPlayerRecordPrepared);
+            mSpellLists.swap(mOwner->mSpellListCache); mSpellPins.swap(mOwner->mPreparedSpellListPins);
+        }
+    };
+    void ESMStore::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing record store is frozen during runtime preparation");
+    }
+
+    ESMStore::RetainedRuntime::RetainedRuntime(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl))
+    {
+    }
+
+    ESMStore::RetainedRuntime::~RetainedRuntime() { restore(); }
+    ESMStore::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    ESMStore::RetainedRuntime& ESMStore::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            restore();
+            mImpl = std::move(other.mImpl);
+        }
+        return *this;
+    }
+
+    ESMStore::RetainedRuntime ESMStore::retainRuntime()
+    {
+        if (mRetainedRuntime)
+            throw std::logic_error("Store runtime is already retained");
+        auto impl = std::make_unique<RetainedRuntime::Impl>(*this);
+        mRetainedRuntime = impl.get();
+        return RetainedRuntime(std::move(impl));
+    }
+
+    bool ESMStore::RetainedRuntime::detach() noexcept
+    {
+        if (!mImpl || !mImpl->mOwner || mImpl->mDetached)
+            return false;
+        const auto& owner = *mImpl->mOwner;
+        if (owner.mDynamicClearGeneration != mImpl->mClearGeneration
+            || owner.mStoreImp->mDynamicPublicationGeneration != mImpl->mPublicationGeneration
+            || owner.mDynamicCount != mImpl->mExpectedDynamicCount
+            || owner.mPlayerRecordPrepared != mImpl->mExpectedPlayerPrepared
+            || !std::ranges::all_of(mImpl->mBindings, [](const auto& binding) { return binding->isUnchanged(); }))
+            return false;
+        mImpl->swap();
+        mImpl->mDetached = true;
+        return true;
+    }
+
+    bool ESMStore::RetainedRuntime::restore() noexcept
+    {
+        if (!mImpl || !mImpl->mOwner)
+            return false;
+        auto& owner = *mImpl->mOwner;
+        if (mImpl->mDetached)
+        {
+            mImpl->swap();
+            owner.mDynamicClearGeneration = mImpl->mClearGeneration;
+            owner.mStoreImp->mDynamicPublicationGeneration = mImpl->mPublicationGeneration;
+        }
+        owner.mRetainedRuntime = nullptr;
+        mImpl.reset();
+        return true;
+    }
+
+    void ESMStore::RetainedRuntime::discard() noexcept
+    {
+        if (!mImpl || !mImpl->mOwner)
+            return;
+        if (!mImpl->mDetached)
+        {
+            restore();
+            return;
+        }
+        mImpl->mOwner->mRetainedRuntime = nullptr;
+        mImpl.reset();
+    }
+
+    ESMStore::~ESMStore()
+    {
+        if (mRetainedRuntime)
+            mRetainedRuntime->mOwner = nullptr;
+    }
+
 
     std::optional<ESM::FormKey> ESMStore::findEsm4FormKey(std::string_view editorId) const
     {
@@ -552,6 +780,7 @@ namespace MWWorld
 
     void ESMStore::clearDynamic()
     {
+        requireMutableRuntime();
         mPreparedSpellListPins.clear();
         for (const auto& store : mDynamicStores)
             store->clearDynamic();
@@ -1332,6 +1561,7 @@ namespace MWWorld
 
     bool ESMStore::readRecord(ESM::ESMReader& reader, uint32_t typeId, bool contentOverridesOnly)
     {
+        requireMutableRuntime();
         ESM::RecNameInts type = static_cast<ESM::RecNameInts>(typeId);
         switch (type)
         {

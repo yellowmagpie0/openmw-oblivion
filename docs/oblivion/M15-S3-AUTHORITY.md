@@ -905,3 +905,19 @@ StateManager does not call it yet. Record bases, Player, native services, scene/
 physics/rendering, Lua/managers and lifetime ordering must be retained together.
 The actual late-load probe still contradicts prior-world preservation, and
 complete S3 acceptance remains open.
+
+ESMStore retention now preserves actual dynamic base records, specialized legacy
+cell nodes, native FormKey/name/exterior/land indexes, dynamic counter, pinned
+spell-list cache, Player flag and clear/publication generations. Rollback disposes
+candidate users before bases and returns original base/CellStore/LiveCellRef
+addresses. Scope/commit/move/owner destruction, source changes, prepared definition
+installation and specialized native indexes have seven production regressions.
+Both targeted7 and complete1426 normal/ASan-UBSan inventories pass with matching
+source fingerprints. Twenty-two explicit operations pass with C++ new disabled;
+forced allocation fails all seven negative cases. Evidence is S3/store-retention-*01.
+Direct family mutation requires a frozen caller; immutable definitions remain
+separately owned. StateManager does not use this API yet. Scene/physics/rendering,
+Player, native services, actual Lua closures/storage/UI and manager state must be
+retained together. The actual late-load probe still loses the outgoing world;
+full prior-world preservation and complete S3 acceptance remain open. Ignored
+native-script drafts have syntax evidence only, not accepted runtime integration.
