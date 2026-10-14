@@ -1183,3 +1183,16 @@ retired widget destruction, scope restore and subsequent render/F5 with audited
 captures/lifecycle/decoded fields. Native windows, shared layers, external adapters,
 full candidate startup, World/backend/remaining managers and StateManager rollback
 remain incomplete. No full S3 acceptance is claimed.
+
+Existing LuaAdapter instances now retain actual containers/elements, parent identity,
+visibility and coordinates within LuaManager selection. Incoming adapters use
+prepared fresh containers. Owner-death handling runs before MyGUI child deletion
+and leaves independently owned element roots alive. Full 2,614 component/1,458
+engine tests and actual render/F5/clean-shutdown courses pass normally and under
+ASan/UBSan at fingerprint
+`0c37eb5f5a0158c267156fc26bfd194557264a055746cd5a7fb88282076d3f02`, in
+`lua-adapter-retention-{normal,sanitized}-02` and `runtime{,-sanitized}-02`.
+Initial runtime-01 courses exposed destructor-order use-after-free and remain
+recorded as failures. Native windows/shared layers/new frontend construction,
+World/backend/remaining services and StateManager prior-world rollback remain
+incomplete. No full S3 acceptance is claimed.

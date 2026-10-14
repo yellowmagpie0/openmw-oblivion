@@ -6,6 +6,37 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain actual Lua adapter containers — 2026-10-14
+
+LuaManager now retains each existing LuaAdapter's actual element/container pair,
+container visibility and adapter coordinates. Detachment parks and unparents the
+original container; incoming elements attach to a prepared fresh container.
+Exchange and rollback restore the original widget parent and geometry. Retirement
+preserves independently owned element roots. Adapter destruction invalidates live
+handles before MyGUI deletes children, using its widget-destruction event.
+
+Full 2,614 component and 1,458 engine tests pass in both normal and ASan/UBSan
+builds at fingerprint
+`0c37eb5f5a0158c267156fc26bfd194557264a055746cd5a7fb88282076d3f02`:
+`S3/lua-adapter-retention-{normal,sanitized}-02`. Actual copied main-thread manager
+courses `lua-adapter-retention-runtime-02` (PID 292043) and
+`lua-adapter-retention-runtime-sanitized-02` (PID 294046) verify parent/widget/
+coordinate identity, fresh incoming containers, candidate retirement, scope
+rollback and adapter owner death with live handles. Both continue through ordinary
+render/F5 and clean shutdown with reviewed Prison/HUD captures, audited lifecycle
+logs and selected decoded native-field equality. Leak checks are disabled.
+
+The initial runtime-01 and runtime-sanitized-01 courses exposed a real deferred
+MyGUI deletion use-after-free: destructor-only cleanup ran after child deletion.
+Their failures and crash/sanitizer reports remain recorded; correction moves
+cleanup to the earlier widget-destruction event. Passing initial helper tests are
+not evidence for the corrected source.
+
+Native WindowManager ownership, shared layers, newly constructed frontend adapters,
+full candidate startup, loaded World/backend and other services, outgoing Scene
+disposal and StateManager failed-load restoration remain open. This is a bounded
+adapter checkpoint; **S3 and M15 remain incomplete**.
+
 ## S3 retain actual Lua UI elements and widgets — 2026-10-14
 
 Lua UI retention now preserves actual game/menu element maps, layouts, states,
