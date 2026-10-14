@@ -224,7 +224,8 @@ namespace MWRender
 
     PostProcessor::~PostProcessor()
     {
-        if (auto* bin = osgUtil::RenderBin::getRenderBinPrototype("DepthSortedBin"))
+        if (auto* bin = osgUtil::RenderBin::getRenderBinPrototype("DepthSortedBin");
+            bin && bin->getDrawCallback() == mTransparentDepthPostPass.get())
             bin->setDrawCallback(nullptr);
     }
 

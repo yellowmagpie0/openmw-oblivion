@@ -79,6 +79,7 @@
 #include "mwworld/worldimp.hpp"
 
 #include "mwrender/vismask.hpp"
+#include "mwrender/runtimeviewer.hpp"
 
 #include "mwclass/classes.hpp"
 
@@ -1026,7 +1027,7 @@ void OMW::Engine::go()
     mEncoder = std::make_unique<ToUTF8::Utf8Encoder>(mEncoding);
 
     // Setup viewer
-    mViewer = new osgViewer::Viewer;
+    mViewer = new MWRender::RuntimeViewer;
     SceneUtil::disableFFPLightModelForRenderer(static_cast<osgViewer::Renderer*>(mViewer->getCamera()->getRenderer()));
     mViewer->setReleaseContextAtEndOfFrameHint(false);
 

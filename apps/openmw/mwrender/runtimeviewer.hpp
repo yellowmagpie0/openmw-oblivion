@@ -1,0 +1,45 @@
+#ifndef OPENMW_MWRENDER_RUNTIMEVIEWER_H
+#define OPENMW_MWRENDER_RUNTIMEVIEWER_H
+
+#include <osg/GraphicsContext>
+#include <osg/observer_ptr>
+#include <osgUtil/RenderBin>
+#include <osgViewer/Scene>
+#include <osgViewer/Viewer>
+
+namespace MWRender
+{
+    /// Keeps the ordinary Viewer bootstrap behavior; only prepared selection bypasses scene traversal.
+    class RuntimeViewer final : public osgViewer::Viewer
+    {
+    public:
+        class Bindings
+        {
+            friend class RuntimeViewer;
+            osg::observer_ptr<RuntimeViewer> mOwner;
+            osg::ref_ptr<osgViewer::Scene> mScene;
+            osg::ref_ptr<osg::Camera> mCamera;
+            osg::ref_ptr<osg::GraphicsOperation> mRenderer;
+            osg::ref_ptr<osg::GraphicsContext> mContext;
+            osg::ref_ptr<osg::GraphicsContext::ResizedCallback> mResizeCallback;
+            osg::ref_ptr<osgUtil::RenderBin> mTransparentBin;
+            osg::ref_ptr<osgUtil::RenderBin::DrawCallback> mTransparentCallback;
+        };
+
+        /// Capture after the scene and camera have been installed and their renderer prepared.
+        /// The caller must keep backend callback targets alive until these bindings are released.
+        Bindings captureBindings();
+
+        /// Requires stopped viewer threads and an idle engine frame. Does not traverse the scene,
+        /// allocate a renderer, or reset the process start tick. Backend ownership stays with the caller.
+        bool selectBindings(const Bindings& bindings) noexcept;
+
+    protected:
+        osg::GraphicsOperation* createRenderer(osg::Camera* camera) override;
+
+    private:
+        bool mSelectingBindings = false;
+    };
+}
+
+#endif

@@ -989,3 +989,26 @@ acceptance. The fourth isolated embedded OSG viewer probe passes prepared scene/
 camera/callback switches without allocation, but performs no rendering; prior
 probes identify real setter allocations. Full scene/resource/Lua/UI/audio/manager
 retention and actual late-failure preservation remain open.
+
+The engine now constructs `MWRender::RuntimeViewer`, preserving ordinary viewer
+bootstrap behavior. Explicit prepared bindings retain actual Scene/camera/renderer
+and shared resize/transparent-bin callbacks; selecting them requires stopped
+threads, reuses the prepared renderer, bypasses allocating scene traversal, and
+preserves the process start tick. Bindings reject another viewer or a changed
+graphics context. Backend callback targets must remain alive under caller-owned
+retention. Postprocessor destruction clears the global transparent callback only
+when it still owns that callback. Three targeted and full 1,449 normal/ASan-UBSan
+engine tests pass at source fingerprint
+`56c2f170befba6ba6d8d39ccb0bdd0913e47721a8cb387b745614ae39bb97a56`.
+Evidence is `S3/runtime-viewer-{normal,sanitized,full-normal,full-sanitized}-01`.
+The production binding exchange passes two explicit allocation-disabled switches;
+its copied forced-allocation negative terminates as expected. These embedded
+context probes perform no rendering (`runtime-viewer-allocation-{control,negative}-01`).
+The full-content `runtime-viewer-native-restart-01` course renders reviewed Prison
+scene/HUD captures and completes initial load/F5/quit/fresh-process load/F5 with
+distinct PIDs 204548/204978. Decoded crime/base/action/counter authorities match.
+The earlier `runtime-viewer-restart-01` fails obsolete S1 fixture skill admission;
+it is retained as failed evidence. Normal rendering/restart does not exercise
+prepared backend exchange. World still rejects initialized backend retention,
+and StateManager, Lua/UI/audio/other-manager ownership and actual late-load
+prior-world preservation remain open; S3 and M15 are incomplete.

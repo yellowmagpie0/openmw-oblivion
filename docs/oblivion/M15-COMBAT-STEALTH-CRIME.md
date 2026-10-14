@@ -6,6 +6,31 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 prepared viewer binding selection — 2026-10-13
+
+The engine uses `RuntimeViewer` with normal bootstrap behavior. Prepared binding
+selection keeps actual camera/renderer/scene identities, restores shared graphics
+resize and transparent-bin callbacks, and preserves the process start tick.
+Selection requires stopped threads and idle engine/backend users. Captured
+bindings keep OSG objects alive; callers retain the backend callback targets.
+Postprocessor destruction clears only its own selected global draw callback.
+
+Three targeted and all 1,449 normal/ASan-UBSan engine tests pass at fingerprint
+`56c2f170befba6ba6d8d39ccb0bdd0913e47721a8cb387b745614ae39bb97a56`.
+Evidence: `S3/runtime-viewer-{normal,sanitized,full-normal,full-sanitized}-01`.
+Two production binding switches pass with C++ allocation disabled; a copied
+forced-allocation selection terminates as expected in
+`runtime-viewer-allocation-{control,negative}-01`. Embedded contexts provide no
+rendering coverage. `runtime-viewer-native-restart-01` separately passes actual
+full-content load/F5/quit/fresh-process load/F5, reviewed scene/HUD captures, and
+decoded crime/base/action/counter persistence with distinct process IDs.
+`runtime-viewer-restart-01` preserves an obsolete S1 fixture admission failure.
+
+This establishes prepared bindings and normal engine rendering/restart, not
+backend exchange acceptance. World still rejects initialized backend retention;
+StateManager, Lua/UI/audio/other-manager retention and late-load prior-world
+preservation remain open. **S3 and M15 are incomplete.**
+
 ## S3 compose retained World simulation ownership — 2026-10-13
 
 World now composes actual Player/combat ownership, native DTOs/pending preparation,
