@@ -921,3 +921,17 @@ Player, native services, actual Lua closures/storage/UI and manager state must b
 retained together. The actual late-load probe still loses the outgoing world;
 full prior-world preservation and complete S3 acceptance remain open. Ignored
 native-script drafts have syntax evidence only, not accepted runtime integration.
+
+Native script retention preserves actual locals/instance and quest nodes, speech,
+diagnostics/trace, sequence/time and activation/hit flags without callback replay.
+Mutation is blocked before detach, active dispatch/nested retention rejected,
+prepared-restore commit deferred, scope/move rollback and owner death handled.
+Compiled corpus/stateless VM stay shared; process-driver executed flags and command
+counts never roll back. Both targeted 3 and full 1,429 normal/ASan-UBSan inventories
+pass with matching source fingerprints. Seventeen explicit operations pass with
+C++ new disabled; forced allocation fails all three negative tests. Evidence is
+S3/native-script-retention-*01. No full World/audio retention or StateManager
+integration is claimed. Stable clock pointers, AI report streams, candidate camera/
+scene roots, actual Lua closures/storage/UI and other-manager state still need
+aggregate retention. The actual late-failure preservation gate and full S3
+acceptance remain open.

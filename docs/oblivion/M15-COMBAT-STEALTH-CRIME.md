@@ -6,6 +6,53 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain native script runtime without replaying callbacks — 2026-10-13
+
+OblivionScriptManager now retains actual instance/local and quest map nodes,
+speech queues, diagnosed topics, diagnostics/trace, sequence/elapsed/depth,
+suppressed activations and friendly-hit state. Candidate quest defaults are
+prepared from winning immutable definitions. Detach swaps state; rollback returns
+original quest addresses and instance state without executing result or load
+callbacks. Scope exit rolls back, move assignment restores its previous owner,
+discard keeps the candidate, and manager destruction invalidates outstanding
+handles. Active VM dispatch and nested retention are rejected. Mutating host,
+script and lazy-local entry points are blocked before detach; prepared-restore
+commit is also blocked until detach. Compiled programs and the stateless VM remain
+shared. Process-local scheduled-event executed flags and cumulative command counts
+stay outside gameplay retention, so rollback cannot rearm acceptance commands.
+
+Three production regressions cover actual script locals/sequence and the exact
+next activation increment, frozen mutation, deferred prepared-restore commit,
+original quest pointers/defaults, scope cancellation, move construction/assignment,
+commit, repeated operations and owner destruction. Both targeted inventories pass
+**3 tests**; both complete engine inventories pass **1,429 tests**, exact
+XML/inventory agreement with no failures/skips, in
+`build/oblivion-compat/m15/S3/native-script-retention-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `033029039cb0a2f4a9fa9ad899a818cb1b1194b6`; matching before/after
+fingerprint: `d3497e2e9c3c7545c3350178f89c4e8ce9e44962b6d37c5533a9889bb8d95ae2`.
+ASan/UBSan halt on errors; leak checks disabled; audio/SDL null/offscreen.
+Full reports/hashes are in `native-script-retention-followup-01/checkpoint-summary.json`.
+
+A copied test object linked to the tested production archive passes **17 explicit
+retention operations** with C++ scalar/array/aligned new disabled in
+`native-script-retention-allocation-control-01`. The negative control inserts a
+vector allocation inside the guard; all **three tests** fail at their first
+guarded operation in `native-script-retention-negative-01`. Preparation, implicit
+scope rollback, move-assignment internals and whole-World/scene/manager operations
+are outside this allocation control. Ignored draft syntax checks were preliminary;
+the initial draft test syntax lacked its fixture include directory, corrected in
+prototype04 before production tests were adopted.
+
+This handle does not retain World or audio services and is not called by
+StateManager yet. Full retention must include original scene/render/physics,
+Player, local script cursors, native AI/combat, actual Lua closures/timers/interfaces,
+storage/UI, other managers and state metadata. The dependency audit finds that
+Lua caches DateTimeManager addresses, AI construction truncates its process event
+report, and RenderingManager construction mutates the viewer camera/root; those
+objects need stable ownership or explicit isolated candidate roots. The earlier
+actual `late-load-preservation-probe-02` remains expected-negative evidence.
+Complete prior-world preservation and full S3 acceptance remain open.
+
 ## S3 retain dynamic record bases and secondary indexes for rollback — 2026-10-13
 
 ESMStore now retains actual dynamic record nodes across typed families, specialized

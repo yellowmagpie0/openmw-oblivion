@@ -18800,3 +18800,118 @@ TEST(OblivionWorldTest, PreparedMechanicsMapsOwnIncomingDefinitionsAndPreserveRe
     auto stale = manager->prepareDeathCounts({}, incoming); manager->clear(); manager->clear(); EXPECT_FALSE(stale());
     auto dead = manager->prepareStolenItems(ESM::StolenItems{}); manager.reset(); EXPECT_FALSE(dead());
 }
+
+
+TEST(OblivionWorldTest, NativeScriptRetentionRestoresActualInstancesWithoutDispatch)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    ESM4::RuntimeState before;
+    scripts.capture(before);
+    ASSERT_EQ(before.mScriptInstances.size(), 1u);
+    auto incoming = before;
+    incoming.mScriptInstances.front().mLocals.front() = std::int64_t{41};
+    incoming.mScriptEventSequence += 20;
+    auto install = scripts.prepareRestore(incoming);
+    auto retained = scripts.retainRuntime();
+    EXPECT_THROW(scripts.clear(), std::logic_error);
+    EXPECT_THROW(scripts.update(0), std::logic_error);
+    EXPECT_THROW(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()), std::logic_error);
+    EXPECT_THROW(scripts.call("ModPCFame", {}, {std::int64_t{1}}, {}, {}), std::logic_error);
+    EXPECT_FALSE(install.commit());
+    ASSERT_TRUE(retained.detach());
+    EXPECT_FALSE(retained.detach());
+    ASSERT_TRUE(install.commit());
+    ESM4::RuntimeState candidate;
+    scripts.capture(candidate);
+    EXPECT_EQ(candidate.mScriptInstances, incoming.mScriptInstances);
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    ASSERT_TRUE(retained.restore());
+    EXPECT_FALSE(retained.restore());
+    ESM4::RuntimeState restored;
+    scripts.capture(restored);
+    EXPECT_EQ(restored.mScriptInstances, before.mScriptInstances);
+    EXPECT_EQ(restored.mScriptEventSequence, before.mScriptEventSequence);
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    scripts.capture(restored);
+    EXPECT_EQ(std::get<std::int64_t>(restored.mScriptInstances.front().mLocals.front()), 2);
+    MWWorld::OblivionScriptManager other(world, world.getStore(), world.getContentFiles());
+    auto first = scripts.retainRuntime();
+    auto second = other.retainRuntime();
+    ASSERT_TRUE(first.detach());
+    ASSERT_TRUE(second.detach());
+    first = std::move(second); // restore the previous owner before adopting another handle
+    scripts.capture(restored);
+    EXPECT_EQ(std::get<std::int64_t>(restored.mScriptInstances.front().mLocals.front()), 2);
+    EXPECT_FALSE(second.restore());
+    EXPECT_TRUE(first.restore());
+}
+
+TEST(OblivionWorldTest, NativeScriptRetentionRestoresQuestNodesAndCommitsReplacement)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    ESM4::Quest quest{};
+    quest.mId = {0xa20, 0};
+    quest.mFormKey = ESM::FormKey::content("headless.esm", 0xa20);
+    quest.mData.flags = ESM4::Quest::Flag_StartGameEnabled;
+    world.getStore().getWritable<ESM4::Quest>().insertStatic(quest, quest.mFormKey);
+    auto snapshot = world.captureOblivionRuntimeState();
+    ESM4::RuntimeQuestState completed;
+    completed.mQuest = quest.mFormKey;
+    completed.mStage = 100;
+    completed.mCompletedStages = {50, 100};
+    snapshot.mQuests = {completed};
+    scripts.restore(snapshot);
+    const auto* original = scripts.findQuestState(quest.mFormKey);
+    ASSERT_NE(original, nullptr);
+    {
+        auto cancelled = scripts.retainRuntime();
+        EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
+        EXPECT_EQ(*original, completed);
+    }
+    EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
+    {
+        auto retained = scripts.retainRuntime();
+        EXPECT_THROW(scripts.retainRuntime(), std::logic_error);
+        auto moved = std::move(retained);
+        EXPECT_FALSE(retained.detach());
+        ASSERT_TRUE(moved.detach());
+        const auto* fresh = scripts.findQuestState(quest.mFormKey);
+        ASSERT_NE(fresh, nullptr);
+        EXPECT_NE(fresh, original);
+        EXPECT_EQ(fresh->mStage, 0);
+        EXPECT_TRUE(fresh->mCompletedStages.empty());
+        EXPECT_TRUE(fresh->mRunning);
+    }
+    EXPECT_EQ(scripts.findQuestState(quest.mFormKey), original);
+    EXPECT_EQ(*original, completed);
+    auto retained = scripts.retainRuntime();
+    ASSERT_TRUE(retained.detach());
+    scripts.restore(snapshot);
+    const auto* replacement = scripts.findQuestState(quest.mFormKey);
+    EXPECT_NE(replacement, original);
+    retained.discard();
+    EXPECT_FALSE(retained.restore());
+    EXPECT_EQ(scripts.findQuestState(quest.mFormKey), replacement);
+    EXPECT_EQ(*replacement, completed);
+    EXPECT_NO_THROW(scripts.clear());
+}
+
+TEST(OblivionWorldTest, NativeScriptRetentionInvalidatesAfterManagerDestruction)
+{
+    std::optional<MWWorld::OblivionScriptManager::RetainedRuntime> retained;
+    {
+        PopulatedMigrationFixture fixture(true);
+        auto& scripts = *fixture.mWorld.getOblivionScriptManager();
+        ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", fixture.mWorld.getPlayerPtr()));
+        retained.emplace(scripts.retainRuntime());
+        ASSERT_TRUE(retained->detach());
+    }
+    EXPECT_FALSE(retained->detach());
+    EXPECT_FALSE(retained->restore());
+    retained->discard();
+}

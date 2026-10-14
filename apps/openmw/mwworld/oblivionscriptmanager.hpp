@@ -30,6 +30,30 @@ namespace MWWorld
     public:
         OblivionScriptManager(World& world, ESMStore& store, const std::vector<std::string>& contentFiles);
 
+        // Keep actual locals, quest nodes, speech queues and diagnostic state.
+        // Prepare while dispatch is idle; mutation is blocked until detach.
+        // Scope exit restores without dispatching callbacks. Process-local
+        // scheduled-event flags and command telemetry never roll back.
+        // Caller must retain World services and audio alongside this handle.
+        class RetainedRuntime
+        {
+            friend class OblivionScriptManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
+        ~OblivionScriptManager() override;
+
         void clear();
         void startNewGame();
         void update(double secondsPassed);
@@ -154,6 +178,8 @@ namespace MWWorld
         std::map<std::string, std::uint64_t, std::less<>> mCommandCounts;
         std::set<ESM::FormKey> mSuppressedActivations;
         bool mIgnoreFriendlyHits = false;
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        void requireMutableRuntime() const;
 
         void compileCorpus();
         void indexNativeVoices();

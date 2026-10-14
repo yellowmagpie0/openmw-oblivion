@@ -391,6 +391,7 @@ namespace MWWorld
     std::optional<OblivionScriptManager::NativeVoice> OblivionScriptManager::findNativeVoice(
         const ESM::FormKey& topic, const Ptr& actor, const Ptr& target, const ESM::FormKey& voiceType) const
     {
+        requireMutableRuntime();
         std::string race;
         std::string sex;
         const bool diagnose = mDiagnosedVoiceTopics.emplace(topic, keyFor(actor)).second;
@@ -484,8 +485,138 @@ namespace MWWorld
         Log(Debug::Info) << "M7 ObScript acceptance events: count=" << mScheduledEvents.size();
     }
 
+    struct OblivionScriptManager::RetainedRuntime::Data
+    {
+        OblivionScriptManager* mOwner;
+        decltype(OblivionScriptManager::mNativeSpeech) mNativeSpeech{};
+        decltype(OblivionScriptManager::mDiagnosedVoiceTopics) mDiagnosedVoiceTopics{};
+        decltype(OblivionScriptManager::mInstances) mInstances{};
+        decltype(OblivionScriptManager::mQuests) mQuests{};
+        decltype(OblivionScriptManager::mDiagnostics) mDiagnostics{};
+        decltype(OblivionScriptManager::mTrace) mTrace{};
+        decltype(OblivionScriptManager::mSequence) mSequence{};
+        decltype(OblivionScriptManager::mDepth) mDepth{};
+        decltype(OblivionScriptManager::mElapsed) mElapsed{};
+        decltype(OblivionScriptManager::mSuppressedActivations) mSuppressedActivations{};
+        decltype(OblivionScriptManager::mIgnoreFriendlyHits) mIgnoreFriendlyHits{};
+        bool mDetached = false;
+        std::uint64_t mExpectedSequence;
+        double mExpectedElapsed;
+        explicit Data(OblivionScriptManager& owner)
+            : mOwner(&owner)
+            , mQuests(owner.mQuests)
+            , mExpectedSequence(owner.mSequence)
+            , mExpectedElapsed(owner.mElapsed)
+        {
+            // Acceptance-driver events and command telemetry remain process-local,
+            // outside gameplay retention. Their executed flags must not roll back.
+            for (auto& [_, quest] : mQuests)
+            {
+                quest.mStage = 0;
+                quest.mCompletedStages.clear();
+                if (const auto* record = owner.mStore.search<ESM4::Quest>(quest.mQuest))
+                    quest.mRunning = (record->mData.flags & ESM4::Quest::Flag_StartGameEnabled) != 0;
+            }
+        }
+        void swap(OblivionScriptManager& owner) noexcept
+        {
+            using std::swap;
+            swap(mNativeSpeech, owner.mNativeSpeech);
+            swap(mDiagnosedVoiceTopics, owner.mDiagnosedVoiceTopics);
+            swap(mInstances, owner.mInstances);
+            swap(mQuests, owner.mQuests);
+            swap(mDiagnostics, owner.mDiagnostics);
+            swap(mTrace, owner.mTrace);
+            swap(mSequence, owner.mSequence);
+            swap(mDepth, owner.mDepth);
+            swap(mElapsed, owner.mElapsed);
+            swap(mSuppressedActivations, owner.mSuppressedActivations);
+            swap(mIgnoreFriendlyHits, owner.mIgnoreFriendlyHits);
+        }
+    };
+    OblivionScriptManager::~OblivionScriptManager()
+    {
+        if (mRetainedRuntime)
+            mRetainedRuntime->mOwner = nullptr;
+    }
+
+    void OblivionScriptManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Native script runtime is retained but not detached");
+    }
+
+    OblivionScriptManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data)
+        : mData(std::move(data))
+    {
+    }
+
+    OblivionScriptManager::RetainedRuntime::~RetainedRuntime() { restore(); }
+    OblivionScriptManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+
+    OblivionScriptManager::RetainedRuntime&
+    OblivionScriptManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            restore();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+
+    OblivionScriptManager::RetainedRuntime OblivionScriptManager::retainRuntime()
+    {
+        if (mRetainedRuntime)
+            throw std::logic_error("Native script runtime is already retained");
+        // Retaining an active VM frame cannot isolate its host side effects.
+        if (mDepth != 0)
+            throw std::logic_error("Native script dispatch is active");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+
+    bool OblivionScriptManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached)
+            return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mSequence != mData->mExpectedSequence || owner.mElapsed != mData->mExpectedElapsed
+            || owner.mDepth != 0)
+            return false;
+        mData->swap(owner);
+        mData->mDetached = true;
+        return true;
+    }
+
+    bool OblivionScriptManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner)
+            return false;
+        if (mData->mDetached)
+            mData->swap(*mData->mOwner);
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData.reset();
+        return true;
+    }
+
+    void OblivionScriptManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner)
+            return;
+        if (!mData->mDetached)
+        {
+            restore();
+            return;
+        }
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData.reset();
+    }
+
     void OblivionScriptManager::clear()
     {
+        requireMutableRuntime();
         mNativeSpeech.clear();
         mDiagnosedVoiceTopics.clear();
         mInstances.clear();
@@ -509,6 +640,7 @@ namespace MWWorld
 
     void OblivionScriptManager::startNewGame()
     {
+        requireMutableRuntime();
         clear();
         // CharacterGen is a native engine bootstrap quest rather than a
         // Start Game Enabled record. Starting it here lets its ordinary
@@ -668,6 +800,7 @@ namespace MWWorld
     OblivionScriptManager::Instance& OblivionScriptManager::instanceFor(
         const ObScript::Program& program, const ESM::FormKey& context)
     {
+        requireMutableRuntime();
         Instance& instance = mInstances[{ program.mUnit.serialize(), context }];
         if (instance.mLocals.empty() && !program.mLocals.empty())
             instance.mLocals = ObScript::VirtualMachine::makeLocals(program);
@@ -680,6 +813,7 @@ namespace MWWorld
         const ESM::FormKey& instanceKey, const ESM::FormKey& self, std::string_view event,
         const ESM::FormKey& actionReference)
     {
+        requireMutableRuntime();
         if (!program)
             return false;
         const std::string requested = lower(event);
@@ -742,6 +876,7 @@ namespace MWWorld
     bool OblivionScriptManager::dispatchObjectEvent(
         const Ptr& self, std::string_view event, const Ptr& actionReference)
     {
+        requireMutableRuntime();
         const auto program = scriptFor(self);
         if (!program)
             return false;
@@ -765,6 +900,7 @@ namespace MWWorld
     bool OblivionScriptManager::dispatchObjectEvent(
         const ESM::FormKey& self, std::string_view event, const ESM::FormKey& actionReference)
     {
+        requireMutableRuntime();
         const auto program = scriptFor(self);
         if (!program)
             return false;
@@ -787,6 +923,7 @@ namespace MWWorld
     bool OblivionScriptManager::dispatchBaseEvent(
         const ESM::FormKey& base, std::string_view event, const ESM::FormKey& actionReference)
     {
+        requireMutableRuntime();
         const auto found = mBaseScripts.find(base);
         return found != mBaseScripts.end()
             && execute(found->second, base, base, event, actionReference);
@@ -794,6 +931,7 @@ namespace MWWorld
 
     bool OblivionScriptManager::dispatchActivation(const Ptr& self, const Ptr& actionReference)
     {
+        requireMutableRuntime();
         const ESM::FormKey key = keyFor(self);
         if (mSuppressedActivations.contains(key))
             return false;
@@ -802,6 +940,7 @@ namespace MWWorld
 
     void OblivionScriptManager::update(double secondsPassed)
     {
+        requireMutableRuntime();
         if (!mWorld.mOblivionRuntimeState)
         {
             try
@@ -891,6 +1030,7 @@ namespace MWWorld
 
     ESM4::RuntimeQuestState& OblivionScriptManager::questState(const ESM::FormKey& key)
     {
+        requireMutableRuntime();
         ESM4::RuntimeQuestState& result = mQuests[key];
         result.mQuest = key;
         return result;
@@ -898,6 +1038,7 @@ namespace MWWorld
 
     void OblivionScriptManager::setStage(const ESM::FormKey& quest, std::int32_t stage)
     {
+        requireMutableRuntime();
         ESM4::RuntimeQuestState& state = questState(quest);
         state.mStage = stage;
         state.mRunning = true;
@@ -914,6 +1055,7 @@ namespace MWWorld
     void OblivionScriptManager::dispatchDialogueResult(
         const ESM::FormKey& info, std::uint32_t ordinal, const Ptr& actor)
     {
+        requireMutableRuntime();
         const auto found = mDialogueResults.find(info);
         if (found == mDialogueResults.end())
             return;
@@ -925,6 +1067,7 @@ namespace MWWorld
     void OblivionScriptManager::dispatchEffect(
         const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster)
     {
+        requireMutableRuntime();
         const auto found = mScripts.find(script);
         if (found != mScripts.end())
         {
@@ -1013,6 +1156,7 @@ namespace MWWorld
     void OblivionScriptManager::persistAnimationState(const ESM::FormKey& reference,
         std::string_view group, int mode, bool playing, bool scripted)
     {
+        requireMutableRuntime();
         if (ESM4::RuntimeReferenceState* state = referenceState(reference))
         {
             state->mCustomState["obscript.animation_group"] = std::string(group);
@@ -1041,6 +1185,7 @@ namespace MWWorld
     ObScript::Value OblivionScriptManager::resolveName(
         std::string_view name, const ObScript::RuntimeContext& context)
     {
+        requireMutableRuntime();
         if (const auto key = ObScript::builtinReferenceKey(name, context.mSelf, context.mActionReference))
             return ObScript::ReferenceValue{ *key, lower(name) };
         if (const auto key = mStore.findEsm4FormKey(name))
@@ -1058,6 +1203,7 @@ namespace MWWorld
 
     ObScript::Value OblivionScriptManager::loadScriptLocal(const ESM::FormKey& target, std::string_view name)
     {
+        requireMutableRuntime();
         std::shared_ptr<const ObScript::Program> program;
         ESM::FormKey instance = target;
         if (const auto quest = mQuestScripts.find(target); quest != mQuestScripts.end())
@@ -1082,6 +1228,7 @@ namespace MWWorld
     bool OblivionScriptManager::storeScriptLocal(
         const ESM::FormKey& target, std::string_view name, const ObScript::Value& value)
     {
+        requireMutableRuntime();
         std::shared_ptr<const ObScript::Program> program;
         if (const auto quest = mQuestScripts.find(target); quest != mQuestScripts.end())
         {
@@ -1118,6 +1265,7 @@ namespace MWWorld
     ObScript::Value OblivionScriptManager::loadMember(
         const ObScript::Value& target, std::string_view name, const ObScript::RuntimeContext&)
     {
+        requireMutableRuntime();
         const auto key = keyFromValue(target);
         return key ? loadScriptLocal(*key, name) : ObScript::Value(std::monostate{});
     }
@@ -1125,6 +1273,7 @@ namespace MWWorld
     void OblivionScriptManager::storeExternal(
         std::string_view name, const ObScript::Value& value, const ObScript::RuntimeContext&)
     {
+        requireMutableRuntime();
         const auto key = mStore.findEsm4FormKey(name);
         if (!key)
             throw ObScript::RuntimeError("OBSV101", "Unknown external variable " + std::string(name));
@@ -1151,6 +1300,7 @@ namespace MWWorld
     void OblivionScriptManager::storeMember(const ObScript::Value& target, std::string_view name,
         const ObScript::Value& value, const ObScript::RuntimeContext&)
     {
+        requireMutableRuntime();
         const auto key = keyFromValue(target);
         if (!key || !storeScriptLocal(*key, name, value))
             throw ObScript::RuntimeError("OBSV102", "Unknown member variable " + std::string(name));
@@ -1160,6 +1310,7 @@ namespace MWWorld
         const std::optional<ObScript::Value>& target, const std::vector<ObScript::Value>& arguments,
         const ObScript::RuntimeContext& context, const ObScript::SourceLocation&)
     {
+        requireMutableRuntime();
         const std::string name = lower(command);
         ++mCommandCounts[name];
         const auto argument = [&](std::size_t index) -> ObScript::Value {
@@ -2480,6 +2631,8 @@ namespace MWWorld
         if (!mImpl || !mImpl->mTarget)
             return false;
         auto& target = *mImpl->mTarget;
+        if (target.mRetainedRuntime && !target.mRetainedRuntime->mDetached)
+            return false;
         target.mInstances.swap(mImpl->mInstances);
         target.mQuests.swap(mImpl->mQuests);
         target.mTrace.swap(mImpl->mTrace);
@@ -2557,12 +2710,14 @@ namespace MWWorld
 
     void OblivionScriptManager::restore(const ESM4::RuntimeState& state)
     {
+        requireMutableRuntime();
         auto plan = prepareRestore(state);
         plan.commit();
     }
 
     void OblivionScriptManager::trace(std::string value)
     {
+        requireMutableRuntime();
         Log(Debug::Info) << "M7 ObScript: " << value;
         mTrace.push_back(std::move(value));
         if (mTrace.size() > 10000)
@@ -2571,6 +2726,7 @@ namespace MWWorld
 
     void OblivionScriptManager::recordDiagnostic(const ObScript::RuntimeDiagnostic& diagnostic)
     {
+        requireMutableRuntime();
         mDiagnostics.push_back(diagnostic);
         if (auto* observation = mWorld.getOblivionObservation())
             observation->diagnostic(diagnostic.mMessage, diagnostic.mCode == "OBSV100");
@@ -2582,6 +2738,7 @@ namespace MWWorld
 
     void OblivionScriptManager::runScheduledEvents()
     {
+        requireMutableRuntime();
         for (ScheduledEvent& event : mScheduledEvents)
         {
             if (event.mExecuted || event.mAt > mElapsed)
@@ -2594,6 +2751,7 @@ namespace MWWorld
 
     void OblivionScriptManager::executeScheduledEvent(const ScheduledEvent& event)
     {
+        requireMutableRuntime();
         if (event.mWords.empty())
             return;
         const auto key = [&](std::size_t index) -> ESM::FormKey {
