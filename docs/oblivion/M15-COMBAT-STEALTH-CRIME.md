@@ -6,6 +6,45 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 group native window ownership — 2026-10-14
+
+WindowManager now owns game-specific UI state through one stable Runtime bundle:
+actual windows, local-map rendering, tooltips, message boxes, character creation,
+marker collection and listener delegates, stats watcher, drag/drop and transfers,
+tracked windows, Lua window-ID views, selections, mode/modal/controller stacks,
+keyboard navigation, pending dialogs/messages, input blocker and session flags.
+HUD/map references stay bound to their actual marker collection; moving the bundle
+will preserve these addresses. Retirement destroys dependent windows/listeners
+while the collection, renderer and MyGUI remain alive. Process GUI/platform/fonts,
+cursor, video and shared resources stay on WindowManager.
+
+Normal and ASan/UBSan engine builds each pass all 1,458 tests at fingerprint
+`1af7270775893ee7e17583b0cf9c22d264f2e91e58b420e00ee3b7fcec284cc8`:
+`S3/native-window-bundle-{normal,sanitized}-01`. The sanitizer compiler used its
+reported debug-variable-tracking fallback in initUI; no instrumentation was
+suppressed. No new component test coverage is claimed for this ownership refactor.
+
+Production-binary courses `native-window-bundle-runtime-03` (PID 297572) and
+`native-window-bundle-runtime-sanitized-02` (PID 299819) load actual native state,
+render, F5 save and shut down cleanly. Captures and the four lifecycle events were
+reviewed; selected decoded crime/base/action/serial fields match prior accepted
+fixtures. The sanitized course also opens native inventory/stat/map windows and
+closes them through Escape, verified in its world/HUD capture. Leak checks are
+disabled. These courses use production binaries, without copied source probes.
+
+Runner metadata failure runtime-01 and missing private fixture plugin runtime-02
+remain recorded. Sanitized runtime-01 and inventory-normal-01 incorrectly tried
+Tab to close inventory: default keyboard navigation consumes Tab to move focus,
+so F5 was rejected while the GUI stayed open. They exited cleanly but failed the
+save gate. Their captures/logs remain recorded, and Escape corrected the course.
+
+This prepares actual native ownership; it does **not** yet add a native selector
+or StateManager rollback. MyGUI layer/node ordering, singleton input/focus/modal/
+capture state, live controller and deferred widget queues still need coordinated
+retention. Candidate frontend construction, matching World/backend/service
+selection and retirement, and prior-world failed-load restoration remain open.
+**S3 and M15 remain incomplete.**
+
 ## S3 retain actual Lua adapter containers — 2026-10-14
 
 LuaManager now retains each existing LuaAdapter's actual element/container pair,

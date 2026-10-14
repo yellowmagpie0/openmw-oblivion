@@ -237,7 +237,7 @@ namespace MWGui
         /// update activated quick key state (if action executing was delayed for some reason)
         void updateActivatedQuickKey() override;
 
-        const ESM::RefId& getSelectedSpell() override { return mSelectedSpell; }
+        const ESM::RefId& getSelectedSpell() override { return mRuntime->mSelectedSpell; }
         void setSelectedSpell(const ESM::RefId& spellId, int successChancePercent) override;
         void setSelectedEnchantItem(const MWWorld::Ptr& item) override;
         const MWWorld::Ptr& getSelectedEnchantItem() const override;
@@ -252,7 +252,7 @@ namespace MWGui
 
         /// Turn visibility of HUD on or off
         bool setHudVisibility(bool show) override;
-        bool isHudVisible() const override { return mHudEnabled; }
+        bool isHudVisible() const override { return mRuntime->mHudEnabled; }
 
         void disallowMouse() override;
         void allowMouse() override;
@@ -303,10 +303,10 @@ namespace MWGui
 
         void executeInConsole(const std::filesystem::path& path) override;
 
-        void enableRest() override { mRestAllowed = true; }
+        void enableRest() override { mRuntime->mRestAllowed = true; }
         bool getRestEnabled() override;
 
-        bool getJournalAllowed() override { return (mAllowed & GW_Magic) != 0; }
+        bool getJournalAllowed() override { return (mRuntime->mAllowed & GW_Magic) != 0; }
 
         bool getPlayerSleeping() override;
         void wakeUpPlayer() override;
@@ -400,106 +400,21 @@ namespace MWGui
         int getControllerMenuHeight() override;
         void cycleActiveControllerWindow(bool next) override;
         void setActiveControllerWindow(GuiMode mode, size_t activeIndex) override;
-        bool getControllerTooltipVisible() const override { return mControllerTooltipVisible; }
+        bool getControllerTooltipVisible() const override { return mRuntime->mControllerTooltipVisible; }
         void setControllerTooltipVisible(bool visible) override;
-        bool getControllerTooltipEnabled() const override { return mControllerTooltipEnabled; }
+        bool getControllerTooltipEnabled() const override { return mRuntime->mControllerTooltipEnabled; }
         void setControllerTooltipEnabled(bool enabled) override;
         void restoreControllerTooltips() override;
         void updateControllerButtonsOverlay() override;
 
         // Used in Lua bindings
-        const std::vector<GuiMode>& getGuiModeStack() const override { return mGuiModes; }
+        const std::vector<GuiMode>& getGuiModeStack() const override { return mRuntime->mGuiModes; }
         void setDisabledByLua(std::string_view windowId, bool disabled) override;
         bool isWindowVisible(std::string_view windowId) const override;
         std::vector<std::string_view> getAllWindowIds() const override;
         std::vector<std::string_view> getAllowedWindowIds(GuiMode mode) const override;
 
     private:
-        unsigned int mOldUpdateMask;
-        unsigned int mOldCullMask;
-
-        const MWWorld::ESMStore* mStore;
-        Resource::ResourceSystem* mResourceSystem;
-        osg::ref_ptr<SceneUtil::WorkQueue> mWorkQueue;
-
-        std::unique_ptr<MyGUIPlatform::Platform> mGuiPlatform;
-        osgViewer::Viewer* mViewer;
-
-        std::unique_ptr<Gui::FontLoader> mFontLoader;
-        std::unique_ptr<StatsWatcher> mStatsWatcher;
-
-        bool mConsoleOnlyScripts;
-
-        std::map<MyGUI::Window*, WindowSettingValues> mTrackedWindows;
-        void trackWindow(Layout* layout, const WindowSettingValues& settings);
-        void onWindowChangeCoord(MyGUI::Window* sender);
-
-        ESM::RefId mSelectedSpell;
-        MWWorld::Ptr mSelectedEnchantItem;
-        MWWorld::Ptr mSelectedWeapon;
-
-        std::vector<WindowModal*> mCurrentModals;
-
-        // Markers placed manually by the player. Must be shared between both map views (the HUD map and the map
-        // window).
-        CustomMarkerCollection mCustomMarkers;
-
-        HUD* mHud;
-        MapWindow* mMap;
-        std::unique_ptr<MWRender::LocalMap> mLocalMapRender;
-        std::unique_ptr<ToolTips> mToolTips;
-        StatsWindow* mStatsWindow;
-        std::unique_ptr<MessageBoxManager> mMessageBoxManager;
-        Console* mConsole;
-        DialogueWindow* mDialogueWindow;
-        std::unique_ptr<DragAndDrop> mDragAndDrop;
-        std::unique_ptr<ItemTransfer> mItemTransfer;
-        InventoryWindow* mInventoryWindow;
-        ScrollWindow* mScrollWindow;
-        BookWindow* mBookWindow;
-        CountDialog* mCountDialog;
-        TradeWindow* mTradeWindow;
-        SettingsWindow* mSettingsWindow;
-        ConfirmationDialog* mConfirmationDialog;
-        SpellWindow* mSpellWindow;
-        QuickKeysMenu* mQuickKeysMenu;
-        LoadingScreen* mLoadingScreen;
-        WaitDialog* mWaitDialog;
-        std::unique_ptr<SoulgemDialog> mSoulgemDialog;
-        MyGUI::ImageBox* mVideoBackground;
-        VideoWidget* mVideoWidget;
-        ScreenFader* mWerewolfFader;
-        ScreenFader* mBlindnessFader;
-        ScreenFader* mHitFader;
-        ScreenFader* mScreenFader;
-        DebugWindow* mDebugWindow;
-        PostProcessorHud* mPostProcessorHud;
-        JailScreen* mJailScreen;
-        ContainerWindow* mContainerWindow;
-        ControllerButtonsOverlay* mControllerButtonsOverlay;
-        InventoryTabsOverlay* mInventoryTabsOverlay;
-
-        std::vector<std::unique_ptr<WindowBase>> mWindows;
-
-        // Mapping windowId -> Window; used by Lua bindings.
-        std::map<std::string_view, WindowBase*> mLuaIdToWindow;
-
-        Translation::Storage& mTranslationDataStorage;
-
-        std::unique_ptr<CharacterCreation> mCharGen;
-
-        MyGUI::Widget* mInputBlocker;
-
-        bool mHudEnabled;
-        bool mCursorVisible;
-        bool mCursorActive;
-
-        int mPlayerBounty;
-
-        void setCursorVisible(bool visible) override;
-
-        std::unique_ptr<MyGUI::Gui> mGui; // Gui
-
         struct GuiModeState
         {
             GuiModeState(WindowBase* window) { mWindows.push_back(window); }
@@ -513,35 +428,121 @@ namespace MWGui
 
             std::vector<WindowBase*> mWindows;
         };
-        // Defines the windows that should be shown in a particular GUI mode.
-        std::map<GuiMode, GuiModeState> mGuiModeStates;
-        // The currently active stack of GUI modes (top mode is the one we are in).
-        std::vector<GuiMode> mGuiModes;
-        // The active window for controller mode for each GUI mode.
-        std::map<GuiMode, size_t> mActiveControllerWindows;
-        // Current tooltip visibility state (can be disabled by mouse movement)
-        bool mControllerTooltipVisible = false;
-        // User preference for tooltips (persists across mouse/controller switches)
-        bool mControllerTooltipEnabled = false;
+        struct ScheduledMessageBox
+        {
+            std::string mMessage;
+            MWGui::ShowInDialogueMode mShowInDialogueMode;
+
+            ScheduledMessageBox(std::string&& message, MWGui::ShowInDialogueMode showInDialogueMode)
+                : mMessage(std::move(message))
+                , mShowInDialogueMode(showInDialogueMode)
+            {
+            }
+        };
+
+        // Addresses inside this bundle stay stable with their widgets. In particular,
+        // HUD/map listeners keep references to this bundle's marker collection.
+        struct Runtime
+        {
+            Runtime();
+            ~Runtime();
+            Runtime(const Runtime&) = delete;
+            Runtime& operator=(const Runtime&) = delete;
+            unsigned int mOldUpdateMask = 0;
+            unsigned int mOldCullMask = 0;
+            std::unique_ptr<StatsWatcher> mStatsWatcher;
+            std::map<MyGUI::Window*, WindowSettingValues> mTrackedWindows;
+            ESM::RefId mSelectedSpell;
+            MWWorld::Ptr mSelectedEnchantItem;
+            MWWorld::Ptr mSelectedWeapon;
+            std::vector<WindowModal*> mCurrentModals;
+            // Shared by HUD and map windows, including their listener delegates.
+            CustomMarkerCollection mCustomMarkers;
+            HUD* mHud = nullptr;
+            MapWindow* mMap = nullptr;
+            std::unique_ptr<MWRender::LocalMap> mLocalMapRender;
+            std::unique_ptr<ToolTips> mToolTips;
+            StatsWindow* mStatsWindow = nullptr;
+            std::unique_ptr<MessageBoxManager> mMessageBoxManager;
+            Console* mConsole = nullptr;
+            DialogueWindow* mDialogueWindow = nullptr;
+            std::unique_ptr<DragAndDrop> mDragAndDrop;
+            std::unique_ptr<ItemTransfer> mItemTransfer;
+            InventoryWindow* mInventoryWindow = nullptr;
+            ScrollWindow* mScrollWindow = nullptr;
+            BookWindow* mBookWindow = nullptr;
+            CountDialog* mCountDialog = nullptr;
+            TradeWindow* mTradeWindow = nullptr;
+            SettingsWindow* mSettingsWindow = nullptr;
+            ConfirmationDialog* mConfirmationDialog = nullptr;
+            SpellWindow* mSpellWindow = nullptr;
+            QuickKeysMenu* mQuickKeysMenu = nullptr;
+            LoadingScreen* mLoadingScreen = nullptr;
+            WaitDialog* mWaitDialog = nullptr;
+            std::unique_ptr<SoulgemDialog> mSoulgemDialog;
+            ScreenFader* mWerewolfFader = nullptr;
+            ScreenFader* mBlindnessFader = nullptr;
+            ScreenFader* mHitFader = nullptr;
+            ScreenFader* mScreenFader = nullptr;
+            DebugWindow* mDebugWindow = nullptr;
+            PostProcessorHud* mPostProcessorHud = nullptr;
+            JailScreen* mJailScreen = nullptr;
+            ContainerWindow* mContainerWindow = nullptr;
+            ControllerButtonsOverlay* mControllerButtonsOverlay = nullptr;
+            InventoryTabsOverlay* mInventoryTabsOverlay = nullptr;
+            std::vector<std::unique_ptr<WindowBase>> mWindows;
+            // Views refer to the actual windows in this bundle.
+            std::map<std::string_view, WindowBase*> mLuaIdToWindow;
+            std::unique_ptr<CharacterCreation> mCharGen;
+            MyGUI::Widget* mInputBlocker = nullptr;
+            bool mHudEnabled = true;
+            bool mCursorVisible = true;
+            bool mCursorActive = true;
+            int mPlayerBounty = -1;
+            std::map<GuiMode, GuiModeState> mGuiModeStates;
+            std::vector<GuiMode> mGuiModes;
+            std::map<GuiMode, size_t> mActiveControllerWindows;
+            bool mControllerTooltipVisible = false;
+            bool mControllerTooltipEnabled = false;
+            std::vector<std::unique_ptr<Layout>> mGarbageDialogs;
+            GuiWindow mShown = GW_ALL;
+            GuiWindow mForceHidden = GW_None;
+            // New-game scripts enable inventory windows incrementally.
+            GuiWindow mAllowed = GW_ALL;
+            bool mRestAllowed = true;
+            std::unique_ptr<KeyboardNavigation> mKeyboardNavigation;
+            Misc::ScopeGuarded<std::vector<ScheduledMessageBox>> mScheduledMessageBoxes;
+        };
+        std::unique_ptr<Runtime> mRuntime;
+
+        const MWWorld::ESMStore* mStore;
+        Resource::ResourceSystem* mResourceSystem;
+        osg::ref_ptr<SceneUtil::WorkQueue> mWorkQueue;
+
+        std::unique_ptr<MyGUIPlatform::Platform> mGuiPlatform;
+        osgViewer::Viewer* mViewer;
+
+        std::unique_ptr<Gui::FontLoader> mFontLoader;
+
+        bool mConsoleOnlyScripts;
+
+        void trackWindow(Layout* layout, const WindowSettingValues& settings);
+        void onWindowChangeCoord(MyGUI::Window* sender);
+
+        MyGUI::ImageBox* mVideoBackground;
+        VideoWidget* mVideoWidget;
+
+        Translation::Storage& mTranslationDataStorage;
+
+        void setCursorVisible(bool visible) override;
+
+        std::unique_ptr<MyGUI::Gui> mGui; // Gui
 
         void reapplyActiveControllerWindow();
 
         std::unique_ptr<SDLUtil::SDLCursorManager> mCursorManager;
 
-        std::vector<std::unique_ptr<Layout>> mGarbageDialogs;
         void cleanupGarbage();
-
-        GuiWindow mShown; // Currently shown windows in inventory mode
-        GuiWindow mForceHidden; // Hidden windows (overrides mShown)
-
-        /* Currently ALLOWED windows in inventory mode. This is used at
-           the start of the game, when windows are enabled one by one
-           through script commands. You can manipulate this through using
-           allow() and disableAll().
-         */
-        GuiWindow mAllowed;
-        // is the rest window allowed?
-        bool mRestAllowed;
 
         void updateVisible(); // Update visibility of all windows based on mode, shown and allowed settings
 
@@ -555,25 +556,9 @@ namespace MWGui
 
         MWGui::TextColours mTextColours;
 
-        std::unique_ptr<KeyboardNavigation> mKeyboardNavigation;
-
         std::unique_ptr<SDLUtil::VideoWrapper> mVideoWrapper;
 
         float mScalingFactor;
-
-        struct ScheduledMessageBox
-        {
-            std::string mMessage;
-            MWGui::ShowInDialogueMode mShowInDialogueMode;
-
-            ScheduledMessageBox(std::string&& message, MWGui::ShowInDialogueMode showInDialogueMode)
-                : mMessage(std::move(message))
-                , mShowInDialogueMode(showInDialogueMode)
-            {
-            }
-        };
-
-        Misc::ScopeGuarded<std::vector<ScheduledMessageBox>> mScheduledMessageBoxes;
 
         /**
          * Called when MyGUI tries to retrieve a tag's value. Tags must be denoted in #{tag} notation and will be

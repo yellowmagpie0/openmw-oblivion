@@ -1196,3 +1196,19 @@ Initial runtime-01 courses exposed destructor-order use-after-free and remain
 recorded as failures. Native windows/shared layers/new frontend construction,
 World/backend/remaining services and StateManager prior-world rollback remain
 incomplete. No full S3 acceptance is claimed.
+
+Native WindowManager game-specific owners now live in one stable Runtime bundle,
+including windows, marker/listener associations, map renderer, stats watcher,
+selection/mode/modal/controller/navigation state and pending messages/dialogs.
+Dependent UI owners retire before MyGUI shutdown. Full 1,458 engine tests pass
+normally and under ASan/UBSan at fingerprint
+`1af7270775893ee7e17583b0cf9c22d264f2e91e58b420e00ee3b7fcec284cc8` in
+`native-window-bundle-{normal,sanitized}-01`. Production-binary runtime-03 and
+runtime-sanitized-02 pass loaded native state, render/F5/clean shutdown with
+reviewed captures, lifecycle audit and selected decoded field equality. The
+sanitized course also verifies native inventory opening and Escape closing.
+Failed runner/fixture and Tab-close attempts remain recorded; default keyboard
+navigation consumes Tab, so those courses correctly fail their save gate.
+This is ownership preparation only: native selection, MyGUI layer/input/controller/
+deferred-widget retention, matching candidate World/backend/service composition
+and StateManager failed-load preservation remain incomplete.
