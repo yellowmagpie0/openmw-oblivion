@@ -275,6 +275,8 @@ namespace MWMechanics
         CharacterController(CharacterController&&) = delete;
 
         void detachAnimation();
+        /// Discard a cancelled runtime without persisting it into cell/native state.
+        void abandonAnimation() noexcept;
 
         const MWWorld::Ptr& getPtr() const { return mPtr; }
 

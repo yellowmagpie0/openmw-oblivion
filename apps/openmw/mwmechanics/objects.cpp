@@ -11,6 +11,12 @@
 
 namespace MWMechanics
 {
+    void Objects::discardRuntime() noexcept
+    {
+        for (auto& object : mObjects) object.abandonAnimation();
+        mIndex.clear();
+        mObjects.clear();
+    }
 
     void Objects::addObject(const MWWorld::Ptr& ptr)
     {

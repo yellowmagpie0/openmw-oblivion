@@ -1088,9 +1088,15 @@ namespace MWMechanics
         if (mAnimation)
         {
             persistAnimationState();
-            mAnimation->setTextKeyListener(nullptr);
+            mAnimation->clearTextKeyListener(this);
             mAnimation = nullptr;
         }
+    }
+
+    void CharacterController::abandonAnimation() noexcept
+    {
+        if (mAnimation) mAnimation->clearTextKeyListener(this);
+        mAnimation = nullptr;
     }
 
     void CharacterController::handleTextKey(

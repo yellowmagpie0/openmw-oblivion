@@ -60,6 +60,7 @@ namespace MWMechanics
         bool hasController(const MWWorld::Ptr& ptr) const { return mIndex.contains(ptr.mRef); }
 
         std::size_t size() const { return mObjects.size(); }
+        void discardRuntime() noexcept;
     };
 }
 

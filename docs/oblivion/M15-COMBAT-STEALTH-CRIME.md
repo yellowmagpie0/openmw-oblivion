@@ -6,6 +6,35 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retained live mechanics runtime — 2026-10-14
+
+MechanicsManager now retains/exchanges actual Actor and animated-object controller
+lists/indexes, death/stolen maps, six actor timers, Player-update/class/race/AI
+flags and restore epoch. Idle guarded preparation/detach/exchange/restore/discard,
+scope rollback, moves and owner invalidation preserve the selected domain without
+reconstructing controllers. Callers retain cell/base/animation owners and stop
+users before retirement. Cancelled controllers abandon animation listeners without
+persisting discarded state; guarded listener clearing protects another owner.
+Ordinary detachment still persists animation state.
+
+Four selected cases (three new retention cases and existing prepared maps) and
+all 1,454 normal/ASan-UBSan engine tests pass at fingerprint
+`0f42d89c2e84089891a678055ca1d8e23ff14ca87ce812c5e3f1f9a79d20b4f5`:
+`S3/mechanics-retention-{normal,sanitized}-02` and
+`mechanics-retention-full-{normal,sanitized}-01`. Loaded-game normal runtime-02
+(PID 237920) and runtime-sanitized-01 (PID 240053) under `mechanics-retention-`
+preserve nine Actor/CharacterController addresses and indexes, a 25-object
+controller container and AI flag. Exact native binary/RNG resume before render/F5;
+selected decoded persistence fields and reviewed Prison scene/HUD captures pass.
+Initial 01 tests dereferenced the headless fixture's absent Player; GDB located
+that setup error and corrected 02 uses winning NPC record ID. The dependent 01
+runtime was not launched. Leak checking remains disabled.
+
+Nonempty incoming-controller retirement and atomic manager/World selection still
+need integrated coverage. Lua/UI/audio/other-manager retention, World backend
+archive composition, StateManager wiring and actual late-load prior-world
+preservation remain open. **S3 and M15 are incomplete.**
+
 ## S3 reversible World backend selection — 2026-10-14
 
 `PreparedBackend::exchange` now reversibly selects the prepared graph by swapping

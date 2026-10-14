@@ -160,6 +160,8 @@ namespace MWMechanics
         void readRecord(ESM::ESMReader& reader, uint32_t type);
 
         void clear(); // Clear death counter
+        /// Retired transaction domain: drop controllers without persisting animation state.
+        void discardRuntime() noexcept;
 
         bool isCastingSpell(const MWWorld::Ptr& ptr) const;
         bool isReadyToBlock(const MWWorld::Ptr& ptr) const;

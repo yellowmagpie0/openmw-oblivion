@@ -1077,3 +1077,21 @@ Selected decoded fields match and captures are reviewed. No candidate frame,
 cells/Player/manager installation, committed backend or loaded outgoing Scene
 disposal is covered. Whole World/manager composition and StateManager wiring are
 still missing, and the prior-world late-load failure contract remains unproven.
+
+Mechanics retention now parks actual actor/object controllers and indexes,
+death/stolen nodes, six actor timers, four selection/update/AI flags and restore
+epoch. Idle guarded detach/exchange/restore/discard, scope/move/owner lifetime
+support preserves controller identities. Cancelled retirement abandons animation
+without persistence and clears only the expected listener; ordinary detachment
+still persists. Caller must retain matching cell/base/animation owners. Four
+selected and full 1,454 normal/ASan-UBSan engine tests pass at fingerprint
+`0f42d89c2e84089891a678055ca1d8e23ff14ca87ce812c5e3f1f9a79d20b4f5` in
+`mechanics-retention-{normal,sanitized}-02` and
+`mechanics-retention-full-{normal,sanitized}-01`. Loaded normal/instrumented
+`mechanics-retention-runtime-02`/`mechanics-retention-runtime-sanitized-01` courses
+preserve nine Actor/CharacterController addresses/indexes, a 25-object container
+and AI flag, exact native binary/RNG, then render/F5 and selected persisted fields
+with reviewed captures. Failed headless Player setup and unlaunched dependent 01
+probe remain recorded. Nonempty incoming-controller retirement, complete
+mechanics/World composition, Lua/UI/audio/other managers and StateManager rollback
+remain unverified; these tests do not close full S3 acceptance.

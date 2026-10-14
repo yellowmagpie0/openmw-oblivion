@@ -40,8 +40,32 @@ namespace MWMechanics
         StolenItemsMap mStolenItems;
         std::shared_ptr<const char> mRestoreLifetime = std::make_shared<const char>();
         std::uint64_t mRestoreEpoch = 0;
+        bool mUpdatingRuntime = false;
+        class RetainedData;
+        RetainedData* mRetainedRuntime = nullptr;
+        void requireMutableRuntime() const;
 
     public:
+        /// Caller keeps both World cell/base/animation domains alive and stops users before disposal.
+        class RetainedRuntime
+        {
+            friend class MechanicsManager;
+            std::unique_ptr<RetainedData> mData;
+            explicit RetainedRuntime(std::unique_ptr<RetainedData> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+        ~MechanicsManager() override;
+        const Actors& getActors() const noexcept { return mActors; }
+        const Objects& getObjects() const noexcept { return mObjects; }
         void buildPlayer();
         ///< build player according to stored class/race/birthsign information. Will
         /// default to the values of the ESM::NPC object, if no explicit information is given.

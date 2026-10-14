@@ -119,6 +119,7 @@ namespace MWMechanics
 {
     void MechanicsManager::buildPlayer()
     {
+        requireMutableRuntime();
         MWWorld::Ptr ptr = getPlayer();
         MWBase::World* world = MWBase::Environment::get().getWorld();
         if (world->getGameProfile() == ESM::GameProfile::Oblivion)
@@ -250,6 +251,112 @@ namespace MWMechanics
         invStore.autoEquip();
     }
 
+    class MechanicsManager::RetainedData
+    {
+    public:
+        MechanicsManager* mOwner;
+        Actors mActors;
+        Objects mObjects;
+        StolenItemsMap mStolenItems;
+        bool mUpdatePlayer = true;
+        bool mClassSelected = false;
+        bool mRaceSelected = false;
+        bool mAI = true;
+        std::uint64_t mEpoch;
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit RetainedData(MechanicsManager& owner) : mOwner(&owner), mEpoch(owner.mRestoreEpoch) {}
+        void swap() noexcept
+        {
+            static_assert(std::is_nothrow_swappable_v<Actors>);
+            static_assert(std::is_nothrow_swappable_v<Objects>);
+            using std::swap;
+            swap(mOwner->mActors, mActors);
+            swap(mOwner->mObjects, mObjects);
+            mOwner->mStolenItems.swap(mStolenItems);
+            swap(mOwner->mUpdatePlayer, mUpdatePlayer);
+            swap(mOwner->mClassSelected, mClassSelected);
+            swap(mOwner->mRaceSelected, mRaceSelected);
+            swap(mOwner->mAI, mAI);
+            swap(mOwner->mRestoreEpoch, mEpoch);
+        }
+        void dispose() noexcept { mActors.discardRuntime(); mObjects.discardRuntime(); }
+    };
+
+    void MechanicsManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing mechanics runtime is frozen before detachment");
+    }
+
+    MechanicsManager::RetainedRuntime MechanicsManager::retainRuntime()
+    {
+        if (mRetainedRuntime || mUpdatingRuntime)
+            throw std::logic_error("Mechanics retention requires an idle unretained manager");
+        auto data = std::make_unique<RetainedData>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    MechanicsManager::~MechanicsManager()
+    {
+        if (!mRetainedRuntime) return;
+        mActors.discardRuntime(); mObjects.discardRuntime();
+        mRetainedRuntime->dispose();
+        mRetainedRuntime->mOwner = nullptr;
+        mRetainedRuntime = nullptr;
+    }
+    MechanicsManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<RetainedData> data) : mData(std::move(data)) {}
+    MechanicsManager::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
+    MechanicsManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    MechanicsManager::RetainedRuntime& MechanicsManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool MechanicsManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mUpdatingRuntime) return false;
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool MechanicsManager::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mUpdatingRuntime) return false;
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool MechanicsManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner) return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mUpdatingRuntime) return false;
+        if (mData->mDetached && !mData->mOriginalSelected)
+        {
+            owner.mActors.discardRuntime(); owner.mObjects.discardRuntime();
+            mData->swap();
+        }
+        mData->dispose();
+        owner.mRetainedRuntime = nullptr; mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
+    void MechanicsManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->dispose();
+        mData->mOwner->mRetainedRuntime = nullptr; mData->mOwner = nullptr;
+        mData.reset();
+    }
+
     MechanicsManager::MechanicsManager()
         : mUpdatePlayer(true)
         , mClassSelected(false)
@@ -261,6 +368,7 @@ namespace MWMechanics
 
     void MechanicsManager::add(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (ptr.getClass().isActor())
             mActors.addActor(ptr);
         else
@@ -284,6 +392,7 @@ namespace MWMechanics
 
     void MechanicsManager::remove(const MWWorld::Ptr& ptr, bool keepActive)
     {
+        requireMutableRuntime();
         if (ptr == MWBase::Environment::get().getWindowManager()->getWatchedActor())
             MWBase::Environment::get().getWindowManager()->watchActor(MWWorld::Ptr());
         mActors.removeActor(ptr, keepActive);
@@ -292,6 +401,7 @@ namespace MWMechanics
 
     void MechanicsManager::updateCell(const MWWorld::Ptr& old, const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (old == MWBase::Environment::get().getWindowManager()->getWatchedActor())
             MWBase::Environment::get().getWindowManager()->watchActor(ptr);
 
@@ -303,12 +413,17 @@ namespace MWMechanics
 
     void MechanicsManager::drop(const MWWorld::CellStore* cellStore)
     {
+        requireMutableRuntime();
         mActors.dropActors(cellStore, getPlayer());
         mObjects.dropObjects(cellStore);
     }
 
     void MechanicsManager::update(float duration, bool paused)
     {
+        requireMutableRuntime();
+        if (mUpdatingRuntime) throw std::logic_error("Recursive mechanics update");
+        mUpdatingRuntime = true;
+        struct ResetUpdate { bool& mFlag; ~ResetUpdate() { mFlag = false; } } resetUpdate{mUpdatingRuntime};
         // Note: we should do it here since game mechanics and world updates use these values
         MWWorld::Ptr ptr = getPlayer();
         MWBase::WindowManager* winMgr = MWBase::Environment::get().getWindowManager();
@@ -1933,6 +2048,7 @@ namespace MWMechanics
 
     void MechanicsManager::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        requireMutableRuntime();
         if (type == ESM::REC_STLN)
         {
             ESM::StolenItems items;
@@ -1945,6 +2061,7 @@ namespace MWMechanics
 
     void MechanicsManager::clear()
     {
+        requireMutableRuntime();
         ++mRestoreEpoch;
         mActors.clear();
         mStolenItems.clear();
@@ -1968,7 +2085,8 @@ namespace MWMechanics
         plan->mLifetime = mRestoreLifetime;
         plan->mEpoch = mRestoreEpoch + 1;
         return [this, plan] {
-            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch) return false;
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch
+                || (mRetainedRuntime && !mRetainedRuntime->mDetached)) return false;
             plan->mUsed = true;
             mStolenItems.swap(plan->mItems);
             return true;
@@ -1996,7 +2114,8 @@ namespace MWMechanics
         plan->mLifetime = mRestoreLifetime;
         plan->mEpoch = mRestoreEpoch + 1;
         return [this, plan] {
-            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch) return false;
+            if (plan->mUsed || plan->mLifetime.expired() || mRestoreEpoch != plan->mEpoch
+                || (mRetainedRuntime && !mRetainedRuntime->mDetached)) return false;
             plan->mUsed = true;
             mActors.mergeDeathCounts(plan->mCounts);
             return true;

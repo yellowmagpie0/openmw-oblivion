@@ -140,6 +140,10 @@ namespace MWRender
         };
 
         void setTextKeyListener(TextKeyListener* listener);
+        void clearTextKeyListener(TextKeyListener* expected) noexcept
+        {
+            if (mTextKeyListener == expected) mTextKeyListener = nullptr;
+        }
 
         virtual bool updateCarriedLeftVisible(const int weaptype) const { return false; }
 

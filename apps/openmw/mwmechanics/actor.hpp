@@ -68,6 +68,7 @@ namespace MWMechanics
             mCharacterController.detachAnimation();
         }
         bool isInvalid() const { return mInvalid; }
+        void abandonAnimation() noexcept { mCharacterController.abandonAnimation(); }
 
     private:
         CharacterController mCharacterController;

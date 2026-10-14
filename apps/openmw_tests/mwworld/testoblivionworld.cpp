@@ -19246,3 +19246,60 @@ TEST(OblivionWorldTest, WorldBackendPreparationRejectsMissingAndPartialGraphWith
     auto archive = world.getWorldModel().retainRuntime();
     EXPECT_TRUE(archive.restore());
 }
+
+TEST(OblivionWorldTest, MechanicsRetentionRestoresMapsEpochAndPreparedPlanWithoutReplay)
+{
+    NativeWorldFixture fixture;
+    MWMechanics::MechanicsManager manager;
+    const auto id = ESM::RefId(ESM::FormId{0x800, 0});
+    readDeathCounts(manager, {{id, 7}});
+    ESM::StolenItems old;
+    old.mStolenItems[id][{ESM::RefId::stringRefId("old-owner"), false}] = 11;
+    auto oldInstall = manager.prepareStolenItems(std::move(old));
+    manager.clear(); ASSERT_TRUE(oldInstall()); readDeathCounts(manager, {{id, 7}});
+    const auto originalItems = stolenState(manager).mStolenItems;
+    ESM::StolenItems incoming; incoming.mStolenItems[id][{id, true}] = 29;
+    auto install = manager.prepareStolenItems(std::move(incoming));
+    auto copy = install;
+    auto retained = manager.retainRuntime();
+    EXPECT_THROW(manager.retainRuntime(), std::logic_error);
+    EXPECT_THROW(manager.clear(), std::logic_error);
+    EXPECT_THROW(manager.update(0, true), std::logic_error);
+    EXPECT_FALSE(install());
+    ASSERT_TRUE(retained.detach()); EXPECT_FALSE(retained.detach());
+    EXPECT_EQ(manager.countDeaths(id), 0); EXPECT_TRUE(stolenState(manager).mStolenItems.empty());
+    manager.clear(); ASSERT_TRUE(install()); EXPECT_FALSE(copy());
+    readDeathCounts(manager, {{id, 31}});
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(manager.countDeaths(id), 7); EXPECT_EQ(stolenState(manager).mStolenItems, originalItems);
+    ASSERT_TRUE(retained.exchange()); EXPECT_EQ(manager.countDeaths(id), 31);
+    ASSERT_TRUE(retained.restore());
+    EXPECT_EQ(manager.countDeaths(id), 7); EXPECT_EQ(stolenState(manager).mStolenItems, originalItems);
+    EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange()); retained.discard();
+}
+
+TEST(OblivionWorldTest, MechanicsRetentionScopeRollbackAndDiscardNormalizeSelectedRuntime)
+{
+    NativeWorldFixture fixture;
+    MWMechanics::MechanicsManager manager;
+    const auto id = ESM::RefId(ESM::FormId{0x800, 0});
+    readDeathCounts(manager, {{id, 7}});
+    { auto retained = manager.retainRuntime(); ASSERT_TRUE(retained.detach()); readDeathCounts(manager, {{id, 19}}); }
+    EXPECT_EQ(manager.countDeaths(id), 7);
+    auto retained = manager.retainRuntime(); ASSERT_TRUE(retained.detach());
+    readDeathCounts(manager, {{id, 23}}); ASSERT_TRUE(retained.exchange());
+    EXPECT_EQ(manager.countDeaths(id), 7);
+    auto moved = std::move(retained); EXPECT_FALSE(retained.restore());
+    moved.discard(); EXPECT_EQ(manager.countDeaths(id), 23);
+    EXPECT_FALSE(moved.restore());
+    auto next = manager.retainRuntime(); EXPECT_TRUE(next.restore());
+}
+
+TEST(OblivionWorldTest, MechanicsRetentionHandleInvalidatesWhenOwnerDies)
+{
+    NativeWorldFixture fixture;
+    auto manager = std::make_unique<MWMechanics::MechanicsManager>();
+    auto retained = manager->retainRuntime(); ASSERT_TRUE(retained.detach());
+    ASSERT_TRUE(retained.exchange()); manager.reset();
+    EXPECT_FALSE(retained.exchange()); EXPECT_FALSE(retained.restore()); retained.discard();
+}

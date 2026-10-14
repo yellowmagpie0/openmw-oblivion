@@ -2580,6 +2580,12 @@ namespace MWMechanics
         mDeathCount.clear();
     }
 
+    void Actors::discardRuntime() noexcept
+    {
+        for (auto& actor : mActors) actor.abandonAnimation();
+        clear();
+    }
+
     void Actors::updateMagicEffects(const MWWorld::Ptr& ptr) const
     {
         adjustMagicEffects(ptr, 0.f);
