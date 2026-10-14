@@ -1168,3 +1168,18 @@ Actual GUI widgets/settings/layers/adapters, native window state, full candidate
 menu initialization, World/backend/other-manager selection and StateManager
 prior-world rollback remain unimplemented/unverified. No full S3 acceptance is
 claimed.
+
+LuaManager now composes actual Lua UI game/menu element maps, layouts/states,
+settings-page tables and widgets with the retained core. Domain guards reject
+frozen/parked/retired mutation; widget callbacks remain stored but event delivery
+is suppressed while trees are parked. Root visibility restores before callbacks
+resume. Two new cases and full 2,614 component/1,458 engine inventories pass
+normally and under ASan/UBSan at fingerprint
+`4d64d9501fb460cbfe66d0a817eba3a1a93b92eee737a8754af4e768b04d07c2`.
+`lua-ui-retention-{normal,sanitized}-01` and actual main-thread copied
+`runtime{,-sanitized}-01` courses verify created MyGUI widget/layout/coordinate/
+visibility/settings identity, parked callback silence, resumed callback count,
+retired widget destruction, scope restore and subsequent render/F5 with audited
+captures/lifecycle/decoded fields. Native windows, shared layers, external adapters,
+full candidate startup, World/backend/remaining managers and StateManager rollback
+remain incomplete. No full S3 acceptance is claimed.

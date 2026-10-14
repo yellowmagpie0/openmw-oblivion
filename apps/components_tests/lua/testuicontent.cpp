@@ -3,6 +3,10 @@
 
 #include <components/lua/luastate.hpp>
 #include <components/lua_ui/content.hpp>
+#include <components/lua_ui/element.hpp>
+#include <components/lua_ui/util.hpp>
+#include <components/lua_ui/registerscriptsettings.hpp>
+#include <components/lua_ui/scriptsettings.hpp>
 
 namespace
 {
@@ -144,4 +148,63 @@ namespace
             content.at(0);
         }
     }
+    TEST_F(LuaUiContentTest, RuntimeRetentionPreservesElementsLayoutsAndSettingsWithoutRebuilding)
+    {
+        mLuaState.protectedCall([&](LuaUtil::LuaView& view) {
+            auto& lua = view.sol();
+            auto original = LuaUi::Element::make(lua.create_table_with("name", "original"), false, std::nullopt);
+            auto menu = LuaUi::Element::make(lua.create_table_with("name", "menu"), true, std::nullopt);
+            const auto layout = original->mLayout;
+            LuaUi::registerSettingsPage(lua.create_table_with("name", "original-page", "element", menu));
+            auto retained = LuaUi::Element::retainRuntime();
+            EXPECT_THROW(original->update(), std::logic_error);
+            EXPECT_THROW(LuaUi::Element::make(lua.create_table(), false, std::nullopt), std::logic_error);
+            ASSERT_TRUE(retained.detach());
+            EXPECT_EQ(LuaUi::scriptSettingsPageCount(), 0);
+            EXPECT_THROW(original->destroy(), std::logic_error);
+            auto incoming = LuaUi::Element::make(lua.create_table_with("name", "incoming"), false, std::nullopt);
+            LuaUi::registerSettingsPage(lua.create_table_with("name", "incoming-page", "element", incoming));
+            ASSERT_TRUE(retained.exchange());
+            EXPECT_EQ(LuaUi::scriptSettingsPageCount(), 1);
+            EXPECT_EQ(LuaUi::scriptSettingsPageAt(0).mName, "original-page");
+            EXPECT_EQ(LuaUi::scriptSettingsPageAt(0).mElement, menu);
+            EXPECT_EQ(original->mLayout, layout);
+            EXPECT_THROW(incoming->update(), std::logic_error);
+            ASSERT_TRUE(retained.exchange());
+            ASSERT_TRUE(retained.restore());
+            EXPECT_EQ(incoming->mState, LuaUi::Element::Destroyed);
+            EXPECT_EQ(original->mState, LuaUi::Element::New);
+            EXPECT_EQ(original->mLayout, layout);
+            EXPECT_THROW(incoming->requireMutableRuntime(), std::logic_error);
+            LuaUi::clearSettings();
+            LuaUi::clearGameInterface(); LuaUi::clearMenuInterface();
+        });
+    }
+
+    TEST_F(LuaUiContentTest, RuntimeScopeAndDiscardNormalizeSelectionAndInvalidateRetiredElements)
+    {
+        mLuaState.protectedCall([&](LuaUtil::LuaView& view) {
+            auto& lua = view.sol();
+            auto original = LuaUi::Element::make(lua.create_table(), false, std::nullopt);
+            {
+                auto retained = LuaUi::Element::retainRuntime();
+                ASSERT_TRUE(retained.detach());
+                auto incoming = LuaUi::Element::make(lua.create_table(), false, std::nullopt);
+                auto moved = std::move(retained);
+                EXPECT_FALSE(retained.restore());
+            }
+            EXPECT_NO_THROW(original->requireMutableRuntime());
+            auto retained = LuaUi::Element::retainRuntime();
+            EXPECT_THROW(LuaUi::Element::retainRuntime(), std::logic_error);
+            ASSERT_TRUE(retained.detach());
+            auto incoming = LuaUi::Element::make(lua.create_table(), false, std::nullopt);
+            ASSERT_TRUE(retained.exchange());
+            retained.discard();
+            EXPECT_EQ(original->mState, LuaUi::Element::Destroyed);
+            EXPECT_THROW(original->requireMutableRuntime(), std::logic_error);
+            EXPECT_NO_THROW(incoming->requireMutableRuntime());
+            LuaUi::clearSettings(); LuaUi::clearGameInterface(); LuaUi::clearMenuInterface();
+        });
+    }
+
 }

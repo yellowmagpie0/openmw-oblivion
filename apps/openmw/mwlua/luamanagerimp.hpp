@@ -53,7 +53,7 @@ namespace MWLua
             bool restore() noexcept;
             void discard() noexcept;
         };
-        // Requires idle users and separately retained cell, GUI/widget and backend domains.
+        // Requires idle users and separately retained cell, native window/layer/adapter and backend domains.
         // Retains the Lua VM's runtime selection, containers, packages and pending core state.
         RetainedRuntime retainRuntime();
         void startPreparedRuntime();

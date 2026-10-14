@@ -355,14 +355,16 @@ namespace MWLua
                 return res.str();
             };
             uiElement["layout"] = sol::property([](const LuaUi::Element& element) { return element.mLayout; },
-                [](LuaUi::Element& element, const sol::main_table& layout) { element.mLayout = layout; });
+                [](LuaUi::Element& element, const sol::main_table& layout) { element.requireMutableRuntime(); element.mLayout = layout; });
             uiElement["update"] = [luaManager = context.mLuaManager](const std::shared_ptr<LuaUi::Element>& element) {
+                element->requireMutableRuntime();
                 if (element->mState != LuaUi::Element::Created)
                     return;
                 luaManager->addAction([element] { element->update(); }, "Update UI");
                 element->mState = LuaUi::Element::Update;
             };
             uiElement["destroy"] = [luaManager = context.mLuaManager](const std::shared_ptr<LuaUi::Element>& element) {
+                element->requireMutableRuntime();
                 if (element->mState == LuaUi::Element::Destroyed)
                     return;
                 luaManager->addAction([element] { LuaUi::Element::erase(element.get()); }, "Destroy UI");

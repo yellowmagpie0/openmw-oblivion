@@ -23,6 +23,8 @@ namespace LuaUi
         }
     }
 
+    void exchangeSettingsPages(std::vector<sol::table>& pages) noexcept { allPages.swap(pages); }
+
     size_t scriptSettingsPageCount()
     {
         return allPages.size();
@@ -35,21 +37,25 @@ namespace LuaUi
 
     void registerSettingsPage(const sol::table& options)
     {
+        Element::requireSelectedRuntime();
         allPages.push_back(options);
     }
 
     void removeSettingsPage(const sol::table& options)
     {
+        Element::requireSelectedRuntime();
         std::erase_if(allPages, [options](const sol::table& it) { return it == options; });
     }
 
     void clearSettings()
     {
+        Element::requireSelectedRuntime();
         allPages.clear();
     }
 
     void ensureScriptSettingsPage(size_t index)
     {
+        Element::requireSelectedRuntime();
         if (index >= allPages.size())
             return;
 
@@ -66,6 +72,7 @@ namespace LuaUi
 
     void attachPageAt(size_t index, LuaAdapter* adapter)
     {
+        Element::requireSelectedRuntime();
         adapter->detach();
         if (index < allPages.size())
         {

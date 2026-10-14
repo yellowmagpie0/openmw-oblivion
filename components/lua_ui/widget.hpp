@@ -34,6 +34,7 @@ namespace LuaUi
         virtual void deinitialize();
 
         MyGUI::Widget* widget() const { return mWidget; }
+        void setRuntimeParked(bool parked) noexcept;
 
         bool isRoot() const { return mElementRoot; }
         WidgetExtension* getParent() const { return mParent; }
@@ -126,6 +127,7 @@ namespace LuaUi
             const WidgetExtension* w = this;
             while (w)
             {
+                if (w->mRuntimeParked) return;
                 bool shouldPropagate = true;
                 auto it = w->mCallbacks.find(name);
                 if (it != w->mCallbacks.end())
@@ -170,6 +172,7 @@ namespace LuaUi
 
     private:
         // use lua_State* instead of sol::state_view because MyGUI requires a default constructor
+        bool mRuntimeParked = false;
         lua_State* mLua;
         MyGUI::Widget* mWidget;
         std::vector<WidgetExtension*> mChildren;

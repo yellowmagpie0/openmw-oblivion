@@ -6,6 +6,41 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain actual Lua UI elements and widgets — 2026-10-14
+
+Lua UI retention now preserves actual game/menu element maps, layouts, states,
+settings-page tables and MyGUI widgets. A domain guard blocks frozen, parked and
+retired element mutation. Widget trees retain their callback maps while event
+and propagation delivery is suppressed during parking. Visibility is captured
+before hiding and restored before callbacks are enabled. Rollback preserves
+widget addresses, geometry/layout identity and callbacks; discard destroys the
+correct retired widgets. LuaManager now composes this UI handle with its retained
+core. Native windows, external adapters and shared layers remain caller-owned.
+
+Two new UI cases and all 2,614 component/1,458 engine tests pass in normal and
+ASan/UBSan builds at fingerprint
+`4d64d9501fb460cbfe66d0a817eba3a1a93b92eee737a8754af4e768b04d07c2`:
+`S3/lua-ui-retention-{normal,sanitized}-01`. Focused preflight-02 passes ten UI
+cases; preflight-01 exposed the parking method's protected access, corrected
+before verification. Both attempts remain recorded.
+
+Actual main-thread copied synchronizedUpdate probes in
+`lua-ui-retention-runtime-01` (PID 279123) and
+`lua-ui-retention-runtime-sanitized-01` (PID 281085) create MyGUI widgets, preserve
+original root/widget/layout/coordinate/visibility/settings identities across
+LuaManager selection, verify silent parked delivery and exactly two resumed
+callbacks, destroy the incoming widget on rollback and exercise scoped restore.
+The game then renders and F5 saves with clean shutdown, audited lifecycle logs,
+reviewed Prison scene/HUD captures and selected decoded native field equality.
+Leak checks are disabled. Allocation-denial and full candidate frontend startup
+are not claimed.
+
+Native window state, shared layer insertion/reordering and external adapters
+still require retention and matching-owner retirement. Loaded World/backend and
+remaining service composition, outgoing Scene disposal, StateManager late-load
+prior-world restoration and full original-gate acceptance remain open.
+**S3 and M15 are incomplete.**
+
 ## S3 compose retained LuaManager core runtime — 2026-10-14
 
 LuaManager now composes the retained script containers, storage, tracker and

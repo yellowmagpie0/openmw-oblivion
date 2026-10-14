@@ -423,8 +423,16 @@ namespace LuaUi
         return widget()->getSize();
     }
 
+    void WidgetExtension::setRuntimeParked(bool parked) noexcept
+    {
+        mRuntimeParked = parked;
+        for (auto* child : mChildren) child->setRuntimeParked(parked);
+        for (auto* child : mTemplateChildren) child->setRuntimeParked(parked);
+    }
+
     void WidgetExtension::triggerEvent(std::string_view name, sol::object argument) const
     {
+        if (mRuntimeParked) return;
         auto it = mCallbacks.find(name);
         if (it != mCallbacks.end())
             it->second.call(argument, mLayout);

@@ -22,6 +22,7 @@
 
 #include <components/lua_ui/registerscriptsettings.hpp>
 #include <components/lua_ui/util.hpp>
+#include <components/lua_ui/element.hpp>
 
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
@@ -99,6 +100,7 @@ namespace MWLua
         EngineEvents mEngineEvents;
         std::vector<InputEvent> mInputEvents;
         std::vector<InputEvent> mMenuInputEvents;
+        std::optional<LuaUi::Element::RetainedRuntime> mInterface;
         std::optional<LuaUtil::LuaState::RetainedDomain> mDomain;
         std::optional<LuaUtil::ScriptsContainer::RetainedRuntime> mLoad;
         std::optional<LuaUtil::ScriptsContainer::RetainedRuntime> mMenu;
@@ -122,6 +124,7 @@ namespace MWLua
         {
             mInputActions.clear();
             mInputTriggers.clear();
+            mInterface.emplace(LuaUi::Element::retainRuntime());
             mDomain.emplace(owner.mLua.retainDomain());
             mLoad.emplace(owner.mLoadScripts.retainRuntime());
             mMenu.emplace(owner.mMenuScripts.retainRuntime());
@@ -221,6 +224,7 @@ namespace MWLua
                 || !mGlobalStorage->exchange() || !mPlayerStorage->exchange()
                 || !mTracker->exchange() || !mLists->exchange()) std::terminate();
             swapFields();
+            if (!mInterface->exchange()) std::terminate();
             if (!mDomain->exchange()) std::terminate();
             mOriginalSelected = !mOriginalSelected;
         }
@@ -230,10 +234,11 @@ namespace MWLua
             {
                 if (!mLoad->restore() || !mMenu->restore() || !mGlobal->restore()
                     || !mGlobalStorage->restore() || !mPlayerStorage->restore()
-                    || !mTracker->restore() || !mLists->restore() || !mDomain->restore()) std::terminate();
+                    || !mTracker->restore() || !mLists->restore() || !mInterface->restore() || !mDomain->restore()) std::terminate();
             }
             else
             {
+                mInterface->discard();
                 mLoad->discard(); mMenu->discard(); mGlobal->discard();
                 mGlobalStorage->discard(); mPlayerStorage->discard();
                 mTracker->discard(); mLists->discard(); mDomain->discard();
@@ -293,6 +298,7 @@ namespace MWLua
     {
         if (!mData || !mData->idle() || mData->mDetached) return false;
         mData->swapFields();
+        if (!mData->mInterface->detach()) std::terminate();
         if (!mData->mLoad->detach() || !mData->mMenu->detach() || !mData->mGlobal->detach()
             || !mData->mGlobalStorage->detach() || !mData->mPlayerStorage->detach()
             || !mData->mTracker->detach() || !mData->mLists->detach() || !mData->mDomain->detach()) std::terminate();

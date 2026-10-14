@@ -5,6 +5,7 @@
 #include "components/settings/values.hpp"
 #include "content.hpp"
 #include "util.hpp"
+#include "registerscriptsettings.hpp"
 #include "widget.hpp"
 
 namespace LuaUi
@@ -246,11 +247,129 @@ namespace LuaUi
     std::map<Element*, std::shared_ptr<Element>> Element::sMenuElements;
     std::map<Element*, std::shared_ptr<Element>> Element::sGameElements;
 
+    std::shared_ptr<Element::RuntimeDomain> Element::sRuntimeDomain = std::make_shared<RuntimeDomain>();
+    Element::RetainedRuntime::Data* Element::sRetainedRuntime = nullptr;
+
+    struct Element::RetainedRuntime::Data
+    {
+        std::map<Element*, std::shared_ptr<Element>> mGame;
+        std::map<Element*, std::shared_ptr<Element>> mMenu;
+        std::vector<sol::table> mPages;
+        std::shared_ptr<RuntimeDomain> mDomain = std::make_shared<RuntimeDomain>();
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        Data() { mDomain->mSelected = false; }
+        static void park()
+        {
+            for (auto* map : { &sGameElements, &sMenuElements })
+                for (auto& [_, element] : *map)
+                    if (element->mRoot)
+                    {
+                        element->mRuntimeVisible = element->mRoot->widget()->getVisible();
+                        element->mRoot->setRuntimeParked(true);
+                    }
+            for (auto* map : { &sGameElements, &sMenuElements })
+                for (auto& [_, element] : *map)
+                    if (element->mRoot) element->mRoot->widget()->setVisible(false);
+        }
+        static void unpark()
+        {
+            for (auto* map : { &sGameElements, &sMenuElements })
+                for (auto& [_, element] : *map)
+                    if (element->mRoot) element->mRoot->widget()->setVisible(element->mRuntimeVisible);
+            for (auto* map : { &sGameElements, &sMenuElements })
+                for (auto& [_, element] : *map)
+                    if (element->mRoot) element->mRoot->setRuntimeParked(false);
+        }
+        void swap()
+        {
+            park();
+            sRuntimeDomain->mSelected = false;
+            sRuntimeDomain->mFrozen = false;
+            sGameElements.swap(mGame);
+            sMenuElements.swap(mMenu);
+            exchangeSettingsPages(mPages);
+            sRuntimeDomain.swap(mDomain);
+            sRuntimeDomain->mSelected = true;
+            sRuntimeDomain->mFrozen = false;
+            unpark();
+        }
+        void release()
+        {
+            mDomain->mRetired = true;
+            mDomain->mSelected = false;
+            for (auto* map : { &mGame, &mMenu })
+                for (auto& [_, element] : *map) element->destroyImpl();
+            mPages.clear(); mGame.clear(); mMenu.clear();
+            sRetainedRuntime = nullptr;
+        }
+    };
+    void Element::requireSelectedRuntime()
+    {
+        if (!sRuntimeDomain->mSelected || sRuntimeDomain->mFrozen || sRuntimeDomain->mRetired)
+            throw std::logic_error("Lua UI runtime is frozen or retired");
+    }
+    void Element::requireMutableRuntime() const
+    {
+        if (!mRuntimeDomain->mSelected || mRuntimeDomain->mFrozen || mRuntimeDomain->mRetired)
+            throw std::logic_error("Lua UI element runtime is parked, frozen or retired");
+    }
+    Element::RetainedRuntime Element::retainRuntime()
+    {
+        requireSelectedRuntime();
+        if (sRetainedRuntime) throw std::logic_error("Lua UI runtime is already retained");
+        auto data = std::make_unique<RetainedRuntime::Data>();
+        sRetainedRuntime = data.get();
+        sRuntimeDomain->mFrozen = true;
+        return RetainedRuntime(std::move(data));
+    }
+    Element::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    Element::RetainedRuntime::~RetainedRuntime()
+    { if (mData && !restore()) std::terminate(); }
+    Element::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    Element::RetainedRuntime& Element::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool Element::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || mData->mDetached) return false;
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool Element::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mDetached) return false;
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool Element::RetainedRuntime::restore() noexcept
+    {
+        if (!mData) return false;
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        sRuntimeDomain->mFrozen = false;
+        mData->release(); mData.reset();
+        return true;
+    }
+    void Element::RetainedRuntime::discard() noexcept
+    {
+        if (!mData) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected) exchange();
+        mData->release(); mData.reset();
+    }
+
     Element::Element(sol::table layout, sol::optional<sol::table> options)
         : mRoot(nullptr)
         , mLayout(std::move(layout))
         , mLayer()
         , mState(Element::New)
+        , mRuntimeDomain(sRuntimeDomain)
     {
         if (options.has_value())
         {
@@ -260,6 +379,7 @@ namespace LuaUi
 
     std::shared_ptr<Element> Element::make(sol::table layout, bool menu, sol::optional<sol::table> options)
     {
+        requireSelectedRuntime();
         std::shared_ptr<Element> ptr(new Element(std::move(layout), std::move(options)));
         auto& container = menu ? sMenuElements : sGameElements;
         container[ptr.get()] = ptr;
@@ -268,6 +388,7 @@ namespace LuaUi
 
     void Element::erase(Element* element)
     {
+        element->requireMutableRuntime();
         element->destroy();
         sMenuElements.erase(element);
         sGameElements.erase(element);
@@ -280,6 +401,7 @@ namespace LuaUi
 
     void Element::create(uint64_t depth)
     {
+        requireMutableRuntime();
         if (mState == New)
         {
             assert(!mRoot);
@@ -293,6 +415,7 @@ namespace LuaUi
 
     void Element::update()
     {
+        requireMutableRuntime();
         if (mState == Update)
         {
             assert(mRoot);
@@ -352,6 +475,11 @@ namespace LuaUi
     }
 
     void Element::destroy()
+    {
+        requireMutableRuntime();
+        destroyImpl();
+    }
+    void Element::destroyImpl()
     {
         if (mState != Destroyed)
         {
