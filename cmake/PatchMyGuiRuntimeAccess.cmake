@@ -1,0 +1,41 @@
+# OpenMW needs to select actual MyGUI runtime owners without rebuilding widget
+# trees or replaying input/focus events. This adds friendship only: no fields,
+# virtual methods or exported library symbols change. Keep the upstream archive
+# pinned and hash-verified in extern/CMakeLists.txt.
+foreach(manager Gui LayerManager InputManager ControllerManager WidgetManager PointerManager ToolTipManager DynLibManager)
+    set(header "${mygui_SOURCE_DIR}/MyGUIEngine/include/MyGUI_${manager}.h")
+    file(READ "${header}" original)
+    if(NOT original MATCHES "friend class RuntimeAccess;")
+        set(anchor "MYGUI_SINGLETON_DECLARATION(${manager});")
+        string(FIND "${original}" "${anchor}" position)
+        if(position EQUAL -1)
+            message(FATAL_ERROR "Pinned MyGUI runtime patch anchor missing: ${header}")
+        endif()
+        string(REPLACE "${anchor}" "${anchor}\n\t\tfriend class RuntimeAccess;" patched "${original}")
+        file(WRITE "${header}" "${patched}")
+    endif()
+endforeach()
+set(header "${mygui_SOURCE_DIR}/MyGUIEngine/include/MyGUI_Gui.h")
+file(READ "${header}" original)
+if(NOT original MATCHES "#define MYGUI_OPENMW_RUNTIME_ACCESS 1")
+    string(REPLACE "#define MYGUI_GUI_H_" "#define MYGUI_GUI_H_\n#define MYGUI_OPENMW_RUNTIME_ACCESS 1" patched "${original}")
+    if(patched STREQUAL original)
+        message(FATAL_ERROR "Pinned MyGUI runtime feature marker anchor missing")
+    endif()
+    file(WRITE "${header}" "${patched}")
+endif()
+
+# Frame subscriptions belong to their widget/controller runtime too. Preserve
+# actual delegate nodes and reject selection during delegate dispatch.
+set(header "${mygui_SOURCE_DIR}/MyGUIEngine/include/MyGUI_Delegate.h")
+file(READ "${header}" original)
+if(NOT original MATCHES "friend class MyGUI::RuntimeAccess;")
+    set(anchor "class MultiDelegate\n\t\t{")
+    string(FIND "${original}" "${anchor}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Pinned MyGUI delegate patch anchor missing")
+    endif()
+    string(REPLACE "namespace MyGUI\n{" "namespace MyGUI\n{\n\tclass RuntimeAccess;" patched "${original}")
+    string(REPLACE "${anchor}" "${anchor}\n\t\t\tfriend class MyGUI::RuntimeAccess;" patched "${patched}")
+    file(WRITE "${header}" "${patched}")
+endif()

@@ -1212,3 +1212,21 @@ navigation consumes Tab, so those courses correctly fail their save gate.
 This is ownership preparation only: native selection, MyGUI layer/input/controller/
 deferred-widget retention, matching candidate World/backend/service composition
 and StateManager failed-load preservation remain incomplete.
+
+GuiRuntime now retains actual MyGUI layers/nodes/roots, input state, controller
+list, deferred deletions, pointer/tooltip temporal state, frame delegate nodes and
+delayed library unloading. Incoming base frame handlers are prepared; selection is
+silent and rejects active frame/focus dispatch. Caller-owned native/Lua widgets
+must retire under matching GUI/backend ownership before raw graph destruction.
+A reproducible friendship-only extension of pinned fetched MyGUI 3.4.3 enables
+access; fetched builds are the default, system builds lack this retention API.
+At fingerprint
+`4ad668f9846483e16f2f698db963b76bf39113c0f2787474657abcbace97e5c5`, full
+2,614 component/1,458 engine tests pass normally and 1,458 engine tests pass under
+ASan/UBSan. Actual copied WindowManager runtime-05 and runtime-sanitized-06 probes
+verify identity/parking/silent exchange, allocation-denied selection, scope/move,
+commit/discard and live-handle shutdown, then render/F5/clean exit with audited
+captures/lifecycle/decoded native fields. Failed fixture, missing frame-delegate
+retention, missing build archive and incomplete probe allocator attempts remain
+recorded. Native frontend selection, SDL process input/cursor state, candidate
+startup, World/backend/other services and StateManager rollback are still open.

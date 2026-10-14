@@ -143,7 +143,7 @@ else()
 endif()
 option(OSG_STATIC "Link static build of OpenSceneGraph into the binaries" ${_osg_static_default})
 
-option(OPENMW_USE_SYSTEM_MYGUI "Use system provided mygui library" ON)
+option(OPENMW_USE_SYSTEM_MYGUI "Use system provided mygui library (without native runtime retention)" OFF)
 if(OPENMW_USE_SYSTEM_MYGUI)
     set(_mygui_static_default OFF)
 else()

@@ -6,6 +6,59 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain actual MyGUI runtime graphs — 2026-10-14
+
+GuiRuntime now retains actual layer objects/node trees, GUI/pointer root vectors,
+input key/mouse focus, layer/capture/modal/modifier/key-repeat state, controller
+list nodes, deferred widget deletion, pointer/tooltip temporal state, frame
+subscription nodes and delayed library unloading. Incoming graphs start empty
+with five prepared manager frame callbacks. Selection swaps actual collections
+without replaying focus events; active frame/focus dispatch rejects selection.
+External native/Lua widget owners must release the retiring graph before GUI-owned
+roots are destroyed, with matching backend/resources alive and UI/viewer users
+stopped. WindowManager invalidates remaining handles before MyGUI shutdown.
+
+The fetched, hash-pinned MyGUI 3.4.3 dependency now receives an idempotent CMake
+friendship extension for eight managers and MultiDelegate. No class fields,
+virtual methods or exported library symbols are added. Fetched MyGUI is now the
+default; explicit system MyGUI builds retain ordinary UI support but cannot use
+GuiRuntime retention. Both local build caches use the patched fetched dependency.
+Resource/factory registries and unlinkers remain shared process resources.
+
+At fingerprint
+`4ad668f9846483e16f2f698db963b76bf39113c0f2787474657abcbace97e5c5`,
+`S3/mygui-runtime-retention-normal-02` passes all 2,614 component and 1,458 engine
+tests; `mygui-runtime-retention-sanitized-03` passes all 1,458 engine tests under
+ASan/UBSan. Focused preflight-02 passes ten Lua UI cases. The new GUI mechanics
+are exercised by actual engine probes, not new headless GoogleTest cases.
+
+Copied WindowManager courses `mygui-runtime-retention-runtime-05` (PID 323670)
+and `mygui-runtime-retention-runtime-sanitized-06` (PID 326860) verify constructor
+commit/discard, shutdown invalidation, native GUI roots/layers/shared HUD nodes,
+key/modal/capture/modifier state, parked controllers/deferred deletion/frame
+callbacks, silent exchange, scope/move restore and thread-local allocation-denied
+detach/exchange. They stop viewer threads during selection, then run ordinary
+render/F5/clean shutdown, including archived graph retirement with a live handle.
+Prison/HUD captures, four lifecycle events and selected decoded native fields were
+audited. Leak checks are disabled; retirement allocation denial is not claimed.
+
+Failures remain recorded: normal runtime-02/-03 exposed fixture picking assumptions
+(HUD below the blocker, then SharedLayer forward pick order). Runtime-04 exposed
+a real missing frame-subscription archive: the incoming controller attempted a
+duplicate subscription, and widget timers also needed parking. Corrected source
+retains the actual frame list. Sanitized helper-01 was stopped for that correction;
+helper-02 later failed linking a missing components archive. Fresh helper-03 rebuilt
+the archive and passed; the disappearance cause was not established. Sanitized
+runtime-05 exposed a probe-only malloc/free override missing nothrow overloads;
+matching overloads corrected runtime-06 without disabling allocator checks.
+Superseded pre-launch probes and all crash/sanitizer reports remain in their dirs.
+
+Native window-bundle selection/factory, SDL text-input/cursor process-state
+selection, full incoming frontend startup and matching World/backend/service
+composition remain open. GUI dialog loading also needs deferral beyond its widget
+callback before full graph selection. StateManager still does not restore the
+prior world on late load failure. **S3 and M15 remain incomplete.**
+
 ## S3 group native window ownership — 2026-10-14
 
 WindowManager now owns game-specific UI state through one stable Runtime bundle:

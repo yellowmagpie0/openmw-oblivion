@@ -69,6 +69,7 @@ if(NOT OPENMW_USE_SYSTEM_MYGUI)
         SOURCE_DIR fetched/mygui
     )
     FetchContent_MakeAvailable(mygui)
+    include(${PROJECT_SOURCE_DIR}/cmake/PatchMyGuiRuntimeAccess.cmake)
 
     set(MyGUI_INCLUDE_DIRS ${mygui_SOURCE_DIR}/MyGUIEngine/include PARENT_SCOPE)
     set(MyGUI_LIBRARIES MyGUIEngine PARENT_SCOPE)

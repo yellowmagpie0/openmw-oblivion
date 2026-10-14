@@ -39,6 +39,7 @@
 
 #include <components/myguiplatform/additivelayer.hpp>
 #include <components/myguiplatform/myguiplatform.hpp>
+#include <components/myguiplatform/guiruntime.hpp>
 #include <components/myguiplatform/myguirendermanager.hpp>
 #include <components/myguiplatform/scalinglayer.hpp>
 
@@ -558,6 +559,7 @@ namespace MWGui
 
             mFontLoader.reset();
 
+            MyGUIPlatform::GuiRuntime::beforeShutdown();
             mGui->shutdown();
 
             mGuiPlatform->shutdown();

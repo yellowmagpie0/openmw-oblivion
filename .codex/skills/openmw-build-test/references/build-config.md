@@ -18,6 +18,18 @@ reconfiguring; preserve unrelated user options.
 - The sanitizer configuration reuses `build/extern/fetched/bullet` through
   `FETCHCONTENT_SOURCE_DIR_BULLET`. Do not assume the fetched sources exist in a
   fresh checkout. Follow the repo dependency/bootstrap configuration first.
+- Native GUI retention now uses `OPENMW_USE_SYSTEM_MYGUI=OFF` in both local
+  caches. The fork defaults to fetched MyGUI 3.4.3 and applies
+  `cmake/PatchMyGuiRuntimeAccess.cmake` before compilation. Explicit system MyGUI
+  still supports ordinary UI but lacks GuiRuntime retention. The local verified
+  source override is `FETCHCONTENT_SOURCE_DIR_MYGUI=REPO/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3`;
+  that ignored directory comes from the hash-pinned archive and receives the
+  reproducible friendship extension. Use actual checkout paths. Normal library:
+  `build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3`; sanitized library:
+  `build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3`. Record
+  loaded library hashes for GUI runtime evidence; a binary hash alone does not
+  identify its shared library. Reusing a different fetched source requires the
+  declared upstream provenance and matching extension, not ad hoc header edits.
 - Six build jobs have worked on this machine (about 31 GiB RAM). Adapt to actual
   resources, especially when compiling main and sanitizer builds concurrently.
 
