@@ -862,6 +862,7 @@ namespace MWWorld
         mWeatherManager = std::make_unique<MWWorld::WeatherManager>(*mRendering, mStore);
 
         mWorldScene = std::make_unique<Scene>(*this, *mRendering.get(), mPhysics.get(), *mNavigator);
+        rememberBackendConfiguration(maxRecastLogLevel, viewer, rootNode, workQueue, unrefQueue);
     }
 
     void World::fillGlobalVariables()
@@ -3930,6 +3931,8 @@ namespace MWWorld
 
     World::~World()
     {
+        cancelPreparedBackend();
+        mBackendConfiguration.reset();
         if (mRetainedSimulation)
         {
             mRetainedSimulation->ownerDestroyed();

@@ -1,0 +1,184 @@
+#include "worldbackend.hpp"
+
+#include <components/detournavigator/navigator.hpp>
+#include <components/detournavigator/settings.hpp>
+#include <components/resource/resourcesystem.hpp>
+#include <components/sceneutil/lightmanager.hpp>
+#include <components/settings/values.hpp>
+
+#include "../mwphysics/physicssystem.hpp"
+#include "../mwrender/renderingmanager.hpp"
+#include "../mwrender/runtimeviewer.hpp"
+#include "../mwrender/vismask.hpp"
+#include "projectilemanager.hpp"
+#include "weather.hpp"
+
+namespace MWWorld
+{
+    struct World::BackendConfiguration
+    {
+        osg::ref_ptr<osgViewer::Viewer> mViewer;
+        osg::ref_ptr<osg::Group> mRoot;
+        SceneUtil::WorkQueue* mWorkQueue;
+        SceneUtil::UnrefQueue* mUnrefQueue;
+        std::optional<DetourNavigator::Settings> mNavigatorSettings;
+    };
+
+    struct World::PreparedBackend::Data
+    {
+        World* mOwner;
+        osg::ref_ptr<MWRender::RuntimeViewer> mViewer;
+        MWRender::RuntimeViewer::Bindings mOriginalBindings;
+        std::optional<MWRender::RuntimeViewer::Bindings> mCandidateBindings;
+        osg::ref_ptr<osg::Camera> mCamera;
+        osg::ref_ptr<osg::Group> mRoot;
+        std::unique_ptr<MWPhysics::PhysicsSystem> mPhysics;
+        std::unique_ptr<DetourNavigator::Navigator> mNavigator;
+        std::unique_ptr<MWRender::RenderingManager> mRendering;
+        std::unique_ptr<ProjectileManager> mProjectiles;
+        std::unique_ptr<WeatherManager> mWeather;
+        std::unique_ptr<Scene> mScene;
+        bool mSelected = false;
+        bool mReady = false;
+
+        explicit Data(World& owner)
+            : mOwner(&owner)
+            , mViewer(dynamic_cast<MWRender::RuntimeViewer*>(owner.mBackendConfiguration->mViewer.get()))
+            , mOriginalBindings(mViewer->captureBindings())
+        {
+        }
+
+        void restoreSelection() noexcept
+        {
+            if (!mSelected) return;
+            if (!mViewer->selectBindings(mOriginalBindings)) std::terminate();
+            mOwner->mRendering->selectRuntimeResources();
+            mSelected = false;
+        }
+
+        void prepare()
+        {
+            auto& owner = *mOwner;
+            auto& config = *owner.mBackendConfiguration;
+            auto* originalCamera = mViewer->getCamera();
+            mCamera = new osg::Camera;
+            mCamera->setGraphicsContext(originalCamera->getGraphicsContext());
+            mCamera->setViewport(new osg::Viewport(*originalCamera->getViewport()));
+            mCamera->setProjectionMatrix(originalCamera->getProjectionMatrix());
+            mCamera->setViewMatrix(originalCamera->getViewMatrix());
+            mRoot = new osg::Group;
+            for (unsigned int i = 0; i < config.mRoot->getNumChildren(); ++i)
+                if (config.mRoot->getChild(i)->getNodeMask() == MWRender::Mask_GUI)
+                    mRoot->addChild(config.mRoot->getChild(i));
+
+            mPhysics = std::make_unique<MWPhysics::PhysicsSystem>(owner.mResourceSystem, mRoot);
+            mNavigator = config.mNavigatorSettings
+                ? DetourNavigator::makeNavigator(*config.mNavigatorSettings, owner.mUserDataPath)
+                : DetourNavigator::makeNavigatorStub();
+            // Even a partially constructed renderer can replace shared callbacks or shadow selection.
+            mSelected = true;
+            mViewer->setCamera(mCamera);
+            mRendering = std::make_unique<MWRender::RenderingManager>(mViewer, mRoot, owner.mResourceSystem,
+                config.mWorkQueue, *mNavigator, owner.mGroundcoverStore, *config.mUnrefQueue,
+                MWRender::RenderingManager::ResourceConfiguration::Reuse);
+            mProjectiles = std::make_unique<ProjectileManager>(mRendering->getLightRoot()->asGroup(),
+                owner.mResourceSystem, mRendering.get(), mPhysics.get());
+            mWeather = std::make_unique<WeatherManager>(*mRendering, owner.mStore);
+            mScene = std::make_unique<Scene>(owner, *mRendering, mPhysics.get(), *mNavigator);
+            mCandidateBindings.emplace(mViewer->captureBindings());
+            restoreSelection();
+            mReady = true;
+        }
+
+        void dispose() noexcept
+        {
+            restoreSelection();
+            mReady = false;
+            mScene.reset(); // empty Scene; abort/wait its own preload users first
+            if (mProjectiles) mProjectiles->clear();
+            mProjectiles.reset();
+            mWeather.reset();
+            mCandidateBindings.reset();
+            if (mCamera)
+            {
+                mCamera->setRenderer(nullptr);
+                mCamera->setUserData(nullptr);
+                mCamera->setCullCallback(nullptr);
+                mCamera->removeChildren(0, mCamera->getNumChildren());
+            }
+            if (mRoot)
+            {
+                mRoot->setUpdateCallback(nullptr);
+                mRoot->setCullCallback(nullptr);
+                mRoot->removeChildren(0, mRoot->getNumChildren());
+            }
+            mRendering.reset();
+            mPhysics.reset();
+            mNavigator.reset();
+            mCamera = nullptr;
+            mRoot = nullptr;
+            mOriginalBindings = MWRender::RuntimeViewer::Bindings{};
+            mViewer = nullptr;
+        }
+    };
+
+    void World::rememberBackendConfiguration(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer,
+        osg::ref_ptr<osg::Group> rootNode, SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue)
+    {
+        auto config = std::make_shared<BackendConfiguration>();
+        config->mViewer = viewer;
+        config->mRoot = std::move(rootNode);
+        config->mWorkQueue = workQueue;
+        config->mUnrefQueue = &unrefQueue;
+        if (Settings::navigator().mEnable)
+        {
+            config->mNavigatorSettings.emplace(DetourNavigator::makeSettingsFromSettingsManager(maxRecastLogLevel));
+            config->mNavigatorSettings->mRecast.mSwimHeightScale = mSwimHeightScale;
+        }
+        mBackendConfiguration = std::move(config);
+    }
+
+    World::PreparedBackend World::prepareBackend()
+    {
+        if (mPreparedBackend || mRetainedSimulation || mGameProfile != ESM::GameProfile::Oblivion
+            || !mBackendConfiguration || !mPhysics || !mNavigator || !mRendering || !mProjectileManager
+            || !mWeatherManager || !mWorldScene
+            || !dynamic_cast<MWRender::RuntimeViewer*>(mBackendConfiguration->mViewer.get())
+            || mBackendConfiguration->mViewer->areThreadsRunning())
+            throw std::logic_error("World backend preparation requires an initialized idle native backend");
+        auto data = std::make_unique<PreparedBackend::Data>(*this);
+        try { data->prepare(); }
+        catch (...) { data->dispose(); throw; }
+        mPreparedBackend = data.get();
+        return PreparedBackend(std::move(data));
+    }
+
+    void World::cancelPreparedBackend() noexcept
+    {
+        if (!mPreparedBackend) return;
+        mPreparedBackend->dispose();
+        mPreparedBackend->mOwner = nullptr;
+        mPreparedBackend = nullptr;
+    }
+
+    World::PreparedBackend::PreparedBackend(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    World::PreparedBackend::~PreparedBackend() { cancel(); }
+    World::PreparedBackend::PreparedBackend(PreparedBackend&&) noexcept = default;
+    World::PreparedBackend& World::PreparedBackend::operator=(PreparedBackend&& other) noexcept
+    {
+        if (this != &other) { cancel(); mData = std::move(other.mData); }
+        return *this;
+    }
+    bool World::PreparedBackend::ready() const noexcept { return mData && mData->mOwner && mData->mReady; }
+    void World::PreparedBackend::cancel() noexcept
+    {
+        if (!mData) return;
+        if (mData->mOwner)
+        {
+            mData->dispose();
+            mData->mOwner->mPreparedBackend = nullptr;
+            mData->mOwner = nullptr;
+        }
+        mData.reset();
+    }
+}

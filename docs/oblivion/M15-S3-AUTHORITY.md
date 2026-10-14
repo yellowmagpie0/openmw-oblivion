@@ -1039,3 +1039,24 @@ allocation mismatch. These probes do not render a candidate frame, activate a
 committed candidate, or retain a loaded actor Scene. World backend archive/factory,
 Lua/UI/audio/other-manager retention, StateManager wiring and real late-failure
 preservation still remain open; complete S3 acceptance is unproven.
+
+World now remembers backend initialization configuration and can prepare a whole
+empty candidate graph through `prepareBackend`: separate physics/navigation/
+renderer/projectile/weather/Scene plus camera/root sharing the GUI. Original
+viewer/resource bindings are restored before return or partial-construction
+teardown. Scope/explicit cancellation and move/nesting rules keep ownership
+single-use; owner death disposes the candidate and releases saved viewer bindings
+before World cells/bases die. Installation remains unexposed. Five targeted and
+full 1,451 normal/ASan-UBSan engine tests pass at fingerprint
+`12ffcb5758020a76836fa963637c13c8b729ab573b568f27476b5236874ec1c2` in
+`world-backend-factory-{normal,sanitized}-02` and
+`world-backend-factory-full-{normal,sanitized}-01`. Actual normal/instrumented
+loaded-game preparation, owner-death and eight-boundary fault courses pass under
+the `world-backend-factory-` evidence prefix. They compare exact live native state/
+RNG, node/backend/camera/scene/start-tick identities and continue to rendering/F5;
+selected decoded persistence fields match and six captures are reviewed.
+Initial failed fixture/probe attempts remain recorded. These checks establish
+preparation and cancellation against a running World, not installation, candidate
+load, retained loaded Scene disposal, external-manager selection or late-failure
+load rollback. Backend archive composition and StateManager wiring still remain
+open, alongside Lua/UI/audio/other-manager retention; full S3 acceptance is absent.

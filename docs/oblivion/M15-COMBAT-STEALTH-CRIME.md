@@ -6,6 +6,40 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 World-owned empty backend preparation — 2026-10-14
+
+`World::prepareBackend` now prepares a separate empty physics/navigation/rendering/
+projectile/weather/Scene graph using remembered initialization configuration.
+It restores the original viewer/resource bindings before returning. The movable
+one-shot handle supports explicit and scope cancellation, rejects nested or
+incomplete preparation, and becomes invalid before its World owner releases
+cells/bases. Teardown stops candidate Scene users and projectiles, removes camera/
+root callbacks and children, then disposes rendering/physics/navigation and saved
+bindings. Installation is deliberately not exposed until this ownership is
+composed with World state and external-manager retention.
+
+Five targeted and full 1,451 normal/ASan-UBSan engine inventories pass at fingerprint
+`12ffcb5758020a76836fa963637c13c8b729ab573b568f27476b5236874ec1c2`:
+`S3/world-backend-factory-{normal,sanitized}-02` and
+`world-backend-factory-full-{normal,sanitized}-01`. Six actual loaded-game courses
+pass: `world-backend-factory-runtime-02`, `runtime-sanitized-01`,
+`owner-runtime-01`, `owner-runtime-sanitized-01`, `fault-runtime-01`, and
+`fault-runtime-sanitized-01` under the same `world-backend-factory-` prefix.
+Copied Engine probes exercise production preparation with loaded cells/Player,
+compare exact native binary/RNG and live node/backend/camera/scene/start-tick
+identities, then render/F5. Owner variants hold a prepared handle across World
+destruction. Fault variants inject errors at eight copied factory construction
+boundaries and verify recovery before subsequent successful preparation.
+Decoded crime/base/action/counter fields match; all six captures were reviewed.
+No sanitizer suppression was added; leak checking is disabled. Failed initial
+fixture baselines and raw-node probe compilation are retained with their reasons.
+
+This closes empty graph preparation/cancellation, not installation or loaded
+Scene retention. `retainSimulation` still rejects initialized backends and
+StateManager does not use the candidate. Backend/World archive composition,
+Lua/UI/audio/other-manager retention and real late-load prior-world preservation
+remain open. **S3 and M15 are incomplete.**
+
 ## S3 candidate renderer preparation and resource selection — 2026-10-14
 
 RenderingManager now has a Reuse configuration for a separately owned candidate

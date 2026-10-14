@@ -134,7 +134,32 @@ namespace MWWorld
             void discard() noexcept;
         };
         RetainedSimulation retainSimulation();
+
+        /// Empty backend candidate for the load transaction. Preparation/cancellation preserves
+        /// the selected World and requires stopped viewer threads. Installation is not exposed
+        /// until backend ownership is composed with cell and external-manager retention.
+        class PreparedBackend
+        {
+            friend class World;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedBackend(std::unique_ptr<Data> data);
+        public:
+            ~PreparedBackend();
+            PreparedBackend(PreparedBackend&&) noexcept;
+            PreparedBackend& operator=(PreparedBackend&&) noexcept;
+            PreparedBackend(const PreparedBackend&) = delete;
+            bool ready() const noexcept;
+            void cancel() noexcept;
+        };
+        PreparedBackend prepareBackend();
     private:
+        struct BackendConfiguration;
+        std::shared_ptr<BackendConfiguration> mBackendConfiguration;
+        PreparedBackend::Data* mPreparedBackend = nullptr;
+        void rememberBackendConfiguration(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer,
+            osg::ref_ptr<osg::Group> rootNode, SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue);
+        void cancelPreparedBackend() noexcept;
         class RuntimeFields
         {
             friend class World;

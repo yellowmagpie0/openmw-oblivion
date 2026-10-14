@@ -19228,3 +19228,21 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRejectsBackendBeforeChangingOwners
     EXPECT_THROW(world.retainSimulation(), std::logic_error);
     EXPECT_EQ(world.getPlayerPtr(), original);
 }
+
+TEST(OblivionWorldTest, WorldBackendPreparationRejectsMissingAndPartialGraphWithoutChangingSimulation)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto player = world.getPlayerPtr();
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    EXPECT_THROW(world.prepareBackend(), std::logic_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    world.initializePhysics(new osg::Group);
+    const auto withPhysics = world.captureOblivionRuntimeState().serializeBinary();
+    EXPECT_THROW(world.prepareBackend(), std::logic_error);
+    EXPECT_EQ(world.getPlayerPtr(), player);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), withPhysics);
+    // Failed preparation never freezes an otherwise usable simulation.
+    auto archive = world.getWorldModel().retainRuntime();
+    EXPECT_TRUE(archive.restore());
+}
