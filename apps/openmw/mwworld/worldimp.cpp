@@ -241,6 +241,281 @@ namespace MWWorld
         }
     };
 
+    struct World::RuntimeFields::Data
+    {
+        LocalScripts::RuntimeState mLocals;
+        Globals mGlobals;
+        DateTimeManager mClock;
+        ESM4::PathgridService mPathgrids;
+        decltype(World::mPrng) mPrng{};
+        decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
+        decltype(World::mPendingOblivionRuntimeState) mPendingOblivionRuntimeState{};
+        decltype(World::mPendingOblivionServices) mPendingOblivionServices{};
+        decltype(World::mSharedDefinitionsPrepared) mSharedDefinitionsPrepared{};
+        decltype(World::mOblivionClearGeneration) mOblivionClearGeneration{};
+        decltype(World::mNextOblivionDynamicSerial) mNextOblivionDynamicSerial{};
+        decltype(World::mOblivionDynamicReferenceIdentity) mOblivionDynamicReferenceIdentity{};
+        decltype(World::mOblivionCombat) mOblivionCombat{};
+        decltype(World::mLastOblivionScriptSeconds) mLastOblivionScriptSeconds{};
+        decltype(World::mOblivionDefaultActivation) mOblivionDefaultActivation{};
+        decltype(World::mDispatchingOblivionDeathEvents) mDispatchingOblivionDeathEvents{};
+        decltype(World::mCurrentWorldSpace) mCurrentWorldSpace{};
+        decltype(World::mPlayer) mPlayer{};
+        decltype(World::mPhysics) mPhysics{};
+        decltype(World::mNavigator) mNavigator{};
+        decltype(World::mRendering) mRendering{};
+        decltype(World::mWorldScene) mWorldScene{};
+        decltype(World::mWeatherManager) mWeatherManager{};
+        decltype(World::mProjectileManager) mProjectileManager{};
+        decltype(World::mSky) mSky{};
+        decltype(World::mGodMode) mGodMode{};
+        decltype(World::mScriptsEnabled) mScriptsEnabled{};
+        decltype(World::mDiscardMovements) mDiscardMovements{};
+        decltype(World::mDistanceToFocusObject) mDistanceToFocusObject{};
+        decltype(World::mTeleportEnabled) mTeleportEnabled{};
+        decltype(World::mLevitationEnabled) mLevitationEnabled{};
+        decltype(World::mGoToJail) mGoToJail{};
+        decltype(World::mDaysInPrison) mDaysInPrison{};
+        decltype(World::mPlayerTraveling) mPlayerTraveling{};
+        decltype(World::mPlayerInJail) mPlayerInJail{};
+        decltype(World::mSpellPreloadTimer) mSpellPreloadTimer{};
+        decltype(World::mDoorStates) mDoorStates{};
+        decltype(World::mRandomSeed) mRandomSeed{};
+        decltype(World::mIdsRebuilt) mIdsRebuilt{};
+        explicit Data(World& world)
+            : mPathgrids(world.mStore.getOblivionPathgridService())
+        {
+            mGlobals.fill(world.mStore);
+            mOblivionClearGeneration = world.mOblivionClearGeneration;
+            mSky = true;
+            mScriptsEnabled = true;
+            mDiscardMovements = true;
+            mTeleportEnabled = true;
+            mLevitationEnabled = true;
+            mNextOblivionDynamicSerial = 1;
+            mDistanceToFocusObject = -1;
+            mPlayer = std::make_unique<Player>(world.mStore.get<ESM::NPC>().find(ESM::RefId::stringRefId("Player")));
+            if (world.mOblivionCombat) mOblivionCombat = std::make_unique<MWMechanics::OblivionCombatService>();
+            for (const auto& [cell, _] : mPathgrids.cells())
+                mPathgrids.cellUnloaded(cell);
+            auto defaults = mPathgrids.prepareOverlayRestore({});
+            if (!defaults.commit()) throw std::logic_error("Candidate pathgrid defaults unavailable");
+        }
+    };
+
+    World::RuntimeFields::RuntimeFields(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    World::RuntimeFields::~RuntimeFields() = default;
+    std::unique_ptr<World::RuntimeFields> World::prepareRuntimeFields()
+    {
+        return std::unique_ptr<RuntimeFields>(new RuntimeFields(std::make_unique<RuntimeFields::Data>(*this)));
+    }
+    void World::swapRuntimeFields(RuntimeFields& fields) noexcept
+    {
+        auto& data = *fields.mData;
+        mLocalScripts.swapRuntime(data.mLocals);
+        mGlobalVariables.swapRuntime(data.mGlobals);
+        mTimeManager->swapRuntime(data.mClock);
+        static_assert(std::is_nothrow_swappable_v<ESM4::PathgridService>);
+        std::swap(mStore.getOblivionPathgridService(), data.mPathgrids);
+        using std::swap;
+        static_assert(std::is_nothrow_swappable_v<decltype(mPrng)>);
+        swap(mPrng, data.mPrng);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionRuntimeState)>);
+        swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionRuntimeState)>);
+        swap(mPendingOblivionRuntimeState, data.mPendingOblivionRuntimeState);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionServices)>);
+        swap(mPendingOblivionServices, data.mPendingOblivionServices);
+        static_assert(std::is_nothrow_swappable_v<decltype(mSharedDefinitionsPrepared)>);
+        swap(mSharedDefinitionsPrepared, data.mSharedDefinitionsPrepared);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionClearGeneration)>);
+        swap(mOblivionClearGeneration, data.mOblivionClearGeneration);
+        static_assert(std::is_nothrow_swappable_v<decltype(mNextOblivionDynamicSerial)>);
+        swap(mNextOblivionDynamicSerial, data.mNextOblivionDynamicSerial);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionDynamicReferenceIdentity)>);
+        swap(mOblivionDynamicReferenceIdentity, data.mOblivionDynamicReferenceIdentity);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionCombat)>);
+        swap(mOblivionCombat, data.mOblivionCombat);
+        static_assert(std::is_nothrow_swappable_v<decltype(mLastOblivionScriptSeconds)>);
+        swap(mLastOblivionScriptSeconds, data.mLastOblivionScriptSeconds);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionDefaultActivation)>);
+        swap(mOblivionDefaultActivation, data.mOblivionDefaultActivation);
+        static_assert(std::is_nothrow_swappable_v<decltype(mDispatchingOblivionDeathEvents)>);
+        swap(mDispatchingOblivionDeathEvents, data.mDispatchingOblivionDeathEvents);
+        static_assert(std::is_nothrow_swappable_v<decltype(mCurrentWorldSpace)>);
+        swap(mCurrentWorldSpace, data.mCurrentWorldSpace);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPlayer)>);
+        swap(mPlayer, data.mPlayer);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPhysics)>);
+        swap(mPhysics, data.mPhysics);
+        static_assert(std::is_nothrow_swappable_v<decltype(mNavigator)>);
+        swap(mNavigator, data.mNavigator);
+        static_assert(std::is_nothrow_swappable_v<decltype(mRendering)>);
+        swap(mRendering, data.mRendering);
+        static_assert(std::is_nothrow_swappable_v<decltype(mWorldScene)>);
+        swap(mWorldScene, data.mWorldScene);
+        static_assert(std::is_nothrow_swappable_v<decltype(mWeatherManager)>);
+        swap(mWeatherManager, data.mWeatherManager);
+        static_assert(std::is_nothrow_swappable_v<decltype(mProjectileManager)>);
+        swap(mProjectileManager, data.mProjectileManager);
+        static_assert(std::is_nothrow_swappable_v<decltype(mSky)>);
+        swap(mSky, data.mSky);
+        static_assert(std::is_nothrow_swappable_v<decltype(mGodMode)>);
+        swap(mGodMode, data.mGodMode);
+        static_assert(std::is_nothrow_swappable_v<decltype(mScriptsEnabled)>);
+        swap(mScriptsEnabled, data.mScriptsEnabled);
+        static_assert(std::is_nothrow_swappable_v<decltype(mDiscardMovements)>);
+        swap(mDiscardMovements, data.mDiscardMovements);
+        static_assert(std::is_nothrow_swappable_v<decltype(mDistanceToFocusObject)>);
+        swap(mDistanceToFocusObject, data.mDistanceToFocusObject);
+        static_assert(std::is_nothrow_swappable_v<decltype(mTeleportEnabled)>);
+        swap(mTeleportEnabled, data.mTeleportEnabled);
+        static_assert(std::is_nothrow_swappable_v<decltype(mLevitationEnabled)>);
+        swap(mLevitationEnabled, data.mLevitationEnabled);
+        static_assert(std::is_nothrow_swappable_v<decltype(mGoToJail)>);
+        swap(mGoToJail, data.mGoToJail);
+        static_assert(std::is_nothrow_swappable_v<decltype(mDaysInPrison)>);
+        swap(mDaysInPrison, data.mDaysInPrison);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPlayerTraveling)>);
+        swap(mPlayerTraveling, data.mPlayerTraveling);
+        static_assert(std::is_nothrow_swappable_v<decltype(mPlayerInJail)>);
+        swap(mPlayerInJail, data.mPlayerInJail);
+        static_assert(std::is_nothrow_swappable_v<decltype(mSpellPreloadTimer)>);
+        swap(mSpellPreloadTimer, data.mSpellPreloadTimer);
+        static_assert(std::is_nothrow_swappable_v<decltype(mDoorStates)>);
+        swap(mDoorStates, data.mDoorStates);
+        static_assert(std::is_nothrow_swappable_v<decltype(mRandomSeed)>);
+        swap(mRandomSeed, data.mRandomSeed);
+        static_assert(std::is_nothrow_swappable_v<decltype(mIdsRebuilt)>);
+        swap(mIdsRebuilt, data.mIdsRebuilt);
+    }
+
+    struct World::RetainedSimulation::Data
+    {
+        World* mOwner;
+        std::unique_ptr<RuntimeFields> mFields;
+        OblivionScriptManager::RetainedRuntime mScripts;
+        MWMechanics::OblivionAiService::RetainedRuntime mAi;
+        ESMStore::RetainedRuntime mStore;
+        WorldModel::RetainedRuntime mModel;
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(World& owner)
+            : mOwner(&owner), mFields(owner.prepareRuntimeFields())
+            , mScripts(owner.mOblivionScriptManager->retainRuntime())
+            , mAi(owner.mOblivionAi->retainRuntime())
+            , mStore(owner.mStore.retainRuntime()), mModel(owner.mWorldModel.retainRuntime()) {}
+        void ownerDestroyed() noexcept
+        {
+            if (mDetached)
+            {
+                mOwner->releaseSimulationUsers();
+                mFields.reset();
+                mScripts.discard(); mAi.discard(); mModel.discard(); mStore.discard();
+            }
+            else
+            {
+                mFields.reset();
+                mModel.restore(); mStore.restore(); mAi.restore(); mScripts.restore();
+            }
+            mOwner = nullptr;
+        }
+    };
+
+    void World::releaseSimulationUsers() noexcept
+    {
+        mLocalScripts.clear();
+        mPendingOblivionServices.reset();
+        mPendingOblivionRuntimeState.reset();
+        mOblivionRuntimeState.reset();
+        mPlayer.reset();
+        mOblivionCombat.reset();
+    }
+    World::RetainedSimulation::RetainedSimulation(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    World::RetainedSimulation::~RetainedSimulation() { restore(); }
+    World::RetainedSimulation::RetainedSimulation(RetainedSimulation&&) noexcept = default;
+    World::RetainedSimulation& World::RetainedSimulation::operator=(RetainedSimulation&& other) noexcept
+    {
+        if (this != &other) { restore(); mData = std::move(other.mData); }
+        return *this;
+    }
+    World::RetainedSimulation World::retainSimulation()
+    {
+        if (mRetainedSimulation || mGameProfile != ESM::GameProfile::Oblivion || !mPlayer
+            || !mOblivionScriptManager || !mOblivionAi || mDispatchingOblivionDeathEvents)
+            throw std::logic_error("World simulation retention is unavailable or active");
+        if (mRendering || mPhysics || mWorldScene || mNavigator || mWeatherManager || mProjectileManager)
+            throw std::logic_error("World backend retention is not integrated yet");
+        auto data = std::make_unique<RetainedSimulation::Data>(*this);
+        mRetainedSimulation = data.get();
+        return RetainedSimulation(std::move(data));
+    }
+    bool World::RetainedSimulation::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached) return false;
+        if (!mData->mModel.detach() || !mData->mStore.detach()
+            || !mData->mScripts.detach() || !mData->mAi.detach())
+        {
+            mData->mModel.restore(); mData->mStore.restore(); mData->mScripts.restore(); mData->mAi.restore();
+            mData->mOwner->mRetainedSimulation = nullptr; mData->mOwner = nullptr;
+            return false;
+        }
+        mData->mOwner->swapRuntimeFields(*mData->mFields);
+        mData->mDetached = true;
+        return true;
+    }
+    void World::RetainedSimulation::prepareExchange()
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached)
+            throw std::logic_error("World exchange requires detachment");
+        mData->mStore.prepareExchange();
+    }
+    bool World::RetainedSimulation::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || !mData->mStore.canExchange()) return false;
+        // Native idle guards precede the remaining callback-free exchanges.
+        if (!mData->mScripts.exchange()) return false;
+        if (!mData->mAi.exchange()) { mData->mScripts.exchange(); return false; }
+        if (!mData->mStore.exchange() || !mData->mModel.exchange()) std::terminate();
+        mData->mOwner->swapRuntimeFields(*mData->mFields);
+        mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool World::RetainedSimulation::restore() noexcept
+    {
+        if (!mData || !mData->mOwner) return false;
+        auto& owner = *mData->mOwner;
+        if (mData->mDetached)
+        {
+            if (mData->mOriginalSelected) mData->mFields.reset();
+            else owner.releaseSimulationUsers();
+            mData->mScripts.restore(); mData->mAi.restore();
+            mData->mModel.restore(); mData->mStore.restore();
+            if (!mData->mOriginalSelected) owner.swapRuntimeFields(*mData->mFields);
+        }
+        else
+        {
+            mData->mFields.reset();
+            mData->mModel.restore(); mData->mStore.restore(); mData->mAi.restore(); mData->mScripts.restore();
+        }
+        owner.mRetainedSimulation = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
+    void World::RetainedSimulation::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->mFields.reset(); // outgoing Player/locals/custom state before cells/bases
+        mData->mScripts.discard(); mData->mAi.discard();
+        mData->mModel.discard(); mData->mStore.discard();
+        mData->mOwner->mRetainedSimulation = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+    }
+
     namespace
     {
         using LegacyDeathMarker = decltype(ESM4::RuntimeReferenceState::mCustomState)::iterator;
@@ -895,6 +1170,8 @@ namespace MWWorld
 
     void World::clear()
     {
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
         // Static graph registrations outlive a game. Prepare their content
         // defaults before teardown so a new game or a save without T4ST cannot
         // inherit disabled nodes from the outgoing native world.
@@ -3653,6 +3930,11 @@ namespace MWWorld
 
     World::~World()
     {
+        if (mRetainedSimulation)
+        {
+            mRetainedSimulation->ownerDestroyed();
+            mRetainedSimulation = nullptr;
+        }
         // Must be cleared before mRendering is destroyed
         if (mProjectileManager)
             mProjectileManager->clear();

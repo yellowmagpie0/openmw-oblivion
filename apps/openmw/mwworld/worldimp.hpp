@@ -112,7 +112,42 @@ namespace MWWorld
     {
         friend class OblivionScriptManager;
         friend class MWMechanics::OblivionAiService;
+    public:
+        // Simulation archive under construction for the full load transaction.
+        // Callers stop external actor/Lua users before restore/discard. Backend
+        // worlds are rejected until renderer/manager ownership is integrated.
+        class RetainedSimulation
+        {
+            friend class World;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedSimulation(std::unique_ptr<Data> data);
+        public:
+            ~RetainedSimulation();
+            RetainedSimulation(RetainedSimulation&&) noexcept;
+            RetainedSimulation& operator=(RetainedSimulation&&) noexcept;
+            RetainedSimulation(const RetainedSimulation&) = delete;
+            bool detach() noexcept;
+            void prepareExchange();
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedSimulation retainSimulation();
     private:
+        class RuntimeFields
+        {
+            friend class World;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RuntimeFields(std::unique_ptr<Data> data);
+        public:
+            ~RuntimeFields();
+        };
+        std::unique_ptr<RuntimeFields> prepareRuntimeFields();
+        void swapRuntimeFields(RuntimeFields& fields) noexcept;
+        void releaseSimulationUsers() noexcept;
+        RetainedSimulation::Data* mRetainedSimulation = nullptr;
         ESM4::RuntimeReferenceState* adoptOblivionActorLife(const Ptr& actor);
         Resource::ResourceSystem* mResourceSystem;
 

@@ -976,3 +976,16 @@ wiring is claimed. Shared shader objects and Viewer/graphics-context/render-bin
 callbacks still require isolated candidate ownership and restoration; actual
 Lua/storage/UI/audio and other-manager retention remain open. Complete late-failure
 prior-world preservation and full S3 acceptance are still unproven.
+
+World simulation retention now composes original Player/combat/DTO/RNG/flags and
+local/global/clock/pathgrid state with record/model/native AI/script domains.
+Rollback/discard/owner death order Player/locals/pending users before cells/bases;
+original addresses and exact native state/RNG resume. Four targeted and full 1,446
+normal/ASan-UBSan inventories pass with matching fingerprints. Eighteen explicit
+operations pass with C++ new disabled; forced allocation fails three selected
+lifecycle tests. Evidence is S3/world-simulation-archive-*01. Initialized backend
+worlds are still rejected and StateManager is not wired: this is not full frontend
+acceptance. The fourth isolated embedded OSG viewer probe passes prepared scene/
+camera/callback switches without allocation, but performs no rendering; prior
+probes identify real setter allocations. Full scene/resource/Lua/UI/audio/manager
+retention and actual late-failure preservation remain open.

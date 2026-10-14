@@ -19147,3 +19147,84 @@ TEST(OblivionWorldTest, WorldRuntimeFieldsRestoreActualGlobalValueNodes)
     EXPECT_EQ(&globals[name], original); EXPECT_EQ(globals[name].getFloat(), 23);
     EXPECT_EQ(parked[name].getFloat(), 55);
 }
+
+TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsServicesClockAndRng)
+{
+    PopulatedMigrationFixture fixture(true);
+    auto& world = fixture.mWorld;
+    auto savedAi = populatedAiRestore(fixture); world.getOblivionAiService()->restore(savedAi);
+    ASSERT_TRUE(world.getOblivionScriptManager()->dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    world.setGlobalFloat(MWWorld::Globals::sGameHour, 3.5f);
+    world.getTimeManager()->setSimulationTime(23); world.getTimeManager()->setRenderingSimulationTime(101);
+    world.getTimeManager()->pause("outgoing"); world.getPrng().seed(19); auto expectedRng = world.getPrng();
+    auto oldPlayer = world.getPlayerPtr(); auto* oldCell = oldPlayer.getCell();
+    auto* oldClock = world.getTimeManager(); auto* oldAi = world.getOblivionAiService();
+    auto* oldScripts = world.getOblivionScriptManager(); auto* oldCombat = world.getOblivionCombatService();
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    const auto* graph = world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid);
+    auto archive = world.retainSimulation();
+    EXPECT_THROW(world.retainSimulation(), std::logic_error);
+    EXPECT_THROW(world.clear(), std::logic_error);
+    ASSERT_TRUE(archive.detach()); EXPECT_FALSE(archive.detach());
+    EXPECT_NE(world.getPlayerPtr(), oldPlayer); EXPECT_EQ(world.getTimeManager(), oldClock);
+    world.clear(); world.setupPlayer(); world.getPlayer().setCell(&world.getWorldModel().getDraftCell());
+    auto candidate = world.getPlayerPtr(); EXPECT_NE(candidate, oldPlayer);
+    world.setGlobalFloat(MWWorld::Globals::sGameHour, 9);
+    world.getTimeManager()->setRenderingSimulationTime(102); world.getPrng()();
+    archive.prepareExchange(); ASSERT_TRUE(archive.exchange());
+    EXPECT_EQ(world.getPlayerPtr(), oldPlayer); EXPECT_EQ(world.getPlayerPtr().getCell(), oldCell);
+    EXPECT_EQ(world.getOblivionCombatService(), oldCombat);
+    ASSERT_TRUE(archive.exchange()); EXPECT_EQ(world.getPlayerPtr(), candidate);
+    ASSERT_TRUE(archive.restore()); EXPECT_FALSE(archive.restore());
+    EXPECT_EQ(world.getPlayerPtr(), oldPlayer); EXPECT_EQ(world.getPlayerPtr().getCell(), oldCell);
+    EXPECT_EQ(world.getOblivionAiService(), oldAi); EXPECT_EQ(world.getOblivionScriptManager(), oldScripts);
+    EXPECT_EQ(world.getOblivionCombatService(), oldCombat); EXPECT_EQ(world.getTimeManager(), oldClock);
+    EXPECT_EQ(world.getTimeManager()->getSimulationTime(), 23);
+    EXPECT_EQ(world.getTimeManager()->getRenderingSimulationTime(), 102);
+    EXPECT_TRUE(world.getTimeManager()->getPausedTags().contains("outgoing"));
+    EXPECT_EQ(world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid), graph);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    EXPECT_EQ(world.getPrng()(), expectedRng());
+}
+
+TEST(OblivionWorldTest, WorldSimulationArchiveScopeCancelAndCommitKeepSelectedIdentity)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld; auto original = world.getPlayerPtr();
+    { auto cancelled = world.retainSimulation(); EXPECT_EQ(world.getPlayerPtr(), original); }
+    {
+        auto archive = world.retainSimulation(); auto moved = std::move(archive);
+        EXPECT_FALSE(archive.detach()); ASSERT_TRUE(moved.detach());
+        world.clear(); world.setupPlayer(); moved.prepareExchange(); ASSERT_TRUE(moved.exchange());
+        EXPECT_EQ(world.getPlayerPtr(), original);
+    }
+    EXPECT_EQ(world.getPlayerPtr(), original);
+    auto archive = world.retainSimulation(); ASSERT_TRUE(archive.detach());
+    world.clear(); world.setupPlayer(); auto candidate = world.getPlayerPtr();
+    archive.prepareExchange(); ASSERT_TRUE(archive.exchange()); archive.discard();
+    EXPECT_EQ(world.getPlayerPtr(), candidate); EXPECT_FALSE(archive.restore());
+    EXPECT_NO_THROW(world.clear());
+}
+
+TEST(OblivionWorldTest, WorldSimulationArchiveInvalidatesBeforeOwnerCellsAndBasesDie)
+{
+    std::optional<MWWorld::World::RetainedSimulation> archive;
+    {
+        PopulatedMigrationFixture fixture;
+        archive.emplace(fixture.mWorld.retainSimulation()); ASSERT_TRUE(archive->detach());
+        fixture.mWorld.clear(); fixture.mWorld.setupPlayer();
+        archive->prepareExchange(); ASSERT_TRUE(archive->exchange());
+    }
+    EXPECT_FALSE(archive->restore()); EXPECT_FALSE(archive->exchange()); archive->discard();
+}
+
+
+TEST(OblivionWorldTest, WorldSimulationArchiveRejectsBackendBeforeChangingOwnership)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto original = world.getPlayerPtr();
+    world.initializePhysics(new osg::Group);
+    EXPECT_THROW(world.retainSimulation(), std::logic_error);
+    EXPECT_EQ(world.getPlayerPtr(), original);
+}

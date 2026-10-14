@@ -6,6 +6,56 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 compose retained World simulation ownership — 2026-10-13
+
+World now composes actual Player/combat ownership, native DTOs/pending preparation,
+RNG and game flags, local-script/global/clock/pathgrid state with the existing
+record/model/native AI/script retention handles. Detachment selects fresh World
+fields and separate incoming reference domains. Exchange selects original or
+incoming fields/services together. Rollback releases candidate Player/locals/
+pending DTO/custom state before candidate cells and bases, then returns original
+Player/cell/service addresses and complete captured native state. Discard keeps
+the candidate; scope cancellation, moved handles and owner teardown preserve
+resource ordering. World clear is blocked before detach. Clear-generation baseline
+is preserved for existing one-clear admission. Process clock rendering time and
+process reports/drivers remain outside gameplay replacement.
+
+This API currently rejects initialized backend worlds before changing ownership.
+It is a deliberate temporary boundary: it is not wired into StateManager and does
+not satisfy the full frontend late-failure preservation contract. External actor/
+Lua users must be stopped by the future coordinator. Full scene/render/physics,
+viewer/resource bindings and Lua/UI/audio/other managers remain to be retained.
+
+Four regressions verify actual original Player/cell/AI/script/combat/clock and
+pathgrid identities, exact binary native state after mutation/candidate clear,
+RNG continuation, monotonic rendering time/pause tags, exchange/scope/cancel/move/
+commit, owner teardown before cells/bases and backend rejection without ownership
+mutation. Both targeted inventories pass **4 tests** and both complete engine
+inventories pass **1,446 tests**, exact XML/inventory agreement without failures/
+skips, in `build/oblivion-compat/m15/S3/world-simulation-archive-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `4cb36a51833f248f6e4f7735d3b8cb8e021169c7`; matching before/after
+fingerprint: `92bc9269c8a9fa526846fe5781e73685b627f3c696dd6436a9f7ba8bb5d31dd4`.
+ASan/UBSan halt on errors; leak checks disabled; audio/SDL null/offscreen.
+
+A copied production-linked test object passes **18 explicit simulation archive
+operations** with C++ scalar/array/aligned new disabled in
+`world-simulation-archive-allocation-control-01`. Forced vector allocation fails
+all **three selected lifecycle tests** at their first guarded operation in
+`world-simulation-archive-negative-01`; the backend-rejection test is outside this
+control. Preparation, implicit scope/move rollback, full scene/manager disposal
+and callbacks outside guarded operations are excluded. Full reports/hashes are
+in `world-simulation-archive-followup-01/checkpoint-summary.json`.
+
+Isolated viewer-bindings-prototype-01/02/03 found real allocation in camera renderer
+creation, Viewer start-tick/context enumeration, then View scene traversal. The
+fourth embedded-context probe selects cached renderers and prepared Scene objects,
+restoring scene/camera/resize/render-bin bindings with C++ new disabled and checking
+actual camera children. It performs no rendering and is not engine acceptance.
+Candidate renderer and PostProcessor drafts remain isolated; shared shader mutation,
+full frame root including GUI, graphics callbacks/stereo and selected-domain disposal
+need integration. Existing actual late-load-preservation-probe-02 still contradicts
+prior-world preservation. Complete S3 acceptance remains open.
+
 ## S3 exchange World local-script, global and clock fields — 2026-10-13
 
 LocalScripts now exposes a World-owned parked list/cursor state. Exchanges keep
