@@ -51,6 +51,14 @@ namespace MWLua
         void addLocalEvent(Local event) { mNewLocalEventBatch.push_back(std::move(event)); }
 
         void clear();
+        void exchangeRuntime(LuaEvents& other) noexcept
+        {
+            mNewGlobalEventBatch.swap(other.mNewGlobalEventBatch);
+            mNewLocalEventBatch.swap(other.mNewLocalEventBatch);
+            mGlobalEventBatch.swap(other.mGlobalEventBatch);
+            mLocalEventBatch.swap(other.mLocalEventBatch);
+            mMenuEvents.swap(other.mMenuEvents);
+        }
         void finalizeEventBatch();
         void callEventHandlers();
         void callMenuEventHandlers();

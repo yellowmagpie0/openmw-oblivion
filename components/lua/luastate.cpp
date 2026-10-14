@@ -21,6 +21,100 @@
 
 namespace LuaUtil
 {
+    struct LuaState::RetainedDomain::Data
+    {
+        LuaState* mOwner;
+        std::shared_ptr<RuntimeDomain> mArchive = std::make_shared<RuntimeDomain>();
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(LuaState& owner) : mOwner(&owner) { mArchive->mSelected = false; }
+        bool idle() const noexcept { return mOwner && !mOwner->hasActiveScript(); }
+        void swap() noexcept
+        {
+            mOwner->mRuntimeDomain->mSelected = false;
+            mOwner->mRuntimeDomain->mFrozen = false;
+            mArchive->mSelected = true;
+            mArchive->mFrozen = false;
+            mOwner->mRuntimeDomain.swap(mArchive);
+        }
+        void release() noexcept
+        { mArchive->mRetired = true; mArchive->mSelected = false; mOwner = nullptr; }
+    };
+    void LuaState::RuntimeDomain::requireSelected() const
+    {
+        if (!mSelected || mFrozen || mRetired)
+            throw std::logic_error("Lua runtime domain is parked, frozen or retired");
+    }
+    LuaState::~LuaState()
+    {
+        mRuntimeDomain->mRetired = true;
+        if (mRetainedDomain) mRetainedDomain->release();
+    }
+    LuaState::RetainedDomain LuaState::retainDomain()
+    {
+        if (mRetainedDomain || hasActiveScript())
+            throw std::logic_error("Lua domain retention requires an idle unretained VM");
+        mRuntimeDomain->requireSelected();
+        auto data = std::make_unique<RetainedDomain::Data>(*this);
+        mRetainedDomain = data.get();
+        return RetainedDomain(std::move(data));
+    }
+    LuaState::RetainedDomain::RetainedDomain(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    LuaState::RetainedDomain::~RetainedDomain()
+    { if (mData && mData->mOwner && !restore()) std::terminate(); }
+    LuaState::RetainedDomain::RetainedDomain(RetainedDomain&&) noexcept = default;
+    LuaState::RetainedDomain& LuaState::RetainedDomain::operator=(RetainedDomain&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    std::shared_ptr<LuaState::RuntimeDomain> LuaState::RetainedDomain::incomingDomain() const
+    {
+        if (!mData || !mData->mOwner || mData->mDetached)
+            throw std::logic_error("Incoming Lua domain is only available before detachment");
+        return mData->mArchive;
+    }
+    bool LuaState::RetainedDomain::freeze() noexcept
+    {
+        if (!mData || !mData->idle() || mData->mDetached) return false;
+        mData->mOwner->mRuntimeDomain->mFrozen = true;
+        return true;
+    }
+    bool LuaState::RetainedDomain::detach() noexcept
+    {
+        if (!mData || !mData->idle() || mData->mDetached) return false;
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool LuaState::RetainedDomain::exchange() noexcept
+    {
+        if (!mData || !mData->idle() || !mData->mDetached) return false;
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool LuaState::RetainedDomain::restore() noexcept
+    {
+        if (!mData || !mData->idle()) return false;
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRuntimeDomain->mFrozen = false;
+        mData->mOwner->mRetainedDomain = nullptr;
+        mData->release(); mData.reset();
+        return true;
+    }
+    void LuaState::RetainedDomain::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { if (!restore()) std::terminate(); return; }
+        if (!mData->idle()) std::terminate();
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+        mData->mOwner->mRetainedDomain = nullptr;
+        mData->release(); mData.reset();
+    }
+
     static VFS::Path::Normalized packageNameToVfsPath(std::string_view packageName, const VFS::Manager& vfs)
     {
         std::string pathValue(packageName);

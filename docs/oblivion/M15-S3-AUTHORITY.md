@@ -1150,3 +1150,21 @@ This leaves aggregate configuration/string views, active-local ordered-set
 selection, events/actions, input and actual UI ownership unimplemented. World
 backend/other-manager composition and StateManager prior-world rollback remain
 open; full S3 acceptance is still unproven.
+
+LuaManager now composes retained core configuration/package/container/storage/
+tracker/list state with actual event/input/callback/action/teleport/message queues,
+loaders/mapping, persistent input metadata and original bindings, resource map,
+flags and preparation identity. Configuration cloning rebuilds string views; a
+shared VM runtime domain freezes/parks all cell-owned script containers, including
+future untracked players, while preserving their data/addresses. Stable container
+slots receive prepared incoming packages/domains. Six new cases and full 2,612
+component/1,458 engine inventories pass normally and under ASan/UBSan at fingerprint
+`09f9476ce46691a797f7b871c39e8a54a708dbe26a8d7a67469b9fc9b289393c`.
+`lua-manager-retention-{normal,sanitized}-01` and actual copied manager
+`runtime{,-sanitized}-01` courses preserve checked core identities and parked
+dispatch boundaries, retire candidate actions, resume original actions once, and
+continue through update/render/F5 with audited captures/lifecycle/decoded fields.
+Actual GUI widgets/settings/layers/adapters, native window state, full candidate
+menu initialization, World/backend/other-manager selection and StateManager
+prior-world rollback remain unimplemented/unverified. No full S3 acceptance is
+claimed.

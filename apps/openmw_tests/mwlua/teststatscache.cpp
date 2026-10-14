@@ -177,4 +177,55 @@ namespace
         EXPECT_THROW(orphan.incomingLists(), std::logic_error);
     }
 
+    TEST(LuaManagerRetentionTest, QueuedActionsAndTeleportResumeInOrderWithoutReplay)
+    {
+        withScripts([](auto&, auto& manager, auto&, auto&, auto&) {
+            std::vector<int> calls;
+            manager.addAction([&] { calls.push_back(1); EXPECT_THROW(manager.retainRuntime(), std::logic_error); });
+            manager.addAction([&] { calls.push_back(2); });
+            manager.addTeleportPlayerAction([&] { calls.push_back(3); });
+            auto retained = manager.retainRuntime();
+            EXPECT_THROW(manager.addAction([] {}), std::logic_error);
+            EXPECT_THROW(manager.applyDelayedActions(), std::logic_error);
+            ASSERT_TRUE(retained.detach());
+            manager.applyDelayedActions();
+            EXPECT_TRUE(calls.empty());
+            manager.addAction([&] { calls.push_back(9); });
+            ASSERT_TRUE(retained.exchange());
+            ASSERT_TRUE(retained.exchange());
+            ASSERT_TRUE(retained.restore());
+            EXPECT_TRUE(calls.empty());
+            manager.applyDelayedActions();
+            manager.applyDelayedActions();
+            EXPECT_EQ(calls, (std::vector<int>{ 1, 2, 3 }));
+        });
+    }
+
+    TEST(LuaManagerRetentionTest, ScopeDiscardAndOwnerDeathRetireTheCorrectQueues)
+    {
+        VFS::Manager vfs;
+        auto manager = std::make_unique<MWLua::LuaManager>(&vfs, std::filesystem::path{});
+        int old = 0, incoming = 0;
+        manager->addAction([&] { ++old; });
+        {
+            auto retained = manager->retainRuntime();
+            ASSERT_TRUE(retained.detach());
+            manager->addAction([&] { ++incoming; });
+            auto moved = std::move(retained);
+        }
+        manager->applyDelayedActions();
+        EXPECT_EQ(old, 1); EXPECT_EQ(incoming, 0);
+        auto retained = manager->retainRuntime();
+        ASSERT_TRUE(retained.detach());
+        manager->addAction([&] { ++incoming; });
+        ASSERT_TRUE(retained.exchange());
+        retained.discard();
+        manager->applyDelayedActions();
+        EXPECT_EQ(incoming, 1);
+        auto orphan = manager->retainRuntime();
+        ASSERT_TRUE(orphan.detach());
+        manager.reset();
+        EXPECT_FALSE(orphan.restore()); EXPECT_FALSE(orphan.exchange());
+    }
+
 }

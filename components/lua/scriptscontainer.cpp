@@ -73,6 +73,7 @@ namespace LuaUtil
             static_assert(std::is_nothrow_swappable_v<decltype(mOwner->mData)>);
             using std::swap;
             swap(mOwner->mData, mArchive->mData);
+            swap(mOwner->mRuntimeDomain, mArchive->mRuntimeDomain);
             swap(mOwner->mAPI, mArchive->mAPI);
             swap(mOwner->mAutoStartScripts, mArchive->mAutoStartScripts);
             swap(mOwner->mSerializer, mArchive->mSerializer);
@@ -100,6 +101,7 @@ namespace LuaUtil
     };
     void ScriptsContainer::requireMutableRuntime() const
     {
+        mRuntimeDomain->requireSelected();
         if (mTrackerLifetime)
         {
             if (!*mTrackerLifetime) throw std::logic_error("Lua script tracker was destroyed");
@@ -128,6 +130,15 @@ namespace LuaUtil
             mData = std::move(other.mData);
         }
         return *this;
+    }
+    void ScriptsContainer::RetainedRuntime::prepareIncoming(std::map<std::string, sol::object> packages,
+        ScriptIdsWithInitializationData autoStart, std::shared_ptr<LuaState::RuntimeDomain> domain)
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mLua.hasActiveScript() || !domain)
+            throw std::logic_error("Incoming Lua packages require an idle prepared container");
+        for (auto& [name, package] : packages) mData->mArchive->addPackage(name, std::move(package));
+        mData->mArchive->setAutoStartConf(std::move(autoStart));
+        mData->mArchive->mRuntimeDomain = std::move(domain);
     }
     bool ScriptsContainer::RetainedRuntime::detach() noexcept
     {
@@ -161,7 +172,8 @@ namespace LuaUtil
 
     ScriptsContainer::ScriptsContainer(
         LuaUtil::LuaState* lua, std::string_view namePrefix, ScriptTracker* tracker, bool load)
-        : mNamePrefix(namePrefix)
+        : mRuntimeDomain(lua->runtimeDomain())
+        , mNamePrefix(namePrefix)
         , mLua(*lua)
         , mThis(std::make_shared<ScriptsContainer*>(this))
         , mTracker(tracker)
@@ -903,6 +915,7 @@ namespace LuaUtil
 
     void ScriptsContainer::statsNextFrame()
     {
+        requireMutableRuntime();
         if (LoadedData* data = std::get_if<LoadedData>(&mData))
         {
             for (auto& [scriptId, script] : data->mScripts)

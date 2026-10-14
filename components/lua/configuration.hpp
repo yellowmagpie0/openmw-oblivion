@@ -22,6 +22,8 @@ namespace LuaUtil
     {
     public:
         void init(ESM::LuaScriptsCfg, bool);
+        ScriptsConfiguration cloneRuntime() const;
+        void exchangeRuntime(ScriptsConfiguration& other) noexcept;
 
         size_t size() const { return mScripts.size(); }
         const ESM::LuaScriptCfg& operator[](size_t id) const { return mScripts[id]; }

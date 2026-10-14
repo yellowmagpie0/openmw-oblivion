@@ -888,4 +888,82 @@ CUSTOM: test1.lua
         EXPECT_THROW(newest.removeAllScripts(), std::logic_error);
     }
 
+    TEST_F(LuaScriptsContainerTest, RuntimeDomainParksExistingAndFutureCellContainersWithoutMovingThem)
+    {
+        LuaUtil::ScriptsContainer original(&mLua, "Original");
+        ASSERT_TRUE(original.addCustomScript(getId(loadSave2Path)));
+        auto weak = original.getWeakPointer();
+        auto domain = mLua.retainDomain();
+        ASSERT_TRUE(domain.freeze());
+        EXPECT_THROW(original.statsNextFrame(), std::logic_error);
+        EXPECT_THROW(original.setSerializer(nullptr), std::logic_error);
+        ASSERT_TRUE(domain.detach());
+        EXPECT_EQ(*weak, &original);
+        EXPECT_THROW(original.update(0), std::logic_error);
+        LuaUtil::ScriptsContainer incoming(&mLua, "Incoming");
+        ASSERT_TRUE(incoming.addCustomScript(getId(loadSave2Path)));
+        EXPECT_NO_THROW(incoming.update(0));
+        ASSERT_TRUE(domain.exchange());
+        EXPECT_NO_THROW(original.update(0));
+        EXPECT_THROW(incoming.update(0), std::logic_error);
+        ASSERT_TRUE(domain.exchange());
+        ASSERT_TRUE(domain.restore());
+        EXPECT_NO_THROW(original.update(0));
+        EXPECT_THROW(incoming.removeAllScripts(), std::logic_error);
+    }
+
+    TEST_F(LuaScriptsContainerTest, RuntimeDomainComposesPreparedStableContainersAndDiscardsOldCells)
+    {
+        LuaUtil::ScriptsContainer global(&mLua, "Global");
+        LuaUtil::ScriptsContainer cell(&mLua, "Cell");
+        ASSERT_TRUE(global.addCustomScript(getId(loadSave2Path)));
+        ASSERT_TRUE(cell.addCustomScript(getId(loadSave2Path)));
+        auto domain = mLua.retainDomain();
+        auto globals = global.retainRuntime();
+        globals.prepareIncoming({}, {}, domain.incomingDomain());
+        ASSERT_TRUE(domain.freeze());
+        ASSERT_TRUE(globals.detach());
+        ASSERT_TRUE(domain.detach());
+        ASSERT_TRUE(global.addCustomScript(getId(loadSave2Path)));
+        EXPECT_THROW(cell.update(0), std::logic_error);
+        ASSERT_TRUE(globals.exchange());
+        ASSERT_TRUE(domain.exchange());
+        EXPECT_NO_THROW(cell.update(0));
+        ASSERT_TRUE(globals.exchange());
+        ASSERT_TRUE(domain.exchange());
+        globals.discard(); domain.discard();
+        EXPECT_NO_THROW(global.update(0));
+        EXPECT_THROW(cell.update(0), std::logic_error);
+        EXPECT_FALSE(domain.restore());
+    }
+
+    TEST_F(LuaScriptsContainerTest, RuntimeDomainRejectsDispatchSelectionAndInvalidatesOnVmDeath)
+    {
+        LuaUtil::ScriptsContainer scripts(&mLua, "Cell");
+        const int id = getId(loadSave2Path);
+        ASSERT_TRUE(scripts.addCustomScript(id));
+        auto domain = mLua.retainDomain();
+        sol::state_view lua = mLua.unsafeState();
+        auto callback = [&] {
+            EXPECT_FALSE(domain.freeze());
+            EXPECT_FALSE(domain.detach());
+            EXPECT_THROW(mLua.retainDomain(), std::logic_error);
+        };
+        lua.set_function("runtimeDomainCallback", callback);
+        scripts.setupUnsavableTimer(LuaUtil::ScriptsContainer::TimerType::SIMULATION_TIME,
+            1, id, lua["runtimeDomainCallback"]);
+        scripts.processTimers(1, 0);
+        ASSERT_TRUE(domain.freeze());
+        ASSERT_TRUE(domain.restore());
+        auto state = std::make_unique<LuaUtil::LuaState>(nullptr, nullptr);
+        auto original = state->runtimeDomain();
+        auto retained = state->retainDomain();
+        auto incoming = retained.incomingDomain();
+        ASSERT_TRUE(retained.detach());
+        state.reset();
+        EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange());
+        EXPECT_THROW(original->requireSelected(), std::logic_error);
+        EXPECT_THROW(incoming->requireSelected(), std::logic_error);
+    }
+
 }

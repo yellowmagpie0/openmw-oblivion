@@ -6,6 +6,50 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 compose retained LuaManager core runtime — 2026-10-14
+
+LuaManager now composes the retained script containers, storage, tracker and
+object lists with actual configuration, package maps, active/queued local sets,
+pending native scripts, loader/content mapping, Lua/engine/menu/input event batches,
+callbacks/actions/teleport/message queues, persistent input metadata baseline,
+original input bindings/values, UI resource map, flags and scene-preparation identity.
+Configuration cloning rebuilds initialization-data views against incoming strings;
+selection preserves original buffers, mappings and loader addresses.
+
+An idle VM domain selector freezes and parks all cell-owned containers, including
+existing and subsequently constructed untracked players. Their data and addresses
+stay in retained cells. Rollback therefore needs no new player-container retention
+allocation. Stable global/menu/load slots receive prepared incoming domains and
+fresh world/nearby package vectors. Serializer setters and frame accounting now
+respect the dispatch guard. Scope/move/restore/discard/owner death retire archived
+registry references while the VM remains alive. World/cell and actual GUI/backend
+domains must be retained separately by callers.
+
+Three VM-domain cases, one configuration ownership case and two manager queue/
+lifetime cases pass. Full 2,612 component and 1,458 engine inventories pass in
+normal and ASan/UBSan builds at tested fingerprint
+`09f9476ce46691a797f7b871c39e8a54a708dbe26a8d7a67469b9fc9b289393c`:
+`S3/lua-manager-retention-{normal,sanitized}-01`. Initial syntax/23-container
+preflight evidence is in `lua-manager-retention-preflight-01`.
+
+Actual copied LuaManager loaded-game probes in `lua-manager-retention-runtime-01`
+(PID 272982) and `lua-manager-retention-runtime-sanitized-01` (PID 275101) preserve
+original player/cell scripts, nine actor IDs, global weak ownership, configuration
+buffer/global loader/active-set/tracker/list identities, reject original and future
+untracked-container dispatch in parked domains, retire an incoming queued action,
+and resume the original action once after restoration. Scoped rollback precedes
+ordinary updates/render/F5. The saved native NPC Lua counter loads as 9. Reviewed
+Prison scene/HUD captures, lifecycle logs and selected decoded crime/base/action/
+identity-counter equality pass. Leak checks are disabled; allocation-denial and
+exhaustive queue integration controls are not claimed.
+
+This is core composition, not full LuaManager/front-end acceptance. Real LuaUi
+widgets/maps/settings pages, shared MyGUI layers/adapters and native window state
+still require retention. startPreparedRuntime is not yet exercised with a fully
+selected candidate UI/backend. Loaded World/backend and remaining-manager
+composition, outgoing Scene retirement and StateManager late-failure rollback
+remain absent. **S3 and M15 are incomplete.**
+
 ## S3 retain Lua object lists and script tracker — 2026-10-14
 
 ScriptTracker now retains its actual unload queue, frame and runtime lifetime

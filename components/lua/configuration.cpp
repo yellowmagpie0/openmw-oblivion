@@ -52,6 +52,29 @@ namespace LuaUtil
         }
     }
 
+    ScriptsConfiguration ScriptsConfiguration::cloneRuntime() const
+    {
+        ESM::LuaScriptsCfg cfg;
+        cfg.mScripts = mScripts;
+        ScriptsConfiguration result;
+        result.init(std::move(cfg), false);
+        result.mScriptIdMapping = mScriptIdMapping;
+        result.mHasScriptIdMapping = mHasScriptIdMapping;
+        result.mSavedScriptCount = mSavedScriptCount;
+        return result;
+    }
+    void ScriptsConfiguration::exchangeRuntime(ScriptsConfiguration& other) noexcept
+    {
+        mScripts.swap(other.mScripts);
+        mPathToIndex.swap(other.mPathToIndex);
+        mScriptsPerType.swap(other.mScriptsPerType);
+        mScriptsPerRecordId.swap(other.mScriptsPerRecordId);
+        mScriptsPerRefNum.swap(other.mScriptsPerRefNum);
+        mScriptIdMapping.swap(other.mScriptIdMapping);
+        std::swap(mHasScriptIdMapping, other.mHasScriptIdMapping);
+        std::swap(mSavedScriptCount, other.mSavedScriptCount);
+    }
+
     void ScriptsConfiguration::init(ESM::LuaScriptsCfg cfg, bool remap)
     {
         mScriptIdMapping.clear();

@@ -37,6 +37,7 @@
 #include "../mwworld/worldmodel.hpp"
 
 #include "luabindings.hpp"
+#include "worldbindings.hpp"
 #include "playerscripts.hpp"
 #include "types/types.hpp"
 #include "userdataserializer.hpp"
@@ -66,6 +67,259 @@ namespace MWLua
         }
     }
 
+    struct LuaManager::RetainedRuntime::Data
+    {
+        LuaManager* mOwner;
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        bool mGlobalScriptsStarted = false;
+        bool mNewGameStarted = false;
+        bool mReloadAllScriptsRequested = false;
+        LuaUtil::ScriptsConfiguration mConfiguration;
+        std::map<std::string, sol::object> mLocalPackages;
+        std::map<std::string, sol::object> mPlayerPackages;
+        std::set<LuaUtil::ScriptsContainerWeakPtr, std::less<>> mActiveLocalScripts;
+        std::vector<LuaUtil::ScriptsContainerWeakPtr> mQueuedAutoStartedScripts;
+        std::map<ESM::FormKey, ESM::LuaScripts> mPendingNativeScripts;
+        std::shared_ptr<const char> mScenePreparationIdentity = std::make_shared<const char>(0);
+        MWWorld::Ptr mPlayer;
+        std::map<int, int> mContentFileMapping;
+        std::unique_ptr<LuaUtil::UserdataSerializer> mGlobalLoader;
+        std::unique_ptr<LuaUtil::UserdataSerializer> mLocalLoader;
+        std::vector<CallbackWithData> mQueuedCallbacks;
+        std::vector<DelayedAction> mActionQueue;
+        std::optional<DelayedAction> mTeleportPlayerAction;
+        std::vector<std::pair<std::string, MWGui::ShowInDialogueMode>> mUIMessages;
+        std::vector<std::pair<std::string, Misc::Color>> mInGameConsoleMessages;
+        std::optional<ObjectId> mDelayedUiModeChangedArg;
+        LuaUi::ResourceManager mUiResourceManager;
+        LuaUtil::InputAction::Registry mInputActions;
+        LuaUtil::InputTrigger::Registry mInputTriggers;
+        LuaEvents mLuaEvents;
+        EngineEvents mEngineEvents;
+        std::vector<InputEvent> mInputEvents;
+        std::vector<InputEvent> mMenuInputEvents;
+        std::optional<LuaUtil::LuaState::RetainedDomain> mDomain;
+        std::optional<LuaUtil::ScriptsContainer::RetainedRuntime> mLoad;
+        std::optional<LuaUtil::ScriptsContainer::RetainedRuntime> mMenu;
+        std::optional<LuaUtil::ScriptsContainer::RetainedRuntime> mGlobal;
+        std::optional<LuaUtil::LuaStorage::RetainedRuntime> mGlobalStorage;
+        std::optional<LuaUtil::LuaStorage::RetainedRuntime> mPlayerStorage;
+        std::optional<LuaUtil::ScriptTracker::RetainedRuntime> mTracker;
+        std::optional<ObjectLists::RetainedRuntime> mLists;
+
+        explicit Data(LuaManager& owner)
+            : mOwner(&owner)
+            , mConfiguration(owner.mConfiguration.cloneRuntime())
+            , mLocalPackages(owner.mLocalPackages)
+            , mPlayerPackages(owner.mPlayerPackages)
+            , mGlobalLoader(createUserdataSerializer(false, &owner.mContentFileMapping))
+            , mLocalLoader(createUserdataSerializer(true, &owner.mContentFileMapping))
+            , mInputActions(owner.mInputActions)
+            , mInputTriggers(owner.mInputTriggers)
+            , mLuaEvents(owner.mGlobalScripts, owner.mMenuScripts)
+            , mEngineEvents(owner.mGlobalScripts)
+        {
+            mInputActions.clear();
+            mInputTriggers.clear();
+            mDomain.emplace(owner.mLua.retainDomain());
+            mLoad.emplace(owner.mLoadScripts.retainRuntime());
+            mMenu.emplace(owner.mMenuScripts.retainRuntime());
+            mGlobal.emplace(owner.mGlobalScripts.retainRuntime());
+            mGlobalStorage.emplace(owner.mGlobalStorage.retainRuntime());
+            mPlayerStorage.emplace(owner.mPlayerStorage.retainRuntime());
+            mTracker.emplace(owner.mScriptTracker.retainRuntime(owner.mLua));
+            mLists.emplace(owner.mObjectLists.retainRuntime());
+            std::map<std::string, sol::object> globalPackages;
+            if (owner.mInitialized)
+                owner.mLua.protectedCall([&](LuaUtil::LuaView& view) {
+                    Context context;
+                    context.mType = Context::Global;
+                    context.mLua = &owner.mLua;
+                    context.mLuaManager = &owner;
+                    context.mLuaEvents = &owner.mLuaEvents;
+                    context.mSerializer = owner.mGlobalSerializer.get();
+                    context.mObjectLists = &mLists->incomingLists();
+                    globalPackages.emplace("openmw.world", initWorldPackage(context));
+                    auto& lua = view.sol();
+                    sol::table nearby(lua, sol::create);
+                    for (const auto& [key, value] : LuaUtil::cast<sol::table>(mLocalPackages.at("openmw.nearby")))
+                        nearby[key] = value;
+                    const auto& lists = mLists->incomingLists();
+                    nearby["activators"] = LObjectList{ lists.getActivatorsInScene() };
+                    nearby["actors"] = LObjectList{ lists.getActorsInScene() };
+                    nearby["containers"] = LObjectList{ lists.getContainersInScene() };
+                    nearby["doors"] = LObjectList{ lists.getDoorsInScene() };
+                    nearby["items"] = LObjectList{ lists.getItemsInScene() };
+                    nearby["players"] = LObjectList{ lists.getPlayers() };
+                    mLocalPackages["openmw.nearby"] = nearby;
+                    mPlayerPackages["openmw.nearby"] = nearby;
+                });
+            const auto domain = mDomain->incomingDomain();
+            mLoad->prepareIncoming({}, mConfiguration.getLoadConf(), domain);
+            mMenu->prepareIncoming({}, mConfiguration.getMenuConf(), domain);
+            mGlobal->prepareIncoming(std::move(globalPackages), mConfiguration.getGlobalConf(), domain);
+            if (!mDomain->freeze()) throw std::logic_error("Lua VM became active during runtime preparation");
+        }
+        void swapFields() noexcept
+        {
+            using std::swap;
+            mOwner->mConfiguration.exchangeRuntime(mConfiguration);
+            static_assert(std::is_nothrow_swappable_v<decltype(mGlobalScriptsStarted)>);
+            swap(mOwner->mGlobalScriptsStarted, mGlobalScriptsStarted);
+            static_assert(std::is_nothrow_swappable_v<decltype(mNewGameStarted)>);
+            swap(mOwner->mNewGameStarted, mNewGameStarted);
+            static_assert(std::is_nothrow_swappable_v<decltype(mReloadAllScriptsRequested)>);
+            swap(mOwner->mReloadAllScriptsRequested, mReloadAllScriptsRequested);
+            static_assert(std::is_nothrow_swappable_v<decltype(mLocalPackages)>);
+            swap(mOwner->mLocalPackages, mLocalPackages);
+            static_assert(std::is_nothrow_swappable_v<decltype(mPlayerPackages)>);
+            swap(mOwner->mPlayerPackages, mPlayerPackages);
+            static_assert(std::is_nothrow_swappable_v<decltype(mActiveLocalScripts)>);
+            swap(mOwner->mActiveLocalScripts, mActiveLocalScripts);
+            static_assert(std::is_nothrow_swappable_v<decltype(mQueuedAutoStartedScripts)>);
+            swap(mOwner->mQueuedAutoStartedScripts, mQueuedAutoStartedScripts);
+            static_assert(std::is_nothrow_swappable_v<decltype(mPendingNativeScripts)>);
+            swap(mOwner->mPendingNativeScripts, mPendingNativeScripts);
+            static_assert(std::is_nothrow_swappable_v<decltype(mScenePreparationIdentity)>);
+            swap(mOwner->mScenePreparationIdentity, mScenePreparationIdentity);
+            static_assert(std::is_nothrow_swappable_v<decltype(mPlayer)>);
+            swap(mOwner->mPlayer, mPlayer);
+            static_assert(std::is_nothrow_swappable_v<decltype(mContentFileMapping)>);
+            swap(mOwner->mContentFileMapping, mContentFileMapping);
+            static_assert(std::is_nothrow_swappable_v<decltype(mGlobalLoader)>);
+            swap(mOwner->mGlobalLoader, mGlobalLoader);
+            static_assert(std::is_nothrow_swappable_v<decltype(mLocalLoader)>);
+            swap(mOwner->mLocalLoader, mLocalLoader);
+            static_assert(std::is_nothrow_swappable_v<decltype(mQueuedCallbacks)>);
+            swap(mOwner->mQueuedCallbacks, mQueuedCallbacks);
+            static_assert(std::is_nothrow_swappable_v<decltype(mActionQueue)>);
+            swap(mOwner->mActionQueue, mActionQueue);
+            static_assert(std::is_nothrow_swappable_v<decltype(mTeleportPlayerAction)>);
+            swap(mOwner->mTeleportPlayerAction, mTeleportPlayerAction);
+            static_assert(std::is_nothrow_swappable_v<decltype(mUIMessages)>);
+            swap(mOwner->mUIMessages, mUIMessages);
+            static_assert(std::is_nothrow_swappable_v<decltype(mInGameConsoleMessages)>);
+            swap(mOwner->mInGameConsoleMessages, mInGameConsoleMessages);
+            static_assert(std::is_nothrow_swappable_v<decltype(mDelayedUiModeChangedArg)>);
+            swap(mOwner->mDelayedUiModeChangedArg, mDelayedUiModeChangedArg);
+            static_assert(std::is_nothrow_swappable_v<decltype(mUiResourceManager)>);
+            swap(mOwner->mUiResourceManager, mUiResourceManager);
+            static_assert(std::is_nothrow_swappable_v<decltype(mInputActions)>);
+            swap(mOwner->mInputActions, mInputActions);
+            static_assert(std::is_nothrow_swappable_v<decltype(mInputTriggers)>);
+            swap(mOwner->mInputTriggers, mInputTriggers);
+            mOwner->mLuaEvents.exchangeRuntime(mLuaEvents);
+            mOwner->mEngineEvents.exchangeRuntime(mEngineEvents);
+            mOwner->mInputEvents.swap(mInputEvents);
+            mOwner->mMenuInputEvents.swap(mMenuInputEvents);
+        }
+        bool idle() const noexcept { return mOwner && mOwner->runtimeIdle(); }
+        void exchange() noexcept
+        {
+            if (!mLoad->exchange() || !mMenu->exchange() || !mGlobal->exchange()
+                || !mGlobalStorage->exchange() || !mPlayerStorage->exchange()
+                || !mTracker->exchange() || !mLists->exchange()) std::terminate();
+            swapFields();
+            if (!mDomain->exchange()) std::terminate();
+            mOriginalSelected = !mOriginalSelected;
+        }
+        void release(bool restore) noexcept
+        {
+            if (restore)
+            {
+                if (!mLoad->restore() || !mMenu->restore() || !mGlobal->restore()
+                    || !mGlobalStorage->restore() || !mPlayerStorage->restore()
+                    || !mTracker->restore() || !mLists->restore() || !mDomain->restore()) std::terminate();
+            }
+            else
+            {
+                mLoad->discard(); mMenu->discard(); mGlobal->discard();
+                mGlobalStorage->discard(); mPlayerStorage->discard();
+                mTracker->discard(); mLists->discard(); mDomain->discard();
+            }
+            mOwner->mRetainedRuntime = nullptr;
+            mLocalPackages.clear(); mPlayerPackages.clear(); mQueuedCallbacks.clear();
+            mActionQueue.clear(); mTeleportPlayerAction.reset();
+            mInputActions.clear(true); mInputTriggers.clear(true);
+            mOwner = nullptr;
+        }
+        void ownerDestroyed() noexcept
+        {
+            if (!idle()) std::terminate();
+            if (mDetached && mOriginalSelected) exchange();
+            release(false);
+        }
+    };
+    bool LuaManager::runtimeIdle() const noexcept
+    {
+        return !mRunningUpdates && !mRunningSynchronizedUpdates && !mProcessingInputEvents
+            && !mApplyingDelayedActions && !mLua.hasActiveScript();
+    }
+    void LuaManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Lua manager is frozen before runtime detachment");
+    }
+    LuaManager::RetainedRuntime LuaManager::retainRuntime()
+    {
+        if (mRetainedRuntime || !runtimeIdle())
+            throw std::logic_error("Lua manager retention requires idle users");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    void LuaManager::startPreparedRuntime()
+    {
+        requireMutableRuntime();
+        if (!mRetainedRuntime || !mRetainedRuntime->mDetached || mRetainedRuntime->mOriginalSelected)
+            throw std::logic_error("Prepared Lua runtime is not selected");
+        mMenuScripts.addAutoStartedScripts();
+    }
+    LuaManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    LuaManager::RetainedRuntime::~RetainedRuntime()
+    { if (mData && mData->mOwner && !restore()) std::terminate(); }
+    LuaManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    LuaManager::RetainedRuntime& LuaManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    bool LuaManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->idle() || mData->mDetached) return false;
+        mData->swapFields();
+        if (!mData->mLoad->detach() || !mData->mMenu->detach() || !mData->mGlobal->detach()
+            || !mData->mGlobalStorage->detach() || !mData->mPlayerStorage->detach()
+            || !mData->mTracker->detach() || !mData->mLists->detach() || !mData->mDomain->detach()) std::terminate();
+        mData->mDetached = true;
+        return true;
+    }
+    bool LuaManager::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->idle() || !mData->mDetached) return false;
+        mData->exchange(); return true;
+    }
+    bool LuaManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->idle()) return false;
+        if (mData->mDetached && !mData->mOriginalSelected) mData->exchange();
+        mData->release(true); mData.reset();
+        return true;
+    }
+    void LuaManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { if (!restore()) std::terminate(); return; }
+        if (!mData->idle()) std::terminate();
+        if (mData->mOriginalSelected) mData->exchange();
+        mData->release(false); mData.reset();
+    }
+
     static LuaUtil::LuaStateSettings createLuaStateSettings()
     {
         if (!Settings::lua().mLuaProfiler)
@@ -92,6 +346,7 @@ namespace MWLua
 
     LuaManager::~LuaManager()
     {
+        if (mRetainedRuntime) mRetainedRuntime->ownerDestroyed();
         LuaUi::clearSettings();
     }
 
@@ -107,6 +362,7 @@ namespace MWLua
 
     void LuaManager::initPreLoad()
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             Context context;
             context.mType = Context::Load;
@@ -127,6 +383,7 @@ namespace MWLua
 
     void LuaManager::contentFilesLoaded()
     {
+        requireMutableRuntime();
         initConfiguration(false);
         mLoadScripts.setAutoStartConf(mConfiguration.getLoadConf());
         mLoadScripts.addAutoStartedScripts();
@@ -136,6 +393,7 @@ namespace MWLua
 
     void LuaManager::initPostLoad()
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             Context globalContext;
             globalContext.mType = Context::Global;
@@ -179,6 +437,7 @@ namespace MWLua
 
     void LuaManager::loadPermanentStorage(const std::filesystem::path& userConfigPath)
     {
+        requireMutableRuntime();
         mPlayerStorage.setActive(true);
         mGlobalStorage.setActive(true);
         const auto globalPath = userConfigPath / "global_storage.bin";
@@ -194,6 +453,7 @@ namespace MWLua
 
     void LuaManager::savePermanentStorage(const std::filesystem::path& userConfigPath)
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             if (mGlobalScriptsStarted)
                 mGlobalStorage.save(view.sol(), userConfigPath / "global_storage.bin");
@@ -214,6 +474,9 @@ namespace MWLua
 
     void LuaManager::update()
     {
+        requireMutableRuntime();
+        if (mRunningUpdates) throw std::logic_error("Recursive Lua manager update");
+        BoolScopeGuard runtimeGuard(mRunningUpdates);
         if (const int steps = Settings::lua().mGcStepsPerFrame; steps > 0)
             lua_gc(mLua.unsafeState(), LUA_GCSTEP, steps);
 
@@ -282,6 +545,7 @@ namespace MWLua
 
     void LuaManager::objectTeleported(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (ptr == mPlayer)
         {
             // For player run the onTeleported handler immediately,
@@ -296,6 +560,7 @@ namespace MWLua
 
     void LuaManager::questUpdated(const ESM::RefId& questId, int stage)
     {
+        requireMutableRuntime();
         if (mPlayer.isEmpty())
             return; // The game is not started yet.
         PlayerScripts* playerScripts = dynamic_cast<PlayerScripts*>(mPlayer.getRefData().getLuaScripts());
@@ -307,6 +572,7 @@ namespace MWLua
 
     void LuaManager::synchronizedUpdate()
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView&) { synchronizedUpdateUnsafe(); });
     }
 
@@ -373,6 +639,7 @@ namespace MWLua
 
     void LuaManager::applyDelayedActions()
     {
+        requireMutableRuntime();
         BoolScopeGuard applyingGuard(mApplyingDelayedActions);
         for (DelayedAction& action : mActionQueue)
             action.apply();
@@ -385,6 +652,7 @@ namespace MWLua
 
     void LuaManager::clear()
     {
+        requireMutableRuntime();
         mScenePreparationIdentity = std::make_shared<const char>(0);
         LuaUi::clearGameInterface();
         mUiResourceManager.clear();
@@ -419,6 +687,7 @@ namespace MWLua
 
     void LuaManager::setupPlayer(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (!mInitialized)
             return;
         if (!mPlayer.isEmpty())
@@ -438,6 +707,7 @@ namespace MWLua
 
     void LuaManager::newGameStarted()
     {
+        requireMutableRuntime();
         mGlobalStorage.setActive(true);
         mInputEvents.clear();
         mGlobalScripts.addAutoStartedScripts();
@@ -447,6 +717,7 @@ namespace MWLua
 
     void LuaManager::gameLoaded()
     {
+        requireMutableRuntime();
         mGlobalStorage.setActive(true);
         if (!mGlobalScriptsStarted)
             mGlobalScripts.addAutoStartedScripts();
@@ -456,6 +727,7 @@ namespace MWLua
 
     void LuaManager::gameEnded()
     {
+        requireMutableRuntime();
         // TODO: disable scripts and global storage when the game is actually unloaded
         // mGlobalStorage.setActive(false);
         mMenuScripts.stateChanged();
@@ -463,12 +735,14 @@ namespace MWLua
 
     void LuaManager::noGame()
     {
+        requireMutableRuntime();
         clear();
         mMenuScripts.stateChanged();
     }
 
     void LuaManager::uiModeChanged(const MWWorld::Ptr& arg)
     {
+        requireMutableRuntime();
         if (mPlayer.isEmpty())
             return;
         ObjectId argId = arg.isEmpty() ? ObjectId() : getId(arg);
@@ -484,6 +758,7 @@ namespace MWLua
 
     void LuaManager::viewportResized(int width, int height)
     {
+        requireMutableRuntime();
         if (!mPlayer.isEmpty())
         {
             PlayerScripts* playerScripts = dynamic_cast<PlayerScripts*>(mPlayer.getRefData().getLuaScripts());
@@ -496,6 +771,7 @@ namespace MWLua
 
     void LuaManager::actorDied(const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
         if (actor.isEmpty())
             return;
         mLuaEvents.addLocalEvent({ getId(actor), "Died", {} });
@@ -504,6 +780,7 @@ namespace MWLua
     void LuaManager::onDialogueResponse(
         const MWWorld::Ptr& actor, const ESM::DialInfo& info, const ESM::Dialogue& record)
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             sol::table data = view.newTable();
             data["actor"] = LObject(actor);
@@ -527,6 +804,7 @@ namespace MWLua
         const MWWorld::Ptr& target, const std::vector<int>& effects, bool ignoreReflect, bool ignoreSpellAbsorption,
         bool stackable, bool isReflect)
     {
+        requireMutableRuntime();
         if (!target.isEmpty())
         {
             mLua.protectedCall([&](LuaUtil::LuaView& view) {
@@ -552,6 +830,7 @@ namespace MWLua
 
     void LuaManager::useItem(const MWWorld::Ptr& object, const MWWorld::Ptr& actor, bool force)
     {
+        requireMutableRuntime();
         MWBase::Environment::get().getWorldModel()->registerPtr(object);
         mEngineEvents.addToQueue(EngineEvents::OnUseItem{ getId(actor), getId(object), force });
     }
@@ -559,6 +838,7 @@ namespace MWLua
     void LuaManager::objectDropped(
         const MWWorld::Ptr& object, const MWWorld::Ptr& actor, const osg::Vec3f& position, const osg::Quat& rotation)
     {
+        requireMutableRuntime();
         MWBase::Environment::get().getWorldModel()->registerPtr(object);
         mEngineEvents.addToQueue(
             EngineEvents::OnDropped{ getId(object), getId(actor), position, LuaUtil::asTransform(rotation) });
@@ -567,6 +847,7 @@ namespace MWLua
     void LuaManager::objectPlaced(
         const MWWorld::Ptr& object, const MWWorld::Ptr& actor, const osg::Vec3f& position, const osg::Quat& rotation)
     {
+        requireMutableRuntime();
         MWBase::Environment::get().getWorldModel()->registerPtr(object);
         mEngineEvents.addToQueue(
             EngineEvents::OnPlaced{ getId(object), getId(actor), position, LuaUtil::asTransform(rotation) });
@@ -574,6 +855,7 @@ namespace MWLua
 
     void LuaManager::animationTextKey(const MWWorld::Ptr& actor, const std::string& key)
     {
+        requireMutableRuntime();
         auto pos = key.find(": ");
         if (pos != std::string::npos)
             mEngineEvents.addToQueue(
@@ -584,6 +866,7 @@ namespace MWLua
         const MWRender::AnimPriority& priority, int blendMask, bool autodisable, float speedmult,
         std::string_view start, std::string_view stop, float startpoint, uint32_t loops, bool loopfallback)
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             sol::table options = view.newTable();
             options["blendMask"] = blendMask;
@@ -620,23 +903,27 @@ namespace MWLua
     void LuaManager::animationEnded(const MWWorld::Ptr& actor, std::string_view groupname, float time, float completion,
         std::string_view startKey, std::string_view stopKey)
     {
+        requireMutableRuntime();
         mEngineEvents.addToQueue(EngineEvents::OnAnimationEnded{
             getId(actor), std::string(groupname), std::string(startKey), std::string(stopKey), time, completion });
     }
 
     void LuaManager::skillUse(const MWWorld::Ptr& actor, ESM::RefId skillId, int useType, float scale)
     {
+        requireMutableRuntime();
         mEngineEvents.addToQueue(EngineEvents::OnSkillUse{ getId(actor), skillId.serializeText(), useType, scale });
     }
 
     void LuaManager::skillLevelUp(const MWWorld::Ptr& actor, ESM::RefId skillId, std::string_view source)
     {
+        requireMutableRuntime();
         mEngineEvents.addToQueue(
             EngineEvents::OnSkillLevelUp{ getId(actor), skillId.serializeText(), std::string(source) });
     }
 
     void LuaManager::jailTimeServed(const MWWorld::Ptr& actor, int days)
     {
+        requireMutableRuntime();
         mEngineEvents.addToQueue(EngineEvents::OnJailTimeServed{ getId(actor), days });
     }
 
@@ -644,6 +931,7 @@ namespace MWLua
         const MWWorld::Ptr& ammo, int attackType, float attackStrength, float attackWindUp, float damage, bool isHealth,
         const osg::Vec3f& hitPos, bool successful, MWMechanics::DamageSourceType sourceType)
     {
+        requireMutableRuntime();
         mLua.protectedCall([&](LuaUtil::LuaView& view) {
             sol::table damageTable = view.newTable();
             if (isHealth)
@@ -686,6 +974,7 @@ namespace MWLua
 
     void LuaManager::objectAddedToScene(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         mObjectLists.objectAddedToScene(ptr); // assigns generated RefNum if it is not set yet.
         mEngineEvents.addToQueue(EngineEvents::OnActive{ getId(ptr) });
 
@@ -754,6 +1043,7 @@ namespace MWLua
     std::unique_ptr<MWBase::LuaManager::PreparedSceneRemoval> LuaManager::prepareSceneRemoval(
         const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (ptr.isEmpty())
             throw std::invalid_argument("empty prepared Lua scene removal");
         return std::make_unique<SceneRemoval>(*this, ptr);
@@ -761,6 +1051,7 @@ namespace MWLua
 
     void LuaManager::objectRemovedFromScene(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         mObjectLists.objectRemovedFromScene(ptr);
         LocalScripts* localScripts = ptr.getRefData().getLuaScripts();
         if (localScripts)
@@ -776,6 +1067,7 @@ namespace MWLua
 
     void LuaManager::inputEvent(const InputEvent& event)
     {
+        requireMutableRuntime();
         if (!MyGUI::InputManager::getInstance().isModalAny()
             && !MWBase::Environment::get().getWindowManager()->isConsoleMode())
         {
@@ -794,6 +1086,7 @@ namespace MWLua
 
     void LuaManager::addCustomLocalScript(const MWWorld::Ptr& ptr, int scriptId, std::string_view initData)
     {
+        requireMutableRuntime();
         LocalScripts* localScripts = getLocalScripts(ptr);
         if (!localScripts)
         {
@@ -841,6 +1134,7 @@ namespace MWLua
 
     void LuaManager::write(ESM::ESMWriter& writer, Loading::Listener& progress)
     {
+        requireMutableRuntime();
         writer.startRecord(ESM::REC_LUAM);
 
         writer.writeHNT<double>("LUAW", MWBase::Environment::get().getWorld()->getTimeManager()->getSimulationTime());
@@ -875,6 +1169,7 @@ namespace MWLua
 
     void LuaManager::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        requireMutableRuntime();
         if (type != ESM::REC_LUAM)
             throw std::runtime_error("ESM::REC_LUAM is expected");
 
@@ -944,6 +1239,7 @@ namespace MWLua
 
     LocalScripts* LuaManager::getLocalScripts(const MWWorld::Ptr& ptr)
     {
+        requireMutableRuntime();
         if (auto* scripts = ptr.getRefData().getLuaScripts())
             return scripts;
         const auto pending = mPendingNativeScripts.find(ptr.getCellRef().getFormKey());
@@ -958,6 +1254,7 @@ namespace MWLua
 
     void LuaManager::saveLocalScripts(const MWWorld::Ptr& ptr, ESM::LuaScripts& data)
     {
+        requireMutableRuntime();
         if (ptr.getRefData().getLuaScripts())
             ptr.getRefData().getLuaScripts()->save(data);
         else
@@ -966,6 +1263,7 @@ namespace MWLua
 
     void LuaManager::loadLocalScripts(const MWWorld::Ptr& ptr, const ESM::LuaScripts& data)
     {
+        requireMutableRuntime();
         if (data.mScripts.empty())
         {
             if (ptr.getRefData().getLuaScripts())
@@ -1049,6 +1347,7 @@ namespace MWLua
     void LuaManager::handleConsoleCommand(
         const std::string& consoleMode, const std::string& command, const MWWorld::Ptr& selectedPtr)
     {
+        requireMutableRuntime();
         PlayerScripts* playerScripts = nullptr;
         if (!mPlayer.isEmpty())
             playerScripts = dynamic_cast<PlayerScripts*>(mPlayer.getRefData().getLuaScripts());
@@ -1095,6 +1394,7 @@ namespace MWLua
 
     void LuaManager::addAction(std::function<void()> action, std::string_view name)
     {
+        requireMutableRuntime();
         if (mApplyingDelayedActions)
             throw std::runtime_error("DelayedAction is not allowed to create another DelayedAction");
         mActionQueue.emplace_back(&mLua, std::move(action), name);
@@ -1102,6 +1402,7 @@ namespace MWLua
 
     void LuaManager::addTeleportPlayerAction(std::function<void()> action)
     {
+        requireMutableRuntime();
         mTeleportPlayerAction = DelayedAction(&mLua, std::move(action), "TeleportPlayer");
     }
 

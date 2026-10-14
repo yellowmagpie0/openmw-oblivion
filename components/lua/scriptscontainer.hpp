@@ -109,6 +109,8 @@ namespace LuaUtil
             RetainedRuntime(RetainedRuntime&&) noexcept;
             RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
             RetainedRuntime(const RetainedRuntime&) = delete;
+            void prepareIncoming(std::map<std::string, sol::object> packages,
+                ScriptIdsWithInitializationData autoStart, std::shared_ptr<LuaState::RuntimeDomain> domain);
             bool detach() noexcept;
             bool exchange() noexcept;
             bool restore() noexcept;
@@ -170,10 +172,10 @@ namespace LuaUtil
 
         // Serializer defines how to serialize/deserialize userdata. If serializer is not provided,
         // only built-in types and types from util package can be serialized.
-        void setSerializer(const UserdataSerializer* serializer) { mSerializer = serializer; }
+        void setSerializer(const UserdataSerializer* serializer) { requireMutableRuntime(); mSerializer = serializer; }
 
         // Special deserializer to use when load data from saves. Can be used to remap content files in Refnums.
-        void setSavedDataDeserializer(const UserdataSerializer* serializer) { mSavedDataDeserializer = serializer; }
+        void setSavedDataDeserializer(const UserdataSerializer* serializer) { requireMutableRuntime(); mSavedDataDeserializer = serializer; }
 
         // Starts scripts according to `autoStartMode` and calls `onInit` for them. Not needed if `load` is used.
         void addAutoStartedScripts();
@@ -296,6 +298,7 @@ namespace LuaUtil
         void requireMutableRuntime() const;
         RetainedRuntime::Data* mRetainedRuntime = nullptr;
         bool mParkedRuntime = false;
+        std::shared_ptr<LuaState::RuntimeDomain> mRuntimeDomain;
         struct Script
         {
             std::optional<sol::main_function> mOnSave;

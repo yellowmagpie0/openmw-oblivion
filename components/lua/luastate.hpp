@@ -125,6 +125,36 @@ namespace LuaUtil
     class LuaState
     {
     public:
+        class RuntimeDomain
+        {
+            friend class LuaState;
+            bool mSelected = true;
+            bool mFrozen = false;
+            bool mRetired = false;
+        public:
+            void requireSelected() const;
+        };
+        class RetainedDomain
+        {
+            friend class LuaState;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedDomain(std::unique_ptr<Data> data);
+        public:
+            ~RetainedDomain();
+            RetainedDomain(RetainedDomain&&) noexcept;
+            RetainedDomain& operator=(RetainedDomain&&) noexcept;
+            RetainedDomain(const RetainedDomain&) = delete;
+            std::shared_ptr<RuntimeDomain> incomingDomain() const;
+            bool freeze() noexcept;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedDomain retainDomain();
+        std::shared_ptr<RuntimeDomain> runtimeDomain() const { return mRuntimeDomain; }
+        ~LuaState();
         explicit LuaState(const VFS::Manager* vfs, const ScriptsConfiguration* conf,
             const LuaStateSettings& settings = LuaStateSettings{});
         LuaState(const LuaState&) = delete;
@@ -193,6 +223,8 @@ namespace LuaUtil
         friend LuaState* beginScriptDispatch(ScriptId);
         friend void endScriptDispatch(LuaState*) noexcept;
         unsigned mRuntimeDispatchDepth = 0;
+        std::shared_ptr<RuntimeDomain> mRuntimeDomain = std::make_shared<RuntimeDomain>();
+        RetainedDomain::Data* mRetainedDomain = nullptr;
         template <typename... Args>
         friend sol::protected_function_result call(const sol::protected_function& fn, Args&&... args);
         template <typename... Args>

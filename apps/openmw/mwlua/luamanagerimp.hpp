@@ -37,6 +37,26 @@ namespace MWLua
     class LuaManager : public MWBase::LuaManager
     {
     public:
+        class RetainedRuntime
+        {
+            friend class LuaManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        // Requires idle users and separately retained cell, GUI/widget and backend domains.
+        // Retains the Lua VM's runtime selection, containers, packages and pending core state.
+        RetainedRuntime retainRuntime();
+        void startPreparedRuntime();
         LuaManager(const VFS::Manager* vfs, const std::filesystem::path& libsDir);
         LuaManager(const LuaManager&) = delete;
         LuaManager(LuaManager&&) = delete;
@@ -84,10 +104,12 @@ namespace MWLua
         void inputEvent(const InputEvent& event) override;
         void itemConsumed(const MWWorld::Ptr& consumable, const MWWorld::Ptr& actor) override
         {
+            requireMutableRuntime();
             mEngineEvents.addToQueue(EngineEvents::OnConsume{ getId(actor), getId(consumable) });
         }
         void objectActivated(const MWWorld::Ptr& object, const MWWorld::Ptr& actor) override
         {
+            requireMutableRuntime();
             mEngineEvents.addToQueue(EngineEvents::OnActivate{ getId(actor), getId(object) });
         }
         void useItem(const MWWorld::Ptr& object, const MWWorld::Ptr& actor, bool force) override;
@@ -111,6 +133,7 @@ namespace MWLua
             MWMechanics::DamageSourceType sourceType) override;
         void exteriorCreated(MWWorld::CellStore& cell) override
         {
+            requireMutableRuntime();
             mEngineEvents.addToQueue(EngineEvents::OnNewExterior{ cell });
         }
         void objectTeleported(const MWWorld::Ptr& ptr) override;
@@ -134,10 +157,12 @@ namespace MWLua
         void addUIMessage(
             std::string_view message, MWGui::ShowInDialogueMode mode = MWGui::ShowInDialogueMode_IfPossible)
         {
+            requireMutableRuntime();
             mUIMessages.emplace_back(message, mode);
         }
         void addInGameConsoleMessage(const std::string& msg, const Misc::Color& color)
         {
+            requireMutableRuntime();
             mInGameConsoleMessages.push_back({ msg, color });
         }
 
@@ -155,11 +180,11 @@ namespace MWLua
         // Loading from a save
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;
         void loadLocalScripts(const MWWorld::Ptr& ptr, const ESM::LuaScripts& data) override;
-        void setContentFileMapping(const std::map<int, int>& mapping) override { mContentFileMapping = mapping; }
+        void setContentFileMapping(const std::map<int, int>& mapping) override { requireMutableRuntime(); mContentFileMapping = mapping; }
 
         // At the end of the next `synchronizedUpdate` drops script cache and reloads all scripts.
         // Calls `onSave` and `onLoad` for every script.
-        void reloadAllScripts() override { mReloadAllScriptsRequested = true; }
+        void reloadAllScripts() override { requireMutableRuntime(); mReloadAllScriptsRequested = true; }
 
         void handleConsoleCommand(
             const std::string& consoleMode, const std::string& command, const MWWorld::Ptr& selectedPtr) override;
@@ -167,6 +192,7 @@ namespace MWLua
         // Used to call Lua callbacks from C++
         void queueCallback(LuaUtil::Callback callback, sol::main_object arg)
         {
+            requireMutableRuntime();
             mQueuedCallbacks.push_back({ std::move(callback), std::move(arg) });
         }
 
@@ -181,15 +207,15 @@ namespace MWLua
             };
         }
 
-        LuaUi::ResourceManager* uiResourceManager() { return &mUiResourceManager; }
+        LuaUi::ResourceManager* uiResourceManager() { requireMutableRuntime(); return &mUiResourceManager; }
 
         bool isProcessingInputEvents() const { return mProcessingInputEvents; }
 
         void reportStats(unsigned int frameNumber, osg::Stats& stats) const;
         std::string formatResourceUsageStats() const override;
 
-        LuaUtil::InputAction::Registry& inputActions() { return mInputActions; }
-        LuaUtil::InputTrigger::Registry& inputTriggers() { return mInputTriggers; }
+        LuaUtil::InputAction::Registry& inputActions() { requireMutableRuntime(); return mInputActions; }
+        LuaUtil::InputTrigger::Registry& inputTriggers() { requireMutableRuntime(); return mInputTriggers; }
 
         void sendLocalEvent(
             const MWWorld::Ptr& target, const std::string& name, const std::optional<sol::table>& data = std::nullopt);
@@ -208,6 +234,10 @@ namespace MWLua
         void synchronizedUpdateUnsafe();
         void normalizeNativeScripts(std::map<ESM::FormKey, ESM::LuaScripts>& scripts, bool savedContentIds);
 
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        bool mRunningUpdates = false;
+        void requireMutableRuntime() const;
+        bool runtimeIdle() const noexcept;
         bool mInitialized = false;
         bool mGlobalScriptsStarted = false;
         bool mProcessingInputEvents = false;

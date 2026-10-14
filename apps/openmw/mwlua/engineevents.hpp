@@ -107,6 +107,7 @@ namespace MWLua
             OnAnimationTextKey, OnAnimationEnded, OnSkillUse, OnSkillLevelUp, OnJailTimeServed, OnDropped, OnPlaced>;
 
         void clear() { mQueue.clear(); }
+        void exchangeRuntime(EngineEvents& other) noexcept { mQueue.swap(other.mQueue); }
         void addToQueue(Event e) { mQueue.push_back(std::move(e)); }
         std::size_t queueSize() const { return mQueue.size(); }
         void reserveNextEvent()

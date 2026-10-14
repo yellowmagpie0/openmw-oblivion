@@ -60,6 +60,38 @@ namespace
         EXPECT_FALSE(conf.mapId(1));
     }
 
+
+    TEST(LuaConfigurationTest, RuntimeCloneRebuildsViewsAndPreservesSavedMapping)
+    {
+        ESM::LuaScriptsCfg oldCfg, cfg;
+        LuaUtil::parseOMWScripts(oldCfg, "CUSTOM: removed.lua");
+        LuaUtil::parseOMWScripts(cfg, "ESM4_NPC CUSTOM: actor.lua");
+        auto& script = cfg.mScripts.front();
+        script.mInitializationData = std::string(64, 'D');
+        const auto record = ESM::RefId::stringRefId("runtime-actor");
+        script.mRecords.push_back({ true, record, std::string(96, 'R') });
+        script.mRefs.push_back({ true, 9, 1, std::string(80, 'F') });
+        LuaUtil::ScriptsConfiguration source;
+        source.init(oldCfg, false);
+        source.init(cfg, true);
+        auto clone = source.cloneRuntime();
+        auto originalRecord = source.getLocalConf(ESM::REC_NPC_4, record, {});
+        auto clonedRecord = clone.getLocalConf(ESM::REC_NPC_4, record, {});
+        ASSERT_EQ(clonedRecord.size(), 1);
+        EXPECT_NE(originalRecord.at(0).data(), clonedRecord.at(0).data());
+        source.init({}, false);
+        EXPECT_EQ(clonedRecord.at(0), std::string(96, 'R'));
+        EXPECT_EQ(clone.getLocalConf(ESM::REC_NPC_4, {}, ESM::RefNum{ 9, 1 }).at(0), std::string(80, 'F'));
+        EXPECT_EQ(clone.getLocalConf(ESM::REC_NPC_4, {}, {}).at(0), std::string(64, 'D'));
+        EXPECT_TRUE(clone.isValidSavedId(0));
+        EXPECT_FALSE(clone.mapId(0));
+        LuaUtil::ScriptsConfiguration selected;
+        selected.exchangeRuntime(clone);
+        EXPECT_EQ(selected.getLocalConf(ESM::REC_NPC_4, record, {}).at(0).data(), clonedRecord.at(0).data());
+        EXPECT_FALSE(selected.mapId(0));
+        EXPECT_EQ(clone.size(), 0);
+    }
+
     std::vector<std::pair<int, std::string>> asVector(const LuaUtil::ScriptIdsWithInitializationData& d)
     {
         std::vector<std::pair<int, std::string>> res;
