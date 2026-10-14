@@ -6,6 +6,50 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 exchange World local-script, global and clock fields — 2026-10-13
+
+LocalScripts now exposes a World-owned parked list/cursor state. Exchanges keep
+actual list nodes and the exact next entry; end sentinels are rebound to their
+own list objects, so switching runtimes does not replay consumed entries. The
+caller must retain referenced Player/cell/base objects and exchange only between
+script passes. Globals exchanges actual value-map nodes. DateTimeManager exchanges
+gameplay time and pause state in place at the address cached by Lua packages;
+process rendering simulation time remains monotonic. World must select matching
+globals and audio/backend state at the same boundary.
+
+Three production regressions exercise the real World local-script service and
+ScriptManager configuration, restoration of the unprocessed next entry and both
+end cursors, the actual World clock's cached address/time/pause tags, monotonic
+rendering time, and original/candidate global-value addresses after mutation.
+Both targeted inventories pass **3 tests**, and both complete engine inventories
+pass **1,442 tests**, exact XML/inventory agreement with no failures/skips, in
+`build/oblivion-compat/m15/S3/world-runtime-fields-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `1e925934d53118b23e94c632853d8b56d3f4a40f`; matching before/after
+fingerprint: `c7326a6e9e6da9e0b0a6d6c4253940c52d4fe1402d5ef1da04bf358ee11cd7d2`.
+ASan/UBSan halt on errors; leak checks disabled; audio/SDL null/offscreen.
+
+A copied production-linked test object passes **8 explicit swaps** with C++
+scalar/array/aligned new disabled in `world-runtime-fields-allocation-control-02`.
+Forced vector allocation fails all **three tests** at their first guarded swap in
+`world-runtime-fields-negative-02`. The 01 helper had already compiled an outdated
+expected count of nine before waiting for the normal build; changing its file to
+eight during that wait did not change loaded code. It failed before test compilation
+or execution, and is preserved in `controls01-failure.json`. Fresh 02 helpers fix
+the count. Preparation, implicit teardown, World/scene/manager work and callbacks
+outside the guarded swap are excluded. Full reports/hashes are in
+`world-runtime-fields-followup-01/checkpoint-summary.json`.
+
+These methods are not yet composed into the enclosing World archive or called by
+StateManager. Isolated drafts under `world-owned-fields-prototype-01` and
+`candidate-renderer-prototype-02` have syntax evidence only. Renderer construction
+can rewrite shaders/programs shared with the outgoing graph. PostProcessor replaces
+Viewer scene data, camera callbacks/user data, the graphics-context resize callback
+and a global render-bin callback; its current destructor clears that global binding
+unconditionally. Full retention must preserve these bindings and both scene graphs,
+actual Lua/storage/UI/audio/other managers, Player/native service state and state
+metadata with safe disposal ordering. The earlier actual late-load probe still
+contradicts prior-world preservation. Complete S3 acceptance remains open.
+
 ## S3 select retained registry, cell and record ownership domains — 2026-10-13
 
 PtrRegistry now exchanges actual index/native/spare tables, revision/serial and

@@ -1,5 +1,8 @@
 #include "datetimemanager.hpp"
 
+#include <type_traits>
+#include <utility>
+
 #include <components/l10n/manager.hpp>
 
 #include "../mwbase/environment.hpp"
@@ -259,4 +262,14 @@ namespace MWWorld
         mPaused = !mPausedTags.empty() || wm->isConsoleMode() || wm->isPostProcessorHudVisible()
             || wm->isInteractiveMessageBoxActive() || stateManager->getState() == MWBase::StateManager::State_NoGame;
     }
+}
+
+void MWWorld::DateTimeManager::swapRuntime(DateTimeManager& parked) noexcept
+{
+    static_assert(std::is_nothrow_swappable_v<DateTimeManager>);
+    const double renderingTime = mRenderingSimulationTime;
+    const double parkedRenderingTime = parked.mRenderingSimulationTime;
+    std::swap(*this, parked);
+    mRenderingSimulationTime = renderingTime;
+    parked.mRenderingSimulationTime = parkedRenderingTime;
 }

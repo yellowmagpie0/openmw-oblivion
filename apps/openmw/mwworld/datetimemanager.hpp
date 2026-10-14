@@ -20,6 +20,10 @@ namespace MWWorld
     class DateTimeManager
     {
     public:
+        // Keep the address cached by Lua packages and process rendering time.
+        // World must select matching globals and sound/backend state too.
+        void swapRuntime(DateTimeManager& parked) noexcept;
+
         // Game time.
         // Note that game time generally goes faster than the simulation time.
         std::string_view getMonthName(int month = -1) const; // -1: current month

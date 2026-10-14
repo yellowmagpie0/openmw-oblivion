@@ -224,3 +224,14 @@ bool MWWorld::LocalScripts::isRunning(const ESM::RefId& scriptName, const Ptr& p
 {
     return std::ranges::find(mScripts, std::pair(scriptName, ptr)) != mScripts.end();
 }
+
+void MWWorld::LocalScripts::swapRuntime(RuntimeState& state) noexcept
+{
+    const bool currentEnd = mIter == mScripts.end();
+    const bool parkedEnd = state.mIter == state.mScripts.end();
+    mScripts.swap(state.mScripts);
+    std::swap(mIter, state.mIter);
+    // List nodes retain their iterators, but end sentinels belong to the object.
+    if (currentEnd) state.mIter = state.mScripts.end();
+    if (parkedEnd) mIter = mScripts.end();
+}

@@ -19085,3 +19085,65 @@ TEST(OblivionWorldTest, NativeAiRetentionInvalidatesAfterServiceDestruction)
     EXPECT_FALSE(retained->restore());
     retained->discard();
 }
+
+TEST(OblivionWorldTest, WorldRuntimeFieldsRetainLocalIterationWithoutReplayingConsumedEntries)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM::Script script{}; script.blank(); script.mId = ESM::RefId::stringRefId("retained-local-cursor");
+    script.mScriptText = "begin retained-local-cursor\nend retained-local-cursor\n";
+    world.getStore().insertStatic(script);
+    MWScript::CompilerContext context(MWScript::CompilerContext::Type_Full);
+    Compiler::Extensions extensions; context.setExtensions(&extensions);
+    MWScript::ScriptManager manager(world.getStore(), context, 0);
+    fixture.mEnvironment.setScriptManager(manager);
+    auto& scripts = world.getLocalScripts();
+    scripts.add(script.mId, world.getPlayerPtr()); scripts.add(script.mId, fixture.mActor);
+    scripts.startIteration();
+    std::pair<ESM::RefId, MWWorld::Ptr> entry;
+    ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.second, world.getPlayerPtr());
+    MWWorld::LocalScripts::RuntimeState parked;
+    scripts.swapRuntime(parked); EXPECT_FALSE(scripts.getNext(entry));
+    scripts.add(script.mId, world.getPlayerPtr()); scripts.startIteration();
+    ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.second, world.getPlayerPtr());
+    scripts.swapRuntime(parked);
+    ASSERT_TRUE(scripts.getNext(entry)); EXPECT_EQ(entry.second, fixture.mActor);
+    EXPECT_FALSE(scripts.getNext(entry));
+    scripts.swapRuntime(parked); EXPECT_FALSE(scripts.getNext(entry));
+    scripts.clear(); scripts.swapRuntime(parked);
+    EXPECT_TRUE(scripts.isRunning(script.mId, fixture.mActor));
+    EXPECT_FALSE(scripts.getNext(entry));
+}
+
+TEST(OblivionWorldTest, WorldRuntimeFieldsKeepClockAddressAndProcessRenderingTime)
+{
+    PopulatedMigrationFixture fixture;
+    auto* captured = fixture.mWorld.getTimeManager();
+    captured->setSimulationTime(23); captured->setRenderingSimulationTime(101); captured->pause("outgoing");
+    MWWorld::DateTimeManager parked;
+    parked.setSimulationTime(44); parked.setRenderingSimulationTime(77); parked.pause("incoming");
+    captured->swapRuntime(parked);
+    EXPECT_EQ(fixture.mWorld.getTimeManager(), captured);
+    EXPECT_EQ(captured->getSimulationTime(), 44); EXPECT_EQ(captured->getRenderingSimulationTime(), 101);
+    EXPECT_TRUE(captured->getPausedTags().contains("incoming"));
+    captured->setRenderingSimulationTime(102); captured->swapRuntime(parked);
+    EXPECT_EQ(captured->getSimulationTime(), 23); EXPECT_EQ(captured->getRenderingSimulationTime(), 102);
+    EXPECT_TRUE(captured->getPausedTags().contains("outgoing"));
+    EXPECT_EQ(parked.getRenderingSimulationTime(), 77);
+}
+
+TEST(OblivionWorldTest, WorldRuntimeFieldsRestoreActualGlobalValueNodes)
+{
+    MWWorld::ESMStore originalStore, incomingStore;
+    ESM::Global record{}; record.mId = ESM::RefId::stringRefId("retained-global");
+    record.mValue.setType(ESM::VT_Float); record.mValue.setFloat(23); originalStore.insertStatic(record);
+    record.mValue.setFloat(44); incomingStore.insertStatic(record);
+    MWWorld::Globals globals, parked; globals.fill(originalStore); parked.fill(incomingStore);
+    MWWorld::GlobalVariableName name{std::string_view{"retained-global"}};
+    auto* original = &globals[name]; auto* incoming = &parked[name];
+    globals.swapRuntime(parked);
+    EXPECT_EQ(&globals[name], incoming); EXPECT_EQ(original->getFloat(), 23);
+    globals[name].setFloat(55); globals.swapRuntime(parked);
+    EXPECT_EQ(&globals[name], original); EXPECT_EQ(globals[name].getFloat(), 23);
+    EXPECT_EQ(parked[name].getFloat(), 55);
+}

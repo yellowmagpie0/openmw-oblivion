@@ -35,6 +35,20 @@ namespace MWWorld
             PreparedRegistration& operator=(PreparedRegistration&&) noexcept;
         };
 
+        // World-owned parked list/cursor. Referenced objects and their bases
+        // must remain alive; exchange only between script passes.
+        class RuntimeState
+        {
+            friend class LocalScripts;
+            std::list<std::pair<ESM::RefId, Ptr>> mScripts;
+            decltype(mScripts)::iterator mIter = mScripts.end();
+        public:
+            RuntimeState() = default;
+            RuntimeState(const RuntimeState&) = delete;
+            RuntimeState& operator=(const RuntimeState&) = delete;
+        };
+        void swapRuntime(RuntimeState& state) noexcept;
+
         LocalScripts(const MWWorld::ESMStore& store);
 
         void startIteration();

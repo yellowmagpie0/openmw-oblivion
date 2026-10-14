@@ -963,3 +963,16 @@ S3/core-runtime-selection-*01. World/scene/manager selection and StateManager wi
 are still absent; isolated local-script/clock/globals probes are not production or
 full runtime acceptance. Complete late-failure prior-world preservation and S3
 acceptance remain open.
+
+World local-script list/cursor exchange preserves actual nodes and both end
+sentinels without replaying processed entries. Global value-map nodes exchange
+in place; the clock keeps the Lua-cached address and process rendering time while
+gameplay time/pause state changes. Both targeted 3 and full 1,442 normal/ASan-UBSan
+inventories pass with matching fingerprints. Eight explicit swaps pass with C++
+new disabled; forced allocation fails all three negative tests. Evidence is
+S3/world-runtime-fields-*01 and allocation-control/negative-*02; the 01 helper-count
+failure is retained and executed no tests. No enclosing World archive or StateManager
+wiring is claimed. Shared shader objects and Viewer/graphics-context/render-bin
+callbacks still require isolated candidate ownership and restoration; actual
+Lua/storage/UI/audio and other-manager retention remain open. Complete late-failure
+prior-world preservation and full S3 acceptance are still unproven.

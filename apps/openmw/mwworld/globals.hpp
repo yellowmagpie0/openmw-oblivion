@@ -61,6 +61,8 @@ namespace MWWorld
         char getType(GlobalVariableName name) const;
         ///< If there is no global variable with this name, ' ' is returned.
 
+        void swapRuntime(Globals& parked) noexcept { mVariables.swap(parked.mVariables); }
+
         void fill(const MWWorld::ESMStore& store);
         ///< Replace variables with variables from \a store with default values.
 
