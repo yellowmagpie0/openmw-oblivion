@@ -1,5 +1,7 @@
 #include "worldmodel.hpp"
 
+#include <exception>
+
 #include <algorithm>
 #include <cassert>
 #include <limits>
@@ -140,6 +142,81 @@ namespace MWWorld
     }
 }
 
+namespace MWWorld
+{
+    struct WorldModel::RetainedRuntime::Data
+    {
+        WorldModel* mOwner;
+        decltype(WorldModel::mPreparedFogStates) mPreparedFogStates{};
+        decltype(WorldModel::mPreparedInventoryStates) mPreparedInventoryStates{};
+        decltype(WorldModel::mPreparedCellReferences) mPreparedCellReferences{};
+        decltype(WorldModel::mPreparedSaveRecords) mPreparedSaveRecords{};
+        decltype(WorldModel::mPreparedPlayerState) mPreparedPlayerState{};
+        decltype(WorldModel::mPreparedPlayerStateRef) mPreparedPlayerStateRef{};
+        decltype(WorldModel::mPreparedNpcStates) mPreparedNpcStates{};
+        decltype(WorldModel::mPreparedCreatureStates) mPreparedCreatureStates{};
+        decltype(WorldModel::mPreparedActorCustomData) mPreparedActorCustomData{};
+        decltype(WorldModel::mPreparedPlayerRef) mPreparedPlayerRef{};
+        decltype(WorldModel::mPreparedPlayerCustomData) mPreparedPlayerCustomData{};
+        decltype(WorldModel::mPreparedPlayerAfterRecord) mPreparedPlayerAfterRecord{};
+        decltype(WorldModel::mPreparationIdentity) mPreparationIdentity{};
+        decltype(WorldModel::mCells) mCells{};
+        decltype(WorldModel::mInteriors) mInteriors{};
+        decltype(WorldModel::mExteriors) mExteriors{};
+        decltype(WorldModel::mIdCache) mIdCache{};
+        decltype(WorldModel::mIdCacheIndex) mIdCacheIndex{};
+        PtrRegistry::RetainedRuntime mRegistry;
+        bool mDetached = false;
+
+        explicit Data(WorldModel& owner)
+            : mOwner(&owner), mIdCache(owner.mIdCache.size(), {ESM::RefId(), nullptr})
+            , mRegistry(owner.mPtrRegistry.retainRuntime())
+        {
+        }
+
+        void swap(WorldModel& owner) noexcept
+        {
+            using std::swap;
+            swap(mPreparedFogStates, owner.mPreparedFogStates);
+            swap(mPreparedInventoryStates, owner.mPreparedInventoryStates);
+            swap(mPreparedCellReferences, owner.mPreparedCellReferences);
+            swap(mPreparedSaveRecords, owner.mPreparedSaveRecords);
+            swap(mPreparedPlayerState, owner.mPreparedPlayerState);
+            swap(mPreparedPlayerStateRef, owner.mPreparedPlayerStateRef);
+            swap(mPreparedNpcStates, owner.mPreparedNpcStates);
+            swap(mPreparedCreatureStates, owner.mPreparedCreatureStates);
+            swap(mPreparedActorCustomData, owner.mPreparedActorCustomData);
+            swap(mPreparedPlayerRef, owner.mPreparedPlayerRef);
+            swap(mPreparedPlayerCustomData, owner.mPreparedPlayerCustomData);
+            swap(mPreparedPlayerAfterRecord, owner.mPreparedPlayerAfterRecord);
+            swap(mPreparationIdentity, owner.mPreparationIdentity);
+            swap(mCells, owner.mCells);
+            swap(mInteriors, owner.mInteriors);
+            swap(mExteriors, owner.mExteriors);
+            swap(mIdCache, owner.mIdCache);
+            swap(mIdCacheIndex, owner.mIdCacheIndex);
+        }
+
+        void release() noexcept
+        {
+            // Destroy references while their registration owner is still alive.
+            mInteriors.clear(); mExteriors.clear(); mCells.clear();
+            mPreparedCellReferences.clear(); mPreparedActorCustomData.clear();
+            mPreparedInventoryStates.clear(); mPreparedPlayerCustomData.reset();
+            mPreparedPlayerAfterRecord.reset();
+            mPreparedFogStates.clear(); mPreparedSaveRecords.reset();
+            mPreparedPlayerState.reset(); mPreparedNpcStates.clear(); mPreparedCreatureStates.clear();
+        }
+    };
+
+}
+
+void MWWorld::WorldModel::requireMutableRuntime() const
+{
+    if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+        throw std::logic_error("Outgoing world model is frozen during runtime preparation");
+}
+
 MWWorld::CellStore& MWWorld::WorldModel::getOrInsertCellStore(const ESM::Cell& cell)
 {
     const auto it = mCells.find(cell.mId);
@@ -150,6 +227,7 @@ MWWorld::CellStore& MWWorld::WorldModel::getOrInsertCellStore(const ESM::Cell& c
 
 MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 {
+    requireMutableRuntime();
     CellStore& cellStore = emplaceCellStore(cell.mId, cell, mStore, mReaders, mCells);
     if (cell.mData.mFlags & ESM::Cell::Interior)
         mInteriors.emplace(cell.mName, &cellStore);
@@ -161,6 +239,7 @@ MWWorld::CellStore& MWWorld::WorldModel::insertCellStore(const ESM::Cell& cell)
 
 void MWWorld::WorldModel::clear()
 {
+    requireMutableRuntime();
     mPreparedFogStates.clear();
     finishCellReferenceRestore();
     mPreparedInventoryStates.clear();
@@ -219,7 +298,72 @@ MWWorld::WorldModel::WorldModel(MWWorld::ESMStore& store, ESM::ReadersCache& rea
 
 namespace MWWorld
 {
-    WorldModel::~WorldModel() = default;
+    WorldModel::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    WorldModel::RetainedRuntime::~RetainedRuntime() { restore(); }
+    WorldModel::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    WorldModel::RetainedRuntime& WorldModel::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other) { restore(); mData = std::move(other.mData); }
+        return *this;
+    }
+
+    WorldModel::RetainedRuntime WorldModel::retainRuntime()
+    {
+        if (mRetainedRuntime) throw std::logic_error("World model runtime is already retained");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+
+    bool WorldModel::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached) return false;
+        if (!mData->mRegistry.detach()) return false;
+        mData->swap(*mData->mOwner);
+        mData->mDetached = true;
+        return true;
+    }
+
+    bool WorldModel::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner) return false;
+        auto& owner = *mData->mOwner;
+        if (mData->mDetached)
+        {
+            owner.clear();
+            if (!mData->mRegistry.restore()) std::terminate();
+            mData->swap(owner);
+        }
+        else
+        {
+            if (!mData->mRegistry.restore()) std::terminate();
+        }
+        owner.mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        return true;
+    }
+
+    void WorldModel::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        auto& owner = *mData->mOwner;
+        mData->mRegistry.discard();
+        mData->release();
+        owner.mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+    }
+
+    WorldModel::~WorldModel()
+    {
+        if (mRetainedRuntime)
+        {
+            mRetainedRuntime->mRegistry.discard();
+            mRetainedRuntime->release();
+            mRetainedRuntime->mOwner = nullptr;
+        }
+    }
+
 
     void WorldModel::setPreparedFogStates(std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> states)
     {
@@ -228,10 +372,17 @@ namespace MWWorld
 
     CellStore& WorldModel::getExterior(ESM::ExteriorCellLocation location, bool forceLoad) const
     {
+        const auto existing = mExteriors.find(location);
+        if (existing != mExteriors.end() && (!forceLoad || existing->second->getState() == CellStore::State_Loaded))
+            return *existing->second;
+        requireMutableRuntime();
         CellStore* cellStore = getOrCreateExterior(location, mExteriors, mStore, mReaders, mCells, true);
 
         if (forceLoad && cellStore->getState() != CellStore::State_Loaded)
+        {
+            requireMutableRuntime();
             cellStore->load();
+        }
 
         return *cellStore;
     }
@@ -243,6 +394,7 @@ namespace MWWorld
 
         if (it == mInteriors.end())
         {
+            requireMutableRuntime();
             cellStore = emplaceInteriorCellStore(name, mStore, mReaders, mCells);
             if (cellStore == nullptr)
                 return cellStore;
@@ -255,7 +407,10 @@ namespace MWWorld
         }
 
         if (forceLoad && cellStore->getState() != CellStore::State_Loaded)
+        {
+            requireMutableRuntime();
             cellStore->load();
+        }
 
         return cellStore;
     }
@@ -275,10 +430,14 @@ namespace MWWorld
         {
             CellStore& cellStore = it->second;
             if (forceLoad && cellStore.getState() != CellStore::State_Loaded)
+            {
+                requireMutableRuntime();
                 cellStore.load();
+            }
             return &cellStore;
         }
 
+        requireMutableRuntime();
         if (id == draftCellId)
         {
             CellStore& cellStore = emplaceCellStore(id, Cell(mDraftCell), mStore, mReaders, mCells);

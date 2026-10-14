@@ -58,6 +58,28 @@ namespace MWWorld
         explicit WorldModel(ESMStore& store, ESM::ReadersCache& reader);
         ~WorldModel();
 
+        // Retain owned cell nodes and registry state while an incoming runtime
+        // is prepared. The caller must retain bases and scene/manager state too,
+        // and tear down incoming scene users before rollback deletes its cells.
+        class RetainedRuntime
+        {
+            friend class WorldModel;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            RetainedRuntime& operator=(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
         // Batch publication for detached prepared references. Preparation may
         // assign their RefNums, but leaves the live registry and serial alone.
         // The references must outlive the preparation and its commit.
@@ -257,6 +279,7 @@ namespace MWWorld
         std::unique_ptr<MWMechanics::PreparedCreatureStats> takePreparedCreatureState(const ESM::ObjectState& state);
 
     private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
         std::map<ESM::RefId, std::unique_ptr<ESM::FogState>> mPreparedFogStates;
         PreparedInventoryStates mPreparedInventoryStates;
         PreparedCellReferences mPreparedCellReferences;
@@ -282,6 +305,8 @@ namespace MWWorld
         ESM::Cell mDraftCell;
         std::vector<std::pair<ESM::RefId, CellStore*>> mIdCache;
         std::size_t mIdCacheIndex = 0;
+
+        void requireMutableRuntime() const;
 
         CellStore& getOrInsertCellStore(const ESM::Cell& cell);
 

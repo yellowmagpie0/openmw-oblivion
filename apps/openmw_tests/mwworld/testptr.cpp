@@ -814,3 +814,149 @@ TEST(MWWorldPtrTest, preparedCellPublicationRejectsBeforeMovingNodesAndCanRetry)
         EXPECT_EQ(model.getPtrRegistryRevision(), revision + 2);
     }
 }
+
+TEST(MWWorldPtrTest, retainedRegistryRestoresOriginalNodesAndSeparatesReservationDomains)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("retained_registry_weapon"); store.insertStatic(base);
+    MWWorld::ManualRef old(store, base.mId), incoming(store, base.mId), later(store, base.mId);
+    MWWorld::PtrRegistry registry; registry.insert(old.getPtr());
+    const auto id = old.getPtr().getCellRef().getRefNum();
+    const auto* node = &*registry.begin();
+    const auto revision = registry.getRevision(); const auto serial = registry.getLastGenerated();
+    auto oldCredits = registry.prepareInsertions(1);
+    auto runtime = registry.retainRuntime();
+    auto incomingCredits = registry.prepareInsertions(4096);
+    auto oldCopy = oldCredits;
+    EXPECT_EQ(registry.pendingInsertions(), 4096u);
+    EXPECT_EQ(registry.getOrEmpty(id), old.getPtr()); EXPECT_EQ(&*registry.begin(), node);
+    EXPECT_THROW(registry.clear(), std::logic_error);
+    EXPECT_THROW(registry.insert(incoming.getPtr()), std::logic_error);
+    EXPECT_THROW(registry.insertPrepared(incoming.getPtr(), incomingCredits), std::logic_error);
+    EXPECT_THROW(registry.retainRuntime(), std::logic_error);
+    EXPECT_FALSE(incoming.getPtr().getCellRef().getRefNum().isSet());
+    ASSERT_TRUE(runtime.detach()); EXPECT_FALSE(runtime.detach());
+    EXPECT_TRUE(registry.getOrEmpty(id).isEmpty());
+    registry.insertPrepared(incoming.getPtr(), incomingCredits);
+    EXPECT_EQ(incoming.getPtr().getCellRef().getRefNum(), id);
+    EXPECT_EQ(registry.getOrEmpty(id), incoming.getPtr());
+    auto moreIncoming = registry.prepareInsertions(4096);
+    auto anotherOldCopy = oldCredits; // Reserve in the retained domain after detach too.
+    ASSERT_TRUE(runtime.restore()); EXPECT_FALSE(runtime.restore());
+    EXPECT_EQ(registry.getOrEmpty(id), old.getPtr()); EXPECT_EQ(&*registry.begin(), node);
+    EXPECT_EQ(registry.getRevision(), revision); EXPECT_EQ(registry.getLastGenerated(), serial);
+    EXPECT_EQ(registry.pendingInsertions(), 3u);
+    EXPECT_THROW(registry.insertPrepared(later.getPtr(), incomingCredits), std::logic_error);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{incomingCredits}, std::logic_error);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{moreIncoming}, std::logic_error);
+    registry.insertPrepared(later.getPtr(), oldCredits);
+    EXPECT_EQ(later.getPtr().getCellRef().getRefNum(), (ESM::RefNum{serial.mIndex + 1, serial.mContentFile}));
+    EXPECT_EQ(registry.pendingInsertions(), 2u);
+}
+
+TEST(MWWorldPtrTest, retainedRegistryCancelsPreparationAndRejectsChangedSources)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("cancelled_registry_weapon"); store.insertStatic(base);
+    MWWorld::ManualRef old(store, base.mId); MWWorld::PtrRegistry registry; registry.insert(old.getPtr());
+    const auto id = old.getPtr().getCellRef().getRefNum(); const auto revision = registry.getRevision();
+    auto oldCredits = registry.prepareInsertions(1);
+    MWWorld::PtrRegistry::PreparedInsertions incoming;
+    {
+        auto runtime = registry.retainRuntime(); incoming = registry.prepareInsertions(8);
+        auto moved = std::move(runtime); EXPECT_FALSE(runtime.detach());
+        EXPECT_EQ(registry.getOrEmpty(id), old.getPtr());
+    }
+    EXPECT_EQ(registry.pendingInsertions(), 1u); EXPECT_EQ(registry.getRevision(), revision);
+    EXPECT_EQ(registry.getOrEmpty(id), old.getPtr());
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{incoming}, std::logic_error);
+    auto changed = registry.retainRuntime(); registry.remove(*old.getPtr().mRef);
+    EXPECT_FALSE(changed.detach()); ASSERT_TRUE(changed.restore());
+    EXPECT_TRUE(registry.getOrEmpty(id).isEmpty()); EXPECT_EQ(registry.getRevision(), revision + 1);
+}
+
+TEST(MWWorldPtrTest, retainedRegistryCommitKeepsIncomingNativeIndexAndRetiresOldCredits)
+{
+    MWClass::Weapon::registerSelf(); ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("native_retention_weapon");
+    ESM4::Reference reference{}; reference.mId = {31, -1}; reference.mBaseObj = {0x800, 0};
+    reference.mFormKey = ESM::FormKey::dynamic("retained-native", 31);
+    MWWorld::LiveCellRef<ESM::Weapon> old(reference, &base);
+    reference.mId = {32, -1}; MWWorld::LiveCellRef<ESM::Weapon> incoming(reference, &base);
+    MWWorld::PtrRegistry registry; registry.insert(MWWorld::Ptr(&old));
+    auto oldCredits = registry.prepareInsertions(1);
+    auto runtime = registry.retainRuntime(); auto incomingCredits = registry.prepareInsertions(1);
+    ASSERT_TRUE(runtime.detach()); EXPECT_TRUE(registry.getDynamicNativePtr(reference.mFormKey).isEmpty());
+    registry.insert(MWWorld::Ptr(&incoming)); runtime.discard();
+    EXPECT_FALSE(runtime.restore()); EXPECT_FALSE(runtime.isDetached());
+    EXPECT_EQ(registry.getDynamicNativePtr(reference.mFormKey), MWWorld::Ptr(&incoming));
+    EXPECT_EQ(registry.getOrEmpty({32, -1}), MWWorld::Ptr(&incoming));
+    EXPECT_EQ(registry.pendingInsertions(), 1u);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{oldCredits}, std::logic_error);
+    EXPECT_NO_THROW(MWWorld::PtrRegistry::PreparedInsertions{incomingCredits});
+}
+
+TEST(MWWorldPtrTest, retainedRegistryTracksMovedOwnersAndRejectsDestroyedOwners)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("moving_registry_weapon"); store.insertStatic(base);
+    MWWorld::ManualRef old(store, base.mId), incoming(store, base.mId);
+    auto owner = std::make_unique<MWWorld::PtrRegistry>(); owner->insert(old.getPtr());
+    const auto id = old.getPtr().getCellRef().getRefNum(); auto runtime = owner->retainRuntime();
+    auto incomingCredits = owner->prepareInsertions(1); ASSERT_TRUE(runtime.detach());
+    MWWorld::PtrRegistry moved(std::move(*owner)); owner.reset();
+    moved.insertPrepared(incoming.getPtr(), incomingCredits); ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(moved.getOrEmpty(id), old.getPtr());
+    owner = std::make_unique<MWWorld::PtrRegistry>();
+    auto oldCredits = owner->prepareInsertions(1); auto destroyed = owner->retainRuntime();
+    auto rejected = owner->prepareInsertions(1); ASSERT_TRUE(destroyed.detach()); owner.reset();
+    EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.detach());
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{oldCredits}, std::logic_error);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{rejected}, std::logic_error);
+}
+
+TEST(MWWorldPtrTest, retainedWorldModelRestoresCellAddressesAndDisposesIncomingNodes)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("retained_cell_weapon"); store.insertStatic(base);
+    ESM::ReadersCache readers; MWWorld::WorldModel model(store, readers);
+    auto* oldCell = &model.getDraftCell();
+    ESM::CellRef reference{}; reference.blank(); reference.mRefID = base.mId; reference.mRefNum = {77, 0};
+    MWWorld::LiveCellRef<ESM::Weapon> live(reference, &base);
+    MWWorld::Ptr old(oldCell->insert(&live), oldCell); old.getCellRef().setCount(3);
+    old.getCellRef().setCharge(17); old.getRefData().disable(); model.registerPtr(old);
+    model.setLastGeneratedRefNum({9, -1});
+    const auto revision = model.getPtrRegistryRevision(); const auto serial = model.getLastGeneratedRefNum();
+    auto runtime = model.retainRuntime(); auto incomingCredits = model.preparePtrInsertions(3);
+    EXPECT_THROW(model.clear(), std::logic_error); EXPECT_EQ(model.getPtr(reference.mRefNum), old);
+    EXPECT_THROW(model.getExterior(ESM::ExteriorCellLocation(123, 456, ESM::Cell::sDefaultWorldspaceId), false), std::logic_error);
+    ASSERT_TRUE(runtime.detach()); EXPECT_FALSE(model.ownsCell(*oldCell));
+    auto* incomingCell = &model.getDraftCell(); ASSERT_NE(incomingCell, oldCell);
+    MWWorld::Ptr incoming(incomingCell->insert(&live), incomingCell); model.registerPreparedPtr(incoming, incomingCredits);
+    EXPECT_EQ(model.getPtr(reference.mRefNum), incoming);
+    EXPECT_EQ(old.getCellRef().getCount(false), 3); EXPECT_EQ(old.getCellRef().getCharge(), 17);
+    ASSERT_TRUE(runtime.restore()); EXPECT_FALSE(runtime.restore());
+    EXPECT_EQ(&model.getDraftCell(), oldCell); EXPECT_TRUE(model.ownsCell(*oldCell));
+    EXPECT_EQ(model.getPtr(reference.mRefNum), old); EXPECT_EQ(model.getResidentPtr(reference.mRefNum), old);
+    EXPECT_FALSE(old.getRefData().isEnabled()); EXPECT_EQ(old.getCellRef().getCount(false), 3);
+    EXPECT_EQ(model.getPtrRegistryRevision(), revision); EXPECT_EQ(model.getLastGeneratedRefNum(), serial);
+    EXPECT_EQ(model.pendingPtrInsertions(), 0u);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{incomingCredits}, std::logic_error);
+}
+
+TEST(MWWorldPtrTest, retainedWorldModelCommitAndOwnerDestructionKeepRegistrationsSafe)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("discarded_cell_weapon"); store.insertStatic(base);
+    ESM::ReadersCache readers; auto model = std::make_unique<MWWorld::WorldModel>(store, readers);
+    ESM::CellRef reference{}; reference.blank(); reference.mRefID = base.mId; reference.mRefNum = {81, 0};
+    MWWorld::LiveCellRef<ESM::Weapon> live(reference, &base);
+    auto* cell = &model->getDraftCell(); MWWorld::Ptr old(cell->insert(&live), cell); model->registerPtr(old);
+    auto runtime = model->retainRuntime(); ASSERT_TRUE(runtime.detach());
+    cell = &model->getDraftCell(); MWWorld::Ptr incoming(cell->insert(&live), cell); model->registerPtr(incoming);
+    runtime.discard(); EXPECT_FALSE(runtime.restore()); EXPECT_EQ(model->getPtr(reference.mRefNum), incoming);
+    auto destroyed = model->retainRuntime(); ASSERT_TRUE(destroyed.detach()); model.reset();
+    EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.detach());
+}

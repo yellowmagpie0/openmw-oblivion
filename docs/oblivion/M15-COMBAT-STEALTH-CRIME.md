@@ -6,6 +6,63 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain registry and cell nodes for rollback — 2026-10-13
+
+PtrRegistry now has a two-phase retention handle. Preparation keeps the outgoing
+index visible but gives incoming reservation plans a separate anchor. Existing
+outgoing reservations, including copies created during preparation or after
+detachment, remain in the retained domain. Detachment transfers actual index
+nodes and the dynamic-native index without reassigning references. Rollback
+restores original nodes, serial and revision; incoming plans are retired and
+cannot publish into the restored game. Discard preserves the incoming domain
+and retires outgoing plans. Scope exit rolls back; moved/destroyed owners and
+repeated operations are checked. Publication/clear is blocked before detachment.
+
+WorldModel retention holds its actual cell containers, interior/exterior indexes,
+lookup cache and prepared resources. Incoming cells are disposed before old cell
+nodes and registrations return. Old CellStore/LiveCellRef addresses, reference
+count/charge/disabled state, serial and revision remain unchanged. Owner teardown
+releases retained references while their registration owner is still alive.
+Callers must retain record bases and scene/manager users as well, and remove
+incoming scene users before rollback releases incoming cells. This API is not
+yet called by StateManager and does not make loadGame transactional.
+
+Six new regressions cover original registry-node addresses, separate old credits
+versus 4,096 + 4,096 incoming slots, copied reservations before/after detach,
+cancellation, native dynamic-key commit, moved/destroyed owners, original cell
+addresses, incoming-node disposal and cell state. Both targeted inventories pass
+**29 tests** in `build/oblivion-compat/m15/S3/runtime-retention-normal-01` and
+`runtime-retention-sanitized-01`. Both complete engine inventories pass **1,419
+tests**, exact XML/inventory agreement with no failures/skips, in
+`runtime-retention-full-normal-01` and `runtime-retention-full-sanitized-01`.
+Tested parent: `ef589b3951fce36ee3391e64c6067b19342ff279`; matching full-run
+before/after fingerprint:
+`898bb0889e886cccd13d4d3f7230eda4a1121c6a0512bcfd8c28b45756244d00`.
+ASan/UBSan halt on errors, leaks disabled; audio/SDL are null/offscreen.
+Component code is unchanged. Full hashes and reports are retained in
+`runtime-retention-followup-01/checkpoint-summary.json`.
+
+`runtime-retention-allocation-control-01` links a copied testptr object against
+the tested production implementation, replacing the original test object. C++
+scalar/array/aligned new is disabled around explicit prepared detach/restore/
+discard operations, outside GTest assertion formatting. **24 calls** pass across
+six cases. `runtime-retention-negative-01` forces a vector allocation under the
+guard; all six tests fail on their first guarded call. Preparation, implicit
+scope rollback and whole-World/scene/manager behavior are outside this control's
+scope. Retained syntax failures were an incorrect test RefId/FormId assignment
+and an incomplete private Data definition at an earlier call site; corrected
+syntax05 passes. No runtime load-retention acceptance is claimed here.
+
+An isolated, untracked record-store retention draft is being developed under
+`store-retention-prototype-*` while the tested source remains frozen. It must
+retain actual dynamic base records, specialized cell nodes/indexes and spell-list
+ownership alongside the cells. Syntax-only draft results are not accepted engine
+evidence. Record-store, Player, native services, renderer/physics/scene, Lua and
+manager retention still need aggregate integration. The earlier real
+`late-load-preservation-probe-02` still represents a failing S3 contract: current
+StateManager cleanup discards the outgoing game after late finalization errors.
+Complete prior-world preservation and full S3 acceptance remain open.
+
 ## S3 prepare global-script records and repair legacy local indexing — 2026-10-13
 
 Admission now owns decoded GSCR records in save order, including duplicate IDs,

@@ -19,6 +19,7 @@ namespace MWWorld
 {
     class PtrRegistry
     {
+        struct RetainedRuntimeData;
         using RefIndex = std::unordered_map<ESM::RefNum, Ptr>;
         struct Reservations
         {
@@ -83,20 +84,32 @@ namespace MWWorld
         {
             reserveCapacity(0);
         }
-        PtrRegistry(PtrRegistry&& other) noexcept
-            : mRevision(other.mRevision), mIndex(std::move(other.mIndex))
-            , mSpareIndex(std::move(other.mSpareIndex))
-            , mDynamicNativeIndex(std::move(other.mDynamicNativeIndex)), mLastGenerated(other.mLastGenerated)
-            , mReservations(std::move(other.mReservations))
-        {
-            if (mReservations->mOwner == &other) mReservations->mOwner = this;
-        }
+        PtrRegistry(PtrRegistry&& other) noexcept;
         PtrRegistry& operator=(const PtrRegistry&) = delete;
         PtrRegistry& operator=(PtrRegistry&&) = delete;
-        ~PtrRegistry()
+        ~PtrRegistry();
+
+        // Start a separate reservation domain before preparing an incoming
+        // runtime. Detach only after preparation succeeds. Rollback restores
+        // the actual outgoing index nodes, serial and revision, not a replay.
+        class RetainedRuntime
         {
-            if (mReservations && mReservations->mOwner == this) mReservations->mOwner = nullptr;
-        }
+            friend class PtrRegistry;
+            std::unique_ptr<RetainedRuntimeData> mData;
+            explicit RetainedRuntime(std::unique_ptr<RetainedRuntimeData> data);
+
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            RetainedRuntime& operator=(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+            bool isDetached() const noexcept;
+        };
+        RetainedRuntime retainRuntime();
 
         PreparedInsertions prepareInsertions(std::size_t count)
         {
@@ -119,10 +132,7 @@ namespace MWWorld
         std::size_t pendingInsertions() const noexcept { return mReservations->mPending; }
         std::size_t bucketCount() const noexcept { return mIndex.bucket_count(); }
         std::size_t preparedBucketCount() const noexcept { return mSpareIndex.bucket_count(); }
-        bool canSwap(const PtrRegistry& other) const noexcept
-        {
-            return mReservations == other.mReservations && other.hasReservedCapacity();
-        }
+        bool canSwap(const PtrRegistry& other) const noexcept;
 
         std::size_t getRevision() const { return mRevision; }
 
@@ -146,7 +156,7 @@ namespace MWWorld
             return found == mDynamicNativeIndex.end() ? Ptr() : found->second;
         }
 
-        void setLastGenerated(ESM::RefNum v) { mLastGenerated = v; }
+        void setLastGenerated(ESM::RefNum v) { requireMutableRuntime(); mLastGenerated = v; }
 
         void swap(PtrRegistry& other) noexcept
         {
@@ -160,6 +170,7 @@ namespace MWWorld
 
         void clear()
         {
+            requireMutableRuntime();
             mIndex.clear();
             mDynamicNativeIndex.clear();
             mLastGenerated = ESM::RefNum{};
@@ -168,6 +179,7 @@ namespace MWWorld
 
         void insert(const Ptr& ptr)
         {
+            requireMutableRuntime();
             const auto key = ptr.getCellRef().getFormKey();
             auto native = mDynamicNativeIndex.end();
             decltype(mDynamicNativeIndex)::node_type preparedNative;
@@ -207,6 +219,7 @@ namespace MWWorld
 
         void insertPrepared(const Ptr& ptr, PreparedInsertions& prepared)
         {
+            requireMutableRuntime();
             if (!prepared.mReservations || prepared.mReservations != mReservations
                 || mReservations->mOwner != this || !hasReservedCapacity())
                 throw std::logic_error("Registry insertion reservation is unavailable");
@@ -273,6 +286,7 @@ namespace MWWorld
         {
             if (!ref.mRefNum.isSet())
             {
+                requireMutableRuntime();
                 CellRef temp(ref);
                 temp.getOrAssignRefNum(mLastGenerated);
                 ref.mRefNum = temp.getRefNum();
@@ -286,6 +300,9 @@ namespace MWWorld
         std::map<ESM::FormKey, Ptr> mDynamicNativeIndex;
         ESM::RefNum mLastGenerated;
         std::shared_ptr<Reservations> mReservations;
+        RetainedRuntimeData* mRetainedRuntime = nullptr;
+
+        void requireMutableRuntime() const;
 
         static std::size_t capacity(const RefIndex& index) noexcept
         {
@@ -316,6 +333,152 @@ namespace MWWorld
         }
 
     };
+
+    struct PtrRegistry::RetainedRuntimeData
+    {
+        PtrRegistry* mOwner;
+        std::unique_ptr<PtrRegistry> mOutgoing;
+        std::shared_ptr<Reservations> mIncoming;
+        std::size_t mRevision;
+        ESM::RefNum mLastGenerated;
+        bool mDetached = false;
+
+        explicit RetainedRuntimeData(PtrRegistry& owner)
+            : mOwner(&owner), mOutgoing(std::make_unique<PtrRegistry>(owner))
+            , mIncoming(std::make_shared<Reservations>(Reservations{&owner}))
+            , mRevision(owner.mRevision), mLastGenerated(owner.mLastGenerated)
+        {
+        }
+    };
+
+    inline void PtrRegistry::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing registry is frozen during runtime preparation");
+    }
+
+    inline bool PtrRegistry::canSwap(const PtrRegistry& other) const noexcept
+    {
+        return (!mRetainedRuntime || mRetainedRuntime->mDetached)
+            && (!other.mRetainedRuntime || other.mRetainedRuntime->mDetached)
+            && mReservations == other.mReservations && other.hasReservedCapacity();
+    }
+
+    inline PtrRegistry::PtrRegistry(PtrRegistry&& other) noexcept
+        : mRevision(other.mRevision), mIndex(std::move(other.mIndex))
+        , mSpareIndex(std::move(other.mSpareIndex))
+        , mDynamicNativeIndex(std::move(other.mDynamicNativeIndex)), mLastGenerated(other.mLastGenerated)
+        , mReservations(std::move(other.mReservations))
+        , mRetainedRuntime(std::exchange(other.mRetainedRuntime, nullptr))
+    {
+        if (mReservations->mOwner == &other) mReservations->mOwner = this;
+        if (mRetainedRuntime) mRetainedRuntime->mOwner = this;
+    }
+
+    inline PtrRegistry::~PtrRegistry()
+    {
+        if (mRetainedRuntime)
+        {
+            mRetainedRuntime->mOwner = nullptr;
+            mRetainedRuntime->mOutgoing->mReservations->mOwner = nullptr;
+            mRetainedRuntime->mOutgoing->clear();
+        }
+        if (mReservations && mReservations->mOwner == this) mReservations->mOwner = nullptr;
+    }
+
+    inline PtrRegistry::RetainedRuntime::RetainedRuntime(std::unique_ptr<RetainedRuntimeData> data)
+        : mData(std::move(data))
+    {
+    }
+    inline PtrRegistry::RetainedRuntime::~RetainedRuntime() { restore(); }
+    inline PtrRegistry::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    inline PtrRegistry::RetainedRuntime& PtrRegistry::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other) { restore(); mData = std::move(other.mData); }
+        return *this;
+    }
+
+    inline PtrRegistry::RetainedRuntime PtrRegistry::retainRuntime()
+    {
+        if (mRetainedRuntime || mReservations->mOwner != this)
+            throw std::logic_error("Registry runtime retention requires an exclusive live owner");
+        auto data = std::make_unique<RetainedRuntimeData>(*this);
+        // All allocation precedes the domain switch. Old reservation copies
+        // continue to reserve against the retained registry, not the incoming one.
+        data->mOutgoing->mReservations->mOwner = data->mOutgoing.get();
+        mReservations = data->mIncoming;
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+
+    inline bool PtrRegistry::RetainedRuntime::isDetached() const noexcept
+    {
+        return mData && mData->mOwner && mData->mDetached;
+    }
+
+    inline bool PtrRegistry::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached) return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mRetainedRuntime != mData.get() || owner.mRevision != mData->mRevision
+            || owner.mLastGenerated != mData->mLastGenerated || owner.mReservations != mData->mIncoming)
+            return false;
+        auto& outgoing = *mData->mOutgoing;
+        outgoing.mIndex.clear(); // Drop preparation copies; retain original nodes below.
+        outgoing.mDynamicNativeIndex.clear();
+        outgoing.mIndex.swap(owner.mIndex);
+        outgoing.mDynamicNativeIndex.swap(owner.mDynamicNativeIndex);
+        owner.mLastGenerated = {};
+        ++owner.mRevision;
+        mData->mDetached = true;
+        return true;
+    }
+
+    inline bool PtrRegistry::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner) return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mRetainedRuntime != mData.get()) return false;
+        auto& outgoing = *mData->mOutgoing;
+        if (mData->mDetached)
+        {
+            owner.mIndex.swap(outgoing.mIndex);
+            owner.mDynamicNativeIndex.swap(outgoing.mDynamicNativeIndex);
+            owner.mSpareIndex.swap(outgoing.mSpareIndex);
+            std::swap(owner.mRevision, outgoing.mRevision);
+            std::swap(owner.mLastGenerated, outgoing.mLastGenerated);
+        }
+        else
+        {
+            // A copied hash table may have a different bucket count. Transfer
+            // its largest empty table without replacing outgoing index nodes.
+            outgoing.mIndex.clear();
+            if (capacity(outgoing.mIndex) > capacity(outgoing.mSpareIndex))
+                outgoing.mIndex.swap(outgoing.mSpareIndex);
+            if (capacity(outgoing.mSpareIndex) > capacity(owner.mSpareIndex))
+                owner.mSpareIndex.swap(outgoing.mSpareIndex);
+        }
+        // Retire every incoming reservation, including externally held plans.
+        // Their cancellation remains safe, but they cannot publish into the old game.
+        owner.mReservations->mOwner = nullptr;
+        owner.mReservations = outgoing.mReservations;
+        owner.mReservations->mOwner = &owner;
+        owner.mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData->mOutgoing.reset();
+        return true;
+    }
+
+    inline void PtrRegistry::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        auto& owner = *mData->mOwner;
+        owner.mRetainedRuntime = nullptr;
+        mData->mOutgoing->mReservations->mOwner = nullptr;
+        mData->mOwner = nullptr;
+        mData->mOutgoing.reset();
+    }
 
     class PtrRegistryView
     {

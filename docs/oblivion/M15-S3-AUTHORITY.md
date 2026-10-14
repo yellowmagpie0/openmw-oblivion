@@ -889,3 +889,19 @@ and the failure dialog. This directly contradicts the full late-failure
 prior-world preservation contract. Record staging is insufficient to close it.
 Journal/local/Lua/cell tracking/scene and other-manager audits, missing dependencies,
 complete outgoing-world preservation and complete S3 acceptance remain open.
+
+PtrRegistry now separates incoming and outgoing reservation domains before
+runtime detachment, retaining actual index nodes and dynamic-native identities.
+Rollback restores original node addresses, serial/revision and old pending plans;
+incoming plans retire without publishing into the old game. WorldModel retention
+keeps actual cell nodes, indexes, caches and prepared resources, disposes incoming
+cells and restores original CellStore/LiveCellRef addresses/state. Scope rollback,
+commit, owner moves/destruction and replay are covered by six new regressions.
+Both targeted29 and complete1419 normal/ASan-UBSan inventories pass with matching
+source fingerprints. Twenty-four explicit operations pass with C++ new disabled;
+forced allocation fails all six negative cases. Evidence is S3/runtime-retention-*01.
+This is a component rollback foundation, not an integrated load transaction:
+StateManager does not call it yet. Record bases, Player, native services, scene/
+physics/rendering, Lua/managers and lifetime ordering must be retained together.
+The actual late-load probe still contradicts prior-world preservation, and
+complete S3 acceptance remains open.
