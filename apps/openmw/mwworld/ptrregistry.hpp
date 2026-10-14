@@ -105,6 +105,8 @@ namespace MWWorld
             RetainedRuntime(const RetainedRuntime&) = delete;
             RetainedRuntime& operator=(const RetainedRuntime&) = delete;
             bool detach() noexcept;
+            // Coordinator-only selection; both reservation domains stay alive.
+            bool exchange() noexcept;
             bool restore() noexcept;
             void discard() noexcept;
             bool isDetached() const noexcept;
@@ -342,6 +344,7 @@ namespace MWWorld
         std::size_t mRevision;
         ESM::RefNum mLastGenerated;
         bool mDetached = false;
+        bool mRetainedSelected = false;
 
         explicit RetainedRuntimeData(PtrRegistry& owner)
             : mOwner(&owner), mOutgoing(std::make_unique<PtrRegistry>(owner))
@@ -434,11 +437,30 @@ namespace MWWorld
         return true;
     }
 
+    inline bool PtrRegistry::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached) return false;
+        auto& owner = *mData->mOwner;
+        if (owner.mRetainedRuntime != mData.get()) return false;
+        auto& outgoing = *mData->mOutgoing;
+        owner.mIndex.swap(outgoing.mIndex);
+        owner.mDynamicNativeIndex.swap(outgoing.mDynamicNativeIndex);
+        owner.mSpareIndex.swap(outgoing.mSpareIndex);
+        std::swap(owner.mRevision, outgoing.mRevision);
+        std::swap(owner.mLastGenerated, outgoing.mLastGenerated);
+        owner.mReservations.swap(outgoing.mReservations);
+        owner.mReservations->mOwner = &owner;
+        outgoing.mReservations->mOwner = &outgoing;
+        mData->mRetainedSelected = !mData->mRetainedSelected;
+        return true;
+    }
+
     inline bool PtrRegistry::RetainedRuntime::restore() noexcept
     {
         if (!mData || !mData->mOwner) return false;
         auto& owner = *mData->mOwner;
         if (owner.mRetainedRuntime != mData.get()) return false;
+        if (mData->mRetainedSelected && !exchange()) return false;
         auto& outgoing = *mData->mOutgoing;
         if (mData->mDetached)
         {
@@ -473,6 +495,7 @@ namespace MWWorld
     {
         if (!mData || !mData->mOwner) return;
         if (!mData->mDetached) { restore(); return; }
+        if (mData->mRetainedSelected && !exchange()) std::terminate();
         auto& owner = *mData->mOwner;
         owner.mRetainedRuntime = nullptr;
         mData->mOutgoing->mReservations->mOwner = nullptr;

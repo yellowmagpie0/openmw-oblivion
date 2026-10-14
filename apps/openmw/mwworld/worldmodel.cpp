@@ -167,6 +167,7 @@ namespace MWWorld
         decltype(WorldModel::mIdCacheIndex) mIdCacheIndex{};
         PtrRegistry::RetainedRuntime mRegistry;
         bool mDetached = false;
+        bool mRetainedSelected = false;
 
         explicit Data(WorldModel& owner)
             : mOwner(&owner), mIdCache(owner.mIdCache.size(), {ESM::RefId(), nullptr})
@@ -324,10 +325,20 @@ namespace MWWorld
         return true;
     }
 
+    bool WorldModel::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached) return false;
+        if (!mData->mRegistry.exchange()) return false;
+        mData->swap(*mData->mOwner);
+        mData->mRetainedSelected = !mData->mRetainedSelected;
+        return true;
+    }
+
     bool WorldModel::RetainedRuntime::restore() noexcept
     {
         if (!mData || !mData->mOwner) return false;
         auto& owner = *mData->mOwner;
+        if (mData->mRetainedSelected && !exchange()) std::terminate();
         if (mData->mDetached)
         {
             owner.clear();
@@ -347,6 +358,7 @@ namespace MWWorld
     {
         if (!mData || !mData->mOwner) return;
         if (!mData->mDetached) { restore(); return; }
+        if (mData->mRetainedSelected && !exchange()) std::terminate();
         auto& owner = *mData->mOwner;
         mData->mRegistry.discard();
         mData->release();

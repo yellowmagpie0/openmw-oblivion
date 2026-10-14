@@ -75,6 +75,8 @@ namespace MWWorld
             RetainedRuntime(const RetainedRuntime&) = delete;
             RetainedRuntime& operator=(const RetainedRuntime&) = delete;
             bool detach() noexcept;
+            // Select cells and their registry together for discarded-user cleanup.
+            bool exchange() noexcept;
             bool restore() noexcept;
             void discard() noexcept;
         };

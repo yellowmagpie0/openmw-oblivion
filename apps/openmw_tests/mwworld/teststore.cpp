@@ -1900,9 +1900,76 @@ TEST(MWWorldStoreRetentionTest, CoordinatesBaseAndCellRollbackWithoutRecreatingR
     MWWorld::Ptr incoming(newCell->insert(&candidate), newCell); model.registerPtr(incoming);
     EXPECT_EQ(old.get<ESM::Weapon>()->mBase, oldBase); EXPECT_EQ(oldBase->mName, "old base");
     EXPECT_EQ(model.getPtr(reference.mRefNum), incoming);
+    bases.prepareExchange();
+    ASSERT_TRUE(bases.exchange()); ASSERT_TRUE(cells.exchange());
+    EXPECT_EQ(model.getPtr(reference.mRefNum), old);
+    EXPECT_EQ(store.get<ESM::Weapon>().search(weapon.mId), oldBase);
+    ASSERT_TRUE(bases.exchange()); ASSERT_TRUE(cells.exchange());
+    EXPECT_EQ(model.getPtr(reference.mRefNum), incoming);
+    EXPECT_EQ(store.get<ESM::Weapon>().search(weapon.mId), newBase);
     // Dispose candidate reference users before their base records are released.
     ASSERT_TRUE(cells.restore()); ASSERT_TRUE(bases.restore());
     EXPECT_EQ(&model.getDraftCell(), oldCell); EXPECT_EQ(model.getPtr(reference.mRefNum), old);
     EXPECT_EQ(old.get<ESM::Weapon>()->mBase, store.get<ESM::Weapon>().search(weapon.mId));
     EXPECT_EQ(old.get<ESM::Weapon>()->mBase->mName, "old base");
+}
+
+TEST(MWWorldStoreRetentionTest, ExchangePreservesMixedLegacyCellNodesWithPreparedTransferCapacity)
+{
+    MWWorld::ESMStore store;
+    ESM::Cell immutable{}; immutable.blank(); immutable.updateId(); immutable.mName = "immutable exterior";
+    loadEsmStore(0, getEsmFile(immutable, false, ESM::CurrentContentFormatVersion), store);
+    store.setUp();
+    const auto* staticCell = store.get<ESM::Cell>().search(immutable.mId);
+    ASSERT_NE(staticCell, nullptr);
+    ESM::Cell cell{}; cell.blank(); cell.mData.mX = 10; cell.mData.mY = 20; cell.updateId(); cell.mName = "outgoing";
+    const auto id = cell.mId;
+    const auto* original = store.getWritable<ESM::Cell>().insert(cell);
+    auto runtime = store.retainRuntime();
+    EXPECT_FALSE(runtime.canExchange()); EXPECT_FALSE(runtime.exchange());
+    EXPECT_THROW(runtime.prepareExchange(), std::logic_error);
+    ASSERT_TRUE(runtime.detach());
+    std::vector<const ESM::Cell*> incoming;
+    for (int i = 0; i < 128; ++i)
+    {
+        cell.mData.mX = 10 + i; cell.updateId(); cell.mName = "incoming";
+        incoming.push_back(store.getWritable<ESM::Cell>().insert(cell));
+    }
+    EXPECT_FALSE(runtime.canExchange()); EXPECT_FALSE(runtime.exchange());
+    EXPECT_EQ(store.get<ESM::Cell>().search(id), incoming.front());
+    runtime.prepareExchange(); ASSERT_TRUE(runtime.canExchange());
+    for (int i = 0; i < 4; ++i)
+    {
+        ASSERT_TRUE(runtime.exchange());
+        EXPECT_EQ(store.get<ESM::Cell>().search(id), original);
+        EXPECT_EQ(original->mName, "outgoing");
+        EXPECT_EQ(store.get<ESM::Cell>().search(immutable.mId), staticCell);
+        ASSERT_TRUE(runtime.exchange());
+        for (int x = 0; x < 128; ++x)
+            EXPECT_EQ(store.get<ESM::Cell>().search(10 + x, 20), incoming[x]);
+        EXPECT_EQ(store.get<ESM::Cell>().search(immutable.mId), staticCell);
+    }
+    ASSERT_TRUE(runtime.exchange());
+    ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(store.get<ESM::Cell>().search(id), original);
+    EXPECT_EQ(store.get<ESM::Cell>().search(immutable.mId), staticCell);
+    EXPECT_FALSE(store.get<ESM::Cell>().search(11, 20));
+}
+
+TEST(MWWorldStoreRetentionTest, ExchangeKeepsClearAndPublicationGenerationsInTheirRuntime)
+{
+    MWWorld::ESMStore store;
+    ESM::NPC player{}; player.blank(); player.mId = ESM::RefId::stringRefId("Player");
+    store.insertStatic(player);
+    auto runtime = store.retainRuntime(); ASSERT_TRUE(runtime.detach());
+    store.clearDynamic();
+    auto incoming = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    runtime.prepareExchange(); ASSERT_TRUE(runtime.exchange());
+    store.clearDynamic(); // this is the outgoing runtime's first clear, not the incoming second clear
+    EXPECT_FALSE(incoming.commit());
+    ASSERT_TRUE(runtime.exchange());
+    store.clearDynamic(); ASSERT_TRUE(incoming.commit());
+    auto next = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
+    ASSERT_TRUE(runtime.exchange()); runtime.discard();
+    store.clearDynamic(); EXPECT_TRUE(next.commit());
 }

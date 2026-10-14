@@ -544,6 +544,9 @@ namespace MWWorld
             virtual ~Binding() = default;
             virtual bool isUnchanged() const noexcept = 0;
             virtual void swap() noexcept = 0;
+            virtual void prepareExchange() {}
+            virtual bool canExchange() const noexcept { return true; }
+            virtual void exchange() noexcept { swap(); }
         };
         template <class StoreType> struct TypedBinding : Binding
         {
@@ -609,6 +612,7 @@ namespace MWWorld
         {
             Store<ESM::Cell>* mTarget;
             decltype(Store<ESM::Cell>::mCells) mCells;
+            decltype(Store<ESM::Cell>::mCells) mStaging;
             decltype(Store<ESM::Cell>::mDynamicInt) mInteriors;
             decltype(Store<ESM::Cell>::mDynamicExt) mExteriors;
             decltype(Store<ESM::Cell>::mSharedInt) mSharedInt;
@@ -624,11 +628,38 @@ namespace MWWorld
                 , mExteriorCount(target.mDynamicExt.size())
             {
                 mCells.reserve(mInteriorCount + mExteriorCount);
+                mStaging.reserve(mInteriorCount + mExteriorCount);
             }
             bool isUnchanged() const noexcept override
             {
                 return mTarget->mCells.size() == mCellCount && mTarget->mDynamicInt.size() == mInteriorCount
                     && mTarget->mDynamicExt.size() == mExteriorCount;
+            }
+            void prepareExchange() override
+            {
+                mStaging.reserve(std::max(mCells.size(), mTarget->mDynamicInt.size() + mTarget->mDynamicExt.size()));
+            }
+            bool canExchange() const noexcept override
+            {
+                const auto dynamic = mTarget->mDynamicInt.size() + mTarget->mDynamicExt.size();
+                const auto stagingCapacity = mStaging.bucket_count() == 1 ? 0 : mStaging.bucket_count();
+                return mDetached && mStaging.empty() && stagingCapacity >= dynamic
+                    && mTarget->mCells.bucket_count() >= mTarget->mCells.size() - dynamic + mCells.size();
+            }
+            void exchange() noexcept override
+            {
+                // Both runtime record sets remain alive; immutable static nodes stay in place.
+                for (const auto& [_, cell] : mTarget->mDynamicInt)
+                    mStaging.insert(mTarget->mCells.extract(cell->mId));
+                for (const auto& [_, cell] : mTarget->mDynamicExt)
+                    mStaging.insert(mTarget->mCells.extract(cell->mId));
+                while (!mCells.empty())
+                    mTarget->mCells.insert(mCells.extract(mCells.begin()));
+                mCells.swap(mStaging);
+                mInteriors.swap(mTarget->mDynamicInt);
+                mExteriors.swap(mTarget->mDynamicExt);
+                mSharedInt.swap(mTarget->mSharedInt);
+                mSharedExt.swap(mTarget->mSharedExt);
             }
             void swap() noexcept override
             {
@@ -658,6 +689,7 @@ namespace MWWorld
         SpellListCache mSpellLists;
         std::vector<std::shared_ptr<MWMechanics::SpellList>> mSpellPins;
         bool mDetached = false;
+        bool mRetainedSelected = false;
         std::uint64_t mExpectedDynamicCount;
         bool mExpectedPlayerPrepared;
         explicit Impl(ESMStore& owner) : mOwner(&owner), mIds(owner.mStoreImp->mStaticIds)
@@ -731,11 +763,41 @@ namespace MWWorld
         return true;
     }
 
+    void ESMStore::RetainedRuntime::prepareExchange()
+    {
+        if (!mImpl || !mImpl->mOwner || !mImpl->mDetached)
+            throw std::logic_error("Store runtime exchange requires detachment");
+        for (auto& binding : mImpl->mBindings) binding->prepareExchange();
+    }
+
+    bool ESMStore::RetainedRuntime::canExchange() const noexcept
+    {
+        return mImpl && mImpl->mOwner && mImpl->mDetached
+            && std::ranges::all_of(mImpl->mBindings, [](const auto& binding) { return binding->canExchange(); });
+    }
+
+    bool ESMStore::RetainedRuntime::exchange() noexcept
+    {
+        if (!canExchange()) return false;
+        auto& owner = *mImpl->mOwner;
+        for (auto& binding : mImpl->mBindings) binding->exchange();
+        mImpl->mIds.swap(owner.mStoreImp->mIds);
+        std::swap(mImpl->mDynamicCount, owner.mDynamicCount);
+        std::swap(mImpl->mPlayerPrepared, owner.mPlayerRecordPrepared);
+        mImpl->mSpellLists.swap(owner.mSpellListCache);
+        mImpl->mSpellPins.swap(owner.mPreparedSpellListPins);
+        std::swap(mImpl->mClearGeneration, owner.mDynamicClearGeneration);
+        std::swap(mImpl->mPublicationGeneration, owner.mStoreImp->mDynamicPublicationGeneration);
+        mImpl->mRetainedSelected = !mImpl->mRetainedSelected;
+        return true;
+    }
+
     bool ESMStore::RetainedRuntime::restore() noexcept
     {
         if (!mImpl || !mImpl->mOwner)
             return false;
         auto& owner = *mImpl->mOwner;
+        if (mImpl->mRetainedSelected && !exchange()) std::terminate();
         if (mImpl->mDetached)
         {
             mImpl->swap();
@@ -756,6 +818,7 @@ namespace MWWorld
             restore();
             return;
         }
+        if (mImpl->mRetainedSelected && !exchange()) std::terminate();
         mImpl->mOwner->mRetainedRuntime = nullptr;
         mImpl.reset();
     }

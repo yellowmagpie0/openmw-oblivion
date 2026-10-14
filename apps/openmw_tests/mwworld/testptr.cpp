@@ -960,3 +960,106 @@ TEST(MWWorldPtrTest, retainedWorldModelCommitAndOwnerDestructionKeepRegistration
     auto destroyed = model->retainRuntime(); ASSERT_TRUE(destroyed.detach()); model.reset();
     EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.detach());
 }
+
+TEST(MWWorldPtrTest, retainedRegistryExchangeKeepsBothCreditDomainsAndOriginalNodes)
+{
+    MWClass::Weapon::registerSelf();
+    MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("exchange_registry_weapon"); store.insertStatic(base);
+    MWWorld::ManualRef old(store, base.mId), incoming(store, base.mId), oldExtra(store, base.mId), newExtra(store, base.mId);
+    auto owner = std::make_unique<MWWorld::PtrRegistry>(); owner->insert(old.getPtr());
+    const auto id = old.getPtr().getCellRef().getRefNum();
+    const auto* node = &*owner->begin();
+    auto oldCredits = owner->prepareInsertions(2);
+    auto runtime = owner->retainRuntime();
+    EXPECT_FALSE(runtime.exchange());
+    auto incomingCredits = owner->prepareInsertions(2);
+    ASSERT_TRUE(runtime.detach()); owner->insertPrepared(incoming.getPtr(), incomingCredits);
+    ASSERT_TRUE(runtime.exchange());
+    EXPECT_EQ(owner->getOrEmpty(id), old.getPtr()); EXPECT_EQ(&*owner->begin(), node);
+    owner->insertPrepared(oldExtra.getPtr(), oldCredits);
+    auto copiedIncoming = incomingCredits; // allocate against the parked candidate domain
+    ASSERT_TRUE(runtime.exchange());
+    EXPECT_EQ(owner->getOrEmpty(id), incoming.getPtr());
+    EXPECT_THROW(owner->insertPrepared(oldExtra.getPtr(), oldCredits), std::logic_error);
+    owner->insertPrepared(newExtra.getPtr(), copiedIncoming);
+    ASSERT_TRUE(runtime.exchange());
+    MWWorld::PtrRegistry moved(std::move(*owner)); owner.reset();
+    ASSERT_TRUE(runtime.restore());
+    EXPECT_EQ(moved.getOrEmpty(id), old.getPtr());
+    EXPECT_EQ(moved.getOrEmpty(oldExtra.getPtr().getCellRef().getRefNum()), oldExtra.getPtr());
+    EXPECT_EQ(moved.getLastGenerated(), oldExtra.getPtr().getCellRef().getRefNum());
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{incomingCredits}, std::logic_error);
+    EXPECT_NO_THROW(MWWorld::PtrRegistry::PreparedInsertions{oldCredits});
+    EXPECT_FALSE(runtime.exchange());
+}
+
+TEST(MWWorldPtrTest, retainedRegistryExchangeCommitAndOwnerDeathRetireCorrectDomains)
+{
+    MWClass::Weapon::registerSelf(); ESM::Weapon base{}; base.blank();
+    ESM4::Reference reference{}; reference.mId = {31, -1}; reference.mBaseObj = {0x800, 0};
+    reference.mFormKey = ESM::FormKey::dynamic("exchange-native", 31);
+    MWWorld::LiveCellRef<ESM::Weapon> old(reference, &base);
+    reference.mId = {32, -1}; MWWorld::LiveCellRef<ESM::Weapon> incoming(reference, &base);
+    auto owner = std::make_unique<MWWorld::PtrRegistry>(); owner->insert(MWWorld::Ptr(&old));
+    auto oldCredits = owner->prepareInsertions(1); auto runtime = owner->retainRuntime();
+    auto newCredits = owner->prepareInsertions(1); ASSERT_TRUE(runtime.detach());
+    owner->insert(MWWorld::Ptr(&incoming)); ASSERT_TRUE(runtime.exchange());
+    EXPECT_EQ(owner->getDynamicNativePtr(reference.mFormKey), MWWorld::Ptr(&old));
+    runtime.discard();
+    EXPECT_EQ(owner->getDynamicNativePtr(reference.mFormKey), MWWorld::Ptr(&incoming));
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{oldCredits}, std::logic_error);
+    EXPECT_NO_THROW(MWWorld::PtrRegistry::PreparedInsertions{newCredits});
+    auto destroyed = owner->retainRuntime(); auto latestCredits = owner->prepareInsertions(1);
+    ASSERT_TRUE(destroyed.detach()); ASSERT_TRUE(destroyed.exchange()); owner.reset();
+    EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.exchange());
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{newCredits}, std::logic_error);
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{latestCredits}, std::logic_error);
+}
+
+TEST(MWWorldPtrTest, retainedWorldModelExchangeSelectsCellsIndexesAndScopeRollbackTogether)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("exchange_model_weapon"); store.insertStatic(base);
+    ESM::ReadersCache readers; MWWorld::WorldModel model(store, readers);
+    auto* oldCell = &model.getDraftCell();
+    ESM::CellRef reference{}; reference.blank(); reference.mRefID = base.mId; reference.mRefNum = {77, 0};
+    MWWorld::LiveCellRef<ESM::Weapon> live(reference, &base);
+    MWWorld::Ptr old(oldCell->insert(&live), oldCell); model.registerPtr(old);
+    auto oldCredits = model.preparePtrInsertions(1);
+    MWWorld::PtrRegistry::PreparedInsertions incomingCredits;
+    {
+        auto runtime = model.retainRuntime(); incomingCredits = model.preparePtrInsertions(1);
+        ASSERT_TRUE(runtime.detach());
+        auto* incomingCell = &model.getDraftCell();
+        MWWorld::Ptr incoming(incomingCell->insert(&live), incomingCell); model.registerPreparedPtr(incoming, incomingCredits);
+        ASSERT_TRUE(runtime.exchange());
+        EXPECT_EQ(&model.getDraftCell(), oldCell); EXPECT_EQ(model.getPtr(reference.mRefNum), old);
+        EXPECT_TRUE(model.ownsCell(*oldCell)); EXPECT_FALSE(model.ownsCell(*incomingCell));
+        auto candidateCopy = incomingCredits;
+        ASSERT_TRUE(runtime.exchange());
+        EXPECT_EQ(&model.getDraftCell(), incomingCell); EXPECT_EQ(model.getPtr(reference.mRefNum), incoming);
+        EXPECT_TRUE(model.ownsCell(*incomingCell)); EXPECT_FALSE(model.ownsCell(*oldCell));
+        ASSERT_TRUE(runtime.exchange()); // scope rollback starts with original selected
+    }
+    EXPECT_EQ(&model.getDraftCell(), oldCell); EXPECT_EQ(model.getPtr(reference.mRefNum), old);
+    EXPECT_NO_THROW(MWWorld::PtrRegistry::PreparedInsertions{oldCredits});
+    EXPECT_THROW(MWWorld::PtrRegistry::PreparedInsertions{incomingCredits}, std::logic_error);
+}
+
+TEST(MWWorldPtrTest, retainedWorldModelExchangeDiscardAndDestructionPreserveCandidateRegistrations)
+{
+    MWClass::Weapon::registerSelf(); MWWorld::ESMStore store; ESM::Weapon base{}; base.blank();
+    base.mId = ESM::RefId::stringRefId("exchange_discard_model_weapon"); store.insertStatic(base);
+    ESM::ReadersCache readers; auto model = std::make_unique<MWWorld::WorldModel>(store, readers);
+    ESM::CellRef reference{}; reference.blank(); reference.mRefID = base.mId; reference.mRefNum = {81, 0};
+    MWWorld::LiveCellRef<ESM::Weapon> live(reference, &base);
+    auto* oldCell = &model->getDraftCell(); MWWorld::Ptr old(oldCell->insert(&live), oldCell); model->registerPtr(old);
+    auto runtime = model->retainRuntime(); ASSERT_TRUE(runtime.detach());
+    auto* cell = &model->getDraftCell(); MWWorld::Ptr incoming(cell->insert(&live), cell); model->registerPtr(incoming);
+    ASSERT_TRUE(runtime.exchange()); runtime.discard();
+    EXPECT_EQ(model->getPtr(reference.mRefNum), incoming); EXPECT_EQ(&model->getDraftCell(), cell);
+    auto destroyed = model->retainRuntime(); ASSERT_TRUE(destroyed.detach());
+    ASSERT_TRUE(destroyed.exchange()); model.reset();
+    EXPECT_FALSE(destroyed.restore()); EXPECT_FALSE(destroyed.exchange());
+}

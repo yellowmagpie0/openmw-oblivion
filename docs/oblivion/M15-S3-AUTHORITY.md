@@ -950,3 +950,16 @@ S3/native-service-selection-*01. World must retain/select the corresponding
 cells/pathgrids/physics and other managers; StateManager is not wired yet. A renamed
 ignored registry draft has standalone evidence only. Actual full late-failure
 world preservation and complete S3 acceptance remain open.
+
+Registry/model/record ownership can now be selected reversibly. Actual node
+addresses and both reservation domains remain alive; terminal restore/discard
+normalize selection and retire the right plans. Legacy dynamic cell transfer uses
+pre-reserved staging buckets and preserves static node addresses. Store generations
+follow their selected runtime. Six new tests and coordinated reference/base
+selection pass both targeted 42 and full 1,439 normal/ASan-UBSan inventories with
+matching fingerprints. Ninety-three explicit operations pass with C++ new disabled;
+forced allocation fails all 19 selected retention tests. Evidence is
+S3/core-runtime-selection-*01. World/scene/manager selection and StateManager wiring
+are still absent; isolated local-script/clock/globals probes are not production or
+full runtime acceptance. Complete late-failure prior-world preservation and S3
+acceptance remain open.

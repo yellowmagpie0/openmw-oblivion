@@ -6,6 +6,55 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 select retained registry, cell and record ownership domains — 2026-10-13
+
+PtrRegistry now exchanges actual index/native/spare tables, revision/serial and
+reservation anchors without retiring either domain. Anchor owners follow the
+selected registry, so pending credits and copies remain usable only within their
+own original/incoming domain. Terminal restore/discard first normalize selection
+and retire the correct domain. Moved/destroyed owners remain checked.
+
+WorldModel exchanges actual cell/prepared/cache tables together with its registry;
+original CellStore/LiveCellRef addresses return during selection. Scope rollback,
+commit and owner teardown normalize either phase before releasing cells. Callers
+must stop the corresponding scene users and retain record bases throughout.
+ESMStore exchanges typed records, native indexes, ID/spell caches, counters and
+clear/publication generations. Mixed legacy cells use a separate reversible
+node-transfer path, preserving both dynamic record sets and immutable static
+addresses. Transfer buckets are reserved with prepareExchange after incoming
+installation; canExchange rejects insufficient capacity before any mutation.
+Terminal rollback retains the existing candidate-disposal path.
+
+Six new regressions and an expanded coordinated model/base regression cover
+copies/consumption across both credit domains, original cell/reference/base
+addresses, selected-phase scope/commit/owner death, native indexes, 128 incoming
+legacy cells versus one outgoing cell with stable static nodes, capacity rejection,
+repeated exchanges and generation-sensitive prepared definition publication.
+Both targeted inventories pass **42 tests**, and both complete engine inventories
+pass **1,439 tests**, exact XML/inventory agreement with no failures/skips, in
+`build/oblivion-compat/m15/S3/core-runtime-selection-{normal,sanitized,full-normal,full-sanitized}-01`.
+Tested parent: `b0dd8e50adf66925a07b8485f7c23f6bc33fc4f5`; matching before/after
+fingerprint: `ab5924564f7a57f46147322c18487995e26fda5801f48eae2a8e03455d220b7c`.
+ASan/UBSan halt on errors; leak checks disabled; audio/SDL null/offscreen.
+Full reports/hashes are in `core-runtime-selection-followup-01/checkpoint-summary.json`.
+
+Copied testptr/teststore objects linked against the tested production archive
+pass **93 explicit ownership operations** with C++ scalar/array/aligned new disabled
+in `core-runtime-selection-allocation-control-01`. Forced vector allocation fails
+all **19 selected retention tests** at their first guarded operation in
+`core-runtime-selection-negative-01`. Preparation/transfer reservation, implicit
+scope rollback, full World/scene/manager teardown and callbacks outside the guarded
+operation are excluded. No whole-load allocation guarantee is claimed.
+
+These APIs still need aggregate World/manager selection and StateManager wiring.
+Old/candidate scene users must be released against their own selected services,
+cells and bases. Ignored local-script/clock/globals drafts have isolated semantic
+probes only; they do not establish production World rollback. Actual Lua closures,
+storage/UI/audio, root/camera/resource bindings and other managers remain to be
+retained. The earlier actual late-load-preservation probe still contradicts the
+full failure contract. Complete prior-world preservation and S3 acceptance remain
+open.
+
 ## S3 retain native AI and select parked services for disposal — 2026-10-13
 
 Native AI now retains actual LiveActor map nodes and their owned route/observed/

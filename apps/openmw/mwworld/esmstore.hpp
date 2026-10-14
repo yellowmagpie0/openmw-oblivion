@@ -183,6 +183,10 @@ namespace MWWorld
             RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
             RetainedRuntime(const RetainedRuntime&) = delete;
             bool detach() noexcept;
+            // Reserve transfer buckets after incoming records are installed.
+            void prepareExchange();
+            bool canExchange() const noexcept;
+            bool exchange() noexcept;
             bool restore() noexcept;
             void discard() noexcept;
         };
