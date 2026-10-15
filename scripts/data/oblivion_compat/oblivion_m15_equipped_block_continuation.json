@@ -33,7 +33,6 @@
     "--replace=config",
     "--config",
     "{output}/config",
-    "--no-sound=1",
     "--no-grab",
     "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
   ],
@@ -92,7 +91,8 @@
     "M15 melee restore:",
     "M15 melee interrupt:",
     "M15 melee hit committed:",
-    "onFrame failed"
+    "onFrame failed",
+    "M15 melee hit sound requested:"
   ],
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",

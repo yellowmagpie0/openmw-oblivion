@@ -6,6 +6,26 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 equipped block impact audio — 2026-10-15
+
+Ordinary equipped blocks now carry native sound selection through contact commit.
+Weapon blocks play independent attacker/defender voices at their world midpoint,
+including two copies of the same SOUN; shields select native weight/material and
+body/weapon layers. The original selector is independently executed for484 cases,
+and shield weight classification for256 flag bytes. The World matrix checks
+prepared layers alongside atomic numeric/contact behavior.
+
+Full normal and ASan/UBSan checks each pass1479 engine tests and2619 component
+tests, with exact inventories and no failures/skips. Both real input courses
+save while blocking and restart in distinct processes with exact native values
+and conditions, two successful block voices and no replay. Captured stock blade
+block PCM matches at0.9985/0.9951 before restart and is absent afterward. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#equipped-block-impact-audio--implementation-checkpoint)
+records frozen source/binary hashes, original-instruction boundaries, retained
+failed builds and the precise runtime scope. Block-hit/recoil animation,
+breakage/drop/mastery, power/creature delivery and the remaining acceptance
+matrix stay open. S4 is not complete.
+
 ## S4 equipped block mitigation and atomic sequential wear — 2026-10-15
 
 Ordinary weapon/unarmed contacts now prepare native shield/weapon blocks through

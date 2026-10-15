@@ -1487,10 +1487,15 @@ namespace MWMechanics
                     continue;
                 if (const auto* sound = MWSound::resolveNativeAnimationSound(world->getStore(), editorId))
                 {
-                    MWBase::Environment::get().getSoundManager()->playSound3D(
-                        contact->mVictim, sound->mId, 1.f, 1.f);
+                    const auto soundManager = MWBase::Environment::get().getSoundManager();
+                    const bool played = contact->mHitSoundPosition
+                        ? soundManager->playSound3D(osg::Vec3f((*contact->mHitSoundPosition)[0],
+                            (*contact->mHitSoundPosition)[1], (*contact->mHitSoundPosition)[2]), sound->mId, 1.f, 1.f)
+                            != nullptr
+                        : soundManager->playSound3D(contact->mVictim, sound->mId, 1.f, 1.f) != nullptr;
                     Log(Debug::Verbose) << "M15 melee hit sound requested: actor=" << actor.serialize()
-                                        << " id=" << strike.mActionId << " sound=" << editorId;
+                                        << " id=" << strike.mActionId << " sound=" << editorId
+                                        << " played=" << played;
                 }
             }
         }

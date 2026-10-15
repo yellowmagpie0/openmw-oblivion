@@ -52,6 +52,7 @@ namespace MWMechanics
         unsigned mArmorConditionWrites = 0;
         unsigned mRandomDraws = 0;
         std::optional<std::array<std::string_view, 3>> mHitSounds{};
+        std::optional<std::array<float, 3>> mHitSoundPosition{};
     };
     // Acquire actual collision/LOS contact, prepare native damage, then publish
     // one owned transaction. Unavailable and unsupported contexts do not spend.
@@ -91,6 +92,9 @@ namespace MWMechanics
         float mPreArmorDamage = 0;
         std::vector<OblivionPhysicalConditionChange> mVictimConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
+        bool mBlockAccepted = false;
+        bool mWeaponBlockSound = false;
+        std::optional<std::array<std::string_view, 3>> mBlockSounds{};
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
@@ -107,6 +111,9 @@ namespace MWMechanics
         float mPreArmorDamage = 0;
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
+        bool mBlockAccepted = false;
+        bool mWeaponBlockSound = false;
+        std::optional<std::array<std::string_view, 3>> mBlockSounds{};
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

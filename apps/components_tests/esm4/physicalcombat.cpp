@@ -4849,3 +4849,21 @@ TEST(ESM4PhysicalCombat, BlockedBodyArmorWearRejectsInvalidDomainsBeforeReturnin
             EXPECT_THROW(ESM4::blockedArmorWear(1, fraction, unarmed), std::invalid_argument);
     }
 }
+
+TEST(ESM4PhysicalCombat, BlockSoundLayersMatchOriginalSelector)
+{
+    struct Case
+    {
+        std::int32_t mAttacker, mDefender;
+        bool mEnchanted;
+        std::array<std::string_view, 2> mSounds;
+    };
+    constexpr Case cases[] = {
+#include "blocksound_expected.inc"
+    };
+    for (const auto& c : cases)
+    {
+        SCOPED_TRACE(::testing::Message() << c.mAttacker << ',' << c.mDefender << ',' << c.mEnchanted);
+        EXPECT_EQ(ESM4::nativeMeleeBlockSounds(c.mAttacker, c.mDefender, c.mEnchanted), c.mSounds);
+    }
+}

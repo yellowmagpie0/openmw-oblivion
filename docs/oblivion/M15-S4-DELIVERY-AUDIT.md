@@ -14,7 +14,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary weapon/unarmed damage. `isOrdinaryMeleeContactPending` admits only Left/Right kinds. | Power selection can create animation/action ownership, but the ordinary contact predicate rejects power kinds. Directional/mastery selection is explicitly unfinished in the controller. Creature attacker and victim domains are rejected by ordinary adapters. Implement the native routes and verify geometry without a TES3 chance roll. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
-| 5. Actual animation, HUD and sound | Native KF timing, native swish and unarmored NPC hit sound requests are wired in the controller. | Contact sound selection excludes armored/blocking victims and creature families. Complete native reaction animation and related sound/HUD feedback; verify rendered output and captured audio. |
+| 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC hits and equipped-block sound selection are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
@@ -31,9 +31,11 @@ Mastery and Reactions. Cover discrete branches at L1 and appropriate pairwise /
 high-risk crosses at L2/L3. Required live assertions include exact pre/post Health,
 Fatigue, armor and weapon condition, contact identity and no replay.
 
-The explicit S4 course still needs a named nonlethal target attacked with normal
+The complete S4 course requires a named nonlethal target attacked with normal
 input, blocking its production-policy attack, misses outside reach and behind a
-wall, and recovery after stagger. Repeat first/third person, keyboard/mouse and
+wall, and recovery after stagger. The bounded equipped-block course now verifies
+a production opponent attack and held-block restart, including stock audio.
+Complete the combined course and repeat first/third person, keyboard/mouse and
 gamepad, and FPS cases. Save/quit/fresh-process load during windup, blocking and
 recovery must match uninterrupted continuation. These are distinct from idle
 restart or direct rule/service tests. The final gate is input -> animation
@@ -299,3 +301,82 @@ held capture was also reviewed. Final binary SHA256s are
 `b3b1aacba95ef2b323a29468f7bd8be7c51b08a15e4bfc086c9c462ed249f8c3`
 (instrumented). Per-course verification retains the tested code fingerprint,
 manifest hashes, original/source/output save hashes and exact assertions.
+
+
+## Equipped block impact audio — implementation checkpoint
+
+Prepared ordinary weapon/unarmed contacts now carry the accepted block sound
+selection through the same owned contact boundary. The controller starts audio
+only after that contact commits. Weapon blocking requests independent attacker
+and defender layers at the native world-position midpoint; positional playback
+preserves both voices when they share the same SOUN. Actor-bound playback would
+replace the first copy. Shield blocking selects its light/heavy material plus
+the native NPC body/weapon layers. Rejected posture/cone/Paralysis blocks no
+longer suppress an otherwise admitted unarmored ordinary hit's sounds merely
+because the victim holds the blocking posture. Unsupported contact branches
+retain their existing admission gates.
+
+Independent original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/block-sound-oracle-01` executes the complete6AFFF0 selector/return path for
+242 attacker/defender/enchantment combinations under each x87 control word,
+484 cases total. The6ADE50 boundary records requested EDIDs/flags and returns
+null: original voice construction, pitch/randomization and output are not
+emulated acceptance evidence. The checked-in `blocksound_expected.inc` retains
+242 independent expected cases, including absent layers and signed enum limits.
+The attacker-only enchanted blade/blunt selector is covered as a pure rule;
+this does not admit enchanted runtime contacts. The original5FF934/5FFB05
+callers distinguish weapon blocking from shield classification. Executing
+4B4C70 on all256 flag bytes independently confirms the shield weight high bit.
+The existing NPC hit selector covers the shield material/body/weapon ordering.
+The32-combination World matrix now checks prepared shield/weapon sound layers
+alongside its exact numeric, atomicity and replay assertions.
+
+Final `S4/block-sound-full-normal-03` and `-full-sanitized-03` each pass all1479
+engine tests/121 suites and2619 component tests/252 suites, unfiltered, with
+exact inventory/XML agreement, zero failures and zero skips. Both retain the
+same frozen dirty-source fingerprint atop97a45a2f00:
+`319a75e087ab5cd850ab7f88a72584b1346c60fe637ab83e250ed4bdae058f99`.
+ASan leak checking is disabled; UBSan halts. Only these documentation and
+portable manifest updates follow the tested C++ source. Normal -01 and sanitizer
+-01 were deliberately stopped when review found same-SOUN replacement. Normal
+-02 retains the diagnosed `auto*`/`NotNullPtr` compiler error; sanitizer -02 was
+stopped before fixing that shared source. Neither is passing final evidence.
+
+`S4/block-sound-runtime-normal-01` and `-runtime-sanitized-01` pass the real held-b
+block, Space activation, production stationary opponent contact, actual Fatigue
+recovery, F5 save and distinct-process load/resave course with audio enabled.
+Normal PIDs447932/448118 and instrumented451092/451443 are terminal. Independent
+verification checks all nine native AV arrays, exact Health/condition results,
+full Player inventory, opponent weapon, unchanged combat RNG, consumed action
+ownership and posture6 -> -1 without replay. Both native block voices return
+successful playback. OpenAL's wave backend captures actual finite, non-silent
+mixer output; both held-pose screenshots were directly reviewed.
+
+The unchanged stock-audio analysis method/0.75 correlation threshold finds one
+block cluster before restart and none after in both builds. Normal matches
+`wpn_block_blade_03.wav` at0.9984971353; instrumented matches
+`wpn_block_blade_02.wav` at0.9950682284. The overlapping two native voices occupy
+one temporal cluster. Winning SOUN `WPNBlockBlade` is00058F14, folder
+`fx\wpn\weaponblock\blade\`, from the unchanged Oblivion master
+SHA256`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+Stock BSA SHA256:
+`f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec`.
+Per-asset hashes, waveform hashes, comparison reports and rejected preflights
+stay in ignored evidence. This proves stock PCM delivery, not hardware listening
+or an original-game waveform/pitch comparison.
+
+Runtime game binary SHA256s are
+`511c78791a749dec35c3c3d870c85fca9c6c0baa2b7448240df9dadd818f2d77`
+and`998084aee6a7ace4d904bb4939682eaed8112b037e9c875dce7893ab681e2707`.
+The checked-in equipped-block/continuation manifests now enable sound and require
+successful block playback/no replay. The local capture backend is declared only
+in the retained runtime manifests; generated plugins/assets remain ignored.
+
+S4 remains incomplete. This checkpoint does not close live shield or unarmed-only
+block audio, block-hit/recoil animation, proc/breakage/drop consequences,
+power/creature routes, or the remaining view/control/FPS and in-action restart
+matrix. In particular, native5F3870 has an NPC drop branch as well as unequip
+paths. Numeric break publication needs complete scene/inventory consequences
+and equipment notifications deferred beyond active controller/actor iteration;
+simply clearing an equipped slot would not deliver that transition safely.

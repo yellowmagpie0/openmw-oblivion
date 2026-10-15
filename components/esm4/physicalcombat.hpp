@@ -46,6 +46,11 @@ namespace ESM4
     // are empty. Creature sources/targets require their separate native paths.
     std::array<std::string_view, 3> nativeNpcMeleeHitSounds(const NpcMeleeHitSoundInput& input);
 
+    // Original6AFFF0 weapon/unarmed block palette in attacker, defender order.
+    // The enchantment selector affects only the attacker layer.
+    std::array<std::string_view, 2> nativeMeleeBlockSounds(std::int32_t attackerWeaponType,
+        std::int32_t defenderWeaponType, bool enchantedWeaponSound = false);
+
     enum class CombatMastery { Novice, Apprentice, Journeyman, Expert, Master };
     struct CombatMasterySettings
     {

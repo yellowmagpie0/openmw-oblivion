@@ -303,6 +303,8 @@ namespace MWMechanics
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
         std::int32_t soundWeaponType = -1;
         float preArmorDamage = 0;
+        bool blockAccepted = false;
+        bool weaponBlockSound = false;
         OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
         {
@@ -318,6 +320,9 @@ namespace MWMechanics
                 result.mDamage = {damage->mHealth, damage->mFatigue};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+                blockAccepted = damage->mBlockAccepted;
+                weaponBlockSound = damage->mWeaponBlockSound;
+                result.mHitSounds = damage->mBlockSounds;
                 preArmorDamage = damage->mPreArmorDamage;
                 deltas.mConditionChanges = damage->mVictimConditionChanges;
                 deltas.mRandomTransition = damage->mRandomTransition;
@@ -351,6 +356,9 @@ namespace MWMechanics
                 result.mDamage = {damage->mHealth, 0};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+                blockAccepted = damage->mBlockAccepted;
+                weaponBlockSound = damage->mWeaponBlockSound;
+                result.mHitSounds = damage->mBlockSounds;
                 result.mWeaponConditionAfterWear = damage->mConditionAfterWear;
                 result.mArmorConditionWrites = static_cast<unsigned>(std::count_if(
                     damage->mVictimConditionChanges.begin(), damage->mVictimConditionChanges.end(),
@@ -367,9 +375,21 @@ namespace MWMechanics
                 preArmorDamage = damage->mPreArmorDamage;
             }
         }
+        if (weaponBlockSound)
+        {
+            // Original6B00F6 computes the midpoint from native world positions.
+            // Independent position voices preserve two identical block layers;
+            // actor-bound playback replaces the first copy of the same SOUN.
+            const auto& from = attacker.getRefData().getPosition();
+            const auto& to = contact->getRefData().getPosition();
+            std::array<float, 3> position;
+            for (std::size_t i = 0; i < position.size(); ++i)
+                position[i] = static_cast<float>((double(from.pos[i]) + to.pos[i]) * .5);
+            result.mHitSoundPosition = position;
+        }
         deltas.mVictimHealth = -result.mDamage.mHealth;
         if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4)
-            && !oblivionBlockingPosture(world, *contact))
+            && !blockAccepted)
         {
             // Unarmored ordinary NPC contacts reach original5FFD61 with no
             // armor/shield material and neither selector flag. Armor-hit
@@ -528,12 +548,14 @@ namespace MWMechanics
             float mDebit = 0;
             bool mAccepted = false;
             bool mUnarmed = true;
+            bool mWeaponBlockSound = false;
+            std::optional<std::array<std::string_view, 3>> mSounds{};
             std::vector<OblivionPhysicalConditionChange> mConditions{};
         };
 
         std::optional<PreparedBlock> prepareOrdinaryBlock(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
-            float remaining, bool weaponAttack, std::span<const ESM4::GameSetting* const> settings)
+            float remaining, std::int32_t attackerWeaponType, std::span<const ESM4::GameSetting* const> settings)
         {
             PreparedBlock result{remaining};
             if (!oblivionBlockingPosture(world, victim) || oblivionParalyzed(world, victim))
@@ -572,7 +594,7 @@ namespace MWMechanics
             const auto equipment = shield ? ESM4::BlockEquipment::Shield
                 : weapon ? ESM4::BlockEquipment::Weapon : ESM4::BlockEquipment::Unarmed;
             const auto disposition = ESM4::blockContactDisposition(
-                {true, false, false, true, equipment, weaponAttack, false});
+                {true, false, false, true, equipment, attackerWeaponType >= 0, false});
             if (disposition == ESM4::BlockContactDisposition::ReactionOnly)
                 return std::nullopt; // Zero-absorption unarmed mastery/recoil remains a separate branch.
             const bool player = victim == world.getPlayerPtr();
@@ -601,6 +623,16 @@ namespace MWMechanics
             const float fatigue = player ? service.getPlayerValue(10) : service.getNonPlayerValue(victim, 10);
             result.mAccepted = true;
             result.mUnarmed = item.isEmpty();
+            if (shield)
+                result.mSounds = ESM4::nativeNpcMeleeHitSounds({attackerWeaponType, -1,
+                    (shield->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0});
+            else if (weapon)
+            {
+                result.mWeaponBlockSound = true;
+                const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType,
+                    static_cast<std::int32_t>(weapon->mData.type));
+                result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
+            }
             result.mFraction = ESM4::blockFraction({integer(15), integer(7),
                 ESM4::combatFatigueRatio(fatigue, base(10)), equipment},
                 ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
@@ -665,7 +697,7 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const auto armor = ESM4::mitigateArmor(incoming.mHealth, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
-        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, false, settings);
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, -1, settings);
         if (!block)
             return std::nullopt;
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
@@ -688,7 +720,8 @@ namespace MWMechanics
             wear = std::move(*prepared);
         }
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
-            incoming.mHealth, std::move(wear.mConditions), wear.mRandom};
+            incoming.mHealth, std::move(wear.mConditions), wear.mRandom,
+            block->mAccepted, block->mWeaponBlockSound, block->mSounds};
     }
 
     namespace
@@ -826,7 +859,8 @@ namespace MWMechanics
         }
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
-        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, true, settings);
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim,
+            armor.mHealthDamage, static_cast<std::int32_t>(weapon->mData.type), settings);
         if (!block)
             return std::nullopt;
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
@@ -839,7 +873,8 @@ namespace MWMechanics
                 block->mFraction, block->mUnarmed)} : std::nullopt);
         if (!wear)
             return std::nullopt;
-        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom, incoming, block->mDebit, block->mFraction};
+        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
+            incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds};
     }
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,

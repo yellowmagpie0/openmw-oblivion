@@ -33,7 +33,6 @@
     "--replace=config",
     "--config",
     "{output}/config",
-    "--no-sound=1",
     "--no-grab",
     "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
   ],
@@ -133,7 +132,8 @@
     "block_fraction=0.025",
     "block_fatigue=20.025",
     "M15 block release: actor=dynamic:player:0000000000000001",
-    "M15 block fatigue recovered: current=140"
+    "M15 block fatigue recovered: current=140",
+    "sound=WPNBlockBlade played=1"
   ],
   "forbidden_log": [
     "Error in frame",
@@ -142,7 +142,8 @@
     "Assertion.*failed",
     "Aborted",
     "M15 melee miss committed:",
-    "onFrame failed"
+    "onFrame failed",
+    "sound=WPNBlockBlade played=0"
   ],
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",

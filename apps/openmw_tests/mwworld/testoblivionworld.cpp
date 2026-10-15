@@ -8449,6 +8449,14 @@ namespace
                     {
                         const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
                         ASSERT_TRUE(prepared);
+                        EXPECT_TRUE(prepared->mBlockAccepted);
+                        EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
+                        ASSERT_TRUE(prepared->mBlockSounds);
+                        EXPECT_EQ(*prepared->mBlockSounds, hasShield
+                            ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
+                                weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
+                            : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
+                                "WPNBlockBlade", ""}));
                         health = prepared->mHealth; debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
                         conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;
                     }
@@ -8456,6 +8464,14 @@ namespace
                     {
                         const auto prepared = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
                         ASSERT_TRUE(prepared);
+                        EXPECT_TRUE(prepared->mBlockAccepted);
+                        EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
+                        ASSERT_TRUE(prepared->mBlockSounds);
+                        EXPECT_EQ(*prepared->mBlockSounds, hasShield
+                            ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
+                                weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
+                            : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
+                                "WPNBlockBlade", ""}));
                         health = prepared->mHealth; fatigue = prepared->mFatigue;
                         debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
                         conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;

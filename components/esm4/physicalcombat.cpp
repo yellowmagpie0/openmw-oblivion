@@ -190,6 +190,25 @@ namespace ESM4
         return result;
     }
 
+    std::array<std::string_view, 2> nativeMeleeBlockSounds(std::int32_t attackerWeaponType,
+        std::int32_t defenderWeaponType, bool enchantedWeaponSound)
+    {
+        const auto layer = [](std::int32_t type, bool enchanted) -> std::string_view {
+            switch (type)
+            {
+                case -1: return "WPNBlockHand";
+                case 0:
+                case 1: return enchanted ? "WPNHitBladeEnchanted" : "WPNBlockBlade";
+                case 2:
+                case 3: return enchanted ? "WPNHitBluntEnchanted" : "WPNBlockBlunt";
+                case 4: return "WPNBlockStaff";
+                case 5: return "WPNBlockBow";
+                default: return {};
+            }
+        };
+        return {layer(attackerWeaponType, enchantedWeaponSound), layer(defenderWeaponType, false)};
+    }
+
     bool nativeAttackAirborne(std::optional<std::uint8_t> animationGroup,
         std::optional<std::uint32_t> characterState)
     {
