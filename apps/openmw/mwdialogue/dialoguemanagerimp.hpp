@@ -29,6 +29,30 @@ namespace MWDialogue
 {
     class DialogueManager : public MWBase::DialogueManager
     {
+    public:
+        class RetainedRuntime
+        {
+            friend class DialogueManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+        ~DialogueManager() override;
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
+
         struct ActorKnownTopicInfo
         {
             int mFlags;

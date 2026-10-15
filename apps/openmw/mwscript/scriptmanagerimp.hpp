@@ -1,6 +1,8 @@
 #ifndef GAME_SCRIPT_SCRIPTMANAGER_H
 #define GAME_SCRIPT_SCRIPTMANAGER_H
 
+#include <memory>
+
 #include <map>
 #include <set>
 #include <string>
@@ -37,6 +39,30 @@ namespace MWScript
 {
     class ScriptManager : public MWBase::ScriptManager
     {
+    public:
+        class RetainedRuntime
+        {
+            friend class ScriptManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+        ~ScriptManager() override;
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
+
         Compiler::StreamErrorHandler mErrorHandler;
         const MWWorld::ESMStore& mStore;
         Compiler::Context& mCompilerContext;

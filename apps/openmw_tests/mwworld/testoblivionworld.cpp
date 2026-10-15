@@ -1,3 +1,7 @@
+#include "apps/openmw/mwdialogue/journalimp.hpp"
+#include "apps/openmw/mwscript/interpretercontext.hpp"
+#include <components/esm3/queststate.hpp>
+#include <components/esm3/globalscript.hpp>
 #include <components/compiler/extensions.hpp>
 #include "apps/openmw/mwdialogue/dialoguemanagerimp.hpp"
 #include <components/esm3/dialoguestate.hpp>
@@ -19302,4 +19306,150 @@ TEST(OblivionWorldTest, MechanicsRetentionHandleInvalidatesWhenOwnerDies)
     auto retained = manager->retainRuntime(); ASSERT_TRUE(retained.detach());
     ASSERT_TRUE(retained.exchange()); manager.reset();
     EXPECT_FALSE(retained.exchange()); EXPECT_FALSE(retained.restore()); retained.discard();
+}
+
+namespace
+{
+    void readJournalQuest(MWDialogue::Journal& journal, const ESM::RefId& id, int index, bool finished)
+    {
+        ESM::QuestState state{ id, index, static_cast<unsigned char>(finished) };
+        auto stream = std::make_unique<std::stringstream>();
+        ESM::ESMWriter writer; writer.setFormatVersion(ESM::CurrentSaveGameFormatVersion); writer.save(*stream);
+        writer.startRecord(ESM::REC_QUES); state.save(writer); writer.endRecord(ESM::REC_QUES); writer.close();
+        ESM::ESMReader reader; reader.open(std::move(stream), "retained-journal-quest");
+        reader.getRecName(); reader.getRecHeader(); journal.readRecord(reader, ESM::REC_QUES);
+    }
+}
+
+TEST(OblivionWorldTest, JournalRetentionPreservesActualQuestNodesThroughReplacementAndScope)
+{
+    NativeWorldFixture fixture;
+    loadDialogueContent(fixture.mWorld.getStore(), "retained-quest");
+    MWDialogue::Journal journal;
+    const auto id = ESM::RefId::stringRefId("retained-quest");
+    readJournalQuest(journal, id, 7, true);
+    auto* original = journal.getQuestOrNull(id); ASSERT_NE(original, nullptr);
+    auto archive = journal.retainRuntime();
+    EXPECT_THROW(journal.clear(), std::logic_error);
+    EXPECT_THROW(journal.retainRuntime(), std::logic_error);
+    ASSERT_TRUE(archive.detach());
+    EXPECT_EQ(journal.getQuestOrNull(id), nullptr);
+    journal.clear(); readJournalQuest(journal, id, 19, false);
+    auto* incoming = journal.getQuestOrNull(id); ASSERT_NE(incoming, original);
+    ASSERT_TRUE(archive.exchange());
+    EXPECT_EQ(journal.getQuestOrNull(id), original);
+    EXPECT_EQ(original->getIndex(), 7); EXPECT_TRUE(original->isFinished());
+    ASSERT_TRUE(archive.exchange());
+    EXPECT_EQ(journal.getQuestOrNull(id), incoming);
+    ASSERT_TRUE(archive.restore());
+    EXPECT_EQ(journal.getQuestOrNull(id), original);
+    {
+        auto scoped = journal.retainRuntime(); auto moved = std::move(scoped);
+        EXPECT_FALSE(scoped.detach()); ASSERT_TRUE(moved.detach());
+        readJournalQuest(journal, id, 23, false);
+    }
+    EXPECT_EQ(journal.getQuestOrNull(id), original);
+}
+
+TEST(OblivionWorldTest, JournalRetentionCommitAndOwnerDeathInvalidateHandles)
+{
+    NativeWorldFixture fixture;
+    loadDialogueContent(fixture.mWorld.getStore(), "retained-quest");
+    std::optional<MWDialogue::Journal::RetainedRuntime> archive;
+    const auto id = ESM::RefId::stringRefId("retained-quest");
+    auto journal = std::make_unique<MWDialogue::Journal>();
+    readJournalQuest(*journal, id, 7, true);
+    archive.emplace(journal->retainRuntime()); ASSERT_TRUE(archive->detach());
+    readJournalQuest(*journal, id, 19, false); auto* incoming = journal->getQuestOrNull(id);
+    ASSERT_TRUE(archive->exchange()); archive->discard();
+    EXPECT_EQ(journal->getQuestOrNull(id), incoming); EXPECT_FALSE(archive->restore());
+    archive.emplace(journal->retainRuntime()); ASSERT_TRUE(archive->detach());
+    journal.reset(); EXPECT_FALSE(archive->exchange()); EXPECT_FALSE(archive->restore()); archive->discard();
+}
+
+TEST(OblivionWorldTest, DialogueRetentionPreservesReactionNodesAndPreparedEpochs)
+{
+    NativeWorldFixture fixture;
+    Compiler::Extensions extensions; Translation::Storage translation;
+    auto manager = std::make_unique<MWDialogue::DialogueManager>(extensions, translation);
+    const auto a = ESM::RefId::stringRefId("retained-a"); const auto b = ESM::RefId::stringRefId("retained-b");
+    ESM::Faction faction; faction.blank(); faction.mId = a;
+    fixture.mWorld.getStore().getWritable<ESM::Faction>().insertStatic(faction);
+    ESM::DialogueState old; old.mChangedFactionReaction[a][b] = 11; readDialogueState(*manager, old);
+    auto* original = manager->getFactionReactionOverrides(a); ASSERT_NE(original, nullptr);
+    MWWorld::ESMStore incoming;
+    ESM::DialogueState next; next.mChangedFactionReaction[a][b] = 17;
+    auto install = manager->prepareDialogueState(std::move(next), incoming);
+    auto archive = manager->retainRuntime(); EXPECT_THROW(manager->clear(), std::logic_error);
+    ASSERT_TRUE(archive.detach()); manager->clear(); ASSERT_TRUE(install());
+    auto* candidate = manager->getFactionReactionOverrides(a); ASSERT_NE(candidate, original);
+    ASSERT_TRUE(archive.exchange()); EXPECT_EQ(manager->getFactionReactionOverrides(a), original);
+    EXPECT_EQ(original->at(b), 11);
+    ASSERT_TRUE(archive.exchange()); EXPECT_EQ(candidate->at(b), 17);
+    auto canceled = manager->prepareDialogueState(ESM::DialogueState{}, incoming);
+    ASSERT_TRUE(archive.restore()); EXPECT_FALSE(canceled());
+    EXPECT_EQ(manager->getFactionReactionOverrides(a), original);
+    auto expired = manager->prepareDialogueState(ESM::DialogueState{}, incoming);
+    auto dying = manager->retainRuntime(); ASSERT_TRUE(dying.detach());
+    manager.reset(); EXPECT_FALSE(expired()); EXPECT_FALSE(dying.restore()); EXPECT_FALSE(dying.exchange());
+}
+
+TEST(OblivionWorldTest, LegacyScriptRetentionPreservesDescriptorsLocalsAndCompiledLayoutAddresses)
+{
+    PopulatedMigrationFixture fixture; auto& store = fixture.mWorld.getStore();
+    const auto script = initialSplitScript(); store.getWritable<ESM::Script>().insertStatic(script);
+    MWScript::CompilerContext context(MWScript::CompilerContext::Type_Full);
+    MWScript::ScriptManager manager(store, context, 0); fixture.mEnvironment.setScriptManager(manager);
+    const auto* layout = &manager.getLocals(script.mId);
+    auto& globals = manager.getGlobalScripts(); globals.addScript(script.mId, fixture.mWorld.getPlayerPtr());
+    auto* descriptor = globals.getScriptIfPresent(script.mId); ASSERT_NE(descriptor, nullptr);
+    globals.getLocals(script.mId).mLongs[0] = 91827364;
+    auto archive = manager.retainRuntime(); EXPECT_THROW(manager.clear(), std::logic_error);
+    EXPECT_THROW(globals.clear(), std::logic_error);
+    ASSERT_TRUE(archive.detach()); manager.clear();
+    globals.addScript(script.mId); auto* candidate = globals.getScriptIfPresent(script.mId);
+    ASSERT_NE(candidate, descriptor); globals.getLocals(script.mId).mLongs[0] = -19;
+    ASSERT_NE(&manager.getLocals(script.mId), layout);
+    ASSERT_TRUE(archive.exchange());
+    EXPECT_EQ(&manager.getLocals(script.mId), layout); EXPECT_EQ(globals.getScriptIfPresent(script.mId), descriptor);
+    EXPECT_EQ(globals.getLocals(script.mId).mLongs[0], 91827364);
+    EXPECT_EQ(descriptor->getPtrIfPresent(), &std::get<MWWorld::Ptr>(descriptor->mTarget));
+    ASSERT_TRUE(archive.exchange()); EXPECT_EQ(globals.getScriptIfPresent(script.mId), candidate);
+    ASSERT_TRUE(archive.restore()); EXPECT_EQ(globals.getScriptIfPresent(script.mId), descriptor);
+    EXPECT_EQ(&manager.getLocals(script.mId), layout);
+}
+
+TEST(OblivionWorldTest, LegacyScriptRetentionRejectsSelectionDuringInterpreterDispatch)
+{
+    NativeWorldFixture fixture;
+    ESM::Script script; script.blank(); script.mId = ESM::RefId::stringRefId("retained_message");
+    script.mScriptText = "begin retained_message\nmessagebox \"retention idle guard\"\nend\n";
+    fixture.mWorld.getStore().getWritable<ESM::Script>().insertStatic(script);
+    MWScript::CompilerContext compiler(MWScript::CompilerContext::Type_Full);
+    MWScript::ScriptManager manager(fixture.mWorld.getStore(), compiler, 0);
+    struct Context : MWScript::InterpreterContext
+    {
+        MWScript::ScriptManager& mManager; bool mRejected = false;
+        Context(MWScript::ScriptManager& manager) : InterpreterContext(nullptr, {}), mManager(manager) {}
+        void messageBox(std::string_view, const std::vector<std::string>&) override
+        {
+            try { auto archive = mManager.retainRuntime(); }
+            catch (const std::logic_error&) { mRejected = true; }
+        }
+    } context(manager);
+    ASSERT_TRUE(manager.run(script.mId, context)); EXPECT_TRUE(context.mRejected);
+    auto archive = manager.retainRuntime(); EXPECT_TRUE(archive.restore());
+}
+
+TEST(OblivionWorldTest, LegacyScriptRetentionInvalidatesArchivedPlanBeforeOwnerDies)
+{
+    NativeWorldFixture fixture; auto& store = fixture.mWorld.getStore();
+    const auto script = initialSplitScript(); store.getWritable<ESM::Script>().insertStatic(script);
+    MWScript::CompilerContext compiler(MWScript::CompilerContext::Type_Full);
+    auto manager = std::make_unique<MWScript::ScriptManager>(store, compiler, 0);
+    fixture.mEnvironment.setScriptManager(*manager);
+    ESM::GlobalScript state; state.mId = script.mId; state.mRunning = true;
+    auto install = manager->getGlobalScripts().prepareRecord(std::move(state));
+    auto archive = manager->retainRuntime(); ASSERT_TRUE(archive.detach());
+    manager.reset(); EXPECT_FALSE(install()); EXPECT_FALSE(archive.restore()); EXPECT_FALSE(archive.exchange());
 }

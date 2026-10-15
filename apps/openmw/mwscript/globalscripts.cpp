@@ -1,4 +1,6 @@
 #include "globalscripts.hpp"
+#include <stdexcept>
+#include <type_traits>
 
 #include <limits>
 #include <optional>
@@ -101,6 +103,107 @@ namespace
 
 namespace MWScript
 {
+    namespace
+    {
+        struct RuntimeCall
+        {
+            unsigned& mDepth;
+            explicit RuntimeCall(unsigned& depth) : mDepth(depth) { ++mDepth; }
+            ~RuntimeCall() { --mDepth; }
+        };
+    }
+
+    struct GlobalScripts::RetainedRuntime::Data
+    {
+        GlobalScripts* mOwner;
+        decltype(GlobalScripts::mRestoreLifetime) mRestoreLifetime{};
+        decltype(GlobalScripts::mRestoreEpoch) mRestoreEpoch{};
+        decltype(GlobalScripts::mScripts) mScripts{};
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(GlobalScripts& owner) : mOwner(&owner) { mRestoreLifetime = std::make_shared<const char>(); mRestoreEpoch = owner.mRestoreEpoch; }
+        void swap() noexcept
+        {
+            using std::swap;
+            static_assert(std::is_nothrow_swappable_v<decltype(mRestoreLifetime)>);
+            swap(mOwner->mRestoreLifetime, mRestoreLifetime);
+            static_assert(std::is_nothrow_swappable_v<decltype(mRestoreEpoch)>);
+            swap(mOwner->mRestoreEpoch, mRestoreEpoch);
+            static_assert(std::is_nothrow_swappable_v<decltype(mScripts)>);
+            swap(mOwner->mScripts, mScripts);
+        }
+    };
+    void GlobalScripts::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing GlobalScripts runtime is frozen before detachment");
+    }
+    GlobalScripts::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    GlobalScripts::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
+    GlobalScripts::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    GlobalScripts::RetainedRuntime& GlobalScripts::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    GlobalScripts::RetainedRuntime GlobalScripts::retainRuntime()
+    {
+        if (mRetainedRuntime || mActiveCalls) throw std::logic_error("GlobalScripts retention requires an idle runtime");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    bool GlobalScripts::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool GlobalScripts::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool GlobalScripts::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mOwner->mActiveCalls) return false;
+
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
+    void GlobalScripts::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+    }
+    GlobalScripts::~GlobalScripts()
+    {
+        if (mRetainedRuntime)
+        {
+            mRetainedRuntime->mRestoreLifetime.reset();
+            mRetainedRuntime->mOwner = nullptr;
+        }
+    }
+
+
     GlobalScriptDesc::GlobalScriptDesc()
         : mRunning(false)
     {
@@ -130,6 +233,7 @@ namespace MWScript
 
     void GlobalScripts::addScript(const ESM::RefId& name, const MWWorld::Ptr& target)
     {
+        requireMutableRuntime();
         const auto iter = mScripts.find(name);
 
         if (iter == mScripts.end())
@@ -158,6 +262,7 @@ namespace MWScript
 
     void GlobalScripts::removeScript(const ESM::RefId& name)
     {
+        requireMutableRuntime();
         const auto iter = mScripts.find(name);
 
         if (iter != mScripts.end())
@@ -176,6 +281,8 @@ namespace MWScript
 
     void GlobalScripts::run()
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         for (const auto& script : mScripts)
         {
             if (script.second->mRunning)
@@ -189,12 +296,14 @@ namespace MWScript
 
     void GlobalScripts::clear()
     {
+        requireMutableRuntime();
         ++mRestoreEpoch;
         mScripts.clear();
     }
 
     void GlobalScripts::addStartup()
     {
+        requireMutableRuntime();
         // make list of global scripts to be added
         std::vector<ESM::RefId> scripts;
 
@@ -248,6 +357,7 @@ namespace MWScript
 
     bool GlobalScripts::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        requireMutableRuntime();
         if (type == ESM::REC_GSCR)
         {
             ESM::GlobalScript script;
@@ -343,6 +453,7 @@ namespace MWScript
 
     Locals& GlobalScripts::getLocals(const ESM::RefId& name)
     {
+        requireMutableRuntime();
         auto iter = mScripts.find(name);
 
         if (iter == mScripts.end())
@@ -368,6 +479,7 @@ namespace MWScript
 
     void GlobalScripts::updatePtrs(const MWWorld::Ptr& base, const MWWorld::Ptr& updated)
     {
+        requireMutableRuntime();
         MatchPtrVisitor visitor(base);
         for (const auto& script : mScripts)
         {

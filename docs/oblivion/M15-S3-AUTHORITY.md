@@ -1310,3 +1310,30 @@ source-correction cancellations remain recorded. Candidate construction is from
 content, not decoded save installation. Loaded commit/owner death, other external
 manager ownership and real StateManager late-load rollback remain unverified;
 S3 remains incomplete.
+
+Journal/dialogue/legacy script retention now selects actual containers and nodes:
+quest/topic/entry maps, full dialogue conversation/reaction/keyword state, compiled
+legacy programs/local layouts/inactive sets and GlobalScripts descriptors/locals/
+targets. Restore lifetime/epochs follow domains; archive anchors expire before
+owner death can leave a live prepared callback referencing a destroyed manager.
+Preparation freezes mutations, and dispatch-depth guards reject selection while
+callbacks/interpreter/compiler work is active. External users remain caller-owned.
+At fingerprint
+`0739084c4a509b51d0f8871568f5017d283128c8a3df8b3a967cdfe108913e08`, all
+1,465 normal and ASan/UBSan engine cases pass in
+`history-script-retention-normal-03` and `history-script-retention-sanitized-04`.
+Six seeded cases test actual quest/reaction/script-descriptor/compiled-layout
+addresses, locals, prepared epochs/lifetimes, scope/move/commit/owner invalidation
+and rejection inside real interpreter dispatch. Copied WindowManager courses
+`history-script-retention-runtime-normal-03` / `runtime-sanitized-04` (PIDs
+370694/372761) select these managers with distinct loaded World/backend and fresh
+mechanics/Lua/native frontend/state, then retire the candidate and restore original
+identities/native state/PRNG and saved history record bytes. Allocation denial,
+render/F5/quit, captures/lifecycle/selected decoded native fields and provenance
+are audited. Runtime history coverage uses the pristine fixture's existing
+records; populated-node checks are separately seeded. Failed include/definition
+fixtures, cancellations and transient archive linker failure remain recorded;
+subsequent ar validation and linking succeeded without confirmed cause.
+Input/audio ownership and actual StateManager save staging/late-failure rollback
+remain absent; loaded aggregate commit/owner-death acceptance remains outstanding.
+S3 is incomplete.

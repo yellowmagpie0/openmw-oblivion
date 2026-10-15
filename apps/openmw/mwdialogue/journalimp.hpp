@@ -1,6 +1,8 @@
 #ifndef GAME_MWDIALOG_JOURNAL_H
 #define GAME_MWDIALOG_JOURNAL_H
 
+#include <memory>
+
 #include "../mwbase/journal.hpp"
 
 #include "quest.hpp"
@@ -10,6 +12,30 @@ namespace MWDialogue
     /// \brief The player's journal
     class Journal : public MWBase::Journal
     {
+    public:
+        class RetainedRuntime
+        {
+            friend class Journal;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+        ~Journal() override;
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
+
         TEntryContainer mJournal;
         TQuestContainer mQuests;
         TTopicContainer mTopics;

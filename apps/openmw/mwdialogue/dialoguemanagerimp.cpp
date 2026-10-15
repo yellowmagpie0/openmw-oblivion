@@ -1,4 +1,6 @@
 #include "dialoguemanagerimp.hpp"
+#include <stdexcept>
+#include <type_traits>
 
 #include <algorithm>
 #include <list>
@@ -55,6 +57,149 @@
 
 namespace MWDialogue
 {
+    namespace
+    {
+        struct RuntimeCall
+        {
+            unsigned& mDepth;
+            explicit RuntimeCall(unsigned& depth) : mDepth(depth) { ++mDepth; }
+            ~RuntimeCall() { --mDepth; }
+        };
+    }
+
+    struct DialogueManager::RetainedRuntime::Data
+    {
+        DialogueManager* mOwner;
+        decltype(DialogueManager::mKnownTopics) mKnownTopics{};
+        decltype(DialogueManager::mChangedFactionReaction) mChangedFactionReaction{};
+        decltype(DialogueManager::mRestoreLifetime) mRestoreLifetime{};
+        decltype(DialogueManager::mRestoreEpoch) mRestoreEpoch{};
+        decltype(DialogueManager::mActorKnownTopics) mActorKnownTopics{};
+        decltype(DialogueManager::mKeywordSearchInitialized) mKeywordSearchInitialized{};
+        decltype(DialogueManager::mKeywordSearch) mKeywordSearch{};
+        decltype(DialogueManager::mActor) mActor{};
+        decltype(DialogueManager::mTalkedTo) mTalkedTo{};
+        decltype(DialogueManager::mChoice) mChoice{};
+        decltype(DialogueManager::mLastTopic) mLastTopic{};
+        decltype(DialogueManager::mIsInChoice) mIsInChoice{};
+        decltype(DialogueManager::mGoodbye) mGoodbye{};
+        decltype(DialogueManager::mChoices) mChoices{};
+        decltype(DialogueManager::mOriginalDisposition) mOriginalDisposition{};
+        decltype(DialogueManager::mCurrentDisposition) mCurrentDisposition{};
+        decltype(DialogueManager::mPermanentDispositionChange) mPermanentDispositionChange{};
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(DialogueManager& owner) : mOwner(&owner) { mRestoreLifetime = std::make_shared<const char>(); mRestoreEpoch = owner.mRestoreEpoch; mChoice = -1; }
+        void swap() noexcept
+        {
+            using std::swap;
+            static_assert(std::is_nothrow_swappable_v<decltype(mKnownTopics)>);
+            swap(mOwner->mKnownTopics, mKnownTopics);
+            static_assert(std::is_nothrow_swappable_v<decltype(mChangedFactionReaction)>);
+            swap(mOwner->mChangedFactionReaction, mChangedFactionReaction);
+            static_assert(std::is_nothrow_swappable_v<decltype(mRestoreLifetime)>);
+            swap(mOwner->mRestoreLifetime, mRestoreLifetime);
+            static_assert(std::is_nothrow_swappable_v<decltype(mRestoreEpoch)>);
+            swap(mOwner->mRestoreEpoch, mRestoreEpoch);
+            static_assert(std::is_nothrow_swappable_v<decltype(mActorKnownTopics)>);
+            swap(mOwner->mActorKnownTopics, mActorKnownTopics);
+            static_assert(std::is_nothrow_swappable_v<decltype(mKeywordSearchInitialized)>);
+            swap(mOwner->mKeywordSearchInitialized, mKeywordSearchInitialized);
+            static_assert(std::is_nothrow_swappable_v<decltype(mKeywordSearch)>);
+            swap(mOwner->mKeywordSearch, mKeywordSearch);
+            static_assert(std::is_nothrow_swappable_v<decltype(mActor)>);
+            swap(mOwner->mActor, mActor);
+            static_assert(std::is_nothrow_swappable_v<decltype(mTalkedTo)>);
+            swap(mOwner->mTalkedTo, mTalkedTo);
+            static_assert(std::is_nothrow_swappable_v<decltype(mChoice)>);
+            swap(mOwner->mChoice, mChoice);
+            static_assert(std::is_nothrow_swappable_v<decltype(mLastTopic)>);
+            swap(mOwner->mLastTopic, mLastTopic);
+            static_assert(std::is_nothrow_swappable_v<decltype(mIsInChoice)>);
+            swap(mOwner->mIsInChoice, mIsInChoice);
+            static_assert(std::is_nothrow_swappable_v<decltype(mGoodbye)>);
+            swap(mOwner->mGoodbye, mGoodbye);
+            static_assert(std::is_nothrow_swappable_v<decltype(mChoices)>);
+            swap(mOwner->mChoices, mChoices);
+            static_assert(std::is_nothrow_swappable_v<decltype(mOriginalDisposition)>);
+            swap(mOwner->mOriginalDisposition, mOriginalDisposition);
+            static_assert(std::is_nothrow_swappable_v<decltype(mCurrentDisposition)>);
+            swap(mOwner->mCurrentDisposition, mCurrentDisposition);
+            static_assert(std::is_nothrow_swappable_v<decltype(mPermanentDispositionChange)>);
+            swap(mOwner->mPermanentDispositionChange, mPermanentDispositionChange);
+        }
+    };
+    void DialogueManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing DialogueManager runtime is frozen before detachment");
+    }
+    DialogueManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    DialogueManager::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
+    DialogueManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    DialogueManager::RetainedRuntime& DialogueManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    DialogueManager::RetainedRuntime DialogueManager::retainRuntime()
+    {
+        if (mRetainedRuntime || mActiveCalls) throw std::logic_error("DialogueManager retention requires an idle runtime");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    bool DialogueManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool DialogueManager::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool DialogueManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mOwner->mActiveCalls) return false;
+
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
+    void DialogueManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+    }
+    DialogueManager::~DialogueManager()
+    {
+        if (mRetainedRuntime)
+        {
+            mRetainedRuntime->mRestoreLifetime.reset();
+            mRetainedRuntime->mOwner = nullptr;
+        }
+    }
+
+
     DialogueManager::DialogueManager(
         const Compiler::Extensions& extensions, Translation::Storage& translationDataStorage)
         : mTranslationDataStorage(translationDataStorage)
@@ -73,6 +218,7 @@ namespace MWDialogue
 
     void DialogueManager::clear()
     {
+        requireMutableRuntime();
         ++mRestoreEpoch;
         mKnownTopics.clear();
         mTalkedTo = false;
@@ -85,6 +231,7 @@ namespace MWDialogue
 
     void DialogueManager::addTopic(const ESM::RefId& topic)
     {
+        requireMutableRuntime();
         mKnownTopics.insert(topic);
     }
 
@@ -93,6 +240,7 @@ namespace MWDialogue
         const auto& dialogue = MWBase::Environment::get().getESMStore()->get<ESM::Dialogue>();
         if (dialogue.getKeywordSearchModFlag() || !mKeywordSearchInitialized)
         {
+            requireMutableRuntime();
             mKeywordSearch.clear();
 
             for (const ESM::Dialogue& topic : dialogue)
@@ -129,6 +277,7 @@ namespace MWDialogue
 
     void DialogueManager::updateOriginalDisposition()
     {
+        requireMutableRuntime();
         if (mActor.getClass().isNpc())
         {
             const auto& stats = mActor.getClass().getNpcStats(mActor);
@@ -143,6 +292,8 @@ namespace MWDialogue
 
     bool DialogueManager::startDialogue(const MWWorld::Ptr& actor, ResponseCallback* callback)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         updateGlobals();
 
         // Dialogue with dead actor (e.g. through script) should not be allowed.
@@ -200,6 +351,8 @@ namespace MWDialogue
 
     std::optional<Interpreter::Program> DialogueManager::compile(const std::string& cmd, const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         bool success = true;
         std::optional<Interpreter::Program> program;
 
@@ -254,6 +407,8 @@ namespace MWDialogue
 
     void DialogueManager::executeScript(const std::string& script, const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         if (const std::optional<Interpreter::Program> program = compile(script, actor))
         {
             try
@@ -285,6 +440,8 @@ namespace MWDialogue
 
     void DialogueManager::executeTopic(const ESM::RefId& topic, ResponseCallback* callback)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         Filter filter(mActor, mChoice, mTalkedTo);
 
         const MWWorld::Store<ESM::Dialogue>& dialogues = MWBase::Environment::get().getESMStore()->get<ESM::Dialogue>();
@@ -345,6 +502,7 @@ namespace MWDialogue
 
     void DialogueManager::updateActorKnownTopics()
     {
+        requireMutableRuntime();
         updateGlobals();
 
         mActorKnownTopics.clear();
@@ -399,6 +557,7 @@ namespace MWDialogue
 
     std::list<std::string> DialogueManager::getAvailableTopics()
     {
+        requireMutableRuntime();
         updateActorKnownTopics();
 
         std::list<std::string> keywordList;
@@ -425,6 +584,8 @@ namespace MWDialogue
 
     void DialogueManager::keywordSelected(std::string_view keyword, ResponseCallback* callback)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         if (!mIsInChoice)
         {
             const ESM::Dialogue* dialogue = searchDialogue(ESM::RefId::stringRefId(keyword));
@@ -442,6 +603,8 @@ namespace MWDialogue
 
     void DialogueManager::goodbyeSelected()
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         // Apply disposition change to NPC's base disposition if we **think** we need to change something
         if ((mPermanentDispositionChange || mOriginalDisposition != mCurrentDisposition) && mActor.getClass().isNpc())
         {
@@ -465,6 +628,8 @@ namespace MWDialogue
 
     void DialogueManager::questionAnswered(int answer, ResponseCallback* callback)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         mChoice = answer;
 
         const ESM::Dialogue* dialogue = searchDialogue(mLastTopic);
@@ -512,6 +677,7 @@ namespace MWDialogue
 
     void DialogueManager::addChoice(std::string_view text, int choice)
     {
+        requireMutableRuntime();
         mIsInChoice = true;
         mChoices.emplace_back(text, choice);
     }
@@ -528,6 +694,7 @@ namespace MWDialogue
 
     void DialogueManager::goodbye()
     {
+        requireMutableRuntime();
         mIsInChoice = false;
         mGoodbye = true;
     }
@@ -686,6 +853,7 @@ namespace MWDialogue
 
     void DialogueManager::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        requireMutableRuntime();
         if (type == ESM::REC_DIAS)
         {
             const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
@@ -734,6 +902,7 @@ namespace MWDialogue
 
     void DialogueManager::modFactionReaction(const ESM::RefId& faction1, const ESM::RefId& faction2, int diff)
     {
+        requireMutableRuntime();
         // Make sure the factions exist
         MWBase::Environment::get().getESMStore()->get<ESM::Faction>().find(faction1);
         MWBase::Environment::get().getESMStore()->get<ESM::Faction>().find(faction2);
@@ -746,6 +915,7 @@ namespace MWDialogue
 
     void DialogueManager::setFactionReaction(const ESM::RefId& faction1, const ESM::RefId& faction2, int absolute)
     {
+        requireMutableRuntime();
         // Make sure the factions exist
         MWBase::Environment::get().getESMStore()->get<ESM::Faction>().find(faction1);
         MWBase::Environment::get().getESMStore()->get<ESM::Faction>().find(faction2);

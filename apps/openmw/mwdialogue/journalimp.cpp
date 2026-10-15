@@ -1,4 +1,6 @@
 #include "journalimp.hpp"
+#include <stdexcept>
+#include <type_traits>
 
 #include <iterator>
 
@@ -18,8 +20,106 @@
 
 namespace MWDialogue
 {
+    namespace
+    {
+        struct RuntimeCall
+        {
+            unsigned& mDepth;
+            explicit RuntimeCall(unsigned& depth) : mDepth(depth) { ++mDepth; }
+            ~RuntimeCall() { --mDepth; }
+        };
+    }
+
+    struct Journal::RetainedRuntime::Data
+    {
+        Journal* mOwner;
+        decltype(Journal::mJournal) mJournal{};
+        decltype(Journal::mQuests) mQuests{};
+        decltype(Journal::mTopics) mTopics{};
+        bool mDetached = false;
+        bool mOriginalSelected = false;
+        explicit Data(Journal& owner) : mOwner(&owner) {}
+        void swap() noexcept
+        {
+            using std::swap;
+            static_assert(std::is_nothrow_swappable_v<decltype(mJournal)>);
+            swap(mOwner->mJournal, mJournal);
+            static_assert(std::is_nothrow_swappable_v<decltype(mQuests)>);
+            swap(mOwner->mQuests, mQuests);
+            static_assert(std::is_nothrow_swappable_v<decltype(mTopics)>);
+            swap(mOwner->mTopics, mTopics);
+        }
+    };
+    void Journal::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->mDetached)
+            throw std::logic_error("Outgoing Journal runtime is frozen before detachment");
+    }
+    Journal::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    Journal::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
+    Journal::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    Journal::RetainedRuntime& Journal::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    Journal::RetainedRuntime Journal::retainRuntime()
+    {
+        if (mRetainedRuntime || mActiveCalls) throw std::logic_error("Journal retention requires an idle runtime");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    bool Journal::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mDetached = true;
+        return true;
+    }
+    bool Journal::RetainedRuntime::exchange() noexcept
+    {
+        if (!mData || !mData->mOwner || !mData->mDetached || mData->mOwner->mActiveCalls) return false;
+
+        mData->swap(); mData->mOriginalSelected = !mData->mOriginalSelected;
+        return true;
+    }
+    bool Journal::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->mOwner || mData->mOwner->mActiveCalls) return false;
+
+        if (mData->mDetached && !mData->mOriginalSelected) mData->swap();
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+        return true;
+    }
+    void Journal::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->mOwner) return;
+        if (!mData->mDetached) { restore(); return; }
+        if (mData->mOriginalSelected && !exchange()) std::terminate();
+
+        mData->mOwner->mRetainedRuntime = nullptr;
+        mData->mOwner = nullptr;
+        mData.reset();
+    }
+    Journal::~Journal()
+    {
+        if (mRetainedRuntime) {  mRetainedRuntime->mOwner = nullptr; }
+    }
+
+
     Quest& Journal::getOrStartQuest(const ESM::RefId& id)
     {
+        requireMutableRuntime();
         TQuestContainer::iterator iter = mQuests.find(id);
 
         if (iter == mQuests.end())
@@ -30,6 +130,7 @@ namespace MWDialogue
 
     Quest* Journal::getQuestOrNull(const ESM::RefId& id)
     {
+        requireMutableRuntime();
         TQuestContainer::iterator iter = mQuests.find(id);
         if (iter == mQuests.end())
         {
@@ -41,6 +142,7 @@ namespace MWDialogue
 
     Topic& Journal::getTopic(const ESM::RefId& id)
     {
+        requireMutableRuntime();
         TTopicContainer::iterator iter = mTopics.find(id);
 
         if (iter == mTopics.end())
@@ -73,6 +175,7 @@ namespace MWDialogue
 
     void Journal::clear()
     {
+        requireMutableRuntime();
         mJournal.clear();
         mQuests.clear();
         mTopics.clear();
@@ -80,6 +183,8 @@ namespace MWDialogue
 
     void Journal::addEntry(const ESM::RefId& id, int index, const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         // bail out if we already have heard this...
         const ESM::RefId& infoId = JournalEntry::idFromIndex(id, index);
         for (const JournalEntry& entry : mJournal)
@@ -117,6 +222,7 @@ namespace MWDialogue
 
     void Journal::setJournalIndex(const ESM::RefId& id, int index)
     {
+        requireMutableRuntime();
         Quest& quest = getOrStartQuest(id);
 
         quest.setIndex(index);
@@ -124,6 +230,8 @@ namespace MWDialogue
 
     void Journal::addTopic(const ESM::RefId& topicId, const ESM::RefId& infoId, const MWWorld::Ptr& actor)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         Topic& topic = getTopic(topicId);
 
         JournalEntry entry(topicId, infoId, actor);
@@ -133,6 +241,7 @@ namespace MWDialogue
 
     void Journal::removeLastAddedTopicResponse(const ESM::RefId& topicId, std::string_view actorName)
     {
+        requireMutableRuntime();
         Topic& topic = getTopic(topicId);
 
         topic.removeLastAddedResponse(actorName);
@@ -215,6 +324,8 @@ namespace MWDialogue
 
     void Journal::readRecord(ESM::ESMReader& reader, uint32_t type)
     {
+        requireMutableRuntime();
+        const RuntimeCall call(mActiveCalls);
         if (type == ESM::REC_JOUR)
         {
             ESM::JournalEntry record;

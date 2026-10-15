@@ -6,6 +6,44 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain journal, dialogue and legacy script owners — 2026-10-14
+
+Journal retains actual entry/quest/topic containers. DialogueManager retains
+known topics, reaction maps, restore lifetime/epoch, actor-topic information,
+keyword trie/cache flag, active actor, choice/topic/goodbye state, choices and
+conversation disposition fields. ScriptManager retains compiled programs/local
+layouts/inactive sets and other-local caches together with GlobalScripts' actual
+descriptors/locals/targets and restore lifetime/epoch. Incoming containers are
+fresh; rollback selects the original nodes rather than rebuilding saved records.
+Prepared lifetime anchors expire on owner death even when an external archive
+handle remains alive. Mutation before detachment is rejected, and dispatch depth
+guards reject retention/selection during journal notification, dialogue dispatch,
+legacy interpretation or compilation. External manager users must be stopped.
+
+Full 1,465 engine tests pass normally and under ASan/UBSan at fingerprint
+`0739084c4a509b51d0f8871568f5017d283128c8a3df8b3a967cdfe108913e08` in
+`S3/history-script-retention-normal-03` and `history-script-retention-sanitized-04`.
+Six new cases cover seeded quest/reaction/descriptor/layout identity through
+replacement and rollback, scope/move/commit/owner invalidation, prepared-plan
+lifetime/epochs and attempted retention inside real interpreter dispatch.
+
+Copied WindowManager courses `history-script-retention-runtime-normal-03`
+(PID 370694) and `runtime-sanitized-04` (PID 372761) select these managers with
+World/backend/mechanics/Lua/native frontend/state, load a separate candidate
+content scene, retire it, and restore original owners and saved history record
+bytes. Selection passes allocation denial. Both render/F5/quit courses have
+reviewed captures, four lifecycle events/zero errors, selected decoded native
+save-field equality and binary/MyGUI/probe provenance in verification.json.
+The runtime fixture supplies its existing history; seeded nonempty node checks
+are separate engine tests. Leak detection is disabled. Earlier missing-header,
+missing fixture definitions, interrupted runs and a transient linker rejection
+are preserved. The rejected archive later passed ar validation and linked; the
+cause of that transient failure is not established.
+
+This does not wire StateManager::loadGame or decode an incoming save transaction.
+Input/audio retention, aggregate staging, loaded commit/owner-death acceptance
+and real late-failure prior-world preservation remain open. S3 is incomplete.
+
 ## S3 couple loaded World simulation and backend selection — 2026-10-14
 
 World::RetainedSimulation now prepares and owns a separate backend when the

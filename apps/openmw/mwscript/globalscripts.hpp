@@ -55,6 +55,30 @@ namespace MWScript
 
     class GlobalScripts
     {
+    public:
+        class RetainedRuntime
+        {
+            friend class GlobalScripts;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+        ~GlobalScripts();
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
+
         const MWWorld::ESMStore& mStore;
         std::shared_ptr<const char> mRestoreLifetime = std::make_shared<const char>();
         std::uint64_t mRestoreEpoch = 0;
