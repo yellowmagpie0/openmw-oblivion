@@ -6,6 +6,69 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 couple loaded World simulation and backend selection — 2026-10-14
+
+World::RetainedSimulation now prepares and owns a separate backend when the
+outgoing World is fully initialized. RuntimeFields no longer swaps backend
+pointers independently. Detach/exchange selects backend, store/model, player,
+clock, native scripts/AI and remaining simulation fields together. Partial
+backends and overlapping archives remain rejected. Explicit scene retirement
+requires matching external managers; restore refuses an active candidate scene.
+Backend preload/physics/render users retire before archived player/cells/bases.
+Owner invalidation stops both backends before cell owners die, under the normal
+World requirement that external controllers/widgets are already retired.
+Loaded commit and owner-death acceptance still require aggregate verification.
+
+CellPreloader tracks queued work even after cache eviction, notification or
+abort. Scene can drain/check that work without clearing the actual preload cache.
+Retention and exchange preparation drain selected work; selection rejects pending
+work before changing any simulation owner. RuntimeViewer now parks a camera's
+renderer slot while retaining its actual renderer and graphics context: OSG draws
+every registered camera with a renderer, including the parked camera. A shared
+registration recognizes only deliberate parking, and selection allocates no new
+renderer. A context-operation regression verifies only the selected renderer runs.
+
+StateManager has a field retainer for state, current character, time played,
+last-save path and recent-load prompt. Incoming state starts at NoGame; save and
+slot deletion are blocked until the retainer finishes. The save library and queued
+process requests remain process-owned. Incoming Lua nearby packages now copy the
+backing table and remain read-only, preserving constants/functions as well as
+binding fresh object lists. Independent navigator cache workers reserve shape/
+tile IDs under a database write transaction, with a bounded busy timeout, so a
+parked worker can resume after the candidate writes to the same disk cache.
+
+Full 2,616 component tests pass normally in `loaded-world-retention-normal-03`
+(fingerprint `44c28b3e78cfc30613e5d37ed116be6097552832af764afe930868f9c6d89998`)
+and under ASan/UBSan in `loaded-world-retention-sanitized-04` (fingerprint
+`36ed6f9323c7d1714724b45e11423580cdc4b6277e3bd58bd68e5c38964d8dd4`).
+Component source is unchanged by the later engine fixes. Full 1,459 engine tests
+pass in `loaded-world-retention-{normal,sanitized}-06` at final fingerprint
+`2bc00eb0672dab71cd43ce9b9c1a9cb65ea04e3d72de0a2cbff55b2b0ab75ea3`.
+
+Copied WindowManager courses `loaded-world-retention-runtime-{normal,sanitized}-08`
+(PIDs 361969/363885) load a distinct candidate cell/backend with fresh mechanics,
+Lua and native/MyGUI frontend owners, verify guarded restore and allocation-denied
+selection, then retire the candidate and restore actual original player/cell/node/
+scene/renderer/navigator/camera/window/HUD/state/character identities and native
+state/PRNG. Scope/move restoration also passes. Runtime-10 courses (PIDs
+364016/364133) additionally hold a real cache worker: exchange is rejected with
+selected owners unchanged, then preparation drains the released worker and the
+same rollback succeeds. All four courses render/F5/quit cleanly with reviewed
+captures, four lifecycle events/zero errors, checked decoded native save fields
+and binary/MyGUI/probe provenance in verification.json. Leak detection is disabled.
+
+Earlier attempts remain available: fixture compile/patch errors, writable or
+incomplete nearby package startup, navigator schema contention, and the actual
+parked-camera draw crash confirmed by UBSan. Extra cold-render frames did not fix
+the draw crash; renderer-slot parking did. Interrupted helpers/courses were stopped
+for concrete source/fixture corrections, not restarted on observation timeouts.
+
+These courses construct a fresh content scene, not a decoded incoming save. Full
+input/audio/dialogue/journal/global-script ownership, loaded commit/owner death,
+real StateManager staging and late-failure prior-world preservation remain open.
+StateManager::loadGame still uses cleanup on late failure. S3 and M15 remain
+incomplete; no full save-load acceptance is claimed.
+
 ## S3 loaded scene retirement and backend commit — 2026-10-14
 
 PreparedBackend now exposes clearSelectedScene and discard. Retirement runs cell

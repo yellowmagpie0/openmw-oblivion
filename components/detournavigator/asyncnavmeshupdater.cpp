@@ -918,7 +918,19 @@ namespace DetourNavigator
         const auto process = [&](auto f) {
             try
             {
-                f(job);
+                if (mWriteToDb)
+                {
+                    // An archived navigator keeps its worker and counters. Another navigator
+                    // can populate the shared disk cache before that worker resumes. Reserve
+                    // shape/tile ids under the database write lock for each job.
+                    auto transaction = mDb->startTransaction(Sqlite3::TransactionMode::Immediate);
+                    mNextTileId = TileId(mDb->getMaxTileId() + 1);
+                    mNextShapeId = ShapeId(mDb->getMaxShapeId() + 1);
+                    f(job);
+                    transaction.commit();
+                }
+                else
+                    f(job);
             }
             catch (const std::exception& e)
             {

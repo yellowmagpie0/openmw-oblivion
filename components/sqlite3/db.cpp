@@ -27,6 +27,10 @@ namespace Sqlite3
             throw std::runtime_error("Failed to open database: " + message);
         }
         Db result(handle);
+        // Retained and incoming navigators can use separate connections to the same cache.
+        // Wait for a short write transaction rather than disabling the incoming cache.
+        if (sqlite3_busy_timeout(handle, 5000) != SQLITE_OK)
+            throw std::runtime_error("Failed to configure database busy timeout: " + std::string(sqlite3_errmsg(handle)));
         if (const int ec = sqlite3_exec(result.get(), schema, nullptr, nullptr, nullptr); ec != SQLITE_OK)
             throw std::runtime_error("Failed create database schema: " + std::string(sqlite3_errmsg(handle)));
         return result;

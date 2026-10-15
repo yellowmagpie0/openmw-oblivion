@@ -157,6 +157,40 @@ namespace
         EXPECT_EQ(tile->mVersion, navMeshFormatVersion);
     }
 
+    TEST_F(DetourNavigatorAsyncNavMeshUpdaterTest, two_live_updaters_should_share_disk_cache_without_reusing_ids)
+    {
+        const auto path = Files::pathToUnicodeString(TestingOpenMW::currentTestDirPath() / "navmesh.db");
+        auto firstDb = std::make_unique<NavMeshDb>(path, std::numeric_limits<std::uint64_t>::max());
+        auto secondDb = std::make_unique<NavMeshDb>(path, std::numeric_limits<std::uint64_t>::max());
+        auto* db = firstDb.get();
+        mRecastMeshManager.setWorldspace(mWorldspace, nullptr);
+        addHeightFieldPlane(mRecastMeshManager);
+        const auto otherWorld = ESM::RefId::stringRefId("candidate-world");
+        TileCachedRecastMeshManager otherMesh{ mSettings.mRecast };
+        otherMesh.setWorldspace(otherWorld, nullptr);
+        addHeightFieldPlane(otherMesh);
+        OffMeshConnectionsManager otherConnections{ mSettings.mRecast };
+        AsyncNavMeshUpdater first(mSettings, mRecastMeshManager, mOffMeshConnectionsManager, std::move(firstDb));
+        AsyncNavMeshUpdater second(mSettings, otherMesh, otherConnections, std::move(secondDb));
+        const auto firstCache = std::make_shared<GuardedNavMeshCacheItem>(1, mSettings);
+        const auto secondCache = std::make_shared<GuardedNavMeshCacheItem>(2, mSettings);
+        const std::map<TilePosition, ChangeType> origin{ { TilePosition{ 0, 0 }, ChangeType::add } };
+        first.post(mAgentBounds, firstCache, mPlayerTile, mWorldspace, origin);
+        first.wait(WaitConditionType::allJobsDone, &mListener);
+        second.post(mAgentBounds, secondCache, mPlayerTile, otherWorld, origin);
+        second.wait(WaitConditionType::allJobsDone, &mListener);
+        // Resume the first worker after the candidate has consumed another cache id.
+        const std::map<TilePosition, ChangeType> next{ { TilePosition{ 1, 0 }, ChangeType::add } };
+        first.post(mAgentBounds, firstCache, mPlayerTile, mWorldspace, next);
+        first.wait(WaitConditionType::allJobsDone, &mListener);
+        first.stop();
+        second.stop();
+        EXPECT_EQ(db->getMaxTileId(), 3);
+        EXPECT_NE(firstCache->lockConst()->getImpl().getTileRefAt(0, 0, 0), 0u);
+        EXPECT_NE(firstCache->lockConst()->getImpl().getTileRefAt(1, 0, 0), 0u);
+        EXPECT_NE(secondCache->lockConst()->getImpl().getTileRefAt(0, 0, 0), 0u);
+    }
+
     TEST_F(DetourNavigatorAsyncNavMeshUpdaterTest, post_when_writing_to_db_disabled_should_not_write_tiles)
     {
         mRecastMeshManager.setWorldspace(mWorldspace, nullptr);
@@ -295,7 +329,7 @@ namespace
         EXPECT_EQ(present, 11);
     }
 
-    TEST_F(DetourNavigatorAsyncNavMeshUpdaterTest, next_tile_id_should_be_updated_on_duplicate)
+    TEST_F(DetourNavigatorAsyncNavMeshUpdaterTest, tile_ids_should_be_reserved_after_another_writer)
     {
         mRecastMeshManager.setWorldspace(mWorldspace, nullptr);
         addHeightFieldPlane(mRecastMeshManager);
@@ -328,8 +362,12 @@ namespace
         const auto tile = dbPtr->findTile(
             mWorldspace, tilePosition, serialize(mSettings.mRecast, agentBounds, *recastMesh, objects));
         ASSERT_TRUE(tile.has_value());
-        EXPECT_EQ(tile->mTileId, 2);
+        EXPECT_EQ(tile->mTileId, 3);
         EXPECT_EQ(tile->mVersion, navMeshFormatVersion);
+        const auto first = dbPtr->findTile(
+            mWorldspace, tilePosition, serialize(mSettings.mRecast, mAgentBounds, *recastMesh, objects));
+        ASSERT_TRUE(first.has_value());
+        EXPECT_EQ(first->mTileId, 2);
     }
 
     TEST_F(DetourNavigatorAsyncNavMeshUpdaterTest, repeated_tile_updates_should_be_delayed)

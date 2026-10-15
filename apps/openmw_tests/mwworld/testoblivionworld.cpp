@@ -19219,7 +19219,7 @@ TEST(OblivionWorldTest, WorldSimulationArchiveInvalidatesBeforeOwnerCellsAndBase
 }
 
 
-TEST(OblivionWorldTest, WorldSimulationArchiveRejectsBackendBeforeChangingOwnership)
+TEST(OblivionWorldTest, WorldSimulationArchiveRejectsPartialBackendBeforeChangingOwnership)
 {
     PopulatedMigrationFixture fixture;
     auto& world = fixture.mWorld;

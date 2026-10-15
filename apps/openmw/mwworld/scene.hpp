@@ -148,6 +148,9 @@ namespace MWWorld
 
         ~Scene();
 
+        void waitForPendingTasks();
+        bool hasPendingTasks() const;
+
         void reloadTerrain();
 
         void playerMoved(const osg::Vec3f& pos);

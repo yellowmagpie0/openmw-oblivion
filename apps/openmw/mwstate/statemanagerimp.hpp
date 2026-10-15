@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <map>
+#include <memory>
 #include <utility>
 
 #include "../mwbase/statemanager.hpp"
@@ -13,6 +14,29 @@ namespace MWState
 {
     class StateManager : public MWBase::StateManager
     {
+    public:
+        // Runtime selection leaves the save library and queued process requests in place.
+        // Stop update/input users before selection. Saves/deletions require a finished load.
+        class RetainedRuntime
+        {
+            friend class StateManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
         bool mQuitRequest;
         bool mAskLoadRecent;
         bool mNewGameRequest = false;
@@ -36,6 +60,7 @@ namespace MWState
 
     public:
         StateManager(const std::filesystem::path& saves, const std::vector<std::string>& contentFiles);
+        ~StateManager() override;
 
         void requestQuit() override;
 

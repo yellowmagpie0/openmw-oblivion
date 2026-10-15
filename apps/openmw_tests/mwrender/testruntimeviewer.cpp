@@ -23,6 +23,13 @@ namespace
         void drawImplementation(osgUtil::RenderBin*, osg::RenderInfo&, osgUtil::RenderLeaf*&) override {}
     };
 
+    struct CountRenderer : osg::GraphicsOperation
+    {
+        int mCalls = 0;
+        CountRenderer() : GraphicsOperation("Count runtime renderer", true) {}
+        void operator()(osg::GraphicsContext*) override { ++mCalls; }
+    };
+
     struct RuntimeViewerTest : testing::Test
     {
         osg::ref_ptr<MWRender::RuntimeViewer> mViewer = new MWRender::RuntimeViewer;
@@ -85,6 +92,7 @@ namespace
         for (int i = 0; i < 3; ++i)
         {
             ASSERT_TRUE(mViewer->selectBindings(original));
+            EXPECT_EQ(candidateCamera->getRenderer(), nullptr);
             EXPECT_EQ(mViewer->getSceneData(), originalScene.get());
             EXPECT_EQ(mViewer->getCamera(), originalCamera.get());
             EXPECT_TRUE(originalCamera->containsNode(originalScene));
@@ -93,6 +101,7 @@ namespace
             EXPECT_EQ(mViewer->getStartTick(), 12345u);
             mContext->resized(0, 0, 32, 32);
             ASSERT_TRUE(mViewer->selectBindings(candidate));
+            EXPECT_EQ(originalCamera->getRenderer(), nullptr);
             EXPECT_EQ(mViewer->getSceneData(), candidateScene.get());
             EXPECT_EQ(mViewer->getCamera(), candidateCamera.get());
             EXPECT_TRUE(candidateCamera->containsNode(candidateScene));
@@ -104,6 +113,34 @@ namespace
         }
         EXPECT_EQ(originalResize->mCalls, 3);
         EXPECT_EQ(candidateResize->mCalls, 3);
+    }
+
+    TEST_F(RuntimeViewerTest, SharedGraphicsContextDrawsOnlyTheSelectedRenderer)
+    {
+        osg::ref_ptr<osg::Camera> originalCamera = mViewer->getCamera();
+        osg::ref_ptr<CountRenderer> originalRenderer = new CountRenderer;
+        mViewer->setSceneData(new osg::Group);
+        originalCamera->setRenderer(originalRenderer);
+        const auto original = mViewer->captureBindings();
+        osg::ref_ptr<osg::Camera> candidateCamera = new osg::Camera;
+        candidateCamera->setGraphicsContext(mContext);
+        mViewer->setCamera(candidateCamera);
+        mViewer->prepareSceneData(new osg::Group);
+        osg::ref_ptr<CountRenderer> candidateRenderer = new CountRenderer;
+        candidateCamera->setRenderer(candidateRenderer);
+        const auto candidate = mViewer->captureBindings();
+        ASSERT_EQ(mContext->getCameras().size(), 2u);
+        ASSERT_TRUE(mViewer->selectBindings(original));
+        mContext->runOperations();
+        EXPECT_EQ(originalRenderer->mCalls, 1);
+        EXPECT_EQ(candidateRenderer->mCalls, 0);
+        ASSERT_TRUE(mViewer->selectBindings(candidate));
+        mContext->runOperations();
+        EXPECT_EQ(originalRenderer->mCalls, 1);
+        EXPECT_EQ(candidateRenderer->mCalls, 1);
+        EXPECT_EQ(originalCamera->getGraphicsContext(), mContext);
+        EXPECT_EQ(candidateCamera->getGraphicsContext(), mContext);
+        EXPECT_EQ(candidateCamera->getRenderer(), candidateRenderer);
     }
 
     TEST_F(RuntimeViewerTest, RejectsForeignDefaultAndChangedContextWithoutChangingActiveBindings)

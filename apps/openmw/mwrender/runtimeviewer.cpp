@@ -24,6 +24,10 @@ namespace MWRender
         result.mScene = getScene();
         result.mCamera = camera;
         result.mRenderer = camera->getRenderer();
+        if (!mSelectedRegistration || mSelectedRegistration->mCamera != camera
+            || mSelectedRegistration->mRenderer != camera->getRenderer())
+            mSelectedRegistration = std::make_shared<CameraRegistration>(camera, camera->getRenderer());
+        result.mRegistration = mSelectedRegistration;
         result.mContext = camera->getGraphicsContext();
         result.mResizeCallback = result.mContext->getResizedCallback();
         result.mTransparentBin = bin;
@@ -37,10 +41,25 @@ namespace MWRender
     bool RuntimeViewer::selectBindings(const Bindings& bindings) noexcept
     {
         if (areThreadsRunning() || bindings.mOwner.get() != this || !bindings.mScene || !bindings.mCamera
-            || bindings.mCamera->getRenderer() != bindings.mRenderer.get()
+            || !bindings.mRegistration
+            || (bindings.mCamera->getRenderer() != bindings.mRenderer.get()
+                && !(bindings.mRegistration->mParked && !bindings.mCamera->getRenderer()))
             || bindings.mCamera->getGraphicsContext() != bindings.mContext.get())
             return false;
 
+        // GraphicsContext::runOperations draws every registered camera, including a camera
+        // no longer selected by View. Keep its context/GL objects and actual Renderer alive,
+        // but park the camera's renderer slot so the archived graph cannot be drawn.
+        auto* outgoing = getCamera();
+        if (outgoing != bindings.mCamera.get())
+        {
+            if (mSelectedRegistration && mSelectedRegistration->mCamera == outgoing)
+                mSelectedRegistration->mParked = true;
+            outgoing->setRenderer(nullptr);
+        }
+        bindings.mCamera->setRenderer(bindings.mRenderer);
+        bindings.mRegistration->mParked = false;
+        mSelectedRegistration = bindings.mRegistration;
         // OSG's regular setSceneData traverses the graph and Viewer also resets the start tick.
         // Both cameras already own their prepared scene children; select the existing Scene directly.
         _scene = bindings.mScene;

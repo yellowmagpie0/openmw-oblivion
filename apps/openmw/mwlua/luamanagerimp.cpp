@@ -150,7 +150,9 @@ namespace MWLua
                     globalPackages.emplace("openmw.world", initWorldPackage(context));
                     auto& lua = view.sol();
                     sol::table nearby(lua, sol::create);
-                    for (const auto& [key, value] : LuaUtil::cast<sol::table>(mLocalPackages.at("openmw.nearby")))
+                    const auto originalNearby = LuaUtil::getMutableFromReadOnly(
+                        LuaUtil::cast<sol::userdata>(mLocalPackages.at("openmw.nearby")));
+                    for (const auto& [key, value] : originalNearby)
                         nearby[key] = value;
                     const auto& lists = mLists->incomingLists();
                     nearby["activators"] = LObjectList{ lists.getActivatorsInScene() };
@@ -159,8 +161,8 @@ namespace MWLua
                     nearby["doors"] = LObjectList{ lists.getDoorsInScene() };
                     nearby["items"] = LObjectList{ lists.getItemsInScene() };
                     nearby["players"] = LObjectList{ lists.getPlayers() };
-                    mLocalPackages["openmw.nearby"] = nearby;
-                    mPlayerPackages["openmw.nearby"] = nearby;
+                    mLocalPackages["openmw.nearby"] = LuaUtil::makeReadOnly(nearby);
+                    mPlayerPackages["openmw.nearby"] = mLocalPackages.at("openmw.nearby");
                 });
             const auto domain = mDomain->incomingDomain();
             mLoad->prepareIncoming({}, mConfiguration.getLoadConf(), domain);

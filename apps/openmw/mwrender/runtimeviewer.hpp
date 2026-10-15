@@ -6,12 +6,19 @@
 #include <osgUtil/RenderBin>
 #include <osgViewer/Scene>
 #include <osgViewer/Viewer>
+#include <memory>
 
 namespace MWRender
 {
     /// Keeps the ordinary Viewer bootstrap behavior; only prepared selection bypasses scene traversal.
     class RuntimeViewer final : public osgViewer::Viewer
     {
+        struct CameraRegistration
+        {
+            osg::Camera* mCamera;
+            osg::GraphicsOperation* mRenderer;
+            bool mParked = false;
+        };
     public:
         class Bindings
         {
@@ -20,6 +27,7 @@ namespace MWRender
             osg::ref_ptr<osgViewer::Scene> mScene;
             osg::ref_ptr<osg::Camera> mCamera;
             osg::ref_ptr<osg::GraphicsOperation> mRenderer;
+            std::shared_ptr<CameraRegistration> mRegistration;
             osg::ref_ptr<osg::GraphicsContext> mContext;
             osg::ref_ptr<osg::GraphicsContext::ResizedCallback> mResizeCallback;
             osg::ref_ptr<osgUtil::RenderBin> mTransparentBin;
@@ -44,6 +52,7 @@ namespace MWRender
 
     private:
         bool mSelectingBindings = false;
+        std::shared_ptr<CameraRegistration> mSelectedRegistration;
     };
 }
 

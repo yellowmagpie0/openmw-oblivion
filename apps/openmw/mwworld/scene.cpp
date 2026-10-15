@@ -962,6 +962,18 @@ namespace MWWorld
             v->waitTillDone();
     }
 
+    void Scene::waitForPendingTasks()
+    {
+        for (const auto& item : mWorkItems) item->waitTillDone();
+        mPreloader->waitForPendingTasks();
+    }
+
+    bool Scene::hasPendingTasks() const
+    {
+        return mPreloader->hasPendingTasks() || std::any_of(mWorkItems.begin(), mWorkItems.end(),
+            [](const auto& item) { return !item->isDone(); });
+    }
+
     bool Scene::hasCellChanged() const
     {
         return mCellChanged;

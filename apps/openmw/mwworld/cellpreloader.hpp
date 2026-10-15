@@ -56,6 +56,8 @@ namespace MWWorld
         void notifyLoaded(MWWorld::CellStore* cell);
 
         void clear();
+        void waitForPendingTasks();
+        bool hasPendingTasks() const;
 
         /// Removes preloaded cells that have not had a preload request for a while.
         void updateCache(double timestamp);
@@ -89,6 +91,8 @@ namespace MWWorld
 
     private:
         void clearAllTasks();
+        void queueWorkItem(osg::ref_ptr<SceneUtil::WorkItem> item, bool front = false);
+        std::vector<osg::ref_ptr<SceneUtil::WorkItem>> mPendingTasks;
 
         Resource::ResourceSystem* mResourceSystem;
         Resource::BulletShapeManager* mBulletShapeManager;

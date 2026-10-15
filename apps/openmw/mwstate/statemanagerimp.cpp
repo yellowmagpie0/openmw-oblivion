@@ -3,6 +3,7 @@
 #include "saveinput.hpp"
 
 #include <filesystem>
+#include <stdexcept>
 
 #include <SDL_clipboard.h>
 
@@ -64,6 +65,80 @@
 
 #include "quicksavemanager.hpp"
 #include "saveadmission.hpp"
+
+struct MWState::StateManager::RetainedRuntime::Data
+{
+    StateManager* mOwner;
+    State mState = State_NoGame;
+    Character* mCharacter = nullptr;
+    double mTimePlayed = 0;
+    std::filesystem::path mLastSavegame;
+    bool mAskLoadRecent = false;
+    bool mDetached = false;
+    bool mOriginalSelected = false;
+    explicit Data(StateManager& owner) : mOwner(&owner) {}
+    void exchange() noexcept
+    {
+        using std::swap;
+        swap(mOwner->mState, mState);
+        swap(mOwner->mTimePlayed, mTimePlayed);
+        swap(mOwner->mLastSavegame, mLastSavegame);
+        swap(mOwner->mAskLoadRecent, mAskLoadRecent);
+        auto* current = mOwner->mCharacterManager.getCurrentCharacter();
+        mOwner->mCharacterManager.setCurrentCharacter(mCharacter);
+        mCharacter = current;
+    }
+};
+
+MWState::StateManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+MWState::StateManager::RetainedRuntime::~RetainedRuntime() { restore(); }
+MWState::StateManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+MWState::StateManager::RetainedRuntime& MWState::StateManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+{
+    if (this != &other) { restore(); mData = std::move(other.mData); }
+    return *this;
+}
+MWState::StateManager::RetainedRuntime MWState::StateManager::retainRuntime()
+{
+    if (mRetainedRuntime) throw std::logic_error("State runtime retention is already active");
+    auto data = std::make_unique<RetainedRuntime::Data>(*this);
+    mRetainedRuntime = data.get();
+    return RetainedRuntime(std::move(data));
+}
+bool MWState::StateManager::RetainedRuntime::detach() noexcept
+{
+    if (!mData || !mData->mOwner || mData->mDetached) return false;
+    mData->exchange(); mData->mDetached = true;
+    return true;
+}
+bool MWState::StateManager::RetainedRuntime::exchange() noexcept
+{
+    if (!mData || !mData->mOwner || !mData->mDetached) return false;
+    mData->exchange(); mData->mOriginalSelected = !mData->mOriginalSelected;
+    return true;
+}
+bool MWState::StateManager::RetainedRuntime::restore() noexcept
+{
+    if (!mData || !mData->mOwner) return false;
+    if (mData->mDetached && !mData->mOriginalSelected) mData->exchange();
+    mData->mOwner->mRetainedRuntime = nullptr;
+    mData->mOwner = nullptr;
+    mData.reset();
+    return true;
+}
+void MWState::StateManager::RetainedRuntime::discard() noexcept
+{
+    if (!mData || !mData->mOwner) return;
+    if (!mData->mDetached) { restore(); return; }
+    if (mData->mOriginalSelected) mData->exchange();
+    mData->mOwner->mRetainedRuntime = nullptr;
+    mData->mOwner = nullptr;
+    mData.reset();
+}
+MWState::StateManager::~StateManager()
+{
+    if (mRetainedRuntime) mRetainedRuntime->mOwner = nullptr;
+}
 
 void MWState::StateManager::cleanup(bool force)
 {
@@ -225,6 +300,7 @@ void MWState::StateManager::resumeGame()
 
 void MWState::StateManager::saveGame(std::string_view description, const Slot* slot)
 {
+    if (mRetainedRuntime) throw std::logic_error("Saving requires a completed runtime load transaction");
     MWBase::Environment::get().getLuaManager()->applyDelayedActions();
 
     MWState::Character* character = getCurrentCharacter();
@@ -952,6 +1028,7 @@ void MWState::StateManager::quickLoad()
 
 void MWState::StateManager::deleteGame(const MWState::Character* character, const MWState::Slot* slot)
 {
+    if (mRetainedRuntime) throw std::logic_error("Save deletion requires a completed runtime load transaction");
     const std::filesystem::path savePath = slot->mPath;
     mCharacterManager.deleteSlot(slot, character);
     if (mLastSavegame == savePath)

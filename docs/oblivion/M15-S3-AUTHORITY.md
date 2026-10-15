@@ -1269,3 +1269,44 @@ available. This proves backend retirement with stopped users at shutdown, not
 full incoming loaded-world construction, external manager retention or failed-load
 restoration. World simulation retention still rejects initialized backends;
 StateManager's late-load cleanup and full S3 acceptance remain open.
+
+Loaded World retention now composes a prepared backend with actual store/model,
+player/clock/native script/AI/runtime-field selection. Generic RuntimeFields no
+longer exchanges backend pointers. Restore refuses active candidate cells;
+explicit retirement runs under matching external owners. Both backends stop
+before cells on owner invalidation, requiring retired external controllers/widgets.
+CellPreloader retains all outstanding work handles, including evicted/aborted
+entries, and Scene drains/checks work while keeping cache ownership. Selection
+rejects active work before changing owners. RuntimeViewer parks only the renderer
+slot of a registered camera and restores its actual captured renderer/context;
+this fixes a real parked-graph draw and null distortion FBO crash. OSG source
+confirmation: GraphicsContext::runOperations in OpenSceneGraph 3.6.5 draws every
+registered camera with a renderer. New context-operation coverage proves inactive
+renderers do not run; no context detach or compiled-object release is performed.
+StateManager field retention stages NoGame and restores current character/time/
+last-save/prompt fields, leaving library/requests process-owned. Saves/deletions
+require a completed retainer. Nearby API copying uses the read-only backing table,
+then makes a fresh read-only package with incoming lists. Navigator DbWorker uses
+per-job write transactions with fresh shape/tile ID reservations, and SQLite
+connections wait briefly for write contention. Shared-worker and lock-contention
+regressions pass.
+
+Full 2,616 components pass normally at fingerprint
+`44c28b3e78cfc30613e5d37ed116be6097552832af764afe930868f9c6d89998` in
+`loaded-world-retention-normal-03`, and under ASan/UBSan at fingerprint
+`36ed6f9323c7d1714724b45e11423580cdc4b6277e3bd58bd68e5c38964d8dd4` in
+`loaded-world-retention-sanitized-04`. Later fixes change only engine source.
+Full 1,459 engines pass normally and under ASan/UBSan at final fingerprint
+`2bc00eb0672dab71cd43ce9b9c1a9cb65ea04e3d72de0a2cbff55b2b0ab75ea3` in
+`loaded-world-retention-{normal,sanitized}-06`. Actual copied WindowManager
+runtime-08 courses (normal/sanitized PIDs 361969/363885) construct distinct loaded
+candidate cells/backends with fresh mechanics/Lua/native frontend, then retire and
+restore actual original owners/state/PRNG with allocation-denied selection and
+scope/move checks. Runtime-10 courses (PIDs 364016/364133) additionally hold a cache
+worker, prove unchanged selection on rejection, drain it and complete rollback.
+All four render/F5/quit courses have audited captures, lifecycle, selected decoded
+native save fields and provenance. Fixture/readonly API/SQLite/draw failures and
+source-correction cancellations remain recorded. Candidate construction is from
+content, not decoded save installation. Loaded commit/owner death, other external
+manager ownership and real StateManager late-load rollback remain unverified;
+S3 remains incomplete.

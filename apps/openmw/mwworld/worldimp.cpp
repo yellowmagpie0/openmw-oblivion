@@ -261,12 +261,6 @@ namespace MWWorld
         decltype(World::mDispatchingOblivionDeathEvents) mDispatchingOblivionDeathEvents{};
         decltype(World::mCurrentWorldSpace) mCurrentWorldSpace{};
         decltype(World::mPlayer) mPlayer{};
-        decltype(World::mPhysics) mPhysics{};
-        decltype(World::mNavigator) mNavigator{};
-        decltype(World::mRendering) mRendering{};
-        decltype(World::mWorldScene) mWorldScene{};
-        decltype(World::mWeatherManager) mWeatherManager{};
-        decltype(World::mProjectileManager) mProjectileManager{};
         decltype(World::mSky) mSky{};
         decltype(World::mGodMode) mGodMode{};
         decltype(World::mScriptsEnabled) mScriptsEnabled{};
@@ -346,18 +340,6 @@ namespace MWWorld
         swap(mCurrentWorldSpace, data.mCurrentWorldSpace);
         static_assert(std::is_nothrow_swappable_v<decltype(mPlayer)>);
         swap(mPlayer, data.mPlayer);
-        static_assert(std::is_nothrow_swappable_v<decltype(mPhysics)>);
-        swap(mPhysics, data.mPhysics);
-        static_assert(std::is_nothrow_swappable_v<decltype(mNavigator)>);
-        swap(mNavigator, data.mNavigator);
-        static_assert(std::is_nothrow_swappable_v<decltype(mRendering)>);
-        swap(mRendering, data.mRendering);
-        static_assert(std::is_nothrow_swappable_v<decltype(mWorldScene)>);
-        swap(mWorldScene, data.mWorldScene);
-        static_assert(std::is_nothrow_swappable_v<decltype(mWeatherManager)>);
-        swap(mWeatherManager, data.mWeatherManager);
-        static_assert(std::is_nothrow_swappable_v<decltype(mProjectileManager)>);
-        swap(mProjectileManager, data.mProjectileManager);
         static_assert(std::is_nothrow_swappable_v<decltype(mSky)>);
         swap(mSky, data.mSky);
         static_assert(std::is_nothrow_swappable_v<decltype(mGodMode)>);
@@ -393,6 +375,7 @@ namespace MWWorld
     struct World::RetainedSimulation::Data
     {
         World* mOwner;
+        std::optional<PreparedBackend> mBackend;
         std::unique_ptr<RuntimeFields> mFields;
         OblivionScriptManager::RetainedRuntime mScripts;
         MWMechanics::OblivionAiService::RetainedRuntime mAi;
@@ -401,7 +384,9 @@ namespace MWWorld
         bool mDetached = false;
         bool mOriginalSelected = false;
         explicit Data(World& owner)
-            : mOwner(&owner), mFields(owner.prepareRuntimeFields())
+            : mOwner(&owner)
+            , mBackend(owner.mRendering ? std::optional<PreparedBackend>(owner.prepareBackend()) : std::nullopt)
+            , mFields(owner.prepareRuntimeFields())
             , mScripts(owner.mOblivionScriptManager->retainRuntime())
             , mAi(owner.mOblivionAi->retainRuntime())
             , mStore(owner.mStore.retainRuntime()), mModel(owner.mWorldModel.retainRuntime()) {}
@@ -432,20 +417,31 @@ namespace MWWorld
         mOblivionCombat.reset();
     }
     World::RetainedSimulation::RetainedSimulation(std::unique_ptr<Data> data) : mData(std::move(data)) {}
-    World::RetainedSimulation::~RetainedSimulation() { restore(); }
+    World::RetainedSimulation::~RetainedSimulation()
+    {
+        if (mData && mData->mOwner && !restore()) std::terminate();
+    }
     World::RetainedSimulation::RetainedSimulation(RetainedSimulation&&) noexcept = default;
     World::RetainedSimulation& World::RetainedSimulation::operator=(RetainedSimulation&& other) noexcept
     {
-        if (this != &other) { restore(); mData = std::move(other.mData); }
+        if (this != &other)
+        {
+            if (mData && mData->mOwner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
         return *this;
     }
     World::RetainedSimulation World::retainSimulation()
     {
-        if (mRetainedSimulation || mGameProfile != ESM::GameProfile::Oblivion || !mPlayer
+        if (mRetainedSimulation || mPreparedBackend || mGameProfile != ESM::GameProfile::Oblivion || !mPlayer
             || !mOblivionScriptManager || !mOblivionAi || mDispatchingOblivionDeathEvents)
             throw std::logic_error("World simulation retention is unavailable or active");
-        if (mRendering || mPhysics || mWorldScene || mNavigator || mWeatherManager || mProjectileManager)
-            throw std::logic_error("World backend retention is not integrated yet");
+        const bool hasBackend = mRendering || mPhysics || mWorldScene || mNavigator
+            || mWeatherManager || mProjectileManager;
+        if (hasBackend && (!mRendering || !mPhysics || !mWorldScene || !mNavigator
+            || !mWeatherManager || !mProjectileManager))
+            throw std::logic_error("World simulation retention requires a complete backend");
+        if (mWorldScene) mWorldScene->waitForPendingTasks();
         auto data = std::make_unique<RetainedSimulation::Data>(*this);
         mRetainedSimulation = data.get();
         return RetainedSimulation(std::move(data));
@@ -453,8 +449,10 @@ namespace MWWorld
     bool World::RetainedSimulation::detach() noexcept
     {
         if (!mData || !mData->mOwner || mData->mDetached) return false;
+        if (mData->mBackend && mData->mOwner->mWorldScene->hasPendingTasks()) return false;
         if (!mData->mModel.detach() || !mData->mStore.detach()
-            || !mData->mScripts.detach() || !mData->mAi.detach())
+            || !mData->mScripts.detach() || !mData->mAi.detach()
+            || (mData->mBackend && !mData->mBackend->exchange()))
         {
             mData->mModel.restore(); mData->mStore.restore(); mData->mScripts.restore(); mData->mAi.restore();
             mData->mOwner->mRetainedSimulation = nullptr; mData->mOwner = nullptr;
@@ -468,23 +466,40 @@ namespace MWWorld
     {
         if (!mData || !mData->mOwner || !mData->mDetached)
             throw std::logic_error("World exchange requires detachment");
+        if (mData->mBackend) mData->mOwner->mWorldScene->waitForPendingTasks();
         mData->mStore.prepareExchange();
     }
     bool World::RetainedSimulation::exchange() noexcept
     {
         if (!mData || !mData->mOwner || !mData->mDetached || !mData->mStore.canExchange()) return false;
+        if (mData->mBackend && mData->mOwner->mWorldScene->hasPendingTasks()) return false;
         // Native idle guards precede the remaining callback-free exchanges.
         if (!mData->mScripts.exchange()) return false;
         if (!mData->mAi.exchange()) { mData->mScripts.exchange(); return false; }
+        if (mData->mBackend && !mData->mBackend->exchange())
+        {
+            if (!mData->mAi.exchange() || !mData->mScripts.exchange()) std::terminate();
+            return false;
+        }
         if (!mData->mStore.exchange() || !mData->mModel.exchange()) std::terminate();
         mData->mOwner->swapRuntimeFields(*mData->mFields);
         mData->mOriginalSelected = !mData->mOriginalSelected;
         return true;
     }
+    bool World::RetainedSimulation::clearSelectedScene()
+    {
+        return mData && mData->mOwner && mData->mDetached && mData->mBackend
+            && mData->mBackend->clearSelectedScene();
+    }
     bool World::RetainedSimulation::restore() noexcept
     {
         if (!mData || !mData->mOwner) return false;
         auto& owner = *mData->mOwner;
+        if (mData->mBackend)
+        {
+            if (!mData->mBackend->canCancel()) return false;
+            mData->mBackend->cancel(); // preload/projectile/render users before cells and player
+        }
         if (mData->mDetached)
         {
             if (mData->mOriginalSelected) mData->mFields.reset();
@@ -508,6 +523,7 @@ namespace MWWorld
         if (!mData || !mData->mOwner) return;
         if (!mData->mDetached) { restore(); return; }
         if (mData->mOriginalSelected && !exchange()) std::terminate();
+        if (mData->mBackend && !mData->mBackend->discard()) std::terminate();
         mData->mFields.reset(); // outgoing Player/locals/custom state before cells/bases
         mData->mScripts.discard(); mData->mAi.discard();
         mData->mModel.discard(); mData->mStore.discard();
@@ -3931,7 +3947,10 @@ namespace MWWorld
 
     World::~World()
     {
-        cancelPreparedBackend();
+        if (mRetainedSimulation && mRetainedSimulation->mBackend)
+            destroyRetainedBackends();
+        else
+            cancelPreparedBackend();
         mBackendConfiguration.reset();
         if (mRetainedSimulation)
         {

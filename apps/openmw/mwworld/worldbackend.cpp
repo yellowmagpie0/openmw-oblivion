@@ -93,14 +93,14 @@ namespace MWWorld
             mReady = true;
         }
 
-        void dispose(bool restoreOriginal = true) noexcept
+        void dispose(bool restoreOriginal = true, bool ownerDestroyed = false) noexcept
         {
             if (restoreOriginal && mExchanged && !exchange()) std::terminate();
             restoreSelection();
             mReady = false;
             // Scene destruction only stops preload work. Its live objects must be unloaded
             // through clearSelectedScene while the corresponding service owners are selected.
-            if (mScene && !mScene->getActiveCells().empty()) std::terminate();
+            if (!ownerDestroyed && mScene && !mScene->getActiveCells().empty()) std::terminate();
             mScene.reset();
             if (mProjectiles) mProjectiles->clear();
             mProjectiles.reset();
@@ -191,6 +191,25 @@ namespace MWWorld
         mPreparedBackend = nullptr;
     }
 
+    void World::destroyRetainedBackends() noexcept
+    {
+        // Normal World destruction already requires external controllers/widgets to be gone.
+        // Stop both backends' preload/physics/render users before either retained cell model dies.
+        if (mPreparedBackend)
+        {
+            mPreparedBackend->dispose(true, true);
+            mPreparedBackend->mOwner = nullptr;
+            mPreparedBackend = nullptr;
+        }
+        mWorldScene.reset();
+        if (mProjectileManager) mProjectileManager->clear();
+        mProjectileManager.reset();
+        mWeatherManager.reset();
+        mRendering.reset();
+        mPhysics.reset();
+        mNavigator.reset();
+    }
+
     World::PreparedBackend::PreparedBackend(std::unique_ptr<Data> data) : mData(std::move(data)) {}
     World::PreparedBackend::~PreparedBackend() { cancel(); }
     World::PreparedBackend::PreparedBackend(PreparedBackend&&) noexcept = default;
@@ -200,6 +219,14 @@ namespace MWWorld
         return *this;
     }
     bool World::PreparedBackend::ready() const noexcept { return mData && mData->mOwner && mData->mReady; }
+    bool World::PreparedBackend::canCancel() const noexcept
+    {
+        if (!ready() || mData->mSelected || mData->mViewer->areThreadsRunning()
+            || MWBase::Environment::get().getWorld() != mData->mOwner)
+            return false;
+        const auto* candidate = mData->mExchanged ? mData->mOwner->mWorldScene.get() : mData->mScene.get();
+        return candidate && candidate->getActiveCells().empty();
+    }
     bool World::PreparedBackend::exchange() noexcept { return mData && mData->exchange(); }
     bool World::PreparedBackend::clearSelectedScene()
     {

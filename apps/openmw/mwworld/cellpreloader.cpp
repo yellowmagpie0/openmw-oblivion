@@ -284,7 +284,7 @@ namespace MWWorld
 
         osg::ref_ptr<PreloadItem> item(new PreloadItem(&cell, mResourceSystem->getSceneManager(), mBulletShapeManager,
             mResourceSystem->getKeyframeManager(), mTerrain, mLandManager, mPreloadInstances));
-        mWorkQueue->addWorkItem(item);
+        queueWorkItem(item);
 
         mPreloadCells.emplace(&cell, PreloadEntry(timestamp, item));
         ++mAdded;
@@ -343,7 +343,7 @@ namespace MWWorld
             // the resource cache is cleared from the worker thread so that we're not holding up the main thread with
             // delete operations
             mUpdateCacheItem = new UpdateCacheItem(mResourceSystem, timestamp);
-            mWorkQueue->addWorkItem(mUpdateCacheItem, true);
+            queueWorkItem(mUpdateCacheItem, true);
             mLastResourceCacheUpdate = timestamp;
         }
 
@@ -412,7 +412,7 @@ namespace MWWorld
             if (!positions.empty())
             {
                 mTerrainPreloadItem = new TerrainPreloadItem(mTerrainViews, mTerrain, positions);
-                mWorkQueue->addWorkItem(mTerrainPreloadItem);
+                queueWorkItem(mTerrainPreloadItem);
             }
         }
     }
@@ -430,6 +430,38 @@ namespace MWWorld
             clearAllTasks();
             mTerrain = terrain;
         }
+    }
+
+    void CellPreloader::queueWorkItem(osg::ref_ptr<SceneUtil::WorkItem> item, bool front)
+    {
+        // Keep even evicted/notified/aborted jobs until completion: those jobs still own
+        // backend resources and may read Land through the currently selected World store.
+        std::erase_if(mPendingTasks, [](const auto& task) { return task->isDone(); });
+        bool tracked = false;
+        try
+        {
+            mPendingTasks.push_back(item);
+            tracked = true;
+            mWorkQueue->addWorkItem(item, front);
+        }
+        catch (...)
+        {
+            if (tracked) mPendingTasks.pop_back();
+            item->abort();
+            item->signalDone(); // not queued; members must not wait forever on this item
+            throw;
+        }
+    }
+
+    void CellPreloader::waitForPendingTasks()
+    {
+        for (const auto& task : mPendingTasks) task->waitTillDone();
+    }
+
+    bool CellPreloader::hasPendingTasks() const
+    {
+        return std::any_of(mPendingTasks.begin(), mPendingTasks.end(),
+            [](const auto& task) { return !task->isDone(); });
     }
 
     void CellPreloader::clearAllTasks()
@@ -453,6 +485,8 @@ namespace MWWorld
         for (PreloadMap::iterator it = mPreloadCells.begin(); it != mPreloadCells.end(); ++it)
             it->second.mWorkItem->waitTillDone();
 
+        waitForPendingTasks();
+        mPendingTasks.clear();
         mPreloadCells.clear();
     }
 

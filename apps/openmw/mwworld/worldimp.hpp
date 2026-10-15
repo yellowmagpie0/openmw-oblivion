@@ -114,8 +114,9 @@ namespace MWWorld
         friend class MWMechanics::OblivionAiService;
     public:
         // Simulation archive under construction for the full load transaction.
-        // Callers stop external actor/Lua users before restore/discard. Backend
-        // worlds are rejected until renderer/manager ownership is integrated.
+        // Callers stop external users and select matching mechanics/Lua/UI/sound owners.
+        // Retire candidate Scene before restore, outgoing Scene before discard, and external
+        // controllers/widgets before owner destruction. Selection retains actual owners.
         class RetainedSimulation
         {
             friend class World;
@@ -130,6 +131,7 @@ namespace MWWorld
             bool detach() noexcept;
             void prepareExchange();
             bool exchange() noexcept;
+            bool clearSelectedScene();
             bool restore() noexcept;
             void discard() noexcept;
         };
@@ -153,6 +155,7 @@ namespace MWWorld
             PreparedBackend& operator=(PreparedBackend&&) noexcept;
             PreparedBackend(const PreparedBackend&) = delete;
             bool ready() const noexcept;
+            bool canCancel() const noexcept;
             bool exchange() noexcept;
             bool clearSelectedScene();
             bool discard() noexcept;
@@ -166,6 +169,7 @@ namespace MWWorld
         void rememberBackendConfiguration(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer,
             osg::ref_ptr<osg::Group> rootNode, SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue);
         void cancelPreparedBackend() noexcept;
+        void destroyRetainedBackends() noexcept;
         class RuntimeFields
         {
             friend class World;
