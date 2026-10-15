@@ -4,6 +4,7 @@
 #include "animation.hpp"
 #include "tes4facegen.hpp"
 #include "util.hpp"
+#include "obliviondropplacement.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -46,6 +47,19 @@ namespace MWRender
         // This does not compute a dropped reference pose or publish a body.
         std::optional<CarriedWeaponBody> captureCarriedWeaponBody(const MWWorld::ConstPtr& item) const;
         bool isCurrentCarriedWeaponBody(const CarriedWeaponBody& body) const noexcept;
+
+        struct CarriedWeaponDrop
+        {
+            CarriedWeaponBody mBody;
+            OblivionDroppedWeaponPose mAnchor;
+        };
+        // The original NPC break path uses skeleton Weapon, not the model's
+        // authored root. Caller resolves and guards the native actor placement.
+        std::optional<CarriedWeaponDrop> captureCarriedWeaponDrop(
+            const MWWorld::ConstPtr& item, const Nif::NiTransform& placement) const;
+        bool isCurrentCarriedWeaponDrop(
+            const CarriedWeaponDrop& drop, const Nif::NiTransform& placement) const noexcept;
+
 
         osg::Vec3f runAnimation(float timepassed) override;
         void refreshEquipment();

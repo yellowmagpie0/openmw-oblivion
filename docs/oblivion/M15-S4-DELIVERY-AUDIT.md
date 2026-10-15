@@ -1017,3 +1017,95 @@ that provenance, including actor placement/morphology transforms, rather than
 normalize/decompose the assembled matrix. Created-reference scale, replacement
 equipment, complete source/contact/scene/body/relation publication and real
 normal-input break/drop/restart courses remain open. S4 remains incomplete.
+
+
+## Native carried-weapon drop anchor capture
+
+`ESM4NpcAnimation::captureCarriedWeaponDrop` now prepares the actual carried
+weapon body together with an independently captured skeleton `Weapon` anchor.
+The original node-index constructor and Character/process getters establish
+that index 3 is this anchor. It is not the carried model root: an inserted model
+offset changes the carried body binding while leaving a freshly captured drop
+position at the skeleton anchor. This is preparation for the drop factory;
+no contact or inventory branch starts using it in this checkpoint.
+
+`OblivionDroppedWeaponPose` owns the scene path and preserves each authored
+NIF separate scale. It reads current rendered local matrices divided by their
+known NIF scale; procedural controllers can leave cached `mRotationScale` stale.
+Synthetic MatrixTransform/PAT wrappers retain their full linear map with separate
+scale 1. Composition uses the shared original-compatible `Nif` helper, retaining
+finite embedded matrix scale/shear/reflection and zero/negative separate scales.
+The existing positive ragdoll API keeps its input/output validation around that
+helper. A nearest-even store admits finite FLT_MAX rounding up to, but excluding,
+the original overflow midpoint. Nonfinite inputs or intermediate results reject.
+
+The caller must supply resolved native actor placement; capture verifies its
+rendered root translation after float narrowing and linear map at relative
+1e-6 tolerance (absolute floor 1). Subsequent validation compares stored root,
+scene and native result bits exactly. A zero explicit root scale is supported;
+an intermediate authored NIF separate scale of zero rejects because current
+rendered orientation cannot be recovered. Unknown/projective/nonrelative
+transforms, detached/hidden paths, overflow and stale bindings also reject.
+This API does not establish native actor placement/morphology policy.
+
+Validation first checks the retained carried item/model/definition binding, then
+borrows the already populated node map. It never calls the lazy map builder.
+Anchor and carried-body captures must share the same actor placement node.
+The caller still needs World/lifetime guards before borrowing animation/item
+owners. Move/copy retention and invalid source/path/definition/scale/root/map
+cases are covered, including the actual NPC animation with an owned NIF body.
+
+The [editable original contract](M15-ORIGINAL-DROP-TRANSFORM-PROBES.json) records:
+
+- Complete original 0053D7A0 composition with actual matrix/vector helpers and no
+  stubs: 688 contexts, including 48 signed near-FLT_MAX store cases. All inputs,
+  callee-saved registers, return value and stack convention are checked. Separate
+  normal and ASan/UBSan production comparisons match 664 finite outputs exactly
+  and reject 24 nonfinite results. Wrong-bit, missing/duplicate-row and malformed
+  input controls all reject. Sixteen curated original rows are versioned.
+- Original 00478070 node-index construction, 004349A0 Character getter,
+  0064B110 process getter and 00477EC0 index getter: eight missing/index/cache
+  combinations. Named scene search, as-node conversion, refcounts, logging and
+  BackWeapon/SideWeapon visibility are declared boundaries. No full scene search,
+  shield, inventory or runtime route is asserted.
+- Original 004D7AF0 reference matrix builder with its actual REFR vtable dispatch
+  and WEAP base: 356 drop-angle/control-word cases, no stubs. The existing
+  `Misc::Convert::makeOsgQuat` agrees within declared 2e-6 tolerance (maximum error
+  1.084227760905776e-7). The earlier direct reconstruction baseline differs for all
+  146 combined matrices; it incorrectly assumed the native angle extractor and
+  reference builder must be inverses. Both results are retained. No generic
+  reference renderer change is warranted by that baseline.
+
+Final `S4/drop-native-capture-engine-normal-02` and `-engine-sanitized-02`
+each pass all **1510 engine tests/122 suites**, exact inventory/XML agreement,
+zero failures/skips. Their source fingerprints agree before/after:
+`6353f9fd225a3a5a0890c2dd71c34cc63616fd18c91dca2061f58878ee356d97`,
+atop `b2bf479fe94ef2abc90a8eed7c8827da85bbffef`. Normal and sanitized
+`S4/drop-native-capture-full-*-01` component results each pass **2639 cases/254
+suites**, fingerprint `626dd5558a2b96c165398c2bf839b7f87ad6bfe1ad7101f5eb288b74966efa79`.
+The subsequent root correction changes only apps renderer/header/World test;
+`drop-native-capture-review-01/reinspection.json` and saved per-source digests
+verify unchanged component source and binary hashes. ASan leaks are disabled;
+UBSan halts on errors. No Python codec or runtime authority changed in this chunk.
+Only documentation and editable original expectations follow these checks.
+
+`S4/drop-native-capture-allocation-01` runs five focused actual engine tests under
+GDB against normal test binary SHA256
+`d4ce7b67857e6ddcf14aa1cb4cb37dc5b542c97fd0338b83d45860a3fb59faeb`.
+There are 53 balanced outer entries/returns and 42 nested entries; native
+composition/anchor-validation/NPC-validation have 50/35/10 hits respectively.
+No main-thread malloc/calloc/realloc/aligned_alloc/posix_memalign is observed.
+Preparation and other threads/APIs are outside this bounded trace.
+
+Retained failures include an initial fixture assertion on intentionally rejected
+scene overflow, 12 finite original FLT_MAX results rejected by an overly strict
+range check, and a regression demonstrating that a bone-rooted anchor could be
+accepted as actor-rooted. The corrected store and explicit root pointer guard
+pass the final checks. Sanitized full-01 was deliberately stopped at its engine
+build before the root fix; its completed component result remains valid, and its
+overall report remains failed. No failed or stopped run is counted as a full pass.
+
+Factory scale, actor placement/morphology admission, compound source/contact/key/
+scene/body/relation publication, replacement equipment and pickup cleanup remain
+open. Actual normal-input break/drop and fresh-process restart acceptance have
+not been added by this checkpoint. S4 remains incomplete.

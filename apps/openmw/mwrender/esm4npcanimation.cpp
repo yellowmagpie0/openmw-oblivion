@@ -247,6 +247,36 @@ namespace MWRender
             && isCurrentCarriedWeaponPose(body.mPose);
     }
 
+    std::optional<ESM4NpcAnimation::CarriedWeaponDrop> ESM4NpcAnimation::captureCarriedWeaponDrop(
+        const MWWorld::ConstPtr& item, const Nif::NiTransform& placement) const
+    {
+        auto body = captureCarriedWeaponBody(item);
+        if (!body) return std::nullopt;
+        const auto& nodes = getNodeMap();
+        const auto anchor = nodes.find("weapon");
+        if (anchor == nodes.end()) return std::nullopt;
+        auto scene = OblivionAttachedWeaponPose::capture(
+            *mPtr.getRefData().getBaseNode(), *anchor->second);
+        if (!scene) return std::nullopt;
+        auto native = OblivionDroppedWeaponPose::capture(*scene, placement);
+        if (!native) return std::nullopt;
+        CarriedWeaponDrop result{std::move(*body), std::move(*native)};
+        if (!isCurrentCarriedWeaponDrop(result, placement)) return std::nullopt;
+        return result;
+    }
+
+    bool ESM4NpcAnimation::isCurrentCarriedWeaponDrop(
+        const CarriedWeaponDrop& drop, const Nif::NiTransform& placement) const noexcept
+    {
+        if (!isCurrentCarriedWeaponBody(drop.mBody) || !mNodeMapCreated) return false;
+        // getNodeMap() can allocate/build through scene traversal. Preparation
+        // populates the map; callback-free validation only borrows it.
+        const auto anchor = mNodeMap.find("weapon");
+        return anchor != mNodeMap.end() && anchor->second.get() == drop.mAnchor.getAnchor()
+            && drop.mAnchor.getPlacementNode() == drop.mBody.mPose.mScene.getPlacementNode()
+            && drop.mAnchor.matchesCurrentScene(placement);
+    }
+
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
         std::string_view model, std::string_view attachBone, std::string_view texture,
         bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts, std::string* sourceHash)

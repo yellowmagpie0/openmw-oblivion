@@ -6,6 +6,26 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native carried-weapon drop anchor capture — 2026-10-15
+
+NPC animation can now prepare the actual carried body and the independently
+captured skeleton `Weapon` anchor. Native parent/local composition preserves
+separate authored scales and current procedural rotations. Stale item/model/
+scene/root/node-map inputs reject through allocation-free validation; the caller
+still supplies and guards native actor placement.
+
+Original instructions establish the anchor and 688 composition contexts; separate
+normal/sanitized comparisons match all 664 finite results exactly and reject 24
+nonfinite outputs. The existing reference-angle renderer also agrees with the
+original reference matrix builder in 356 bounded cases, so no rendering change
+is needed. Normal and ASan/UBSan each pass 2639 component and 1510 engine tests.
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-carried-weapon-drop-anchor-capture)
+records exact evidence, corrected failures and the no-allocation trace.
+
+Factory publication, actor placement/morphology policy, replacement equipment,
+pickup cleanup and real normal-input break/drop/restart acceptance remain open.
+S4 remains incomplete.
+
 ## S4 native dropped placement arithmetic — 2026-10-15
 
 The native placement rule now preserves the original angle approximation, float

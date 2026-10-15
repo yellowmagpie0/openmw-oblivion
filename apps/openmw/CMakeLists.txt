@@ -19,7 +19,7 @@ source_group(apps/openmw FILES main.cpp androidmain.cpp ${OPENMW_SOURCES} ${OPEN
 
 add_openmw_dir (mwrender
     actors objects renderingmanager animation rotatecontroller sky skyutil npcanimation esm4npcanimation vismask
-    creatureanimation effectmanager util renderinginterface pathgrid rendermode weaponanimation screenshotmanager
+    creatureanimation effectmanager util obliviondropplacement renderinginterface pathgrid rendermode weaponanimation screenshotmanager
     bulletdebugdraw globalmap characterpreview camera localmap water terrainstorage ripplesimulation
     renderbin actoranimation landmanager navmesh actorspaths recastmesh fogmanager objectpaging groundcover
     postprocessor pingpongcull luminancecalculator pingpongcanvas transparentpass precipitationocclusion ripples

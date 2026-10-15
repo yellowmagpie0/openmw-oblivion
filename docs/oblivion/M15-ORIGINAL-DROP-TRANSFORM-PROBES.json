@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "composition": {
+    "passed": true,
+    "cases": 688,
+    "finite_results": 664,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Complete original 0053D7A0 composition and actual 007100A0/007101F0 helpers; no stubs. Extends 640 parent/local contexts with 48 signed matrix/vector/translation float-store cases at and around FLT_MAX overflow midpoint. Preserved inputs/registers and full return verified. No scene traversal, actor policy or runtime acceptance."
+  },
+  "anchor": {
+    "passed": true,
+    "cases": 8,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual node-index constructor 00478070 requests original named skeleton nodes, actual Character +168 getter 004349A0, actual process +118 getter 0064B110 and index getter 00477EC0. Nonnull Character node-index path returns Weapon index3; null uses process FC/100 by F4. Named node search, virtual as-node conversion, interlocked refcounts, diagnostic log and BackWeapon/SideWeapon visibility helper are declared boundaries. No scene search implementation, model-root identity, shield path, full break/drop or original-game runtime acceptance.",
+    "node_index": {
+      "0": "Bip01 Head",
+      "1": "Bip01 R Finger1",
+      "2": "Bip01 L Finger1",
+      "3": "Weapon",
+      "4": "BackWeapon",
+      "5": "SideWeapon",
+      "6": "Quiver",
+      "7": "Bip01 L ForearmTwist",
+      "8": "Torch"
+    },
+    "declared_boundaries": {
+      "006F94A0": "named scene node search",
+      "virtual_8": "as-node conversion",
+      "00A28078_00A2807C": "interlocked refcount IATs",
+      "004A7A60": "diagnostic log",
+      "00897A90": "BackWeapon/SideWeapon visibility"
+    }
+  },
+  "reference_render": {
+    "passed": true,
+    "cases": 356,
+    "tolerance": 2e-06,
+    "max_abs_error": 1.084227760905776e-07,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual reference rotation builder 4D7AF0 with original REFR vtable A46C44/+190 dispatch, WEAP base type21 and actual axis/matrix helpers; no stubs. Full return, callee-saved registers and input reference preserved. Compared to existing Misc::Convert::makeOsgQuat using stored original drop angle bits. Does not prove full reference creation, actor root placement or runtime acceptance.",
+    "caller_evidence": "004E4080 GenerateNiNode copies reference position, calls 004D7AF0, then copies its nine floats into the new node local rotation at +30.",
+    "probe_binary_scope": "Existing header-only Misc::Convert::makeOsgQuat; standalone O2 comparison. Original output expectations precede comparison. Not a renderer implementation change."
+  },
+  "probes": {
+    "drop-native-composition-oracle-02": {
+      "probe_sha256": "1aa866d30359e7ab24941a6493c794594f49318cb4f6ef5aa81211f86c1e3adc",
+      "cases_sha256": "87b694954526d839f0f12e2ee0784deb9efa9dba5acc57784b969479845a94a6"
+    },
+    "drop-native-anchor-oracle-01": {
+      "probe_sha256": "0be006eef86e1a751b0e406b18e34d8f29084b22ece9dffb023625a7379be960",
+      "cases_sha256": "0b6af5518e700c235e0402c55dcdfb03fcf54adc898706165a28e6f1d66d8e44"
+    },
+    "drop-reference-render-oracle-01": {
+      "probe_sha256": "4eb2840f0fd0dcc207743d67b4b54abf6a73ac70f6aa3965396f60d91e3f29d8",
+      "cases_sha256": "1ed678240f54397a1cd71d7cca5c9d342969bb12d9d6e4adb455acb9bfc79af5"
+    }
+  },
+  "not_established": [
+    "Actor native placement/morphology resolution in the production drop factory",
+    "Intermediate zero NIF separate-scale orientation recovery",
+    "Whole reference creation and scene/body/relation/inventory/contact publication",
+    "Replacement equipment, pickup cleanup and normal-input break/drop/restart acceptance"
+  ],
+  "comparison": {
+    "normal": {
+      "passed": true,
+      "cases": 688,
+      "finite_exact": 664,
+      "nonfinite_rejected": 24,
+      "flavour": "normal",
+      "negative_controls": [
+        {
+          "name": "wrong-bit",
+          "rejected": true
+        },
+        {
+          "name": "missing-row",
+          "rejected": true
+        },
+        {
+          "name": "duplicate-row",
+          "rejected": true
+        },
+        {
+          "name": "malformed-input",
+          "rejected": true,
+          "returncode": 2
+        }
+      ],
+      "case_sha256": "87b694954526d839f0f12e2ee0784deb9efa9dba5acc57784b969479845a94a6",
+      "source_sha256": "4f5512ad1810d339ebdb1adba5160e844dada91c138bfd13fa6dd131c2985f36",
+      "header_sha256": "2bc93925f000dee8a865f6091307dd5b09c36cd5bbe573d6aea02da470a5767e",
+      "cpp_probe_sha256": "c8858627f8c9d15e2c041261141008fe58816d8548f84b78e6649a4b43ce7f18"
+    },
+    "sanitized": {
+      "passed": true,
+      "cases": 688,
+      "finite_exact": 664,
+      "nonfinite_rejected": 24,
+      "flavour": "sanitized",
+      "negative_controls": [
+        {
+          "name": "wrong-bit",
+          "rejected": true
+        },
+        {
+          "name": "missing-row",
+          "rejected": true
+        },
+        {
+          "name": "duplicate-row",
+          "rejected": true
+        },
+        {
+          "name": "malformed-input",
+          "rejected": true,
+          "returncode": 2
+        }
+      ],
+      "case_sha256": "87b694954526d839f0f12e2ee0784deb9efa9dba5acc57784b969479845a94a6",
+      "source_sha256": "4f5512ad1810d339ebdb1adba5160e844dada91c138bfd13fa6dd131c2985f36",
+      "header_sha256": "2bc93925f000dee8a865f6091307dd5b09c36cd5bbe573d6aea02da470a5767e",
+      "cpp_probe_sha256": "c8858627f8c9d15e2c041261141008fe58816d8548f84b78e6649a4b43ce7f18"
+    }
+  }
+}

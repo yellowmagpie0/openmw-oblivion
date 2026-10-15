@@ -33,6 +33,7 @@ file(GLOB UNITTEST_SRC_FILES
     nifloader/testactorragdoll.cpp
     nifloader/testactorragdollphysics.cpp
     nifloader/testragdollbonepose.cpp
+    nifloader/testnativetransform.cpp
 
     detournavigator/navigator.cpp
     detournavigator/settingsutils.cpp

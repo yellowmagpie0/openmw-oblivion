@@ -14666,3 +14666,35 @@ instrumented component inventories each pass 2636 cases. The
 records fingerprints, the initial signed-zero failure and the removed unsupported
 proper-rotation restriction. Renderer/native transform provenance, factory scale,
 publication and normal-input/runtime acceptance remain separate work.
+
+
+### S4 native composition, skeleton drop anchor and reference rotation
+
+The [editable transform contract](M15-ORIGINAL-DROP-TRANSFORM-PROBES.json) records
+complete original 0053D7A0/007100A0/007101F0 composition: 688 contexts, both x87
+control words, zero/negative separate scales, embedded matrix scale and signed
+FLT_MAX boundaries. Independent expectations precede separate current production
+normal/ASan comparisons: 664 finite outputs match all 13 float bits and 24
+nonfinite results reject. Four corruption controls reject in each profile.
+Sixteen [curated rows](M15-ORIGINAL-DROP-TRANSFORM-EXPECTED.json) remain editable.
+The initial strict finite-range guard rejected 12 valid original rounded-MAX
+results; the corrected store uses the original overflow midpoint.
+
+Actual node-index construction 00478070 and Character/process getters identify
+`Weapon` index3 as the NPC drop anchor in eight bounded cases. Scene search,
+as-node conversion, reference counting, logging and visibility remain declared
+boundaries. The implemented renderer capture owns this anchor independently of
+the carried model's authored root and preserves current local matrix/separate
+NIF scale provenance. Intermediate zero NIF scale rejects; explicit native root
+placement remains a caller responsibility.
+
+Actual reference builder 004D7AF0, with original REFR vtable and WEAP base,
+passes 356 angle/control-word contexts without stubs. Existing
+`Misc::Convert::makeOsgQuat` agrees within declared 2e-6 tolerance, maximum
+1.084227760905776e-7. A retained 146-case reconstruction baseline fails because
+it assumes the native extraction/rendering mappings must be inverses; it does
+not prove an engine renderer bug. No generic renderer convention changed.
+The [capture audit](M15-S4-DELIVERY-AUDIT.md#native-carried-weapon-drop-anchor-capture)
+records full normal/instrumented inventories and a bounded no-allocation trace.
+Full factory/contact publication and actual break/drop/restart acceptance remain
+open; none is established by these emulated instruction paths.

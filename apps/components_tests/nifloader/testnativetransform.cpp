@@ -1,0 +1,133 @@
+#include <components/nif/nativetransform.hpp>
+#include <gtest/gtest.h>
+#include <array>
+#include <bit>
+#include <cstdint>
+#include <limits>
+
+namespace
+{
+    Nif::NiTransform transform(const std::array<float, 13>& values)
+    {
+        Nif::NiTransform result;
+        for (unsigned i = 0; i < 9; ++i) result.mRotation.mValues[i / 3][i % 3] = values[i];
+        for (unsigned i = 0; i < 3; ++i) result.mTranslation[i] = values[9 + i];
+        result.mScale = values[12];
+        return result;
+    }
+    std::array<std::uint32_t, 13> bits(const Nif::NiTransform& value)
+    {
+        std::array<std::uint32_t, 13> result;
+        for (unsigned i = 0; i < 9; ++i) result[i] = std::bit_cast<std::uint32_t>(value.mRotation.mValues[i / 3][i % 3]);
+        for (unsigned i = 0; i < 3; ++i) result[9 + i] = std::bit_cast<std::uint32_t>(value.mTranslation[i]);
+        result[12] = std::bit_cast<std::uint32_t>(value.mScale);
+        return result;
+    }
+    struct OriginalCase
+    {
+        std::array<float, 13> mParent, mLocal;
+        std::array<std::uint32_t, 13> mExpected;
+    };
+    // Actual original 0053D7A0/007100A0/007101F0; image a8f31384... .
+    // Selected independently emitted cases from drop-native-composition-oracle-01.
+    const std::array<OriginalCase, 8> original{{
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x0.0p+0f},
+         {0x1.0000000000000p+1f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.e921de0000000p+0f, -0x1.2e9cda0000000p-1f, 0x0.0p+0f, 0x1.2e9cda0000000p-1f, 0x1.e921de0000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, -0x1.0000000000000p+1f},
+         {0x0u, 0xbff490efu, 0x3f174e6du, 0x40000000u, 0x0u, 0x0u, 0x0u, 0x3f174e6du, 0x3ff490efu, 0x41440000u, 0xc1180000u, 0x447a4800u, 0x80000000u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x0.0p+0f},
+         {0x1.0000000000000p+1f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.e921de0000000p+0f, -0x1.2e9cda0000000p-1f, 0x0.0p+0f, 0x1.2e9cda0000000p-1f, 0x1.e921de0000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, 0x1.0000000000000p-2f},
+         {0x0u, 0xbff490efu, 0x3f174e6du, 0x40000000u, 0x0u, 0x0u, 0x0u, 0x3f174e6du, 0x3ff490efu, 0x41440000u, 0xc1180000u, 0x447a4800u, 0x0u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x0.0p+0f},
+         {0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, -0x1.0000000000000p+1f},
+         {0x0u, 0x3f800000u, 0x0u, 0x3f800000u, 0x0u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x41440000u, 0xc1180000u, 0x447a4800u, 0x80000000u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x0.0p+0f},
+         {0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, 0x1.0000000000000p-2f},
+         {0x0u, 0x3f800000u, 0x0u, 0x3f800000u, 0x0u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x41440000u, 0xc1180000u, 0x447a4800u, 0x0u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x1.0000000000000p+1f},
+         {0x1.0000000000000p+1f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.e921de0000000p+0f, -0x1.2e9cda0000000p-1f, 0x0.0p+0f, 0x1.2e9cda0000000p-1f, 0x1.e921de0000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, -0x1.0000000000000p+1f},
+         {0x0u, 0xbff490efu, 0x3f174e6du, 0x40000000u, 0x0u, 0x0u, 0x0u, 0x3f174e6du, 0x3ff490efu, 0x418a0000u, 0xc0e00000u, 0x447c2800u, 0xc0800000u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x1.0000000000000p+1f},
+         {0x1.0000000000000p+1f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.e921de0000000p+0f, -0x1.2e9cda0000000p-1f, 0x0.0p+0f, 0x1.2e9cda0000000p-1f, 0x1.e921de0000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, 0x1.0000000000000p-2f},
+         {0x0u, 0xbff490efu, 0x3f174e6du, 0x40000000u, 0x0u, 0x0u, 0x0u, 0x3f174e6du, 0x3ff490efu, 0x418a0000u, 0xc0e00000u, 0x447c2800u, 0x3f000000u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x1.0000000000000p+1f},
+         {0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, -0x1.0000000000000p+1f},
+         {0x0u, 0x3f800000u, 0x0u, 0x3f800000u, 0x0u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x418a0000u, 0xc0e00000u, 0x447c2800u, 0xc0800000u}},
+        {{0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.8800000000000p+3f, -0x1.3000000000000p+3f, 0x1.f490000000000p+9f, 0x1.0000000000000p+1f},
+         {0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, -0x1.0000000000000p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x0.0p+0f, 0x1.0000000000000p+0f, 0x1.4000000000000p+0f, -0x1.4000000000000p+1f, 0x1.e000000000000p+1f, 0x1.0000000000000p-2f},
+         {0x0u, 0x3f800000u, 0x0u, 0x3f800000u, 0x0u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x418a0000u, 0xc0e00000u, 0x447c2800u, 0x3f000000u}},
+    }};
+
+    TEST(NifNativeTransform, OriginalCompositionBitsAndInputOwnership)
+    {
+        for (const auto& sample : original)
+        {
+            const auto parent = transform(sample.mParent), local = transform(sample.mLocal);
+            const auto parentBefore = bits(parent), localBefore = bits(local);
+            const auto result = Nif::tryComposeNativeTransform(parent, local);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(bits(*result), sample.mExpected);
+            EXPECT_EQ(bits(parent), parentBefore);
+            EXPECT_EQ(bits(local), localBefore);
+        }
+    }
+
+    TEST(NifNativeTransform, RejectsNonfiniteInputsAndOverflowWithoutMutatingThem)
+    {
+        const std::array<float, 13> identity{1,0,0,0,1,0,0,0,1,0,0,0,1};
+        const auto good = transform(identity);
+        for (unsigned i = 0; i < 13; ++i)
+        for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+                std::numeric_limits<float>::quiet_NaN()})
+        {
+            auto values = identity; values[i] = bad;
+            const auto invalid = transform(values); const auto before = bits(invalid);
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(invalid, good));
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(good, invalid));
+            EXPECT_EQ(bits(invalid), before);
+        }
+        for (unsigned i : {0u, 9u, 12u})
+        {
+            auto values = identity; values[i] = std::numeric_limits<float>::max();
+            auto large = transform(values); auto twice = good;
+            twice.mScale = 2; twice.mRotation.mValues[0][0] = 2;
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(twice, large));
+        }
+    }
+
+    TEST(NifNativeTransform, OriginalStoresRoundFiniteMaximumUntilTheOverflowMidpoint)
+    {
+        // Independent original 0053D7A0 matrix/vector/translation cases,
+        // including both signs and the exact overflow tie.
+        for (float sign : {-1.f, 1.f})
+        {
+            auto parent = Nif::NiTransform::getIdentity();
+            auto local = Nif::NiTransform::getIdentity();
+            local.mTranslation.x() = sign * std::numeric_limits<float>::max();
+            parent.mTranslation.x() = sign * 0x1p102f;
+            auto result = Nif::tryComposeNativeTransform(parent, local);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mTranslation.x(), local.mTranslation.x());
+            parent.mTranslation.x() = sign * 0x1p103f;
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(parent, local));
+            parent = Nif::NiTransform::getIdentity(); parent.mRotation.mValues[0][1] = 1;
+            local.mTranslation.y() = sign * 0x1p102f;
+            result = Nif::tryComposeNativeTransform(parent, local);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mTranslation.x(), local.mTranslation.x());
+            local.mTranslation.y() = sign * 0x1p103f;
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(parent, local));
+            local = Nif::NiTransform::getIdentity();
+            local.mRotation.mValues[0][0] = sign * std::numeric_limits<float>::max();
+            local.mRotation.mValues[1][0] = sign * 0x1p102f;
+            result = Nif::tryComposeNativeTransform(parent, local);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(result->mRotation.mValues[0][0], local.mRotation.mValues[0][0]);
+            local.mRotation.mValues[1][0] = sign * 0x1p103f;
+            EXPECT_FALSE(Nif::tryComposeNativeTransform(parent, local));
+        }
+        float destination = 17;
+        EXPECT_FALSE(Nif::tryStoreNativeTransformFloat(0x1.ffffffp+127, destination));
+        EXPECT_EQ(destination, 17);
+    }
+
+}

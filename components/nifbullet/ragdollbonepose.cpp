@@ -1,5 +1,7 @@
 #include "ragdollbonepose.hpp"
 
+#include <components/nif/nativetransform.hpp>
+
 #include <cmath>
 #include <stdexcept>
 
@@ -81,9 +83,10 @@ namespace NifBullet
     {
         validate(parent);
         validate(local);
-        const auto result = composePose(parent, local, true);
-        validate(result);
-        return result;
+        const auto result = Nif::tryComposeNativeTransform(parent, local);
+        if (!result) throw std::invalid_argument("nonfinite ragdoll node transform result");
+        validate(*result);
+        return *result;
     }
 
     RagdollBonePoseWriteback ragdollBonePoseWriteback(const Nif::NiTransform& previousLocal,

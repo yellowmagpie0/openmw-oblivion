@@ -11687,6 +11687,13 @@ namespace
 
 TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejectsStaleBindings)
 {
+    class TestableDropAnimation : public MWRender::ESM4NpcAnimation
+    {
+    public:
+        using MWRender::ESM4NpcAnimation::ESM4NpcAnimation;
+        void setNodeMapPrepared(bool value) { mNodeMapCreated = value; }
+        bool isNodeMapPrepared() const { return mNodeMapCreated; }
+    };
     for (const bool nativeNif : {false, true})
     {
         SCOPED_TRACE(nativeNif);
@@ -11756,7 +11763,7 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
         std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponPose> retained;
         std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponBody> retainedBody;
         {
-            MWRender::ESM4NpcAnimation animation(actor, placement, &fixture.mResources);
+            TestableDropAnimation animation(actor, placement, &fixture.mResources);
             EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
             animation.showWeapons(true);
             auto pose = animation.captureCarriedWeaponPose(item);
@@ -11804,6 +11811,46 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
             {
                 ASSERT_TRUE(body); ASSERT_TRUE(body->mDefinition);
                 EXPECT_TRUE(animation.isCurrentCarriedWeaponBody(*body));
+                auto nativePlacement = Nif::NiTransform::getIdentity();
+                nativePlacement.mTranslation = {100,20,30};
+                auto drop = animation.captureCarriedWeaponDrop(item, nativePlacement);
+                ASSERT_TRUE(drop);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
+                animation.setNodeMapPrepared(false);
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
+                EXPECT_FALSE(animation.isNodeMapPrepared());
+                animation.setNodeMapPrepared(true);
+                auto* weaponAnchor = const_cast<osg::Node*>(drop->mAnchor.getAnchor());
+                auto anchorOnly = MWRender::OblivionAttachedWeaponPose::capture(*weaponAnchor, *weaponAnchor);
+                ASSERT_TRUE(anchorOnly);
+                auto wrongPlacement = Nif::NiTransform::getIdentity();
+                wrongPlacement.mTranslation = {3,-4,5};
+                auto wrongRoot = MWRender::OblivionDroppedWeaponPose::capture(*anchorOnly, wrongPlacement);
+                ASSERT_TRUE(wrongRoot);
+                auto mixedRoot = *drop; mixedRoot.mAnchor = std::move(*wrongRoot);
+                EXPECT_NE(mixedRoot.mAnchor.getPlacementNode(), drop->mBody.mPose.mScene.getPlacementNode());
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(mixedRoot, wrongPlacement));
+                EXPECT_EQ(drop->mAnchor.getDropPlacement().mPosition.asVec3(), osg::Vec3f(103,16,35));
+                auto invalidDrop = *drop; invalidDrop.mBody.mDefinition.reset();
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(invalidDrop, nativePlacement));
+                // Changing only model-local attachment transforms invalidates
+                // the old carried source but does not move skeleton Weapon.
+                auto* modelNode = const_cast<osg::Node*>(body->mPose.mScene.getAttachedNode());
+                ASSERT_EQ(modelNode->getNumParents(), 1u);
+                osg::ref_ptr<osg::Group> oldParent = modelNode->getParent(0);
+                osg::ref_ptr<osg::MatrixTransform> offset = new osg::MatrixTransform;
+                offset->setMatrix(osg::Matrix::translate(10,20,30));
+                oldParent->removeChild(modelNode); offset->addChild(modelNode); oldParent->addChild(offset);
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
+                auto shiftedModel = animation.captureCarriedWeaponDrop(item, nativePlacement);
+                ASSERT_TRUE(shiftedModel);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*shiftedModel, nativePlacement));
+                EXPECT_EQ(shiftedModel->mAnchor.getDropPlacement().mPosition.asVec3(), osg::Vec3f(103,16,35));
+                EXPECT_NE(shiftedModel->mBody.mPose.mScene.getWorldMatrix().getTrans(),
+                    drop->mBody.mPose.mScene.getWorldMatrix().getTrans());
+                offset->removeChild(modelNode); oldParent->removeChild(offset); oldParent->addChild(modelNode);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*shiftedModel, nativePlacement));
                 EXPECT_EQ(body->mDefinition->mSourceHash, body->mPose.mSourceHash);
                 ASSERT_EQ(body->mDefinition->mBodies.size(), 1u);
                 const auto& authored = body->mDefinition->mBodies.front();
