@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "purpose": "M15S4 owned compound weapon shape geometry; bounded original-instruction contracts",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "copy_scale": {
+    "evidence": "S4/compound-shape-scale-oracle-02",
+    "cases": 340,
+    "entries": {
+      "box": "0x008B7F40",
+      "transform": "0x008C9520"
+    },
+    "stops": {
+      "box": "0x008B7F8F",
+      "transform": "0x008C95BC"
+    },
+    "cache_getters": {
+      "box": "0x008B8060",
+      "transform": "0x008C98E0"
+    },
+    "scale_float_bits": [
+      "0x38D1B717",
+      "0x3DCCCCCD",
+      "0x3F000000",
+      "0x3F666665",
+      "0x3F666666",
+      "0x3F666667",
+      "0x3F7FFFFF",
+      "0x3F800000",
+      "0x3F800001",
+      "0x3F8CCCCD",
+      "0x3FA66666",
+      "0x40000000",
+      "0x40400000",
+      "0x41000000",
+      "0x41200000",
+      "0x42C80000",
+      "0x461C4000"
+    ],
+    "input_vec4_float_bits": [
+      [
+        "0x3DFCD6DE",
+        "0x40300000",
+        "0x42C84000",
+        "0x80000000"
+      ],
+      [
+        "0x3F800000",
+        "0x40400000",
+        "0x40A00000",
+        "0x42C60000"
+      ],
+      [
+        "0x38D1B717",
+        "0x3E000000",
+        "0x4282BD71",
+        "0x00000000"
+      ],
+      [
+        "0x0DA24260",
+        "0x1E3CE508",
+        "0x2EDBE6FF",
+        "0x4640E400"
+      ],
+      [
+        "0x80000000",
+        "0x00000000",
+        "0x40500000",
+        "0x00000000"
+      ]
+    ],
+    "x87_control_words": [
+      "0x027F",
+      "0x037F"
+    ],
+    "radius": 0.06125,
+    "boundaries": [
+      "Transform clone-presence 0x008A2760 returns false.",
+      "Stop before transformed child clone or generic 0x008A2670 publication; allocation, constructors and full clone do not execute."
+    ],
+    "expected": [
+      "Box cached vec4 half extents scale with explicit binary32 stores.",
+      "Transform cached translation vec4 scales; rotation and radius remain unchanged.",
+      "Represented XYZ outputs agree across both x87 precision settings; 170 distinct test rows."
+    ],
+    "expected_table": "apps/components_tests/nifloader/native_compound_shape_scale_expected.inc"
+  },
+  "box_constructor_aabb": {
+    "evidence": "S4/box-shape-padding-oracle-01",
+    "cases": 576,
+    "constructor": "0x008CDFE0",
+    "aabb": "0x008CE060",
+    "executed_helper": "0x008CDF30",
+    "boundary_stubs": [],
+    "dimensions": [
+      [
+        0.5,
+        1.25,
+        2.75
+      ],
+      [
+        1,
+        2,
+        3
+      ]
+    ],
+    "radius": [
+      0.0,
+      0.10000000149011612,
+      0.25
+    ],
+    "rotations_column_vectors": [
+      [
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0
+      ]
+    ],
+    "translation": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        -3,
+        4
+      ]
+    ],
+    "query_tolerance": [
+      0.0,
+      0.125
+    ],
+    "x87_control_words": [
+      "0x027F",
+      "0x037F"
+    ],
+    "fourth_lane_padding": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1.36182336e-15
+      ],
+      [
+        0.5,
+        -0.25,
+        1.5,
+        -3
+      ]
+    ],
+    "expected": [
+      "Constructor retains core half extents and supplied radius.",
+      "AABB expands rotated core extents by radius plus query tolerance.",
+      "All finite padding patterns have identical XYZ bounds, including stock waraxe M33."
+    ],
+    "expected_table": "apps/components_tests/nifloader/native_box_aabb_expected.inc",
+    "table_scope": "72 unique cases from earlier 144-case box-shape-aabb-oracle-01 (both control words), included in the 576 contexts here. Bullet comparison tolerance 1e-6; query tolerance folded into fixture radius."
+  },
+  "limitations": [
+    "No original-game runtime or full bhk/NIF clone acceptance.",
+    "Native collection filter metadata is retained; native child/world collision policy is not established.",
+    "Box AABB expectations cover identity and exact right-angle rotations.",
+    "Cached fourth lanes are native padding; owned geometry represents XYZ only."
+  ]
+}

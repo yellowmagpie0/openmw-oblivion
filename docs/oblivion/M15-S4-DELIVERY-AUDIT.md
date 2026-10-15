@@ -671,3 +671,72 @@ fingerprint recorded above. The combined checkpoint report is
 handles are terminal. This verifies the existing equipped-block route after the
 World-wrapper change. It does not close stock break/drop, mastery/effects,
 power/creature dispatch, reaction animation or the remaining S4 acceptance matrix.
+
+
+## Compound stock melee body geometry
+
+The authored-body loader and Bullet owner now retain nested `bhkListShape`,
+`bhkConvexTransformShape` and `bhkBoxShape` geometry as owned trees. Lists preserve
+child order, separate instances and filter metadata; transformed children retain
+rigid XYZ bases and translation. Actual compound collision shapes preserve gaps
+between children. Box half extents describe the core, with convex radius added
+outside it. Native cached-property scaling recursively scales box extents and
+transform translation, preserving convex radius and rotation. This adds no save
+wire state and admits no new ordinary-contact branch.
+
+Loading rejects foreign/cyclic/null child links, malformed dimensions/transforms,
+empty lists and inconsistent filter counts. Loading, copying for native scaling,
+and physics construction bound each body to 128 edges of depth and 4096 expanded
+shape nodes. Physics rejects non-rigid or reflected XYZ bases before publication.
+Finite fourth lanes are padding: the actual stock waraxe has a tiny M33 rather
+than one. They must not produce projective division or an affine-W rejection.
+Collection filter metadata is retained; the caller still supplies body collision
+group/mask. This is not implementation or verification of native child filtering.
+
+The [editable original probe contract](M15-ORIGINAL-COMPOUND-SHAPE-PROBES.json)
+pins executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/compound-shape-scale-oracle-02` passes 340 configurations of actual box and
+transform scaling prefixes, with actual cached getters, declared clone boundaries
+and both x87 precision settings. Its 170 distinct XYZ results are retained as
+exact float-bit tests. `S4/box-shape-padding-oracle-01` executes the actual box
+constructor/AABB/helper without callee stubs and passes 576 contexts. It confirms
+core/radius semantics and padding invariance for identity/right-angle rotations.
+The earlier 144 AABB contexts are included, not additional unique coverage; their
+72 distinct results are retained with a 1e-6 Bullet comparison tolerance. These
+probes do not execute full NIF cloning or establish original-game acceptance.
+
+`S4/stock-compound-body-normal-04` and `-sanitized-01` each pass all eight actual
+iron melee meshes from Meshes BSA SHA256
+`d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b`.
+They verify loading, generic Bullet world admission, twenty free-fall steps
+relative to initial center of mass, finite bounds and complete body teardown.
+Asset, source, component-library and probe-binary hashes are recorded. This
+improves the retained preimplementation baseline from one of eight to eight of
+eight. Explicit group 1/mask -1 and length scale 7 are probe policy; renderer,
+production drop input, native filtering and save/restart acceptance are not tested.
+
+Final `S4/compound-shape-full-normal-03` and `-full-sanitized-03` each pass all
+**2631 component tests/252 suites** and **1502 engine tests/121 suites**, unfiltered,
+with exact inventory/XML agreement, zero failures/skips and identical before/after
+source fingerprint `101c9943985b6de8ba904556358020fce5095848c0c690dc488701f975acc42b`
+atop `3a7680636e76a8a54cff456da236403e59a1bb3c`. ASan leak checking is disabled;
+UBSan halts. Twelve new tests cover ownership, invalid graphs, resource bounds,
+scaling, child gaps, transformed bounds, padding and original expected outputs.
+Only documentation and the editable probe contract follow these checks.
+
+Retained failed/intermediate attempts matter: initial syntax probes caught OSG
+vector overload and test trace errors. Sanitizer -01 exposed a null fixture using
+an unresolved record handle; fixtures now use a posted null and loading checks
+empty children before `getPtr()`. Normal -02 passed before the stock waraxe exposed
+an incorrect affine-W restriction. Instrumented -02 was stopped before its engine
+phase completed. Stock normal -01 lacked a Bullet header; -02's reporter lacked
+its helper import path; corrected -03 records seven of eight passing and the
+waraxe rejection. The native padding probe justified the final correction, and
+both final full runs and stock probes pass. Failed evidence remains in place.
+
+Stock model/body hash and carried-pose binding, dropper/list relation metadata,
+replacement equipment, complete contact/removal/scene publication and deferred
+notification still need production integration and real break/drop/restart
+courses. The earlier equipped-block live course was not repeated for this shape
+chunk. S4 remains incomplete.

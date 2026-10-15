@@ -6,6 +6,23 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 compound stock melee body geometry — 2026-10-15
+
+The owned body loader and physics owner now support nested lists, transformed
+children and boxes without filling gaps between children. Native property scaling
+preserves the independently verified extents, translation, rotation and radius
+rules. Bounded validation rejects malformed graphs before physical publication.
+
+Normal and ASan/UBSan each pass all 2631 component tests and 1502 engine tests,
+with exact inventories and no failures/skips. All eight stock iron melee meshes
+pass loading, Bullet admission, free fall and teardown in both builds, improving
+the retained one-of-eight baseline. Independent original-instruction probes pass
+340 scale and 576 constructor/AABB/padding contexts; their editable contract and
+expected tables are versioned. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#compound-stock-melee-body-geometry) records
+fingerprints, limits, failures and evidence scope. Native filter policy and the
+production drop factory/input/restart course remain open; S4 is incomplete.
+
 ## S4 active-World contact and removal guards — 2026-10-15
 
 Prepared World contacts now bind native resources to the selected simulation,

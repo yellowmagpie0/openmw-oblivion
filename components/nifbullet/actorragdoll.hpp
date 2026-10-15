@@ -30,12 +30,38 @@ namespace NifBullet
         std::vector<osg::Vec3f> mVertices;
         float mRadius;
     };
-    using RagdollShape = std::variant<RagdollSphere, RagdollCapsule, RagdollHull>;
-
+    struct RagdollBox
+    {
+        // Native hkBoxShape stores core half extents, expanded by radius.
+        osg::Vec3f mHalfExtents;
+        float mRadius;
+    };
     struct RagdollBodyFilter
     {
         std::uint8_t mLayer = 0, mFlags = 0;
         std::uint16_t mGroup = 0;
+    };
+    struct RagdollShape;
+    struct RagdollList
+    {
+        std::vector<RagdollShape> mChildren;
+        // Preserve native collection metadata; collision policy belongs to the caller.
+        std::vector<RagdollBodyFilter> mFilters;
+    };
+    struct RagdollTransform
+    {
+        osg::Matrixf mTransform;
+        // Wrapper metadata; the child supplies the convex collision radius.
+        float mRadius;
+        // Exactly one child. A vector permits a deeply owned recursive value.
+        std::vector<RagdollShape> mChildren;
+    };
+    using RagdollShapeValue = std::variant<RagdollSphere, RagdollCapsule, RagdollHull,
+        RagdollBox, RagdollList, RagdollTransform>;
+    struct RagdollShape : RagdollShapeValue
+    {
+        using RagdollShapeValue::RagdollShapeValue;
+        using RagdollShapeValue::operator=;
     };
 
     struct RagdollBlendDefinition
@@ -145,8 +171,9 @@ namespace NifBullet
         const ActorRagdollDefinition& source, float resolvedActorScale);
 
     // The currently admitted Oblivion skeleton graph uses sphere/capsule/hull
-    // bodies and ragdoll/limited-hinge joints, including malleable wrappers.
-    // Unsupported or malformed graphs are diagnosed as a whole.
+    // bodies, box/list/transformed weapon shapes and ragdoll/limited-hinge joints, including malleable wrappers.
+    // Unsupported or malformed graphs are diagnosed as a whole. Shape trees
+    // are bounded to 128 edges and 4096 expanded instances per body.
     ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file);
 }
 

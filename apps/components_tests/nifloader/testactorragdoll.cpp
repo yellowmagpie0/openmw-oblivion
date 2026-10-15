@@ -901,3 +901,160 @@ TEST_F(ActorRagdollTest, KeepsUnverifiedLaterNonemptyBlendKeyLayoutsUnsupported)
     Nif::bhkBlendController controller;
     EXPECT_THROW(controller.read(&stream), std::runtime_error);
 }
+
+TEST_F(ActorRagdollTest, OwnsNestedWeaponListsTransformsBoxesAndFiltersAfterFileDestruction)
+{
+    auto original = NifBullet::loadActorRagdollDefinition(mFile);
+    auto& source = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[original.mBodies[0].mRecord]);
+    auto& box = add<Nif::bhkBoxShape>(); box.mRecordType = Nif::RC_bhkBoxShape;
+    box.mExtents = {.5f, 1.f, 2.f}; box.mRadius = .125f;
+    auto& transformed = add<Nif::bhkConvexTransformShape>(); transformed.mRecordType = Nif::RC_bhkConvexTransformShape;
+    transformed.mShape = Nif::bhkShapePtr(&box); transformed.mRadius = .125f;
+    transformed.mTransform = osg::Matrixf::rotate(1.5707963267948966, osg::Vec3f(0,0,1));
+    transformed.mTransform.setTrans(osg::Vec3f(2,3,4));
+    auto& list = add<Nif::bhkListShape>(); list.mRecordType = Nif::RC_bhkListShape;
+    list.mSubshapes = {source.mShape, Nif::bhkShapePtr(&transformed), Nif::bhkShapePtr(&box)};
+    list.mHavokFilters = {{1,2,3},{4,5,6},{7,8,9}};
+    source.mShape = Nif::bhkShapePtr(&list);
+    auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    mFile.mRecords.clear();
+    auto& owned = std::get<NifBullet::RagdollList>(graph.mBodies[0].mShape);
+    ASSERT_EQ(owned.mChildren.size(), 3u); ASSERT_EQ(owned.mFilters.size(), 3u);
+    EXPECT_EQ(owned.mFilters[1].mLayer, 4); EXPECT_EQ(owned.mFilters[1].mFlags, 5); EXPECT_EQ(owned.mFilters[1].mGroup, 6);
+    const auto& transform = std::get<NifBullet::RagdollTransform>(owned.mChildren[1]);
+    ASSERT_EQ(transform.mChildren.size(), 1u); EXPECT_EQ(transform.mTransform.getTrans(), osg::Vec3f(2,3,4));
+    EXPECT_EQ(std::get<NifBullet::RagdollBox>(transform.mChildren[0]).mHalfExtents, osg::Vec3f(.5f,1,2));
+    // Shared source shapes are independently owned values, preserving instances.
+    std::get<NifBullet::RagdollBox>(owned.mChildren[2]).mHalfExtents.x() = 5;
+    EXPECT_EQ(std::get<NifBullet::RagdollBox>(transform.mChildren[0]).mHalfExtents.x(), .5f);
+}
+
+TEST_F(ActorRagdollTest, CompoundWeaponShapesRejectCyclesForeignNullEmptyAndMismatchedFilters)
+{
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[graph.mBodies[0].mRecord]);
+    const auto original = body.mShape;
+    Nif::bhkSphereShape foreign; foreign.mRecordType = Nif::RC_bhkSphereShape; foreign.mRadius = 1;
+    for (int change = 0; change < 5; ++change)
+    {
+        SCOPED_TRACE(change);
+        auto& list = add<Nif::bhkListShape>(); list.mRecordType = Nif::RC_bhkListShape;
+        list.mSubshapes = {original};
+        if (change == 0) list.mSubshapes.push_back(Nif::bhkShapePtr(&list));
+        if (change == 1) list.mSubshapes.push_back(Nif::bhkShapePtr(nullptr));
+        if (change == 2) list.mSubshapes.clear();
+        if (change == 3) list.mHavokFilters.resize(2);
+        if (change == 4) list.mSubshapes = {Nif::bhkShapePtr(&foreign)};
+        body.mShape = Nif::bhkShapePtr(&list);
+        EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+        EXPECT_EQ(body.mShape.getPtr(), &list);
+        body.mShape = original;
+        EXPECT_NO_THROW(NifBullet::loadActorRagdollDefinition(mFile));
+    }
+}
+
+TEST_F(ActorRagdollTest, CompoundWeaponShapesBoundHierarchyDepthAndExpandedInstances)
+{
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[graph.mBodies[0].mRecord]);
+    const auto original = body.mShape;
+    for (unsigned i = 0; i < 129; ++i)
+    {
+        auto& list = add<Nif::bhkListShape>(); list.mRecordType = Nif::RC_bhkListShape;
+        list.mSubshapes = {body.mShape}; body.mShape = Nif::bhkShapePtr(&list);
+    }
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    auto& wide = add<Nif::bhkListShape>(); wide.mRecordType = Nif::RC_bhkListShape;
+    wide.mSubshapes.resize(4096, original); body.mShape = Nif::bhkShapePtr(&wide);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+}
+
+TEST_F(ActorRagdollTest, NativeScaleOwnsNestedBoxExtentsAndTranslationWithoutScalingRadiusOrRotation)
+{
+    auto body = NifBullet::loadActorRagdollDefinition(mFile).mBodies[0];
+    auto matrix = osg::Matrixf::rotate(1.5707963267948966, osg::Vec3f(0,0,1)); matrix.setTrans(osg::Vec3f(2,3,4));
+    body.mShape = NifBullet::RagdollList{{NifBullet::RagdollTransform{matrix,.125f,
+        {NifBullet::RagdollBox{{.5f,1,2},.0625f}}}},{{1,2,3}}};
+    const auto scaled = NifBullet::ragdollBodyWithNativeScaledProperties(body, .5f);
+    const auto& list = std::get<NifBullet::RagdollList>(scaled.mShape);
+    const auto& transform = std::get<NifBullet::RagdollTransform>(list.mChildren[0]);
+    EXPECT_EQ(transform.mTransform.getTrans(), osg::Vec3f(1,1.5f,2));
+    for (unsigned row = 0; row < 3; ++row) for (unsigned col = 0; col < 3; ++col)
+        EXPECT_EQ(transform.mTransform(row,col), matrix(row,col));
+    const auto& box = std::get<NifBullet::RagdollBox>(transform.mChildren[0]);
+    EXPECT_EQ(box.mHalfExtents, osg::Vec3f(.25f,.5f,1)); EXPECT_EQ(box.mRadius, .0625f);
+    EXPECT_EQ(transform.mRadius, .125f); EXPECT_EQ(list.mFilters[0].mGroup, 3);
+    const auto& source = std::get<NifBullet::RagdollTransform>(std::get<NifBullet::RagdollList>(body.mShape).mChildren[0]);
+    EXPECT_EQ(source.mTransform.getTrans(), osg::Vec3f(2,3,4));
+}
+
+TEST_F(ActorRagdollTest, CompoundWeaponShapesRejectMalformedBoxesTransformsAndScalingWithoutMutation)
+{
+    auto body = NifBullet::loadActorRagdollDefinition(mFile).mBodies[0];
+    body.mShape = NifBullet::RagdollTransform{osg::Matrixf::identity(),.1f,
+        {NifBullet::RagdollBox{{1,2,3},.125f}}};
+    auto& transform = std::get<NifBullet::RagdollTransform>(body.mShape);
+    transform.mTransform(3,0) = std::numeric_limits<float>::max();
+    EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(body, 2), std::runtime_error);
+    EXPECT_EQ(transform.mTransform(3,0), std::numeric_limits<float>::max());
+    transform.mChildren.clear();
+    EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(body, 1), std::runtime_error);
+    body.mShape = NifBullet::RagdollBox{{-1,2,3},.125f};
+    EXPECT_THROW(NifBullet::ragdollBodyWithNativeScaledProperties(body, 1), std::runtime_error);
+}
+
+namespace
+{
+    struct NativeCompoundScaleCase
+    {
+        bool mTransform;
+        std::uint32_t mScale;
+        std::array<std::uint32_t, 3> mInput, mOutput;
+        std::uint32_t mRadius;
+    };
+#include "native_compound_shape_scale_expected.inc"
+}
+
+TEST_F(ActorRagdollTest, CompoundWeaponScalingMatchesOriginalStoredBits)
+{
+    auto body = NifBullet::loadActorRagdollDefinition(mFile).mBodies[0]; body.mMass = 1;
+    for (const auto& row : NativeCompoundScaleCases)
+    {
+        SCOPED_TRACE(row.mScale);
+        SCOPED_TRACE(row.mTransform);
+        const auto value = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+        const osg::Vec3f input(value(row.mInput[0]), value(row.mInput[1]), value(row.mInput[2]));
+        if (row.mTransform)
+        {
+            auto matrix = osg::Matrixf::identity(); matrix.setTrans(input);
+            body.mShape = NifBullet::RagdollTransform{matrix,value(row.mRadius),{NifBullet::RagdollSphere{1}}};
+        }
+        else body.mShape = NifBullet::RagdollBox{input,value(row.mRadius)};
+        const auto scaled = NifBullet::ragdollBodyWithNativeScaledProperties(body, value(row.mScale));
+        const auto result = row.mTransform ? osg::Vec3f(std::get<NifBullet::RagdollTransform>(scaled.mShape).mTransform.getTrans())
+            : std::get<NifBullet::RagdollBox>(scaled.mShape).mHalfExtents;
+        for (unsigned axis = 0; axis < 3; ++axis) EXPECT_EQ(std::bit_cast<std::uint32_t>(result[axis]), row.mOutput[axis]);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(row.mTransform
+            ? std::get<NifBullet::RagdollTransform>(scaled.mShape).mRadius
+            : std::get<NifBullet::RagdollBox>(scaled.mShape).mRadius), row.mRadius);
+    }
+}
+
+TEST_F(ActorRagdollTest, CompoundWeaponLoaderRejectsMalformedBoxAndTransformRecords)
+{
+    const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+    auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[graph.mBodies[0].mRecord]);
+    const auto original = body.mShape;
+    auto& box = add<Nif::bhkBoxShape>(); box.mRecordType = Nif::RC_bhkBoxShape;
+    box.mExtents = {-1,1,2}; box.mRadius = .1f; body.mShape = Nif::bhkShapePtr(&box);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    box.mExtents.x() = 1; box.mRadius = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    auto& transform = add<Nif::bhkConvexTransformShape>(); transform.mRecordType = Nif::RC_bhkConvexTransformShape;
+    transform.mShape = original; transform.mRadius = .1f; transform.mTransform = osg::Matrixf::identity();
+    transform.mTransform(2,1) = std::numeric_limits<float>::infinity();
+    body.mShape = Nif::bhkShapePtr(&transform);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+    transform.mTransform = osg::Matrixf::identity(); transform.mShape = Nif::bhkShapePtr(nullptr);
+    EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
+}

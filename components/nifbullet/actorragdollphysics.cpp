@@ -14,6 +14,7 @@
 #include <stdexcept>
 
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
@@ -61,6 +62,80 @@ namespace NifBullet
         {
             require(std::isfinite(value) && value > 0, "invalid radius");
         }
+        std::unique_ptr<btCollisionShape> makeBodyShape(const RagdollShape& input, btScalar scale,
+            std::vector<std::unique_ptr<btCollisionShape>>& owned, std::size_t depth, std::size_t& nodes)
+        {
+            require(depth <= 128 && ++nodes <= 4096, "shape hierarchy exceeds limits");
+            return std::visit([&](const auto& value) -> std::unique_ptr<btCollisionShape> {
+                using T = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<T, RagdollSphere>)
+                {
+                    radius(value.mRadius);
+                    return std::make_unique<btSphereShape>(value.mRadius * scale);
+                }
+                else if constexpr (std::is_same_v<T, RagdollCapsule>)
+                {
+                    radius(value.mRadius1); radius(value.mRadius2);
+                    const btVector3 points[] = {vector(value.mPoint1) * scale, vector(value.mPoint2) * scale};
+                    const btScalar radii[] = {value.mRadius1 * scale, value.mRadius2 * scale};
+                    return std::make_unique<btMultiSphereShape>(points, radii, 2);
+                }
+                else if constexpr (std::is_same_v<T, RagdollHull>)
+                {
+                    coefficient(value.mRadius);
+                    require(value.mVertices.size() >= 4, "insufficient hull vertices");
+                    auto result = std::make_unique<btConvexHullShape>();
+                    for (const auto& point : value.mVertices) result->addPoint(vector(point) * scale, false);
+                    result->setMargin(value.mRadius * scale); result->recalcLocalAabb();
+                    return result;
+                }
+                else if constexpr (std::is_same_v<T, RagdollBox>)
+                {
+                    const auto half = vector(value.mHalfExtents) * scale;
+                    coefficient(value.mRadius);
+                    const btScalar margin = value.mRadius * scale;
+                    for (unsigned i = 0; i < 3; ++i)
+                        require(half[i] >= 0 && half[i] + margin > 0, "invalid box half extents");
+                    auto result = std::make_unique<btBoxShape>(half + btVector3(margin, margin, margin));
+                    result->setMargin(margin);
+                    // Bullet's constructor/setMargin preserve outer dimensions.
+                    // Native hkBoxShape instead supplies core half extents.
+                    result->setImplicitShapeDimensions(half);
+                    return result;
+                }
+                else
+                {
+                    if constexpr (std::is_same_v<T, RagdollList>)
+                        require(!value.mChildren.empty() && (value.mFilters.empty()
+                            || value.mFilters.size() == value.mChildren.size()), "invalid list children/filters");
+                    else require(value.mChildren.size() == 1, "transform requires exactly one child");
+                    require(value.mChildren.size() <= 4096 - nodes, "shape hierarchy exceeds limits");
+                    auto result = std::make_unique<btCompoundShape>();
+                    btTransform pose = btTransform::getIdentity();
+                    if constexpr (std::is_same_v<T, RagdollTransform>)
+                    {
+                        coefficient(value.mRadius);
+                        const auto& matrix = value.mTransform;
+                        for (unsigned i = 0; i < 16; ++i)
+                            require(std::isfinite(matrix.ptr()[i]), "nonfinite shape transform");
+                        // Havok's fourth lanes are padding, not projective
+                        // coordinates. The stock waraxe does not have M33=1.
+                        pose = btTransform(btMatrix3x3(matrix(0,0), matrix(1,0), matrix(2,0),
+                            matrix(0,1), matrix(1,1), matrix(2,1), matrix(0,2), matrix(1,2), matrix(2,2)),
+                            vector(matrix.getTrans()) * scale);
+                        validatePose(pose);
+                    }
+                    for (const auto& child : value.mChildren)
+                    {
+                        auto shape = makeBodyShape(child, scale, owned, depth + 1, nodes);
+                        result->addChildShape(pose, shape.get());
+                        owned.push_back(std::move(shape));
+                    }
+                    return result;
+                }
+            }, input);
+        }
+
         btTransform hingeFrame(const RagdollJointFrame& frame, btScalar scale)
         {
             auto axis = vector(frame.mAxis);
@@ -955,33 +1030,8 @@ namespace NifBullet
             coefficient(input.mFriction);
             coefficient(input.mRestitution);
             const btScalar scale = lengthScale;
-            auto shape = std::visit([scale](const auto& value) -> std::unique_ptr<btCollisionShape> {
-                using T = std::decay_t<decltype(value)>;
-                if constexpr (std::is_same_v<T, RagdollSphere>)
-                {
-                    radius(value.mRadius);
-                    return std::make_unique<btSphereShape>(value.mRadius * scale);
-                }
-                else if constexpr (std::is_same_v<T, RagdollCapsule>)
-                {
-                    radius(value.mRadius1);
-                    radius(value.mRadius2);
-                    const btVector3 points[] = {vector(value.mPoint1) * scale, vector(value.mPoint2) * scale};
-                    const btScalar radii[] = {value.mRadius1 * scale, value.mRadius2 * scale};
-                    return std::make_unique<btMultiSphereShape>(points, radii, 2);
-                }
-                else
-                {
-                    coefficient(value.mRadius);
-                    require(value.mVertices.size() >= 4, "insufficient hull vertices");
-                    auto result = std::make_unique<btConvexHullShape>();
-                    for (const auto& point : value.mVertices)
-                        result->addPoint(vector(point) * scale, false);
-                    result->setMargin(value.mRadius * scale);
-                    result->recalcLocalAabb();
-                    return result;
-                }
-            }, input.mShape);
+            std::size_t shapeNodes = 0;
+            auto shape = makeBodyShape(input.mShape, scale, mImpl->mShapes, 0, shapeNodes);
             btMatrix3x3 inertia;
             for (int row = 0; row < 3; ++row)
                 for (int col = 0; col < 3; ++col)

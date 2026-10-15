@@ -5129,3 +5129,106 @@ namespace
         EXPECT_EQ(world.getNumCollisionObjects(), 1);
     }
 }
+
+TEST_F(ActorRagdollPhysicsTest, CompoundWeaponBodyPreservesChildTransformsRadiusAndCenterFrame)
+{
+    auto transform = osg::Matrixf::rotate(1.5707963267948966, osg::Vec3f(0,0,1)); transform.setTrans(osg::Vec3f(3,4,5));
+    mGraph.mBodies[0].mCenter = {.25f,-.5f,1};
+    mGraph.mBodies[0].mShape = NifBullet::RagdollList{{NifBullet::RagdollSphere{.5f},
+        NifBullet::RagdollTransform{transform,.25f,{NifBullet::RagdollBox{{1,2,3},.25f}}}}, {}};
+    NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2, mPoses, 1, -1);
+    const auto* object = actor.collisionObjects()[0]; btVector3 low, high;
+    object->getCollisionShape()->getAabb(object->getWorldTransform(), low, high);
+    EXPECT_NEAR(low.x(), -1, 1e-5); EXPECT_NEAR(low.y(), -1, 1e-5); EXPECT_NEAR(low.z(), 1, 1e-5);
+    EXPECT_NEAR(high.x(), 10.5, 1e-5); EXPECT_NEAR(high.y(), 10.5, 1e-5); EXPECT_NEAR(high.z(), 18.5, 1e-5);
+}
+
+TEST_F(ActorRagdollPhysicsTest, CompoundWeaponBodyRetainsEmptySpaceBetweenChildren)
+{
+    mGraph.mBodies[0].mShape = NifBullet::RagdollList{{NifBullet::RagdollSphere{.5f},
+        NifBullet::RagdollTransform{osg::Matrixf::translate(4,0,0),.5f,{NifBullet::RagdollSphere{.5f}}}}, {}};
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        btCollisionWorld::ClosestRayResultCallback gap({2,-5,2},{2,5,2});
+        mWorld.rayTest(gap.m_rayFromWorld, gap.m_rayToWorld, gap); EXPECT_FALSE(gap.hasHit());
+        btCollisionWorld::ClosestRayResultCallback child({4,-5,2},{4,5,2});
+        mWorld.rayTest(child.m_rayFromWorld, child.m_rayToWorld, child); ASSERT_TRUE(child.hasHit());
+        EXPECT_EQ(child.m_collisionObject, actor.collisionObjects()[0]);
+    }
+    EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+}
+
+TEST_F(ActorRagdollPhysicsTest, CompoundWeaponBodyRejectsInvalidTreesBeforeWorldPublication)
+{
+    for (int change = 0; change < 7; ++change)
+    {
+        SCOPED_TRACE(change);
+        auto matrix = osg::Matrixf::identity();
+        NifBullet::RagdollTransform transformed{matrix,.1f,{NifBullet::RagdollBox{{1,2,3},.125f}}};
+        if (change == 0) transformed.mChildren.clear();
+        if (change == 1) transformed.mChildren.push_back(NifBullet::RagdollSphere{1});
+        if (change == 2) transformed.mTransform(0,0) = 2;
+        if (change == 3) transformed.mTransform(0,0) = -1;
+        if (change == 4) transformed.mTransform(3,1) = std::numeric_limits<float>::quiet_NaN();
+        if (change == 5) std::get<NifBullet::RagdollBox>(transformed.mChildren[0]).mRadius = -1;
+        if (change == 6) std::get<NifBullet::RagdollBox>(transformed.mChildren[0]).mHalfExtents.x() = -1;
+        mGraph.mBodies[0].mShape = std::move(transformed);
+        EXPECT_THROW((NifBullet::ActorRagdollPhysics(mGraph, mWorld, 1, mPoses, 1, -1)), std::invalid_argument);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+    }
+}
+
+namespace
+{
+    struct NativeBoxAabbCase
+    {
+        std::array<std::uint32_t,3> mHalf;
+        std::uint32_t mRadius, mTolerance;
+        std::array<int,9> mRotation;
+        std::array<std::uint32_t,3> mTranslation, mLow, mHigh;
+    };
+#include "native_box_aabb_expected.inc"
+}
+
+TEST_F(ActorRagdollPhysicsTest, WeaponBoxBoundsMatchOriginalNativeConstructorAndAabb)
+{
+    // The native query adds a float tolerance to convex radius. Fold it into
+    // this fixture's radius to compare the same geometry with Bullet's query.
+    for (const auto& row : NativeBoxAabbCases)
+    {
+        const auto f = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+        const auto& r = row.mRotation;
+        mGraph.mBodies[0].mShape = NifBullet::RagdollBox{{f(row.mHalf[0]),f(row.mHalf[1]),f(row.mHalf[2])},
+            f(row.mRadius) + f(row.mTolerance)};
+        mPoses[0] = btTransform(btMatrix3x3(r[0],r[3],r[6],r[1],r[4],r[7],r[2],r[5],r[8]),
+            btVector3(f(row.mTranslation[0]),f(row.mTranslation[1]),f(row.mTranslation[2])));
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto* object = actor.collisionObjects()[0]; btVector3 low, high;
+        object->getCollisionShape()->getAabb(object->getWorldTransform(), low, high);
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            EXPECT_NEAR(low[i], f(row.mLow[i]), 1e-6);
+            EXPECT_NEAR(high[i], f(row.mHigh[i]), 1e-6);
+        }
+    }
+}
+
+TEST_F(ActorRagdollPhysicsTest, WeaponShapeTransformIgnoresNativeFourthLanePadding)
+{
+    const std::array<std::array<float,4>,4> patterns{{{0,0,0,0},{0,0,0,1},
+        {0,0,0,1.36182336e-15f},{.5f,-.25f,1.5f,-3}}};
+    mPoses[0] = btTransform::getIdentity();
+    for (const auto& padding : patterns)
+    {
+        auto matrix = osg::Matrixf::rotate(1.5707963267948966, osg::Vec3f(0,0,1));
+        matrix.setTrans(osg::Vec3f(2,-3,4));
+        for (unsigned row=0; row<4; ++row) matrix(row,3) = padding[row];
+        mGraph.mBodies[0].mShape = NifBullet::RagdollTransform{matrix,.25f,{NifBullet::RagdollBox{{1,2,3},.25f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto* object = actor.collisionObjects()[0]; btVector3 low,high;
+        object->getCollisionShape()->getAabb(object->getWorldTransform(),low,high);
+        // Original 8CE060/8CDF30 with the same XYZ transform and each padding pattern.
+        EXPECT_NEAR(low.x(),-.25,1e-6); EXPECT_NEAR(low.y(),-4.25,1e-6); EXPECT_NEAR(low.z(),.75,1e-6);
+        EXPECT_NEAR(high.x(),4.25,1e-6); EXPECT_NEAR(high.y(),-1.75,1e-6); EXPECT_NEAR(high.z(),7.25,1e-6);
+    }
+}

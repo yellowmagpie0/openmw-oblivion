@@ -14502,3 +14502,33 @@ replacement selection/application, cleanup, scene and actor follow-up bodies
 remain boundary stubs. This proves their selected routing and arguments,
 not full inventory/drop execution, source-extra ownership behavior, Player drop,
 the caller's `0x4DC000` relation bookkeeping or original-game runtime acceptance.
+
+
+### S4 original compound weapon shape geometry
+
+The [editable probe contract](M15-ORIGINAL-COMPOUND-SHAPE-PROBES.json) pins the
+original executable SHA256 and all input dimensions/boundaries. Actual box
+`0x008B7F40` and transform `0x008C9520` cached-property scaling prefixes with real
+cached getters pass 340 configurations in `S4/compound-shape-scale-oracle-02`.
+Box cached half extents and transform cached translation scale with binary32
+stores; radius and transform rotation are unchanged. The transform clone-presence
+boundary returns false and execution stops before child/generic clone publication.
+The owned C++ geometry represents XYZ only. Its exact expected table has 170
+unique rows after the two x87 precision contexts agree.
+
+`S4/box-shape-padding-oracle-01` passes 576 contexts executing actual hkBoxShape
+constructor `0x008CDFE0`, AABB `0x008CE060` and helper `0x008CDF30`, without callee
+stubs. Core half extents are retained and transformed bounds expand by convex
+radius plus query tolerance. Four finite fourth-lane patterns give identical XYZ
+bounds, including the tiny stock waraxe M33. Identity/right-angle rotations only;
+the earlier 144 AABB contexts are included here. Their 72 unique expectations
+are retained; Bullet's double-precision bounds compare within 1e-6.
+
+The owned loader/physics paths now preserve compound children and transformed
+boxes; tests verify gaps rather than flattening lists into convex hulls. Actual
+eight-mesh normal/instrumented loading and generic Bullet simulation diagnostics
+pass. Native list child filters remain metadata with caller-defined body policy.
+No full original clone, native world-filter behavior, production drop/input,
+or original-game runtime acceptance is established. See the
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#compound-stock-melee-body-geometry) for final
+regression fingerprints, stock archive identity and retained failures.

@@ -36,6 +36,99 @@ namespace NifBullet
         {
             require(std::isfinite(value) && value > 0, "invalid positive coefficient");
         }
+        constexpr std::size_t MaxShapeDepth = 128, MaxShapeNodes = 4096;
+
+        void shapeBudget(const RagdollShape& source)
+        {
+            std::vector<std::pair<const RagdollShape*, std::size_t>> pending{{&source, 0}};
+            std::size_t nodes = 0;
+            while (!pending.empty())
+            {
+                const auto [shape, depth] = pending.back(); pending.pop_back();
+                require(depth <= MaxShapeDepth && ++nodes <= MaxShapeNodes, "shape hierarchy exceeds limits");
+                std::visit([&](const auto& value) {
+                    using T = std::decay_t<decltype(value)>;
+                    if constexpr (std::is_same_v<T, RagdollList> || std::is_same_v<T, RagdollTransform>)
+                    {
+                        if constexpr (std::is_same_v<T, RagdollTransform>)
+                            require(value.mChildren.size() == 1, "transform requires exactly one child");
+                        else
+                            require(!value.mChildren.empty() && (value.mFilters.empty()
+                                || value.mFilters.size() == value.mChildren.size()), "invalid list children/filters");
+                        require(value.mChildren.size() <= MaxShapeNodes - nodes, "shape hierarchy exceeds limits");
+                        for (const auto& child : value.mChildren) pending.emplace_back(&child, depth + 1);
+                    }
+                }, *shape);
+            }
+        }
+
+        RagdollShape loadShape(const Nif::bhkShape* source,
+            const std::unordered_set<const Nif::Record*>& members)
+        {
+            std::unordered_set<const Nif::Record*> path;
+            std::size_t nodes = 0;
+            const auto load = [&](auto&& self, const Nif::bhkShape* shape, std::size_t depth) -> RagdollShape {
+                require(shape && members.contains(shape), "shape outside source file");
+                require(depth <= MaxShapeDepth && ++nodes <= MaxShapeNodes, "shape hierarchy exceeds limits");
+                require(path.insert(shape).second, "cyclic shape hierarchy");
+                RagdollShape result;
+                if (shape->mRecordType == Nif::RC_bhkSphereShape)
+                {
+                    const auto* value = dynamic_cast<const Nif::bhkSphereShape*>(shape);
+                    require(value, "invalid sphere record"); positive(value->mRadius);
+                    result = RagdollSphere{value->mRadius};
+                }
+                else if (const auto* capsule = dynamic_cast<const Nif::bhkCapsuleShape*>(shape))
+                {
+                    positive(capsule->mRadius1); positive(capsule->mRadius2);
+                    result = RagdollCapsule{xyz(capsule->mPoint1), xyz(capsule->mPoint2), capsule->mRadius1, capsule->mRadius2};
+                }
+                else if (const auto* hull = dynamic_cast<const Nif::bhkConvexVerticesShape*>(shape))
+                {
+                    nonnegative(hull->mRadius); require(hull->mVertices.size() >= 4, "insufficient hull vertices");
+                    RagdollHull output{{}, hull->mRadius};
+                    for (const auto& vertex : hull->mVertices) output.mVertices.push_back(xyz(vertex));
+                    result = std::move(output);
+                }
+                else if (const auto* box = dynamic_cast<const Nif::bhkBoxShape*>(shape))
+                {
+                    const auto extents = xyz(box->mExtents);
+                    for (unsigned axis = 0; axis < 3; ++axis)
+                        require(std::isfinite(extents[axis]) && extents[axis] >= 0
+                            && double(extents[axis]) + box->mRadius > 0, "invalid box half extents");
+                    nonnegative(box->mRadius); result = RagdollBox{extents, box->mRadius};
+                }
+                else if (const auto* list = dynamic_cast<const Nif::bhkListShape*>(shape))
+                {
+                    require(!list->mSubshapes.empty() && list->mSubshapes.size() <= MaxShapeNodes - nodes
+                        && (list->mHavokFilters.empty() || list->mHavokFilters.size() == list->mSubshapes.size()),
+                        "invalid list children/filters");
+                    RagdollList output;
+                    for (const auto& child : list->mSubshapes)
+                    {
+                        require(!child.empty(), "null list child");
+                        output.mChildren.push_back(self(self, child.getPtr(), depth + 1));
+                    }
+                    for (const auto& filter : list->mHavokFilters)
+                        output.mFilters.push_back({filter.mLayer, filter.mFlags, filter.mGroup});
+                    result = std::move(output);
+                }
+                else if (const auto* transformed = dynamic_cast<const Nif::bhkConvexTransformShape*>(shape))
+                {
+                    require(!transformed->mShape.empty(), "null transformed child");
+                    for (unsigned i = 0; i < 16; ++i)
+                        require(std::isfinite(transformed->mTransform.ptr()[i]), "nonfinite shape transform");
+                    nonnegative(transformed->mRadius);
+                    result = RagdollTransform{transformed->mTransform, transformed->mRadius,
+                        {self(self, transformed->mShape.getPtr(), depth + 1)}};
+                }
+                else require(false, "unsupported body shape");
+                path.erase(shape);
+                return result;
+            };
+            return load(load, source, 0);
+        }
+
         void limits(float low, float high)
         {
             require(std::isfinite(low) && std::isfinite(high) && low <= high, "invalid joint limits");
@@ -92,6 +185,7 @@ namespace NifBullet
         };
         // Own the complete copy before changing any property. Caller state and
         // shared authored definitions survive rejected and successful scaling.
+        shapeBudget(source.mShape);
         RagdollBodyDefinition result = source;
         positive(source.mMass);
         result.mMass = multiply(source.mMass, scale);
@@ -99,35 +193,61 @@ namespace NifBullet
         result.mCenter = vector(source.mCenter);
         for (std::size_t i = 0; i < result.mInertia.size(); ++i)
             result.mInertia[i] = multiply(source.mInertia[i], inertiaScale);
-        std::visit([&](auto& shape) {
-            using Shape = std::decay_t<decltype(shape)>;
-            if constexpr (std::is_same_v<Shape, RagdollSphere>)
-            {
-                positive(shape.mRadius);
-                shape.mRadius = multiply(shape.mRadius, scale);
-                positive(shape.mRadius);
-            }
-            else if constexpr (std::is_same_v<Shape, RagdollCapsule>)
-            {
-                positive(shape.mRadius1);
-                positive(shape.mRadius2);
-                shape.mPoint1 = vector(shape.mPoint1);
-                shape.mPoint2 = vector(shape.mPoint2);
-                shape.mRadius1 = multiply(shape.mRadius1, scale);
-                shape.mRadius2 = multiply(shape.mRadius2, scale);
-                positive(shape.mRadius1);
-                positive(shape.mRadius2);
-            }
-            else
-            {
-                nonnegative(shape.mRadius);
-                require(shape.mVertices.size() >= 4, "insufficient hull vertices");
-                for (auto& vertex : shape.mVertices)
-                    vertex = vector(vertex);
-                // Original 8C8AA0 leaves convex-hull collision radius intact.
-                // Its plane-normal/offset array is not retained by this graph.
-            }
-        }, result.mShape);
+        const auto scaleShape = [&](auto&& self, RagdollShape& value) -> void {
+            std::visit([&](auto& shape) {
+                using Shape = std::decay_t<decltype(shape)>;
+                if constexpr (std::is_same_v<Shape, RagdollSphere>)
+                {
+                    positive(shape.mRadius);
+                    shape.mRadius = multiply(shape.mRadius, scale);
+                    positive(shape.mRadius);
+                }
+                else if constexpr (std::is_same_v<Shape, RagdollCapsule>)
+                {
+                    positive(shape.mRadius1);
+                    positive(shape.mRadius2);
+                    shape.mPoint1 = vector(shape.mPoint1);
+                    shape.mPoint2 = vector(shape.mPoint2);
+                    shape.mRadius1 = multiply(shape.mRadius1, scale);
+                    shape.mRadius2 = multiply(shape.mRadius2, scale);
+                    positive(shape.mRadius1);
+                    positive(shape.mRadius2);
+                }
+                else if constexpr (std::is_same_v<Shape, RagdollBox>)
+                {
+                    nonnegative(shape.mRadius);
+                    for (unsigned i = 0; i < 3; ++i)
+                        require(std::isfinite(shape.mHalfExtents[i]) && shape.mHalfExtents[i] >= 0
+                            && double(shape.mHalfExtents[i]) + shape.mRadius > 0, "invalid box half extents");
+                    shape.mHalfExtents = vector(shape.mHalfExtents);
+                    for (unsigned i = 0; i < 3; ++i)
+                        require(std::isfinite(shape.mHalfExtents[i]) && shape.mHalfExtents[i] >= 0
+                            && double(shape.mHalfExtents[i]) + shape.mRadius > 0, "invalid box half extents");
+                    // Original 8B7F40 scales cached extents, retaining convex radius.
+                }
+                else if constexpr (std::is_same_v<Shape, RagdollList> || std::is_same_v<Shape, RagdollTransform>)
+                {
+                    if constexpr (std::is_same_v<Shape, RagdollTransform>)
+                    {
+                        nonnegative(shape.mRadius);
+                        for (unsigned i = 0; i < 16; ++i)
+                            require(std::isfinite(shape.mTransform.ptr()[i]), "nonfinite shape transform");
+                        shape.mTransform.setTrans(vector(shape.mTransform.getTrans()));
+                    }
+                    for (auto& child : shape.mChildren) self(self, child);
+                }
+                else
+                {
+                    nonnegative(shape.mRadius);
+                    require(shape.mVertices.size() >= 4, "insufficient hull vertices");
+                    for (auto& vertex : shape.mVertices)
+                        vertex = vector(vertex);
+                    // Original 8C8AA0 leaves convex-hull collision radius intact.
+                    // Its plane-normal/offset array is not retained by this graph.
+                }
+            }, value);
+        };
+        scaleShape(scaleShape, result.mShape);
         return result;
     }
 
@@ -371,32 +491,7 @@ namespace NifBullet
             value.mRestitution = info.mRestitution;
             value.mMaxLinearVelocity = info.mMaxLinearVelocity;
             value.mMaxAngularVelocity = info.mMaxAngularVelocity;
-            const auto* shape = body->mShape.getPtr();
-            if (shape->mRecordType == Nif::RC_bhkSphereShape)
-            {
-                const auto* sphere = dynamic_cast<const Nif::bhkSphereShape*>(shape);
-                require(sphere, "invalid sphere record");
-                positive(sphere->mRadius);
-                value.mShape = RagdollSphere{ sphere->mRadius };
-            }
-            else if (const auto* capsule = dynamic_cast<const Nif::bhkCapsuleShape*>(shape))
-            {
-                positive(capsule->mRadius1);
-                positive(capsule->mRadius2);
-                value.mShape = RagdollCapsule{ xyz(capsule->mPoint1), xyz(capsule->mPoint2),
-                    capsule->mRadius1, capsule->mRadius2 };
-            }
-            else if (const auto* hull = dynamic_cast<const Nif::bhkConvexVerticesShape*>(shape))
-            {
-                nonnegative(hull->mRadius);
-                require(hull->mVertices.size() >= 4, "insufficient hull vertices");
-                RagdollHull output{ {}, hull->mRadius };
-                for (const auto& vertex : hull->mVertices)
-                    output.mVertices.push_back(xyz(vertex));
-                value.mShape = std::move(output);
-            }
-            else
-                require(false, "unsupported body shape");
+            value.mShape = loadShape(body->mShape.getPtr(), records);
             bodies.emplace(body, result.mBodies.size());
             result.mBodies.push_back(std::move(value));
         }
