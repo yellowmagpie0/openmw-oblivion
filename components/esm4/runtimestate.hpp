@@ -23,6 +23,7 @@
 #include "physicalcombat.hpp"
 #include "projectilerules.hpp"
 #include "physicalblendsettings.hpp"
+#include "droprelations.hpp"
 #include "physicalvelocitycontroller.hpp"
 #include "physicalsceneworld.hpp"
 
@@ -37,7 +38,8 @@ namespace ESM4
     // v45 retains v44's payload layout and requires owned shared bounty views
     // to agree at whole-save admission. Earlier v44 saves may have stale views.
     // v46 adds exact Player reference Fame/Infamy and optional accumulation.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 46;
+    // v47 carries exact native dropped-item relation extras on references.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 47;
 
     struct RuntimeContentIdentity
     {
@@ -100,6 +102,8 @@ namespace ESM4
         // v41: absent rank is distinct from every signed explicit rank.
         std::optional<std::int32_t> mOwnershipRank = std::nullopt;
         ESM::FormKey mOwnershipGlobal = {};
+
+        DropRelations mDropRelations; // v47; older saves do not replace live relation extras.
 
         friend bool operator==(const RuntimeReferenceState&, const RuntimeReferenceState&) = default;
     };

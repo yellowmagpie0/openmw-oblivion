@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 46
+CURRENT_VERSION = 47
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -281,6 +281,53 @@ def _validate_ownership_extras(value: dict[str, Any], version: int) -> None:
         raise RuntimeStateError("Invalid TES4 native ownership rank")
     if global_ != "null" and _global_identity(global_)[0] != "content":
         raise RuntimeStateError("Native ownership global requires a content FormKey")
+
+
+def _validate_drop_relations(value: dict[str, Any], version: int) -> None:
+    dropper, items = value.get("dropper"), value.get("dropped_items")
+    if version < 47 and (dropper is not None or items is not None):
+        raise RuntimeStateError("Native drop relations require runtime-state version47")
+
+    def key(identity: Any) -> None:
+        kind, namespace, serial = _global_identity(identity)
+        width = 6 if kind == "content" else 16
+        if identity != f"{kind}:{namespace}:{serial:0{width}x}":
+            raise RuntimeStateError("Invalid native drop relation identity")
+
+    if dropper is not None:
+        key(dropper)
+    if items is not None:
+        if not isinstance(items, list) or len(items) > MAX_COLLECTION:
+            raise RuntimeStateError("Invalid native dropped item list")
+        seen = set()
+        for item in items:
+            key(item)
+            if item in seen:
+                raise RuntimeStateError("Duplicate native dropped item identity")
+            seen.add(item)
+
+
+def _read_drop_relations(reader: _Reader, value: dict[str, Any]) -> None:
+    present = reader.unpack("<B")
+    if present > 1:
+        raise RuntimeStateError("Invalid native dropper presence flag")
+    value["dropper"] = reader.string() if present else None
+    present = reader.unpack("<B")
+    if present > 1:
+        raise RuntimeStateError("Invalid native dropped-list presence flag")
+    value["dropped_items"] = [reader.string() for _ in range(reader.count())] if present else None
+
+
+def _write_drop_relations(writer: _Writer, value: dict[str, Any]) -> None:
+    dropper, items = value.get("dropper"), value.get("dropped_items")
+    writer.pack("<B", int(dropper is not None))
+    if dropper is not None:
+        writer.string(dropper)
+    writer.pack("<B", int(items is not None))
+    if items is not None:
+        writer.pack("<I", len(items))
+        for item in items:
+            writer.string(item)
 
 
 def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
@@ -720,6 +767,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("TES4 runtime-state reference has a null owner")
 
         _validate_ownership_extras(reference, version)
+        _validate_drop_relations(reference, version)
         for name in ("item_condition", "item_charge"):
             extra = reference.get(name)
             if extra is not None:
@@ -1656,6 +1704,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 reference[name] = reader.unpack("<f") if present else None
         if version >= 41:
             _read_ownership_extras(reader, reference)
+        if version >= 47:
+            _read_drop_relations(reader, reference)
         references.append(reference)
     result["references"] = references
     _validate_inventory(result["player"]["inventory"], version, True)
@@ -2099,6 +2149,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", extra)
         if version >= 41:
             _write_ownership_extras(writer, reference)
+        if version >= 47:
+            _write_drop_relations(writer, reference)
     if version >= 2:
         writer.pack("<Q", int(state.get("script_event_sequence", 0)))
         scripts = sorted(state.get("script_instances", []), key=lambda item: (item["unit"], item["context"]))
@@ -2533,6 +2585,13 @@ def load_save(path: Path) -> dict[str, Any]:
 
 
 
+def _upgrade_drop_relations(state: dict[str, Any]) -> None:
+    for reference in state.get("references", []):
+        _validate_drop_relations(reference, state.get("schema_version", 1))
+        reference.setdefault("dropper", None)
+        reference.setdefault("dropped_items", None)
+
+
 def _upgrade_reference_item_extras(state: dict[str, Any]) -> None:
     for reference in state.get("references", []):
         for name in ("item_condition", "item_charge"):
@@ -2600,6 +2659,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
     _upgrade_reference_item_extras(state)
+    _upgrade_drop_relations(state)
     _upgrade_actor_knockback(state)
     _upgrade_bow_states(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
@@ -2643,6 +2703,8 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
         _upgrade_inventory(reference["inventory"])
         reference.setdefault("ownership_rank", None)
         reference.setdefault("ownership_global", "null")
+        reference.setdefault("dropper", None)
+        reference.setdefault("dropped_items", None)
     payload = encode_payload(state)
     record_body = struct.pack("<4sI", b"VERS", 4) + struct.pack("<I", CURRENT_VERSION)
     for offset in range(0, len(payload), CHUNK_SIZE):
@@ -2670,6 +2732,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)
     _upgrade_reference_item_extras(result)
+    _upgrade_drop_relations(result)
     _upgrade_actor_knockback(result)
     _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION
@@ -2703,6 +2766,8 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
         _upgrade_inventory(reference["inventory"])
         reference.setdefault("ownership_rank", None)
         reference.setdefault("ownership_global", "null")
+        reference.setdefault("dropper", None)
+        reference.setdefault("dropped_items", None)
     player = result["player"]
     player.setdefault("name", "Bendu Olo")
     player.setdefault("race", "content:oblivion.esm:000907")
@@ -2808,6 +2873,8 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
         _upgrade_inventory(reference["inventory"])
         reference.setdefault("ownership_rank", None)
         reference.setdefault("ownership_global", "null")
+        reference.setdefault("dropper", None)
+        reference.setdefault("dropped_items", None)
     return result
 
 

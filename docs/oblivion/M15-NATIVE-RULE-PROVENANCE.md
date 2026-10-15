@@ -14581,3 +14581,66 @@ Final normal/instrumented 1502-case engine runs and 37-scope allocation evidence
 are recorded in the [S4 audit](M15-S4-DELIVERY-AUDIT.md#carried-model-and-authored-body-source-binding).
 These are factory preparation dependencies, not native dropped placement,
 production inventory/drop publication or normal-input/restart acceptance.
+
+### S4 relation predicates, WEAP header mapping and removal boundary
+
+The [relation contract](M15-ORIGINAL-DROP-RELATION-PROBES.json) adds 2880 contexts
+at `S4/drop-relations-native-predicates-01`. These use original TESObjectREFR
+vtable `0x00A46C44` and TESObjectWEAP vtable `0x00A45354`, actual empty
+reference `+0x10/+0x14` list lookup `0x0046B680`, and original virtual delegation
+`0x004D9B10`, base getter `0x004D9B40` and predicate `0x004D7030`.
+Raw reference and base flags each vary over 0, 0x3FF, 0x400 and 0xFFFFFFFF.
+The selected helper mutates relations only for nonnull non-Player actor/reference
+inputs when both tested bit0x400 conditions allow it. Existing-extra lookup,
+list-node allocation and the exact change request remain declared boundaries.
+The empty-list probe does not establish the list's role or its nonempty/TLS paths.
+
+`S4/weapon-header-quest-flag-oracle-03` passes 72 contexts. Actual constructor
+`0x0046C460` initializes all 69 signature-table rows from original executable
+strings before the actual `0x004BB150..0x004BB18C` WEAP load prefix executes.
+The original reader consumes a supplied raw 20-byte WEAP header and encounters
+six-byte subrecord EOF. Actual type decoder `0x0046AF70` and header application
+`0x00451210` execute; form-ID registration and source-file membership are
+explicit boundaries. Runtime flags become header flags plus retained prior
+bit0x4000, then the WEAP prefix clears bit8. Original reference/base predicate AL
+then equals the header bit0x400 condition in all selected cases. This establishes
+the selected WEAP mapping; it does not establish full record contents, all form
+categories, complete global registration or original-game runtime acceptance.
+The first two failed harnesses omitted native table initialization; their rejected
+WEAP inputs are retained as harness failures rather than engine evidence.
+
+`S4/drop-relations-removal-oracle-01` passes 80 contexts executing actual
+`0x00424C00` and linked-list removal `0x0065C620`. Null targets bypass lookup.
+A nonnull target removes at most its first matching entry, preserves remaining
+order, frees one heap node when needed, and requests generic extra removal when
+an existing extra ends empty (including an already empty list). Deliberate duplicate
+fixtures retain later matches. Extra lookup, free and generic detach/destruction
+remain boundaries. This does not identify a pickup caller or prove reference
+side dropper cleanup. No production cleanup implementation is claimed.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#owned-native-drop-relations-and-runtime-state-version-47)
+records the fork's owned relation extras, version-47 persistence, invalid-target
+admission checks and actual two-process persistence evidence separately from
+these native rules. Normal-input drop creation, replacement equipment, pickup
+cleanup and full M15S4 acceptance remain open.
+
+### S4 original equipped-node drop arguments
+
+The [placement contract](M15-ORIGINAL-DROP-PLACEMENT-PROBES.json) and
+[numerical expectations](M15-ORIGINAL-DROP-PLACEMENT-EXPECTED.json) record
+`S4/drop-placement-native-oracle-02`: 544 contexts at actual NPC break caller
+`0x005F3A93..0x005F3AF7`. It supplies a nonnull equipped node/entry and records
+actor virtual `+0x2C8` arguments without executing that drop body. Original matrix
+to Euler `0x00711440`, original arithmetic callees and actual pi/half-pi
+initializers `0x00A09B90`/`0x00A09BB0` execute. Thirty-four input matrices include
+identity, signed cardinal rotations, arbitrary single-axis rotations, combined
+rotations and gimbal cases; two translations, four positive scales and both
+x87 control words are crossed. The caller copies translation exactly and passes
+base, source extra, quantity 1, position and computed Euler rotation. Changing
+only the node's separate scale leaves these arguments bit-identical.
+
+The retained 68 unique numerical outputs preserve original polynomial rounding;
+host atan2 differs slightly for selected ordinary angles. This is evidence for
+future placement implementation, not an implemented native placement API.
+Created-reference scale, node acquisition/null-node fallback, inventory removal,
+scene/physics publication and runtime break/drop acceptance remain unverified.

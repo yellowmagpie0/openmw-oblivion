@@ -192,6 +192,28 @@ namespace MWWorld
         }
     }
 
+    void CellRef::setNativeDropRelations(ESM4::DropRelations relations)
+    {
+        if ((!getNativeReference() && !getNativeActor())
+            || (relations.mDropper && !getNativeReference()) || (relations.mItems && !getNativeActor()))
+            throw std::invalid_argument("Native drop relation extra has the wrong reference category");
+        relations.validate();
+        if (relations == mNativeDropRelations) return;
+        std::swap(mNativeDropRelations, relations);
+        mChanged = true;
+    }
+
+    bool CellRef::swapNativeDropRelations(CellRef& prepared) noexcept
+    {
+        if ((!getNativeReference() && !getNativeActor())
+            || bool(getNativeReference()) != bool(prepared.getNativeReference())
+            || bool(getNativeActor()) != bool(prepared.getNativeActor()))
+            return false;
+        std::swap(mNativeDropRelations, prepared.mNativeDropRelations);
+        mChanged = prepared.mChanged = true;
+        return true;
+    }
+
     std::optional<float> CellRef::getNativeItemCondition() const
     {
         const auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant);

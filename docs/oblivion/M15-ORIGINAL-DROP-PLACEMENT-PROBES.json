@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "cases": 544,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Actual NPC break caller 5F3A93..5F3AF7, original matrix-to-Euler 711440 and its original x87 math callees. Actual native pi/half-pi initializers A09B90/A09BB0. Supplied nonnull equipped NiAVObject, entry/extra and actor pointers. Actor virtual +2C8 records spawn arguments and returns null. No node lookup, inventory removal, scene or physics publication, full drop route, or runtime acceptance.",
+  "evidence": "S4/drop-placement-native-oracle-02",
+  "probe_sha256": "2764a137aac8297409468ba17d230a898f231a08a09f021709b069f1e2179f20",
+  "expectations_sha256": "83c751f17e4f656ad71c16bcd6a8405ba53d941b2f98bb2425d0a83b3d8e3ac1",
+  "factors": {
+    "rotation_matrices": 34,
+    "translations": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        12.25,
+        -9.5,
+        1001.125
+      ]
+    ],
+    "node_scale": [
+      0.25,
+      1,
+      2,
+      7
+    ],
+    "x87_control_word": [
+      "0x027F",
+      "0x037F"
+    ]
+  },
+  "expected": [
+    "Caller copies node +0x88 translation to position arguments exactly.",
+    "Caller passes base, source extra, quantity 1, position and rotation to virtual +0x2C8.",
+    "Changing only node +0x94 scale leaves position and Euler arguments bit-identical in the selected nonnull-node path.",
+    "68 unique original numerical outputs are retained for implementation comparison; original 0x007070B0 uses a rounded polynomial, not host atan2."
+  ],
+  "not_established": [
+    "Node acquisition/null-node fallback",
+    "Created reference scale, inventory removal, physics/contact/scene publication or replacement equipment",
+    "Full drop transaction, pickup cleanup or original-game runtime acceptance"
+  ],
+  "schema_version": 1,
+  "expectations_file": "M15-ORIGINAL-DROP-PLACEMENT-EXPECTED.json"
+}

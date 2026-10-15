@@ -6,6 +6,28 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 owned drop relations and save persistence — 2026-10-15
+
+Native instances now own optional droppers and ordered dropped-item lists.
+Runtime-state version 47 preserves list absence, present-empty lists and exact
+order through C++/Python codecs and staged World restore. Shared admission checks
+reject invalid targets before either save-admission or direct apply publishes
+clock, registry or relation changes. Older runtime versions preserve live extras.
+
+Normal and ASan/UBSan each pass all 2633 component tests and 1506 engine tests
+with exact inventories and no failures/skips; the full Python suite passes 301.
+Both final game images pass actual two-process SDL save/load/resave courses with
+exact seeded relations and native actor arrays. Morrowind profile isolation also
+passes. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#owned-native-drop-relations-and-runtime-state-version-47)
+records frozen fingerprints, source manifests, runtime hashes, the direct-apply
+failure found by the tests and the final correction.
+
+Independent original probes add 2880 predicate contexts, 72 WEAP header-mapping
+contexts, 80 list-removal contexts and 544 equipped-node placement contexts with
+retained numerical outputs. Production dropped placement/scale, replacement
+equipment, pickup cleanup, complete contact/removal/scene publication and real
+normal-input break/drop/restart acceptance remain open. S4 remains incomplete.
+
 ## S4 carried model/body source binding — 2026-10-15
 
 Carried-weapon captures now retain the file identity of the actual instantiated

@@ -1894,6 +1894,7 @@ namespace MWWorld
                     const ESM::RefId ownerId = ptr.getCellRef().getOwner();
                     if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
                         reference.mOwner = resolver.toFormKey(*owner);
+                    reference.mDropRelations = ptr.getCellRef().getNativeDropRelations();
                     reference.mOwnershipRank = ptr.getCellRef().getNativeOwnershipRank();
                     reference.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                         mStore, resolver, ptr.getCellRef());
@@ -2869,6 +2870,61 @@ namespace MWWorld
         return std::max(0.f, result);
     }
 
+    namespace
+    {
+        void validateNativeDropRelations(const ESM4::RuntimeState& state, const ESMStore& store,
+            const ESM::FormKeyResolver& resolver, const ESMStore* incoming = nullptr)
+        {
+            if (std::none_of(state.mReferences.begin(), state.mReferences.end(),
+                    [](const auto& reference) { return !reference.mDropRelations.empty(); })) return;
+            std::map<ESM::FormKey, ESM::FormKey> relationBases;
+            for (const auto& reference : state.mReferences) relationBases.emplace(reference.mKey, reference.mBase);
+            const auto relationBase = [&](const ESM::FormKey& key) -> ESM::FormKey {
+                if (const auto saved = relationBases.find(key); saved != relationBases.end()) return saved->second;
+                if (const auto* npc = store.get<ESM4::ActorCharacter>().search(key)) return npc->mBaseKey;
+                if (const auto* creature = store.get<ESM4::ActorCreature>().search(key)) return creature->mBaseKey;
+                if (const auto* object = store.get<ESM4::Reference>().search(key)) return object->mBaseKey;
+                throw std::invalid_argument("Native drop relation target is missing: " + key.serialize());
+            };
+            const auto relationActor = [&](const ESM::FormKey& base) {
+                return store.get<ESM4::Npc>().search(base) || store.get<ESM4::Creature>().search(base)
+                    || (incoming && (incoming->get<ESM4::Npc>().search(base)
+                        || incoming->get<ESM4::Creature>().search(base)));
+            };
+            const auto relationItem = [&](const ESM::FormKey& base) {
+                const auto id = resolver.toFormId(base);
+                return id && (OblivionProfileServices::itemDefinition(store, ESM::RefId(*id))
+                    || (incoming && OblivionProfileServices::itemDefinition(*incoming, ESM::RefId(*id))));
+            };
+            const auto relationActorTarget = [&](const ESM::FormKey& key) {
+                if (key == state.mPlayer.mReference) return true;
+                if (key.isContent() && !store.get<ESM4::ActorCharacter>().search(key)
+                    && !store.get<ESM4::ActorCreature>().search(key)) return false;
+                return relationActor(relationBase(key));
+            };
+            const auto relationItemTarget = [&](const ESM::FormKey& key) {
+                if (key.isContent() && !store.get<ESM4::Reference>().search(key)) return false;
+                return relationItem(relationBase(key));
+            };
+            for (const auto& reference : state.mReferences)
+            {
+                const auto& relations = reference.mDropRelations;
+                if (relations.mDropper && (!relationItem(reference.mBase)
+                    || !relationActorTarget(*relations.mDropper)))
+                    throw std::invalid_argument("Native dropper relation requires a takeable item and actor");
+                if (relations.mItems)
+                {
+                    if (!relationActor(reference.mBase))
+                        throw std::invalid_argument("Native dropped-list extra requires an actor reference");
+                    for (const auto& item : *relations.mItems)
+                        if (!relationItemTarget(item))
+                            throw std::invalid_argument("Native dropped-list entry requires a takeable reference");
+                }
+            }
+
+        }
+    }
+
     void World::applyOblivionRuntimeState()
     {
         mSharedDefinitionsPrepared = false;
@@ -2882,6 +2938,7 @@ namespace MWWorld
             return;
         }
         const ESM4::RuntimeState& state = *mPendingOblivionRuntimeState;
+        validateNativeDropRelations(state, mStore, ESM::FormKeyResolver(mContentFiles));
         for (const auto& reference : state.mReferences)
             if (const auto marker = reference.mCustomState.find("obscript.dead");
                 marker != reference.mCustomState.end() && !std::holds_alternative<bool>(marker->second))
@@ -3145,6 +3202,12 @@ namespace MWWorld
                     itemCellRef->setNativeOwnershipRank(reference.mOwnershipRank);
                 else if (reference.mOwnershipRank)
                     throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
+            }
+
+            if (state.mVersion >= 47)
+            {
+                if (!itemCellRef) itemCellRef.emplace(found->second.getCellRef());
+                itemCellRef->setNativeDropRelations(reference.mDropRelations);
             }
 
             std::optional<ESM::RefId> owner;
@@ -3726,6 +3789,8 @@ namespace MWWorld
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
         const ESM::FormKeyResolver resolver(mContentFiles);
+        validateNativeDropRelations(state, mStore, resolver, incoming);
+
         const auto validateFloat = [](double value, std::string_view name) {
             if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()
                 || value > std::numeric_limits<float>::max())
@@ -3946,6 +4011,10 @@ namespace MWWorld
                 throw std::runtime_error("TES4 runtime-state actor base is not present: " + base->serialize());
             if (reference.mActorDrawState && !npc && !creature)
                 throw std::runtime_error("TES4 runtime-state actor draw state requires an actor reference");
+            if (reference.mDropRelations.mItems && !npc && !creature)
+                throw std::invalid_argument("Native dropped-list owner requires ACHR/ACRE");
+            if (reference.mDropRelations.mDropper && !object)
+                throw std::invalid_argument("Native dropper extra requires REFR");
             if ((npc || creature) && reference.mOwnershipRank)
                 throw std::invalid_argument("Native actor reference cannot own a REFR rank extra");
         }

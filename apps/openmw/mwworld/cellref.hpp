@@ -10,6 +10,7 @@
 #include <components/esm/esmbridge.hpp>
 #include <components/esm3/cellref.hpp>
 #include <components/esm4/loadrefr.hpp>
+#include <components/esm4/droprelations.hpp>
 #include <components/esm4/loadachr.hpp>
 
 namespace ESM
@@ -69,6 +70,13 @@ namespace MWWorld
             };
             return std::visit(Visitor(), mCellRef.mVariant);
         }
+
+        const ESM4::DropRelations& getNativeDropRelations() const noexcept { return mNativeDropRelations; }
+        // Fallible ownership/identity validation before publication. Private
+        // instance extras are copied independently of authored records.
+        void setNativeDropRelations(ESM4::DropRelations relations);
+        // Prepared native publication only; no allocation or observers.
+        bool swapNativeDropRelations(CellRef& prepared) noexcept;
 
         // Construction Set identifier carried by native TES4 placed references.
         // TES3 references do not have a separate placed-reference editor ID.
@@ -348,6 +356,7 @@ namespace MWWorld
         // authored record. Native save capture/restore must carry them.
         std::optional<float> mNativePlacedItemCondition;
         float mNativePlacedEnchantmentCharge = -1.f;
+        ESM4::DropRelations mNativeDropRelations;
     };
 
 }

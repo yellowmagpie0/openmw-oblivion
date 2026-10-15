@@ -139,9 +139,179 @@
   ],
   "not_established": [
     "Full 0x004DB4A0 query semantics outside the selected null-lookup fallback",
-    "Base predicate/on-disk record flag mapping",
+    "Other base categories/header loaders outside the selected WEAP prefix",
     "Generic ExtraDataList attachment/locking and allocation-failure behavior",
     "Previous dropper list cleanup elsewhere, pickup/removal semantics or save serialization",
     "Production factory, normal-input break/drop and original-game runtime acceptance"
-  ]
+  ],
+  "native_predicate_probe": {
+    "evidence": "S4/drop-relations-native-predicates-01",
+    "cases": 2880,
+    "probe_sha256": "09f84c5dab04c80e30506e95237640f01edc90a8f6d5667f0f40b3db74d40f83",
+    "reference_vtable": "0x00A46C44",
+    "weapon_vtable": "0x00A45354",
+    "executed": [
+      "0x004DC000",
+      "0x004DB4A0",
+      "0x0046B680",
+      "0x004D9B10",
+      "0x004D9B40",
+      "0x004D7030",
+      "0x00424B60",
+      "0x004203E0",
+      "0x00446CB0"
+    ],
+    "factors": {
+      "actor_argument": [
+        "null",
+        "player-singleton",
+        "other-nonnull"
+      ],
+      "reference_present": [
+        false,
+        true
+      ],
+      "raw_reference_flags": [
+        0,
+        1023,
+        1024,
+        4294967295
+      ],
+      "raw_base_flags": [
+        0,
+        1023,
+        1024,
+        4294967295
+      ],
+      "initial_actor_list": [
+        "empty",
+        "other",
+        "reference",
+        "other -> reference",
+        "other -> another"
+      ],
+      "initial_dropper": [
+        "null",
+        "other",
+        "actor"
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "selected_layout": [
+      "reference +0x10/+0x14 list is empty; actual lookup (-1) returns null without a stub",
+      "reference +0x1C points to a fixture WEAP using the original vtable",
+      "reference virtual +0x170 executes original base getter; +0x78 executes original delegation twice per allowed relation update"
+    ],
+    "boundaries": [
+      "ExtraDataList lookup supplies existing fixture extras",
+      "allocator supplies fresh eight-byte list nodes",
+      "reference virtual +0x40 records the exact 0x20000 request"
+    ],
+    "expected": [
+      "Null/Player actor and null reference bypass mutation.",
+      "Raw reference flags bit0x400 selects the original query fallback and skips relation mutation.",
+      "Otherwise the original reference/base predicate skips mutation exactly when raw WEAP flags bit0x400 is set.",
+      "Other raw bits do not replace those conditions in this selected path.",
+      "Admitted mutations retain duplicate suppression, front insertion/order and dropper overwrite; change request follows the second actual predicate call."
+    ],
+    "not_established": [
+      "Nonempty reference +0x10 list and other query/TLS branches",
+      "Mapping original file-header flags to raw base flags",
+      "Full object constructors, native persistence or original-game runtime acceptance"
+    ]
+  },
+  "weapon_header_probe": {
+    "passed": true,
+    "cases": 72,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual complete 46C460 constructor with native 69-row signature-table initialization, then WEAP load prefix 4BB150..4BB18C, actual 4511C0/450080 twenty-byte record-header read and six-byte subrecord EOF, actual type decoding 46AF70 and form-header load 451210, actual bit8 clear 46AB80, then actual reference/base getter/predicate 4D9B10/4D9B40/4D7030. File read supplies explicit raw WEAP header bytes. Form-ID registration and source-file membership are declared boundaries. No full WEAP contents, full global form registration or original-game runtime acceptance.",
+    "evidence": "S4/weapon-header-quest-flag-oracle-03",
+    "probe_sha256": "58c5f44e7015028c42334c343c2259da9a713b9cc27a8413b76246a9377c8935",
+    "entry": "0x0046C460",
+    "load_prefix": [
+      "0x004BB150",
+      "0x004BB18C"
+    ],
+    "factors": {
+      "raw_header_flags": [
+        0,
+        1,
+        8,
+        1023,
+        1024,
+        1025,
+        2048,
+        16384,
+        4294705151
+      ],
+      "old_runtime_flags": [
+        0,
+        1024,
+        16384,
+        4294967295
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "expected": [
+      "Original constructor initializes all 69 FourCC table slots from the original executable strings, with no substituted decoder/table.",
+      "Actual record header loader copies header flags while retaining only prior runtime bit0x4000; the WEAP prefix then clears runtime bit8.",
+      "The actual reference/base predicate AL equals whether raw WEAP record-header flags include bit0x400 in all selected cases."
+    ],
+    "boundaries": [
+      "20-byte raw WEAP header read and six-byte subrecord EOF through the original reader callback interface.",
+      "Form-ID registration 0x0046C300 and source-file membership 0x0046B6C0 are supplied boundaries.",
+      "The actual constructor executes with null global form manager 0x00B33A98; complete engine-wide form registration is outside this fixture."
+    ],
+    "not_established": [
+      "Complete WEAP contents or original engine startup/full global registration",
+      "Other record categories or full query/TLS branches",
+      "Production dropped-reference factory or normal-input/runtime acceptance"
+    ]
+  },
+  "removal_probe": {
+    "passed": true,
+    "cases": 80,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual 424C00 actor extra-list removal helper and actual 65C620 first-match linked-list removal. Existing extra lookup 41E210, node free 401F20 and generic extra removal 422E20 are explicit recorded boundaries. This does not identify a pickup caller, execute generic extra detach/destruction, clear the dropped reference dropper, or establish runtime acceptance.",
+    "evidence": "S4/drop-relations-removal-oracle-01",
+    "probe_sha256": "8f8fee9d821d11db89f3603a55d65001e92e6514c434529d5b1e8305d5d80630",
+    "executed": [
+      "0x00424C00",
+      "0x0065C620"
+    ],
+    "factors": {
+      "list_shapes": 10,
+      "extra_exists": [
+        false,
+        true
+      ],
+      "target": [
+        0,
+        1
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "expected": [
+      "Null target skips extra lookup/mutation.",
+      "Absent extra remains absent.",
+      "An existing list removes at most its first matching target while preserving remaining order; deliberate duplicate fixtures retain later matches.",
+      "Removing from a nonempty multi-node list frees exactly one heap node; removing a single inline head only clears it.",
+      "For a nonnull target, an existing extra whose list is empty afterward requests generic removal with arguments (extra,1), even when it was already empty."
+    ],
+    "not_established": [
+      "Caller identity/pickup or destruction semantics",
+      "Actual generic extra detach/destruction or reference dropper cleanup",
+      "Runtime persistence or production acceptance"
+    ]
+  },
+  "scope_note": "Top-level executed/boundaries and the existing/construction sections describe the initial probes. Later named probes replace only their explicitly tested opaque boundaries; all other limits remain."
 }

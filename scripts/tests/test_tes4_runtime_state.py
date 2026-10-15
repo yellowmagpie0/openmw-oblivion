@@ -162,6 +162,82 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             "inventory": [], "custom_state": {}}]
         return state
 
+    def test_drop_relations47_independent_wire_order_presence_and_legacy(self):
+        state = self.ownership_state()
+        state["schema_version"] = 46
+        ref = state["references"][0]
+        ref["ownership_global"] = "content:oblivion.esm:deadbe"
+        old = state_io.encode_payload(state)
+        marker = ref["ownership_global"].encode()
+        boundary = old.index(marker) + len(marker)
+        key = lambda text: struct.pack("<I", len(text)) + text.encode()
+        actor = "content:oblivion.esm:000902"
+        ordered = ["dynamic:native-reference:0000000000000003", "content:oblivion.esm:000960"]
+        state["schema_version"] = 47
+        for dropper in (None, actor):
+            for items in (None, [], ordered):
+                with self.subTest(dropper=dropper, items=items):
+                    ref.update(dropper=dropper, dropped_items=items)
+                    extra = bytes([dropper is not None]) + (key(dropper) if dropper else b"")
+                    extra += bytes([items is not None])
+                    if items is not None:
+                        extra += struct.pack("<I", len(items)) + b"".join(key(item) for item in items)
+                    expected = bytearray(old)
+                    struct.pack_into("<I", expected, len(state_io.MAGIC), 47)
+                    expected[boundary:boundary] = extra
+                    self.assertEqual(state_io.encode_payload(state), bytes(expected))
+                    decoded = state_io.decode_payload(bytes(expected))["references"][0]
+                    self.assertEqual(decoded["dropper"], dropper)
+                    self.assertEqual(decoded["dropped_items"], items)
+                    for offset in (boundary, boundary + 1 + (len(key(dropper)) if dropper else 0)):
+                        bad = bytearray(expected); bad[offset] = 2
+                        with self.assertRaises(state_io.RuntimeStateError):
+                            state_io.decode_payload(bytes(bad))
+                    if dropper is not None or items is not None:
+                        legacy = copy.deepcopy(state); legacy["schema_version"] = 46
+                        with self.assertRaises(state_io.RuntimeStateError):
+                            state_io.encode_payload(legacy)
+        self.assertNotIn("dropper", state_io.decode_payload(old)["references"][0])
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(old)), old)
+
+    def test_drop_relations47_rejects_invalid_identity_type_duplicate_and_wire(self):
+        state = self.ownership_state(); state["schema_version"] = 47
+        ref = state["references"][0]
+        for identity in ("null", "content:Oblivion.esm:000001", "content:oblivion.esm:1000000",
+                         "dynamic:native-reference:0000000000000000", "dynamic:bad:namespace:1", 3, True):
+            for field, value in (("dropper", identity), ("dropped_items", [identity])):
+                with self.subTest(field=field, identity=identity):
+                    ref.update(dropper=None, dropped_items=None); ref[field] = value
+                    with self.assertRaises(state_io.RuntimeStateError):
+                        state_io.encode_payload(state)
+        valid = "dynamic:native-reference:0000000000000003"
+        for value in ([valid, valid], valid, {}, True):
+            ref.update(dropper=None, dropped_items=value)
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+        ref.update(dropper=valid, dropped_items=None)
+        payload = state_io.encode_payload(state)
+        bad = payload.replace(valid.encode(), valid.encode().replace(b"dynamic", b"Dynamic"))
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(bad)
+
+    def test_drop_relations47_legacy_rewrite_preserves_opaque_records(self):
+        state = self.ownership_state(); state["schema_version"] = 46
+        payload = state_io.encode_payload(state)
+        body = struct.pack("<4sII", b"VERS", 4, 46) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
+        tail = struct.pack("<4sIII", b"TEST", 12, 0, 0) + struct.pack("<4sI", b"DATA", 4) + b"keep"
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)/"source.omwsave"; target = Path(directory)/"target.omwsave"
+            source.write_bytes(record + tail)
+            state_io.write_save(source, target, state)
+            decoded = state_io.load_save(target)
+            self.assertEqual(decoded["schema_version"], 47)
+            self.assertIsNone(decoded["references"][0]["dropper"])
+            self.assertIsNone(decoded["references"][0]["dropped_items"])
+            self.assertEqual(decoded["next_dynamic_serial"], state["next_dynamic_serial"])
+            self.assertTrue(target.read_bytes().endswith(tail))
+
     def test_native_ownership41_exact_wire_inventory_and_legacy_defaults(self):
         state = self.ownership_state()
         state["schema_version"] = 41

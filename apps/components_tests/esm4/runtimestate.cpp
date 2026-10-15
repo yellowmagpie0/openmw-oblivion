@@ -3491,3 +3491,100 @@ TEST(ESM4RuntimeState, Reputation46OwnsExactSignedCountersAndIndependentAccumula
     state.mNativeActorValues.front().mOwner = ESM4::ActorValueOwner::NonPlayer;
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
 }
+
+TEST(ESM4RuntimeState, DropRelations47IndependentWirePresenceOrderAndLegacyBoundary)
+{
+    auto state = makeState();
+    auto& reference = state.mReferences.front();
+    reference.mOwnershipGlobal = ESM::FormKey::content("oblivion.esm", 0xdeadbe);
+    auto legacy = state; legacy.mVersion = 46;
+    const auto old = legacy.serializeBinary();
+    const std::string marker = "content:oblivion.esm:deadbe";
+    const auto found = std::search(old.begin(), old.end(), marker.begin(), marker.end());
+    ASSERT_NE(found, old.end());
+    const std::size_t boundary = std::distance(old.begin(), found) + marker.size();
+    const auto actor = ESM::FormKey::content("oblivion.esm", 0x902);
+    const auto first = ESM::FormKey::dynamic("native-reference", 3);
+    const auto second = ESM::FormKey::content("oblivion.esm", 0x960);
+    for (const bool dropper : {false, true})
+    for (const int list : {0, 1, 2})
+    {
+        SCOPED_TRACE(dropper);
+        SCOPED_TRACE(list);
+        auto& relations = reference.mDropRelations;
+        relations = {};
+        if (dropper) relations.mDropper = actor;
+        if (list) relations.mItems.emplace();
+        if (list == 2) *relations.mItems = {first, second};
+        std::vector<std::uint8_t> extra;
+        const auto integer = [&](std::uint32_t value) {
+            for (unsigned i = 0; i < 4; ++i) extra.push_back((value >> (i * 8)) & 0xff);
+        };
+        const auto key = [&](std::string_view text) {
+            integer(text.size()); extra.insert(extra.end(), text.begin(), text.end());
+        };
+        extra.push_back(dropper);
+        if (dropper) key("content:oblivion.esm:000902");
+        const auto listFlag = extra.size();
+        extra.push_back(list != 0);
+        if (list)
+        {
+            integer(list == 2 ? 2 : 0);
+            if (list == 2)
+            {
+                key("dynamic:native-reference:0000000000000003");
+                key("content:oblivion.esm:000960");
+            }
+        }
+        auto expected = old; expected[9] = 47;
+        expected.insert(expected.begin() + boundary, extra.begin(), extra.end());
+        EXPECT_EQ(state.serializeBinary(), expected);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(expected);
+        EXPECT_EQ(decoded.mReferences.front().mDropRelations, relations);
+        EXPECT_EQ(decoded.serializeBinary(), expected);
+        EXPECT_NE(decoded.canonicalJson().find("\"dropped_items\":"), std::string::npos);
+        auto malformed = expected; malformed[boundary] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::exception);
+        malformed = expected; malformed[boundary + listFlag] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::exception);
+        if (!relations.empty())
+        {
+            auto rejected = state; rejected.mVersion = 46;
+            EXPECT_THROW(rejected.serializeBinary(), std::runtime_error);
+        }
+    }
+    const auto decodedOld = ESM4::RuntimeState::deserializeBinary(old);
+    EXPECT_TRUE(decodedOld.mReferences.front().mDropRelations.empty());
+    EXPECT_EQ(decodedOld.serializeBinary(), old);
+}
+
+TEST(ESM4RuntimeState, DropRelations47RejectNullDuplicateAndLossyIdentities)
+{
+    auto state = makeState();
+    const auto valid = ESM::FormKey::dynamic("native-reference", 3);
+    const std::array<ESM::FormKey, 6> invalid{{{},
+        {ESM::FormKeyKind::Content,"Oblivion.esm",1},
+        {ESM::FormKeyKind::Content,"oblivion.esm",0x1000000},
+        {ESM::FormKeyKind::Content,"",1},
+        {ESM::FormKeyKind::Dynamic,"native-reference",0},
+        {ESM::FormKeyKind::Dynamic,"bad:namespace",3}}};
+    for (const auto& key : invalid)
+    for (const bool list : {false, true})
+    {
+        auto& relations = state.mReferences.front().mDropRelations;
+        relations = {};
+        if (list) relations.mItems = {{key}};
+        else relations.mDropper = key;
+        EXPECT_THROW(state.serializeBinary(), std::exception);
+        EXPECT_THROW(state.canonicalJson(), std::exception);
+    }
+    state.mReferences.front().mDropRelations = {{}, {{valid, valid}}};
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mReferences.front().mDropRelations = {valid, {}};
+    const auto bytes = state.serializeBinary();
+    const std::string text = "dynamic:native-reference:0000000000000003";
+    auto bad = bytes;
+    const auto position = std::search(bad.begin(), bad.end(), text.begin(), text.end());
+    ASSERT_NE(position, bad.end()); *position = 'D';
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::exception);
+}

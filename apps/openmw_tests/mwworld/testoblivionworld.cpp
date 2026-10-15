@@ -20456,3 +20456,178 @@ TEST(OblivionWorldTest, PreparedWorldContactTracksRetainedRegistryIndependentlyO
     ASSERT_TRUE(contact->isValid()); ASSERT_TRUE(contact->commit());
     EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(b, 8), health - 3);
 }
+
+namespace
+{
+    struct NativeDropRelationsFixture : NativeWorldFixture
+    {
+        MWWorld::Ptr mItem, mSecond, mActor;
+        NativeDropRelationsFixture()
+        {
+            mItem = installNativeLooseItemCapture(*this);
+            mActor = addNativeNpc(*this, 0x900);
+            mActor = mActor.getCell()->moveTo(mActor, mItem.getCell());
+            mWorld.getWorldModel().registerPtr(mActor);
+            auto placed = *mItem.getCellRef().getNativeReference();
+            placed.mId = {0x961, 0}; placed.mFormKey = ESM::FormKey::content("headless.esm", 0x961);
+            mWorld.getStore().getWritable<ESM4::Reference>().insertStatic(placed, placed.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Weapon> live(placed, mItem.get<ESM4::Weapon>()->mBase);
+            mSecond = MWWorld::Ptr(mItem.getCell()->insert(&live), mItem.getCell());
+            mWorld.getWorldModel().registerPtr(mSecond);
+        }
+        ESM4::DropRelations actorRelations() const
+        { return {{}, {{mSecond.getCellRef().getFormKey(), mItem.getCellRef().getFormKey()}}}; }
+        ESM4::DropRelations itemRelations() const
+        { return {mActor.getCellRef().getFormKey(), {}}; }
+    };
+}
+
+TEST(OblivionWorldTest, NativeDropRelationInstanceExtrasAreOwnedValidatedAndSwappable)
+{
+    NativeDropRelationsFixture fixture;
+    auto& item = fixture.mItem.getCellRef();
+    auto& actor = fixture.mActor.getCellRef();
+    const auto number = item.getRefNum();
+    const auto key = item.getFormKey();
+    const auto actorKey = actor.getFormKey();
+    const auto reference = *item.getNativeReference();
+    auto preparedItem = item;
+    auto preparedActor = actor;
+    preparedItem.setNativeDropRelations(fixture.itemRelations());
+    preparedActor.setNativeDropRelations(fixture.actorRelations());
+    EXPECT_TRUE(item.getNativeDropRelations().empty());
+    EXPECT_TRUE(actor.getNativeDropRelations().empty());
+    EXPECT_THROW(item.setNativeDropRelations(fixture.actorRelations()), std::invalid_argument);
+    EXPECT_THROW(actor.setNativeDropRelations(fixture.itemRelations()), std::invalid_argument);
+    ESM4::DropRelations invalid; invalid.mDropper.emplace();
+    EXPECT_THROW(item.setNativeDropRelations(invalid), std::exception);
+    EXPECT_FALSE(item.swapNativeDropRelations(preparedActor));
+    EXPECT_TRUE(item.getNativeDropRelations().empty());
+    EXPECT_TRUE(item.swapNativeDropRelations(preparedItem));
+    EXPECT_TRUE(actor.swapNativeDropRelations(preparedActor));
+    EXPECT_EQ(item.getNativeDropRelations(), fixture.itemRelations());
+    EXPECT_EQ(actor.getNativeDropRelations(), fixture.actorRelations());
+    EXPECT_TRUE(preparedItem.getNativeDropRelations().empty());
+    EXPECT_TRUE(preparedActor.getNativeDropRelations().empty());
+    EXPECT_EQ(item.getFormKey(), key); EXPECT_EQ(item.getRefNum(), number);
+    EXPECT_EQ(actor.getFormKey(), actorKey);
+    EXPECT_EQ(item.getNativeReference()->mFormKey, reference.mFormKey);
+    EXPECT_TRUE(item.hasChanged()); EXPECT_TRUE(actor.hasChanged());
+    ESM::CellRef tes3; tes3.blank(); MWWorld::CellRef legacy(tes3);
+    EXPECT_THROW(legacy.setNativeDropRelations({}), std::invalid_argument);
+    EXPECT_FALSE(legacy.swapNativeDropRelations(preparedItem));
+}
+
+TEST(OblivionWorldTest, NativeDropRelationsCaptureRestoreExactPresenceOrderAndLegacyLiveExtras)
+{
+    NativeDropRelationsFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& actor = fixture.mActor.getCellRef();
+    auto& item = fixture.mItem.getCellRef();
+    const auto key = item.getFormKey(); const auto number = item.getRefNum();
+    for (const bool dropper : {false, true})
+    for (const int list : {0, 1, 2})
+    {
+        SCOPED_TRACE(dropper);
+        SCOPED_TRACE(list);
+        auto relations = fixture.actorRelations();
+        if (list == 0) relations.mItems.reset();
+        if (list == 1) relations.mItems->clear();
+        actor.setNativeDropRelations(relations);
+        item.setNativeDropRelations(dropper ? fixture.itemRelations() : ESM4::DropRelations{});
+        const auto saved = world.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mVersion, 47u);
+        const auto expectedItem = item.getNativeDropRelations();
+        actor.setNativeDropRelations({}); item.setNativeDropRelations({});
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(actor.getNativeDropRelations(), relations);
+        EXPECT_EQ(item.getNativeDropRelations(), expectedItem);
+        EXPECT_EQ(item.getFormKey(), key); EXPECT_EQ(item.getRefNum(), number);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    }
+    auto old = world.captureOblivionRuntimeState(); old.mVersion = 46;
+    for (auto& reference : old.mReferences) reference.mDropRelations = {};
+    actor.setNativeDropRelations(fixture.actorRelations());
+    item.setNativeDropRelations(fixture.itemRelations());
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(old.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(actor.getNativeDropRelations(), fixture.actorRelations());
+    EXPECT_EQ(item.getNativeDropRelations(), fixture.itemRelations());
+}
+
+TEST(OblivionWorldTest, NativeDropRelationAdmissionRejectsDanglingAndWrongRolesBeforePublication)
+{
+    for (int change = 0; change < 6; ++change)
+    {
+        SCOPED_TRACE(change);
+        NativeDropRelationsFixture fixture;
+        auto& world = fixture.mWorld;
+        fixture.mItem.getCellRef().setNativeDropRelations(fixture.itemRelations());
+        fixture.mActor.getCellRef().setNativeDropRelations(fixture.actorRelations());
+        auto state = world.captureOblivionRuntimeState();
+        const auto before = state;
+        auto& item = *std::find_if(state.mReferences.begin(), state.mReferences.end(), [&](const auto& value) {
+            return value.mKey == fixture.mItem.getCellRef().getFormKey(); });
+        auto& actor = *std::find_if(state.mReferences.begin(), state.mReferences.end(), [&](const auto& value) {
+            return value.mKey == fixture.mActor.getCellRef().getFormKey(); });
+        if (change == 0) item.mDropRelations.mDropper = ESM::FormKey::content("headless.esm", 0x999);
+        if (change == 1) item.mDropRelations.mDropper = item.mKey;
+        if (change == 2) actor.mDropRelations.mItems = {{actor.mKey}};
+        if (change == 3) item.mDropRelations = fixture.actorRelations();
+        if (change == 4) actor.mDropRelations = fixture.itemRelations();
+        if (change == 5) actor.mDropRelations.mItems = {{ESM::FormKey::dynamic("native-reference", 999)}};
+        state.mClock.mHour = 9;
+        const auto time = world.getTimeStamp();
+        const auto revision = world.getWorldModel().getPtrRegistryRevision();
+        const auto serial = world.getWorldModel().getLastGeneratedRefNum();
+        EXPECT_THROW(world.validateOblivionSaveState(state), std::invalid_argument);
+        readNativeSnapshot(fixture, state);
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::invalid_argument);
+        EXPECT_EQ(world.getTimeStamp(), time);
+        EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
+        EXPECT_EQ(world.getWorldModel().getLastGeneratedRefNum(), serial);
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeDropRelations(), fixture.itemRelations());
+        EXPECT_EQ(fixture.mActor.getCellRef().getNativeDropRelations(), fixture.actorRelations());
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeActorValues, before.mNativeActorValues);
+    }
+}
+
+TEST(OblivionWorldTest, NativeDropRelationsRestoreNewDynamicReferenceBeforeResolvingListOrder)
+{
+    NativeDropRelationsFixture fixture;
+    auto& world = fixture.mWorld;
+    auto state = world.captureOblivionRuntimeState();
+    auto dynamic = *std::find_if(state.mReferences.begin(), state.mReferences.end(), [&](const auto& value) {
+        return value.mKey == fixture.mItem.getCellRef().getFormKey(); });
+    dynamic.mKey = ESM::FormKey::dynamic("native-reference", 10);
+    dynamic.mDropRelations = fixture.itemRelations();
+    state.mNextDynamicSerial = 11;
+    auto& actor = *std::find_if(state.mReferences.begin(), state.mReferences.end(), [&](const auto& value) {
+        return value.mKey == fixture.mActor.getCellRef().getFormKey(); });
+    actor.mDropRelations.mItems = {{dynamic.mKey, fixture.mItem.getCellRef().getFormKey()}};
+    const auto relations = actor.mDropRelations;
+    state.mReferences.push_back(dynamic);
+    for (unsigned pass = 0; pass < 2; ++pass)
+    {
+        SCOPED_TRACE(pass);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(fixture.mActor.getCellRef().getNativeDropRelations(), relations);
+        unsigned count = 0;
+        for (const auto& ptr : world.getWorldModel().getResidentPtrs())
+            if (ptr.getCellRef().getFormKey() == dynamic.mKey)
+            {
+                ++count;
+                EXPECT_EQ(ptr.getCellRef().getNativeDropRelations(), fixture.itemRelations());
+                EXPECT_NE(ptr.getCellRef().getNativeReference(), nullptr);
+            }
+        EXPECT_EQ(count, 1u);
+        const auto captured = world.captureOblivionRuntimeState();
+        EXPECT_EQ(captured.mNextDynamicSerial, 11u);
+        const auto found = std::find_if(captured.mReferences.begin(), captured.mReferences.end(),
+            [&](const auto& value) { return value.mKey == dynamic.mKey; });
+        ASSERT_NE(found, captured.mReferences.end());
+        EXPECT_EQ(found->mDropRelations, fixture.itemRelations());
+    }
+}

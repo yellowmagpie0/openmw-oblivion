@@ -135,6 +135,15 @@ namespace ESM4
             return ESM::FormKey::deserialize(reader.string());
         }
 
+        ESM::FormKey readDropRelationKey(BinaryReader& reader)
+        {
+            const auto text = reader.string();
+            const auto key = ESM::FormKey::deserialize(text);
+            if (key.isNull() || key.serialize() != text)
+                throw std::runtime_error("Invalid native drop relation wire identity");
+            return key;
+        }
+
         void writePosition(BinaryWriter& writer, const ESM::Position& position)
         {
             for (float value : position.pos)
@@ -1229,6 +1238,9 @@ namespace ESM4
         for (const RuntimeReferenceState& reference : mReferences)
         {
             validateOwnershipExtras(reference.mOwnershipRank, reference.mOwnershipGlobal, mVersion);
+            reference.mDropRelations.validate();
+            if (mVersion < 47 && !reference.mDropRelations.empty())
+                throw std::runtime_error("Native drop relations require runtime-state version47");
             if (reference.mKey.isNull() || reference.mBase.isNull() || reference.mCell.isNull())
                 throw std::runtime_error("TES4 runtime-state reference has a null required FormKey");
             if (!referenceKeys.insert(reference.mKey).second)
@@ -1549,6 +1561,18 @@ namespace ESM4
                 }
             if (mVersion >= 41)
                 writeOwnershipExtras(writer, reference.mOwnershipRank, reference.mOwnershipGlobal);
+            if (mVersion >= 47)
+            {
+                const auto& relations = reference.mDropRelations;
+                writer.integer<std::uint8_t>(relations.mDropper.has_value());
+                if (relations.mDropper) writeKey(writer, *relations.mDropper);
+                writer.integer<std::uint8_t>(relations.mItems.has_value());
+                if (relations.mItems)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(relations.mItems->size()));
+                    for (const auto& item : *relations.mItems) writeKey(writer, item);
+                }
+            }
         }
 
         if (mVersion >= 2)
@@ -2221,6 +2245,21 @@ namespace ESM4
                 }
             if (result.mVersion >= 41)
                 readOwnershipExtras(reader, reference.mOwnershipRank, reference.mOwnershipGlobal);
+            if (result.mVersion >= 47)
+            {
+                const auto present = reader.integer<std::uint8_t>();
+                if (present > 1) throw std::runtime_error("Invalid native dropper presence flag");
+                if (present) reference.mDropRelations.mDropper = readDropRelationKey(reader);
+                const auto listPresent = reader.integer<std::uint8_t>();
+                if (listPresent > 1) throw std::runtime_error("Invalid native dropped-list presence flag");
+                if (listPresent)
+                {
+                    auto& items = reference.mDropRelations.mItems.emplace();
+                    const auto count = reader.count(); items.reserve(count);
+                    for (std::uint32_t itemIndex = 0; itemIndex < count; ++itemIndex)
+                        items.push_back(readDropRelationKey(reader));
+                }
+            }
             result.mReferences.push_back(std::move(reference));
         }
 
@@ -3163,6 +3202,25 @@ namespace ESM4
             }
             if (mVersion >= 41)
                 writeJsonOwnershipExtras(stream, reference.mOwnershipRank, reference.mOwnershipGlobal);
+            if (mVersion >= 47)
+            {
+                const auto& relations = reference.mDropRelations;
+                stream << ",\"dropper\":";
+                if (relations.mDropper) stream << '"' << escapeJson(relations.mDropper->serialize()) << '"';
+                else stream << "null";
+                stream << ",\"dropped_items\":";
+                if (relations.mItems)
+                {
+                    stream << '[';
+                    for (std::size_t j = 0; j < relations.mItems->size(); ++j)
+                    {
+                        if (j) stream << ',';
+                        stream << '"' << escapeJson((*relations.mItems)[j].serialize()) << '"';
+                    }
+                    stream << ']';
+                }
+                else stream << "null";
+            }
             stream << '}';
         }
         stream << "],\"script_event_sequence\":" << mScriptEventSequence << ",\"script_instances\":[";

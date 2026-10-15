@@ -815,3 +815,149 @@ The next production work remains native dropped-reference placement and scale,
 dropper/list relation storage and persistence, replacement equipment, composition
 with prepared contact/removal/key/scene publication, and real break/drop/restart
 input courses. S4 is incomplete; no break rejection is removed here.
+
+## Owned native drop relations and runtime-state version 47
+
+Native `CellRef` instances now own `ExtraItemDropper` and ordered
+`ExtraDroppedItemList` identities outside authored record fields and inventory
+slots. Absent and present-empty lists remain distinct. Fallible preparation
+rejects null/noncanonical identities, duplicate list entries and wrong reference
+categories before mutation. Prepared relation-only publication swaps owned extras
+without allocating or calling observers; caller lifetime/identity guards remain
+required. This does not impose inverse consistency: the verified native helper
+can overwrite a dropper without removing the reference from an earlier list.
+
+Runtime-state version 47 appends explicit dropper/list presence and ordered keys
+after each reference's existing ownership extras. C++ and Python codecs agree
+on independently emitted bytes, canonical identities and exact presence/order.
+Malformed presence/keys, resource bounds and lossy back-version writes reject.
+Old payloads remain readable; restoring <=46 preserves live relation extras.
+Whole-save admission and direct World apply share early target validation.
+Dropper targets must resolve to actors and list targets to takeable placed
+references, including references created by the same restore. Preparation and
+publication use the existing staged reference bindings.
+
+Two component cases, four World cases and three Python cases cover independent
+wire bytes, all six presence combinations, copy/ownership/category rejection,
+exact capture/restore, old-save behavior, invalid target rejection before clock
+or registry publication, and repeated dynamic-reference restoration. Final full
+normal report is `S4/drop-relations-full-normal-03`. The completed sanitizer
+component run in `S4/drop-relations-full-sanitized-03` is independently rechecked
+by its `components-reinspection.json`; the final sanitizer engine report is
+`S4/drop-relations-engine-sanitized-04`. Both builds pass all **2633 component
+tests/252 suites** and **1506 engine tests/121 suites**, unfiltered with exact inventory/XML agreement and zero
+failures/skips. Before/after source fingerprints agree:
+`a694145a4c38e195aa1c41b8b09019de7d325f9842c7f2aaf94dc11b42544002`,
+atop `184aefd514e93b79f32ab7c76484c4daef26189f`. The normal full Python suite
+passes 301 tests. ASan leak checking is disabled and UBSan halts. Only probe
+contracts, declarative runtime sources and documentation follow the final source
+checks.
+
+`S4/drop-relations-allocation-01` selects the actual ELF entry for
+`CellRef::swapNativeDropRelations` in normal `openmw-tests` SHA256
+`c9ef2df0d838ddf76732d885d12f83feeed0db1b7e6abaafe63076c991ce5773`.
+One selected World test passes with four balanced scopes (invalid category,
+two successful swaps and invalid TES3 source). No main-thread malloc, calloc,
+realloc, aligned_alloc or posix_memalign call occurs in those scopes. Fallible
+preparation and other allocator/thread/path behavior are outside the trace.
+
+The editable [persistence scenario](../../scripts/data/oblivion_compat/oblivion_m15_drop_relation_persistence.json)
+and [seed recipe](../../scripts/data/oblivion_compat/m15_drop_relation_fixture.json)
+are versioned under `scripts/data/oblivion_compat/`. They explicitly seed existing stock references:
+one actor list has two non-sorted items, another has a present-empty list, and
+the two placed items carry droppers. No plugin generation or new content records
+are involved. The original schema-46 seed SHA256 is
+`4f88acb728719dfb245f36fd67ccb9f84f8987bf99ac2ee8f11570eb592d6c17`;
+the promoted/seeded version-47 save is
+`798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a`.
+`S4/drop-relations-cpp-seed-inspection-01` additionally passes actual C++ ESM3
+save reading, T4ST validation, exact canonical agreement with Python and complete
+payload reencoding for all 34,728 references, nine native actor arrays and four
+relation owners. This is structural/semantic codec inspection, not World or
+original-game acceptance.
+
+Final actual rendered/SDL courses `S4/drop-relations-runtime-normal-03` and
+`-sanitized-01` each load the seed, save using F5 after the read-only five-frame
+ready marker, quit, then load/resave in a distinct process epoch. Normal game SHA256
+`0e835c0836dbd31be1900cae605f4b0e98d932eb1bd04cb8ec4e90047a14b970`
+runs PIDs 521789/521896 (save ticks 6/5); instrumented game SHA256
+`9a19a78bfc5bd1f04fab83bdfbb10f3a62fb65a497767bb10074fa4071e0bb84`
+runs PIDs 524125/524373 (both save tick 5). Both courses terminate cleanly and
+use distinct epochs/PIDs, verified save input/output hashes and unchanged pinned
+images. Exact output-save hashes are retained in each verification report.
+Live load/save dumps and binary saves agree exactly on all four relation owners;
+all other references retain absent extras. All nine native actor arrays,
+Player inventory, selected item metadata, RNG, action identities and dynamic
+serial also remain exact. Screenshots were inspected. This verifies seeded
+relation persistence through actual game processes; normal-input break/drop,
+replacement equipment, pickup cleanup and audio acceptance remain open.
+
+`S4/drop-relations-morrowind-01` separately passes actual Morrowind profile
+load/resave with the final normal image, no GPRO/T4VR/T4ST top-level record and
+no OMW4STATE payload. The 102-record save has 19 distinct TES3 save record tags.
+The inspected screenshot shows terrain/sky and HUD; the course loads Balmora
+but does not establish broader town/gameplay or audio acceptance. The existing
+fixture's reviewed missing-resource findings remain explicitly bounded.
+
+Retained attempts: full normal/sanitized -01 were deliberately stopped to remove
+a new shadow warning. Both -02 component runs passed 2633 cases. Normal -02's
+engine run passed 1505 and failed one negative test: direct World apply accepted
+invalid relation targets even though outer admission rejected them. Sanitized
+-02's engine build was stopped before correction. The shared validator now runs
+before either entry point can publish changes. Final normal -03 and sanitized
+engine -04 retain that negative coverage. The final -03 supervising helper disappeared during a
+continuation while its detached CMake child remained live. No source was edited
+or build restarted: the original build finished, the completed 2633-case component
+XML/inventory was reinspected, and a detached -04 helper passed final engine
+checks against the same source. Runtime normal -01 failed before loading because
+the pinned executable lacked its adjacent defaults/config files; -02 fixed that harness
+and passed an intermediate engine image. Final normal -03 repeats the course
+with the corrected final image. Failed evidence is retained, not counted as a
+pass.
+
+The original relation contract now also records 2880 contexts using actual
+reference/WEAP vtables, actual empty reference+0x10 list lookup and actual
+reference/base predicate bodies. A separate 72-case probe executes the original
+69-row signature initializer, WEAP header-load prefix and predicate: raw header
+bit0x400 feeds the predicate, while prior runtime bit0x4000 is retained and bit8
+is cleared by the WEAP prefix. File read, registration and membership boundaries
+remain explicit. The first two header harnesses failed because their uninitialized
+native signature table rejected WEAP; the corrected probe executes the actual
+initializer rather than substituting table values or the decoder.
+
+Native dropped placement/scale, replacement equipment, composition of relation
+publication with prepared contact/removal/key/scene state, pickup cleanup and
+real normal-input break/drop/restart courses remain production work. S4 remains
+incomplete; no previously rejected break branch is admitted here.
+
+The seed can be reproduced from the recipe's pinned local source without
+modifying that source or generating a plugin:
+
+```python
+from pathlib import Path
+import hashlib, json
+from scripts.tes4_runtime_state import load_save, write_save
+recipe = json.loads(Path("scripts/data/oblivion_compat/m15_drop_relation_fixture.json").read_text())
+source = Path(recipe["source"])
+assert hashlib.sha256(source.read_bytes()).hexdigest() == recipe["source_sha256"]
+work = Path("build/oblivion-compat/m15/S4/reproduced-drop-relation-seed")
+work.mkdir()
+promoted, seeded = work / "promoted.omwsave", work / "seed.omwsave"
+write_save(source, promoted, load_save(source))
+state = load_save(promoted)
+references = {ref["key"]: ref for ref in state["references"]}
+for key, extras in recipe["expected"].items():
+    references[key].update(extras)
+write_save(promoted, seeded, state)
+assert hashlib.sha256(seeded.read_bytes()).hexdigest() == recipe["seed_sha256"]
+```
+
+`S4/drop-relations-runtime-staging-01/recipe-reproduction.json` verifies that
+procedure byte-for-byte. The scenario expects this seed at
+`{output}/userdata/saves/M15DropRelations/Quicksave.omwsave` and variables
+`openmw`, `source`, `resources`, `oblivion_data`, `epoch`. Each epoch uses a
+fresh output directory/process; the second receives the first's saved output.
+Pinned executable copies also need their adjacent `defaults.bin` and
+`openmw.cfg`. Keep the read-only ready script, actual SDL F5, clean quit and
+live/binary semantic inspection; a scenario success alone does not assert the
+exact persisted relations.

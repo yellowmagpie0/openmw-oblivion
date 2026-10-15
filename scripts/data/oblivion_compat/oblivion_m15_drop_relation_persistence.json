@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{output}/test-data\"\ncontent=Oblivion.esm\ncontent=m15-ready.omwscripts\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[General]\nscreenshot format = png\n"
+    },
+    {
+      "path": "test-data/m15-ready.omwscripts",
+      "content": "PLAYER: scripts/m15-ready.lua\n"
+    },
+    {
+      "path": "test-data/scripts/m15-ready.lua",
+      "content": "local frames=0\nreturn {{engineHandlers={{onFrame=function() frames=frames+1; if frames==5 then print('M15 drop relation frame-ready') end end}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--game-profile=oblivion",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15DropRelations/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "name": "m15-drop-relation-persistence",
+  "actions": [
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "\"event\":\"load-complete\"",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 drop relation frame-ready",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "screenshot",
+      "name": "drop-relations.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "timeout_seconds": 600,
+  "terminate_after_actions": true,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Writing saved game 'Quicksave'",
+    "M15 drop relation frame-ready"
+  ],
+  "forbidden_log": [
+    "Failed to load saved game",
+    "Failed to save game",
+    "Error in frame",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "Failed to load saved game"
+  ],
+  "sdl_offscreen_input": true,
+  "sdl_input_timeout_seconds": 300,
+  "environment": {
+    "OPENMW_DISABLE_CRASH_CATCHER": "1",
+    "ALSOFT_DRIVERS": "null",
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "drop-relations-persistence",
+    "OPENMW_M15_EPOCH": "{epoch}"
+  }
+}

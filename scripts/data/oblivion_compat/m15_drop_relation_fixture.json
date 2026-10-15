@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "source": "build/oblivion-compat/m15/S3/completion-audit-legacy-normal-03/course/userdata/saves/M15Legacy/Quicksave.omwsave",
+  "source_sha256": "4f88acb728719dfb245f36fd67ccb9f84f8987bf99ac2ee8f11570eb592d6c17",
+  "seed_sha256": "798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a",
+  "actor": "content:oblivion.esm:01fc43",
+  "empty_list_actor": "content:oblivion.esm:014a30",
+  "ordered_items": [
+    "content:oblivion.esm:012d18",
+    "content:oblivion.esm:000f1f"
+  ],
+  "expected": {
+    "content:oblivion.esm:01fc43": {
+      "dropper": null,
+      "dropped_items": [
+        "content:oblivion.esm:012d18",
+        "content:oblivion.esm:000f1f"
+      ]
+    },
+    "content:oblivion.esm:014a30": {
+      "dropper": null,
+      "dropped_items": []
+    },
+    "content:oblivion.esm:012d18": {
+      "dropper": "content:oblivion.esm:01fc43",
+      "dropped_items": null
+    },
+    "content:oblivion.esm:000f1f": {
+      "dropper": "content:oblivion.esm:01fc43",
+      "dropped_items": null
+    }
+  },
+  "scope": "Explicit relation-state persistence fixture on existing content references. Seeded metadata is not input-driven break/drop acceptance."
+}
