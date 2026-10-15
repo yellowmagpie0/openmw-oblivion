@@ -36,6 +36,22 @@ and the preserved evidence before inventing an unrelated workaround.
 
 ## Legacy native action-service migration
 
+Current compatibility evidence is summarized in
+`docs/oblivion/M15-S3-ACCEPTANCE.md`. The historical S1-only recipe below no
+longer supplies the winning native Player form required for actual actor
+construction. Adding Oblivion.esm to that synthetic fixture also produces
+ambiguous native GMSTs. Preserve those inputs as historical evidence; do not
+describe that recipe as a current passing runtime check. For a real-content
+legacy input use the untouched schema-21 save at
+`S4/native-process-construction-legacy-offscreen-01/first/input-pristine.omwsave`.
+The final normal/instrumented recipes and independent comparisons are retained
+in `S3/completion-audit-legacy-{normal,sanitized}-03` and
+`S3/completion-audit-01/verify_legacy.py`. They wait for five actual Player frames,
+save schema46 and verify the original Player/reference inventories plus selected
+contracts. All supported schema versions, including7, additionally have automated
+admission and migration coverage. Do not confuse content validation failure with
+unsupported wire format.
+
 The v8 action-service change has a reusable scenario:
 `scripts/data/oblivion_compat/oblivion_m15_legacy_action_service.json`.
 It expects an existing S1 M15Observation fixture save copied to

@@ -6,6 +6,32 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 delivered — requirement audit, 2026-10-15
+
+S3 services, actor authority and persistence are delivered at implementation
+checkpoint `2a97dce87a42a23e74821ab7c3aa6ce067b4c9c5`. The
+[acceptance record](M15-S3-ACCEPTANCE.md) maps all five deliverables and explicit
+test/gate requirements to source and evidence. Earlier incomplete entries below
+are historical checkpoints; full M15 gameplay remains in progress.
+
+The completion audit revalidates the exact full normal/instrumented inventories:
+1,477 engine cases / 121 suites and 2,616 component cases / 252 suites. Components
+are unchanged since their cited passing checkpoint. All 298 Python cases pass at
+the final implementation. Canonical runtime reload, late rollback, postcommit
+protection, actual distinct-process restart and Morrowind save isolation retain
+their separate source fingerprints and scopes in the acceptance record.
+
+Additional final-implementation normal/ASan/UBSan runtime courses
+`S3/completion-audit-legacy-{normal,sanitized}-03` load untouched historical
+schema21 saves, render, F5/save schema46 and SDL quit. PIDs 425189/425188 and
+input/output hashes are audited. Player inventory, all2,021 original nonempty
+reference inventories (only absent ownership-field defaults normalized), and
+selected action/base/death/engagement state survive. Both captures were reviewed.
+The obsolete synthetic S1 recipes fail required native content checks; their
+failed attempts remain preserved and the build skill now explains the supported
+real-content recipe. `S3/completion-audit-01` contains the exact-case/evidence
+linkage and independent migration audit scripts/results. All handles are terminal.
+
 ## S3 install native saves through retained runtime transaction — 2026-10-15
 
 `StateManager::loadGame` now uses `NativeLoadTransaction` for Oblivion. It first
@@ -5547,7 +5573,7 @@ logs, saves, screenshots, and reports are deliberately not committed.
 | S0 baseline and inventory | passed | Baseline above; `S0/baseline-01/`, `static-calls-01/`, `inventory-02/`, `inventory-03/`; inventory closure below | Carry classified baseline defects and campaign prerequisites into their owning stages |
 | S1 evidence harness | passed | `3477e6a4b0` through `8ac15f0ca3`, simulation-tick closure below; contract/observation/replay/restart evidence | Extend causal telemetry and negative controls with each native feature |
 | S2 native data/rules | passed | Typed CSTY/CREA/FACT, 3,636 explained actor policies, hash/count lock and complete pure-rule review; S2 closure below | Carry reviewed rules into S3-S14 world integration and normal-input/restart acceptance; magic remains M16-owned |
-| S3 services/persistence | in-progress | Action ledger, schema evolution, live actor publication, prepared character/inventory/registry/native-view/script/AI/overlay restore, pending snapshot isolation, owned-clock restoration, early native semantic admission, detached shared-record decoding, incoming class/global reconciliation, detached shared-world decoding, isolated global/native/shared-local Lua admission, dynamic native reference reconstruction/indexing, prepared cell tracking/registry relocation, retained admission service plans, prepared shared definition publication, retained detached actor inventories, generated shared actor-item identities, legacy generated inventory recovery, initialized dry-cell save water, detached auxiliary shared-record admission and valid quickload teardown, schema44 owned bounty snapshots, schema43 fractional crime/custody contracts and public jail query, populated migration and complete native idle restart comparisons below | Complete semantic/shared-record restore staging and cache reconciliation, remaining populated migrations and active-action continuation |
+| S3 services/persistence | delivered | Native service authority, profile/lifecycle, versioned contracts, supported migrations, strict whole-save admission, staged World/manager transaction, public queries and actual save/restart/profile evidence; see [acceptance audit](M15-S3-ACCEPTANCE.md) | Later-stage gameplay acceptance remains separate |
 | S4 melee/block | in-progress | Native ordinary Player/NPC contacts, block/wear, cancellation and stock swish/layered impact recordings and persisted timed knockback below | Remaining actors/power/mastery/reactions/control-view matrices and complete restart gate |
 | S5 projectiles | in-progress | Owned saved bow input, held-arrow geometry, shared swept physics and prepared resource/break publication, loose-item save extras, cell staging, native ownership selection, loose-body lifecycle, reversible rendering, final equipped-weapon removal and compound native admission; checkpoints255–284 below | Normal input controller, compound projectile publication, native flight/impact/recovery, NPC ordinary-bow drops and in-flight restart |
 | S6 death/essential/loot | pending | No implementation/evidence | Physical corpse, essential recovery, loot, restart |

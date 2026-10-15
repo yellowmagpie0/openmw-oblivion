@@ -1,9 +1,12 @@
 # M15S3 authority and restore map
 
-This maps the current implementation, not full S3 acceptance. The requirements
-remain [S3 and section3 of the implementation plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md).
+S3 is delivered; see the current [requirement audit and acceptance evidence](M15-S3-ACCEPTANCE.md).
+This map traces its implementation. The requirements remain
+[S3 and section3 of the implementation plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md).
 Checkpoints, test fingerprints and runtime evidence are in
 [the milestone ledger](M15-COMBAT-STEALTH-CRIME.md).
+The append-only checkpoint notes below preserve findings that were open at their
+respective revisions; the acceptance record states their current disposition.
 
 | Path | Live authority and mutations | Reads and persistence |
 | --- | --- | --- |
