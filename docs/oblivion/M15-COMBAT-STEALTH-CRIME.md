@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 current delivery audit — 2026-10-15
+
+The [S4 requirement map](M15-S4-DELIVERY-AUDIT.md) traces all eight deliverables,
+the relevant section8 rows and the explicit input/restart gate against current
+source. S4 remains incomplete: ordinary contact rejects power/creature routes,
+facing equipped weapon block, breakage and other required branches. Reaction
+and mastery integration plus the full control/view/restart matrix remain open.
+
+At `4996a2eb1a`, current-build checks pass49 selected melee-related engine cases
+normally and under ASan/UBSan. A two-process normal-input first-person unarmed
+miss/idle-restart course verifies one native fatigue debit, actual stock PCM
+swish, preserved native values/inventory/RNG and no replay. The linked audit
+records exact fingerprints, evidence paths, limitations and the retained failed
+invocation. This checkpoint changes documentation/evidence, not gameplay.
+
 ## S3 delivered — requirement audit, 2026-10-15
 
 S3 services, actor authority and persistence are delivered at implementation
