@@ -89,7 +89,7 @@ namespace MWMechanics
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
         float mPreArmorDamage = 0;
-        std::vector<OblivionPhysicalConditionChange> mArmorConditionChanges{};
+        std::vector<OblivionPhysicalConditionChange> mVictimConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
@@ -102,9 +102,11 @@ namespace MWMechanics
     {
         float mHealth;
         std::optional<float> mConditionAfterWear;
-        std::vector<OblivionPhysicalConditionChange> mArmorConditionChanges{};
+        std::vector<OblivionPhysicalConditionChange> mVictimConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
         float mPreArmorDamage = 0;
+        float mBlockFatigueDebit = 0;
+        float mBlockAbsorbedFraction = 0;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

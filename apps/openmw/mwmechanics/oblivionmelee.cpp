@@ -319,9 +319,11 @@ namespace MWMechanics
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 preArmorDamage = damage->mPreArmorDamage;
-                deltas.mConditionChanges = damage->mArmorConditionChanges;
+                deltas.mConditionChanges = damage->mVictimConditionChanges;
                 deltas.mRandomTransition = damage->mRandomTransition;
-                result.mArmorConditionWrites = static_cast<unsigned>(damage->mArmorConditionChanges.size());
+                result.mArmorConditionWrites = static_cast<unsigned>(std::count_if(
+                    damage->mVictimConditionChanges.begin(), damage->mVictimConditionChanges.end(),
+                    [](const auto& change) { return change.mItem.getType() == ESM::REC_ARMO; }));
                 result.mRandomDraws = damage->mRandomTransition ? damage->mRandomTransition->mDraws : 0;
             }
             else
@@ -347,8 +349,12 @@ namespace MWMechanics
                 if (!damage)
                     return std::nullopt;
                 result.mDamage = {damage->mHealth, 0};
+                result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
+                result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 result.mWeaponConditionAfterWear = damage->mConditionAfterWear;
-                result.mArmorConditionWrites = static_cast<unsigned>(damage->mArmorConditionChanges.size());
+                result.mArmorConditionWrites = static_cast<unsigned>(std::count_if(
+                    damage->mVictimConditionChanges.begin(), damage->mVictimConditionChanges.end(),
+                    [](const auto& change) { return change.mItem.getType() == ESM::REC_ARMO; }));
                 result.mRandomDraws = damage->mRandomTransition ? damage->mRandomTransition->mDraws : 0;
                 if (damage->mConditionAfterWear)
                 {
@@ -356,7 +362,7 @@ namespace MWMechanics
                     deltas.mConditionChanges.push_back(std::move(condition));
                 }
                 deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
-                    damage->mArmorConditionChanges.begin(), damage->mArmorConditionChanges.end());
+                    damage->mVictimConditionChanges.begin(), damage->mVictimConditionChanges.end());
                 deltas.mRandomTransition = damage->mRandomTransition;
                 preArmorDamage = damage->mPreArmorDamage;
             }
@@ -512,7 +518,118 @@ namespace MWMechanics
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
-            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings);
+            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings,
+            std::span<const OblivionPhysicalConditionChange> prior = {}, std::optional<float> adjustedWear = {});
+
+        struct PreparedBlock
+        {
+            float mRemaining;
+            float mFraction = 0;
+            float mDebit = 0;
+            bool mAccepted = false;
+            bool mUnarmed = true;
+            std::vector<OblivionPhysicalConditionChange> mConditions{};
+        };
+
+        std::optional<PreparedBlock> prepareOrdinaryBlock(MWBase::World& world,
+            OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+            float remaining, bool weaponAttack, std::span<const ESM4::GameSetting* const> settings)
+        {
+            PreparedBlock result{remaining};
+            if (!oblivionBlockingPosture(world, victim) || oblivionParalyzed(world, victim))
+                return result;
+            const auto& from = attacker.getRefData().getPosition();
+            const auto& to = victim.getRefData().getPosition();
+            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
+            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
+            if (!ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy),
+                    ESM4::buildCombatHitConeAngle(settings)).mInside)
+                return result;
+            auto& inventory = victim.getClass().getInventoryStore(victim);
+            MWWorld::Ptr item;
+            const ESM4::Armor* shield = nullptr;
+            const ESM4::Weapon* weapon = nullptr;
+            if (auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                left != inventory.end() && left->getType() == ESM::REC_ARMO)
+            {
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), left->getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                shield = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                if (!shield || !(shield->mArmorFlags & ESM4::Armor::TES4_Shield))
+                    throw std::invalid_argument("native blocking shield has no winning shield definition");
+                item = *left;
+            }
+            else if (auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                right != inventory.end() && right->getType() == ESM::REC_WEAP)
+            {
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), right->getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+                if (!weapon || weapon->mData.type > 3)
+                    return std::nullopt;
+                item = *right;
+            }
+            const auto equipment = shield ? ESM4::BlockEquipment::Shield
+                : weapon ? ESM4::BlockEquipment::Weapon : ESM4::BlockEquipment::Unarmed;
+            const auto disposition = ESM4::blockContactDisposition(
+                {true, false, false, true, equipment, weaponAttack, false});
+            if (disposition == ESM4::BlockContactDisposition::ReactionOnly)
+                return std::nullopt; // Zero-absorption unarmed mastery/recoil remains a separate branch.
+            const bool player = victim == world.getPlayerPtr();
+            const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
+            const auto integer = [&](std::uint8_t av) { return player ? service.getPlayerIntegerValue(av)
+                : service.getNonPlayerIntegerValue(victim, av); };
+            const auto base = [&](std::uint8_t av) { return player ? service.getPlayerBaseValue(av)
+                : service.getNonPlayerBaseValue(key, av, world.getStore()); };
+            // Expert/Master defensive procs need their complete recoil/drop
+            // transaction. Never publish an ordinary hit while omitting them.
+            if (ESM4::combatMastery(base(item.isEmpty() ? 17 : 15),
+                    ESM4::buildCombatMasterySettings(settings)) >= ESM4::CombatMastery::Expert)
+                return std::nullopt;
+            double itemCondition = 0;
+            if (!item.isEmpty())
+            {
+                const auto& ref = item.getCellRef();
+                itemCondition = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
+                    : ref.getCharge() < 0 ? double(shield ? shield->mData.health : weapon->mData.health)
+                    : double(ref.getCharge()) + ref.getChargeIntRemainder();
+                if (!std::isfinite(itemCondition) || itemCondition < 0)
+                    throw std::invalid_argument("invalid native blocking item condition");
+                if (itemCondition == 0)
+                    return std::nullopt; // Broken equipped state needs the break/unequip transition.
+            }
+            const float fatigue = player ? service.getPlayerValue(10) : service.getNonPlayerValue(victim, 10);
+            result.mAccepted = true;
+            result.mUnarmed = item.isEmpty();
+            result.mFraction = ESM4::blockFraction({integer(15), integer(7),
+                ESM4::combatFatigueRatio(fatigue, base(10)), equipment},
+                ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
+            const auto costs = ESM4::blockContactCosts(base(15), integer(15), remaining,
+                result.mFraction, !item.isEmpty(), ESM4::buildBlockCostSettings(settings),
+                ESM4::buildCombatMasterySettings(settings));
+            result.mDebit = costs.mFatigueDebit;
+            result.mRemaining = static_cast<float>(double(remaining) * (1.0 - result.mFraction));
+            if (costs.mBlockingItemWear > 0 && !(player && world.getGodModeState()))
+            {
+                const double current = itemCondition;
+                std::optional<float> condition;
+                if (shield)
+                {
+                    const bool heavy = shield->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor;
+                    condition = ESM4::nativeArmorConditionAfterWear(current, costs.mBlockingItemWear,
+                        base(heavy ? 18 : 27), heavy ? ESM4::ArmorWeight::Heavy : ESM4::ArmorWeight::Light,
+                        ESM4::buildArmorWearMasterySettings(settings), ESM4::buildCombatMasterySettings(settings));
+                }
+                else
+                    condition = ESM4::nativeConditionAfterWear(current, costs.mBlockingItemWear);
+                if (condition && *condition == 0)
+                    return std::nullopt; // Prepared break/unequip/drop consequences are still required.
+                if (condition)
+                    result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, item, *condition));
+            }
+            return result;
+        }
+
     }
 
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
@@ -548,59 +665,29 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const auto armor = ESM4::mitigateArmor(incoming.mHealth, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
-        float remaining = armor.mHealthDamage;
-        float blockFraction = 0, blockDebit = 0;
-        if (oblivionBlockingPosture(world, victim) && !oblivionParalyzed(world, victim))
-        {
-            const auto& from = attacker.getRefData().getPosition();
-            const auto& to = victim.getRefData().getPosition();
-            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
-            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
-            const auto cone = ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy),
-                ESM4::buildCombatHitConeAngle(settings));
-            if (cone.mInside)
-            {
-                // Native process +F8/+EC selects actual shield/weapon entries.
-                // This branch supports an unarmed blocker: no blocking-item
-                // wear exists. Equipped blocking items require the wear branch.
-                auto& inventory = victim.getClass().getInventoryStore(victim);
-                const auto shield = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-                const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-                if ((shield != inventory.end() && shield->getType() == ESM::REC_ARMO)
-                    || (weapon != inventory.end() && weapon->getType() == ESM::REC_WEAP))
-                    return std::nullopt;
-                const auto key = victim == player ? ESM::FormKey::dynamic("player", 1)
-                    : victim.getCellRef().getFormKey();
-                const auto base = [&](std::uint8_t av) { return victim == player ? service->getPlayerBaseValue(av)
-                    : service->getNonPlayerBaseValue(key, av, world.getStore()); };
-                const float fatigue = victim == player ? service->getPlayerValue(10)
-                    : service->getNonPlayerValue(victim, 10);
-                blockFraction = ESM4::blockFraction({integer(victim, 15), integer(victim, 7),
-                    ESM4::combatFatigueRatio(fatigue, base(10)), ESM4::BlockEquipment::Unarmed},
-                    ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
-                blockDebit = ESM4::blockContactCosts(base(15), integer(victim, 15), remaining,
-                    blockFraction, false, ESM4::buildBlockCostSettings(settings),
-                    ESM4::buildCombatMasterySettings(settings)).mFatigueDebit;
-                remaining = static_cast<float>(double(remaining) * (1.0 - blockFraction));
-            }
-        }
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, false, settings);
+        if (!block)
+            return std::nullopt;
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
-        const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
+        const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, block->mRemaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        PreparedArmorWear wear;
+        PreparedArmorWear wear{block->mConditions, {}};
         // Original5FF77A computes armor wear only when incoming hand Fatigue
         // is nonpositive. Knocked victims suppress that Fatigue writer while
         // retaining Health damage; they still enter the ordinary armor path.
         if (incoming.mFatigue <= 0)
         {
             auto prepared = prepareOrdinaryArmorWear(world, *service, victim, incoming.mHealth,
-                armor.mAbsorbedFraction, settings);
+                armor.mAbsorbedFraction, settings, block->mConditions,
+                block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
+                    ESM4::armorWear(incoming.mHealth, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
+                    block->mFraction, block->mUnarmed)} : std::nullopt);
             if (!prepared)
                 return std::nullopt;
             wear = std::move(*prepared);
         }
-        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction,
+        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
             incoming.mHealth, std::move(wear.mConditions), wear.mRandom};
     }
 
@@ -609,12 +696,14 @@ namespace MWMechanics
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
-            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings)
+            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings,
+            std::span<const OblivionPhysicalConditionChange> prior, std::optional<float> adjustedWear)
         {
-            PreparedArmorWear result;
+            PreparedArmorWear result{{prior.begin(), prior.end()}, {}};
             if (absorbedFraction <= 0)
                 return result;
-            const float wear = ESM4::armorWear(incoming, absorbedFraction, ESM4::buildDurabilitySettings(settings));
+            const float wear = adjustedWear.value_or(
+                ESM4::armorWear(incoming, absorbedFraction, ESM4::buildDurabilitySettings(settings)));
             if (wear <= 0)
                 return result;
             const bool player = victim == world.getPlayerPtr();
@@ -665,7 +754,10 @@ namespace MWMechanics
                 return result; // Original65FF10 suppresses condition after selection has consumed its draws.
             const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
             const auto& ref = candidate.mItem.getCellRef();
-            const double current = ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
+            const auto priorCondition = std::find_if(result.mConditions.begin(), result.mConditions.end(),
+                [&](const auto& change) { return change.mItem == candidate.mItem; });
+            const double current = priorCondition != result.mConditions.end() ? double(priorCondition->mCondition)
+                : ref.getNativeItemCondition() ? double(*ref.getNativeItemCondition())
                 : ref.getCharge() < 0 ? double(candidate.mBase->mData.health)
                 : double(ref.getCharge()) + ref.getChargeIntRemainder();
             const bool heavy = candidate.mBase->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor;
@@ -678,7 +770,10 @@ namespace MWMechanics
                 throw std::logic_error("admitted native armor wear did not prepare a condition");
             if (*condition == 0)
                 return std::nullopt; // Break unequip/drop/reactions require their own atomic policy.
-            result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, candidate.mItem, *condition));
+            if (priorCondition != result.mConditions.end())
+                priorCondition->mCondition = *condition;
+            else
+                result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, candidate.mItem, *condition));
             return result;
         }
     }
@@ -731,23 +826,20 @@ namespace MWMechanics
         }
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
-        if (oblivionBlockingPosture(world, victim) && !oblivionParalyzed(world, victim))
-        {
-            const auto& from = attacker.getRefData().getPosition();
-            const auto& to = victim.getRefData().getPosition();
-            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
-            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
-            if (ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy), ESM4::buildCombatHitConeAngle(settings)).mInside)
-                return std::nullopt; // Weapon hits also require block reactions when absorption is zero.
-        }
+        const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, true, settings);
+        if (!block)
+            return std::nullopt;
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
-        const auto damage = ESM4::physicalContactDamage({incoming, 0}, armor.mHealthDamage,
+        const auto damage = ESM4::physicalContactDamage({incoming, 0}, block->mRemaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        auto wear = prepareOrdinaryArmorWear(world, *service, victim, incoming, armor.mAbsorbedFraction, settings);
+        auto wear = prepareOrdinaryArmorWear(world, *service, victim, incoming, armor.mAbsorbedFraction, settings,
+            block->mConditions, block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
+                ESM4::armorWear(incoming, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
+                block->mFraction, block->mUnarmed)} : std::nullopt);
         if (!wear)
             return std::nullopt;
-        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom, incoming};
+        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom, incoming, block->mDebit, block->mFraction};
     }
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,

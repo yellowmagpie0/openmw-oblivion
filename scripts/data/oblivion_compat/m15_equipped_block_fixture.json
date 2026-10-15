@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "build/oblivion-compat/m15/S4/native-stationary-matrix-seed0-cap60-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "d6360816f0f6b7ceaa2de48ec936619cbd97a023c4b243e30ea980369dd86732",
+  "actor": "content:oblivion.esm:01fc43",
+  "player_weapon": {
+    "base": "content:oblivion.esm:090615",
+    "count": 1,
+    "condition": 55.875,
+    "charge": -1.0,
+    "equipped_slots": 65536,
+    "hotkey": -1,
+    "owner": "null",
+    "remaining_usage_time": -1.0
+  },
+  "player_armor_unequipped": true,
+  "player_health_damage": 0,
+  "opponent_weapon_condition": -1,
+  "activation_local": 0,
+  "expected": "equipped-block-runtime-oracle-02/report.json",
+  "purpose": "Declared inventory, reset activation-local/Health and full opponent weapon; ordinary b block + Space activation starts exactly one production opponent attack. No injected hit/damage/outcome.",
+  "settling": "Read-only Player onFrame observer waits for a real debit then actual Fatigue140; no resource/clock writes.",
+  "all_prior_player_equipment_unequipped": true
+}

@@ -6,6 +6,24 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 equipped block mitigation and atomic sequential wear — 2026-10-15
+
+Ordinary weapon/unarmed contacts now prepare native shield/weapon blocks through
+one shared adapter. Shield priority, posture/angle/Paralysis, mitigation, separate
+Novice Fatigue cost, blocking-item wear and the original stored body-wear
+adjustment use reviewed native rules. If blocking and armor selection wear the
+same shield, both calculations precede one guarded condition publication with
+resources/RNG/action ownership. Expert/Master procs and broken-item transitions
+remain explicitly gated; they are not silently omitted from an admitted contact.
+
+Final normal and ASan/UBSan full checks each pass1479 engine cases/121 suites and
+2618 component cases/252 suites, with exact inventories and no failures/skips.
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#equipped-blocking-and-sequential-victim-wear--implementation-checkpoint)
+records independent original arithmetic/caller evidence, the 32-combination World
+matrix, source fingerprints, editable Player-block/opponent-activation courses,
+and the corrected actual-Fatigue recovery gate. Numeric/held-pose/restart evidence
+does not close block-hit/recoil audio/animation, proc/drop effects or full S4.
+
 ## S4 admit unarmed contacts against knocked actors — 2026-10-15
 
 Ordinary unarmed contact now prepares native armor wear when incoming hand

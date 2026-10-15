@@ -435,6 +435,11 @@ namespace ESM4
         float damage, float absorbedFraction, bool hasBlockingItem,
         const BlockCostSettings& settings, const CombatMasterySettings& mastery);
     void validateBlockCostSettings(const BlockCostSettings& settings);
+    // Native accepted block adjusts the previously stored body-armor wear.
+    // Preserve the intermediate remainder store; an unarmed block leaves it
+    // unchanged, while complete equipped absorption suppresses this wear.
+    float blockedArmorWear(float wear, float absorbedFraction, bool unarmedBlock);
+
 
     struct WeaponDamageInput
     {

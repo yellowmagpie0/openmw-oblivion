@@ -4826,3 +4826,26 @@ TEST(ESM4PhysicalCombat, NativeDeathDecisionDistinguishesEssentialRefreshAndNorm
             }
     EXPECT_EQ(ESM4::nativeDeathDecision({0xffffffffu, true, true}), Decision::EnterEssentialUnconscious);
 }
+
+TEST(ESM4PhysicalCombat, BlockedBodyArmorWearMatchesOriginalFloatStoresAndCompleteAbsorption)
+{
+    struct Row { float wear, fraction; bool unarmed; std::uint32_t expected; };
+    const Row rows[] = {
+#include "blockarmorwear_expected.inc"
+    };
+    // Original5FFB96..5FFBE3, executable a8f313845c1545e9...;
+    // S4/equipped-block-oracle-03: both x87 words, subnormal and adjacent stores.
+    for (const auto& row : rows)
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::blockedArmorWear(row.wear, row.fraction, row.unarmed)), row.expected);
+}
+
+TEST(ESM4PhysicalCombat, BlockedBodyArmorWearRejectsInvalidDomainsBeforeReturningEitherRoute)
+{
+    for (bool unarmed : {false, true})
+    {
+        for (float wear : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            EXPECT_THROW(ESM4::blockedArmorWear(wear, .5f, unarmed), std::invalid_argument);
+        for (float fraction : {-1.f, 1.01f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            EXPECT_THROW(ESM4::blockedArmorWear(1, fraction, unarmed), std::invalid_argument);
+    }
+}

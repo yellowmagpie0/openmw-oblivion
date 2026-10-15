@@ -1,6 +1,6 @@
 # M15S4 delivery audit
 
-Status: **incomplete**, inspected at `4996a2eb1a3a666751358f7435a459907e6e6345`
+Status: **incomplete**. The initial audit inspected `4996a2eb1a3a666751358f7435a459907e6e6345`
 on 2026-10-15. This is a working requirement map, not acceptance. The controlling
 scope is [S4 in the implementation plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION-PLAN.md#s4---deliver-a-normal-input-melee-slice),
 including its tests and gate. Historical pure-rule, isolated body and service
@@ -12,7 +12,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary Player/NPC contact reaches `commitOblivionOrdinaryMeleeContact`. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary weapon/unarmed damage. `isOrdinaryMeleeContactPending` admits only Left/Right kinds. | Power selection can create animation/action ownership, but the ordinary contact predicate rejects power kinds. Directional/mastery selection is explicitly unfinished in the controller. Creature attacker and victim domains are rejected by ordinary adapters. Implement the native routes and verify geometry without a TES3 chance roll. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | `resolveOblivionOrdinaryWeaponContact` rejects a facing blocking victim. Zero-after-wear weapon/armor cases are rejected before contact. Complete equipped block, breakage and reaction publication, including actual renderer/physics recovery, once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, native swish and unarmored NPC hit sound requests are wired in the controller. | Contact sound selection excludes armored/blocking victims and creature families. Complete native reaction animation and related sound/HUD feedback; verify rendered output and captured audio. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
@@ -173,3 +173,129 @@ Normal binary SHA256:
 The per-course verification files retain input/output hashes, process epochs,
 manifest hashes and the tested code fingerprint. All current run handles are
 terminal. No physical knockdown/recovery or equipped block gate is closed.
+
+## Equipped blocking and sequential victim wear — implementation checkpoint
+
+Ordinary Player/NPC unarmed and weapon contacts now share native block preparation.
+The active shield takes priority over the carried weapon; facing, raw posture6,
+integer Paralysis, integer Block/Luck and current/base Fatigue select mitigation.
+Novice Block pays its separate Fatigue writer before Health/contact Fatigue;
+Novice/Apprentice gear receives the absorbed damage as wear. Shield wear also
+uses the native armor-weight/base-skill mastery multiplier. The generic victim
+condition vector is named `mVictimConditionChanges`, since it can include a
+blocking weapon as well as armor. Armor-write telemetry counts actual ARMO items.
+
+The stored body-armor wear follows original5FFB96 float stores on an accepted
+equipped block: store its remaining portion, subtract that stored value, clamp
+negative results, and suppress this wear at complete absorption. An unarmed
+block preserves the original wear. This is not replaced by one algebraically
+simplified multiplication. If the selected body-armor item is the same shield
+already worn by blocking, prepare its second wear from the first stored
+condition, then publish one final condition with the original instance guards.
+Resources, both participants' conditions, RNG and action ownership still commit
+through the existing atomic transaction. No schema change is needed.
+
+Admission stays explicit for unfinished consequences. Expert/Master defensive
+proc eligibility (Block with equipment, Hand to Hand without it), zero-condition
+blocking items, break-after-wear, and the zero-absorption unarmed weapon-block
+recoil branch reject without spending or changing live state. The new matrix
+checks six supported Block boundaries0/24/25/49/50/74, rejected75/100, shield
+priority over an equipped weapon, punches/weapon strikes, ordered double shield
+wear, original-condition guards, stale-plan atomicity, zero-condition rejection,
+and binary service restore without replay. This does not implement the gated
+mastery or break transitions.
+
+Native executable identity remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/equipped-block-oracle-03` independently executes42 precision cases plus120
+body-wear adjustment cases, both x87 words. It concatenates original5474A0,
+547590,5F5BAB,5F3870/484850,5FF8F3 and5FFB96 with declared value/condition-reader/
+writer boundaries; base mastery admission is supplied from the separately
+reviewed rank rule. It is not a full contact or original-game probe. The corpus
+and adjustment SHA256s are respectively
+`40b2e355a48f180e9f1d2568e0490786716c095433ad42e31c6461e1ebf166d9`
+and `ad46baf1f2cf147fc33ce40eaf528f40a78249a1738c99f24b77a4a51dceb326`.
+The component golden inventory checks all60 distinct adjustment outputs, including
+subnormal/large-adjacent float stores and complete absorption.
+
+`S4/equipped-block-runtime-oracle-02` adds two exact original observations for
+native NPC Rusty Iron Shortsword damage1.009374976158142 against Player Block5,
+Luck50 and full Fatigue, with a blocking weapon at55.875/56. Expected block
+fraction is0.02499999850988388, separate Fatigue cost20.024999618530273,
+Health damage0.9841405749320984 and blocking condition55.84976577758789.
+Corpus SHA256:
+`048cfed36293fc5bcd5365bdb5fd74ccf36cc336494de1235fd7aef86bce8a6b`.
+The -01 runtime oracle setup omitted `__file__` and failed before emulation;
+its source is retained. The corrected -02 supplies it explicitly.
+
+One trace interpretation is corrected: actor virtual+39C is **not** an animation
+request. Character/Creature dispatch to890B90 (`ret12`); Player dispatches to668C30,
+which uses the SKIL definition/use path. Thus the Block15 argument at5F5C05 is not
+an animation-group ID. The native table beginningB102E0 puts BlockHit at28,
+Recoil30 and Stagger31. These are dispatch/table observations; they do not prove
+a runtime reaction animation. Reaction wiring remains open.
+
+Final `S4/equipped-block-full-normal-02` and `-full-sanitized-02` pass all1479
+engine cases/121 suites and2618 component cases/252 suites each, with exact
+unfiltered inventories, zero failures and zero skips. Tested dirty-source
+fingerprint:
+`e1f9759a5b33063cbabef5061fbadbf1267249eea7c3ea3a058032657119c309`.
+No C++ changes follow it; only this documentation and editable runtime inputs.
+ASan leak checks are disabled and UBSan halts. Existing compiler warnings are
+retained. The earlier normal -01 checks pass before the final admission guards;
+the earlier sanitizer -01 build was explicitly cancelled and its process tree
+confirmed quiescent before adding those guards. Its cancellation report remains
+in place. Python implementation is unchanged.
+
+Editable inputs are `oblivion_m15_equipped_block.json`,
+`oblivion_m15_equipped_block_continuation.json` and `m15_equipped_block_fixture.json`
+under `scripts/data/oblivion_compat`. Both manifests pass the harness validator.
+The recipe declares a private copy of the existing stationary fixture's actual
+schema28 output, unequips prior Player equipment, adds the parry weapon, resets
+Player Health Damage and the opponent activation local, and restores the
+opponent's full weapon. Supply the existing `stationary_fixture` directory plus
+`openmw`, `resources` and `oblivion_data`. Original source files stay unchanged.
+Normal b input holds native OneHandBlockIdle, ordinary Space activation invokes
+the production stationary policy, and one native animation contact applies the
+frozen damage/cost/condition outcome. Saving while held stores posture6; key
+release and the fresh-process continuation return it to-1 without replay.
+
+The fixed15-second settling attempt in `equipped-block-runtime-sanitized-02`
+passes scenario actions but fails independent value comparison: Fatigue is still
+regenerating under instrumentation. It is not accepted settled-state evidence.
+Corrected -03 manifests add a read-only Player onFrame observer that requires a
+real debit followed by actual Fatigue140 before saving. It changes no resource,
+clock, input or outcome. Normal -02 passes, but the recovery-gated -03 courses
+are the canonical recipe. The pre-admission sanitizer runtime -01 completed
+only its first phase and establishes no restart result.
+
+Audio is explicitly disabled in these block courses. A rendered held blocking
+pose, numeric mitigation and condition persistence do not close block-hit/recoil
+animation, block audio, the gated mastery/breakage consequences, shield gameplay,
+third person/gamepad/FPS crosses, or complete windup/block/recovery restart
+comparison. S4 remains incomplete.
+
+Canonical recovery-gated runtime verification now passes in
+`S4/equipped-block-runtime-normal-03` (PIDs445081/445333) and
+`S4/equipped-block-runtime-sanitized-03` (PIDs445118/445542). Both prove one
+production opponent contact with the exact oracle Health and both weapon
+conditions, actual recovery to native Fatigue channels `[140,0,0,0]`, unchanged
+remaining native value arrays and combat RNG, counter2 -> 3 with no pending
+ownership, and held posture6 -> released posture-1 after real process restart.
+The read-only recovery marker occurs after the hit in both logs. Script local
+fighting0 -> 2 proves the activation/stop course; neither second process attacks.
+The independent verifier compares all nine native actor-value arrays, all Player
+inventory fields (only absent ownership defaults normalized), the opponent's
+weapon, exact input/output hash linkage and process epochs. Both saves in each
+course are schema46. All processes and check handles are terminal, with no
+ASan/UBSan diagnostic. Leak checking remains disabled.
+
+The instrumented held-pose capture was directly reviewed: named Valen Dreth,
+both drawn weapons, Player's OneHandBlockIdle and the live HUD render. This is
+held-pose evidence, not a captured block-hit/recoil animation. The normal earlier
+held capture was also reviewed. Final binary SHA256s are
+`db6b79b0474bd62fae5e52c74414c0e8e7ecb0ddc561e416130a6930904901d2`
+(normal) and
+`b3b1aacba95ef2b323a29468f7bd8be7c51b08a15e4bfc086c9c462ed249f8c3`
+(instrumented). Per-course verification retains the tested code fingerprint,
+manifest hashes, original/source/output save hashes and exact assertions.

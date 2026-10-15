@@ -1053,6 +1053,19 @@ namespace ESM4
         return result;
     }
 
+    float blockedArmorWear(float wear, float absorbedFraction, bool unarmedBlock)
+    {
+        nonnegative(wear);
+        nonnegative(absorbedFraction);
+        if (absorbedFraction > 1)
+            throw std::invalid_argument("invalid native block absorbed fraction");
+        if (unarmedBlock)
+            return wear;
+        const float remainder = rounded(double(wear) * (1.0 - absorbedFraction));
+        const float result = std::max(0.f, rounded(double(wear) - remainder));
+        return absorbedFraction >= 1 ? 0.f : result;
+    }
+
     bool damageKnockdown(std::int32_t agility, std::int32_t luck, float fatigueRatio,
         std::int32_t damage, unsigned draw, const KnockdownSettings& settings,
         const PhysicalCombatSettings& physical)
