@@ -82,6 +82,21 @@ namespace MWWorld
         };
         RetainedRuntime retainRuntime();
 
+        // Borrow the currently selected registry lifetime and revision.
+        class RegistryGuard
+        {
+            friend class WorldModel;
+            WorldModel* mWorld;
+            std::weak_ptr<const char> mIdentity;
+            std::size_t mRevision;
+            ESM::RefNum mLastGenerated;
+            explicit RegistryGuard(WorldModel& world);
+        public:
+            // Constant-size borrowed snapshot; does not copy or mutate the index.
+            bool isValid() const noexcept;
+        };
+        RegistryGuard prepareRegistryGuard();
+
         // Batch publication for detached prepared references. Preparation may
         // assign their RefNums, but leaves the live registry and serial alone.
         // The references must outlive the preparation and its commit.

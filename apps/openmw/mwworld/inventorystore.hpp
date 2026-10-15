@@ -135,6 +135,11 @@ namespace MWWorld
             friend class InventoryStore;
         public:
             ~PreparedEquippedWeaponRemoval();
+            // Borrowed-owner entry points remain safe after inventory teardown.
+            bool ownerIsCurrent() const noexcept;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+            bool notify();
             PreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval&&) noexcept;
             PreparedEquippedWeaponRemoval& operator=(PreparedEquippedWeaponRemoval&&) noexcept;
             PreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval&) = delete;

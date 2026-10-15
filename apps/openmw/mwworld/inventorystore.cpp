@@ -1067,6 +1067,7 @@ struct MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::Impl
 {
     InventoryStore* mOwner = nullptr;
     std::shared_ptr<const char> mIdentity;
+    std::weak_ptr<const char> mStorageIdentity;
     Ptr mItem;
     bool mCommitted = false;
     bool mNotified = false;
@@ -1079,6 +1080,27 @@ MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::PreparedEquippedWeaponRe
     PreparedEquippedWeaponRemoval&&) noexcept = default;
 MWWorld::InventoryStore::PreparedEquippedWeaponRemoval&
 MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::operator=(PreparedEquippedWeaponRemoval&&) noexcept = default;
+
+bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::ownerIsCurrent() const noexcept
+{
+    return mImpl && !mImpl->mStorageIdentity.expired()
+        && mImpl->mIdentity == mImpl->mOwner->mPreparedAmmunitionIdentity;
+}
+
+bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::isValid() const noexcept
+{
+    return ownerIsCurrent() && mImpl->mOwner->validatePreparedEquippedWeaponRemoval(*this);
+}
+
+bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::commit() noexcept
+{
+    return ownerIsCurrent() && mImpl->mOwner->commitPreparedEquippedWeaponRemoval(*this);
+}
+
+bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::notify()
+{
+    return ownerIsCurrent() && mImpl->mOwner->notifyPreparedEquippedWeaponRemoval(*this);
+}
 
 std::unique_ptr<MWWorld::InventoryStore::PreparedEquippedWeaponRemoval>
 MWWorld::InventoryStore::prepareEquippedWeaponRemoval()
@@ -1097,6 +1119,7 @@ MWWorld::InventoryStore::prepareEquippedWeaponRemoval()
     if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
     impl->mOwner = this;
     impl->mIdentity = mPreparedAmmunitionIdentity;
+    impl->mStorageIdentity = prepareStorageIdentity();
     impl->mItem = item;
     return std::unique_ptr<PreparedEquippedWeaponRemoval>(new PreparedEquippedWeaponRemoval(std::move(impl)));
 }
@@ -1105,7 +1128,8 @@ bool MWWorld::InventoryStore::validatePreparedEquippedWeaponRemoval(
     const PreparedEquippedWeaponRemoval& removal) const noexcept
 {
     const auto* value = removal.mImpl.get();
-    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
+    if (!value || value->mStorageIdentity.expired() || value->mOwner != this
+        || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
         return false;
     const auto& slot = mSlots[Slot_CarriedRight];
     if (slot == end() || slot.getType() != ContainerStore::Type_Weapon || *slot != value->mItem)
@@ -1137,14 +1161,15 @@ bool MWWorld::InventoryStore::commitPreparedEquippedWeaponRemoval(PreparedEquipp
 bool MWWorld::InventoryStore::notifyPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal)
 {
     auto* value = removal.mImpl.get();
-    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity
+    if (!value || value->mStorageIdentity.expired() || value->mOwner != this
+        || value->mIdentity != mPreparedAmmunitionIdentity
         || !value->mCommitted || value->mNotified)
         return false;
     value->mNotified = true;
     MWBase::Environment::get().getWorld()->removeRefScript(&value->mItem.getCellRef());
-    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
     fireEquipmentChangedEvent();
-    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
     if (mListener) mListener->itemRemoved(value->mItem, 1);
     return true;
 }

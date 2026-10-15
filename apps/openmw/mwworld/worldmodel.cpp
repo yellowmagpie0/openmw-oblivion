@@ -547,6 +547,26 @@ namespace MWWorld
         return *result;
     }
 
+    WorldModel::RegistryGuard::RegistryGuard(WorldModel& world)
+        : mWorld(&world), mRevision(world.getPtrRegistryRevision()), mLastGenerated(world.getLastGeneratedRefNum())
+    {
+        if (!world.mPreparationIdentity) world.mPreparationIdentity = std::make_shared<const char>(0);
+        mIdentity = world.mPreparationIdentity;
+    }
+
+    bool WorldModel::RegistryGuard::isValid() const noexcept
+    {
+        const auto identity = mIdentity.lock();
+        return identity && identity == mWorld->mPreparationIdentity
+            && mWorld->getPtrRegistryRevision() == mRevision
+            && mWorld->getLastGeneratedRefNum() == mLastGenerated;
+    }
+
+    WorldModel::RegistryGuard WorldModel::prepareRegistryGuard()
+    {
+        return RegistryGuard(*this);
+    }
+
     WorldModel::PreparedPtrReplacement::PreparedPtrReplacement(WorldModel& world,
         std::span<const Ptr> removed, std::span<const Ptr> inserted, std::span<const Ptr> relocated)
         : mWorld(&world)

@@ -203,7 +203,7 @@ namespace MWWorld
         class PreparedOblivionSaveStateImpl;
         std::unique_ptr<PreparedOblivionServices> mPendingOblivionServices;
         bool mSharedDefinitionsPrepared = false;
-        const std::shared_ptr<const char> mOblivionRestoreIdentity = std::make_shared<const char>();
+        std::shared_ptr<const char> mOblivionRestoreIdentity = std::make_shared<const char>();
         std::uint64_t mOblivionClearGeneration = 0;
         void validateOblivionSaveStateImpl(
             const ESM4::RuntimeState& state, PreparedOblivionServices* prepared,
@@ -415,6 +415,23 @@ namespace MWWorld
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
         std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;
         bool cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor) override;
+        class PreparedOblivionPhysicalContact
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedOblivionPhysicalContact(std::unique_ptr<Data> data);
+            friend class World;
+        public:
+            ~PreparedOblivionPhysicalContact();
+            PreparedOblivionPhysicalContact(const PreparedOblivionPhysicalContact&) = delete;
+            PreparedOblivionPhysicalContact& operator=(const PreparedOblivionPhysicalContact&) = delete;
+            // Revalidate the selected World simulation after external admission.
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContact(
+            std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas);
         bool commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas) override;
         bool getOblivionKnockback(const Ptr& actor, ESM4::TimedKnockbackState& state) const override;

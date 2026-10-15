@@ -14472,3 +14472,33 @@ current float composition is incorrect. Extreme CRT branch differences are
 also recorded. This establishes getter/storage provenance for the next S3
 reference-counter authority change. Production integration, legacy migration,
 mutator rules and gameplay acceptance are not established by this probe.
+
+
+### S4 original NPC drop follow-up routing
+
+The pinned original executable
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+is executed from `0x5FC440` through the common `RET 0x14` at `0x5FC6BF` for
+192 selected NPC/Creature contexts. Actual base getter `0x4D9B40` and combat
+query `0x5E6110` execute; the latter's actor/process gates are fixed to zero
+and the process package is varied. The
+[editable probe contract](M15-ORIGINAL-DROP-FOLLOWUP-PROBES.json) records factor
+ranges, exact stack arguments, source hash, opaque boundaries and expected calls.
+
+With the selected null source-extra/cell boundaries, a living NPC dropping
+armor requests virtual `+0x2C0`. For a weapon outside combat, it queries virtual
+`+0x2B8` with `-1`; a returned entry leads to `0x5FAEA0(item,1,extraList,1,0)`
+and the two entry-cleanup callees. These requests occur even if the source/drop
+boundary returned no reference. A returned reference supplies a model to
+`0x897A20(model,1)`; a nondead actor additionally calls
+`0x5E99C0(item,0,0)`. The model getter has no stack argument: the preceding
+pushed `1` belongs to the later scene-follow-up call. Return value and stack
+balance are checked for every context and both x87 control words.
+
+Evidence: `S4/drop-followup-routing-05`. Attempts -01 through -03 had invalid
+terminal-code/stop layouts; -04 used the wrong model-getter argument cleanup.
+They are retained as failed harnesses. Source removal/spawn, death predicate,
+replacement selection/application, cleanup, scene and actor follow-up bodies
+remain boundary stubs. This proves their selected routing and arguments,
+not full inventory/drop execution, source-extra ownership behavior, Player drop,
+the caller's `0x4DC000` relation bookkeeping or original-game runtime acceptance.

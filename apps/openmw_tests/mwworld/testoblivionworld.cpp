@@ -11303,20 +11303,20 @@ namespace
         MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& mRemoval;
         MWWorld::World::PreparedOblivionDynamicReferenceKey& mKey;
         MWWorld::Ptr mSource;
-        MWWorld::CellRef mFinalCondition;
+        MWWorld::World::PreparedOblivionPhysicalContact& mContact;
         unsigned mValidations = 0, mPublications = 0;
-        bool mSerialCommitted = false, mRemoved = false;
+        bool mSerialCommitted = false, mRemoved = false, mContactCommitted = false;
         CompoundEquippedWeaponPublication(MWWorld::InventoryStore& inventory,
             MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& removal,
-            MWWorld::World::PreparedOblivionDynamicReferenceKey& key, MWWorld::Ptr source)
+            MWWorld::World::PreparedOblivionDynamicReferenceKey& key, MWWorld::Ptr source,
+            MWWorld::World::PreparedOblivionPhysicalContact& contact)
             : mInventory(inventory), mRemoval(removal), mKey(key), mSource(source),
-              mFinalCondition(source.getCellRef())
-        { mFinalCondition.setNativeItemCondition(0); }
+              mContact(contact) {}
         static bool validate(void* opaque) noexcept
         {
             auto& c = *static_cast<CompoundEquippedWeaponPublication*>(opaque);
             ++c.mValidations;
-            return c.mKey.isValid() && c.mInventory.validatePreparedEquippedWeaponRemoval(c.mRemoval)
+            return c.mKey.isValid() && c.mRemoval.isValid() && c.mContact.isValid()
                 && c.mSource.getCellRef().getNativeItemCondition() == std::optional<float>(50)
                 && c.mSource.getCellRef().getEnchantmentCharge() == 7.25f;
         }
@@ -11325,8 +11325,8 @@ namespace
             auto& c = *static_cast<CompoundEquippedWeaponPublication*>(opaque);
             ++c.mPublications;
             c.mSerialCommitted = c.mKey.commit();
-            (void)c.mSource.getCellRef().swapNativeItemCondition(c.mFinalCondition);
-            c.mRemoved = c.mInventory.commitPreparedEquippedWeaponRemoval(c.mRemoval);
+            c.mContactCommitted = c.mContact.commit();
+            c.mRemoved = c.mRemoval.commit();
         }
     };
 }
@@ -11336,7 +11336,7 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
     // Owned OSGT and a synthetic one-body definition isolate external asset
     // loading. This exercises actual World/InventoryStore/Objects/PhysicsSystem
     // publication, not the stock bow factory, native ownership or bow release.
-    for (int outcome = 0; outcome < 5; ++outcome)
+    for (int outcome = 0; outcome < 7; ++outcome)
     {
         SCOPED_TRACE(outcome);
         NativeWorldFixture fixture;
@@ -11357,6 +11357,12 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
         item.mEquippedSlots = ESM4::InventorySlotWeapon;
         installEquipmentInventory(fixture, npc, {item});
         const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto detachedVictim = addNativeNpc(fixture, 0x902);
+        const auto victim = detachedVictim.getCell()->moveTo(detachedVictim, resident.getCell());
+        ASSERT_TRUE(world.activateOblivionActor(npc)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        const float health = world.getOblivionCombatService()->getNonPlayerValue(victim, 8);
+        const float fatigue = world.getOblivionCombatService()->getNonPlayerValue(npc, 10);
+        const auto action = world.beginOblivionPhysicalAction(npc);
         auto key = world.prepareOblivionDynamicReferenceKey();
         auto removal = inventory.prepareEquippedWeaponRemoval();
 
@@ -11384,7 +11390,10 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
         auto prepared = world.getWorldModel().prepareLooseWeaponAdmission(*resident.getCell(), drop,
             objects, physics, "compound-weapon.osgt", osg::Quat(), MWRender::Mask_Object,
             definition, 1.f, poses, 1, -1);
-        CompoundEquippedWeaponPublication context(inventory, *removal, *key, bow);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, 0};
+        deltas.mConditionChanges.push_back(MWMechanics::captureOblivionPhysicalConditionChange(npc, bow, 0));
+        auto contact = world.prepareOblivionPhysicalContact(action, npc, victim, deltas); ASSERT_TRUE(contact);
+        CompoundEquippedWeaponPublication context(inventory, *removal, *key, bow, *contact);
         MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{
             &context, CompoundEquippedWeaponPublication::validate, CompoundEquippedWeaponPublication::publish};
         const auto cellCount = resident.getCell()->count();
@@ -11392,13 +11401,19 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
         if (outcome == 2) root->mAfterInsert = [&] { EXPECT_TRUE(key->commit()); };
         if (outcome == 3) root->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
         if (outcome == 4) root->mFailure = CompoundWeaponSceneRoot::Failure::InsertThrow;
+        if (outcome == 5) root->mAfterInsert = [&] { ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 0,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, 1)); };
+        if (outcome == 6) root->mAfterInsert = [&] { world.toggleGodMode(); };
         if (outcome == 0)
         {
             const auto published = prepared->commit(hooks);
             ASSERT_FALSE(published.isEmpty());
             EXPECT_EQ(context.mValidations, 2u);
             EXPECT_EQ(context.mPublications, 1u);
-            EXPECT_TRUE(context.mSerialCommitted); EXPECT_TRUE(context.mRemoved);
+            EXPECT_TRUE(context.mSerialCommitted); EXPECT_TRUE(context.mRemoved); EXPECT_TRUE(context.mContactCommitted);
+            EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(victim, 8), health - 3);
+            EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(npc, 10), fatigue - 7);
+            EXPECT_TRUE(world.getOblivionCombatService()->isActionConsumed(action));
             EXPECT_EQ(bow.getCellRef().getCount(false), 0);
             EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), std::optional<float>(0));
             EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
@@ -11415,6 +11430,9 @@ TEST(OblivionWorldTest, CompoundNativeWeaponAdmissionPublishesActualNpcInventory
         {
             EXPECT_ANY_THROW(prepared->commit(hooks));
             EXPECT_EQ(context.mPublications, 0u);
+            EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(victim, 8), health);
+            EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(npc, 10), fatigue);
+            EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(action, npc.getCellRef().getFormKey()));
             EXPECT_EQ(bow.getCellRef().getCount(false), 1);
             EXPECT_EQ(bow.getCellRef().getNativeItemCondition(), std::optional<float>(outcome == 1 ? 49 : 50));
             EXPECT_FLOAT_EQ(bow.getCellRef().getEnchantmentCharge(), 7.25f);
@@ -19609,6 +19627,11 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsService
     auto oldPlayer = world.getPlayerPtr(); auto* oldCell = oldPlayer.getCell();
     auto* oldClock = world.getTimeManager(); auto* oldAi = world.getOblivionAiService();
     auto* oldScripts = world.getOblivionScriptManager(); auto* oldCombat = world.getOblivionCombatService();
+    ASSERT_TRUE(world.activateOblivionActor(fixture.mActor));
+    const auto action = world.beginOblivionPhysicalAction(fixture.mActor);
+    ASSERT_NE(action, 0u);
+    auto contact = world.prepareOblivionPhysicalContact(action, fixture.mActor, {}, {-7, 0, 0});
+    ASSERT_TRUE(contact); ASSERT_TRUE(contact->isValid());
     const auto before = world.captureOblivionRuntimeState().serializeBinary();
     const auto* graph = world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid);
     int notifications = 0;
@@ -19616,9 +19639,11 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsService
     auto queued = world.prepareOblivionEquipmentNotification([&] { ++notifications; });
     ASSERT_TRUE(queued->commit());
     auto archive = world.retainSimulation();
+    EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit());
     EXPECT_THROW(world.retainSimulation(), std::logic_error);
     EXPECT_THROW(world.clear(), std::logic_error);
     ASSERT_TRUE(archive.detach()); EXPECT_FALSE(archive.detach());
+    EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit());
     EXPECT_FALSE(deferred->isValid()); EXPECT_FALSE(deferred->commit());
     ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(notifications, 0);
     EXPECT_NE(world.getPlayerPtr(), oldPlayer); EXPECT_EQ(world.getTimeManager(), oldClock);
@@ -19640,6 +19665,7 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsService
     EXPECT_EQ(world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid), graph);
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
     EXPECT_EQ(world.getPrng()(), expectedRng());
+    ASSERT_TRUE(contact->isValid()); ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
     ASSERT_TRUE(deferred->isValid()); ASSERT_TRUE(deferred->commit());
     ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(notifications, 2);
 }
@@ -20217,4 +20243,104 @@ TEST(OblivionWorldTest, PreparedPhysicalContactPreservesMatchingGenericNativeRef
         ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
         EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(b, 8), health - 3);
     }
+}
+
+TEST(OblivionWorldTest, PreparedWorldContactsRejectRegistryGodModeAndPhysicalContextChanges)
+{
+    for (int change = 0; change < 3; ++change)
+    {
+        SCOPED_TRACE(change);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        const auto action = world.beginOblivionPhysicalAction(a);
+        auto contact = world.prepareOblivionPhysicalContact(action, a, b, {-7, -3, 0});
+        ASSERT_TRUE(contact); ASSERT_TRUE(contact->isValid());
+        if (change == 0) world.getWorldModel().registerPtr(a);
+        else if (change == 1) world.toggleGodMode();
+        else world.initializePhysics(new osg::Group);
+        const auto before = contactSnapshot(fixture, {a, b});
+        EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit());
+        EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedWorldContactsRejectClearAndDestructionBeforeBorrowedOwnerAccess)
+{
+    for (bool clear : {false, true})
+    {
+        auto fixture = std::make_unique<NativeWorldFixture>();
+        auto& world = fixture->mWorld;
+        const auto a = addNativeNpc(*fixture, 0x900), b = addNativeNpc(*fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto contact = world.prepareOblivionPhysicalContact(world.beginOblivionPhysicalAction(a), a, b, {-7, -3, 0});
+        ASSERT_TRUE(contact); ASSERT_TRUE(contact->isValid());
+        if (clear) world.clear(); else fixture.reset();
+        EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit());
+    }
+}
+
+TEST(OblivionWorldTest, EquippedRemovalTokenRejectsDestroyedAndReconstructedOwnersWithoutDereferencingThem)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, false);
+    auto& original = actors.actor.getClass().getInventoryStore(actors.actor);
+    using Inventory = MWWorld::InventoryStore;
+    alignas(Inventory) std::byte storage[sizeof(Inventory)];
+    auto* owner = new (storage) Inventory(original);
+    auto token = owner->prepareEquippedWeaponRemoval(); ASSERT_TRUE(token->isValid());
+    owner->~Inventory();
+    EXPECT_FALSE(token->ownerIsCurrent()); EXPECT_FALSE(token->isValid());
+    EXPECT_FALSE(token->commit()); EXPECT_FALSE(token->notify());
+    owner = new (storage) Inventory(original);
+    EXPECT_FALSE(token->ownerIsCurrent()); EXPECT_FALSE(token->commit()); EXPECT_FALSE(token->notify());
+    auto current = owner->prepareEquippedWeaponRemoval(); ASSERT_TRUE(current->commit());
+    owner->~Inventory();
+    EXPECT_FALSE(current->ownerIsCurrent()); EXPECT_FALSE(current->notify());
+}
+
+TEST(OblivionWorldTest, EquippedRemovalNotificationSurvivesActualOwnerDestructionAndException)
+{
+    for (bool throws : {false, true})
+    {
+        NativeWorldFixture fixture;
+        const auto actors = installPreparedBowRelease(fixture, false);
+        auto owner = std::make_unique<MWWorld::InventoryStore>(actors.actor.getClass().getInventoryStore(actors.actor));
+        struct Observer : MWWorld::InventoryStoreListener, MWWorld::ContainerStoreListener
+        {
+            std::unique_ptr<MWWorld::InventoryStore>& mOwner;
+            bool mThrows;
+            int mEquipment = 0, mRemoved = 0;
+            Observer(std::unique_ptr<MWWorld::InventoryStore>& owner, bool throws) : mOwner(owner), mThrows(throws) {}
+            void equipmentChanged() override
+            {
+                ++mEquipment; mOwner.reset();
+                if (mThrows) throw std::runtime_error("owner destroyed by equipment observer");
+            }
+            void itemRemoved(const MWWorld::ConstPtr&, int) override { ++mRemoved; }
+        } observer(owner, throws);
+        owner->setInvListener(&observer); owner->setContListener(&observer);
+        auto token = owner->prepareEquippedWeaponRemoval(); ASSERT_TRUE(token->commit());
+        if (throws) EXPECT_THROW(token->notify(), std::runtime_error);
+        else EXPECT_TRUE(token->notify());
+        EXPECT_EQ(observer.mEquipment, 1); EXPECT_EQ(observer.mRemoved, 0); EXPECT_FALSE(owner);
+        EXPECT_FALSE(token->notify()); EXPECT_FALSE(token->commit());
+    }
+}
+
+TEST(OblivionWorldTest, PreparedWorldContactTracksRetainedRegistryIndependentlyOfCombatService)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+    ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+    const auto health = world.getOblivionCombatService()->getNonPlayerValue(b, 8);
+    auto contact = world.prepareOblivionPhysicalContact(world.beginOblivionPhysicalAction(a), a, b, {-7, -3, 0});
+    ASSERT_TRUE(contact); ASSERT_TRUE(contact->isValid());
+    auto retained = world.getWorldModel().retainRuntime(); ASSERT_TRUE(retained.detach());
+    EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit());
+    ASSERT_TRUE(retained.restore());
+    ASSERT_TRUE(contact->isValid()); ASSERT_TRUE(contact->commit());
+    EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(b, 8), health - 3);
 }

@@ -554,3 +554,120 @@ debugger and runtime handles are terminal. This is regression acceptance of the
 existing equipped-block route, not block-hit/recoil animation, break/drop,
 mastery, power/creature or the full view/control/FPS/restart matrix. S4 remains
 incomplete.
+
+
+## Active-World contact guards and compound scene publication
+
+World now exposes a prepared contact that binds the service preparation to its
+selected World generation, combat service, Player, physics owner, scene and God
+Mode. A constant-size registry guard checks lifetime, selected registry identity,
+revision and generated-reference boundary without copying the reference index.
+Validation and commit allocate nothing and invoke no observer. The existing
+immediate World entry point delegates through this guarded path. World invalidates
+its borrowed lifetime marker before backend or payload teardown.
+
+An outgoing simulation frozen before archive detach rejects contact publication.
+A retained original combat service alone does not authorize an unselected
+simulation or registry. After rollback restores the exact original owners and
+unchanged participant state, its original token can commit once. Registry-only
+retention is covered independently from combat-service retention. Clear, World
+destruction, registry mutation, changed God Mode and physical-owner replacement
+also reject before any resource publication.
+
+Equipped-weapon removal tokens now have owner-safe validation, commit and notify
+entry points. A weak storage lease is checked before the borrowed inventory or
+item is touched, including destruction/reconstruction at the same address.
+Deferred observers can destroy the inventory, return or throw; notification
+cannot resume into that dead owner or replay. Final wear remains owned by the
+contact transaction, and removal still changes only quantity/slot/caches.
+
+The existing compound native weapon admission test now commits actual prepared
+Health/Fatigue/condition changes alongside exact inventory removal and the World
+serial, after actual renderer/physics admission. Seven outcomes cover successful
+once-only publication, stale condition, stale serial, scene rejection, throwing
+scene insertion, changed participant values and changed God Mode. Rejection
+rolls back model/body admission before contact, inventory, cell or registry
+publication. This is engine transaction coverage with test-owned model/body
+assets, not a production stock drop factory or normal-input break acceptance.
+
+Final `S4/world-contact-full-normal-02` and `-full-sanitized-02` each pass all
+**1502 engine tests/121 suites**, unfiltered, with exact inventory/XML agreement,
+zero failures and zero skips. Source before/after agrees in both:
+`d6b697e5b49e9b15a1d4ae64c88332acdf9919ee085f281ffea4ef975f9f51cf`,
+atop `650066f6d44ff986d8d3a528f4ae85b85e768553`. ASan leak checking is disabled;
+UBSan halts. Five new tests cover World context/lifetime, independent registry
+retention and safe weapon-removal owner teardown. Existing full simulation
+archive and compound admission cases are extended. Unchanged components/Python
+were not rerun. Only documentation/probe-manifest edits follow these C++ checks.
+
+`S4/world-contact-allocation-01` passes seven selected World contact, archive,
+compound admission and removal cases. Its exact-entry Linux x86_64 trace observes
+61 balanced outer scopes and 81 nested entries, including World/removal token
+validation and commit, service validation and executed publication. No calls to
+malloc, calloc, realloc, aligned_alloc or posix_memalign are observed within
+these main-thread scopes. This does not cover other allocator APIs, threads or
+unselected paths. The test binary and frozen source hashes are retained.
+
+Normal -01's two failures were fixture defects: a new victim remained in the
+uncapturable draft cell, and the archive fixture's placeholder Player class
+could not initialize native major skills. The victim now resides in the managed
+cell; the archive case uses its valid native NPC's missed swing, retaining the
+same World/Player ownership guards. Sanitizer -01 was stopped before these
+shared fixture corrections. The initial normal runtime course uses the same
+final game binary: subsequent corrections changed only tests. Its final state
+verifier checks the current binary against both captured process hashes.
+
+
+Original follow-up routing is independently verified for 192 selected contexts
+in `S4/drop-followup-routing-05`, with actual entry/return, base getter and combat
+query instructions, and declared opaque resource/equipment/scene boundaries.
+The [probe contract](M15-ORIGINAL-DROP-FOLLOWUP-PROBES.json) and native provenance
+record the replacement-equipment requests, their independence from a returned
+reference, stack conventions and retained harness failures. This is additional
+factory guidance, not original-game drop acceptance.
+
+Read-only stock asset diagnosis identifies the next concrete factory dependency.
+`S4/stock-melee-drop-body-01` extracts eight iron melee NIFs from Meshes BSA
+SHA256 `d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b`.
+The existing authored-body loader accepts only the mace hull. The other seven
+NIFs parse structurally but their body graphs reject unsupported shapes.
+`S4/stock-drop-body-preflight-05` verifies body-root/child links and identifies capsule lists for swords, dagger,
+claymore and warhammer, and capsule/box/transformed-box lists for both axes.
+The bow's single hull is accepted; the arrow's separate unsupported graph is
+outside this melee diagnosis. Earlier probe attempts retain an obsolete reader
+setter and invalid JSON from printing a binary NIF hash as UTF-8; the corrected
+report hex-encodes that hash. These are parser diagnostics, not physical admission.
+Complete compound/box body support, stock model/body and carried-pose binding,
+dropper/list metadata, replacement-equipment follow-ups, deferred notification
+and real break/drop/restart courses remain required. No break rejection is
+removed by the World guard checkpoint, and S4 remains incomplete.
+
+
+Final runtime courses `S4/world-contact-runtime-normal-01` and
+`-sanitized-02` each pass both ordinary-input and fresh-process phases. Exact
+inspection preserves all nine native actor-value arrays except expected Player
+Health `-0.9841405749320984`, with Player blocking-weapon condition
+`55.84976577758789` and NPC weapon condition `55.70000076293945`. Complete Player
+inventory, NPC weapon, recovered block Fatigue, unchanged RNG, action ID advance
+`2 -> 3`, empty pending/owner lists, script phase `0 -> 2`, and held/released
+process actions `6 -> -1` match. Process epochs are `485202 -> 485323` normal and
+`490833 -> 493103` instrumented. No native contact or voice replays after restart.
+
+Both courses start two successful WPNBlockBlade voices and capture finite,
+non-silent OpenAL wave output. The unchanged stock-PCM method/fixed 0.75 threshold
+finds one block cluster before restart and none after: blade sample03 at
+`0.9979219634698733` normal, sample01 at `0.9973005777996221` instrumented.
+Both held-block images were directly reviewed. Game SHA256s are
+`e3d1de343fc3d0515844ce4872753d0c2334f6f9a77e3f0f9b01d78917009233` and
+`b74b7858ad185e729aa1a67bf0de42396a85fb713429e364d9b637e5f11f2f89`.
+The retained instrumented runtime -01 is not a pass: its launcher began hashing
+before final linking settled, and correctly rejected the changed executable hash
+after an otherwise completed first phase. Fresh -02 starts after the completed
+build target and verifies unchanged before/after/epoch hashes in both processes.
+
+All five final build/trace/runtime reports share the frozen implementation
+fingerprint recorded above. The combined checkpoint report is
+`S4/world-contact-allocation-01/checkpoint-verification.json`. All check/runtime
+handles are terminal. This verifies the existing equipped-block route after the
+World-wrapper change. It does not close stock break/drop, mastery/effects,
+power/creature dispatch, reaction animation or the remaining S4 acceptance matrix.

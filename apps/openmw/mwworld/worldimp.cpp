@@ -2458,25 +2458,80 @@ namespace MWWorld
         return mOblivionCombat->consumeAction(id, key);
     }
 
-    bool World::commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+    struct World::PreparedOblivionPhysicalContact::Data
+    {
+        World* mWorld;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mGeneration;
+        MWMechanics::OblivionCombatService* mCombat;
+        Player* mPlayer;
+        MWPhysics::PhysicsSystem* mPhysics;
+        Scene* mScene;
+        bool mGodMode;
+        std::unique_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
+        std::optional<WorldModel::RegistryGuard> mRegistry;
+    };
+
+    World::PreparedOblivionPhysicalContact::PreparedOblivionPhysicalContact(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    World::PreparedOblivionPhysicalContact::~PreparedOblivionPhysicalContact() = default;
+
+    bool World::PreparedOblivionPhysicalContact::isValid() const noexcept
+    {
+        if (!mData || mData->mIdentity.expired() || !mData->mRegistry->isValid()
+            || !mData->mContact->isValid()) return false;
+        const auto& world = *mData->mWorld;
+        return world.mOblivionClearGeneration == mData->mGeneration
+            && world.mOblivionCombat.get() == mData->mCombat && world.mPlayer.get() == mData->mPlayer
+            && world.mPhysics.get() == mData->mPhysics && world.mWorldScene.get() == mData->mScene
+            && world.getGodModeState() == mData->mGodMode
+            && (!world.mRetainedSimulation || world.mRetainedSimulation->mDetached);
+    }
+
+    bool World::PreparedOblivionPhysicalContact::commit() noexcept
+    {
+        return isValid() && mData->mContact->commit();
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {
         if (!mOblivionCombat || attacker.isEmpty())
-            return false;
+            return nullptr;
         const bool player = attacker == getPlayerPtr();
         if (!player && attacker.getType() != ESM::REC_NPC_4 && attacker.getType() != ESM::REC_CREA4)
-            return false;
+            return nullptr;
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
         if (!mOblivionCombat->isActionPending(id, key))
-            return false;
+            return nullptr;
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
-            return false;
+            return nullptr;
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
-        return mOblivionCombat->commitPhysicalContact(id, attacker, victim, deltas, mPlayer.get(), essential,
+        auto contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, deltas, mPlayer.get(), essential,
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+        if (!contact) return nullptr;
+        auto data = std::make_unique<PreparedOblivionPhysicalContact::Data>();
+        data->mWorld = this;
+        data->mIdentity = mOblivionRestoreIdentity;
+        data->mGeneration = mOblivionClearGeneration;
+        data->mCombat = mOblivionCombat.get();
+        data->mPlayer = mPlayer.get();
+        data->mPhysics = mPhysics.get();
+        data->mScene = mWorldScene.get();
+        data->mGodMode = getGodModeState();
+        data->mContact = std::move(contact);
+        data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());
+        return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
+    }
+
+    bool World::commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        auto prepared = prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+        return prepared && prepared->commit();
     }
 
     bool World::getOblivionKnockback(const Ptr& actor, ESM4::TimedKnockbackState& state) const
@@ -4056,6 +4111,8 @@ namespace MWWorld
 
     World::~World()
     {
+        // Invalidate borrowed World transactions before backend/payload teardown.
+        mOblivionRestoreIdentity.reset();
         if (mRetainedSimulation && mRetainedSimulation->mBackend)
             destroyRetainedBackends();
         else

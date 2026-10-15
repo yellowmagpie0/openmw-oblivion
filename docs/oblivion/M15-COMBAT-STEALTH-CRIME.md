@@ -6,6 +6,27 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 active-World contact and removal guards — 2026-10-15
+
+Prepared World contacts now bind native resources to the selected simulation,
+registry revision, Player, physics/scene owners and God Mode. Frozen or replaced
+simulations reject publication; exact rollback restores eligible preparations.
+Equipped-weapon removal tokens safely validate, commit and notify after owner
+teardown/reuse, including destruction or exceptions inside observers. The real
+compound scene/physics test now publishes prepared resources, final wear,
+inventory removal and the World serial together, or rolls admission back.
+
+Normal and ASan/UBSan each pass all 1502 engine tests/121 suites, with exact
+inventories and no failures/skips. Both live block/save/fresh-process courses
+preserve exact resources/conditions and stock audio without replay. A bounded
+allocation trace passes 61 outer scopes. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#active-world-contact-guards-and-compound-scene-publication)
+records source/binary hashes, five new tests, extended composition/archive cases,
+retained failures and a 192-case original drop-routing probe. Stock diagnosis
+also identifies missing compound body shapes in seven of eight iron melee meshes.
+That is the next factory dependency; no new break branch is admitted, and S4
+remains incomplete.
+
 ## S4 prepared physical contacts — 2026-10-15
 
 Physical contact now separates fallible preparation from guarded, allocation-free

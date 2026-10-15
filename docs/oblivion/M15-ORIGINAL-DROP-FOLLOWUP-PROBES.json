@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "purpose": "Original NPC/Creature item-drop follow-up routing, for M15S4 equipment consequence integration",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_va": "0x005FC440",
+  "selected_return_va": "0x005FC6BF",
+  "cases": 192,
+  "case_dimensions": {
+    "actor_base_type": [
+      35,
+      36
+    ],
+    "dead_predicate": [
+      false,
+      true
+    ],
+    "item_type": [
+      20,
+      33,
+      32
+    ],
+    "combat_package_type": [
+      0,
+      12
+    ],
+    "replacement_entry_available": [
+      false,
+      true
+    ],
+    "dropped_reference_returned": [
+      false,
+      true
+    ],
+    "x87_control_word": [
+      "0x027F",
+      "0x037F"
+    ]
+  },
+  "executed_callees": [
+    "0x004D9B40 base-form getter",
+    "0x005E6110 InCombat routing with actor+0x380/process+0x36C boundary returns fixed to zero"
+  ],
+  "boundaries": [
+    "source ExtraDataList is null",
+    "cell helper 0x006ECC80 returns null; 0x004C9F60 returns false",
+    "actor+0x100 source-removal/spawn boundary returns null or a fixture reference",
+    "actor+0x198 death predicate is an input",
+    "actor+0x2B8 replacement query returns null or a fixture entry",
+    "actor+0x2C0 and 0x005FAEA0 are recorded requests; their bodies do not execute",
+    "entry cleanup at 0x00484470/0x00401F20 is stubbed",
+    "reference+0x154 model getter returns a fixture pointer; 0x00897A20 and 0x005E99C0 bodies do not execute"
+  ],
+  "expected": {
+    "actor_0x100_arguments": [
+      "item_base",
+      0,
+      1,
+      0,
+      1,
+      0,
+      "position",
+      "rotation",
+      1,
+      0
+    ],
+    "npc_alive_armor_type_20": [
+      "actor virtual +0x2C0 called with no stack arguments"
+    ],
+    "npc_alive_weapon_type_33_out_of_combat": [
+      "actor virtual +0x2B8 queried with -1",
+      "if an entry exists, 0x005FAEA0 receives item_base,1,entry_extra_list,1,0",
+      "then 0x00484470 and 0x00401F20 are called for that entry"
+    ],
+    "replacement_independent_of_spawn_result": true,
+    "returned_reference": [
+      "reference virtual +0x154 has no stack argument",
+      "0x00897A20 receives model_pointer,1",
+      "if actor is not dead, 0x005E99C0 receives item_base,0,0"
+    ],
+    "return": "same null/non-null reference from actor+0x100, balanced RET 0x14"
+  },
+  "evidence": "build/oblivion-compat/m15/S4/drop-followup-routing-05",
+  "probe_source_sha256": "86a8fd2ad6b3e9df8b05597af3c8e066e5859b407fdf92787eca560eaccd6428",
+  "scope_limit": "Selected common NPC/Creature path with declared opaque boundaries; not full inventory/scene/equipment execution, Player drop, ownership semantics or original-game runtime acceptance."
+}
