@@ -54,6 +54,7 @@ namespace MWSound
 
     protected:
         Sound_Instance mHandle = nullptr;
+        bool mResumeAfterParking = false;
 
         friend class OpenALOutput;
 
@@ -172,6 +173,7 @@ namespace MWSound
         {
             mParams = params;
             mHandle = nullptr;
+            mResumeAfterParking = false;
         }
 
         SoundBase() = default;

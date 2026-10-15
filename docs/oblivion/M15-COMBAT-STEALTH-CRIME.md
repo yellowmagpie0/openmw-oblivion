@@ -6,6 +6,53 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain sound voices and decoder-worker ownership — 2026-10-15
+
+SoundManager retains actual sound/say/track/music pointers and owning containers,
+listener state, pause blockers, playback pause, water/region/playlist state,
+simulation scale, timers, cell associations and prepared-plan identity/generation.
+OpenAL retains actual active-source registrations and decoder-worker entries.
+Selection locks the decoder worker, pauses outgoing sources, moves the actual
+lists and resumes only incoming sources that were playing before parking.
+Already-paused sources remain paused, and parked streams cannot read/refill their
+decoders. Device, buffer cache and object pools stay at stable addresses; archived
+ObjectPtr deleters continue to reference their original pool. Retirement stops
+unwanted sources/decoders before releasing their pointers, buffers or output.
+Scope/move rollback, commit and owner death preserve that destruction order.
+
+Prepared facade mutations and active callback selection are rejected. Decoder
+initialization and offset/loudness queries carry dispatch guards. Prepared audio
+callbacks also require their lifetime anchor to be currently selected, so equal
+generations in another retained domain cannot publish or consume an old plan.
+
+At fingerprint
+`e58d18a1732fab5487ff35954999d4852add835888fc06ce63be35f0d8e4d061`, all
+1,477 engine cases (121 suites) pass normally and under ASan/UBSan in
+`S3/audio-retention-normal-03` and `-sanitized-03`. Six new audio cases cover
+actual OpenAL source identity/offset and paused-state preservation, frozen parked
+decoder reads, candidate pause/resume isolation, scope/move/commit, owner death,
+and decoder callback reentry. Existing projectile-audio cases additionally prove
+cross-domain prepared-plan rejection without consumption and archive lifetime
+invalidation after owner teardown. Component sources are unchanged by this slice.
+
+Sound-enabled copied WindowManager courses `audio-retention-runtime-normal-02`
+(PID 404514) and `-sanitized-02` (PID 404628) select audio with loaded World/backend,
+mechanics/Lua/native frontend/state/history/input/legacy scripts. They seed an
+original voice and scripted title music, park them, load a separate candidate
+content scene with its own voice/normal music, exchange both domains and roll
+back. The original decoder stays frozen while parked, original voice identity/
+volume and scripted music return, candidate decoder closes once, and the original
+closes only when explicitly stopped. Detach/exchange pass C++ allocation denial;
+retirement is checked separately. Render/F5/SDL quit, captures, lifecycle, selected
+decoded save fields and source/binary/MyGUI provenance are audited. OpenAL Soft's
+null driver verifies source/decoder behavior, not listening-device output.
+Earlier build/course attempts were stopped for callback-depth and selected-anchor
+corrections after process quiescence; their evidence remains preserved.
+
+Actual StateManager save staging and late-failure rollback, loaded aggregate
+commit/owner-death courses, and the full S3 acceptance audit remain open.
+S3 is incomplete.
+
 ## S3 retain input runtime and pending action owners — 2026-10-14
 
 InputManager now retains control-switch map nodes, disabled-controls state, idle

@@ -30,6 +30,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwdialogue/testkeywordsearch.cpp
 
     mwsound/testnativeaudio.cpp
+    mwsound/testruntime.cpp
 
     mwphysics/testprojectilesweep.cpp
     mwphysics/testtrigger.cpp

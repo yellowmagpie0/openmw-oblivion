@@ -5,6 +5,7 @@
 #include <map>
 #include <numeric>
 #include <sstream>
+#include <stdexcept>
 
 #include <osg/Matrixf>
 
@@ -110,6 +111,153 @@ namespace MWSound
         return static_cast<int>(a) | static_cast<int>(b);
     }
 
+    namespace
+    {
+        struct RuntimeCall
+        {
+            unsigned& depth;
+            explicit RuntimeCall(unsigned& value) : depth(value) { ++depth; }
+            ~RuntimeCall() { --depth; }
+        };
+    }
+
+    struct SoundManager::RetainedRuntime::Data
+    {
+        SoundManager* owner;
+        // Output owns raw voice registrations; manager containers own the voices.
+        // Both lists are exchanged under the decoder worker lock before fields.
+        std::unique_ptr<SoundOutput::Runtime> output;
+        SoundMap sounds;
+        SaySoundMap sayQueue;
+        SaySoundMap sayActive;
+        TrackList tracks;
+        StreamPtr music;
+        MusicType musicType = MusicType::Normal;
+        bool underwater = false;
+        osg::Vec3f position{0, 0, 0}, direction{1, 0, 0}, up{0, 0, 1}, velocity{0, 0, 0};
+        int pausedTypes[BlockerType::MaxCount] = {};
+        Sound* underwaterSound = nullptr;
+        Sound* nearWaterSound = nullptr;
+        VFS::Path::Normalized nextMusic;
+        std::string nativePlaylist;
+        bool playbackPaused = false;
+        RegionSoundSelector region;
+        float timePassed = 0;
+        float simulationTimeScale = 1;
+        const MWWorld::Cell* lastCell = nullptr;
+        Sound* currentRegionSound = nullptr;
+        std::shared_ptr<const char> identity = std::make_shared<const char>();
+        std::uint64_t generation;
+        bool detached = false;
+        bool originalSelected = true;
+
+        explicit Data(SoundManager& manager)
+            : owner(&manager), output(manager.mOutput->prepareRuntime()), generation(manager.mRestoreGeneration)
+        {
+        }
+
+        bool select(bool activate = true) noexcept
+        {
+            if (!owner || owner->mActiveCalls || !output->exchange(activate)) return false;
+            auto& m = *owner;
+            m.mActiveSounds.swap(sounds);
+            m.mSaySoundsQueue.swap(sayQueue);
+            m.mActiveSaySounds.swap(sayActive);
+            m.mActiveTracks.swap(tracks);
+            m.mMusic.swap(music);
+            std::swap(m.mMusicType, musicType);
+            std::swap(m.mListenerUnderwater, underwater);
+            std::swap(m.mListenerPos, position);
+            std::swap(m.mListenerDir, direction);
+            std::swap(m.mListenerUp, up);
+            std::swap(m.mListenerVel, velocity);
+            for (int i = 0; i < BlockerType::MaxCount; ++i) std::swap(m.mPausedSoundTypes[i], pausedTypes[i]);
+            std::swap(m.mUnderwaterSound, underwaterSound);
+            std::swap(m.mNearWaterSound, nearWaterSound);
+            std::swap(m.mNextMusic, nextMusic);
+            m.mNativePlaylist.swap(nativePlaylist);
+            std::swap(m.mPlaybackPaused, playbackPaused);
+            std::swap(m.mRegionSoundSelector, region);
+            std::swap(m.mTimePassed, timePassed);
+            std::swap(m.mSimulationTimeScale, simulationTimeScale);
+            std::swap(m.mLastCell, lastCell);
+            std::swap(m.mCurrentRegionSound, currentRegionSound);
+            m.mRestoreIdentity.swap(identity);
+            std::swap(m.mRestoreGeneration, generation);
+            m.mWaterSoundUpdater.setUnderwater(m.mListenerUnderwater);
+            m.mOutput->updateListener(m.mListenerPos, m.mListenerDir, m.mListenerUp, m.mListenerVel,
+                m.mListenerUnderwater ? Env_Underwater : Env_Normal);
+            if (m.mPlaybackPaused || !activate) m.mOutput->pauseActiveDevice();
+            else m.mOutput->resumeActiveDevice();
+            originalSelected = !originalSelected;
+            return true;
+        }
+
+        bool finish(bool commit) noexcept
+        {
+            if (!owner || owner->mActiveCalls) return false;
+            if (!detached) return true;
+            const bool desired = !commit;
+            if (originalSelected == desired && !select(false)) return false;
+            // Retire unwanted sources/decoder objects before dropping their
+            // owning pointers or the shared pools/buffer cache/output device.
+            owner->clear();
+            return select();
+        }
+    };
+
+    SoundManager::RetainedRuntime::RetainedRuntime(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    SoundManager::RetainedRuntime::~RetainedRuntime()
+    {
+        if (mData && mData->owner && !restore()) std::terminate();
+    }
+    SoundManager::RetainedRuntime::RetainedRuntime(RetainedRuntime&&) noexcept = default;
+    SoundManager::RetainedRuntime& SoundManager::RetainedRuntime::operator=(RetainedRuntime&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (mData && mData->owner && !restore()) std::terminate();
+            mData = std::move(other.mData);
+        }
+        return *this;
+    }
+    SoundManager::RetainedRuntime SoundManager::retainRuntime()
+    {
+        if (mRetainedRuntime || mActiveCalls) throw std::logic_error("Sound runtime retention requires idle users");
+        auto data = std::make_unique<RetainedRuntime::Data>(*this);
+        mRetainedRuntime = data.get();
+        return RetainedRuntime(std::move(data));
+    }
+    void SoundManager::requireMutableRuntime() const
+    {
+        if (mRetainedRuntime && !mRetainedRuntime->detached)
+            throw std::logic_error("Sound runtime is prepared but not detached");
+    }
+    bool SoundManager::RetainedRuntime::detach() noexcept
+    {
+        if (!mData || !mData->owner || mData->detached || !mData->select()) return false;
+        mData->detached = true;
+        return true;
+    }
+    bool SoundManager::RetainedRuntime::exchange() noexcept
+    {
+        return mData && mData->detached && mData->select();
+    }
+    bool SoundManager::RetainedRuntime::restore() noexcept
+    {
+        if (!mData || !mData->finish(false)) return false;
+        mData->owner->mRetainedRuntime = nullptr;
+        mData.reset();
+        return true;
+    }
+    void SoundManager::RetainedRuntime::discard() noexcept
+    {
+        if (!mData || !mData->owner) return;
+        if (!mData->finish(true)) std::terminate();
+        mData->owner->mRetainedRuntime = nullptr;
+        mData.reset();
+    }
+
     SoundManager::SoundManager(const VFS::Manager* vfs, bool useSound)
         : mVFS(vfs)
         , mOutput(std::make_unique<OpenALOutput>(*this))
@@ -163,7 +311,22 @@ namespace MWSound
 
     SoundManager::~SoundManager()
     {
-        SoundManager::clear();
+        if (mRetainedRuntime)
+        {
+            auto* retained = mRetainedRuntime;
+            mRetainedRuntime = nullptr;
+            mRestoreIdentity.reset();
+            retained->identity.reset();
+            SoundManager::clear();
+            if (retained->detached)
+            {
+                if (!retained->select(false)) std::terminate();
+                SoundManager::clear();
+            }
+            retained->owner = nullptr;
+            retained->output.reset();
+        }
+        else SoundManager::clear();
         mSoundBuffers.clear();
         mOutput.reset();
     }
@@ -205,6 +368,8 @@ namespace MWSound
 
     StreamPtr SoundManager::playVoice(DecoderPtr decoder, const osg::Vec3f& pos, bool playlocal)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         MWBase::World* world = MWBase::Environment::get().getWorld();
         static const float fAudioMinDistanceMult
             = world->getStore().get<ESM::GameSetting>().find("fAudioMinDistanceMult")->mValue.getFloat();
@@ -250,6 +415,8 @@ namespace MWSound
 
     void SoundManager::stopMusic()
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (mMusic)
         {
             mOutput->finishStream(mMusic.get());
@@ -259,6 +426,8 @@ namespace MWSound
 
     void SoundManager::streamMusicFull(VFS::Path::NormalizedView filename)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
 
@@ -291,6 +460,8 @@ namespace MWSound
 
     void SoundManager::advanceMusic(VFS::Path::NormalizedView filename, float fadeOut)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!isMusicPlaying())
         {
             streamMusicFull(filename);
@@ -309,6 +480,8 @@ namespace MWSound
 
     void SoundManager::streamMusic(VFS::Path::NormalizedView filename, MusicType type, float fade)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         // Can not interrupt scripted music by built-in playlists
         if (mMusicType == MusicType::MWScript && type != MusicType::MWScript)
             return;
@@ -319,6 +492,8 @@ namespace MWSound
 
     void SoundManager::say(const MWWorld::ConstPtr& ptr, VFS::Path::NormalizedView filename)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
 
@@ -353,6 +528,7 @@ namespace MWSound
 
     float SoundManager::getSaySoundLoudness(const MWWorld::ConstPtr& ptr) const
     {
+        RuntimeCall call(mActiveCalls);
         SaySoundMap::const_iterator snditer = mActiveSaySounds.find(ptr.mRef);
         if (snditer != mActiveSaySounds.end())
         {
@@ -374,6 +550,7 @@ namespace MWSound
 
     float SoundManager::getSaySoundOffset(const MWWorld::ConstPtr& ptr) const
     {
+        RuntimeCall call(mActiveCalls);
         const auto active = mActiveSaySounds.find(ptr.mRef);
         if (active == mActiveSaySounds.end())
             return 0.f;
@@ -382,6 +559,8 @@ namespace MWSound
 
     void SoundManager::say(VFS::Path::NormalizedView filename)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
 
@@ -400,6 +579,7 @@ namespace MWSound
 
     double SoundManager::getSoundFileDuration(VFS::Path::NormalizedView filename)
     {
+        RuntimeCall call(mActiveCalls);
         try
         {
             DecoderPtr decoder = getDecoder();
@@ -450,6 +630,8 @@ namespace MWSound
 
     void SoundManager::stopSay(const MWWorld::ConstPtr& ptr)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         SaySoundMap::iterator snditer = mSaySoundsQueue.find(ptr.mRef);
         if (snditer != mSaySoundsQueue.end())
         {
@@ -467,6 +649,8 @@ namespace MWSound
 
     Stream* SoundManager::playTrack(const DecoderPtr& decoder, Type type)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -488,6 +672,8 @@ namespace MWSound
 
     void SoundManager::stopTrack(Stream* stream)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         mOutput->finishStream(stream);
         TrackList::iterator iter = std::lower_bound(mActiveTracks.begin(), mActiveTracks.end(), stream,
             [](const StreamPtr& lhs, Stream* rhs) { return lhs.get() < rhs; });
@@ -497,6 +683,7 @@ namespace MWSound
 
     double SoundManager::getTrackTimeDelay(Stream* stream)
     {
+        RuntimeCall call(mActiveCalls);
         return mOutput->getStreamDelay(stream);
     }
 
@@ -515,6 +702,8 @@ namespace MWSound
 
     Sound* SoundManager::playSound(SoundBuffer* sfx, float volume, float pitch, Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -542,6 +731,8 @@ namespace MWSound
     Sound* SoundManager::playSound(
         VFS::Path::NormalizedView fileName, float volume, float pitch, Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -558,6 +749,8 @@ namespace MWSound
     Sound* SoundManager::playSound(
         const ESM::RefId& soundId, float volume, float pitch, Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -571,6 +764,8 @@ namespace MWSound
     Sound* SoundManager::playSound3D(const MWWorld::ConstPtr& ptr, SoundBuffer* sfx, float volume, float pitch,
         Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -625,6 +820,8 @@ namespace MWSound
     Sound* SoundManager::playSound3D(const MWWorld::ConstPtr& ptr, const ESM::RefId& soundId, float volume, float pitch,
         Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (remove3DSoundAtDistance(mode, ptr))
             return nullptr;
 
@@ -639,6 +836,8 @@ namespace MWSound
     Sound* SoundManager::playSound3D(const MWWorld::ConstPtr& ptr, VFS::Path::NormalizedView fileName, float volume,
         float pitch, Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (remove3DSoundAtDistance(mode, ptr))
             return nullptr;
 
@@ -656,6 +855,8 @@ namespace MWSound
     std::function<Sound*()> SoundManager::prepareSound3D(const osg::Vec3f& pos, const ESM::RefId& id,
         float volume, float pitch, Type type, PlayMode mode)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return {};
         auto buffer = mSoundBuffers.prepareImmutable(id);
@@ -667,7 +868,8 @@ namespace MWSound
         const std::weak_ptr<const char> identity = mRestoreIdentity;
         const auto generation = mRestoreGeneration + 1;
         return [this, identity, generation, plan, pos, volume, pitch, type, mode]() -> Sound* {
-            if (identity.expired() || plan->mConsumed || mRestoreGeneration != generation)
+            if (identity.expired() || identity.lock() != mRestoreIdentity
+                || plan->mConsumed || mRestoreGeneration != generation)
                 return nullptr;
             plan->mConsumed = true;
             // Backend playback failure has the same unavailable-sound outcome
@@ -690,6 +892,8 @@ namespace MWSound
     Sound* SoundManager::playSound3D(const osg::Vec3f& initialPos, const ESM::RefId& soundId, float volume, float pitch,
         Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return nullptr;
 
@@ -704,6 +908,8 @@ namespace MWSound
     Sound* SoundManager::playSound3D(const osg::Vec3f& initialPos, SoundBuffer* sfx, float volume, float pitch,
         Type type, PlayMode mode, float offset)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         const float squaredDist = (mListenerPos - initialPos).length2();
 
         SoundPtr sound = getSoundRef();
@@ -743,12 +949,16 @@ namespace MWSound
 
     void SoundManager::stopSound(Sound* sound)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (sound)
             mOutput->finishSound(sound);
     }
 
     void SoundManager::stopSound(SoundBuffer* sfx, const MWWorld::ConstPtr& ptr)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         SoundMap::iterator snditer = mActiveSounds.find(ptr.mRef);
         if (snditer != mActiveSounds.end())
         {
@@ -762,6 +972,8 @@ namespace MWSound
 
     void SoundManager::stopSound3D(const MWWorld::ConstPtr& ptr, const ESM::RefId& soundId)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
         if (auto* buffer = mSoundBuffers.lookup(soundId))
@@ -772,6 +984,8 @@ namespace MWSound
 
     void SoundManager::stopSound3D(const MWWorld::ConstPtr& ptr, VFS::Path::NormalizedView fileName)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
 
@@ -784,6 +998,8 @@ namespace MWSound
 
     void SoundManager::stopSound3D(const MWWorld::ConstPtr& ptr)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         SoundMap::iterator snditer = mActiveSounds.find(ptr.mRef);
         if (snditer != mActiveSounds.end())
         {
@@ -800,6 +1016,8 @@ namespace MWSound
 
     void SoundManager::stopSound(const MWWorld::CellStore* cell)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         for (auto& [ref, sound] : mActiveSounds)
         {
             if (ref != nullptr && ref != MWMechanics::getPlayer().mRef && sound.mCell == cell)
@@ -824,6 +1042,8 @@ namespace MWSound
 
     void SoundManager::fadeOutSound3D(const MWWorld::ConstPtr& ptr, const ESM::RefId& soundId, float duration)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         SoundMap::iterator snditer = mActiveSounds.find(ptr.mRef);
         if (snditer != mActiveSounds.end())
         {
@@ -874,6 +1094,8 @@ namespace MWSound
 
     void SoundManager::pauseSounds(BlockerType blocker, int types)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (mOutput->isInitialized())
         {
             if (mPausedSoundTypes[blocker] != 0)
@@ -887,6 +1109,8 @@ namespace MWSound
 
     void SoundManager::resumeSounds(BlockerType blocker)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (mOutput->isInitialized())
         {
             mPausedSoundTypes[blocker] = 0;
@@ -903,6 +1127,8 @@ namespace MWSound
 
     void SoundManager::pausePlayback()
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (mPlaybackPaused)
             return;
 
@@ -912,6 +1138,8 @@ namespace MWSound
 
     void SoundManager::resumePlayback()
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mPlaybackPaused)
             return;
 
@@ -1224,6 +1452,8 @@ namespace MWSound
 
     void SoundManager::update(float duration)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized() || mPlaybackPaused)
             return;
 
@@ -1250,6 +1480,8 @@ namespace MWSound
 
     void SoundManager::processChangedSettings(const Settings::CategorySettingVector& settings)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (!mOutput->isInitialized())
             return;
         mOutput->startUpdate();
@@ -1290,6 +1522,8 @@ namespace MWSound
     void SoundManager::setListenerPosDir(
         const osg::Vec3f& pos, const osg::Vec3f& dir, const osg::Vec3f& up, bool underwater)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         mListenerPos = pos;
         mListenerDir = dir;
         mListenerUp = up;
@@ -1301,11 +1535,15 @@ namespace MWSound
 
     void SoundManager::setListenerVel(const osg::Vec3f& vel)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         mListenerVel = vel;
     }
 
     void SoundManager::updatePtr(const MWWorld::ConstPtr& old, const MWWorld::ConstPtr& updated)
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         SoundMap::iterator snditer = mActiveSounds.find(old.mRef);
         if (snditer != mActiveSounds.end())
             snditer->second.mCell = updated.mCell;
@@ -1407,6 +1645,8 @@ namespace MWSound
 
     void SoundManager::clear()
     {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         ++mRestoreGeneration;
         stopMusic();
         mMusicType = MusicType::Normal;

@@ -42,6 +42,7 @@ namespace MWSound
         void setUnderwater(bool value) { mListenerUnderwater = value; }
 
     private:
+        friend class SoundManager;
         const WaterSoundUpdaterSettings mSettings;
         bool mListenerUnderwater = false;
 

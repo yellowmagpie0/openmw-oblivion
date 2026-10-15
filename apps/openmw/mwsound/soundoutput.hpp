@@ -84,6 +84,14 @@ namespace MWSound
         }
 
     public:
+        class Runtime
+        {
+        public:
+            virtual ~Runtime() = default;
+            virtual bool exchange(bool activate = true) noexcept = 0;
+        };
+        virtual std::unique_ptr<Runtime> prepareRuntime() = 0;
+
         virtual ~SoundOutput() {}
 
         bool isInitialized() const { return mInitialized; }

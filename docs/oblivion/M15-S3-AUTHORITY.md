@@ -1360,3 +1360,25 @@ These courses build a candidate content scene with audio disabled; they do not
 prove real saved-data installation or failed StateManager.loadGame restoration.
 Audio ownership, root staging and loaded aggregate commit/owner death remain open.
 S3 remains incomplete.
+
+SoundManager now retains actual voice/stream/music owners and transient audio
+state. OpenAL source registrations and decoder-worker entries move together under
+the worker lock; parked streams do not decode/refill and already-paused sources
+are not restarted. Device/buffer cache/object pools remain stable. Unwanted voices
+are finished before releasing their ObjectPtrs or output/pool dependencies.
+Scope/move/commit/owner death and callback-depth rejection have six new engine
+cases; existing prepared-audio cases additionally reject equal-generation plans
+from an unselected domain and expire archived plans on owner death.
+At fingerprint
+`e58d18a1732fab5487ff35954999d4852add835888fc06ce63be35f0d8e4d061`, all
+1,477 engine cases pass in `audio-retention-normal-03` / `-sanitized-03` normally
+and under ASan/UBSan. Component sources are unchanged. Sound-enabled runtime
+normal-02 / sanitized-02 (PIDs 404514/404628) select audio with the loaded retained
+manager group and distinct candidate content scene. Original voice decoder reads
+stay frozen while parked, voice identity/volume and scripted music return,
+candidate decoder retires once, and original decoder closes only on explicit
+stop. Allocation-denied detach/exchange and subsequent render/F5/SDL quit pass;
+provenance, selected decoded saves, lifecycle and captures are audited. The null
+OpenAL driver proves source/decoder behavior, not listening-device output.
+Correction cancellations remain recorded. Real StateManager staged load/failure
+acceptance and loaded aggregate commit/owner death remain open. S3 is incomplete.

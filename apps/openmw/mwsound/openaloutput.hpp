@@ -24,6 +24,8 @@ namespace MWSound
 
     class OpenALOutput : public SoundOutput
     {
+        struct Runtime;
+        unsigned mActiveCalls = 0;
         ALCdevice* mDevice;
         ALCcontext* mContext;
 
@@ -82,6 +84,8 @@ namespace MWSound
         void onDisconnect();
 
     public:
+        std::unique_ptr<SoundOutput::Runtime> prepareRuntime() override;
+
         std::vector<std::string> enumerate() override;
         bool init(const std::string& devname, const std::string& hrtfname, HrtfMode hrtfmode) override;
         void deinit() override;

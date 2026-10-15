@@ -21,6 +21,7 @@
 #include "efxpresets.h"
 #include "loudness.hpp"
 #include "openaloutput.hpp"
+#include <stdexcept>
 #include "sound.hpp"
 #include "sounddecoder.hpp"
 #include "soundmanagerimp.hpp"
@@ -392,6 +393,69 @@ namespace MWSound
         StreamThread(const StreamThread& rhs) = delete;
         StreamThread& operator=(const StreamThread& rhs) = delete;
     };
+
+    namespace
+    {
+        struct OutputCall
+        {
+            unsigned& depth;
+            explicit OutputCall(unsigned& value) : depth(value) { ++depth; }
+            ~OutputCall() { --depth; }
+        };
+    }
+
+    struct OpenALOutput::Runtime final : SoundOutput::Runtime
+    {
+        OpenALOutput& output;
+        SoundVec sounds;
+        StreamVec streams;
+        std::vector<OpenAL_SoundStream*> workerStreams;
+
+        explicit Runtime(OpenALOutput& owner) : output(owner) {}
+
+        bool exchange(bool activate) noexcept override
+        {
+            if (output.mActiveCalls || std::this_thread::get_id() == output.mStreamThread->mThread.get_id())
+                return false;
+            // No decoder can execute while either actual worker list is moved.
+            std::lock_guard<std::mutex> lock(output.mStreamThread->mMutex);
+            const auto park = [](SoundBase& sound, ALuint source)
+            {
+                ALint state = AL_STOPPED;
+                alGetSourcei(source, AL_SOURCE_STATE, &state);
+                sound.mResumeAfterParking = sound.mResumeAfterParking || state == AL_PLAYING;
+                if (sound.mResumeAfterParking) alSourcePause(source);
+            };
+            for (Sound* sound : output.mActiveSounds)
+                park(*sound, GET_PTRID(sound->mHandle));
+            for (Stream* stream : output.mActiveStreams)
+                park(*stream, reinterpret_cast<OpenAL_SoundStream*>(stream->mHandle)->mSource);
+            output.mActiveSounds.swap(sounds);
+            output.mActiveStreams.swap(streams);
+            output.mStreamThread->mStreams.swap(workerStreams);
+            for (Sound* sound : output.mActiveSounds)
+                if (activate && sound->mResumeAfterParking)
+                {
+                    alSourcePlay(GET_PTRID(sound->mHandle));
+                    sound->mResumeAfterParking = false;
+                }
+            for (Stream* stream : output.mActiveStreams)
+                if (activate && stream->mResumeAfterParking)
+                {
+                    alSourcePlay(reinterpret_cast<OpenAL_SoundStream*>(stream->mHandle)->mSource);
+                    stream->mResumeAfterParking = false;
+                }
+            output.mStreamThread->mCondVar.notify_all();
+            return true;
+        }
+    };
+
+    std::unique_ptr<SoundOutput::Runtime> OpenALOutput::prepareRuntime()
+    {
+        if (mActiveCalls || std::this_thread::get_id() == mStreamThread->mThread.get_id())
+            throw std::logic_error("Audio retention cannot run inside a decoder callback");
+        return std::make_unique<Runtime>(*this);
+    }
 
     class OpenALOutput::DefaultDeviceThread
     {
@@ -1031,6 +1095,7 @@ namespace MWSound
 
     std::pair<Sound_Handle, size_t> OpenALOutput::loadSound(VFS::Path::NormalizedView fname)
     {
+        OutputCall call(mActiveCalls);
         getALError();
 
         std::vector<char> data;
@@ -1285,6 +1350,7 @@ namespace MWSound
             return;
         ALuint source = GET_PTRID(sound->mHandle);
         sound->mHandle = nullptr;
+        sound->mResumeAfterParking = false;
 
         // Rewind the stream to put the source back into an AL_INITIAL state, for
         // the next time it's used.
@@ -1322,6 +1388,7 @@ namespace MWSound
 
     bool OpenALOutput::streamSound(DecoderPtr decoder, Stream* sound, bool getLoudnessData)
     {
+        OutputCall call(mActiveCalls);
         if (mFreeSources.empty())
         {
             Log(Debug::Warning) << "No free sources!";
@@ -1353,6 +1420,7 @@ namespace MWSound
 
     bool OpenALOutput::streamSound3D(DecoderPtr decoder, Stream* sound, bool getLoudnessData)
     {
+        OutputCall call(mActiveCalls);
         if (mFreeSources.empty())
         {
             Log(Debug::Warning) << "No free sources!";
@@ -1384,12 +1452,14 @@ namespace MWSound
 
     void OpenALOutput::finishStream(Stream* sound)
     {
+        OutputCall call(mActiveCalls);
         if (!sound->mHandle)
             return;
         OpenAL_SoundStream* stream = reinterpret_cast<OpenAL_SoundStream*>(sound->mHandle);
         ALuint source = stream->mSource;
 
         sound->mHandle = nullptr;
+        sound->mResumeAfterParking = false;
         mStreamThread->remove(stream);
 
         // Rewind the stream to put the source back into an AL_INITIAL state, for
@@ -1414,6 +1484,7 @@ namespace MWSound
 
     float OpenALOutput::getStreamOffset(Stream* sound)
     {
+        OutputCall call(mActiveCalls);
         if (!sound->mHandle)
             return 0.f;
         OpenAL_SoundStream* stream = reinterpret_cast<OpenAL_SoundStream*>(sound->mHandle);
@@ -1423,6 +1494,7 @@ namespace MWSound
 
     float OpenALOutput::getStreamLoudness(Stream* sound)
     {
+        OutputCall call(mActiveCalls);
         if (!sound->mHandle)
             return 0.0;
         OpenAL_SoundStream* stream = reinterpret_cast<OpenAL_SoundStream*>(sound->mHandle);

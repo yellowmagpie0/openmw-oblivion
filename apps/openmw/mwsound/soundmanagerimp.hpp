@@ -133,7 +133,7 @@ namespace MWSound
             PlayMode mode = PlayMode::Normal, float offset = 0);
         Sound* playSound3D(const osg::Vec3f& pos, SoundBuffer* sfx, float volume, float pitch,
             Type type, PlayMode mode, float offset);
-        const std::shared_ptr<const char> mRestoreIdentity = std::make_shared<const char>();
+        std::shared_ptr<const char> mRestoreIdentity = std::make_shared<const char>();
         std::uint64_t mRestoreGeneration = 0;
 
         Sound* playSound3D(const MWWorld::ConstPtr& ptr, SoundBuffer* sfx, float volume, float pitch, Type type,
@@ -167,6 +167,33 @@ namespace MWSound
         ///< Stop the given object from playing given sound buffer.
 
     public:
+        // Stop audio callers before selection. The device, caches and object
+        // pools stay stable while actual voices/decoder queues are parked.
+        class RetainedRuntime
+        {
+            friend class SoundManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
+    private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        mutable unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
+
+    public:
+
         SoundManager(const VFS::Manager* vfs, bool useSound);
         ~SoundManager() override;
         std::function<Sound*()> prepareSound3D(const osg::Vec3f& pos, const ESM::RefId& id,

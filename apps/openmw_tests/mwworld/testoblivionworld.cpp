@@ -8918,6 +8918,16 @@ namespace
             1.f, 1.f, Type::Sfx, Mode::Loop); };
         { auto cancelled = prepare(); ASSERT_TRUE(cancelled); EXPECT_EQ(cancelled(), nullptr); }
         EXPECT_TRUE(sound.getSoundPlaying({}, definition.mId));
+        // Equal generations in distinct retained domains must not admit an
+        // outgoing callback into the candidate, or consume it on rejection.
+        auto isolated = prepare(); ASSERT_TRUE(isolated);
+        auto retained = sound.retainRuntime(); ASSERT_TRUE(retained.detach());
+        sound.clear();
+        EXPECT_EQ(isolated(), nullptr);
+        ASSERT_TRUE(retained.restore());
+        sound.clear();
+        ASSERT_NE(isolated(), nullptr);
+        EXPECT_EQ(isolated(), nullptr);
         auto stale = prepare(); sound.clear(); sound.clear(); EXPECT_EQ(stale(), nullptr);
         // A dynamic outgoing definition must not supply the restore resource.
         definition.mSound = "outgoing-missing.wav";
@@ -8989,13 +8999,17 @@ namespace
         definition.mSound = "orphan-loop.wav"; definition.mData.mVolume = 255;
         fixture.mWorld.getStore().getWritable<ESM::Sound>().insertStatic(definition);
         std::function<MWBase::Sound*()> orphan;
+        std::optional<MWSound::SoundManager::RetainedRuntime> archived;
         {
             MWSound::SoundManager temporary(&fixture.mVfs, true);
             ASSERT_TRUE(temporary.isEnabled());
             orphan = temporary.prepareSound3D({}, definition.mId, 1.f, 1.f,
                 MWSound::Type::Sfx, MWSound::PlayMode::Loop);
             ASSERT_TRUE(orphan);
+            archived.emplace(temporary.retainRuntime());
+            ASSERT_TRUE(archived->detach());
         }
+        EXPECT_FALSE(archived->restore());
         EXPECT_EQ(orphan(), nullptr);
         orphan = {};
     }
