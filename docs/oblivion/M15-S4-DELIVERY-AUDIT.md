@@ -740,3 +740,78 @@ replacement equipment, complete contact/removal/scene publication and deferred
 notification still need production integration and real break/drop/restart
 courses. The earlier equipped-block live course was not repeated for this shape
 chunk. S4 remains incomplete.
+
+
+## Carried model and authored-body source binding
+
+`ESM4NpcAnimation` now captures the binary 16-byte file identity from the scene
+**template actually instantiated**, alongside the live item, normalized model
+path and attachment generation. `captureCarriedWeaponBody` loads an owned,
+immutable NIF body definition only when its path/hash matches that attachment.
+Non-NIF models, missing body graphs and mismatched scene/parser cache generations
+cannot supply a body capture. Malformed supported body graphs remain fallible
+preparation errors. Pose/body revalidation checks source identity and the existing
+slot/count/model, scene topology, transform, generation and visibility guards.
+Body capture does not compute native reference rotation, strip placement scale,
+select collision policy, remove inventory or admit a drop branch.
+
+An already captured immutable body still matches its old rendered attachment
+when the VFS file changes. A new capture rejects the different parser bytes;
+refreshing equipment against the old scene template still rejects them. Clearing
+the template cache and refreshing produces a new matching body and invalidates
+the old attachment generation. Geometry remains owned after parser cache and
+animation teardown. Future transactions must validate World/inventory lifetimes
+before borrowing the item or calling the still-live animation owner.
+
+The existing actual NPC animation test now runs with both its owned OSGT model
+and an explicit test-owned TES4 NIF (one named node, collision, rigid body and
+sphere). It checks source hash tampering/absence, authored bind transform,
+non-NIF rejection, empty body handle, changed file and independently stale caches,
+refresh invalidation, immutable retained geometry and original quantity/condition/
+charge. `S4/carried-body-nif-preflight-01` separately verifies that fixture through
+the real parser/owned-body loader. These tests use real resource and animation
+objects without a GL draw or stock asset; they are not input/drop acceptance.
+
+Final `S4/carried-body-full-normal-02` and `-full-sanitized-02` each rebuild/link
+`openmw`, `openmw-tests` and `esmtool`, then pass all **1502 engine tests/121 suites**,
+unfiltered with exact inventory/XML agreement and zero failures/skips. Both
+before/after source fingerprints agree:
+`b6381248becb4196b0971c78c9a2994bdbd310629c58e52d1327ae6a65bbb92a`,
+atop `5035159669ec265e8b232f9ce8f91be5af0a2067`. ASan leak checking is disabled;
+UBSan halts. Component/Python/schema implementation did not change and those
+suites were not repeated. Only documentation/probe-contract edits follow these
+C++ checks.
+
+`S4/carried-body-allocation-02` traces the same normal test binary SHA256
+`f752c5ba13fd863a8f4bc83846a67967e38e7a527f5a723371d17c23a3a69fb9`.
+One selected NPC animation test passes; exact ELF entries plus main load bias
+observe **37 balanced outer scopes and six nested entries**. Pose validation is
+hit 35 times and body validation eight times. No main-thread malloc, calloc,
+realloc, aligned_alloc or posix_memalign call occurs inside those scopes.
+Preparation may allocate. Other allocators, threads and paths are not covered.
+
+The first full normal run passed before this trace exposed existing path-building
+allocations in pose revalidation. Allocation -01 also selected GCC's `.cold`
+pose symbol instead of the normal entry; its body entry still observed the real
+string allocations. The instrumented -01 build was deliberately stopped before
+editing. Preparation now owns the borrowed class record's normalized path;
+validation compares it directly without constructing/correcting strings. Final
+trace -02 selects both actual normal entries and passes. Syntax attempt -01 used
+a stale compilation database missing these sources; -02 uses current CMake flags
+and passes. These failed/intermediate attempts remain retained.
+
+Original drop relation probes also advance the next factory dependency. The
+[editable relation contract](M15-ORIGINAL-DROP-RELATION-PROBES.json) records 1440
+existing-extra contexts and 384 construction contexts at actual `0x004DC000`,
+including original list/dropper mutators, list insertion and selected constructors.
+It establishes duplicate suppression, front insertion, dropper overwrite and
+conditional `+0x40(0x20000)` change requests under explicit pointer/query/extra/
+allocation boundaries. Raw reference `+8` bit `0x400` is tested only through the
+selected null `0x0046B680` fallback; the lookup's role and other query branches
+are not inferred from a harness label. Generic extra attachment, allocation
+failure, persistence and original-game runtime acceptance remain untested.
+
+The next production work remains native dropped-reference placement and scale,
+dropper/list relation storage and persistence, replacement equipment, composition
+with prepared contact/removal/key/scene publication, and real break/drop/restart
+input courses. S4 is incomplete; no break rejection is removed here.

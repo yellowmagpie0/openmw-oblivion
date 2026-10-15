@@ -11639,103 +11639,215 @@ TEST(OblivionWorldTest, NativeCellClaimDistinguishesNonOwnerRecordsFromMissingAn
     EXPECT_THROW(fixture.claim(false), std::invalid_argument);
 }
 
+#include <components/resource/niffilemanager.hpp>
+
+namespace
+{
+    // Test-owned TES4 NIF: one named node, collision object, rigid body and
+    // sphere. Explicit bytes exercise the actual resource/parser path.
+    std::string nativeCarriedWeaponNif(float radius)
+    {
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto string = [&](std::string_view value) {
+            return bytes(std::uint32_t(value.size())) + std::string(value);
+        };
+        std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
+        data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
+            + bytes(std::uint32_t{4}) + bytes(std::uint32_t{0}) + std::string(3, '\0');
+        data += bytes(std::uint16_t{4});
+        for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape"})
+            data += string(type);
+        for (std::uint16_t i = 0; i < 4; ++i) data += bytes(i);
+        data += bytes(std::uint32_t{0}); // No groups.
+        // NiNode / NiAVObject / NiObjectNET.
+        data += string("Owned weapon") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})
+            + bytes(std::uint16_t{14});
+        for (const float value : {1.f,2.f,3.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})
+            data += bytes(value);
+        data += bytes(std::uint32_t{0}) + bytes(std::int32_t{1}) // Properties and collision.
+            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Children/effects.
+        data += bytes(std::int32_t{0}) + bytes(std::uint16_t{1}) + bytes(std::int32_t{2});
+        // bhkRigidBody: shape, world filter/info, entity info, rigid info.
+        data += bytes(std::int32_t{3}) + std::string(4, '\0') + std::string(20, '\0')
+            + std::string(4, '\0') + std::string(20, '\0');
+        for (const float value : {0.f,0.f,0.f,0.f, 0.f,0.f,0.f,1.f, // Translation/XYZW rotation.
+                 0.f,0.f,0.f,0.f, 0.f,0.f,0.f,0.f, // Velocities.
+                 1.f,0.f,0.f,0.f, 0.f,1.f,0.f,0.f, 0.f,0.f,1.f,0.f, // Padded inertia.
+                 0.f,0.f,0.f,0.f, 2.f,0.f,0.f,.5f,.1f,100.f,50.f,.01f})
+            data += bytes(value);
+        data += bytes(std::uint8_t{1}) + std::string(3, '\0') + std::string(12, '\0')
+            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Constraints/body flags.
+        data += bytes(std::uint32_t{0}) + bytes(radius); // Sphere material/radius.
+        data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0}); // Root.
+        return data;
+    }
+}
+
 TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejectsStaleBindings)
 {
-    NativeWorldFixture fixture;
-    const auto actor = addNativeNpc(fixture, 0x900);
-    auto& store = fixture.mWorld.getStore();
-    auto npc = *actor.get<ESM4::Npc>()->mBase;
-    npc.mModel = "m15-carried-skeleton.osgt";
-    store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
-    MWClass::Weapon::registerSelf();
-    const auto key = ESM::FormKey::content("headless.esm", 0x940);
-    ESM4::Weapon native{}; native.mId = {0x940, 0};
-    native.mData.health = 100; native.mData.type = 5;
-    native.mModel = "m15-carried-bow.osgt";
-    store.getWritable<ESM4::Weapon>().insertStatic(native, key);
-    ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(native.mId);
-    shared.mData.mType = ESM::Weapon::MarksmanBow; shared.mData.mHealth = 100;
-    shared.mModel = "m15-carried-bow.osgt";
-    store.insertStatic(shared);
-
-    osg::ref_ptr<osg::Group> skeleton = new osg::Group;
-    skeleton->setName("Owned skeleton");
-    osg::ref_ptr<osgAnimation::Bone> bone = new osgAnimation::Bone;
-    bone->setName("weapon");
-    bone->setDataVariance(osg::Object::DYNAMIC);
-    bone->setMatrix(osg::Matrix::translate(3, -4, 5));
-    skeleton->addChild(bone);
-    osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
-    model->setName("Bow");
-    model->setDataVariance(osg::Object::DYNAMIC);
-    model->setMatrix(osg::Matrix::translate(1, 2, 3));
-    std::filesystem::create_directories(fixture.mDirectory / "meshes");
-    ASSERT_TRUE(osgDB::writeNodeFile(*skeleton,
-        (fixture.mDirectory / "meshes/m15-carried-skeleton.osgt").string()));
-    ASSERT_TRUE(osgDB::writeNodeFile(*model,
-        (fixture.mDirectory / "meshes/m15-carried-bow.osgt").string()));
-    fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
-    fixture.mVfs.buildIndex();
-    auto* scene = fixture.mResources.getSceneManager();
-    scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
-    auto defines = Shader::getDefaultDefines();
-    for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
-        defines[name] = value;
-    osg::ref_ptr<SceneUtil::LightManager> lights
-        = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
-    for (const auto& [name, value] : lights->getLightDefines())
-        defines[name] = value;
-    scene->getShaderManager().setGlobalDefines(defines);
-    ESM4::RuntimeInventoryItem saved;
-    saved.mBase = key; saved.mCount = 1; saved.mCondition = 0.f; saved.mCharge = 7.25f;
-    saved.mEquippedSlots = ESM4::InventorySlotWeapon;
-    installEquipmentInventory(fixture, actor, {saved});
-    auto& inventory = actor.getClass().getInventoryStore(actor);
-    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-    ASSERT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
-    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
-    placement->setPosition({100, 20, 30});
-    actor.getRefData().setBaseNode(placement);
-    std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponPose> retained;
+    for (const bool nativeNif : {false, true})
     {
-        MWRender::ESM4NpcAnimation animation(actor, placement, &fixture.mResources);
-        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
-        animation.showWeapons(true);
-        auto pose = animation.captureCarriedWeaponPose(item);
-        ASSERT_TRUE(pose);
-        EXPECT_EQ(pose->mItem, item);
-        EXPECT_EQ(pose->mModel, VFS::Path::Normalized("meshes/m15-carried-bow.osgt"));
-        EXPECT_EQ(pose->mScene.getWorldMatrix().getTrans(), osg::Vec3(104, 18, 38));
-        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
-        EXPECT_FALSE(animation.captureCarriedWeaponPose(actor));
-        EXPECT_FALSE(animation.captureCarriedWeaponPose(MWWorld::ConstPtr()));
-        placement->setPosition({101, 20, 30});
-        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+        SCOPED_TRACE(nativeNif);
+        NativeWorldFixture fixture;
+        const std::string modelPath = nativeNif ? "m15-carried-weapon.nif" : "m15-carried-bow.osgt";
+        const auto writeNif = [&](float radius) {
+            const auto file = fixture.mDirectory / "meshes" / modelPath;
+            std::ofstream stream(file, std::ios::binary);
+            const auto bytes = nativeCarriedWeaponNif(radius);
+            stream.write(bytes.data(), bytes.size());
+            if (!stream) throw std::runtime_error("failed to write owned weapon NIF");
+        };
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = fixture.mWorld.getStore();
+        auto npc = *actor.get<ESM4::Npc>()->mBase;
+        npc.mModel = "m15-carried-skeleton.osgt";
+        store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+        MWClass::Weapon::registerSelf();
+        const auto key = ESM::FormKey::content("headless.esm", 0x940);
+        ESM4::Weapon native{}; native.mId = {0x940, 0};
+        native.mData.health = 100; native.mData.type = 5;
+        native.mModel = modelPath;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, key);
+        ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(native.mId);
+        shared.mData.mType = ESM::Weapon::MarksmanBow; shared.mData.mHealth = 100;
+        shared.mModel = modelPath;
+        store.insertStatic(shared);
+
+        osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+        skeleton->setName("Owned skeleton");
+        osg::ref_ptr<osgAnimation::Bone> bone = new osgAnimation::Bone;
+        bone->setName("weapon");
+        bone->setDataVariance(osg::Object::DYNAMIC);
+        bone->setMatrix(osg::Matrix::translate(3, -4, 5));
+        skeleton->addChild(bone);
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        model->setName("Bow");
+        model->setDataVariance(osg::Object::DYNAMIC);
+        model->setMatrix(osg::Matrix::translate(1, 2, 3));
+        std::filesystem::create_directories(fixture.mDirectory / "meshes");
+        ASSERT_TRUE(osgDB::writeNodeFile(*skeleton,
+            (fixture.mDirectory / "meshes/m15-carried-skeleton.osgt").string()));
+        if (nativeNif) writeNif(.5f);
+        else ASSERT_TRUE(osgDB::writeNodeFile(*model, (fixture.mDirectory / "meshes" / modelPath).string()));
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        auto* scene = fixture.mResources.getSceneManager();
+        scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+        auto defines = Shader::getDefaultDefines();
+        for (const auto& [name, value] : SceneUtil::ShadowManager::getShadowsDisabledDefines())
+            defines[name] = value;
+        osg::ref_ptr<SceneUtil::LightManager> lights
+            = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+        for (const auto& [name, value] : lights->getLightDefines())
+            defines[name] = value;
+        scene->getShaderManager().setGlobalDefines(defines);
+        ESM4::RuntimeInventoryItem saved;
+        saved.mBase = key; saved.mCount = 1; saved.mCondition = 0.f; saved.mCharge = 7.25f;
+        saved.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, actor, {saved});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        ASSERT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+        osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
         placement->setPosition({100, 20, 30});
-        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
-        item.getCellRef().setCount(2);
-        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
-        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
-        item.getCellRef().setCount(1);
-        animation.refreshEquipment();
-        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
-        auto refreshed = animation.captureCarriedWeaponPose(item);
-        ASSERT_TRUE(refreshed);
-        EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*refreshed));
-        animation.showWeapons(false);
-        EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*refreshed));
-        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
-        animation.showWeapons(true);
-        retained = animation.captureCarriedWeaponPose(item);
-        ASSERT_TRUE(retained);
-        const auto inventoryBefore = fixture.mWorld.captureOblivionActorInventory(actor);
-        EXPECT_FLOAT_EQ(inventoryBefore.front().mCondition, 0.f);
-        EXPECT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
-        EXPECT_EQ(item.getCellRef().getCount(), 1);
-        EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), item);
+        actor.getRefData().setBaseNode(placement);
+        std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponPose> retained;
+        std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponBody> retainedBody;
+        {
+            MWRender::ESM4NpcAnimation animation(actor, placement, &fixture.mResources);
+            EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+            animation.showWeapons(true);
+            auto pose = animation.captureCarriedWeaponPose(item);
+            ASSERT_TRUE(pose);
+            EXPECT_EQ(pose->mItem, item);
+            EXPECT_EQ(pose->mModel, VFS::Path::Normalized("meshes/" + modelPath));
+            EXPECT_EQ(pose->mScene.getWorldMatrix().getTrans(),
+                nativeNif ? osg::Vec3(103, 16, 35) : osg::Vec3(104, 18, 38));
+            ASSERT_EQ(pose->mSourceHash.size(), 16u);
+            auto changedHash = *pose;
+            changedHash.mSourceHash[0] ^= 1;
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(changedHash));
+            changedHash.mSourceHash.clear();
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(changedHash));
+            EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
+            EXPECT_FALSE(animation.captureCarriedWeaponPose(actor));
+            EXPECT_FALSE(animation.captureCarriedWeaponPose(MWWorld::ConstPtr()));
+            placement->setPosition({101, 20, 30});
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+            placement->setPosition({100, 20, 30});
+            EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*pose));
+            item.getCellRef().setCount(2);
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+            EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+            item.getCellRef().setCount(1);
+            animation.refreshEquipment();
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*pose));
+            auto refreshed = animation.captureCarriedWeaponPose(item);
+            ASSERT_TRUE(refreshed);
+            EXPECT_TRUE(animation.isCurrentCarriedWeaponPose(*refreshed));
+            animation.showWeapons(false);
+            EXPECT_FALSE(animation.isCurrentCarriedWeaponPose(*refreshed));
+            EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+            animation.showWeapons(true);
+            retained = animation.captureCarriedWeaponPose(item);
+            ASSERT_TRUE(retained);
+            const auto inventoryBefore = fixture.mWorld.captureOblivionActorInventory(actor);
+            EXPECT_FLOAT_EQ(inventoryBefore.front().mCondition, 0.f);
+            EXPECT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(item.getCellRef().getCount(), 1);
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), item);
+            auto body = animation.captureCarriedWeaponBody(item);
+            if (!nativeNif) EXPECT_FALSE(body);
+            else
+            {
+                ASSERT_TRUE(body); ASSERT_TRUE(body->mDefinition);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponBody(*body));
+                EXPECT_EQ(body->mDefinition->mSourceHash, body->mPose.mSourceHash);
+                ASSERT_EQ(body->mDefinition->mBodies.size(), 1u);
+                const auto& authored = body->mDefinition->mBodies.front();
+                EXPECT_EQ(authored.mBone, "Owned weapon");
+                EXPECT_EQ(authored.mBoneBind.getTrans(), osg::Vec3f(1,2,3));
+                EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(authored.mShape).mRadius, .5f);
+                auto changedBody = *body; changedBody.mDefinition.reset();
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponBody(changedBody));
+                changedBody = *body; changedBody.mPose.mSourceHash[0] ^= 1;
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponBody(changedBody));
+                // NIF and scene templates have independent cache lifetimes. A new
+                // body at the old model path must not bind to the old visible mesh.
+                writeNif(2.f);
+                fixture.mResources.getNifFileManager()->clearCache();
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponBody(*body));
+                EXPECT_FALSE(animation.captureCarriedWeaponBody(item));
+                animation.refreshEquipment();
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponBody(*body));
+                EXPECT_FALSE(animation.captureCarriedWeaponBody(item));
+                fixture.mResources.getSceneManager()->clearCache();
+                animation.refreshEquipment();
+                auto replacement = animation.captureCarriedWeaponBody(item);
+                ASSERT_TRUE(replacement);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponBody(*replacement));
+                EXPECT_NE(replacement->mPose.mSourceHash, body->mPose.mSourceHash);
+                EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(
+                    replacement->mDefinition->mBodies.front().mShape).mRadius, 2.f);
+                // Captures own geometry after the parser/cache and actor go away.
+                EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(authored.mShape).mRadius, .5f);
+                retained = replacement->mPose;
+                retainedBody = std::move(*replacement);
+            }
+        }
+        EXPECT_TRUE(retained->mBindingIdentity.expired());
+        EXPECT_FALSE(retained->mScene.matchesCurrentScene());
+        if (retainedBody)
+        {
+            fixture.mResources.getNifFileManager()->clearCache();
+            EXPECT_TRUE(retainedBody->mPose.mBindingIdentity.expired());
+            EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(
+                retainedBody->mDefinition->mBodies.front().mShape).mRadius, 2.f);
+            EXPECT_EQ(retainedBody->mDefinition->mSourceHash, retainedBody->mPose.mSourceHash);
+        }
     }
-    EXPECT_TRUE(retained->mBindingIdentity.expired());
-    EXPECT_FALSE(retained->mScene.matchesCurrentScene());
 }
 
 TEST(OblivionWorldTest, NativeOwnershipExtrasCaptureAndRestoreExactPresenceWhileOlderSavesRetainLiveExtras)

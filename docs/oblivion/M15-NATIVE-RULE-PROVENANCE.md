@@ -14532,3 +14532,52 @@ No full original clone, native world-filter behavior, production drop/input,
 or original-game runtime acceptance is established. See the
 [S4 audit](M15-S4-DELIVERY-AUDIT.md#compound-stock-melee-body-geometry) for final
 regression fingerprints, stock archive identity and retained failures.
+
+
+### S4 original post-drop relation mutation and construction
+
+The [editable probe contract](M15-ORIGINAL-DROP-RELATION-PROBES.json) pins original
+image SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`,
+entries, input factors, stack convention, constructors and opaque boundaries.
+`S4/drop-relations-existing-oracle-01` passes 1440 contexts executing actual
+`0x004DC000`, the selected `0x004DB4A0` null-lookup/raw-bit fallback, existing-extra
+mutators `0x00424B60`/`0x004203E0`, and list insertion `0x00446CB0`. Sixty contexts
+mutate the selected relations; thirty request virtual `+0x40(0x20000)`; twenty-four
+allocate one list node. The first actor argument is null, the Player singleton,
+or a different nonnull pointer. This helper does not validate the actor's base
+type. Reference virtual `+0x78` remains a separately configured opaque predicate
+before and after mutation. The `0x0046B680` lookup returns null; the harness's
+lookup label does not establish its role or its nonnull/TLS query branches.
+
+Null references, null/Player actor arguments, the selected raw reference bit
+`0x400`, or a true initial `+0x78` predicate bypass relation mutation. Otherwise
+the actor list suppresses duplicate references across its nodes and inserts a
+missing reference at the front, preserving previous order. Its first value needs
+no list-node allocation; a nonempty insertion allocates eight bytes. The dropped
+reference's dropper is overwritten even when the list already contains it. This
+helper does not inspect or clean up an earlier dropper's list. It then queries
+`+0x78` again and requests the change mask only if false. The change request is
+not proof of a literal persistent flag or a base/on-disk flag mapping.
+
+`S4/drop-relations-construction-oracle-01` passes 384 contexts varying missing
+and existing extras and executes original constructors `0x0042A860` (20 bytes,
+type `0x42`, zeroed list head/next) and `0x0042A840` (16 bytes, type `0x41`, zeroed
+dropper). It checks constructor vtables, add requests, actual subsequent storage,
+stack and preserved registers. Extra lookup/add, successful allocation and the
+virtual predicates/change request remain boundaries. Generic ExtraDataList
+attachment/locking, allocation failure, removal/pickup, persistence and original
+runtime acceptance are not established.
+
+### S4 carried weapon geometry binds to its rendered source
+
+The actual template's binary file hash now accompanies carried pose captures.
+An owned immutable body graph is prepared only from a NIF with the matching
+normalized model path and hash. Actual NPC renderer/resource tests cover OSGT,
+a test-owned native NIF, independent cache generations, source replacement,
+stale attachment generations and retained graph ownership. No new native
+mathematical rule is introduced. A bounded allocator trace first exposed path
+construction during validation; direct borrowed-path comparison fixes it.
+Final normal/instrumented 1502-case engine runs and 37-scope allocation evidence
+are recorded in the [S4 audit](M15-S4-DELIVERY-AUDIT.md#carried-model-and-authored-body-source-binding).
+These are factory preparation dependencies, not native dropped placement,
+production inventory/drop publication or normal-input/restart acceptance.

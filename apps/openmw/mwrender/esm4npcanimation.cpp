@@ -22,11 +22,14 @@
 #include <components/esm4/facegen.hpp>
 
 #include <components/misc/resourcehelpers.hpp>
+#include <components/misc/osguservalues.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/imagemanager.hpp>
 #include <components/resource/scenemanager.hpp>
+#include <components/resource/niffilemanager.hpp>
+#include <components/nifbullet/actorragdoll.hpp>
 #include <components/sceneutil/attach.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/riggeometry.hpp>
@@ -120,6 +123,8 @@ namespace MWRender
         mWeaponBindingIdentity.reset();
         mCarriedWeapon = MWWorld::ConstPtr();
         mCarriedWeaponModel = VFS::Path::Normalized();
+        mCarriedWeaponRecordModel.clear();
+        mCarriedWeaponSourceHash.clear();
         mWeaponParts.clear();
         mNodeMap.clear();
         mNodeMapCreated = false;
@@ -151,11 +156,13 @@ namespace MWRender
             Log(Debug::Warning) << "Unable to attach ESM4 carried weapon " << path << ": mesh is missing";
             return;
         }
-        if (osg::ref_ptr<osg::Node> attached = insertPart(model, "Weapon", {}, false, &mWeaponParts))
+        if (osg::ref_ptr<osg::Node> attached
+            = insertPart(model, "Weapon", {}, false, &mWeaponParts, &mCarriedWeaponSourceHash))
         {
             hideOblivionWeaponScabbard(*attached);
             mCarriedWeapon = *weapon;
             mCarriedWeaponModel = path;
+            mCarriedWeaponRecordModel = model;
             mWeaponBindingIdentity = std::make_shared<const char>(0);
             Log(Debug::Info) << "M15 carried weapon attached: ref=" << mPtr.getCellRef().getRefId()
                              << " item=" << weapon->getCellRef().getRefId() << " model=" << model
@@ -166,7 +173,8 @@ namespace MWRender
     std::optional<ESM4NpcAnimation::CarriedWeaponPose> ESM4NpcAnimation::captureCarriedWeaponPose(
         const MWWorld::ConstPtr& item) const
     {
-        if (!mShowWeapon || !mWeaponBindingIdentity || item.isEmpty() || item != mCarriedWeapon
+        if (!mShowWeapon || !mWeaponBindingIdentity || mCarriedWeaponSourceHash.size() != 16
+            || item.isEmpty() || item != mCarriedWeapon
             || mWeaponParts.size() != 1)
             return std::nullopt;
         const MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
@@ -179,7 +187,8 @@ namespace MWRender
         auto scene = OblivionAttachedWeaponPose::capture(*placement, *mWeaponParts.front()->getNode());
         if (!scene)
             return std::nullopt;
-        CarriedWeaponPose result{ item, mCarriedWeaponModel, std::move(*scene), mWeaponBindingIdentity };
+        CarriedWeaponPose result{ item, mCarriedWeaponModel, mCarriedWeaponSourceHash,
+            std::move(*scene), mWeaponBindingIdentity };
         if (!isCurrentCarriedWeaponPose(result))
             return std::nullopt;
         return result;
@@ -193,6 +202,7 @@ namespace MWRender
             if (!identity || identity != mWeaponBindingIdentity || !mShowWeapon
                 || pose.mItem.isEmpty() || pose.mItem != mCarriedWeapon
                 || pose.mModel != mCarriedWeaponModel
+                || pose.mSourceHash.size() != 16 || pose.mSourceHash != mCarriedWeaponSourceHash
                 || mWeaponParts.size() != 1
                 || pose.mScene.getAttachedNode() != mWeaponParts.front()->getNode().get()
                 || pose.mScene.getPlacementNode() != mPtr.getRefData().getBaseNode())
@@ -201,8 +211,9 @@ namespace MWRender
             const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             return equipped != inventory.end() && *equipped == pose.mItem
                 && pose.mItem.getCellRef().getCount() == 1
-                && Misc::ResourceHelpers::correctMeshPath(
-                       VFS::Path::Normalized(pose.mItem.getClass().getModel(pose.mItem).value())) == pose.mModel
+                // Keep path allocation/normalization in preparation. Classes
+                // expose a borrowed normalized record path for revalidation.
+                && pose.mItem.getClass().getModel(pose.mItem).value() == mCarriedWeaponRecordModel
                 && pose.mScene.matchesCurrentScene();
         }
         catch (...)
@@ -211,9 +222,34 @@ namespace MWRender
         }
     }
 
+    std::optional<ESM4NpcAnimation::CarriedWeaponBody> ESM4NpcAnimation::captureCarriedWeaponBody(
+        const MWWorld::ConstPtr& item) const
+    {
+        auto pose = captureCarriedWeaponPose(item);
+        if (!pose || !pose->mModel.value().ends_with(".nif"))
+            return std::nullopt;
+        const auto file = mResourceSystem->getNifFileManager()->get(pose->mModel);
+        if (file->mPath != pose->mModel || file->mHash != pose->mSourceHash)
+            return std::nullopt;
+        auto definition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+            NifBullet::loadActorRagdollDefinition(*file));
+        if (definition->mBodies.empty())
+            return std::nullopt;
+        CarriedWeaponBody result{std::move(*pose), std::move(definition)};
+        if (!isCurrentCarriedWeaponBody(result))
+            return std::nullopt;
+        return result;
+    }
+
+    bool ESM4NpcAnimation::isCurrentCarriedWeaponBody(const CarriedWeaponBody& body) const noexcept
+    {
+        return body.mDefinition && body.mDefinition->mSourceHash == body.mPose.mSourceHash
+            && isCurrentCarriedWeaponPose(body.mPose);
+    }
+
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
         std::string_view model, std::string_view attachBone, std::string_view texture,
-        bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts)
+        bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts, std::string* sourceHash)
     {
         if (model.empty())
             return {};
@@ -224,6 +260,9 @@ namespace MWRender
         try
         {
             osg::ref_ptr<const osg::Node> node = sceneManager->getTemplate(path);
+            std::string hash;
+            if (sourceHash)
+                node->getUserValue(Misc::OsgUserValues::sFileHash, hash);
             osg::Group* attachment = mObjectRoot.get();
             osg::Quat attachmentAttitude;
             const osg::Quat* attitude = nullptr;
@@ -262,6 +301,8 @@ namespace MWRender
             }
             auto& destination = parts ? *parts : mParts;
             destination.emplace_back(std::make_unique<PartHolder>(std::move(attached)));
+            if (sourceHash)
+                *sourceHash = std::move(hash);
             return destination.back()->getNode();
         }
         catch (const std::exception& e)

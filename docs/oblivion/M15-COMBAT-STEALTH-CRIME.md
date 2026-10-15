@@ -6,6 +6,24 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 carried model/body source binding — 2026-10-15
+
+Carried-weapon captures now retain the file identity of the actual instantiated
+scene template. Owned NIF body capture rejects a different source at the same
+path, including independently stale scene/parser caches. Geometry survives parser
+and animation teardown; pose/body revalidation compares prepared path data
+without allocating strings.
+
+Normal and ASan/UBSan each pass all 1502 engine tests with exact inventories and
+no failures/skips. The actual NPC renderer case covers both OSGT and a test-owned
+TES4 NIF, source replacement, refresh and retained ownership. A corrected allocator
+trace passes 37 outer scopes. Independent original probes cover 1440 existing-extra
+and 384 constructor contexts for drop relations. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#carried-model-and-authored-body-source-binding)
+records fingerprints, declared boundaries and the retained allocation failure.
+Native placement/scale, relation persistence, replacement equipment and the
+production drop/input/restart transaction remain open. S4 remains incomplete.
+
 ## S4 compound stock melee body geometry — 2026-10-15
 
 The owned body loader and physics owner now support nested lists, transformed

@@ -28,11 +28,24 @@ namespace MWRender
         {
             MWWorld::ConstPtr mItem;
             VFS::Path::Normalized mModel;
+            // Binary file identity from the template actually instantiated.
+            std::string mSourceHash;
             OblivionAttachedWeaponPose mScene;
             std::weak_ptr<const char> mBindingIdentity;
         };
         std::optional<CarriedWeaponPose> captureCarriedWeaponPose(const MWWorld::ConstPtr& item) const;
         bool isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept;
+
+        struct CarriedWeaponBody
+        {
+            CarriedWeaponPose mPose;
+            std::shared_ptr<const NifBullet::ActorRagdollDefinition> mDefinition;
+        };
+        // Fallible, read-only preparation. Geometry must come from the same
+        // bytes as the rendered attachment, even across independent caches.
+        // This does not compute a dropped reference pose or publish a body.
+        std::optional<CarriedWeaponBody> captureCarriedWeaponBody(const MWWorld::ConstPtr& item) const;
+        bool isCurrentCarriedWeaponBody(const CarriedWeaponBody& body) const noexcept;
 
         osg::Vec3f runAnimation(float timepassed) override;
         void refreshEquipment();
@@ -43,7 +56,8 @@ namespace MWRender
     private:
         osg::ref_ptr<osg::Node> insertPart(
             std::string_view model, std::string_view attachBone = {}, std::string_view texture = {},
-            bool correctHeadPartOrientation = true, std::vector<PartHolderPtr>* parts = nullptr);
+            bool correctHeadPartOrientation = true, std::vector<PartHolderPtr>* parts = nullptr,
+            std::string* sourceHash = nullptr);
         void updateWeapon();
         void updateWeaponParts();
         std::size_t applyRagdollPose();
@@ -61,6 +75,8 @@ namespace MWRender
         std::vector<PartHolderPtr> mWeaponParts;
         MWWorld::ConstPtr mCarriedWeapon;
         VFS::Path::Normalized mCarriedWeaponModel;
+        std::string mCarriedWeaponRecordModel;
+        std::string mCarriedWeaponSourceHash;
         std::shared_ptr<const char> mWeaponBindingIdentity;
         bool mShowWeapon = false;
         std::vector<Tes4FaceMorph> mFaceMorphs;

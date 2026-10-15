@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "purpose": "M15S4 native post-drop actor/list and reference/dropper mutation contracts",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x004DC000",
+  "return": "0x004DC061",
+  "calling_convention": "cdecl(actor_pointer, reference_pointer); callee preserves ESI/EDI and leaves arguments on caller stack",
+  "executed": [
+    "0x004DC000 routing",
+    "0x004DB4A0 with 0x0046B680 returning null, selecting raw reference +8 bit 0x400",
+    "0x00424B60 actor dropped-list mutation",
+    "0x004203E0 reference dropper mutation",
+    "0x00446CB0 list insertion",
+    "0x0042A860/0x0042A840 constructors in construction probe only"
+  ],
+  "boundaries": [
+    "Actor argument is null, equal to Player singleton at 0x00B333C4, or a different nonnull pointer. The helper does not validate NPC base type.",
+    "Reference virtual +0x78 is an opaque input predicate, separately configured for its pre/post calls. No base-form/on-disk flag mapping is established.",
+    "Reference virtual +0x40 records the 0x20000 change request; this is not a literal persistent flag.",
+    "0x0046B680 returns null; other 0x004DB4A0 nonnull-lookup/TLS branches do not execute.",
+    "0x0041E210 extra lookup returns configured existing records or null.",
+    "0x00401F00 allocator returns fresh zeroed memory. Allocation failure is excluded.",
+    "0x0041E0A0 generic ExtraDataList add is a construction-probe boundary: validates constructor metadata and records the add request; it does not execute native attachment."
+  ],
+  "existing_extra_probe": {
+    "evidence": "S4/drop-relations-existing-oracle-01",
+    "probe_sha256": "524f961f4edf9d1c56fb551a4a3300f817209df9ef27e811f1592c3d30ffbd9a",
+    "cases": 1440,
+    "factors": {
+      "actor_argument": [
+        "null",
+        "player-singleton",
+        "other-nonnull"
+      ],
+      "reference_present": [
+        false,
+        true
+      ],
+      "raw_reference_bit_0x400": [
+        false,
+        true
+      ],
+      "pre_predicate": [
+        false,
+        true
+      ],
+      "post_predicate": [
+        false,
+        true
+      ],
+      "initial_actor_list": [
+        "empty",
+        "other",
+        "reference",
+        "other -> reference",
+        "other -> another"
+      ],
+      "initial_reference_dropper": [
+        "null",
+        "other",
+        "actor"
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "observations": {
+      "mutating_contexts": 60,
+      "change_requests": 30,
+      "list_node_allocations": 24
+    }
+  },
+  "construction_probe": {
+    "evidence": "S4/drop-relations-construction-oracle-01",
+    "probe_sha256": "d34bd6fb69acbea27c3555bf5ebe5617d18cfdfdd2e356b0c22e96335b50a537",
+    "cases": 384,
+    "factors": {
+      "actor_argument": [
+        "null",
+        "player-singleton",
+        "other-nonnull"
+      ],
+      "reference_present": [
+        false,
+        true
+      ],
+      "raw_reference_bit_0x400": [
+        false,
+        true
+      ],
+      "pre_predicate": [
+        false,
+        true
+      ],
+      "post_predicate": [
+        false,
+        true
+      ],
+      "actor_extra_existing": [
+        false,
+        true
+      ],
+      "reference_extra_existing": [
+        false,
+        true
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "existing_actor_list": "one other reference",
+    "existing_reference_dropper": "other pointer",
+    "constructors": {
+      "0x0042A860": {
+        "allocation_bytes": 20,
+        "type_byte": 66,
+        "vtable": "0x00A35A10",
+        "initial_list_head": 0,
+        "initial_list_next": 0
+      },
+      "0x0042A840": {
+        "allocation_bytes": 16,
+        "type_byte": 65,
+        "vtable": "0x00A35A04",
+        "initial_dropper": 0
+      }
+    }
+  },
+  "expected": [
+    "Null reference, null actor or Player actor bypass all relation mutation.",
+    "With a nonnull non-Player actor, the raw 0x400 fallback bit or true first +0x78 predicate bypasses all relation mutation.",
+    "Otherwise add the reference to the actor dropped list only if absent; insert it at the front while retaining old order.",
+    "An empty list receives its first pointer directly; a nonempty missing-reference list allocates one eight-byte node. Duplicate references allocate no node.",
+    "Set/overwrite the dropped reference dropper with the actor, regardless of its previous pointer. This helper does not inspect or clean up a previous dropper actor list.",
+    "After both mutations, query +0x78 again and request +0x40(0x20000) only when false.",
+    "Missing actor/list and reference/dropper extras request their actual original constructors and generic extra attachment before mutation."
+  ],
+  "not_established": [
+    "Full 0x004DB4A0 query semantics outside the selected null-lookup fallback",
+    "Base predicate/on-disk record flag mapping",
+    "Generic ExtraDataList attachment/locking and allocation-failure behavior",
+    "Previous dropper list cleanup elsewhere, pickup/removal semantics or save serialization",
+    "Production factory, normal-input break/drop and original-game runtime acceptance"
+  ]
+}
