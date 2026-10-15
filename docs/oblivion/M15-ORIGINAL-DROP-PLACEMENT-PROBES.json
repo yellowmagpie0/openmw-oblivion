@@ -1,13 +1,67 @@
 {
   "passed": true,
-  "cases": 544,
+  "cases": 4992,
   "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
   "scope": "Actual NPC break caller 5F3A93..5F3AF7, original matrix-to-Euler 711440 and its original x87 math callees. Actual native pi/half-pi initializers A09B90/A09BB0. Supplied nonnull equipped NiAVObject, entry/extra and actor pointers. Actor virtual +2C8 records spawn arguments and returns null. No node lookup, inventory removal, scene or physics publication, full drop route, or runtime acceptance.",
-  "evidence": "S4/drop-placement-native-oracle-02",
-  "probe_sha256": "2764a137aac8297409468ba17d230a898f231a08a09f021709b069f1e2179f20",
-  "expectations_sha256": "83c751f17e4f656ad71c16bcd6a8405ba53d941b2f98bb2425d0a83b3d8e3ac1",
+  "schema_version": 1,
+  "evidence": "S4/drop-placement-native-oracle-06",
+  "previous_probe": {
+    "passed": true,
+    "cases": 544,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual NPC break caller 5F3A93..5F3AF7, original matrix-to-Euler 711440 and its original x87 math callees. Actual native pi/half-pi initializers A09B90/A09BB0. Supplied nonnull equipped NiAVObject, entry/extra and actor pointers. Actor virtual +2C8 records spawn arguments and returns null. No node lookup, inventory removal, scene or physics publication, full drop route, or runtime acceptance.",
+    "evidence": "S4/drop-placement-native-oracle-02",
+    "probe_sha256": "2764a137aac8297409468ba17d230a898f231a08a09f021709b069f1e2179f20",
+    "expectations_sha256": "83c751f17e4f656ad71c16bcd6a8405ba53d941b2f98bb2425d0a83b3d8e3ac1",
+    "factors": {
+      "rotation_matrices": 34,
+      "translations": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          12.25,
+          -9.5,
+          1001.125
+        ]
+      ],
+      "node_scale": [
+        0.25,
+        1,
+        2,
+        7
+      ],
+      "x87_control_word": [
+        "0x027F",
+        "0x037F"
+      ]
+    },
+    "expected": [
+      "Caller copies node +0x88 translation to position arguments exactly.",
+      "Caller passes base, source extra, quantity 1, position and rotation to virtual +0x2C8.",
+      "Changing only node +0x94 scale leaves position and Euler arguments bit-identical in the selected nonnull-node path.",
+      "68 unique original numerical outputs are retained for implementation comparison; original 0x007070B0 uses a rounded polynomial, not host atan2."
+    ],
+    "not_established": [
+      "Node acquisition/null-node fallback",
+      "Created reference scale, inventory removal, physics/contact/scene publication or replacement equipment",
+      "Full drop transaction, pickup cleanup or original-game runtime acceptance"
+    ],
+    "schema_version": 1,
+    "expectations_file": "M15-ORIGINAL-DROP-PLACEMENT-EXPECTED.json",
+    "expectations_revision": "ec471945a7469e2d7a6afe0f33543b22fa5469d3",
+    "note": "Historical expectations at the named revision; the current expectations file supersedes that selected corpus."
+  },
+  "probe_sha256": "adb5c7657e3113eaa2db923d5719e9f8c4d7ebcfc3c02b11a3c7169888b44f3b",
+  "expectations_file": "M15-ORIGINAL-DROP-PLACEMENT-EXPECTED.json",
+  "expectations_sha256": "519ea781ff807711b316ff1005011f3bf525f3bced1d20013e57dfd215ce2980",
   "factors": {
-    "rotation_matrices": 34,
+    "matrices": 208,
+    "curated_matrices": 80,
+    "deterministic_random_matrices": 128,
+    "random_seed": 1504003,
     "translations": [
       [
         0,
@@ -20,7 +74,9 @@
         1001.125
       ]
     ],
-    "node_scale": [
+    "separate_node_scale": [
+      0,
+      -2,
       0.25,
       1,
       2,
@@ -32,16 +88,26 @@
     ]
   },
   "expected": [
-    "Caller copies node +0x88 translation to position arguments exactly.",
-    "Caller passes base, source extra, quantity 1, position and rotation to virtual +0x2C8.",
-    "Changing only node +0x94 scale leaves position and Euler arguments bit-identical in the selected nonnull-node path.",
-    "68 unique original numerical outputs are retained for implementation comparison; original 0x007070B0 uses a rounded polynomial, not host atan2."
+    "Caller copies translation exactly and supplies base/source-extra/quantity 1/position/angles to actor virtual +0x2C8.",
+    "Original angle helper returns the uniqueness flag in AL. Gimbal cases still produce drop arguments; the caller ignores that flag.",
+    "The nine matrix lanes can retain embedded scale, reflection, shear and degeneracy; the angle helper does not normalize or reject these finite matrices.",
+    "Changing separate NiTransform scale alone leaves arguments unchanged, including zero/negative scale.",
+    "Original arithmetic includes float-stored polynomial stages, asin clamps, quadrant corrections and gimbal signed-zero subtraction."
   ],
+  "cpp_comparison": {
+    "passed": true,
+    "unique_cases_compared": 416,
+    "original_contexts": 4992,
+    "different": [],
+    "source_sha256": "7b39749fd0b955d6b835984146587f63f76adb9586355f8e0e4500f75494e8ae",
+    "probe_sha256": "adb5c7657e3113eaa2db923d5719e9f8c4d7ebcfc3c02b11a3c7169888b44f3b",
+    "cpp_probe_sha256": "4d8ea7c6c6320a810dabba4dc4d8b13e70d6938b14c4f6cb8b66c8d67f0e1e2d",
+    "cpp_binary_sha256": "7f15cfe36f20e9bd8678fbc065bef9f29c5f721d795fcbeaf9cf2b682777faef",
+    "compiler": "c++ -std=c++20 -O2 -I. compare.cpp components/esm4/dropplacement.cpp"
+  },
   "not_established": [
-    "Node acquisition/null-node fallback",
-    "Created reference scale, inventory removal, physics/contact/scene publication or replacement equipment",
-    "Full drop transaction, pickup cleanup or original-game runtime acceptance"
-  ],
-  "schema_version": 1,
-  "expectations_file": "M15-ORIGINAL-DROP-PLACEMENT-EXPECTED.json"
+    "Obtaining the actual native world NiTransform from a renderer capture; decomposing a final OSG matrix cannot recover separate scale versus embedded rotationScale.",
+    "Created-reference scale, node acquisition/null-node fallback, inventory removal and scene/body publication",
+    "Production drop factory, normal-input break/drop/restart and original-game runtime acceptance"
+  ]
 }

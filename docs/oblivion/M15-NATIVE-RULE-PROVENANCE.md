@@ -14644,3 +14644,25 @@ host atan2 differs slightly for selected ordinary angles. This is evidence for
 future placement implementation, not an implemented native placement API.
 Created-reference scale, node acquisition/null-node fallback, inventory removal,
 scene/physics publication and runtime break/drop acceptance remain unverified.
+
+
+### S4 native dropped placement rule and finite matrix domain
+
+`S4/drop-placement-native-oracle-06` expands the preceding caller probe to 4992
+contexts, including 128 deterministic random matrices, adjacent gimbal lanes,
+signed zeros, embedded matrix scale/shear/reflection/degeneracy and zero/negative
+separate scale. It also records actual 00711440 AL before the caller proceeds.
+The [updated contract](M15-ORIGINAL-DROP-PLACEMENT-PROBES.json) retains the original
+executable hash, complete scope, earlier probe and 160 curated expectations.
+Production `ESM4::droppedItemPlacement` matches all 416 distinct matrix/control-word
+angle bit patterns and return flags exactly in a separately compiled comparison.
+
+The rule preserves explicit float stores in the original polynomial, clamps asin,
+and uses actual subtraction at gimbal boundaries to preserve signed zero. An
+actual `Nif::NiTransform` overload ignores only its separate scale, preserving
+embedded rotationScale. Nonfinite supported inputs reject. Final normal and
+instrumented component inventories each pass 2636 cases. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#native-equipped-node-drop-placement-arithmetic)
+records fingerprints, the initial signed-zero failure and the removed unsupported
+proper-rotation restriction. Renderer/native transform provenance, factory scale,
+publication and normal-input/runtime acceptance remain separate work.

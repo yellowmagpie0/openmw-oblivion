@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native dropped placement arithmetic — 2026-10-15
+
+The native placement rule now preserves the original angle approximation, float
+stores, asin clamps, gimbal choices and signed zeros. It accepts finite embedded
+matrix scale/shear/reflection and excludes only the separate native transform
+scale. A bounded original probe passes 4992 contexts; all 416 distinct C++ angle
+and uniqueness-flag outputs agree bit for bit. Both normal and ASan/UBSan pass
+all 2636 component tests with exact inventories and no failures/skips.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-equipped-node-drop-placement-arithmetic)
+records the independent expectations and initial signed-zero correction. Renderer
+capture must retain native scale/rotationScale provenance; generic decomposition
+of its final OSG matrix is insufficient. Factory publication, replacement equipment
+and normal-input break/drop/restart acceptance remain open. S4 is incomplete.
+
 ## S4 owned drop relations and save persistence — 2026-10-15
 
 Native instances now own optional droppers and ordered dropped-item lists.

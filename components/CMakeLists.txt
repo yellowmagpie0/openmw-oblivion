@@ -341,6 +341,7 @@ add_component_dir (esm4
     readerutils
     reference
     runtimestate
+    dropplacement
     observation
     script
     typetraits

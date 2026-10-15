@@ -961,3 +961,59 @@ Pinned executable copies also need their adjacent `defaults.bin` and
 `openmw.cfg`. Keep the read-only ready script, actual SDL F5, clean quit and
 live/binary semantic inspection; a scenario success alone does not assert the
 exact persisted relations.
+
+
+## Native equipped-node drop placement arithmetic
+
+`ESM4::droppedItemPlacement` implements the original NPC break caller's position
+and Euler arguments as an immutable rule. The overload accepting an actual
+`Nif::NiTransform` copies its rotationScale and translation and deliberately
+excludes its separate scale. The selected original path accepts finite matrices
+with embedded scale, shear, reflection and degeneracy; it does not normalize them.
+Nonfinite matrix/position inputs are outside the supported fork domain and reject.
+The native uniqueness flag is retained, including false at gimbal poles, where
+the original caller still uses the deterministic returned angles.
+
+The [original contract](M15-ORIGINAL-DROP-PLACEMENT-PROBES.json) now records
+`S4/drop-placement-native-oracle-06`: **4992 contexts**, crossing 208 matrices,
+two translations, six separate scales (including zero/negative) and both x87
+control words. Actual original 005F3A93..005F3AF7, 00711440 and its math callees,
+and pi/half-pi initializers execute. Only actor virtual +2C8 records the drop
+arguments and returns null. Eighty curated matrices include signed zeros, signed
+cardinal angles, combined/gimbal/adjacent-threshold cases and embedded matrix
+scale/shear/degeneracy. Another 128 use declared seed 1504003. The 160 curated
+control-word outputs are versioned; the larger corpus stays ignored.
+
+`S4/drop-placement-native-oracle-06/cpp-comparison.json` compares all **416**
+distinct matrix/control-word outputs with a separately compiled current production
+C++ rule: every angle bit and native uniqueness flag agrees exactly. Separate
+scale/translation crossings are independently checked by the original caller
+probe. Three component tests additionally compare the 80 curated cases against
+literal original bits, cover the native transform overload across five scales,
+copy translations exactly and reject nonfinite supported inputs. Test expectations
+come from the original image, never the production implementation.
+
+Final `S4/drop-placement-full-normal-01` and `-full-sanitized-01` each pass all
+**2636 component tests/253 suites**, unfiltered with exact inventory/XML agreement
+and zero failures/skips. Both before/after source fingerprints agree:
+`a96f6e65ff64ee5df87356ed39b331d3f3b2f18759aa63383502fee55b266153`,
+atop `ec471945a7469e2d7a6afe0f33543b22fa5469d3`. ASan leaks are disabled and
+UBSan halts. No engine, Python or runtime authority changed, so those checks were
+not repeated for this arithmetic chunk. Only documentation/probe expectations
+follow these final checks.
+
+Preflight -01 retained one failed signed-zero comparison: unary negation differs
+from the original gimbal `0 - angle` subtraction for zero. The corrected -02
+comparison passes; -03 adds the native-transform overload and finite-matrix domain.
+An early uncommitted proper-rotation validator was removed when source review
+showed that native NIF matrices explicitly permit embedded scale. Expanded
+original -03 through -06 probes confirm that distinction and the native AL flag.
+No failed evidence is counted as an acceptance pass.
+
+This is not a renderer capture/factory integration or a new gameplay branch.
+`NifOsg::MatrixTransform` retains native separate scale and rotationScale precisely
+because the final OSG matrix cannot recover them. The next capture must preserve
+that provenance, including actor placement/morphology transforms, rather than
+normalize/decompose the assembled matrix. Created-reference scale, replacement
+equipment, complete source/contact/scene/body/relation publication and real
+normal-input break/drop/restart courses remain open. S4 remains incomplete.
