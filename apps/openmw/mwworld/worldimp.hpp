@@ -5,6 +5,7 @@
 #include <osg/ref_ptr>
 
 #include <array>
+#include <functional>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -218,6 +219,8 @@ namespace MWWorld
         double mLastOblivionScriptSeconds = 0;
         bool mOblivionDefaultActivation = false;
         void takeOblivionReference(const Ptr& ptr);
+        struct OblivionEquipmentNotifications;
+        std::unique_ptr<OblivionEquipmentNotifications> mOblivionEquipmentNotifications;
         bool mDispatchingOblivionDeathEvents = false;
 
         std::string mCurrentWorldSpace;
@@ -324,6 +327,28 @@ namespace MWWorld
             const std::filesystem::path& userDataPath, ESM::GameProfile requestedGameProfile);
 
         ESM::GameProfile getGameProfile() const override { return mGameProfile; }
+        class PreparedOblivionEquipmentNotification
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedOblivionEquipmentNotification(std::unique_ptr<Data> data);
+            friend class World;
+        public:
+            ~PreparedOblivionEquipmentNotification();
+            bool isValid() const noexcept;
+            // Publish only after the associated resource transaction. No
+            // allocation or observer runs here; cancellation invokes nothing.
+            bool commit() noexcept;
+        };
+        // The callback must own its payload and guard any borrowed actor/store.
+        // Drained at World::update, after controller/actor and physics updates.
+        std::unique_ptr<PreparedOblivionEquipmentNotification> prepareOblivionEquipmentNotification(
+            std::function<void()> notification);
+        // False means an observer cleared/replaced/destroyed this World; its
+        // caller must return without accessing World state. Nested drains do
+        // not consume work queued during the current dispatch.
+        bool dispatchOblivionEquipmentNotifications();
+
         void validateOblivionSaveState(const ESM4::RuntimeState& state) const override;
         std::unique_ptr<PreparedOblivionSaveState> prepareOblivionSaveState(
             const ESM4::RuntimeState& state, std::unique_ptr<ESMStore> definitions = {}) override;

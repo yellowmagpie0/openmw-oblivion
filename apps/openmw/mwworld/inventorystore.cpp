@@ -1153,6 +1153,7 @@ struct MWWorld::InventoryStore::PreparedUnequip::Impl
 {
     InventoryStore* mOwner;
     std::shared_ptr<const char> mIdentity;
+    std::weak_ptr<const char> mStorageIdentity;
     Ptr mItem;
     int mSlot;
     int mCount;
@@ -1169,6 +1170,17 @@ MWWorld::InventoryStore::PreparedUnequip::PreparedUnequip(PreparedUnequip&&) noe
 MWWorld::InventoryStore::PreparedUnequip&
 MWWorld::InventoryStore::PreparedUnequip::operator=(PreparedUnequip&&) noexcept = default;
 
+bool MWWorld::InventoryStore::PreparedUnequip::ownerIsCurrent() const noexcept
+{
+    return mImpl && !mImpl->mStorageIdentity.expired()
+        && mImpl->mIdentity == mImpl->mOwner->mPreparedAmmunitionIdentity;
+}
+
+bool MWWorld::InventoryStore::PreparedUnequip::notify()
+{
+    return ownerIsCurrent() && mImpl->mOwner->notifyPreparedUnequip(*this);
+}
+
 std::unique_ptr<MWWorld::InventoryStore::PreparedUnequip>
 MWWorld::InventoryStore::prepareUnequip(int slot)
 {
@@ -1182,6 +1194,7 @@ MWWorld::InventoryStore::prepareUnequip(int slot)
     if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
     impl->mOwner = this;
     impl->mIdentity = mPreparedAmmunitionIdentity;
+    impl->mStorageIdentity = prepareStorageIdentity();
     impl->mItem = item;
     impl->mSlot = slot;
     impl->mCount = reference->mCount;
@@ -1191,7 +1204,8 @@ MWWorld::InventoryStore::prepareUnequip(int slot)
 bool MWWorld::InventoryStore::validatePreparedUnequip(const PreparedUnequip& change) const noexcept
 {
     const auto* value = change.mImpl.get();
-    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
+    if (!value || value->mStorageIdentity.expired() || value->mOwner != this
+        || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
         return false;
     const auto& slot = mSlots[value->mSlot];
     if (slot == end() || *slot != value->mItem)
@@ -1214,15 +1228,15 @@ bool MWWorld::InventoryStore::commitPreparedUnequip(PreparedUnequip& change) noe
 bool MWWorld::InventoryStore::notifyPreparedUnequip(PreparedUnequip& change)
 {
     auto* value = change.mImpl.get();
-    if (!value || value->mOwner != this || value->mIdentity != mPreparedAmmunitionIdentity
-        || !value->mCommitted || value->mNotified)
+    if (!value || value->mStorageIdentity.expired() || value->mOwner != this
+        || value->mIdentity != mPreparedAmmunitionIdentity || !value->mCommitted || value->mNotified)
         return false;
     // Mark before any operation that can throw or invoke an observer.
     value->mNotified = true;
     if (value->mItem.getCellRef().getCount())
     {
         restack(value->mItem);
-        if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+        if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
         if (getPtr() == MWMechanics::getPlayer())
         {
             const ESM::RefId& script = value->mItem.getClass().getScript(value->mItem);
@@ -1230,7 +1244,7 @@ bool MWWorld::InventoryStore::notifyPreparedUnequip(PreparedUnequip& change)
                 value->mItem.getRefData().getLocals().setVarByInt(script, "onpcequip", 0);
         }
     }
-    if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
     fireEquipmentChangedEvent();
     return true;
 }

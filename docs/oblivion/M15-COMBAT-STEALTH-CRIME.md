@@ -6,6 +6,22 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 deferred equipment notifications and lifetime guards — 2026-10-15
+
+Prepared unequip tokens now reject dead/replaced inventories before notification.
+World can stage allocation-free notification publication and dispatch observers
+after controller/actor and physics updates. Clear/destruction stops dispatch;
+exceptions preserve remaining order without replay; retained simulation rollback
+preserves the original queue. Capture destruction is included in lifetime guards.
+
+Normal and ASan/UBSan each pass all1487 engine tests/121 suites with exact
+inventories and zero failures/skips. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#deferred-equipment-notifications-and-lifetime-guards--transaction-groundwork)
+records the eight new lifetime/transaction cases, frozen source, retained build
+attempts and independent546-case original item-predicate audit. This is groundwork
+for full break/drop publication. No new melee break branch or live break
+acceptance is claimed; S4 remains incomplete.
+
 ## S4 equipped block impact audio — 2026-10-15
 
 Ordinary equipped blocks now carry native sound selection through contact commit.

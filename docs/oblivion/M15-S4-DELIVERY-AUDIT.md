@@ -13,7 +13,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary Player/NPC contact reaches `commitOblivionOrdinaryMeleeContact`. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary weapon/unarmed damage. `isOrdinaryMeleeContactPending` admits only Left/Right kinds. | Power selection can create animation/action ownership, but the ordinary contact predicate rejects power kinds. Directional/mastery selection is explicitly unfinished in the controller. Creature attacker and victim domains are rejected by ordinary adapters. Implement the native routes and verify geometry without a TES3 chance roll. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
-| 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
+| 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC hits and equipped-block sound selection are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
@@ -380,3 +380,73 @@ matrix. In particular, native5F3870 has an NPC drop branch as well as unequip
 paths. Numeric break publication needs complete scene/inventory consequences
 and equipment notifications deferred beyond active controller/actor iteration;
 simply clearing an equipped slot would not deliver that transition safely.
+
+
+## Deferred equipment notifications and lifetime guards — transaction groundwork
+
+`PreparedUnequip` now exposes a token-owned notification entry point guarded by
+both inventory revision and a weak storage lifetime. It rejects destruction,
+clear/replacement and same-address inventory reuse before dereferencing either
+owner or item. The existing publication still changes slots without quantities
+or callbacks. Notification remains once-only, including observer failure.
+
+World now stages an owned callback/list node before resource publication. Its
+commit only splices the preallocated node; it allocates nothing and invokes no
+observer. `World::update` drains the queue after the engine's mechanics/actor and
+physics updates, before rendering. Each event is removed before invocation.
+Reentrant drains leave newly queued work for a later boundary; a throwing event
+cannot replay, and older undispatched events retain their order ahead of newly
+queued work. Payload destruction occurs before the post-observer World guard.
+The queue invalidates its identity before destroying pending captures, so their
+destructors cannot publish into a tearing-down queue.
+
+A clear or destruction stops dispatch and returns from `World::update` before
+using stale backend/actor state. A detached but still-live original queue retains
+its unfinished events for simulation rollback. Queue ownership moves with
+`RuntimeFields`; staged preparations reject the incoming simulation and become
+valid again only when their original World/queue/generation is restored. This
+queue is transient notification infrastructure, not a new save-wire authority.
+Borrowed actor/store payloads still require their own lifetime guard; the new
+unequip token provides it for that operation.
+
+Final `S4/deferred-equipment-full-normal-03` and `-full-sanitized-03` each pass all
+1487 engine tests/121 suites, unfiltered, with exact inventory/XML agreement,
+zero failures and zero skips. Frozen source atop17710f46a8:
+`297c903888cc98761df27598a7d280335f7dcde52364b6a5dacede4659c420e4`.
+Both before/after fingerprints agree. ASan leak checking is disabled and UBSan
+halts. Only documentation follows the tested implementation. Components and
+Python code did not change and were not rerun for this checkpoint.
+
+Eight new engine tests cover deferred unequip publication, same-address owner
+reconstruction, reentrant/throwing observers and ordering, clear during actual
+`World::update`, World destruction, clear during capture destruction, queue
+teardown during capture destruction, and simulation replacement during dispatch
+with both normal return and exception. The existing simulation archive test also
+checks staged and queued notifications through detach/exchange/restore. These
+are engine transaction/lifetime tests, not normal-input break acceptance.
+
+The retained -01 builds were deliberately stopped after review found that a
+replaced-but-retained queue must keep its unfinished events. Normal -02 passes
+1485 cases before the two final capture-destruction cases; sanitizer -02 was
+stopped to correct those lifetime boundaries. Neither replaces the final -03
+scope. All final build/test handles are terminal.
+
+Independent original `S4/broken-equipment-type-audit-01` also resolves the native
+NPC break predicate without inferring meaning from a function label. The
+hash-verified executable is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+An RTTI complete-object-locator walk finds primary weapon vtableA45354 and armor
+vtableA441BC. Both virtual+78 slots resolve to4D7030. Executing that original
+function for546 flag inputs confirms its low-byte result reads internal TESForm
+flags at+08, bit0x400. Original5F3A47 tests that byte: true reaches5F3B0D's
+unequip call, false reaches5F3A59's NPC drop preparation. Player bypasses the
+predicate. The drop path uses the equipped scene node and invokes actor
+virtual+2C8 plus4DC000; this is more than a slot change. The ignored reproduction
+script/report retain the RTTI walk, cases and exact boundary. On-disk flag mapping,
+full drop execution and original-game runtime acceptance remain separate work.
+
+This checkpoint prepares the notification boundary needed by the complete
+break/drop transaction. It admits no new melee break branch. Zero/broken-after-
+wear contacts, their scene/inventory publication, interruptions, script effects
+and normal-input/restart acceptance still require implementation. S4 remains
+incomplete.

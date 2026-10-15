@@ -160,6 +160,10 @@ namespace MWWorld
             ~PreparedUnequip();
             PreparedUnequip(PreparedUnequip&&) noexcept;
             PreparedUnequip& operator=(PreparedUnequip&&) noexcept;
+            // Safe even after owner destruction/reuse. Notification owns no
+            // inventory lifetime and invokes observers at most once.
+            bool ownerIsCurrent() const noexcept;
+            bool notify();
             PreparedUnequip(const PreparedUnequip&) = delete;
             PreparedUnequip& operator=(const PreparedUnequip&) = delete;
         };

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#include <list>
 #include <type_traits>
 #include <vector>
 
@@ -241,6 +242,110 @@ namespace MWWorld
         }
     };
 
+    struct World::OblivionEquipmentNotifications
+    {
+        std::shared_ptr<const char> mIdentity = std::make_shared<const char>();
+        std::list<std::function<void()>> mPending;
+        bool mDispatching = false;
+        // Payload destructors can inspect retained preparations. Invalidate
+        // their queue before destroying the list, including World teardown.
+        ~OblivionEquipmentNotifications() { mIdentity.reset(); }
+    };
+
+    struct World::PreparedOblivionEquipmentNotification::Data
+    {
+        World* mWorld;
+        OblivionEquipmentNotifications* mQueue;
+        std::weak_ptr<const char> mWorldIdentity, mQueueIdentity;
+        std::uint64_t mClearGeneration;
+        std::list<std::function<void()>> mNode;
+    };
+
+    World::PreparedOblivionEquipmentNotification::PreparedOblivionEquipmentNotification(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    World::PreparedOblivionEquipmentNotification::~PreparedOblivionEquipmentNotification() = default;
+
+    bool World::PreparedOblivionEquipmentNotification::isValid() const noexcept
+    {
+        return mData && !mData->mNode.empty() && !mData->mWorldIdentity.expired()
+            && !mData->mQueueIdentity.expired()
+            && mData->mWorld->mOblivionClearGeneration == mData->mClearGeneration
+            && mData->mWorld->mOblivionEquipmentNotifications.get() == mData->mQueue;
+    }
+
+    bool World::PreparedOblivionEquipmentNotification::commit() noexcept
+    {
+        if (!isValid()) return false;
+        mData->mQueue->mPending.splice(mData->mQueue->mPending.end(), mData->mNode);
+        return true;
+    }
+
+    std::unique_ptr<World::PreparedOblivionEquipmentNotification> World::prepareOblivionEquipmentNotification(
+        std::function<void()> notification)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !notification)
+            throw std::invalid_argument("native equipment notification requires native World and callback");
+        if (!mOblivionEquipmentNotifications)
+            mOblivionEquipmentNotifications = std::make_unique<OblivionEquipmentNotifications>();
+        auto data = std::make_unique<PreparedOblivionEquipmentNotification::Data>();
+        data->mWorld = this;
+        data->mQueue = mOblivionEquipmentNotifications.get();
+        data->mWorldIdentity = mOblivionRestoreIdentity;
+        data->mQueueIdentity = mOblivionEquipmentNotifications->mIdentity;
+        data->mClearGeneration = mOblivionClearGeneration;
+        data->mNode.emplace_back(std::move(notification));
+        return std::unique_ptr<PreparedOblivionEquipmentNotification>(
+            new PreparedOblivionEquipmentNotification(std::move(data)));
+    }
+
+    bool World::dispatchOblivionEquipmentNotifications()
+    {
+        auto* queue = mOblivionEquipmentNotifications.get();
+        if (!queue || queue->mDispatching) return true;
+        const std::weak_ptr<const char> worldIdentity = mOblivionRestoreIdentity;
+        const std::weak_ptr<const char> queueIdentity = queue->mIdentity;
+        const auto generation = mOblivionClearGeneration;
+        const auto current = [&] {
+            return !worldIdentity.expired() && !queueIdentity.expired()
+                && mOblivionClearGeneration == generation && mOblivionEquipmentNotifications.get() == queue;
+        };
+        struct ResetDispatch
+        {
+            OblivionEquipmentNotifications* mQueue;
+            std::weak_ptr<const char> mIdentity;
+            ~ResetDispatch() { if (!mIdentity.expired()) mQueue->mDispatching = false; }
+        } reset{queue, queueIdentity};
+        queue->mDispatching = true;
+        std::list<std::function<void()>> work;
+        work.splice(work.end(), queue->mPending);
+        try
+        {
+            while (!work.empty())
+            {
+                {
+                    auto callback = std::move(work.front());
+                    work.pop_front(); // A throwing observer cannot replay this event.
+                    callback();
+                } // Destroy captured payloads before checking World lifetime.
+                if (!current())
+                {
+                    // A detached simulation can still own this queue. Keep
+                    // its unfinished events for a later rollback/restore.
+                    if (!queueIdentity.expired()) queue->mPending.splice(queue->mPending.begin(), work);
+                    return false;
+                }
+            }
+        }
+        catch (...)
+        {
+            // Preserve older work with its original queue, including a live
+            // archive. A cleared/destroyed queue instead discards its events.
+            if (!queueIdentity.expired()) queue->mPending.splice(queue->mPending.begin(), work);
+            throw;
+        }
+        return true;
+    }
+
     struct World::RuntimeFields::Data
     {
         LocalScripts::RuntimeState mLocals;
@@ -256,6 +361,7 @@ namespace MWWorld
         decltype(World::mNextOblivionDynamicSerial) mNextOblivionDynamicSerial{};
         decltype(World::mOblivionDynamicReferenceIdentity) mOblivionDynamicReferenceIdentity{};
         decltype(World::mOblivionCombat) mOblivionCombat{};
+        decltype(World::mOblivionEquipmentNotifications) mOblivionEquipmentNotifications{};
         decltype(World::mLastOblivionScriptSeconds) mLastOblivionScriptSeconds{};
         decltype(World::mOblivionDefaultActivation) mOblivionDefaultActivation{};
         decltype(World::mDispatchingOblivionDeathEvents) mDispatchingOblivionDeathEvents{};
@@ -330,6 +436,8 @@ namespace MWWorld
         swap(mOblivionDynamicReferenceIdentity, data.mOblivionDynamicReferenceIdentity);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionCombat)>);
         swap(mOblivionCombat, data.mOblivionCombat);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionEquipmentNotifications)>);
+        swap(mOblivionEquipmentNotifications, data.mOblivionEquipmentNotifications);
         static_assert(std::is_nothrow_swappable_v<decltype(mLastOblivionScriptSeconds)>);
         swap(mLastOblivionScriptSeconds, data.mLastOblivionScriptSeconds);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionDefaultActivation)>);
@@ -1196,6 +1304,7 @@ namespace MWWorld
         if (mGameProfile == ESM::GameProfile::Oblivion)
             preparedPathgrids.emplace(mStore.getOblivionPathgridService().prepareOverlayRestore({}));
 
+        mOblivionEquipmentNotifications.reset();
         mOblivionDynamicReferenceIdentity.reset();
         if (mWeatherManager)
             mWeatherManager->clear();
@@ -5045,6 +5154,7 @@ namespace MWWorld
 
     void World::update(float duration, bool paused)
     {
+        if (!dispatchOblivionEquipmentNotifications()) return;
         if (mGoToJail && !paused)
             goToJail();
 

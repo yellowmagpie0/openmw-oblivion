@@ -10141,6 +10141,169 @@ TEST(OblivionWorldTest, PreparedUnequipOwnerReuseAndDiscardAfterDestructionAreSa
     old.reset(); current.reset();
 }
 
+TEST(OblivionWorldTest, DeferredEquipmentNotificationsPublishWithoutObserversAndNotifyUnequipOnce)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = installPreparedDebitAmmunition(fixture, 2);
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    struct Observer : MWWorld::InventoryStoreListener
+    {
+        int mChanged = 0;
+        void equipmentChanged() override { ++mChanged; }
+    } observer;
+    inventory.setInvListener(&observer);
+    std::shared_ptr<MWWorld::InventoryStore::PreparedUnequip> change =
+        inventory.prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);
+    auto event = world.prepareOblivionEquipmentNotification([change] { EXPECT_TRUE(change->notify()); });
+    auto cancelled = world.prepareOblivionEquipmentNotification([] { ADD_FAILURE() << "cancelled observer"; });
+    cancelled.reset();
+    EXPECT_EQ(observer.mChanged, 0);
+    ASSERT_TRUE(inventory.commitPreparedUnequip(*change));
+    ASSERT_TRUE(event->commit());
+    EXPECT_FALSE(event->commit());
+    EXPECT_EQ(observer.mChanged, 0);
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observer.mChanged, 1);
+    EXPECT_FALSE(change->notify());
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observer.mChanged, 1);
+    inventory.setInvListener(nullptr);
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentNotificationsKeepExceptionOrderAndDeferReentrantWork)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    std::vector<int> observed;
+    auto first = world.prepareOblivionEquipmentNotification([&] {
+        observed.push_back(1);
+        auto later = world.prepareOblivionEquipmentNotification([&] { observed.push_back(4); });
+        ASSERT_TRUE(later->commit());
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(observed, std::vector<int>{1});
+        throw std::runtime_error("equipment observer failure");
+    });
+    auto second = world.prepareOblivionEquipmentNotification([&] { observed.push_back(2); });
+    auto third = world.prepareOblivionEquipmentNotification([&] { observed.push_back(3); });
+    ASSERT_TRUE(first->commit()); ASSERT_TRUE(second->commit()); ASSERT_TRUE(third->commit());
+    EXPECT_THROW(world.dispatchOblivionEquipmentNotifications(), std::runtime_error);
+    EXPECT_EQ(observed, std::vector<int>{1});
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observed, (std::vector<int>{1, 2, 3, 4}));
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observed.size(), 4u);
+    EXPECT_THROW(world.prepareOblivionEquipmentNotification({}), std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentNotificationsStopWorldUpdateAfterClear)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    int observed = 0;
+    auto stale = world.prepareOblivionEquipmentNotification([&] { ++observed; });
+    auto first = world.prepareOblivionEquipmentNotification([&] { ++observed; world.clear(); });
+    auto second = world.prepareOblivionEquipmentNotification([&] { ADD_FAILURE() << "old World observer"; });
+    ASSERT_TRUE(first->commit()); ASSERT_TRUE(second->commit());
+    // This headless World has no physics/rendering backend. Returning after
+    // the callback clears it is required before update can touch those owners.
+    world.update(0, false);
+    EXPECT_EQ(observed, 1);
+    EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit());
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observed, 1);
+    auto fresh = world.prepareOblivionEquipmentNotification([&] { ++observed; });
+    ASSERT_TRUE(fresh->commit()); ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observed, 2);
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentNotificationsOutliveDestroyedWorldWithoutDereferencingIt)
+{
+    auto fixture = std::make_unique<NativeWorldFixture>();
+    auto* world = &fixture->mWorld;
+    auto stale = world->prepareOblivionEquipmentNotification([] { ADD_FAILURE() << "destroyed World observer"; });
+    auto first = world->prepareOblivionEquipmentNotification([&] { fixture.reset(); });
+    auto second = world->prepareOblivionEquipmentNotification([] { ADD_FAILURE() << "destroyed queue observer"; });
+    ASSERT_TRUE(first->commit()); ASSERT_TRUE(second->commit());
+    EXPECT_FALSE(world->dispatchOblivionEquipmentNotifications());
+    EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit());
+    EXPECT_FALSE(first->commit()); EXPECT_FALSE(second->commit());
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentPayloadDestructionStopsWorldUpdateAfterClear)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    int destroyed = 0;
+    auto payload = std::shared_ptr<char>(new char, [&](char* value) {
+        ++destroyed; world.clear(); delete value;
+    });
+    auto event = world.prepareOblivionEquipmentNotification([held = std::move(payload)] { (void)held; });
+    auto second = world.prepareOblivionEquipmentNotification([] { ADD_FAILURE() << "cleared payload's World"; });
+    ASSERT_TRUE(event->commit()); ASSERT_TRUE(second->commit());
+    world.update(0, false);
+    EXPECT_EQ(destroyed, 1);
+    EXPECT_FALSE(event->commit()); EXPECT_FALSE(second->commit());
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentQueueInvalidatesBeforePendingPayloadDestruction)
+{
+    auto fixture = std::make_unique<NativeWorldFixture>();
+    auto* world = &fixture->mWorld;
+    auto retained = world->prepareOblivionEquipmentNotification([] { ADD_FAILURE() << "tearing-down World event"; });
+    int destroyed = 0;
+    auto payload = std::shared_ptr<char>(new char, [&](char* value) {
+        ++destroyed;
+        EXPECT_FALSE(retained->isValid()); EXPECT_FALSE(retained->commit());
+        delete value;
+    });
+    auto pending = world->prepareOblivionEquipmentNotification([held = std::move(payload)] { (void)held; });
+    ASSERT_TRUE(pending->commit());
+    fixture.reset();
+    EXPECT_EQ(destroyed, 1);
+    EXPECT_FALSE(retained->isValid()); EXPECT_FALSE(pending->commit());
+}
+
+TEST(OblivionWorldTest, PreparedUnequipNotificationSkipsDestroyedAndReusedInventory)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture, true, 2);
+    auto& source = actors.actor.getClass().getInventoryStore(actors.actor);
+    alignas(MWWorld::InventoryStore) std::array<std::byte, sizeof(MWWorld::InventoryStore)> memory;
+    auto* owner = new (memory.data()) MWWorld::InventoryStore(source);
+    struct Observer : MWWorld::InventoryStoreListener
+    {
+        MWWorld::InventoryStore*& mOwner;
+        MWWorld::InventoryStore& mSource;
+        int mChanged = 0;
+        Observer(MWWorld::InventoryStore*& owner, MWWorld::InventoryStore& source) : mOwner(owner), mSource(source) {}
+        void equipmentChanged() override
+        {
+            ++mChanged;
+            mOwner->~InventoryStore();
+            mOwner = new (mOwner) MWWorld::InventoryStore(mSource);
+        }
+    } observer(owner, source);
+    owner->setInvListener(&observer);
+    std::shared_ptr<MWWorld::InventoryStore::PreparedUnequip> first =
+        owner->prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight);
+    std::shared_ptr<MWWorld::InventoryStore::PreparedUnequip> second =
+        owner->prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);
+    auto a = fixture.mWorld.prepareOblivionEquipmentNotification([first] { EXPECT_TRUE(first->notify()); });
+    auto b = fixture.mWorld.prepareOblivionEquipmentNotification([second] { EXPECT_FALSE(second->notify()); });
+    ASSERT_TRUE(owner->commitPreparedUnequip(*first)); ASSERT_TRUE(owner->commitPreparedUnequip(*second));
+    ASSERT_TRUE(a->commit()); ASSERT_TRUE(b->commit());
+    ASSERT_TRUE(fixture.mWorld.dispatchOblivionEquipmentNotifications());
+    EXPECT_EQ(observer.mChanged, 1);
+    EXPECT_FALSE(first->ownerIsCurrent()); EXPECT_FALSE(second->ownerIsCurrent());
+    EXPECT_FALSE(first->notify()); EXPECT_FALSE(second->notify());
+    EXPECT_NE(owner->getSlot(MWWorld::InventoryStore::Slot_CarriedRight), owner->end());
+    EXPECT_NE(owner->getSlot(MWWorld::InventoryStore::Slot_Ammunition), owner->end());
+    owner->~InventoryStore();
+    EXPECT_FALSE(first->notify()); EXPECT_FALSE(second->notify());
+}
+
 TEST(OblivionWorldTest, PreparedPlayerBowBreakPublishesAllResourcesBeforeEquipmentObservers)
 {
     NativeWorldFixture fixture;
@@ -19448,10 +19611,16 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsService
     auto* oldScripts = world.getOblivionScriptManager(); auto* oldCombat = world.getOblivionCombatService();
     const auto before = world.captureOblivionRuntimeState().serializeBinary();
     const auto* graph = world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid);
+    int notifications = 0;
+    auto deferred = world.prepareOblivionEquipmentNotification([&] { ++notifications; });
+    auto queued = world.prepareOblivionEquipmentNotification([&] { ++notifications; });
+    ASSERT_TRUE(queued->commit());
     auto archive = world.retainSimulation();
     EXPECT_THROW(world.retainSimulation(), std::logic_error);
     EXPECT_THROW(world.clear(), std::logic_error);
     ASSERT_TRUE(archive.detach()); EXPECT_FALSE(archive.detach());
+    EXPECT_FALSE(deferred->isValid()); EXPECT_FALSE(deferred->commit());
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(notifications, 0);
     EXPECT_NE(world.getPlayerPtr(), oldPlayer); EXPECT_EQ(world.getTimeManager(), oldClock);
     world.clear(); world.setupPlayer(); world.getPlayer().setCell(&world.getWorldModel().getDraftCell());
     auto candidate = world.getPlayerPtr(); EXPECT_NE(candidate, oldPlayer);
@@ -19471,6 +19640,36 @@ TEST(OblivionWorldTest, WorldSimulationArchiveRestoresOriginalPlayerCellsService
     EXPECT_EQ(world.getStore().getOblivionPathgridService().graph(savedAi.mPathPoints.front().mPathgrid), graph);
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
     EXPECT_EQ(world.getPrng()(), expectedRng());
+    ASSERT_TRUE(deferred->isValid()); ASSERT_TRUE(deferred->commit());
+    ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(notifications, 2);
+}
+
+TEST(OblivionWorldTest, DeferredEquipmentDispatchKeepsRemainingEventsWithArchivedSimulation)
+{
+    for (bool throws : {false, true})
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        std::optional<MWWorld::World::RetainedSimulation> archive;
+        std::vector<int> observed;
+        auto first = world.prepareOblivionEquipmentNotification([&] {
+            observed.push_back(1);
+            archive.emplace(world.retainSimulation());
+            if (!archive->detach()) throw std::logic_error("failed to detach simulation");
+            if (throws) throw std::runtime_error("observer after simulation replacement");
+        });
+        auto second = world.prepareOblivionEquipmentNotification([&] { observed.push_back(2); });
+        ASSERT_TRUE(first->commit()); ASSERT_TRUE(second->commit());
+        if (throws) EXPECT_THROW(world.dispatchOblivionEquipmentNotifications(), std::runtime_error);
+        else EXPECT_FALSE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(observed, std::vector<int>{1});
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(observed, std::vector<int>{1});
+        ASSERT_TRUE(archive); ASSERT_TRUE(archive->restore());
+        ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(observed, (std::vector<int>{1, 2}));
+        ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(observed.size(), 2u);
+    }
 }
 
 TEST(OblivionWorldTest, WorldSimulationArchiveScopeCancelAndCommitKeepSelectedIdentity)
