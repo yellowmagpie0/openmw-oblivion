@@ -319,6 +319,10 @@ namespace MWMechanics
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 preArmorDamage = damage->mPreArmorDamage;
+                deltas.mConditionChanges = damage->mArmorConditionChanges;
+                deltas.mRandomTransition = damage->mRandomTransition;
+                result.mArmorConditionWrites = static_cast<unsigned>(damage->mArmorConditionChanges.size());
+                result.mRandomDraws = damage->mRandomTransition ? damage->mRandomTransition->mDraws : 0;
             }
             else
             {
@@ -498,6 +502,19 @@ namespace MWMechanics
         return static_cast<float>(double(std::clamp(difficultySetting, -100, 100)) / 100.0);
     }
 
+    namespace
+    {
+        struct PreparedArmorWear
+        {
+            std::vector<OblivionPhysicalConditionChange> mConditions;
+            std::optional<OblivionCombatRandomTransition> mRandom;
+        };
+
+        std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
+            OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
+            float absorbedFraction, std::span<const ESM4::GameSetting* const> settings);
+    }
+
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         float normalizedDifficulty, bool sneaking)
@@ -524,8 +541,6 @@ namespace MWMechanics
         if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
         const auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
-        if (incoming.mFatigue <= 0)
-            return std::nullopt; // Native zero-Fatigue contacts enter armor wear.
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
@@ -573,16 +588,24 @@ namespace MWMechanics
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
         const auto damage = ESM4::physicalContactDamage({incoming.mHealth, incoming.mFatigue}, remaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction, incoming.mHealth};
+        PreparedArmorWear wear;
+        // Original5FF77A computes armor wear only when incoming hand Fatigue
+        // is nonpositive. Knocked victims suppress that Fatigue writer while
+        // retaining Health damage; they still enter the ordinary armor path.
+        if (incoming.mFatigue <= 0)
+        {
+            auto prepared = prepareOrdinaryArmorWear(world, *service, victim, incoming.mHealth,
+                armor.mAbsorbedFraction, settings);
+            if (!prepared)
+                return std::nullopt;
+            wear = std::move(*prepared);
+        }
+        return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, blockDebit, blockFraction,
+            incoming.mHealth, std::move(wear.mConditions), wear.mRandom};
     }
 
     namespace
     {
-        struct PreparedArmorWear
-        {
-            std::vector<OblivionPhysicalConditionChange> mConditions;
-            std::optional<OblivionCombatRandomTransition> mRandom;
-        };
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,

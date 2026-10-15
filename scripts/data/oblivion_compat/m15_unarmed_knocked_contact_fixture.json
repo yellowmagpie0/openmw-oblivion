@@ -1,0 +1,20 @@
+{
+  "source": "build/oblivion-compat/m15/S4/current-firstperson-restart-02/staged-input.omwsave",
+  "source_sha256": "8c7c1ff8ba69869c3bbe35e7ffd863bfe5077352fabb597079fdcc797725c180",
+  "actor": "content:oblivion.esm:01fc43",
+  "position": [
+    672,
+    60,
+    -109.68915557861328,
+    0,
+    0,
+    3.1415927410125732
+  ],
+  "process_knocked_state": 1,
+  "purpose": "Declared knocked-state and geometry setup; damage only through ordinary Player input. No actual knockdown/recovery acceptance.",
+  "version": 1,
+  "native_ai_restrained": true,
+  "manifest": "oblivion_m15_unarmed_knocked_contact.json",
+  "continuation_manifest": "oblivion_m15_native_firstperson_melee_idle_continuation.json",
+  "fixture_data": "build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/fixture"
+}

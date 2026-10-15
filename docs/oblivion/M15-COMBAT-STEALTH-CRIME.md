@@ -6,6 +6,23 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 admit unarmed contacts against knocked actors — 2026-10-15
+
+Ordinary unarmed contact now prepares native armor wear when incoming hand
+Fatigue is nonpositive and publishes its condition/RNG transition with the owned
+Health/Fatigue transaction. Knocked targets no longer discard the punch. Standing
+targets retain the no-wear path. Exact native oracle values and the three-seed /
+five-state integration matrix are recorded in the
+[S4 delivery audit](M15-S4-DELIVERY-AUDIT.md#unarmed-contact-against-knocked-actors--implementation-checkpoint).
+
+Full normal and ASan/UBSan inventories pass1478 engine cases/121 suites each.
+Normal and instrumented input courses against staged knocked Valen Dreth commit
+one Health delta, zero victim Fatigue and one attacker debit, then save and restart
+in distinct processes without replay. The editable scenario and fixture recipe are checked in;
+the linked audit records source fingerprints, retained failed attempts and exact
+scope. This advances contact delivery. Physical reactions, equipped block,
+breakage, mastery/power/creature and the complete S4 matrix remain open.
+
 ## S4 current delivery audit — 2026-10-15
 
 The [S4 requirement map](M15-S4-DELIVERY-AUDIT.md) traces all eight deliverables,

@@ -89,6 +89,8 @@ namespace MWMechanics
         float mBlockFatigueDebit = 0;
         float mBlockAbsorbedFraction = 0;
         float mPreArmorDamage = 0;
+        std::vector<OblivionPhysicalConditionChange> mArmorConditionChanges{};
+        std::optional<OblivionCombatRandomTransition> mRandomTransition{};
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,

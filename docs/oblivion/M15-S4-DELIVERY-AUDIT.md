@@ -20,7 +20,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
-weapon resistance, negative incoming damage, and some zero-fatigue branches.
+weapon resistance, negative incoming damage, and remaining breakage branches.
 They need their reviewed native branches before broader contact acceptance.
 Removing a rejection without its complete consequences does not deliver a branch.
 
@@ -85,3 +85,91 @@ nonlethal target damage, blocking an opponent, reactions, other weapons/views/
 controls, power/mastery, or windup/block/recovery restart equivalence. All those
 requirements above remain open. No gameplay implementation changed in this
 audit checkpoint, and S4 is not delivered.
+
+## Unarmed contact against knocked actors — implementation checkpoint
+
+`resolveOblivionOrdinaryUnarmedContact` now admits nonpositive incoming hand
+Fatigue and prepares the native armor-wear branch. The production contact adapter
+forwards its prepared condition changes and RNG transition into the same owned
+transaction as Health/Fatigue. Positive hand Fatigue preserves the existing
+no-armor-wear route. This removes the prior blanket rejection of punches against
+knocked actors. Armor breakage still rejects before publication; this checkpoint
+does not replace the missing unequip/drop/reaction policy.
+
+Independent original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/unarmed-zero-fatigue-oracle-01` contains six original mitigation/selection/
+condition observations, both x87 precision words, with three RNG seeds. Supplied
+Health20, armor25, wear multiplier9 and novice heavy skill5 produce Health15,
+wear45 and condition100.125 -> 32.625. Seed0/1/5540 consume2/3/1 draws and finish
+at505908858/415139642/1188163031. Corpus SHA256:
+`dac026c0609720371817f9ba28a79af035820e9867a7d676fb5cf068f3cf71af`.
+These concatenate original paths with declared AV/item/TLS boundaries; they
+are not live game contacts. Ten additional original5FF712..5FF7BD observations
+vary the actual incoming Fatigue and prove positive values skip wear, including
+signed-zero boundaries. Forty-eight corrected5FFBE3 dispatch observations check
+armor fraction, wear and NPC/creature form gates through the actual base getter.
+The retained first gate attempt mislabeled stack+38 as Fatigue; it is the armor
+fraction. Only `gate-report-02.json` and `fatigue-gate-report.json` are accepted
+for those respective gates. The mislabeled attempts are explicitly invalidated.
+
+The new World integration case crosses three seeds with raw knocked states
+0/1/3/6/-1. It verifies read-only preparation, exact native Health/Fatigue/wear,
+base rather than current armor mastery, stale-RNG rejection without mutation,
+atomic resources/condition/RNG publication and no action replay after binary
+service restore. The existing unarmed identity corpus now expects the admitted
+zero-Fatigue result and retains its unchanged-state assertion. This is service/
+inventory integration; the assembled state snapshot is not a fresh-World armor
+restoration course.
+
+All1478 engine cases /121 suites pass normally and under ASan/UBSan, with exact
+unfiltered inventories and zero failures/skips, in
+`S4/unarmed-zero-fatigue-full-normal-01` and `-full-sanitized-01`. The focused
+five-case runs also pass in `-normal-01` / `-sanitized-01`. The tested dirty-source
+fingerprint is
+`a76d13e90b0566659c2a951c2546bfab782f81872a58265b6b8e084c2b404184`;
+only this evidence documentation and editable scenario/recipe files follow it.
+ASan leak checks are disabled; UBSan halts. Existing unrelated compiler warnings
+remain in the build logs. Components and Python implementation are unchanged.
+
+Editable runtime inputs are
+`scripts/data/oblivion_compat/oblivion_m15_unarmed_knocked_contact.json` and
+`m15_unarmed_knocked_contact_fixture.json`; continuation reuses the existing
+`oblivion_m15_native_firstperson_melee_idle_continuation.json` (only the diagnostic
+name differs in the recorded copy). The fixture declares copied-source identity,
+geometry, AI restraint and raw knocked-state1. Apply those fields using the native
+save decoder/writer to a private copy, then place it in the scenario's private
+`userdata/saves/M15Review/Quicksave.omwsave` slot. Supply `miss_fixture` from the
+recipe along with `openmw`, `resources` and `oblivion_data`. Do not overwrite the
+historical source. The new scenario passes the harness manifest validator.
+
+The normal runtime course `S4/unarmed-knocked-runtime-normal-02` passes with
+PIDs429742/429902: one keyboard punch hits named Valen Dreth through actual
+animation/contact dispatch, spends attacker Fatigue140 -> 133, and changes victim
+Health Damage by exactly-1.4199999570846558 with no victim Fatigue debit. Native
+flesh/hand sound requests occur. All nine native actor-value arrays are checked;
+only that declared Health channel changes after regeneration. Player inventory,
+RNG, action counter2 -> 3, empty pending ownership and raw knocked-state1 survive
+actual separate-process restart. Both phases save schema46 and exit peacefully.
+The preparation-only normal-01 failure used `reference` instead of the decoder's
+`key` field; no game launched. It remains retained.
+
+The target's raw knocked byte is declared setup. Its standing rendered pose is
+an outstanding reaction-integration limitation, not evidence of a real knockdown
+or recovery. Neither this bare-target course nor the unit wear matrix establishes
+armored gameplay/restart, equipped weapon blocking, power/creature/mastery or the
+full S4 control/view/reaction matrix. S4 remains incomplete.
+
+The corresponding ASan/UBSan runtime course
+`S4/unarmed-knocked-runtime-sanitized-01` also passes both processes
+(PIDs432160/434553). The same independent decoder assertions prove exact Health,
+unchanged victim Fatigue, all nine native value arrays, inventory/RNG and no
+replay. Its restarted capture was directly reviewed: named target, drawn
+first-person hands and live HUD render. Both processes quit peacefully with no
+ASan/UBSan diagnostics; leak checking is disabled. Instrumented binary SHA256:
+`b81e166129f12da841f9fa92ae21d6f4a019cb28e20e9f5e5db4c9bfcf85cb08`.
+Normal binary SHA256:
+`8f9ca46dc89e9810b61a0acafa56045aff6dc3789dc29949b15087b663fd06c0`.
+The per-course verification files retain input/output hashes, process epochs,
+manifest hashes and the tested code fingerprint. All current run handles are
+terminal. No physical knockdown/recovery or equipped block gate is closed.
