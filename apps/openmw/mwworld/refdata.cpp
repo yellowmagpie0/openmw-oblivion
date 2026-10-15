@@ -34,6 +34,7 @@ namespace MWWorld
 
     void RefData::copy(const RefData& refData)
     {
+        mRuntimeIdentity.mValue.reset();
         mBaseNode = refData.mBaseNode;
         mLocals = refData.mLocals;
         mEnabled = refData.mEnabled;
@@ -51,6 +52,7 @@ namespace MWWorld
 
     void RefData::cleanup()
     {
+        mRuntimeIdentity.mValue.reset();
         mBaseNode = nullptr;
         mCustomData = nullptr;
         mLuaScripts = nullptr;
@@ -253,8 +255,15 @@ namespace MWWorld
         return mPosition;
     }
 
+    std::weak_ptr<const char> RefData::prepareRuntimeIdentity()
+    {
+        if (!mRuntimeIdentity.mValue) mRuntimeIdentity.mValue = std::make_shared<const char>();
+        return mRuntimeIdentity.mValue;
+    }
+
     void RefData::setCustomData(std::unique_ptr<CustomData>&& value) noexcept
     {
+        mRuntimeIdentity.mValue.reset();
         mChanged = true; // We do not currently track CustomData, so assume anything with a CustomData is changed
         mCustomData = std::move(value);
     }

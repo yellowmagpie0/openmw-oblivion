@@ -39,6 +39,11 @@ namespace MWWorld
         ESM::FormKey getFormKey() const;
         const ESM4::Reference* getNativeReference() const noexcept
         { return std::get_if<ESM4::Reference>(&mCellRef.mVariant); }
+        // ACRE shares the ACHR base representation in this wrapper. Borrowed
+        // access avoids allocating a FormKey during transaction validation.
+        const ESM4::ActorCharacter* getNativeActor() const noexcept
+        { return std::get_if<ESM4::ActorCharacter>(&mCellRef.mVariant); }
+
 
 
         // Returns RefNum.

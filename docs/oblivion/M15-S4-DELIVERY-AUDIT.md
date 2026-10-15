@@ -450,3 +450,107 @@ break/drop transaction. It admits no new melee break branch. Zero/broken-after-
 wear contacts, their scene/inventory publication, interruptions, script effects
 and normal-input/restart acceptance still require implementation. S4 remains
 incomplete.
+
+## Prepared physical contacts — transaction groundwork
+
+Native physical contact now has separate preparation, validation and publication.
+The existing immediate World/service route delegates to this API, so accepted
+ordinary melee, blocked contact and projectile callers use the same publication
+boundary. Preparation stages actor values/lifecycle, projections, sequential
+condition writes, RNG, timed knockback and death events without publishing them.
+Cancelling a preparation leaves the action and resources unchanged. A successful
+commit consumes the contact once; repeated commit or validation fails.
+
+Before publication, the token rechecks the service generation, participant values,
+base overrides, lifecycle, action ownership, melee/bow state, animation clock,
+draw state, position/rotation/scale, and equipped item identity/count/condition/
+charges. Borrowed reference leases expire before custom-data replacement,
+copy/move replacement or destruction; inventory leases reject replaced storage.
+These checks precede dereferencing cached stats, inventory and item pointers.
+Native ACHR/ACRE and matching generic native-reference bindings remain admitted
+at this low-level service boundary. This does not enable ordinary creature melee.
+
+Commit performs no allocation or observer callback. It swaps only the prepared
+condition fields, preserving unrelated ownership metadata, and changes only the
+victim's prepared knockback pulse. Concurrent unrelated actor actions, values and
+pulses survive; changed participant state, RNG, relevant pulse or staged death
+queue rejects before publication. Token-owned entry points safely reject clear,
+service/World destruction and expired participant lifetimes. This is a service
+transaction: a future fallible World/scene admission must also guard its active
+World and simulation context before calling it. Retaining an old service is not
+proof that it is the currently selected simulation.
+
+Final `S4/prepared-contact-full-normal-07` and `-full-sanitized-06` pass all
+**1497 engine tests/121 suites**, unfiltered, with exact inventory/XML agreement,
+zero failures and zero skips. Both before/after source fingerprints agree:
+`4d3bfbe89b8ad4b63326ac7b87547a5d8fd31147e63dcd787d6dace2a8b0bb19`,
+atop `e0a3bb1859b07b83c19baed80eb5001869c187e5`. ASan leak checking is disabled;
+UBSan halts. Ten new cases cover staged cancellation/once-only publication,
+stale authority/geometry/projection owners, unrelated actors, service/World
+teardown, reference leases, equipped conditions and ownership preservation,
+stale RNG/death queues, lethal NPC/creature service contacts, independent versus
+stale victim pulses, and both native-reference representations. Only documentation
+follows the tested source; unchanged components/Python were not rerun.
+
+`S4/prepared-contact-allocation-05` additionally traces nine selected prepared-
+contact GTests in the normal Linux x86_64 binary. Exact ELF entries and original
+stack return addresses bound 61 balanced outer scopes, with 59 nested entries;
+token validation/commit, service validation and the executed outlined publication
+body are observed. There are zero observed main-thread calls to malloc, calloc,
+realloc, aligned_alloc or posix_memalign within these scopes. This is a bounded
+trace, not coverage of other threads, allocator APIs or unselected paths.
+
+Retained attempts remain distinct: early builds/preflights exposed private
+CellRef access, an unsupported variant alternative, nonmovable projection
+construction and a wrong command enum. Normal -04's five new snapshot-fixture
+failures came from omitted registered actors; normal -05 then passed 1496 cases.
+Sanitized -04 caught the new NPC-only test helper binding a reference to its
+absent Player; the helper now passes `nullptr`. Normal -06/sanitized -05 were
+stopped to remove new shadow warnings. Allocation probes -01 through -04 are
+not passes: optimized function splitting, quoted-symbol lookup, an internal GDB
+crash and a requirement for an unexecuted wrapper invalidated their reports.
+The final trace uses actual ELF addresses, follows token entries and changes
+breakpoints outside stop callbacks. These failures were not engine acceptance.
+
+Independent bounded original caller inspection in
+`S4/broken-drop-callers-01` retains the same executable hash as the preceding
+predicate audit. RTTI resolves the Character/Creature actor virtual slot
+`+0x2C8` to `0x5FC440` and PlayerCharacter's slot to `0x660CC0`. Original
+post-drop `0x4DC000` associates the actor's ExtraDroppedItemList (extra type
+`0x42`, constructor RTTI) and the dropped reference's ExtraItemDropper (type
+`0x41`). TESObjectREFR virtual slot `+0x78` delegates to the base-record predicate;
+slot `+0x40` forwards the `0x20000` mask to a change helper. That mask is not
+established as a literal persistent-reference flag. This is bounded instruction/
+RTTI evidence, not full drop execution or an original-game runtime pass. Scene
+placement, inventory removal, drop identities/relations, active-World validation
+and deferred notification still need one complete break/drop transaction. This
+checkpoint admits no new break branch.
+
+Final real-input regression courses `S4/prepared-contact-runtime-normal-02` and
+`-sanitized-02` both pass. Held keyboard block intercepts one production
+stationary-opponent attack after ordinary activation; F5 saves while held, and a
+new process loads/resaves after release. Exact inspection preserves all nine
+native actor-value arrays except the independently expected Player Health delta
+`-0.9841405749320984`. Player blocking-weapon condition is
+`55.84976577758789`, opponent weapon condition `55.70000076293945`; complete
+Player inventory, NPC weapon, unchanged combat RNG, action next ID `2 -> 3`,
+empty pending/owner lists and script phase `0 -> 2` match. Actual block Fatigue
+recovers before saving; process action is `6` while saved blocking and `-1` after
+fresh release. Distinct process epochs are `477711 -> 477908` normal and
+`480004 -> 482406` instrumented. No contact, selection or impact voice replays.
+
+Both courses start two successful native WPNBlockBlade voices and capture finite,
+non-silent actual OpenAL wave output. The unchanged stock-PCM method and fixed
+0.75 threshold find one block cluster before restart and none afterward:
+`wpn_block_blade_02.wav` correlation `0.9982556661884925` normal,
+`wpn_block_blade_01.wav` correlation `0.990941916884005` instrumented. Both
+held-block images were directly reviewed. Game binary SHA256s are
+`433705fd678b2305d3de06d5bc2be33e11bb26ab2621192eac40143089094500` and
+`08e0fbb94e813e2d0db14bcd4abb4e723e56e0ab9eb3ecbbdfbc3727a45a867f`.
+All five final reports carry the same frozen source fingerprint; the combined
+report is `S4/prepared-contact-allocation-05/checkpoint-verification.json`.
+Earlier runtime -01 courses remain intermediate evidence. Final build, test,
+debugger and runtime handles are terminal. This is regression acceptance of the
+existing equipped-block route, not block-hit/recoil animation, break/drop,
+mastery, power/creature or the full view/control/FPS/restart matrix. S4 remains
+incomplete.

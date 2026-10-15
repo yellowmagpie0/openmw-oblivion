@@ -19934,3 +19934,287 @@ TEST(OblivionWorldTest, LegacyScriptRetentionInvalidatesArchivedPlanBeforeOwnerD
     auto archive = manager->retainRuntime(); ASSERT_TRUE(archive.detach());
     manager.reset(); EXPECT_FALSE(install()); EXPECT_FALSE(archive.restore()); EXPECT_FALSE(archive.exchange());
 }
+namespace
+{
+    auto prepareContact(NativeWorldFixture& fixture, std::uint64_t id, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& victim, const MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        auto& world = fixture.mWorld;
+        // These NPC/creature-only fixtures intentionally have no Player object.
+        return world.getOblivionCombatService()->preparePhysicalContact(id, attacker, victim, deltas,
+            nullptr, false, {}, MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+    }
+
+    auto contactSnapshot(NativeWorldFixture& fixture, std::initializer_list<MWWorld::Ptr> actors)
+    {
+        auto current = actors.begin();
+        auto state = captureNativeActorState(fixture, *current++);
+        while (current != actors.end())
+            state.mReferences.push_back(captureNativeActorState(fixture, *current++).mReferences[0]);
+        return state.serializeBinary();
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactStagesCancelsAndCommitsResourcesExactlyOnce)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto action = world.beginOblivionPhysicalAction(a);
+        const auto before = contactSnapshot(fixture, {a, b});
+        auto cancelled = prepareContact(fixture, action, a, b, {-7, -3, -1, -2});
+        ASSERT_TRUE(cancelled); EXPECT_TRUE(cancelled->isValid()); cancelled.reset();
+        EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+        const float attackerFatigue = service.getNonPlayerValue(a, 10), victimFatigue = service.getNonPlayerValue(b, 10);
+        const float health = service.getNonPlayerValue(b, 8);
+        auto prepared = prepareContact(fixture, action, a, b, {-7, -3, -1, -2});
+        ASSERT_TRUE(prepared); EXPECT_TRUE(prepared->isValid());
+        EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+        ASSERT_TRUE(prepared->commit());
+        EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(prepared->isValid());
+        EXPECT_EQ(service.getNonPlayerValue(a, 10), attackerFatigue - 7);
+        EXPECT_EQ(service.getNonPlayerValue(b, 10), victimFatigue - 3);
+        EXPECT_EQ(service.getNonPlayerValue(b, 8), health - 3);
+        EXPECT_TRUE(service.isActionConsumed(action));
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactRejectsChangedAuthorityGeometryAndProjectionOwners)
+    {
+        for (int change = 0; change < 8; ++change)
+        {
+            SCOPED_TRACE(change);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            auto& service = *world.getOblivionCombatService();
+            const auto key = b.getCellRef().getFormKey();
+            const auto action = world.beginOblivionPhysicalAction(a);
+            auto prepared = prepareContact(fixture, action, a, b, {-7, -3, -1}); ASSERT_TRUE(prepared);
+            if (change == 0) ASSERT_TRUE(world.executeOblivionActorValueCommand(b, 0,
+                ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, 1));
+            else if (change == 1) service.setProcessAction(key, 6);
+            else if (change == 2) { auto p = b.getRefData().getPosition(); p.pos[0] += 1; b.getRefData().setPosition(p); }
+            else if (change == 3) b.getCellRef().setScale(2);
+            else if (change == 4) b.getClass().getCreatureStats(b).setDrawState(MWMechanics::DrawState::Weapon);
+            else if (change == 5) b.getRefData().setCustomData(b.getRefData().getCustomData()->clone());
+            else if (change == 6) service.allocateAction(key);
+            else service.cancelActorActions(a.getCellRef().getFormKey());
+            const auto before = contactSnapshot(fixture, {a, b});
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+            EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactAllowsUnrelatedActorActionsAndValueUpdates)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901), c = addNativeNpc(fixture, 0x902);
+        for (const auto actor : {a, b, c}) ASSERT_TRUE(world.activateOblivionActor(actor));
+        const auto id = world.beginOblivionPhysicalAction(a);
+        auto prepared = prepareContact(fixture, id, a, b, {-7, -3, -1}); ASSERT_TRUE(prepared);
+        const auto unrelated = world.beginOblivionPhysicalAction(c);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(c, 0, ESM4::ActorValueCommand::Mod,
+            ESM4::ActorValueCommandSource::Script, 1));
+        const auto expected = *world.getOblivionCombatService()->findActorValues(c.getCellRef().getFormKey());
+        ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+        EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(unrelated, c.getCellRef().getFormKey()));
+        EXPECT_EQ(*world.getOblivionCombatService()->findActorValues(c.getCellRef().getFormKey()), expected);
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactSurvivesServiceAndWorldDestructionOnlyAsInvalidToken)
+    {
+        std::unique_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> retained;
+        for (bool clear : {false, true})
+        {
+            auto fixture = std::make_unique<NativeWorldFixture>();
+            auto& world = fixture->mWorld;
+            const auto a = addNativeNpc(*fixture, 0x900), b = addNativeNpc(*fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            retained = prepareContact(*fixture, world.beginOblivionPhysicalAction(a), a, b, {-7, -3, -1});
+            ASSERT_TRUE(retained); ASSERT_TRUE(retained->isValid());
+            if (clear) world.clear(); else fixture.reset();
+            EXPECT_FALSE(retained->isValid()); EXPECT_FALSE(retained->commit());
+            retained.reset();
+        }
+    }
+
+    TEST(OblivionWorldTest, ReferenceRuntimeLeasesExpireBeforeCustomDataAndAcrossMoveCopyAndReuse)
+    {
+        MWWorld::RefData source;
+        auto first = source.prepareRuntimeIdentity();
+        MWWorld::RefData copy(source);
+        auto other = copy.prepareRuntimeIdentity();
+        EXPECT_FALSE(first.expired()); EXPECT_FALSE(other.expired());
+        MWWorld::RefData moved(std::move(source));
+        EXPECT_TRUE(first.expired()); EXPECT_FALSE(other.expired());
+        auto current = moved.prepareRuntimeIdentity();
+        copy = std::move(moved);
+        EXPECT_TRUE(current.expired()); EXPECT_TRUE(other.expired());
+        auto lease = copy.prepareRuntimeIdentity();
+        copy = source;
+        EXPECT_TRUE(lease.expired());
+        struct Observed : MWWorld::CustomData
+        {
+            std::weak_ptr<const char>& mLease;
+            bool& mExpired;
+            Observed(std::weak_ptr<const char>& l, bool& e) : mLease(l), mExpired(e) {}
+            ~Observed() override { mExpired = mLease.expired(); }
+            std::unique_ptr<MWWorld::CustomData> clone() const override { return std::make_unique<Observed>(*this); }
+        };
+        bool expired = false;
+        copy.setCustomData(std::make_unique<Observed>(lease, expired));
+        lease = copy.prepareRuntimeIdentity();
+        copy.setCustomData({});
+        EXPECT_TRUE(expired); EXPECT_TRUE(lease.expired());
+    }
+}
+
+namespace
+{
+    TEST(OblivionWorldTest, PreparedPhysicalContactGuardsEquippedConditionsAndPreservesOwnershipMetadata)
+    {
+        for (int change = 0; change < 5; ++change)
+        {
+            SCOPED_TRACE(change);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            ESM4::RuntimeInventoryItem equipped;
+            equipped.mBase = addEquipmentWeapon(fixture); equipped.mCount = 1; equipped.mCondition = 55.125f;
+            equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+            installEquipmentInventory(fixture, b, {equipped});
+            auto& inventory = b.getClass().getInventoryStore(b);
+            const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            const auto action = world.beginOblivionPhysicalAction(a);
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, -1};
+            deltas.mConditionChanges.push_back(MWMechanics::captureOblivionPhysicalConditionChange(b, item, 50.25f));
+            auto prepared = prepareContact(fixture, action, a, b, deltas); ASSERT_TRUE(prepared);
+            if (change == 0) item.getCellRef().setNativeItemCondition(54.125f);
+            else if (change == 1) inventory.clear();
+            else if (change == 2) installEquipmentInventory(fixture, b, {equipped});
+            else if (change == 3) item.getRefData().setCustomData({});
+            else item.getCellRef().setOwner(ESM::RefId::stringRefId("new-owner"));
+            if (change == 4)
+            {
+                ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+                EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 50.25f);
+                EXPECT_EQ(item.getCellRef().getOwner(), ESM::RefId::stringRefId("new-owner"));
+            }
+            else
+            {
+                const auto before = contactSnapshot(fixture, {a, b});
+                EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+                EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+            }
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactRejectsStaleRngAndDeathQueueWithoutPublishing)
+    {
+        for (bool lethal : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901), c = addNativeNpc(fixture, 0x902);
+            for (const auto actor : {a, b, c}) ASSERT_TRUE(world.activateOblivionActor(actor));
+            auto& service = *world.getOblivionCombatService();
+            const auto id = world.beginOblivionPhysicalAction(a);
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, lethal ? -1000.f : -3.f, -1};
+            if (!lethal) deltas.mRandomTransition = service.prepareCombatRandom(1);
+            auto prepared = prepareContact(fixture, id, a, b, deltas); ASSERT_TRUE(prepared);
+            if (lethal) ASSERT_TRUE(world.killOblivionActor(c, {}));
+            else
+            {
+                const auto other = world.beginOblivionPhysicalAction(c);
+                MWMechanics::OblivionPhysicalContactDeltas transition;
+                transition.mRandomTransition = service.prepareCombatRandom(1);
+                ASSERT_TRUE(world.commitOblivionPhysicalContact(other, c, b, transition));
+            }
+            const auto before = contactSnapshot(fixture, {a, b, c});
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+            EXPECT_EQ(contactSnapshot(fixture, {a, b, c}), before);
+            EXPECT_TRUE(service.isActionPending(id, a.getCellRef().getFormKey()));
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedPhysicalContactStagesDeathAndPreservesCreatureParticipantAdmission)
+    {
+        for (bool creature : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900);
+            const auto b = creature ? addEquipmentCreature(fixture) : addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            const auto id = world.beginOblivionPhysicalAction(a);
+            auto prepared = prepareContact(fixture, id, a, b, {-7, -1000, 0}); ASSERT_TRUE(prepared);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(b.getCellRef().getFormKey())->mPhase,
+                ESM4::ActorLifePhase::Alive);
+            ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(b.getCellRef().getFormKey())->mPhase,
+                ESM4::ActorLifePhase::Dead);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, PreparedPhysicalContactPublishesOnlyItsVictimKnockbackAndRejectsStalePulse)
+{
+    for (bool sameVictim : {false, true})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        const auto c = addNativeNpc(fixture, 0x902), d = addNativeNpc(fixture, 0x903);
+        for (const auto actor : {a, b, c, d}) ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, 0};
+        deltas.mKnockback = MWMechanics::OblivionKnockbackContact{{0, 100, 1}, 1, 155,
+            {1, -.008f, 50, 10, 512, 1}, {-20, .4f, 1, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f}};
+        const auto id = world.beginOblivionPhysicalAction(a);
+        auto prepared = prepareContact(fixture, id, a, b, deltas); ASSERT_TRUE(prepared);
+        const auto otherVictim = sameVictim ? b : d;
+        const auto otherKey = otherVictim.getCellRef().getFormKey();
+        const auto other = world.beginOblivionPhysicalAction(c);
+        auto pulseOnly = deltas; pulseOnly.mAttackerFatigue = pulseOnly.mVictimHealth = 0;
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(other, c, otherVictim, pulseOnly));
+        const auto pulse = service.actorKnockback(otherKey); ASSERT_TRUE(pulse);
+        if (sameVictim)
+        {
+            const auto before = contactSnapshot(fixture, {a, b, c, d});
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+            EXPECT_EQ(contactSnapshot(fixture, {a, b, c, d}), before);
+        }
+        else
+        {
+            ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+            EXPECT_TRUE(service.actorKnockback(b.getCellRef().getFormKey()));
+        }
+        EXPECT_EQ(service.actorKnockback(otherKey), pulse);
+    }
+}
+
+TEST(OblivionWorldTest, PreparedPhysicalContactPreservesMatchingGenericNativeReferenceBindings)
+{
+    for (bool victim : {false, true})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        const auto actor = victim ? b : a;
+        const auto original = *actor.getCellRef().getNativeActor();
+        ESM4::Reference equivalent{};
+        equivalent.mId = original.mId; equivalent.mFormKey = original.mFormKey;
+        equivalent.mBaseObj = original.mBaseObj; equivalent.mBaseKey = original.mBaseKey;
+        actor.getCellRef() = MWWorld::CellRef(equivalent);
+        const auto action = world.beginOblivionPhysicalAction(a);
+        const float health = world.getOblivionCombatService()->getNonPlayerValue(b, 8);
+        auto prepared = prepareContact(fixture, action, a, b, {-7, -3, 0}); ASSERT_TRUE(prepared);
+        ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+        EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(b, 8), health - 3);
+    }
+}

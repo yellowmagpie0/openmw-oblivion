@@ -1619,7 +1619,160 @@ namespace MWMechanics
         return {mCombatRngState, next, draws};
     }
 
-    bool OblivionCombatService::commitPhysicalContact(std::uint64_t id,
+    struct OblivionCombatService::PreparedPhysicalContact::Impl
+    {
+        struct Gear
+        {
+            MWWorld::Ptr mItem;
+            std::weak_ptr<const char> mIdentity;
+            ESM::RefId mBase;
+            std::optional<float> mCondition;
+            int mCount, mCharge;
+            float mRemainder;
+            std::uint32_t mEnchantment;
+        };
+        struct Participant
+        {
+            MWWorld::Ptr mActor;
+            std::weak_ptr<const char> mIdentity, mStorageIdentity;
+            MWWorld::InventoryStore* mInventory = nullptr;
+            CreatureStats* mStats = nullptr;
+            DrawState mDraw;
+            ESM::Position mPosition;
+            ESM::FormKey mPlacedBase;
+            float mScale;
+            ESM4::RuntimeActorValues mValues;
+            ESM4::RuntimeActorLife mLife;
+            std::optional<ESM4::RuntimeActorBaseOverride> mBase;
+            std::optional<ESM4::RuntimeMeleeState> mMelee;
+            std::optional<ESM4::RuntimeBowState> mBow;
+            std::optional<float> mClock;
+            std::array<std::optional<Gear>, MWWorld::InventoryStore::Slots> mSlots;
+
+            void capture(OblivionCombatService& owner, const MWWorld::Ptr& actor, const ESM::FormKey& key)
+            {
+                mActor = actor;
+                mValues = *owner.findActorValues(key);
+                mLife = *owner.findActorLife(key);
+                if (const auto* value = owner.findActorBase(mValues.mBase)) mBase = *value;
+                if (const auto* value = owner.findMeleeState(key)) mMelee = *value;
+                if (const auto* value = owner.findBowState(key)) mBow = *value;
+                if (const auto clock = owner.mAnimationClocks.find(key); clock != owner.mAnimationClocks.end())
+                    mClock = clock->second;
+                mStats = &actor.getClass().getCreatureStats(actor);
+                mDraw = mStats->getDrawState();
+                if (actor.getClass().hasInventoryStore(actor))
+                {
+                    mInventory = &actor.getClass().getInventoryStore(actor);
+                    mStorageIdentity = mInventory->prepareStorageIdentity();
+                    for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+                        if (const auto item = mInventory->getSlot(slot); item != mInventory->end())
+                        {
+                            const auto& ref = item->getCellRef();
+                            mSlots[slot] = Gear{*item, item->getRefData().prepareRuntimeIdentity(), ref.getRefId(),
+                                ref.getNativeItemCondition(), ref.getCount(), ref.getCharge(), ref.getChargeIntRemainder(),
+                                std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge())};
+                        }
+                }
+                mPosition = actor.getRefData().getPosition();
+                if (const auto* ref = actor.getCellRef().getNativeActor()) mPlacedBase = ref->mBaseKey;
+                else if (const auto* reference = actor.getCellRef().getNativeReference()) mPlacedBase = reference->mBaseKey;
+                mScale = actor.getCellRef().getScale();
+                // Obtain the lease after class access has initialized custom data.
+                mIdentity = actor.getRefData().prepareRuntimeIdentity();
+            }
+
+            bool valid(const OblivionCombatService& owner) const noexcept
+            {
+                if (mIdentity.expired() || (mInventory && mStorageIdentity.expired())) return false;
+                const auto same = [](const auto* value, const auto& expected) {
+                    return bool(value) == expected.has_value() && (!value || *value == *expected);
+                };
+                const auto* values = owner.findActorValues(mValues.mActor);
+                const auto* life = owner.findActorLife(mValues.mActor);
+                const auto clock = owner.mAnimationClocks.find(mValues.mActor);
+                if (!values || *values != mValues || !life || *life != mLife
+                    || !same(owner.findActorBase(mValues.mBase), mBase)
+                    || !same(owner.findMeleeState(mValues.mActor), mMelee)
+                    || !same(owner.findBowState(mValues.mActor), mBow)
+                    || (clock != owner.mAnimationClocks.end()) != mClock.has_value()
+                    || (mClock && clock->second != *mClock) || mStats->getDrawState() != mDraw
+                    || mActor.getCellRef().getScale() != mScale)
+                    return false;
+                const auto& position = mActor.getRefData().getPosition();
+                for (unsigned i = 0; i < 3; ++i)
+                    if (position.pos[i] != mPosition.pos[i] || position.rot[i] != mPosition.rot[i]) return false;
+                if (mValues.mOwner == ESM4::ActorValueOwner::NonPlayer)
+                {
+                    if (const auto* ref = mActor.getCellRef().getNativeActor())
+                    {
+                        if (ref->mFormKey != mValues.mActor || ref->mBaseKey != mPlacedBase) return false;
+                    }
+                    else if (const auto* reference = mActor.getCellRef().getNativeReference())
+                    {
+                        if (reference->mFormKey != mValues.mActor || reference->mBaseKey != mPlacedBase) return false;
+                    }
+                    else return false;
+                }
+                if (mInventory)
+                    for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+                    {
+                        const auto item = mInventory->getSlot(slot);
+                        const auto& expected = mSlots[slot];
+                        if ((item != mInventory->end()) != expected.has_value()) return false;
+                        if (!expected) continue;
+                        if (expected->mIdentity.expired() || *item != expected->mItem) return false;
+                        const auto& ref = item->getCellRef();
+                        if (ref.getRefId() != expected->mBase || ref.getCount() != expected->mCount
+                            || ref.getNativeItemCondition() != expected->mCondition || ref.getCharge() != expected->mCharge
+                            || ref.getChargeIntRemainder() != expected->mRemainder
+                            || std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()) != expected->mEnchantment)
+                            return false;
+                    }
+                return true;
+            }
+        };
+        struct Condition { MWWorld::Ptr mItem; MWWorld::CellRef mReference; bool mApply; };
+        OblivionCombatService* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mId = 0;
+        Participant mAttacker;
+        std::optional<Participant> mVictim;
+        std::vector<std::pair<std::uint64_t, ESM::FormKey>> mOwnedActions;
+        ESM4::RuntimeActorValues mAttacking;
+        std::optional<ESM4::RuntimeActorValues> mReceiving;
+        std::optional<ESM4::RuntimeActorLife> mReceivingLife;
+        std::optional<PreparedLifeTransition> mTransition, mExpectedTransition;
+        std::uint64_t mExpectedNextDeath = 0;
+        std::optional<decltype(OblivionCombatService::mActorKnockback)> mKnockback;
+        std::optional<ESM4::TimedKnockbackState> mExpectedKnockback;
+        std::optional<OblivionCombatRandomTransition> mRandom;
+        std::optional<float> mPlayerTimer;
+        std::unique_ptr<OblivionActorProjection> mPlayerView;
+        std::unique_ptr<PreparedNonPlayerView> mAttackerView, mVictimView;
+        std::vector<Condition> mConditions;
+        bool mCommitted = false;
+    };
+
+    OblivionCombatService::PreparedPhysicalContact::PreparedPhysicalContact(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionCombatService::PreparedPhysicalContact::~PreparedPhysicalContact() = default;
+    OblivionCombatService::PreparedPhysicalContact::PreparedPhysicalContact(PreparedPhysicalContact&&) noexcept = default;
+    OblivionCombatService::PreparedPhysicalContact& OblivionCombatService::PreparedPhysicalContact::operator=(
+        PreparedPhysicalContact&&) noexcept = default;
+
+    bool OblivionCombatService::PreparedPhysicalContact::isValid() const noexcept
+    {
+        return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->validatePhysicalContact(*this);
+    }
+
+    bool OblivionCombatService::PreparedPhysicalContact::commit() noexcept
+    {
+        return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->commitPhysicalContact(*this);
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
+    OblivionCombatService::preparePhysicalContact(std::uint64_t id,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
         bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
@@ -1633,11 +1786,11 @@ namespace MWMechanics
         };
         const auto attackerKey = actorKey(attacker);
         if (!isActionPending(id, attackerKey))
-            return false;
+            return nullptr;
         // A draw ID belongs to the release transaction, never a melee contact
         // or an in-flight impact. Reject before resource/RNG preparation.
         if (const auto* bow = findBowState(attackerKey); bow && bow->mActionId == id)
-            return false;
+            return nullptr;
         const auto validateActor = [&](const MWWorld::Ptr& ptr, const ESM::FormKey& key) {
             const auto* values = findActorValues(key);
             const auto* life = findActorLife(key);
@@ -1659,7 +1812,7 @@ namespace MWMechanics
             throw std::invalid_argument("native melee AI contact does not match its owned target");
         auto attacking = *validateActor(attacker, attackerKey);
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
-            return false;
+            return nullptr;
         for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth,
                  deltas.mVictimFatigue, deltas.mVictimBlockFatigue})
             if (!std::isfinite(delta))
@@ -1694,7 +1847,7 @@ namespace MWMechanics
             receiving = *validateActor(victim, victimKey);
             receivingLife = *findActorLife(victimKey);
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
-                return false;
+                return nullptr;
             change(*receiving, 10, deltas.mVictimBlockFatigue);
             change(*receiving, 8, deltas.mVictimHealth);
             change(*receiving, 10, deltas.mVictimFatigue);
@@ -1708,6 +1861,7 @@ namespace MWMechanics
         }
         change(attacking, 10, deltas.mAttackerFatigue);
         std::optional<decltype(mActorKnockback)> knockback;
+        std::optional<ESM4::TimedKnockbackState> expectedKnockback;
         if (deltas.mKnockback)
         {
             if (!receiving || receiving->mOwner != ESM4::ActorValueOwner::NonPlayer
@@ -1720,9 +1874,10 @@ namespace MWMechanics
                 ESM4::combatFatigueRatio(nonPlayerFloat(*receiving, 10, base), request.mBaseFatigue),
                 request.mDamage, request.mSettings, request.mPhysical);
             const auto vector = ESM4::nativeKnockbackVector(request.mDelta, force);
-            knockback = mActorKnockback;
-            const auto found = knockback->find(victimKey);
-            const auto previous = found == knockback->end() ? ESM4::TimedKnockbackState{} : found->second;
+            knockback.emplace();
+            const auto found = mActorKnockback.find(victimKey);
+            if (found != mActorKnockback.end()) expectedKnockback = found->second;
+            const auto previous = expectedKnockback.value_or(ESM4::TimedKnockbackState{});
             const auto pulse = ESM4::replaceNativeKnockback(previous, vector, request.mSettings.mDuration);
             if (pulse != ESM4::TimedKnockbackState{})
                 knockback->insert_or_assign(victimKey, pulse);
@@ -1730,27 +1885,22 @@ namespace MWMechanics
         if (attacking.mOwner == ESM4::ActorValueOwner::Player)
             preparePlayerValues(attacking, playerBase);
         attacking.validate();
-        std::optional<OblivionActorProjection> playerView;
-        std::optional<PreparedNonPlayerView> attackerView;
-        std::optional<PreparedNonPlayerView> victimView;
+        std::unique_ptr<OblivionActorProjection> playerView;
+        std::unique_ptr<PreparedNonPlayerView> attackerView;
+        std::unique_ptr<PreparedNonPlayerView> victimView;
         const auto prepareView = [&](const MWWorld::Ptr& ptr, const ESM4::RuntimeActorValues& values,
                                      const ESM4::RuntimeActorLife* life,
-                                     std::optional<PreparedNonPlayerView>& npcView) {
+                                     std::unique_ptr<PreparedNonPlayerView>& npcView) {
             if (values.mOwner == ESM4::ActorValueOwner::Player)
-                playerView.emplace(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, life));
+                playerView = std::make_unique<OblivionActorProjection>(
+                    ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, life));
             else
-                npcView.emplace(ptr, values, findActorBase(values.mBase), life);
+                npcView = std::make_unique<PreparedNonPlayerView>(ptr, values, findActorBase(values.mBase), life);
         };
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
-        struct PreparedCondition
-        {
-            MWWorld::Ptr mItem;
-            MWWorld::CellRef mReference;
-            bool mApply;
-        };
-        std::vector<PreparedCondition> conditions;
+        std::vector<PreparedPhysicalContact::Impl::Condition> conditions;
         conditions.reserve(deltas.mConditionChanges.size());
         if (victim.isEmpty() && !deltas.mConditionChanges.empty())
             throw std::invalid_argument("native missed swing cannot change equipment condition");
@@ -1787,39 +1937,127 @@ namespace MWMechanics
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
         }
-        // No allocations, callbacks or fallible calculations after this point.
-        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
-        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
-        static_assert(std::is_nothrow_swappable_v<MWWorld::CellRef>);
-        for (auto& prepared : conditions)
-            if (prepared.mApply)
-                std::swap(prepared.mItem.getCellRef(), prepared.mReference);
-        if (deltas.mRandomTransition)
-            mCombatRngState = deltas.mRandomTransition->mNextState;
-        if (knockback)
-            mActorKnockback.swap(*knockback);
-        std::swap(mActorValues.at(attackerKey), attacking);
-        if (receiving)
-        {
-            std::swap(mActorValues.at(victimKey), *receiving);
-            std::swap(mActorLife.at(victimKey), *receivingLife);
-            if (findActorLife(victimKey)->mPhase != ESM4::ActorLifePhase::Alive)
-                cancelActorActions(victimKey);
-            if (findActorLife(victimKey)->mPhase == ESM4::ActorLifePhase::Dead)
-                stopCombat(victimKey);
-        }
-        consumeContactAction(id, attackerKey);
+        auto data = std::make_unique<PreparedPhysicalContact::Impl>();
+        if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
+        data->mOwner = this;
+        data->mIdentity = mPreparedReleaseIdentity.mValue;
+        data->mId = id;
+        data->mAttacker.capture(*this, attacker, attackerKey);
+        if (receiving) data->mVictim.emplace().capture(*this, victim, victimKey);
+        for (const auto& [action, owner] : mActionOwners)
+            if (owner == attackerKey || (receiving && owner == victimKey))
+                data->mOwnedActions.emplace_back(action, owner);
+        data->mAttacking = std::move(attacking);
+        data->mReceiving = std::move(receiving);
+        data->mReceivingLife = std::move(receivingLife);
         if (transition)
         {
-            mPendingDeathEvents.swap(transition->mEvents);
-            mDeathCounts.swap(transition->mCounts);
-            if (findActorLife(victimKey)->mPhase == ESM4::ActorLifePhase::Dead)
-                ++mNextDeathEvent;
+            data->mTransition = std::move(transition);
+            data->mExpectedTransition.emplace(PreparedLifeTransition{mPendingDeathEvents, mDeathCounts});
+            data->mExpectedNextDeath = mNextDeathEvent;
         }
-        if (playerView) playerView->commit();
-        if (attackerView) attackerView->commit();
-        if (victimView) victimView->commit();
+        if (knockback)
+        {
+            data->mKnockback = std::move(knockback);
+            data->mExpectedKnockback = expectedKnockback;
+        }
+        data->mRandom = deltas.mRandomTransition;
+        data->mPlayerTimer = mPlayerBowTimer;
+        data->mPlayerView = std::move(playerView);
+        data->mAttackerView = std::move(attackerView);
+        data->mVictimView = std::move(victimView);
+        data->mConditions = std::move(conditions);
+        return std::unique_ptr<PreparedPhysicalContact>(new PreparedPhysicalContact(std::move(data)));
+    }
+
+    bool OblivionCombatService::validatePhysicalContact(const PreparedPhysicalContact& contact) const noexcept
+    {
+        const auto* data = contact.mImpl.get();
+        if (!data || data->mCommitted || data->mIdentity.expired() || data->mOwner != this
+            || data->mIdentity.lock() != mPreparedReleaseIdentity.mValue
+            || !isActionPending(data->mId, data->mAttacker.mValues.mActor)
+            || !data->mAttacker.valid(*this) || (data->mVictim && !data->mVictim->valid(*this)))
+            return false;
+        const auto& attackerKey = data->mAttacker.mValues.mActor;
+        const auto* victimKey = data->mVictim ? &data->mVictim->mValues.mActor : nullptr;
+        std::size_t owned = 0;
+        for (const auto& action : mActionOwners)
+            if (action.second == attackerKey || (victimKey && action.second == *victimKey))
+            {
+                if (owned == data->mOwnedActions.size() || action.first != data->mOwnedActions[owned].first
+                    || action.second != data->mOwnedActions[owned].second || !mActions.isPending(action.first)) return false;
+                ++owned;
+            }
+        if (data->mKnockback)
+        {
+            const auto found = mActorKnockback.find(*victimKey);
+            if ((found != mActorKnockback.end()) != data->mExpectedKnockback.has_value()
+                || (data->mExpectedKnockback && found->second != *data->mExpectedKnockback)) return false;
+        }
+        for (const auto& condition : data->mConditions)
+            if (condition.mApply && (!condition.mItem.getCellRef().supportsNativeItemCondition()
+                || !condition.mReference.supportsNativeItemCondition())) return false;
+        if (owned != data->mOwnedActions.size()
+            || ((data->mAttacker.mValues.mOwner == ESM4::ActorValueOwner::Player
+                || (data->mVictim && data->mVictim->mValues.mOwner == ESM4::ActorValueOwner::Player))
+                && mPlayerBowTimer != data->mPlayerTimer)
+            || (data->mRandom && mCombatRngState != data->mRandom->mExpectedState)
+            || (data->mExpectedTransition && (mNextDeathEvent != data->mExpectedNextDeath
+                || mPendingDeathEvents != data->mExpectedTransition->mEvents
+                || mDeathCounts != data->mExpectedTransition->mCounts))) return false;
         return true;
+    }
+
+    bool OblivionCombatService::commitPhysicalContact(PreparedPhysicalContact& contact) noexcept
+    {
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::TimedKnockbackState>);
+        if (!validatePhysicalContact(contact)) return false;
+        auto& data = *contact.mImpl;
+        const auto& attackerKey = data.mAttacker.mValues.mActor;
+        const auto* victimKey = data.mVictim ? &data.mVictim->mValues.mActor : nullptr;
+        for (auto& condition : data.mConditions)
+            if (condition.mApply) condition.mItem.getCellRef().swapNativeItemCondition(condition.mReference);
+        if (data.mRandom) mCombatRngState = data.mRandom->mNextState;
+        if (data.mKnockback && !data.mKnockback->empty())
+        {
+            const auto next = data.mKnockback->begin();
+            const auto found = mActorKnockback.find(next->first);
+            if (found == mActorKnockback.end()) mActorKnockback.insert(data.mKnockback->extract(next));
+            else std::swap(found->second, next->second);
+        }
+        std::swap(mActorValues.find(attackerKey)->second, data.mAttacking);
+        if (victimKey)
+        {
+            std::swap(mActorValues.find(*victimKey)->second, *data.mReceiving);
+            std::swap(mActorLife.find(*victimKey)->second, *data.mReceivingLife);
+            if (findActorLife(*victimKey)->mPhase != ESM4::ActorLifePhase::Alive) cancelActorActions(*victimKey);
+            if (findActorLife(*victimKey)->mPhase == ESM4::ActorLifePhase::Dead) stopCombat(*victimKey);
+        }
+        consumeContactAction(data.mId, attackerKey);
+        if (data.mTransition)
+        {
+            mPendingDeathEvents.swap(data.mTransition->mEvents);
+            mDeathCounts.swap(data.mTransition->mCounts);
+            if (findActorLife(*victimKey)->mPhase == ESM4::ActorLifePhase::Dead) ++mNextDeathEvent;
+        }
+        data.mCommitted = true;
+        if (data.mPlayerView) data.mPlayerView->commit();
+        if (data.mAttackerView) data.mAttackerView->commit();
+        if (data.mVictimView) data.mVictimView->commit();
+        return true;
+    }
+
+    bool OblivionCombatService::commitPhysicalContact(std::uint64_t id,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+        bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
+    {
+        auto prepared = preparePhysicalContact(id, attacker, victim, deltas, player, victimEssential,
+            recovery, playerBase, playerGodMode);
+        return prepared && commitPhysicalContact(*prepared);
     }
 
     const ESM4::RuntimeActorValues& OblivionCombatService::nonPlayerValues(const MWWorld::Ptr& actor) const

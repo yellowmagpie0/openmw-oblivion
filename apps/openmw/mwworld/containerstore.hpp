@@ -265,10 +265,11 @@ namespace MWWorld
             return isStorableType(T::sRecordId);
         }
 
-    protected:
         // Expires when storage is cleared, replaced, moved, rebound or destroyed.
-        // Prepared mutations never keep their owner alive through this guard.
+        // Prepared transactions keep no owner alive through this guard.
         std::weak_ptr<const char> prepareStorageIdentity();
+
+    protected:
         std::unique_ptr<PreparedInitialInventory> takePreparedInitialAutoEquip();
         ContainerStoreListener* mListener = nullptr;
 

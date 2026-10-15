@@ -470,6 +470,30 @@ namespace MWMechanics
         // both actors, projections and death events before changing any live
         // state. Resource publication and consumption precede external callbacks.
         // An empty victim commits a swing/miss with no victim deltas.
+        class PreparedPhysicalContact
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedPhysicalContact(std::unique_ptr<Impl> impl);
+            friend class OblivionCombatService;
+        public:
+            ~PreparedPhysicalContact();
+            PreparedPhysicalContact(PreparedPhysicalContact&&) noexcept;
+            PreparedPhysicalContact& operator=(PreparedPhysicalContact&&) noexcept;
+            // Safe entry points even after service/participant destruction.
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+            PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;
+        };
+        std::unique_ptr<PreparedPhysicalContact> preparePhysicalContact(std::uint64_t id,
+            const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+            const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+            bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode = false);
+        // Revalidate after fallible external admission. No allocation/callback
+        // in validation or publication; stale participants leave all unchanged.
+        bool validatePhysicalContact(const PreparedPhysicalContact& contact) const noexcept;
+        bool commitPhysicalContact(PreparedPhysicalContact& contact) noexcept;
         bool commitPhysicalContact(std::uint64_t id, const MWWorld::Ptr& attacker,
             const MWWorld::Ptr& victim, const OblivionPhysicalContactDeltas& deltas,
             MWWorld::Player* player, bool victimEssential,

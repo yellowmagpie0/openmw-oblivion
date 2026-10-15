@@ -6,6 +6,27 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 prepared physical contacts — 2026-10-15
+
+Physical contact now separates fallible preparation from guarded, allocation-free
+publication. Existing immediate callers use the same path. Tokens reject stale
+participant authority, geometry, equipment and lifetime owners before changing
+resources; successful commit preserves unrelated actor updates and item ownership
+metadata, and consumes contact once. This supports the future atomic scene/
+inventory break-drop transaction; it admits no new break branch.
+
+Normal and ASan/UBSan each pass all 1497 engine tests/121 suites with exact
+inventories and zero failures/skips. Both real input courses verify exact blocked
+contact values/conditions, held-block save and fresh-process release without
+replay, plus captured stock blade-block audio before restart and none afterward.
+A bounded allocation trace observes zero monitored allocator calls in 61 balanced
+validation/publication scopes. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#prepared-physical-contacts--transaction-groundwork)
+records source/binary hashes, ten new regression cases, retained failures, trace
+limits and original NPC drop metadata findings. S4 remains incomplete; active-World
+scene composition and complete break/drop consequences are the next integration
+boundary, with the remaining gameplay/acceptance matrix still open.
+
 ## S4 deferred equipment notifications and lifetime guards — 2026-10-15
 
 Prepared unequip tokens now reject dead/replaced inventories before notification.

@@ -43,6 +43,16 @@ namespace MWWorld
 
     class RefData
     {
+        // First member: default move assignment invalidates borrowed views
+        // before replacing any scene/custom-data owner. Copies never share it.
+        struct RuntimeIdentity
+        {
+            std::shared_ptr<const char> mValue;
+            RuntimeIdentity() = default;
+            RuntimeIdentity(RuntimeIdentity&& other) noexcept { other.mValue.reset(); }
+            RuntimeIdentity& operator=(RuntimeIdentity&& other) noexcept
+            { if (this != &other) { mValue.reset(); other.mValue.reset(); } return *this; }
+        } mRuntimeIdentity;
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> mBaseNode;
 
         MWScript::Locals mLocals;
@@ -125,6 +135,10 @@ namespace MWWorld
 
         void setPosition(const ESM::Position& pos);
         const ESM::Position& getPosition() const;
+
+        // Borrowed projection/item guards expire before custom data or this
+        // reference is replaced, moved or destroyed. They keep no owner alive.
+        std::weak_ptr<const char> prepareRuntimeIdentity();
 
         void setCustomData(std::unique_ptr<CustomData>&& value) noexcept;
         ///< Set custom data (potentially replacing old custom data). The ownership of \a data is
