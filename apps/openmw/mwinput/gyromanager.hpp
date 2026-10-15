@@ -13,6 +13,7 @@ namespace MWInput
         void setGuiCursorEnabled(bool enabled) { mGuiCursorEnabled = enabled; }
 
     private:
+        friend class InputManager;
         bool mGuiCursorEnabled = true;
     };
 }

@@ -52,6 +52,7 @@ namespace MWInput
         std::string getControllerAxisIcon(int axis);
 
     private:
+        friend class InputManager;
         // Return true if GUI consumes input.
         bool gamepadToGuiControl(const SDL_ControllerButtonEvent& arg);
         bool gamepadToGuiControl(const SDL_ControllerAxisEvent& arg);

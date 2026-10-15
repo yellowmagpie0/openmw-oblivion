@@ -10,7 +10,7 @@ namespace TestingOpenMW
 {
     // Headless inventory tests observe real update callbacks. Every other UI
     // entry point rejects so the fixture cannot silently bypass new dependencies.
-    struct InventoryWindowManager final : MWBase::WindowManager
+    struct InventoryWindowManager : MWBase::WindowManager
     {
         mutable std::size_t mInventoryUpdates = 0;
         std::function<void(std::string_view, MWGui::ShowInDialogueMode)> mMessageCallback;

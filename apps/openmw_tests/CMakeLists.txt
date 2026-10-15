@@ -6,6 +6,8 @@ file(GLOB UNITTEST_SRC_FILES
 
     options.cpp
 
+    mwinput/testruntime.cpp
+
     mwstate/testsaveadmission.cpp
 
     mwworld/teststore.cpp

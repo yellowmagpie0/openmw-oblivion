@@ -91,6 +91,17 @@ namespace ICS
 
         void setEnabled(bool enabled);
 
+        struct RuntimeState
+        {
+            float value = 0.5f;
+            bool enabled = true;
+        };
+
+        RuntimeState prepareRuntime() const;
+
+        // Silent selection: held controls must not dispatch action callbacks.
+        void exchangeRuntime(RuntimeState& state) noexcept;
+
     protected:
 
         int mNumber;

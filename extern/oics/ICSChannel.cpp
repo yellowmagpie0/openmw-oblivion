@@ -32,6 +32,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace ICS
 {
+    Channel::RuntimeState Channel::prepareRuntime() const
+    {
+        // At rest all attached controls have zero deviation from their initial
+        // value; this is the same raw value computed by update().
+        return {mAttachedControls.empty() ? mValue : mAttachedControls.front().control->getInitialValue(), true};
+    }
+
+    void Channel::exchangeRuntime(RuntimeState& state) noexcept
+    {
+        std::swap(mValue, state.value);
+        std::swap(mEnabled, state.enabled);
+    }
+
 	Channel::Channel(int number, float initialValue
 			, float bezierMidPointY, float bezierMidPointX, float symmetricAt, float bezierStep)
             : mNumber(number)

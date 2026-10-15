@@ -49,6 +49,26 @@ namespace MWInput
     class InputManager final : public MWBase::InputManager
     {
     public:
+        // Stop input/event users before selecting a domain. Listener and device
+        // identities remain stable; rollback restores actual pending action nodes.
+        class RetainedRuntime
+        {
+            friend class InputManager;
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit RetainedRuntime(std::unique_ptr<Data> data);
+        public:
+            ~RetainedRuntime();
+            RetainedRuntime(RetainedRuntime&&) noexcept;
+            RetainedRuntime& operator=(RetainedRuntime&&) noexcept;
+            RetainedRuntime(const RetainedRuntime&) = delete;
+            bool detach() noexcept;
+            bool exchange() noexcept;
+            bool restore() noexcept;
+            void discard() noexcept;
+        };
+        RetainedRuntime retainRuntime();
+
         InputManager(SDL_Window* window, osg::ref_ptr<osgViewer::Viewer> viewer,
             osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler, const std::filesystem::path& userFile,
             bool userFileExists, const std::filesystem::path& userControllerBindingsFile,
@@ -108,6 +128,9 @@ namespace MWInput
         bool controlsDisabled() override { return mControlsDisabled; }
 
     private:
+        RetainedRuntime::Data* mRetainedRuntime = nullptr;
+        unsigned mActiveCalls = 0;
+        void requireMutableRuntime() const;
         bool mControlsDisabled;
 
         void saveBindings() override;

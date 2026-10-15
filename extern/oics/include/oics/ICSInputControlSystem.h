@@ -178,6 +178,34 @@ namespace ICS
 			Control::ControlChangingDirection direction;
 		} PendingActionItem;
 
+    public:
+        // Prepared against this exact binding topology. Configuration, listeners
+        // and physical controller handles remain shared by both runtime domains.
+        class RuntimeState
+        {
+        public:
+            RuntimeState() = default;
+            RuntimeState(const RuntimeState&) = delete;
+            RuntimeState& operator=(const RuntimeState&) = delete;
+            RuntimeState(RuntimeState&&) = default;
+            RuntimeState& operator=(RuntimeState&&) = default;
+
+        private:
+            friend class InputControlSystem;
+            const InputControlSystem* owner = nullptr;
+            std::vector<std::pair<Control*, Control::RuntimeState>> controls;
+            std::vector<std::pair<Channel*, Channel::RuntimeState>> channels;
+            std::list<PendingActionItem> pendingActions;
+            bool active = true;
+            Control* detectingControl = nullptr;
+            Control::ControlChangingDirection detectingDirection = Control::STOP;
+            int mouseInitialValues[3] = {0, 0, 0};
+        };
+
+        RuntimeState prepareRuntime() const;
+        bool exchangeRuntime(RuntimeState& state) noexcept;
+
+    protected:
 		std::list<PendingActionItem> mPendingActions;
 
 		std::string mFileName;

@@ -41,6 +41,7 @@ namespace MWInput
         int getMouseMoveY() const { return mMouseMoveY; }
 
     private:
+        friend class InputManager;
         BindingsManager* mBindingsManager;
         SDLUtil::InputWrapper* mInputWrapper;
 

@@ -34,6 +34,7 @@ namespace MWInput
         size_t countSavedGameRecords() const;
 
     private:
+        friend class InputManager;
         std::map<std::string, bool, std::less<>> mSwitches;
     };
 }

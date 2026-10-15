@@ -6,6 +6,49 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 retain input runtime and pending action owners — 2026-10-14
+
+InputManager now retains control-switch map nodes, disabled-controls state, idle
+clock, mouse coordinates/wheel/movement/warp/look/cursor state, controller GUI
+button/trigger/cursor/last-used state and gyro samples/timer. Bindings retain actual
+ICS pending-action list nodes, control values/directions/auto-reverse state,
+channel values/enabled flags, drag/drop and binding-detection state. Selection
+preserves binding definitions, listener objects and physical device handles.
+Preparation freezes facade mutations; active input/action callbacks reject
+retention or selection. Scope/move rollback, commit and owner invalidation are
+supported. Event and input users must be stopped before selection.
+
+SDL retains transient mouse bookkeeping and cursor/grab/relative-mode wishes,
+then reconciles physical modes against current window focus. Window dimensions,
+orientation/sensor handles and the physical SDL event queue remain process-owned.
+Loading keeps release events queued; these can update restored held controls on
+the next ordinary capture. Selection does not replay input or reload preferences.
+
+At fingerprint
+`bff717694d8199d9b5af3cf0dffacaa4c9f47a7fb5f03ec8120aad9313c7bda8`,
+`S3/input-facade-retention-normal-02` and `-sanitized-02` pass all 1,471 engine
+cases (119 suites) and 2,616 component cases (252 suites), normally and under
+ASan/UBSan. Six new cases cover silent held/pending-node restoration, unchanged
+binding identity, topology/foreign-owner rejection, facade switch/controller
+selection, scope/move/commit/owner death, callback rejection and SDL wishes/wheel.
+
+Copied WindowManager courses `input-facade-retention-runtime-normal-03` (PID
+383674) and `-sanitized-02` (PID 385960) select input with loaded World/backend,
+mechanics/Lua/native frontend/state/history/legacy scripts. They change candidate
+switches/controller modes, exchange both domains, retire the candidate and restore
+original saved control-switch bytes/modes and other checked owners. Input detach,
+exchange and restore pass C++ allocation denial. Render/F5/SDL-quit, captures,
+lifecycle, selected decoded native save fields and binary/source/MyGUI provenance
+are audited. Populated held-action nodes have seeded unit coverage; the runtime
+fixture does not seed held keys. Candidate construction uses a fresh content
+scene, and sound is disabled. Earlier attempts preserve the empty bindings-path
+fixture's generated `.new` file/source-drift rejection and the unstaged plugin
+runtime failure; corrected fresh courses pass. All handles are terminal.
+
+Audio ownership, actual StateManager save staging/late-failure rollback, loaded
+aggregate commit/owner-death courses and the full S3 acceptance audit remain open.
+S3 is incomplete.
+
 ## S3 retain journal, dialogue and legacy script owners — 2026-10-14
 
 Journal retains actual entry/quest/topic containers. DialogueManager retains

@@ -17,6 +17,12 @@ namespace MWInput
     class BindingsManager
     {
     public:
+        struct RuntimeState;
+        struct RuntimeDeleter { void operator()(RuntimeState*) const; };
+        using RuntimeHandle = std::unique_ptr<RuntimeState, RuntimeDeleter>;
+        RuntimeHandle prepareRuntime() const;
+        bool exchangeRuntime(RuntimeState& state) noexcept;
+
         BindingsManager(const std::filesystem::path& userFile, bool userFileExists, ESM::GameProfile gameProfile);
 
         virtual ~BindingsManager();

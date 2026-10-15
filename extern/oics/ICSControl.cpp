@@ -46,6 +46,19 @@ namespace ICS
 
 	}
 
+    Control::RuntimeState Control::prepareRuntime() const
+    {
+        return {mInitialValue, false, STOP, {}};
+    }
+
+    void Control::exchangeRuntime(RuntimeState& state) noexcept
+    {
+        std::swap(mValue, state.value);
+        std::swap(mIgnoreAutoReverse, state.ignoreAutoReverse);
+        std::swap(currentChangingDirection, state.direction);
+        mPendingActions.swap(state.pendingActions);
+    }
+
 	Control::~Control()
 	{
 		mAttachedChannels.clear();

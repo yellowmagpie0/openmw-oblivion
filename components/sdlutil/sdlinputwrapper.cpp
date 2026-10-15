@@ -40,6 +40,33 @@ namespace SDLUtil
         _setWindowScale();
     }
 
+    InputWrapper::RuntimeState InputWrapper::prepareRuntime() const
+    {
+        RuntimeState state;
+        state.wantGrab = mWantGrab;
+        state.mouseX = mMouseX;
+        state.mouseY = mMouseY;
+        return state;
+    }
+
+    void InputWrapper::exchangeRuntime(RuntimeState& state) noexcept
+    {
+        std::swap(mWarpX, state.warpX);
+        std::swap(mWarpY, state.warpY);
+        std::swap(mWarpCompensate, state.warpCompensate);
+        std::swap(mWantMouseVisible, state.wantMouseVisible);
+        std::swap(mWantGrab, state.wantGrab);
+        std::swap(mWantRelative, state.wantRelative);
+        std::swap(mFirstMouseMove, state.firstMouseMove);
+        std::swap(mMouseZ, state.mouseZ);
+        std::swap(mMouseX, state.mouseX);
+        std::swap(mMouseY, state.mouseY);
+        std::swap(mPendingWheelY, state.pendingWheelY);
+        // Focus, window size, physical devices and the SDL queue belong to the
+        // process. Reconcile the selected wishes against their current state.
+        updateMouseSettings();
+    }
+
     InputWrapper::~InputWrapper() = default;
 
     void InputWrapper::_setWindowScale()

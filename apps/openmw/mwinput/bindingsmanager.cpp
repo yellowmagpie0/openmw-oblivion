@@ -166,10 +166,35 @@ namespace MWInput
         }
 
     private:
+        friend class BindingsManager;
         ICS::InputControlSystem* mInputBinder;
         BindingsManager* mBindingsManager;
         bool mDetectingKeyboard;
     };
+
+    struct BindingsManager::RuntimeState
+    {
+        ICS::InputControlSystem::RuntimeState binder;
+        bool dragDrop = false;
+        bool detectingKeyboard = false;
+        explicit RuntimeState(const BindingsManager& owner) : binder(owner.mInputBinder->prepareRuntime()) {}
+    };
+
+    void BindingsManager::RuntimeDeleter::operator()(RuntimeState* state) const { delete state; }
+
+    BindingsManager::RuntimeHandle BindingsManager::prepareRuntime() const
+    {
+        return RuntimeHandle(new RuntimeState(*this));
+    }
+
+    bool BindingsManager::exchangeRuntime(RuntimeState& state) noexcept
+    {
+        if (!mInputBinder->exchangeRuntime(state.binder))
+            return false;
+        std::swap(mDragDrop, state.dragDrop);
+        std::swap(mListener->mDetectingKeyboard, state.detectingKeyboard);
+        return true;
+    }
 
     BindingsManager::BindingsManager(
         const std::filesystem::path& userFile, bool userFileExists, ESM::GameProfile gameProfile)

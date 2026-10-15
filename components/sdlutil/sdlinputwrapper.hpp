@@ -28,6 +28,18 @@ namespace SDLUtil
         void setWindowEventCallback(WindowListener* listen) { mWindowListener = listen; }
         void setControllerEventCallback(ControllerListener* listen) { mConListener = listen; }
 
+        struct RuntimeState
+        {
+            Uint16 warpX = 0, warpY = 0;
+            bool warpCompensate = false;
+            bool wantMouseVisible = true, wantGrab = false, wantRelative = false;
+            bool firstMouseMove = true;
+            Sint32 mouseZ = 0, mouseX = 0, mouseY = 0;
+            double pendingWheelY = 0;
+        };
+        RuntimeState prepareRuntime() const;
+        void exchangeRuntime(RuntimeState& state) noexcept;
+
         void capture(bool windowEventsOnly);
         bool isModifierHeld(int mod);
         bool isKeyDown(SDL_Scancode key);

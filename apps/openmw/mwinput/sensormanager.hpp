@@ -42,6 +42,7 @@ namespace MWInput
         std::array<float, 3> getGyroValues() const;
 
     private:
+        friend class InputManager;
         void updateSensors();
         void correctGyroscopeAxes();
 

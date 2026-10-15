@@ -42,6 +42,7 @@ namespace MWInput
         bool isSneaking() const;
 
     private:
+        friend class InputManager;
         void handleGuiArrowKey(int action);
 
         BindingsManager* mBindingsManager;

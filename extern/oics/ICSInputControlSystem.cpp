@@ -28,6 +28,44 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace ICS
 {
+    InputControlSystem::RuntimeState InputControlSystem::prepareRuntime() const
+    {
+        RuntimeState state;
+        state.owner = this;
+        state.active = mActive;
+        state.controls.reserve(mControls.size());
+        state.channels.reserve(mChannels.size());
+        for (Control* control : mControls)
+            state.controls.emplace_back(control, control->prepareRuntime());
+        for (Channel* channel : mChannels)
+            state.channels.emplace_back(channel, channel->prepareRuntime());
+        return state;
+    }
+
+    bool InputControlSystem::exchangeRuntime(RuntimeState& state) noexcept
+    {
+        if (state.owner != this || state.controls.size() != mControls.size()
+            || state.channels.size() != mChannels.size())
+            return false;
+        for (size_t i = 0; i < mControls.size(); ++i)
+            if (state.controls[i].first != mControls[i])
+                return false;
+        for (size_t i = 0; i < mChannels.size(); ++i)
+            if (state.channels[i].first != mChannels[i])
+                return false;
+        for (auto& item : state.controls)
+            item.first->exchangeRuntime(item.second);
+        for (auto& item : state.channels)
+            item.first->exchangeRuntime(item.second);
+        mPendingActions.swap(state.pendingActions);
+        std::swap(mActive, state.active);
+        std::swap(mDetectingBindingControl, state.detectingControl);
+        std::swap(mDetectingBindingDirection, state.detectingDirection);
+        for (size_t i = 0; i < 3; ++i)
+            std::swap(mMouseAxisBindingInitialValues[i], state.mouseInitialValues[i]);
+        return true;
+    }
+
 	const float ICS_MAX = std::numeric_limits<float>::max();
 
 	InputControlSystem::InputControlSystem(std::string file, bool active

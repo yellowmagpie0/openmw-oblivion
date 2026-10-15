@@ -1337,3 +1337,26 @@ subsequent ar validation and linking succeeded without confirmed cause.
 Input/audio ownership and actual StateManager save staging/late-failure rollback
 remain absent; loaded aggregate commit/owner-death acceptance remains outstanding.
 S3 is incomplete.
+
+Input runtime ownership now joins the retained manager group. InputManager swaps
+actual control-switch nodes and transient input state; ICS swaps actual pending
+action nodes/control/channel state without action notifications or preference
+reload. SDL wishes/mouse bookkeeping follow the selected domain while focus,
+window scale, orientation/devices and the physical event queue remain current.
+Prepared facade mutations and active callback selection are rejected. Lifetime,
+move/scope/commit, original held nodes and topology rejection have six engine cases.
+At fingerprint
+`bff717694d8199d9b5af3cf0dffacaa4c9f47a7fb5f03ec8120aad9313c7bda8`,
+`input-facade-retention-normal-02` / `-sanitized-02` pass all 1,471 engine and
+2,616 component cases in both normal and ASan/UBSan configurations.
+Copied runtime courses normal-03 / sanitized-02 (PIDs 383674/385960) verify
+candidate switch/controller mode differences, original/candidate selection,
+allocation-denied input detach/exchange/restore, restored control-switch bytes,
+loaded coupled owners and subsequent render/F5/SDL quit. Binary/source/MyGUI,
+selected decoded save fields, lifecycle and captures are audited. Nonempty held
+input is seeded separately in unit tests. Empty-path fixture source drift and
+missing runtime plugin attempts are retained, with corrected fresh passes.
+These courses build a candidate content scene with audio disabled; they do not
+prove real saved-data installation or failed StateManager.loadGame restoration.
+Audio ownership, root staging and loaded aggregate commit/owner death remain open.
+S3 remains incomplete.

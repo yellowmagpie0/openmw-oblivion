@@ -75,6 +75,17 @@ namespace ICS
 		inline void addListener(ControlListener* ob){ mListeners.push_back(ob); };
 	    inline void removeListener(ControlListener* ob){ mListeners.remove(ob); };
 
+        struct RuntimeState
+        {
+            float value;
+            bool ignoreAutoReverse = false;
+            ControlChangingDirection direction = STOP;
+            std::list<ControlChangingDirection> pendingActions;
+        };
+
+        RuntimeState prepareRuntime() const;
+        void exchangeRuntime(RuntimeState& state) noexcept;
+
 		void update(float timeSinceLastFrame);
 
 	protected:
