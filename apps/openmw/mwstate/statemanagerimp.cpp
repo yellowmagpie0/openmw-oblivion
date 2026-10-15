@@ -1,6 +1,8 @@
 #include "statemanagerimp.hpp"
 
 #include "saveinput.hpp"
+#include "nativeloadtransaction.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include <filesystem>
 #include <stdexcept>
@@ -554,6 +556,15 @@ struct SaveVersionTooNewError : SaveFormatVersionError
 void MWState::StateManager::loadGame(const Character* character, const std::filesystem::path& filepath)
 {
     bool restorationStarted = false;
+    std::unique_ptr<NativeLoadTransaction> transaction;
+    const auto rollback = [&] {
+        if (transaction)
+        {
+            transaction->rollback();
+            transaction.reset();
+            restorationStarted = false;
+        }
+    };
     try
     {
         Log(Debug::Info) << "Reading save file " << filepath.filename();
@@ -573,6 +584,18 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
 
         std::map<int, int> contentFileMap = buildContentFileIndexMap(reader);
         reader.setContentFileMapping(&contentFileMap);
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // Confirm content changes against the live frontend. Admission has
+            // no publication callbacks here; real plans target incoming owners.
+            const auto preflight = admitSave(reader, world.getGameProfile(),
+                [](const ESM4::RuntimeState& native) { native.validate(); }, &world.getStore());
+            const auto missing = preflight.getMissingContentFiles(world.getContentFiles());
+            if (!missing.empty() && !confirmLoading(missing)) return;
+            auto* nativeWorld = dynamic_cast<MWWorld::World*>(&world);
+            if (!nativeWorld) throw std::logic_error("Native load requires the native World implementation");
+            transaction = std::make_unique<NativeLoadTransaction>(*this, *nativeWorld);
+        }
         std::unique_ptr<MWBase::World::PreparedOblivionSaveState> preparedNative;
         std::function<void()> preparedGlobalMap;
         std::function<bool()> preparedWeather;
@@ -661,17 +684,17 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         if (world.getGameProfile() == ESM::GameProfile::Oblivion)
             preparedSpellLists.emplace(world.getStore().prepareSpellLists(preparedActorCustomData.spellListRequests()));
         const auto missingFiles = admittedProfile.getMissingContentFiles(world.getContentFiles());
-        if (!missingFiles.empty() && !confirmLoading(missingFiles))
+        if (!transaction && !missingFiles.empty() && !confirmLoading(missingFiles))
             return;
 
-        // Errors in opening, framing, profile, native schema or content identity
-        // leave the outgoing game intact. Later record restoration still owns
-        // the cleanup-on-failure boundary until full staging is implemented.
+        // Native restoration only clears the detached incoming domain. The
+        // complete outgoing game remains owned until the final commit.
         restorationStarted = true;
         // Prepared native and weather plans require one reset for both initial
         // menu loads and in-game loads. Other shared-only loads retain their lifecycle.
         cleanup(preparedNative != nullptr || bool(preparedWeather) || bool(preparedProjectiles) || bool(preparedSpellLists)
             || !preparedGlobalScripts.empty());
+        if (transaction) transaction->startIncomingScripts();
         if (preparedNative && !preparedNative->install())
             throw std::runtime_error("TES4 prepared save no longer matches the cleared World");
         if (preparedSpellLists && !preparedSpellLists->install(world.getStore()))
@@ -890,8 +913,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
 
         mState = State_Running;
 
-        if (character)
-            Settings::saves().mCharacter.set(Files::pathToUnicodeString(character->getPath().filename()));
         mLastSavegame = filepath;
 
         MWBase::Environment::get().getWindowManager()->setNewGame(false);
@@ -957,7 +978,6 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
         MWBase::Environment::get().getWorldScene()->markCellAsUnchanged();
 
         MWBase::Environment::get().getLuaManager()->gameLoaded();
-        MWBase::Environment::get().getWorld()->observeOblivionState("load-complete", filepath);
         for (int actorId : actorIdConverter.mGraveyard)
         {
             auto mapped = actorIdConverter.mMappings.find(actorId);
@@ -970,14 +990,27 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             MWBase::Environment::get().getWorldModel()->finishActorCustomDataRestore();
             MWBase::Environment::get().getWorldModel()->finishCellReferenceRestore();
         }
+        if (transaction)
+        {
+            transaction->commit();
+            // Once published, later reporting/preference failures must not
+            // clear the newly committed game as if installation had failed.
+            restorationStarted = false;
+            transaction.reset();
+        }
+        if (character)
+            Settings::saves().mCharacter.set(Files::pathToUnicodeString(character->getPath().filename()));
+        MWBase::Environment::get().getWorld()->observeOblivionState("load-complete", filepath);
     }
     catch (const SaveVersionTooNewError& e)
     {
+        rollback();
         std::string error = "#{OMWEngine:LoadingRequiresNewVersionError}";
         printSavegameFormatError(e.what(), error, restorationStarted);
     }
     catch (const SaveVersionTooOldError& e)
     {
+        rollback();
         const char* release;
         // Report the last version still capable of reading this save
         if (e.getFormatVersion() < ESM::OpenMW0_49MinSaveGameFormatVersion)
@@ -994,6 +1027,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
     }
     catch (const std::exception& e)
     {
+        rollback();
         std::string error = "#{OMWEngine:LoadingFailed}: " + std::string(e.what());
         printSavegameFormatError(e.what(), error, restorationStarted);
     }

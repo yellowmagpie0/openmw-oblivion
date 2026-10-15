@@ -6,6 +6,66 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S3 install native saves through retained runtime transaction — 2026-10-15
+
+`StateManager::loadGame` now uses `NativeLoadTransaction` for Oblivion. It first
+validates framing/native contracts and confirms missing content against the live
+frontend. It then retains World/backend, state, journal/dialogue/legacy scripts,
+mechanics, Lua, native frontend, input and audio; detaches them; and prepares real
+admission plans against incoming owners. Cleanup clears only that incoming domain.
+The outgoing world remains owned through record installation, Player setup, cell
+loading, Lua initialization and restore finalization. Failure destroys admission
+plans first, retires the matching candidate scene/controllers/widgets/services,
+and restores original owners. Successful commit retires the old scene and its
+users before old backend/model/base storage. Viewer threads stay stopped during
+selection/retirement and are stopped again after loading restores its thread mode.
+
+`load-complete` is published after commit; save-character preferences are updated
+only after success. Once commit succeeds, later errors cannot invoke destructive
+load cleanup. A partial commit guard tracks domain selections so pre-retirement
+rejection can return to the candidate for rollback. Cached Lua camera API closures
+now resolve the selected camera/renderer through World on each call: ASan found
+that their original raw backend captures survived retirement. Fresh runtime
+courses pass after that fix.
+
+Final fingerprint
+`d6421374ccfeebcfa064b6c862da40c59a8febc72bc9e838fe72a18211ae453f` passes all
+1,477 engine cases/121 suites normally and under ASan/UBSan in
+`S3/root-load-transaction-normal-05` / `-sanitized-04`. Component implementation
+is unchanged. Canonical engine courses `root-load-transaction-runtime-normal-06`
+(PID 423558) / `-sanitized-07` (PID 423786) actually load from NoGame, F5, F9-load
+from Running, render, F5 and SDL quit. Their source manifest is
+`scripts/data/oblivion_compat/oblivion_m15_staged_reload.json`. Visual readiness
+waits for five actual Player frames and persisted Lua load count2, not a fixed
+delay. Source/binary/MyGUI/scenario/capture/save hashes and lifecycle are audited.
+
+At the preceding core fingerprint
+`970306f2e426d42025881f0c85bb43b85891c864a8eb8d7041dda17c41e115ad`,
+copied StateManager failure courses normal-04 / sanitized-04 (PIDs 415734/417612)
+throw on the second load after the candidate scene and Lua are loaded. They prove
+original Player/cell/node/Scene/RenderingManager/current-character identities,
+native serialized bytes and PRNG return exactly, then dismiss the error, render,
+F5 and quit. Final-fingerprint postcommit courses normal-01 / sanitized-01
+(PIDs 421576/423458) throw after publication and prove the committed new world
+stays Running, renders and saves. The injected copies leave real installation,
+commit and rollback code unchanged.
+
+Core-fingerprint restart normal-01 / sanitized-01 (PIDs 418927/418947) load actual
+preceding-course saves in fresh processes, render, resave schema46 and quit;
+links verify distinct PIDs and input SHA against preceding output. Native courses
+preserve selected crime/base/action/serial fields and all 2,588 nonempty native
+reference inventories. Morrowind normal-01 loads a new game/render/F5/quit and
+structurally verifies all102 save records contain no GPRO/T4VR/T4ST; its terrain
+capture is limited profile-isolation evidence. Preflight callback failure,
+retired-camera ASan findings, immediate/short-delay fog captures and the missing
+ASan preload attempt remain preserved. Frame-gated corrected courses pass. All
+handles are terminal.
+
+The real late-load preservation gap is now implemented and verified for this
+loaded fixture. S3 remains in progress pending a requirement-by-requirement audit
+of all authority/lifecycle/migration/adversarial/profile and public-query gates;
+these current-fixture courses alone do not establish that broader completion.
+
 ## S3 retain sound voices and decoder-worker ownership — 2026-10-15
 
 SoundManager retains actual sound/say/track/music pointers and owning containers,

@@ -729,3 +729,33 @@ adjust bounds to fit a failed case. Keep normal-input logs and independent save
 checks, and directly review images. Small on-screen bars are easy to misread:
 the former reported short-after-Wait bar was actually full. Quantitative review
 prevented an unnecessary speculative GUI change.
+
+## Native staged reload and frame readiness
+
+Use `scripts/data/oblivion_compat/oblivion_m15_staged_reload.json` for the
+canonical current-fixture initial load/F5/F9 load/render/F5/quit course. Before
+launching, stage a **copy** of the enriched M15Review pristine save at
+`OUTPUT/userdata/saves/M15Review/Quicksave.omwsave` and its
+`autoequip-gmsts.esp` at `OUTPUT/test-data/autoequip-gmsts.esp`. Proven paired
+inputs and provenance are in `S3/root-load-transaction-runtime-normal-06` and
+`-sanitized-07`. The fixture requires the generated blade/history/local-script
+save and signed bounty/Infamy/high Fame values; it is not an arbitrary native
+save smoke test. Its initial saved `m15-reputation.lua` data has no persisted
+`loads` counter; the manifest records it during F5 and waits for load count2.
+
+The manifest waits for Player `onFrame` number5 after reload and logs Player and
+camera positions before the post-load capture. An immediate capture can show
+only fog/HUD before cold-backend frame updates; do not lower the entropy gate or
+describe such a failed capture as accepted rendering. For sanitizer SDL replay,
+keep the actual ASan library first in `LD_PRELOAD`, plus the explicit ASan/UBSan
+environment described above. The normal source manifest does not hardcode that
+platform-specific preload.
+
+Require two committed load events, two save events and run-end in one PID;
+second-load SHA must equal first-save SHA. Decode the final T4ST and compare
+selected native contracts and all nonempty reference inventories. Fresh-process
+continuation additionally requires a new PID and an input SHA matching the
+preceding process's real output. Copied StateManager fault probes can inject
+immediately after `LuaManager::gameLoaded` to verify actual late rollback, or
+after `load-complete` to verify errors cannot clear an already committed world.
+Keep those copies/hashes and their scope distinct from the canonical executable.

@@ -436,6 +436,8 @@ namespace MWWorld
         void init(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
             SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue);
 
+        osgViewer::Viewer* getRuntimeViewer() const noexcept;
+
         virtual ~World();
 
         void setRandomSeed(uint32_t seed) override;

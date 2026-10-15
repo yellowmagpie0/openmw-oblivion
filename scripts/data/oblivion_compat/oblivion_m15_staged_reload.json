@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m15-staged-native-reload",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{output}/test-data\"\ncontent=Oblivion.esm\ncontent=autoequip-gmsts.esp\ncontent=m15-bounty.omwscripts\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 1 command dynamic:native-reference:0000000000000001 getscale\nat 1 command player getdead\nat 1 command dynamic:native-reference:0000000000000001 getincell \"content:oblivion.esm:022288\"\nat 1 command dynamic:native-reference:0000000000000001 getincell \"content:oblivion.esm:01fbb9\"\nat 1 command player isplayerinjail\nat 1 command player getav Bounty\nat 1 command player getbaseav Bounty\nat 1 command player modpcinfamy 0\nat 1 command player getpcinfamy\nat 1 command player getav Infamy\nat 1 command player getbaseav Infamy\nat 1 command player getav Fame\nat 1 command player getbaseav Fame\n"
+    },
+    {
+      "path": "test-data/m15-bounty.omwscripts",
+      "content": "GLOBAL: scripts/m15-bounty.lua\nPLAYER: scripts/m15-reputation.lua\nCUSTOM: scripts/m15-local-retention.lua\n"
+    },
+    {
+      "path": "test-data/scripts/m15-bounty.lua",
+      "content": "local world = require('openmw.world')\nlocal types = require('openmw.types')\nlocal done = false\nlocal function update()\n    if done then return end\n    local player = world.players[1]\n    if not player then return end\n    local before = types.Player.getCrimeLevel(player)\n    assert(before == -3 or before == -4)\n    if before == -3 then types.Player.setCrimeLevel(player, -4) end\n    assert(types.Player.getCrimeLevel(player) == -4)\n    print('M15 bounty Lua before=' .. before .. ' after=-4')\n    done = true\nend\nreturn {{engineHandlers={{onUpdate=update,onSave=function() return {{done=done}} end,onLoad=function() done=false end}}}}\n"
+    },
+    {
+      "path": "test-data/scripts/m15-reputation.lua",
+      "content": "local self = require('openmw.self')\nlocal types = require('openmw.types')\nlocal done = false\nlocal loads = 0\nlocal frames = 0\nlocal camera = require('openmw.camera')\nlocal function update()\n    if done then return end\n    local before = types.NPC.stats.reputation(self).current\n    assert(before == 16777217 or before == 16777219)\n    if before == 16777217 then types.NPC.stats.reputation(self).current = 16777219 end\n    assert(types.NPC.stats.reputation(self).current == 16777219)\n    print('M15 Fame Lua before=' .. before .. ' after=16777219')\n    done = true\nend\nreturn {{engineHandlers={{onUpdate=update,onFrame=function() frames=frames+1; if frames==5 then print('M15 reload frame-ready',loads,self.position,camera.getPosition()) end end,onSave=function() return {{done=done,loads=loads}} end,onLoad=function(data) done=false; frames=0; loads=(data and data.loads or 0)+1 end}}}}\n"
+    },
+    {
+      "path": "test-data/scripts/m15-local-retention.lua",
+      "content": "local updates = 0\nreturn {{engineHandlers={{onInit=function() print('M15 local retention init') end,onUpdate=function() if updates==0 then print('M15 local retention update') end; updates=updates+1 end,onSave=function() return {{updates=updates}} end,onLoad=function(s) updates=s.updates; assert(updates>0); print('M15 local retention load', updates) end}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Fame Lua before=1677721[79] after=16777219",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "name=getpcinfamy result=-3",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "running.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "key_held",
+      "value": "F9"
+    },
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "(?s)\"event\":\"load-complete\".*\"event\":\"load-complete\"",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reload frame-ready\\s+2",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "reloaded.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 300
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "Writing saved game 'Quicksave'",
+    "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+    "M15 Fame Lua before=1677721[79] after=16777219",
+    "M15 local retention load\\s+[1-9][0-9]*",
+    "M15 reload frame-ready\\s+2"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "Prepared initial inventory enchantment",
+    "Prepared spell",
+    "Enchantment charge .*integer domain",
+    "Prepared initial inventory stack storage is unavailable",
+    "Registry insertion reservation is unavailable",
+    "Prepared registry insertion nodes exhausted",
+    "Prepared initial autoequip split is unavailable",
+    "Prepared initial autoequip dependencies are unavailable",
+    "Prepared local script registration is unavailable",
+    "Prepared initial split script is unavailable",
+    "Global variables exceed the prepared script layout",
+    "Prepared legacy registration requires a shared reference",
+    "Prepared cell reference type changed",
+    "Prepared cell reference was already published",
+    "Prepared reference state is unavailable",
+    "Prepared cell reference has no matching state",
+    "Prepared Player state requires",
+    "Prepared save record boundary changed",
+    "Prepared save records belong to another reader",
+    "Prepared saved reference identity changed",
+    "Prepared saved reference was already consumed",
+    "Prepared saved Player was already consumed",
+    "Prepared dialogue no longer",
+    "Prepared deaths no longer",
+    "Prepared stolen items no longer",
+    "cannot prepare saved state",
+    "cannot prepare stolen items",
+    "cannot prepare death counts",
+    "Global script record has no admitted plan",
+    "Prepared global script no longer matches cleared manager",
+    "M15 local retention init",
+    "Error in the destructor"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "native-window-retention-runtime",
+    "OPENMW_M15_EPOCH": "1",
+    "ALSOFT_DRIVERS": "null",
+    "OPENMW_DISABLE_CRASH_CATCHER": "1"
+  },
+  "sdl_offscreen_input": true,
+  "sdl_input_timeout_seconds": 300,
+  "reviewed_error_log": [
+    "Failed\\ to\\ open\\ image:\\ Resource\\ 'textures/menu_icon_equip\\.dds'\\ not\\ found"
+  ]
+}

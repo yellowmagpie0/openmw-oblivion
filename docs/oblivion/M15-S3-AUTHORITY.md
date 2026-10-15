@@ -34,7 +34,14 @@ life/breath, engagements and crime/arrest/jail contracts project into
 gameplay producers are outside S3. `takeNextDeathEvent` removes the front event
 before dispatch so a callback save cannot replay that event.
 
-`StateManager::loadGame` admits and prepares native state before cleanup.
+`StateManager::loadGame` preflights native saves against the live frontend, then
+uses `NativeLoadTransaction` to retain/detach the complete outgoing runtime.
+Actual admission plans target incoming managers before one incoming-only clear.
+Late failure retires the candidate under matching owners and restores the original
+Running game; successful installation retires outgoing users before backend,
+model and base ownership. `load-complete` follows commit. Postcommit errors leave
+the committed game intact. Cached Lua camera closures resolve the currently
+selected World backend rather than keeping raw retired Camera/renderer pointers.
 `World::prepareOblivionSaveState` retains detached definitions, inventories and
 native service plans; installation requires the expected clear boundary.
 World capture uses the same live service state, not telemetry as an authority.
@@ -1382,3 +1389,22 @@ provenance, selected decoded saves, lifecycle and captures are audited. The null
 OpenAL driver proves source/decoder behavior, not listening-device output.
 Correction cancellations remain recorded. Real StateManager staged load/failure
 acceptance and loaded aggregate commit/owner death remain open. S3 is incomplete.
+
+Real StateManager staging now composes World/backend/state/history/legacy scripts,
+mechanics/Lua/native GUI/input/audio archives. At final fingerprint
+`d6421374ccfeebcfa064b6c862da40c59a8febc72bc9e838fe72a18211ae453f`, all1,477
+engine cases pass normally/ASan/UBSan (normal-05 / sanitized-04). Canonical real
+initial-load/F5/F9-load/render/F5/quit courses normal-06 / sanitized-07 (PIDs
+423558/423786) pass. Final postcommit fault courses (PIDs 421576/423458) keep the
+new committed world alive after a later exception. Precommit fault courses at
+core fingerprint970306f2e426d42025881f0c85bb43b85891c864a8eb8d7041dda17c41e115ad
+(PIDs 415734/417612) throw after a distinct loaded candidate and Lua.gameLoaded,
+then prove original identities/native bytes/PRNG and resumed render/F5/quit.
+Core fresh-process continuation courses (PIDs 418927/418947) consume preceding
+real saves and resave schema46. Audits retain all2,588 nonempty native inventories
+and selected native fields, lifecycle and source/binary/MyGUI/capture hashes.
+Morrowind's actual102-record save has no native profile/runtime records. Visual
+readiness uses five actual Player frames; failed preflight/retired-camera/fog
+capture/preload attempts remain preserved. Current-source full S3 audit across
+all named requirement gates is still pending; these fixture passes do not prove
+all migrations/adversarial/profile/query requirements by themselves.

@@ -26,6 +26,11 @@ namespace MWWorld
         std::optional<DetourNavigator::Settings> mNavigatorSettings;
     };
 
+    osgViewer::Viewer* World::getRuntimeViewer() const noexcept
+    {
+        return mBackendConfiguration ? mBackendConfiguration->mViewer.get() : nullptr;
+    }
+
     struct World::PreparedBackend::Data
     {
         World* mOwner;
