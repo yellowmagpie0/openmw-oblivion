@@ -6,6 +6,31 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 registered loose-root scale separation — 2026-10-16
+
+Registered root-targeted drops now permit a changed visible reference scale
+while retaining admitted physical offsets, collision shape, mass and inertia.
+Root capture and subsequent forced transforms keep using that admitted state.
+Real-NIF factory tests cover both direct-root and relocated-child models;
+worker-count tests verify unchanged bounds, forces, identities and velocities.
+Non-root targets retain their guard pending per-node callback integration.
+
+All **1,563 engine tests / 122 suites** pass in normal and ASan/UBSan builds.
+Unchanged component coverage is reused from the preceding checkpoint. Original
+registration/settling/SetScale probes cover 192 contexts plus 64 forced
+continuations; both production comparisons match every output float bit.
+Final-ELF inspection confirms admitted scale2 across 14 captures while visible
+scale changes. The preceding ELF's positive-scale rejection is independently
+observed.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#registered-loose-root-visible-scale-and-admitted-physical-state)
+and [editable provenance](M15-ORIGINAL-REGISTERED-ROOT-SCALE-PROBES.json) record
+scope and failures. An original small-motion course also disproves unconditional
+reference publication: rendered cached position can change without a reference
+callback. That correction, full World/script continuation, non-root projection,
+loose save/recreation, production combat and gameplay gates remain open.
+S4 is incomplete.
+
 ## S4 native reference collision relocation — 2026-10-16
 
 The owned drop factory now relocates a selected dynamic child collision to the

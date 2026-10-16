@@ -2546,3 +2546,127 @@ read-only pre-open hashing. No failed attempt is reclassified as acceptance.
 [Editable provenance](M15-ORIGINAL-REFERENCE-COLLISION-RELOCATION-PROBES.json)
 records hashes, scope, literal examples and remaining gates. Full S4 remains
 active and incomplete.
+
+## Registered loose-root visible scale and admitted physical state
+
+Registered one-body root targets now permit a finite positive visible reference
+scale that differs from their admitted physical scale. Both physical root capture
+and subsequent forced root transforms retain the owned admitted bind/bodyT
+translation, shape, mass and inertia. The renderer placement can change scale
+without rebuilding physics or rejecting the next World frame. Non-root targets
+retain their previous guard until per-node local/callback projection is integrated.
+Invalid visible scales still reject before physical mutation.
+
+The real-NIF factory test covers direct-root and selected-child relocation,
+visible scales .63/1/1.38, unchanged child local matrices, the newly scaled child
+world position, unchanged root-local identity and body/packed-velocity state.
+It explicitly performs the visible reference/PAT half of Scene's scale update,
+then actual PhysicsSystem::updateScale and normal World publication. It does not
+call World::scaleObject or prove normal script input for a dropped owner.
+Parameterized scheduler cases cover ordinary/bodyT targets and all 0/1/2 worker
+configurations, preserving body/shape identity, mass, inertia, bounds, forces and
+packed velocities, then forcing a rotated/translated root after scaling with the
+admitted offset. Invalid scale and unimplemented child-target changes reject.
+
+Original registration sets flags 0x4D, including pending forced-sync bit 0x40.
+The first actual 707370 scene update executes that scene-to-body synchronization
+and clears 0x40, leaving 0x0D. A settled physical pose fixture is installed and
+pulled through a second original scene update before freezing physical storage.
+The complete original SetScale command then executes192 contexts across root /
+child registration sources, plain/bodyT wrappers, two old offsets/quaternions,
+two child rotations, both x87 words and three sequential scales. Every admitted
+wrapper, Havok/motion/island/shape byte stays unchanged across those scale
+commands; visible child locals and root rotation/translation remain unchanged.
+No reference callback fires in this settled course (zero change mask).
+
+Actual original constructors, registration, math, collision retargeting, scene
+updates, SetScale rounding and physics-to-reference callback dispatch execute.
+Allocation/free, command argument extraction4FAE80, command nonactor RTTI
+result9832E6, Windows import/TLS services, critical sections and change-record
+capture are declared boundaries. Original CRT initialization, sprintf/atof and
+scale formatting execute. Null native World and null cell/config
+skip broadphase/activation/migration. This is not complete attachment, the
+property-copy scale branch, ordinary input or gameplay acceptance.
+
+The existing production inverse bodyT, scene matrix and root writeback helpers
+match all 192 original root local R/T/scale outputs plus zero mask bit for bit in
+normal and ASan/UBSan component-library diagnostics. The same registered/scaled
+course continues through 64 forced requests; existing forward scene/bodyT
+conversion matches every resulting native XYZ/XYZW bit in both builds. The
+request fixture sets root R/T and bit 0x40; this does not prove SetPos/SetAngle
+command dispatch. Components are unchanged
+from b837f6b6f1; their full passing 2,703-test evidence is reused from the preceding
+checkpoint rather than rerun. Current engine results are recorded separately.
+
+Earlier registered-root-scale probes01/02 fail the incorrect assumption that
+physics stays unchanged while registration's pending force flag is still set.
+Probe03 records original motion writes through897510/89EE00 and proves that
+pending branch; probe04 consumes it via the actual first scene update before
+establishing settled scaling invariants. Baseline01 could not launch the retained
+ELF because copyfile omitted execute permission; baseline02 restores permission
+without changing bytes and observes the original scheduler scale rejection.
+All attempts are retained.
+
+A separate 28-context full-registration topology audit confirms the next
+integration distinction: root/first/second selected targets receive flags 0x4D;
+unselected deep/null-first cases retain child targets with flags 0x41. Those flags
+are recorded from actual registration, not synthesized callback profiles. After
+pending bit 0x40 is consumed, their masks differ 0x0D versus0x01; do not apply the
+root callback behavior to every physical descendant. Visible cached-world versus
+local representation and non-root reference publication remain required work.
+
+An additional 192-context original course introduces a small physical X movement
+5->5.0005 native lengths after settling and before scaling. Both real scene
+traversals leave REFR pose unchanged with no callback, while the final cached
+root world position differs from REFR. This directly disproves unconditional
+reference publication even for a registered root. Current World publication
+still needs that correction; this chunk delivers scale/admitted-physics
+separation, not complete root callback semantics.
+
+Remaining work includes native callback-mask/cached-world publication, non-root
+physical targets, actual World/script scale/forced-transform continuation,
+Havok-enable/cell/property-copy admission, loose physical save/recreation,
+production break/mastery and the entire required normal-input/restart/controller/
+FPS S4 course. This checkpoint does not deliver complete SetScale semantics or
+M15S4. The full goal remains active and incomplete.
+
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `registered-root-scale-oracle-04`: 192 original registered/settled scale cases.
+- `registered-root-scale-forced-oracle-01`: the same scale cases and 64 forced
+  continuations; `registered-root-scale-forced-compare-01` matches all seven
+  native pose lanes in normal and sanitized libraries.
+- `registered-root-scale-compare-01`: all 13 root local float lanes and zero
+  change mask match in all 192 normal and sanitized comparisons.
+- `reference-registration-topology-oracle-01`: 28 full-registration contexts
+  across seven one-body topologies, two wrapper types and both x87 words.
+- `registered-root-small-motion-oracle-01`: 192 original counterexamples to
+  unconditional reference publication; the remaining World correction is open.
+- `registered-root-scale-baseline-02`: read-only prior-ELF throw observation on
+  the existing positive-scale factory case; exact inventory/XML agrees.
+- `registered-root-scale-runtime-01`: final-ELF read-only inspection of 14 actual
+  owned `sceneBind` calls/returns; admitted scale2, visible scales2/.63/1/1.38,
+  root record0, identity bind throughout, exact one-case inventory/XML.
+- `registered-root-scale-preflight-01`: 63 selected loose scheduler/factory
+  engine cases; `registered-root-scale-normal-01` and
+  `registered-root-scale-sanitized-01`: all 1,563 engine tests / 122 suites each.
+  Exact inventory/XML agrees, with no failures/skips; ASan leak checks are off,
+  ASan/UBSan halt on errors. Existing unrelated compiler warnings remain.
+
+The engine checks preserve source fingerprint
+`690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657`
+on parent `b837f6b6f1bafc2bcb9d386ea5a884949d761937` before documentation.
+Normal engine ELF SHA256:
+`b91fd395343d19278e1a8aaef90e1e61fe3f65575dc3f432dbb229c7883fe358`.
+Sanitized engine ELF SHA256:
+`59217f9fcfa5ee064f8e53f32096342e0a62f4f8607c1fd977aca76934860777`.
+The review directory freezes implementation hashes and exact patch. Its component
+reuse report verifies no component source/test changes relative to that parent;
+prior full normal and sanitized 2,703-component-test checks retain their own
+fingerprints and are not reported as new runs.
+
+[Editable provenance](M15-ORIGINAL-REGISTERED-ROOT-SCALE-PROBES.json) records
+original executable/corpus hashes, curated forced cases, actual-ELF observations,
+engine checks, retained failures and remaining gates. Full S4 stays active and
+incomplete.

@@ -1631,6 +1631,10 @@ namespace
         const auto after = scheduler.captureLooseObject(mPtr);
         EXPECT_EQ(before.front().mPose, after.front().mPose);
         EXPECT_EQ(before.front().mLinearVelocity, after.front().mLinearVelocity);
+        mPtr.getCellRef().setScale(2.f);
+        EXPECT_THROW(scheduler.captureLooseObjectRootPose(mPtr), std::invalid_argument);
+        EXPECT_THROW(scheduler.updateLooseObjectRootPose(mPtr, root), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, after.front().mPose);
         scheduler.removeLooseObject(mPtr);
         EXPECT_THROW(scheduler.captureLooseObjectRootPose(mPtr), std::invalid_argument);
     }
@@ -1729,6 +1733,78 @@ namespace
             EXPECT_EQ(physics.looseObjectOwners(),std::vector<MWWorld::Ptr>{mPtr});
             EXPECT_EQ(mPtr.getCellRef().getScale(),2.f);
             physics.removeLooseObject(mPtr);
+        }
+    }
+}
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, RegisteredLooseRootScaleKeepsAdmittedPropertiesBoundsAndForcedOffset)
+    {
+        for (bool bodyT : {false, true})
+        {
+            SCOPED_TRACE(bodyT);
+            NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+            auto graph = mGraph;
+            auto& body = graph.mBodies.front();
+            graph.mReferenceRoot = 0; body.mNodeRecord = 0;
+            body.mBoneBind = osg::Matrixf::identity();
+            body.mUsesRigidBodyTransform = bodyT;
+            body.mTranslation = {.25f, -.5f, .125f};
+            body.mRotation = osg::Quat(osg::PI_2, osg::Vec3f(1, 0, 0));
+            mPtr.getCellRef().setScale(2.f);
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(graph, 2.f);
+            const auto root = osg::Matrixf::translate(100, 40, 80);
+            const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{0, root}}};
+            const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
+            auto prepared = scheduler.prepareLooseObject(mPtr, scaled, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            auto* rigid = btRigidBody::upcast(scheduler.looseObjectCollisionObject(mPtr)); ASSERT_NE(rigid, nullptr);
+            const auto inverseMass = rigid->getInvMass();
+            const auto inertia = rigid->getInvInertiaDiagLocal();
+            auto* shape = rigid->getCollisionShape(); const auto shapeScale = shape->getLocalScaling();
+            rigid->applyCentralForce(btVector3(3, 4, 5));
+            btVector3 minimum, maximum; rigid->getAabb(minimum, maximum);
+            const auto initial = scheduler.captureLooseObject(mPtr);
+            const auto packed = scheduler.captureLooseObjectPackedVelocities(mPtr);
+            const auto originalRoot = scheduler.captureLooseObjectRootPose(mPtr);
+            for (float scale : {.63f, 1.f, 1.38f})
+            {
+                mPtr.getCellRef().setScale(scale);
+                EXPECT_EQ(scheduler.captureLooseObjectRootPose(mPtr), originalRoot);
+                EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, initial[0].mPose);
+                EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, packed[0].mVelocities);
+                btVector3 low, high; rigid->getAabb(low, high);
+                EXPECT_EQ(low, minimum); EXPECT_EQ(high, maximum);
+                EXPECT_EQ(rigid->getCollisionShape(), shape); EXPECT_EQ(shape->getLocalScaling(), shapeScale);
+                EXPECT_EQ(rigid->getInvMass(), inverseMass); EXPECT_EQ(rigid->getInvInertiaDiagLocal(), inertia);
+                EXPECT_EQ(rigid->getTotalForce(), btVector3(3, 4, 5));
+            }
+            for (float invalid : {0.f, -1.f, std::numeric_limits<float>::infinity(),
+                     std::numeric_limits<float>::quiet_NaN()})
+            {
+                mPtr.getCellRef().setScale(invalid);
+                EXPECT_THROW(scheduler.captureLooseObjectRootPose(mPtr), std::invalid_argument);
+                EXPECT_THROW(scheduler.updateLooseObjectRootPose(mPtr, root), std::invalid_argument);
+                EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, initial[0].mPose);
+            }
+            mPtr.getCellRef().setScale(1.38f);
+            // A forced transform after scaling must use the admitted bodyT
+            // offset, without multiplying it by the new visible scale.
+            const auto moved = osg::Matrixf::rotate(osg::PI_2, osg::Vec3f(0, 0, 1))
+                * osg::Matrixf::translate(30, 70, 90);
+            scheduler.updateLooseObjectRootPose(mPtr, moved);
+            const auto actual = scheduler.captureLooseObjectRootPose(mPtr);
+            for (unsigned i = 0; i < 16; ++i) EXPECT_NEAR(actual.ptr()[i], moved.ptr()[i], .0005f) << i;
+            const std::array<NifBullet::RagdollBoneWorldPose, 1> movedBones{{{0, moved}}};
+            const auto expected = NifBullet::ragdollBodyWorldPoses(scaled, movedBones);
+            const auto after = scheduler.captureLooseObject(mPtr)[0].mPose;
+            EXPECT_NEAR((after.getOrigin() - expected[0].getOrigin()).length(), 0, .0005f);
+            EXPECT_EQ(scheduler.looseObjectCollisionObject(mPtr), rigid);
+            EXPECT_EQ(rigid->getInvMass(), inverseMass); EXPECT_EQ(rigid->getInvInertiaDiagLocal(), inertia);
+            EXPECT_EQ(rigid->getTotalForce(), btVector3(3, 4, 5));
+            scheduler.removeLooseObject(mPtr);
         }
     }
 }

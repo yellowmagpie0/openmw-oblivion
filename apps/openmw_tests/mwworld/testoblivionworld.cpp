@@ -21947,7 +21947,7 @@ TEST(OblivionWorldTest, NativeWeaponFactoryFallingBodyPublishesSceneAndReference
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()),saved);
 }
 
-TEST(OblivionWorldTest, NativeWeaponFactoryPhysicalRotationAndScaleGuardPreserveRigidAuthority)
+TEST(OblivionWorldTest, NativeWeaponFactoryPhysicalRotationAndInvalidScaleGuardPreserveRigidAuthority)
 {
     NativeWeaponFactoryFixture fixture;
     auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
@@ -21964,7 +21964,7 @@ TEST(OblivionWorldTest, NativeWeaponFactoryPhysicalRotationAndScaleGuardPreserve
     const auto before=reference.getRefData().getPosition();
     auto* node=reference.getRefData().getBaseNode(); ASSERT_NE(node,nullptr);
     const auto attitude=node->getAttitude();
-    reference.getCellRef().setScale(4.f);
+    reference.getCellRef().setScale(-4.f);
     EXPECT_THROW(MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld,physics),std::invalid_argument);
     EXPECT_EQ(reference.getRefData().getPosition(),before);
     EXPECT_EQ(node->getPosition(),before.asVec3());
@@ -22135,6 +22135,60 @@ TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedCollisionFollowsRootWhileChi
     EXPECT_EQ(after[0].mLinearVelocity, stepped[0].mLinearVelocity);
     EXPECT_EQ(after[0].mAngularVelocity, stepped[0].mAngularVelocity);
     EXPECT_EQ(physics.captureLooseObjectPackedVelocities(reference)[0].mVelocities, packed[0].mVelocities);
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryVisibleScaleRetainsAdmittedPhysicsAndChildLocalPose)
+{
+    for (bool childTarget : {false, true})
+    {
+        SCOPED_TRACE(childTarget);
+        NativeWeaponFactoryFixture fixture(childTarget);
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        auto& physics = *fixture.mPhysics;
+        auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
+        ASSERT_NE(animation, nullptr);
+        NativeWeaponTargetVisitor root, child(1);
+        animation->getObjectRoot()->accept(root); ASSERT_TRUE(root.mTarget);
+        if (childTarget)
+        {
+            animation->getObjectRoot()->accept(child);
+            ASSERT_TRUE(child.mTarget);
+        }
+        const auto childLocal = childTarget ? child.mTarget->getMatrix() : osg::Matrixd::identity();
+        auto* node = reference.getRefData().getBaseNode(); ASSERT_NE(node, nullptr);
+        const auto initial = physics.captureLooseObject(reference);
+        const auto packed = physics.captureLooseObjectPackedVelocities(reference);
+        const auto rigidRoot = physics.captureLooseObjectRootPose(reference);
+        for (float scale : {.63f, 1.f, 1.38f})
+        {
+            SCOPED_TRACE(scale);
+            // The visible half of Scene::updateObjectScale, then the actual
+            // PhysicsSystem scale dispatch and normal frame publication.
+            reference.getCellRef().setScale(scale);
+            node->setScale({scale, scale, scale});
+            physics.updateScale(reference);
+            EXPECT_EQ(physics.captureLooseObjectRootPose(reference), rigidRoot);
+            MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, physics);
+            EXPECT_EQ(node->getScale(), osg::Vec3f(scale, scale, scale));
+            EXPECT_EQ(root.mTarget->getMatrix(), osg::Matrixd::identity());
+            EXPECT_EQ(reference.getRefData().getPosition().asVec3(), rigidRoot.getTrans());
+            if (childTarget)
+            {
+                EXPECT_EQ(child.mTarget->getMatrix(), childLocal);
+                const auto worlds = child.mTarget->getWorldMatrices(); ASSERT_EQ(worlds.size(), 1u);
+                const auto expected = osg::Vec3f(childLocal.getTrans()) * scale * rigidRoot;
+                EXPECT_NEAR(worlds[0].getTrans().x(), expected.x(), .0001);
+                EXPECT_NEAR(worlds[0].getTrans().y(), expected.y(), .0001);
+                EXPECT_NEAR(worlds[0].getTrans().z(), expected.z(), .0001);
+            }
+            const auto after = physics.captureLooseObject(reference);
+            EXPECT_EQ(after[0].mPose, initial[0].mPose);
+            EXPECT_EQ(after[0].mLinearVelocity, initial[0].mLinearVelocity);
+            EXPECT_EQ(after[0].mAngularVelocity, initial[0].mAngularVelocity);
+            EXPECT_EQ(physics.captureLooseObjectPackedVelocities(reference)[0].mVelocities, packed[0].mVelocities);
+        }
+    }
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedSourceRemainsGuardedBeforePublication)

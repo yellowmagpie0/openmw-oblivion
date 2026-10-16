@@ -489,6 +489,25 @@ namespace MWPhysics
         const float mReferenceScale;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
+
+        osg::Matrixf sceneBind(float visibleScale) const
+        {
+            if (mLengthScale != NifBullet::RagdollNativeLengthScale)
+                throw std::invalid_argument("loose native scene pose requires the native length scale");
+            if (!std::isfinite(visibleScale) || visibleScale <= 0)
+                throw std::invalid_argument("invalid loose visible reference scale");
+            const auto& body = mDefinition.mBodies.front();
+            // Registered dynamic root targets keep their admitted bodyT offset,
+            // shape and mass when SetScale changes the visible reference. Child
+            // targets still need per-node local/callback projection before they
+            // can support a different visible scale through this root adapter.
+            if (visibleScale != mReferenceScale && mDefinition.mReferenceRoot != body.mNodeRecord)
+                throw std::invalid_argument("loose child scene pose requires its admitted reference scale");
+            (void)NifBullet::ragdollNativeSceneTargetPose(body.mBoneBind);
+            auto bind = body.mBoneBind;
+            bind.setTrans(bind.getTrans() * mReferenceScale);
+            return bind;
+        }
     };
 
     struct PhysicsTaskScheduler::PreparedLooseObject::Impl
@@ -612,14 +631,8 @@ namespace MWPhysics
         if (found == mLooseObjects.end())
             throw std::invalid_argument("reference has no loose physics");
         const auto& object = *found->second;
-        if (ptr.getCellRef().getScale() != object.mReferenceScale)
-            throw std::invalid_argument("loose native scene pose requires its admitted reference scale");
-        if (object.mLengthScale != NifBullet::RagdollNativeLengthScale)
-            throw std::invalid_argument("loose native scene pose requires the native length scale");
+        const auto bind = object.sceneBind(ptr.getCellRef().getScale());
         const auto& body = object.mDefinition.mBodies.front();
-        // A physical graph can be used without renderer metadata. Reject bad
-        // scene metadata before returning a pose rather than guessing identity.
-        (void)NifBullet::ragdollNativeSceneTargetPose(body.mBoneBind);
         const auto states = object.mPhysics.capture();
         const auto& pose = states.front().mPose;
         const auto& origin = pose.getOrigin();
@@ -632,8 +645,6 @@ namespace MWPhysics
         // The renderer retains reference scale on its placement node. The
         // physical target is rigid, with that scale already applied to the
         // bind translation and cached body properties, not to its rotation.
-        auto bind = body.mBoneBind;
-        bind.setTrans(bind.getTrans() * object.mReferenceScale);
         osg::Matrixf inverse;
         if (!inverse.invert(bind))
             throw std::invalid_argument("loose native model bind is not invertible");
@@ -659,13 +670,9 @@ namespace MWPhysics
         const auto found = mLooseObjects.find(ptr.mRef);
         if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
         auto& object = *found->second;
-        if (object.mLengthScale != NifBullet::RagdollNativeLengthScale
-            || ptr.getCellRef().getScale() != object.mReferenceScale)
-            throw std::invalid_argument("loose scene input requires its admitted native scale and units");
+        const auto bind = object.sceneBind(ptr.getCellRef().getScale());
         (void)NifBullet::ragdollNativeSceneTargetPose(root);
         const auto& body = object.mDefinition.mBodies.front();
-        auto bind = body.mBoneBind;
-        bind.setTrans(bind.getTrans() * object.mReferenceScale);
         const std::array<NifBullet::RagdollNativeScenePoseRequest,1> request{{{body.mRecord,bind * root}}};
         object.mPhysics.synchronizeNativeForcedPoses(request);
     }

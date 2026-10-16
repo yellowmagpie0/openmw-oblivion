@@ -1,0 +1,445 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "registered root capture/forced transforms admit changed visible scale while retaining admitted physics; full M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+  "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657",
+  "implementation_digests": {
+    "apps/openmw/mwphysics/mtphysics.cpp": "8c07c6d84699ff02407c020450d59d63c66ff6fcc81c89a553949a87fb225909",
+    "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "1fc9942dbe6973b60d3264894b8b1d9b60a756b30d43485f9293b9596b3de1e7",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "01b17d2f95a170ec6d909283f5f4eaaa16ce5c2d1fdaeb945fa695628ee0493e"
+  },
+  "implementation_patch_sha256": "05771845e262820b663bae3a5dc1ef3a310404caf916e6ce81a57884138750c4",
+  "behavior": [
+    "One-body registered reference root target permits a finite positive visible scale different from physical admission scale. BodyT offsets, shape, mass/inertia and forced-pose bind use admitted scale.",
+    "Non-root targets retain prior scale guard pending per-node local/callback projection. Invalid scale/units/bind metadata reject before physics changes.",
+    "Actual factory test performs Scene visible reference/PAT scale effects, PhysicsSystem scale dispatch and normal World frame publication; direct-root and relocated-child geometry covered. This does not call World::scaleObject or prove dropped-owner normal script input.",
+    "Worker0/1/2 scheduler tests preserve shape/body identity, bounds, mass/inertia, forces and packed velocities; forced rotated/translated roots after scaling retain admitted offset."
+  ],
+  "original_settled_scale": {
+    "path": "registered-root-scale-oracle-04/verification.json",
+    "report_sha256": "e3e152e3510667679cf4fef19506cfa16ae9c543c618a98725c0ce912e309c7b",
+    "passed": true,
+    "contexts": 192,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "5aaa3c940b1ebb0590cf42526c3b586d1375be072fd08f6b46f92947ee5fe2fa",
+    "cases_sha256": "a0b73d04ecade85f65dc484b7e76db862d1d82e2e2f2409e1591add05f24c37b",
+    "scope": "Full original reference registration then full SetScale on actual registered dynamic root flags77, root/child and plain/bodyT source, two old quaternions/offsets/child rotations/x87, three sequential scales. Windows CRT/TLS and change-record captures, fresh allocation/free boundaries inherited from registration. Registration pending bit0x40 consumed by actual707370 first scene update, leaving flags13. Settled native motion fixture then installed and pulled by a second original scene update; wrapper/Havok/motion/island/shape storage byte-frozen afterward. Actual callback4E2160 and TESObjectExtraData lookup; cell null/config skip migration. No real native World, property-copy, activation, full attachment or normal gameplay."
+  },
+  "original_forced_continuation": {
+    "path": "registered-root-scale-forced-oracle-01/verification.json",
+    "report_sha256": "6879f413d28f072af883e348b10a9a0a87697721bde2f4a3901d4c38baeb4a8d",
+    "passed": true,
+    "contexts": 192,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "f82199c263bf49bd368f9baab02483a10cdb027a721e33972a0e63e88ed17ff2",
+    "cases_sha256": "a0b73d04ecade85f65dc484b7e76db862d1d82e2e2f2409e1591add05f24c37b",
+    "scope": "Full original reference registration then full SetScale on actual registered dynamic root flags77, root/child and plain/bodyT source, two old quaternions/offsets/child rotations/x87, three sequential scales. Windows CRT/TLS and change-record captures, fresh allocation/free boundaries inherited from registration. Registration pending bit0x40 consumed by actual707370 first scene update, leaving flags13. Settled native motion fixture then installed and pulled by a second original scene update; wrapper/Havok/motion/island/shape storage byte-frozen afterward. Actual callback4E2160 and TESObjectExtraData lookup; cell null/config skip migration. No real native World, property-copy, activation, full attachment or normal gameplay. After three scales, fixture sets root R/T and pending force bit; actual707370 dispatches native body setters. All64 forced continuations retain offsets and child locals, clear pending bit and reset both velocity vectors. No actual SetPos/SetAngle command dispatch.",
+    "forced_contexts": 64,
+    "forced_cases_sha256": "8374c4b59494398700a0fa7c32ea3a07ce2881c270aa75c00593a123a189fbf8"
+  },
+  "original_registration_topology": {
+    "path": "reference-registration-topology-oracle-01/verification.json",
+    "report_sha256": "f3d97de4a455706e5f4432fe5b607ff900b3f853a20f9c8948a83308aadf4486",
+    "passed": true,
+    "contexts": 28,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "b2e5d5487c63680d4ccf09fa3c924cdcf27bc99d48860da96faf6c4c25f832c7",
+    "cases_sha256": "4de1eae35ee45ac298167ee81ca5547bf951ed39d8529276adc1edce3f34f9ac",
+    "scope": "Full actual nonactor reference prefix plus World registration across7 one-body root/literal-child/null/deep topologies, plain/bodyT and both x87. Selection, target identity, locals/REFR invariants, real virtual dispatch/RTTI/constructors and full World return checked. Native World null, optional property-copy/special gates zero and collision scene dispatch suppressed during registration; declared allocation/free/Windows boundaries inherited from reference-root-relocation-oracle10. Collision flags/motion changes recorded, not assumed. Not initial scene update or gameplay."
+  },
+  "original_small_motion_counterexample": {
+    "path": "registered-root-small-motion-oracle-01/verification.json",
+    "report_sha256": "c1f8b3cd6a30ae01d7a598de72171c4dc9248d03b0af6b931e980fd0dd567231",
+    "passed": true,
+    "contexts": 192,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "ec342f693be404babb453df54972b8f8ae675132a697dac90588eae098efb3a0",
+    "cases_sha256": "e57b739b354b963ace02e100bca9f97e9ab6d52affb8917d0bd17df33d563bae",
+    "scope": "Full original reference registration then full SetScale on actual registered dynamic root flags77, root/child and plain/bodyT source, two old quaternions/offsets/child rotations/x87, three sequential scales. Windows CRT/TLS and change-record captures, fresh allocation/free boundaries inherited from registration. Registration pending bit0x40 consumed by actual707370 first scene update, leaving flags13. Settled native motion fixture then installed and pulled by a second original scene update; wrapper/Havok/motion/island/shape storage byte-frozen afterward. Actual callback4E2160 and TESObjectExtraData lookup; cell null/config skip migration. No real native World, property-copy, activation, full attachment or normal gameplay. Additional physical X movement5->5.0005 native lengths installed after settled root scene projection and before SetScale. All192 commands leave REFR pose unchanged with no callbacks, but final root cached world position differs from REFR after two original scene traversals. This is a direct counterexample to unconditional reference publication; not a normal frame or gameplay proof."
+  },
+  "native_registration_findings": {
+    "selected_root_first_second_flags": "0x4D",
+    "unselected_deep_null_first_flags": "0x41",
+    "pending_first_scene_force_bit": "0x40",
+    "after_actual_first_scene_update_root_flags": "0x0D",
+    "settled_scale_callback_masks": "zero in all192 contexts; root local/world R/T and REFR pose fixed across each three-scale sequence",
+    "next_integration": "Non-root cached-world/local semantics differ and cannot use the root callback profile universally."
+  },
+  "normal_sanitized_comparisons": {
+    "settled_scale": {
+      "normal": {
+        "path": "registered-root-scale-compare-01/normal-verification.json",
+        "report_sha256": "a161177eb322b5f2182d72a7ffa0e30f8a9f2d5b77b71dca479b7936c1a31df7",
+        "passed": true,
+        "cases": 192,
+        "float_lanes": 13,
+        "mask_lanes": 1,
+        "mismatches": [],
+        "binary_sha256": "923f6f3f5e4b0e572577680c8aaf2a0372e789078463baabd2d80b8be14f111a",
+        "scope": "Existing production inverse bodyT, native scene matrix and root writeback composed against192 full original registered/settled/SetScale contexts. Root local R/T/scale and zero callback mask bit exact. Root world equals local in original cases. This does not test full scheduler state or normal-input gameplay.",
+        "production_source_hashes": {
+          "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+          "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2"
+        },
+        "input_sha256": "fd58b86fd0cefaef562d512e01bcbf5733352d2753c39ad05c73d0268cb3329d"
+      },
+      "sanitized": {
+        "path": "registered-root-scale-compare-01/sanitized-verification.json",
+        "report_sha256": "523c9da87bf4ee31ae1d923d8cd1f6777b6f619743e2dec019d307fbdaefafbe",
+        "passed": true,
+        "cases": 192,
+        "float_lanes": 13,
+        "mask_lanes": 1,
+        "mismatches": [],
+        "binary_sha256": "b342424de992c65409c6827ad36c7652cbf8e890662da00d9daf958690bcdc11",
+        "scope": "Existing production inverse bodyT, native scene matrix and root writeback composed against192 full original registered/settled/SetScale contexts. Root local R/T/scale and zero callback mask bit exact. Root world equals local in original cases. This does not test full scheduler state or normal-input gameplay.",
+        "production_source_hashes": {
+          "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+          "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2"
+        },
+        "input_sha256": "fd58b86fd0cefaef562d512e01bcbf5733352d2753c39ad05c73d0268cb3329d"
+      }
+    },
+    "forced_after_scale": {
+      "normal": {
+        "path": "registered-root-scale-forced-compare-01/normal-verification.json",
+        "report_sha256": "dcddaa20deb627043e2300b58044a9fbb0295e5a8abeb9d4657656af306f8900",
+        "passed": true,
+        "cases": 64,
+        "float_lanes": 7,
+        "mismatches": [],
+        "binary_sha256": "3f3d1b3445acc31fce86cffc80b334534f6b36b30c641c0de95c9beedd5e9096",
+        "scope": "Existing production forward scene/bodyT adapter compared against64 full original registered/settled/SetScale/forced-request continuations. Native position XYZ/quaternion XYZW bit exact. Admitted offsets remain unchanged after scale; fixture supplies forced root pose and flag, no actual command or normal-input gameplay acceptance."
+      },
+      "sanitized": {
+        "path": "registered-root-scale-forced-compare-01/sanitized-verification.json",
+        "report_sha256": "6b783c211f609b6171cc04d6ce6aa0d7b4c3b9c7c3323022712df030a8216bc5",
+        "passed": true,
+        "cases": 64,
+        "float_lanes": 7,
+        "mismatches": [],
+        "binary_sha256": "357c96899cd2cebd98365d68343d96f90005561b8d1b58360e080a98454fc470",
+        "scope": "Existing production forward scene/bodyT adapter compared against64 full original registered/settled/SetScale/forced-request continuations. Native position XYZ/quaternion XYZW bit exact. Admitted offsets remain unchanged after scale; fixture supplies forced root pose and flag, no actual command or normal-input gameplay acceptance."
+      }
+    }
+  },
+  "preceding_elf": {
+    "path": "registered-root-scale-baseline-02/verification.json",
+    "report_sha256": "0a3d5e714a9136536424b67eff400055d30db59b6251c4ecf8d05972199b4cd0",
+    "binary_sha256": "91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6",
+    "source_commit": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+    "exit_code": 0,
+    "scope": "Read-only preceding-ELF observer of original existing factory test. The test changes positive reference scale2->4 then invokes World frame publication; preceding scheduler throws. Independent settled native registration/SetScale oracle shows root scale changes preserve physical state. No observer inputs/gameplay writes or normal-input gameplay acceptance.",
+    "baseline_failure_verified": true,
+    "root_scale_throw_count": 1,
+    "throw_call_path": [
+      "__cxa_throw",
+      "PhysicsTaskScheduler::captureLooseObjectRootPose",
+      "PhysicsSystem::captureLooseObjectRootPose",
+      "synchronizeLooseWeaponPoses",
+      "NativeWeaponFactoryPhysicalRotationAndScaleGuardPreserveRigidAuthority"
+    ]
+  },
+  "final_elf": {
+    "path": "registered-root-scale-runtime-01/verification.json",
+    "report_sha256": "155a163214a7cd48508d5113f0edf0a2529abbbdb38403f15a7b0d30e508f4e3",
+    "binary_sha256": "b91fd395343d19278e1a8aaef90e1e61fe3f65575dc3f432dbb229c7883fe358",
+    "exit_code": 0,
+    "scope": "Read-only final-ELF inspection of actual registered-root factory scaling test. sceneBind hidden result pointer RDI, this RSI and float XMM0 are verified in final disassembly. Admitted scale remains2 while visible scale changes; owned bind stays identity. No debugger input/gameplay writes or normal-input acceptance.",
+    "passed": true,
+    "observed_calls": 14,
+    "identity_bind_returns": 14,
+    "admitted_scales": [
+      2.0
+    ],
+    "node_records": [
+      0
+    ],
+    "observed_scale_counts": [
+      {
+        "bodyT": false,
+        "visible_scale": 0.6299999952316284,
+        "calls": 2
+      },
+      {
+        "bodyT": false,
+        "visible_scale": 1.0,
+        "calls": 2
+      },
+      {
+        "bodyT": false,
+        "visible_scale": 1.3799999952316284,
+        "calls": 2
+      },
+      {
+        "bodyT": false,
+        "visible_scale": 2.0,
+        "calls": 1
+      },
+      {
+        "bodyT": true,
+        "visible_scale": 0.6299999952316284,
+        "calls": 2
+      },
+      {
+        "bodyT": true,
+        "visible_scale": 1.0,
+        "calls": 2
+      },
+      {
+        "bodyT": true,
+        "visible_scale": 1.3799999952316284,
+        "calls": 2
+      },
+      {
+        "bodyT": true,
+        "visible_scale": 2.0,
+        "calls": 1
+      }
+    ]
+  },
+  "engine_checks": {
+    "registered-root-scale-preflight-01": {
+      "passed": true,
+      "source_before": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "source_after": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "suites": 2,
+      "results": {
+        "engine": {
+          "executed": 63,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "WorkerCounts/RagdollSchedulerTest.*Loose*:OblivionWorldTest.NativeWeaponFactory*",
+          "binary_sha256": "b91fd395343d19278e1a8aaef90e1e61fe3f65575dc3f432dbb229c7883fe358",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "475c5d57d859298f6a009e90349169cd4ee252170696c92b912bc9bf26b8f331",
+          "inventory_sha256": "a40fb95bada1a4af7b3b3045e785c9f86d7d8cd0af6c90e37392fbc059df377e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "registered-root-scale-normal-01": {
+      "passed": true,
+      "source_before": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "source_after": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "suites": 122,
+      "results": {
+        "engine": {
+          "executed": 1563,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b91fd395343d19278e1a8aaef90e1e61fe3f65575dc3f432dbb229c7883fe358",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "0dab25641228feb2e260ec41de036b0f97607b7da0c2a35c15e4b4688dc5ab02",
+          "inventory_sha256": "a40fb95bada1a4af7b3b3045e785c9f86d7d8cd0af6c90e37392fbc059df377e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "registered-root-scale-sanitized-01": {
+      "passed": true,
+      "source_before": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "source_after": {
+        "head": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+        "source_fingerprint": "690a980d63b38678a135104e579345f600ec847b9949411f4ef947e72c36e657"
+      },
+      "suites": 122,
+      "results": {
+        "engine": {
+          "executed": 1563,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "59217f9fcfa5ee064f8e53f32096342e0a62f4f8607c1fd977aca76934860777",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "89c56ccc22800a4b4c6e5782930665fee89887efc39448a75d821a3df19bddc3",
+          "inventory_sha256": "a40fb95bada1a4af7b3b3045e785c9f86d7d8cd0af6c90e37392fbc059df377e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "component_reuse": {
+    "unchanged_relative_to": "b837f6b6f1bafc2bcb9d386ea5a884949d761937",
+    "component_code_and_tests_unchanged": true,
+    "normal": "reference-collision-retarget-normal-01/verification.json",
+    "sanitized": "reference-collision-retarget-sanitized-01/verification.json",
+    "executed_per_build": 2703,
+    "scope": "Prior unfiltered component passes reused; this chunk changes engine scheduler/tests only. Source fingerprints differ; no new component run claimed."
+  },
+  "sanitizer_scope": "ASan/UBSan halt on error, leak checking disabled; no leak coverage.",
+  "retained_failures": [
+    "registered-root-scale-oracle-01/02 incorrectly assume body state unchanged before registration pending0x40 is consumed. Probe03 records native motion writes, probe04 executes actual initial scene update before establishing settled invariants. Unsettled first-sync behavior is distinct, not suppressed.",
+    "registered-root-scale-baseline-01 could not launch copied ELF without execute permission. Baseline02 restores permission without changing bytes; it observes original positive-scale scheduler rejection in the existing factory test."
+  ],
+  "remaining_gates": [
+    "Native callback mask/cached-world publication, especially unselected/deep physical targets; root-only scale admission is not a universal target adapter.",
+    "Actual World/script scale/forced-transform continuation for dropped owners, normal-input validation and immediate command/query callback semantics.",
+    "General Havok-enable/special-reference/cell admission and original property-copy scale branch.",
+    "Loose physical retention/save/recreation with fresh-process continuation.",
+    "Production break/mastery, retained/quest unequip, drawn NPC/grouped drop policy, pickup/replacement/sound.",
+    "Power/creature/reaction/effect wiring and entire first/third-person, keyboard/mouse/gamepad, FPS, normal-input and windup/block/recovery restart S4 matrix."
+  ],
+  "curated_forced_cases": [
+    {
+      "child_target_before_registration": false,
+      "plain_source": false,
+      "control_word": 639,
+      "visible_scale_bits": 1068540887,
+      "requested_rotation": [
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "requested_translation": [
+        30,
+        70,
+        90
+      ],
+      "offset_rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "offset_translation_XYZ_bits": [
+        0,
+        0,
+        0
+      ],
+      "motion_position_XYZ_bits": [
+        1082730851,
+        1092617630,
+        1095613972
+      ],
+      "motion_rotation_bits": [
+        0,
+        0,
+        1060439283,
+        1060439283
+      ],
+      "final_linear_angular_bits": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "flags": 13
+    },
+    {
+      "child_target_before_registration": true,
+      "plain_source": false,
+      "control_word": 639,
+      "visible_scale_bits": 1068540887,
+      "requested_rotation": [
+        0,
+        -1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "requested_translation": [
+        30,
+        70,
+        90
+      ],
+      "offset_rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "offset_translation_XYZ_bits": [
+        1054569834,
+        1058164295,
+        1060561369
+      ],
+      "motion_position_XYZ_bits": [
+        1080934196,
+        1093067081,
+        1096363058
+      ],
+      "motion_rotation_bits": [
+        0,
+        0,
+        1060439283,
+        1060439283
+      ],
+      "final_linear_angular_bits": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "flags": 13
+    }
+  ],
+  "command_boundaries": {
+    "0x4FAE80": "Supplies chosen scale at real argument output pointer; actual argument parsing excluded.",
+    "0x9832E6": "Supplies nonactor RTTI command result; registration collision/NiNode RTTI lookup and initializers execute separately.",
+    "0x43F2E0/0x43F300": "Critical-section no-op boundaries.",
+    "change_record_calls": "Capture reference modification masks; final alteration and actual reference callbacks execute.",
+    "Windows_imports": "Argument-checked GetLastError, SetLastError, TlsGetValue, FlsGetValue providers. Original CRT initialization, sprintf/atof and scale formatting execute."
+  },
+  "production_component_sources": {
+    "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+    "components/nifbullet/actorragdollphysics.hpp": "894e321f39a8a66f0894dd61ae8520951b5cff980ecae48ca31de38a80ac6092",
+    "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2"
+  }
+}
