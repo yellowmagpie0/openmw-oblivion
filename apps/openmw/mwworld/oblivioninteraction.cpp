@@ -9,6 +9,7 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/formkey.hpp>
@@ -771,8 +772,25 @@ namespace MWWorld
             return found == mOblivionRuntimeState->mReferences.end() ? nullptr : &*found;
         };
         auto* cached = findSource();
-        if (!cached || cached->mBase != item.mBase)
+        std::optional<ESM4::RuntimeReferenceState> newSource;
+        if (!cached)
+        {
+            // Newly admitted references need not have existed when the save
+            // cache was last refreshed. Import only this live reference; a
+            // whole-state replacement would discard unrelated cached state.
+            auto live = captureOblivionRuntimeState();
+            const auto found = std::find_if(live.mReferences.begin(), live.mReferences.end(),
+                [&](const auto& reference) { return reference.mKey == key; });
+            if (found == live.mReferences.end())
+                throw std::invalid_argument("pickup source is absent from the live native state");
+            newSource.emplace(std::move(*found));
+            mOblivionRuntimeState->mReferences.reserve(mOblivionRuntimeState->mReferences.size() + 1);
+            cached = &*newSource;
+        }
+        if (cached->mBase != item.mBase)
             throw std::invalid_argument("pickup source is absent from the current native state");
+        const auto* cacheOwner = mOblivionRuntimeState.get();
+        const auto cachedSize = mOblivionRuntimeState->mReferences.size();
         auto custom = cached->mCustomState;
         custom["taken"] = true;
         if (!owner.empty()) custom["ownership_checked"] = true;
@@ -794,7 +812,11 @@ namespace MWWorld
             scene = mWorldScene->prepareItemRemoval(ptr);
         else if (ptr.getRefData().getBaseNode())
             throw std::invalid_argument("pickup source model has no owning scene");
-        if (worldIdentity.expired() || getPlayerPtr() != player || findSource() != cached
+        if (worldIdentity.expired() || getPlayerPtr() != player || mOblivionRuntimeState.get() != cacheOwner
+            || (newSource ? findSource() != nullptr
+                    || mOblivionRuntimeState->mReferences.size() != cachedSize
+                    || mOblivionRuntimeState->mReferences.capacity() <= cachedSize
+                : findSource() != cached)
             || ptr.getCellRef().getCount() != item.mCount
             || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr
             || !addition->isValid() || (registration && !registration->isValid())
@@ -809,6 +831,13 @@ namespace MWWorld
             throw std::logic_error("validated pickup inventory addition was rejected");
         if (registration) registration->commit();
         cached->mCustomState.swap(custom);
+        if (newSource)
+        {
+            // Capacity was reserved before resource preparation and guarded
+            // above. Moving the reference cannot allocate or invoke observers.
+            static_assert(std::is_nothrow_move_constructible_v<ESM4::RuntimeReferenceState>);
+            mOblivionRuntimeState->mReferences.push_back(std::move(*newSource));
+        }
         if (scene)
         {
             if (!scene->commitInactiveEvent())

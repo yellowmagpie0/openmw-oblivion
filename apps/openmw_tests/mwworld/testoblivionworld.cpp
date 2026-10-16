@@ -12533,6 +12533,97 @@ TEST(OblivionWorldTest, NativePickupRecursiveObserverCannotRepeatSourceTransfer)
     inventory.setContListener(nullptr);
 }
 
+TEST(OblivionWorldTest, NativePickupAdoptsNewLiveReferenceWithoutReplacingCachedState)
+{
+    for (const bool dynamic : {false, true})
+    {
+        SCOPED_TRACE(dynamic);
+        NativePickupFixture fixture;
+        auto& world = fixture.mWorld;
+        auto saved = world.captureOblivionRuntimeState();
+        saved.mReferences.front().mCustomState["pickup_cache_witness"] = std::int64_t{123};
+        readNativeSnapshot(fixture, saved);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        auto placed = *fixture.mSource.getCellRef().getNativeReference();
+        auto serial = world.prepareOblivionDynamicReferenceKey();
+        placed.mId = dynamic ? ESM::FormId{} : ESM::FormId{0x961, 0};
+        placed.mFormKey = dynamic ? serial->key() : ESM::FormKey::content("headless.esm", 0x961);
+        if (dynamic) ASSERT_TRUE(serial->commit());
+        MWWorld::LiveCellRef<ESM4::Weapon> live(placed, fixture.mSource.get<ESM4::Weapon>()->mBase);
+        live.mRef.setCount(1);
+        live.mRef.setNativeItemCondition(0.f);
+        live.mRef.setEnchantmentCharge(3.125f);
+        auto& cell = *fixture.mSource.getCell();
+        const MWWorld::Ptr source(cell.insert(&live), &cell);
+        world.getWorldModel().registerPtr(source);
+        auto& inventory = world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr());
+        NativePickupFixture::Listener listener;
+        listener.mCallback = [&](const MWWorld::ConstPtr& item, int count) {
+            EXPECT_EQ(source.getCellRef().getCount(), 0);
+            EXPECT_EQ(count, 1);
+            EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), 3.125f);
+            const auto during = world.captureOblivionRuntimeState();
+            const auto found = std::find_if(during.mReferences.begin(), during.mReferences.end(),
+                [&](const auto& ref) { return ref.mKey == placed.mFormKey; });
+            ASSERT_NE(found, during.mReferences.end());
+            EXPECT_TRUE(std::get<bool>(found->mCustomState.at("taken")));
+            world.interactWithOblivionReference(source, MWWorld::OblivionInteractionKind::Take);
+            throw std::runtime_error("new-reference pickup observer");
+        };
+        inventory.setContListener(&listener);
+        EXPECT_THROW(world.interactWithOblivionReference(source, MWWorld::OblivionInteractionKind::Take),
+            std::runtime_error);
+        EXPECT_EQ(listener.mCalls, 1);
+        EXPECT_EQ(inventory.count(ESM::RefId(placed.mBaseObj)), 1);
+        EXPECT_EQ(fixture.mSource.getCellRef().getCount(), 2);
+        const auto after = world.captureOblivionRuntimeState();
+        ASSERT_EQ(after.mReferences.size(), 2u);
+        const auto witness = std::find_if(after.mReferences.begin(), after.mReferences.end(),
+            [&](const auto& ref) { return ref.mKey == fixture.mSource.getCellRef().getFormKey(); });
+        ASSERT_NE(witness, after.mReferences.end());
+        EXPECT_EQ(std::get<std::int64_t>(witness->mCustomState.at("pickup_cache_witness")), 123);
+        EXPECT_FALSE(witness->mCustomState.contains("taken"));
+        const auto roundTrip = ESM4::RuntimeState::deserializeBinary(after.serializeBinary());
+        EXPECT_EQ(roundTrip, after);
+        inventory.setContListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupNewReferenceFailedPreparationCanRetryWithoutTransfer)
+{
+    NativePickupFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    auto serial = world.prepareOblivionDynamicReferenceKey();
+    auto placed = *fixture.mSource.getCellRef().getNativeReference();
+    placed.mId = {}; placed.mFormKey = serial->key();
+    ASSERT_TRUE(serial->commit());
+    MWWorld::LiveCellRef<ESM4::Weapon> live(placed, fixture.mSource.get<ESM4::Weapon>()->mBase);
+    live.mRef.setCount(1);
+    live.mRef.setNativeItemCondition(0.f);
+    auto& cell = *fixture.mSource.getCell();
+    const MWWorld::Ptr source(cell.insert(&live), &cell);
+    world.getWorldModel().registerPtr(source);
+    auto& inventory = world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr());
+    // No owning Scene: reject after the new cache entry and addition were
+    // prepared, before either source or inventory can be published.
+    source.getRefData().setBaseNode(new SceneUtil::PositionAttitudeTransform);
+    EXPECT_THROW(world.interactWithOblivionReference(source, MWWorld::OblivionInteractionKind::Take),
+        std::invalid_argument);
+    EXPECT_EQ(source.getCellRef().getCount(), 1);
+    EXPECT_EQ(inventory.count(ESM::RefId(placed.mBaseObj)), 0);
+    const auto rejected = world.captureOblivionRuntimeState();
+    const auto found = std::find_if(rejected.mReferences.begin(), rejected.mReferences.end(),
+        [&](const auto& ref) { return ref.mKey == placed.mFormKey; });
+    ASSERT_NE(found, rejected.mReferences.end());
+    EXPECT_FALSE(found->mCustomState.contains("taken"));
+    source.getRefData().setBaseNode(nullptr);
+    EXPECT_NO_THROW(world.interactWithOblivionReference(source, MWWorld::OblivionInteractionKind::Take));
+    EXPECT_EQ(source.getCellRef().getCount(), 0);
+    EXPECT_EQ(inventory.count(ESM::RefId(placed.mBaseObj)), 1);
+}
+
 TEST(OblivionWorldTest, NativePickupObserverCanClearWorldAfterCommittedTransfer)
 {
     NativePickupFixture fixture;

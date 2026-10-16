@@ -1595,3 +1595,57 @@ production contact/wear dispatch, pickup cleanup and actual normal-input
 break/drop/restart acceptance still need integration. Broader S4 power,
 creature, mastery, reaction, effect and input/controller/FPS requirements remain
 open. S4 remains incomplete.
+
+## Immediate pickup after native reference publication
+
+`World::takeOblivionReference` previously required an entry in the cached runtime
+snapshot even for a currently registered, live native reference. A reference
+created after that snapshot was applied could not be taken until the cache was
+refreshed. Pickup now captures and stages only the missing reference, reserves
+cache capacity before resource preparation, and checks cache ownership, absence,
+size and capacity before publication. The source debit, inventory addition and
+new cache entry publish before observers. The appended entry has a statically
+verified noexcept move; publication uses the reserved capacity. Existing cached
+reference custom state is preserved.
+
+The new tests cover both content and dynamic references created after an applied
+cache, exact broken-item condition/charge, observer-visible publication,
+recursive pickup suppression, throwing observers, preservation of unrelated
+cached state, binary round-trip, and rejection after preparation followed by a
+successful retry. They construct real registered cell references and use the
+production interaction/inventory path. They do not exercise normal game input
+or the still-unwired drop factory.
+
+`S4/new-reference-pickup-normal-02` and
+`S4/new-reference-pickup-sanitized-02` each pass all **1528 engine tests/122
+suites**, unfiltered with exact inventory/XML agreement and zero failures/skips.
+ASan leak checking is disabled; ASan/UBSan halt on errors. Both reports have
+identical before/after source state, atop `07b3de5da4e0e0d12bbbef100a4b67054bbdb9ff`,
+with tested source fingerprint
+`46396a83e873888b2b995440d1735aee6fdbd31891d6941a5d1e79409f49e0b1`.
+Component/Python implementation is unchanged and those suites were not rerun.
+
+`S4/new-reference-pickup-baseline-03` links the corrected tests against the
+previous committed `oblivioninteraction.cpp`, compiled with the configured normal
+engine flags into a separate object/binary. The link map confirms that object's
+pickup definition is used. Both tests fail specifically with `pickup source is
+absent from the current native state`; the negative-control verifier requires
+that message for each case. Scripts, source/object/test/binary hashes, link map,
+logs and XML are retained. This is an engine regression control, not an original
+Oblivion executable oracle.
+
+The first normal run exposed fixture mistakes: the snapshot was staged without
+being applied, and the cloned reference inherited count two. Those fixtures did
+not test the intended cache state. The normal-01 log is retained, sanitized-01
+was stopped before correction, and baseline-02 is explicitly invalidated.
+Baseline-01's compile recipe lookup failed against stale compile_commands; the
+accepted baseline uses the actual configured target flags. Production code did
+not change after the first normal run; the corrected fixtures establish the
+regression and pass in both final builds.
+
+`S4/new-reference-pickup-review-01` freezes both implementation file hashes and
+the patch before these report updates. No new gameplay/restart course is claimed.
+Native carried-NIF factory construction, source/ownership/drop relations,
+retained Player/quest unequips, replacement and sound follow-up, native pickup
+ExtraScale/dropper/list cleanup, and real normal-input break/drop/pickup/restart
+acceptance remain required. The wider S4 matrix above remains incomplete.

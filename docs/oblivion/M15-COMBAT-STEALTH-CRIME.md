@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 immediate pickup of newly admitted references — 2026-10-15
+
+Native pickup now accepts a live reference admitted after the runtime cache was
+applied. It stages only the missing cache entry and publishes it with the source
+debit and inventory addition, preserving existing cached state. Failed resource
+preparation leaves the transfer unpublished and permits a retry.
+
+Normal and ASan/UBSan builds each pass all **1,528 engine tests/122 suites**,
+with exact inventory agreement and zero failures/skips. Both regression tests
+reject the previous production pickup code specifically at its missing-cache
+check. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#immediate-pickup-after-native-reference-publication)
+records evidence and retained fixture failures. This is engine integration
+coverage; native factory/contact dispatch, pickup scale/relation semantics and
+normal-input break/drop/pickup/restart acceptance remain open. S4 is incomplete.
+
 ## S4 grouped weapon-drop publication boundary — 2026-10-15
 
 One preparation can now publish two weapon references from one contact with
