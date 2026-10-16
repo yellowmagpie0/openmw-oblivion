@@ -2850,16 +2850,37 @@ namespace MWRender
                     }
                     traverse(node);
                 }
-            } root(*definition.mReferenceRoot);
+            } root(definition.mReferenceAssetRoot.value_or(*definition.mReferenceRoot));
             mObjectRoot->accept(root);
             if (root.mMatches != 1 || !root.mTransform
                 || root.mTransform->getDataVariance() != osg::Object::DYNAMIC)
                 throw std::invalid_argument("loose reference requires a private mutable NIF root");
-            // The outer reference node owns the native placement. Replace the
-            // asset root's authored pose rather than applying it a second time.
-            root.mTransform->setScale(1.f);
-            root.mTransform->setRotation(Nif::NiTransform::getIdentity().mRotation);
-            root.mTransform->setTranslation({0, 0, 0});
+            if (definition.mReferenceAssetRoot)
+            {
+                if (*definition.mReferenceAssetRoot == *definition.mReferenceRoot
+                    || root.mTransform->getNumParents() != 1)
+                    throw std::invalid_argument("invalid retained loose reference root mapping");
+                // Native retains the file root below its generated BSFadeNode.
+                // The outer OSG placement still owns the REFR pose here; this
+                // private native wrapper has a unit local transform.
+                osg::ref_ptr<NifOsg::MatrixTransform> wrapper
+                    = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+                wrapper->setDataVariance(osg::Object::DYNAMIC);
+                wrapper->setUserValue("recordIndex", *definition.mReferenceRoot);
+                wrapper->setUserValue("nativeNifRecordType", static_cast<unsigned>(Nif::RC_NiNode));
+                wrapper->setUserValue("nativeNifLoadedFlags", 14u);
+                auto* parent = root.mTransform->getParent(0);
+                wrapper->addChild(root.mTransform);
+                parent->replaceChild(root.mTransform, wrapper);
+            }
+            else
+            {
+                // An ordinary folded file root represents the normalized
+                // generated wrapper, whose local pose is replaced by the REFR.
+                root.mTransform->setScale(1.f);
+                root.mTransform->setRotation(Nif::NiTransform::getIdentity().mRotation);
+                root.mTransform->setTranslation({0, 0, 0});
+            }
         }
         auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
         binding->captureWorldBones(objectWorld);

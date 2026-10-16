@@ -11655,7 +11655,8 @@ namespace
 {
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
-    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1)
+    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1,
+        bool rotatedRoot = false)
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -11676,7 +11677,10 @@ namespace
         data += string("Owned weapon") + bytes(std::uint32_t{1})
             + bytes(std::int32_t(childTarget ? 5 : 4)) + bytes(std::int32_t{-1})
             + bytes(std::uint16_t{14});
-        for (const float value : {1.f,2.f,3.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})
+        const std::array<float, 13> rootTransform = rotatedRoot
+            ? std::array<float, 13>{1,2,3, 0,1,0,-1,0,0,0,0,1, 1}
+            : std::array<float, 13>{1,2,3, 1,0,0,0,1,0,0,0,1, 1};
+        for (const float value : rootTransform)
             data += bytes(value);
         data += bytes(std::uint32_t{0}) + bytes(std::int32_t(childTarget ? -1 : 1)); // Properties/collision.
         data += bytes(std::uint32_t(childTarget ? 1 : 0));
@@ -21298,7 +21302,8 @@ namespace
         std::unique_ptr<MWRender::Objects> mObjects;
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
-        explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1)
+        explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1,
+            bool rotatedRoot = false)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
@@ -21322,7 +21327,7 @@ namespace
             if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes/factory-skeleton.osgt").string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
-                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags);
+                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags, rotatedRoot);
                 std::ofstream file(mDirectory / "meshes/factory-weapon.nif", std::ios::binary);
                 file.write(bytes.data(), bytes.size());
                 if (!file) throw std::runtime_error("cannot write owned factory weapon NIF");
@@ -22051,6 +22056,57 @@ TEST(OblivionWorldTest, NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCa
     EXPECT_EQ(cached.mTarget->getMatrix(), templateMatrix);
     EXPECT_TRUE(binding->isValid());
     EXPECT_FALSE(binding->matchesLocalPose(checkpoint));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryRetainsRotatedFileRootBelowPrivateReferenceWrapper)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, true);
+    const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+    ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+    const auto& graph = *carried->mReferenceDefinition;
+    ASSERT_EQ(graph.mReferenceAssetRoot, 0u); ASSERT_EQ(graph.mReferenceRoot, 5u);
+    ASSERT_TRUE(graph.mReferenceCollisionSource);
+    EXPECT_EQ(graph.mBodies.front().mNodeRecord, 5u);
+    EXPECT_TRUE(graph.mBodies.front().mBone.empty());
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
+    ASSERT_NE(animation, nullptr);
+    NativeWeaponTargetVisitor source(0), wrapper(5);
+    animation->getObjectRoot()->accept(source); animation->getObjectRoot()->accept(wrapper);
+    ASSERT_TRUE(source.mTarget); ASSERT_TRUE(wrapper.mTarget);
+    ASSERT_EQ(source.mTarget->getNumParents(), 1u);
+    EXPECT_EQ(source.mTarget->getParent(0), wrapper.mTarget);
+    EXPECT_EQ(wrapper.mTarget->getMatrix(), osg::Matrixd::identity());
+    EXPECT_EQ(source.mTarget->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    EXPECT_EQ(source.mTarget->mRotationScale.mValues[0][1], 1);
+    EXPECT_EQ(source.mTarget->mRotationScale.mValues[1][0], -1);
+    const auto sourceLocal = source.mTarget->getMatrix();
+    unsigned flags = 0;
+    ASSERT_TRUE(wrapper.mTarget->getUserValue("nativeNifLoadedFlags", flags)); EXPECT_EQ(flags, 14u);
+    const auto cached = fixture.mResources.getSceneManager()->getTemplate(
+        VFS::Path::NormalizedView("meshes/factory-weapon.nif"), true, true);
+    NativeWeaponTargetVisitor cachedSource, cachedWrapper(5);
+    const_cast<osg::Node*>(cached.get())->accept(cachedSource);
+    const_cast<osg::Node*>(cached.get())->accept(cachedWrapper);
+    ASSERT_TRUE(cachedSource.mTarget); EXPECT_FALSE(cachedWrapper.mTarget);
+    EXPECT_NE(cachedSource.mTarget, source.mTarget);
+    EXPECT_EQ(cachedSource.mTarget->getMatrix(), sourceLocal);
+    const auto link = fixture.mPhysics->captureLooseObjectSceneBinding(reference);
+    ASSERT_TRUE(link); EXPECT_TRUE(link->matches(graph));
+    auto invalid = graph; invalid.mReferenceAssetRoot.reset(); EXPECT_FALSE(link->matches(invalid));
+    auto velocities = fixture.mPhysics->captureLooseObjectPackedVelocities(reference);
+    velocities.front().mVelocities.mLinear = {2, 0, 0, 0};
+    fixture.mPhysics->restoreLooseObject(reference, fixture.mPhysics->captureLooseObject(reference), velocities);
+    osg::ref_ptr<osg::Stats> stats = new osg::Stats("retained native file root");
+    fixture.mPhysics->stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *stats);
+    const auto stepped = fixture.mPhysics->captureLooseObjectRootPose(reference);
+    MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, *fixture.mPhysics);
+    EXPECT_EQ(reference.getRefData().getPosition().asVec3(), stepped.getTrans());
+    EXPECT_EQ(source.mTarget->getMatrix(), sourceLocal);
+    EXPECT_EQ(cachedSource.mTarget->getMatrix(), sourceLocal);
+    EXPECT_TRUE(animation->getLoosePhysicalPose()->isValid());
+    EXPECT_TRUE(link->isValidFor(reference, true));
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose)

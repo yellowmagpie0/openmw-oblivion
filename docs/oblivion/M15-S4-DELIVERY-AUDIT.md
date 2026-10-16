@@ -4089,3 +4089,44 @@ course is claimed for this traversal API checkpoint.
 Production wrapper preparation, physical initialization/replacement, clocks and
 physics scheduling, one owner and remaining M15S4 runtime/restart gates remain
 open. M15S4 remains active and incomplete.
+
+## 2026-10-16 — retain ordinary transformed asset roots beneath reference wrappers
+
+Reference definition loading now distinguishes an ordinary retained file root
+from its generated reference wrapper. Own-controller presence or a numerically
+nonidentity rotation retains the file root, including its R/T/scale. Translation
+and scale alone do not determine retention; negative zero compares equal to zero.
+The synthetic reference identity is disjoint from source records and equals their
+count. Registration selection uses this prepared hierarchy: a retained root is
+the literal first child, and its deeper descendants are not searched. Collision
+on that retained root relocates to the synthetic target with the existing native
+bodyT offset rule. The folded identity-root path keeps its previous alias mapping.
+
+Detached ObjectAnimation preparation creates a private unit wrapper above a
+retained root, preserving its locals, callbacks and source metadata. Cached and
+carried models remain unchanged. The loose scene lease checks the retained-root
+mapping. A new factory engine regression publishes an actual rotated-root NIF,
+checks private/cached identity, steps physics and synchronizes the reference while
+preserving the source local matrix. Two new component regressions and a corrected
+rotated-root regression cover the policy, source preservation, native relocation
+bits and absence of a deep collision search.
+
+An independent312case original constructor branch corpus matches both production
+loaders. Each build also parses the archived stock short sword and exactly matches
+the13asset-root local fields and7registered bodyT offset/quaternion fields from
+the independent original real-World capture. Its tiny nonzero rotation is enough
+to retain the source root. Full normal and ASan/UBSan runs each pass2,786components/
+266suites and1,612engine/122suites, complete inventories, no failures/skips; leak
+detection disabled. Build/test fixture setup failures remain retained.
+[Editable verification](M15-REFERENCE-ASSET-ROOT-VERIFICATION.json) pins code,
+source fingerprints, native/captured evidence and all reports.
+
+This checkpoint handles ordinary exact NiNode retention. Full BSFadeNode
+construction/names/culling, special roots, folded-root flag/visibility transfer,
+scabbard removal and native initial physical/clock/update ownership remain open.
+A subsequent309case original full scabbard-removal corpus records162removals and
+147absent results, including interior null child slots; it prepares later work
+and is not a production comparison. The factory test is engine integration,
+not normal-input/fresh-process gameplay acceptance. Remaining M15S4 migration,
+save/recreation, melee/drop/effect/input/runtime gates remain open; M15S4 remains
+active and incomplete.

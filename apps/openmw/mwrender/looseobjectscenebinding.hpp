@@ -47,6 +47,7 @@ namespace MWRender
         std::uint32_t mBodyRecord, mNodeRecord;
         std::uint16_t mCollisionFlags;
         std::optional<std::uint32_t> mReferenceRoot;
+        std::optional<std::uint32_t> mReferenceAssetRoot;
         bool mPublished = false;
         bool mRetired = false;
         friend class Objects;

@@ -165,9 +165,13 @@ namespace NifBullet
         std::string mSourceHash;
         std::vector<RagdollBodyDefinition> mBodies;
         std::vector<RagdollJointDefinition> mJoints;
-        // Present only when loaded for a new placed reference. Its authored
-        // root transform is omitted from bind matrices and replaced in 3D.
+        // Present only for a new placed reference. This node owns the normalized
+        // reference pose, independently of any retained file-root transform.
         std::optional<std::uint32_t> mReferenceRoot;
+        // Ordinary transformed/controller-bearing file roots survive below a
+        // synthetic reference root (record identity = source record count).
+        // Otherwise the file-root identity represents the normalized wrapper.
+        std::optional<std::uint32_t> mReferenceAssetRoot;
         // The original child remains visible after its collision is relocated.
         // Retain its identity for model admission without treating it as a body.
         struct ReferenceCollisionSource
@@ -197,10 +201,10 @@ namespace NifBullet
     // Unsupported or malformed graphs are diagnosed as a whole. Shape trees
     // are bounded to 128 edges and 4096 expanded instances per body.
     ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file);
-    // GenerateNiNode replaces the single asset root's local pose with the
-    // reference placement. Registration relocates a selected dynamic child
-    // collision to that root with a bodyT offset; visible child locals and
-    // body properties/joint frames remain authored.
+    // Prepare an ordinary model's reference-root mapping. A NiNode with a
+    // controller or nonidentity rotation retains its local pose beneath the
+    // normalized wrapper. Registration selection uses that prepared hierarchy.
+    // Other special model-root policies still require their own admission.
     ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file);
 }
 

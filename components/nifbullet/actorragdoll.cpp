@@ -2,8 +2,10 @@
 #include "actorragdollphysics.hpp"
 
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -402,6 +404,24 @@ namespace NifBullet
             const auto* root = dynamic_cast<const Nif::NiAVObject*>(file.getRoot(0));
             member(root);
             result.mReferenceRoot = root->mRecordIndex;
+            // Original BSFadeNode constructor4A133E..4A13CB tests controller
+            // presence and rotation only. Translation/scale do not prevent an
+            // ordinary identity-rotation root from being folded into its wrapper.
+            // Retained roots remain a literal first child during registration.
+            if (typeid(*root) == typeid(Nif::NiNode))
+            {
+                bool identity = true;
+                for (unsigned row = 0; row < 3; ++row)
+                    for (unsigned column = 0; column < 3; ++column)
+                        identity &= root->mTransform.mRotation.mValues[row][column] == (row == column ? 1.f : 0.f);
+                if (!root->mController.empty() || !identity)
+                {
+                    require(file.numRecords() < std::numeric_limits<std::uint32_t>::max(),
+                        "reference wrapper identity exceeds record range");
+                    result.mReferenceAssetRoot = root->mRecordIndex;
+                    result.mReferenceRoot = static_cast<std::uint32_t>(file.numRecords());
+                }
+            }
         }
 
         // Traverse iteratively: corrupt cycles or extremely deep hierarchies must
@@ -599,7 +619,7 @@ namespace NifBullet
             const auto* selected = root;
             // Original4E1FD0 selects the root, literal first child, or literal
             // second child. It does not search recursively for a physical node.
-            if (root->mCollision.empty())
+            if (!result.mReferenceAssetRoot && root->mCollision.empty())
                 if (const auto* branch = dynamic_cast<const Nif::NiNode*>(root);
                     branch && !branch->mChildren.empty() && !branch->mChildren[0].empty())
                 {
@@ -608,7 +628,7 @@ namespace NifBullet
                         && !branch->mChildren[1].empty())
                         selected = branch->mChildren[1].getPtr();
                 }
-            if (selected != root && !selected->mCollision.empty())
+            if ((result.mReferenceAssetRoot || selected != root) && !selected->mCollision.empty())
             {
                 const auto* collision = static_cast<const Nif::bhkCollisionObject*>(selected->mCollision.getPtr());
                 const auto* body = static_cast<const Nif::bhkRigidBody*>(collision->mBody.getPtr());
@@ -627,8 +647,8 @@ namespace NifBullet
                     value.mTranslation = offset.mPosition;
                     value.mRotation = osg::Quat(offset.mRotation[0], offset.mRotation[1],
                         offset.mRotation[2], offset.mRotation[3]);
-                    value.mNodeRecord = root->mRecordIndex;
-                    value.mBone = root->mName;
+                    value.mNodeRecord = *result.mReferenceRoot;
+                    value.mBone = result.mReferenceAssetRoot ? std::string() : root->mName;
                     value.mBoneBind = osg::Matrixf::identity();
                 }
             }

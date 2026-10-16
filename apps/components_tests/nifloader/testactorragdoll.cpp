@@ -162,7 +162,7 @@ namespace
             EXPECT_EQ(collision.mFlags, flags);
         }
     }
-    TEST_F(ActorRagdollTest, ReferencePlacementReplacesRootAndRelocatesOnlySelectedCollision)
+    TEST_F(ActorRagdollTest, ReferencePlacementRetainsRotatedAssetRootBelowNormalizedWrapper)
     {
         auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
         root.mTransform.mRotation.mValues[0][0] = 0;
@@ -173,19 +173,22 @@ namespace
         const auto authored = NifBullet::loadActorRagdollDefinition(mFile);
         const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
         EXPECT_FALSE(authored.mReferenceRoot);
-        ASSERT_EQ(placed.mReferenceRoot, 0u);
+        ASSERT_EQ(placed.mReferenceRoot, mFile.mRecords.size());
+        ASSERT_EQ(placed.mReferenceAssetRoot, 0u);
         ASSERT_EQ(placed.mBodies.size(), authored.mBodies.size());
         EXPECT_EQ(placed.mSourceHash, authored.mSourceHash);
-        EXPECT_EQ(placed.mBodies[0].mNodeRecord, 0u);
-        EXPECT_EQ(placed.mBodies[0].mBone, root.mName);
-        EXPECT_TRUE(placed.mBodies[0].mUsesRigidBodyTransform);
-        EXPECT_EQ(placed.mBodies[0].mBoneBind, osg::Matrixf::identity());
-        EXPECT_EQ(placed.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(4, 5, 6));
-        EXPECT_NE(authored.mBodies[0].mBoneBind, placed.mBodies[0].mBoneBind);
+        // The generated wrapper's first child is the file root. Registration
+        // does not search its descendants for either physical child.
+        EXPECT_FALSE(placed.mReferenceCollisionSource);
+        for (unsigned i = 0; i < placed.mBodies.size(); ++i)
+        {
+            EXPECT_EQ(placed.mBodies[i].mNodeRecord, authored.mBodies[i].mNodeRecord);
+            EXPECT_EQ(placed.mBodies[i].mBoneBind, authored.mBodies[i].mBoneBind);
+            EXPECT_EQ(placed.mBodies[i].mUsesRigidBodyTransform, authored.mBodies[i].mUsesRigidBodyTransform);
+        }
         EXPECT_FLOAT_EQ(placed.mBodies[0].mMass, authored.mBodies[0].mMass);
         EXPECT_EQ(placed.mBodies[0].mInertia, authored.mBodies[0].mInertia);
-        EXPECT_EQ(placed.mBodies[0].mTranslation,
-            NifBullet::ragdollWorldToNativePosition({1, 2, 3}));
+        EXPECT_EQ(placed.mBodies[0].mTranslation, authored.mBodies[0].mTranslation);
         EXPECT_EQ(placed.mBodies[0].mRotation, authored.mBodies[0].mRotation);
         EXPECT_EQ(std::get<NifBullet::RagdollHingeJoint>(placed.mJoints[0].mJoint).mA.mPivot,
             std::get<NifBullet::RagdollHingeJoint>(authored.mJoints[0].mJoint).mA.mPivot);
@@ -193,6 +196,53 @@ namespace
         EXPECT_FLOAT_EQ(root.mTransform.mScale, 2);
         EXPECT_EQ(NifBullet::loadActorRagdollDefinition(mFile).mBodies[0].mBoneBind,
             authored.mBodies[0].mBoneBind);
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceWrapperRelocatesTheRetainedAssetRootCollision)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        auto& child = static_cast<Nif::NiNode&>(*mFile.mRecords[1]);
+        root.mCollision = child.mCollision; child.mCollision = Nif::NiCollisionObjectPtr(nullptr);
+        static_cast<Nif::bhkCollisionObject*>(root.mCollision.getPtr())->mTarget = Nif::NiAVObjectPtr(&root);
+        root.mTransform.mTranslation = {3, 4, 5};
+        root.mTransform.mRotation.mValues[0][0] = root.mTransform.mRotation.mValues[1][1] = 0;
+        root.mTransform.mRotation.mValues[0][1] = 1;
+        root.mTransform.mRotation.mValues[1][0] = -1;
+        const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+        ASSERT_EQ(placed.mReferenceAssetRoot, 0u); ASSERT_EQ(placed.mReferenceRoot, mFile.mRecords.size());
+        ASSERT_TRUE(placed.mReferenceCollisionSource);
+        EXPECT_EQ(placed.mReferenceCollisionSource->mNodeRecord, 0u);
+        EXPECT_EQ(placed.mReferenceCollisionSource->mNodeLocal, root.mTransform.toMatrix());
+        EXPECT_EQ(placed.mBodies[0].mNodeRecord, placed.mReferenceRoot);
+        EXPECT_TRUE(placed.mBodies[0].mBone.empty());
+        EXPECT_EQ(placed.mBodies[0].mBoneBind, osg::Matrixf::identity());
+        // Original ordinary registration, plain wrapper with R90/T3,4,5.
+        const std::array<unsigned, 3> expected{1054569834u,1058164295u,1060561369u};
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<unsigned>(placed.mBodies[0].mTranslation[i]), expected[i]);
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(placed, 2);
+        EXPECT_EQ(scaled.mReferenceAssetRoot, placed.mReferenceAssetRoot);
+        EXPECT_EQ(scaled.mReferenceRoot, placed.mReferenceRoot);
+        EXPECT_EQ(scaled.mReferenceCollisionSource->mNodeLocal, placed.mReferenceCollisionSource->mNodeLocal);
+        EXPECT_EQ(child.mCollision.empty(), true); EXPECT_FALSE(root.mCollision.empty());
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceWrapperPolicyUsesControllerPresenceAndRotationInsteadOfTranslationOrScale)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        root.mTransform.mTranslation = {3, 4, 5}; root.mTransform.mScale = 2;
+        root.mTransform.mRotation.mValues[0][1] = -0.f;
+        const auto folded = NifBullet::loadReferenceRagdollDefinition(mFile);
+        EXPECT_EQ(folded.mReferenceRoot, 0u); EXPECT_FALSE(folded.mReferenceAssetRoot);
+        root.mTransform.mRotation.mValues[0][0] = std::bit_cast<float>(0x3f800001u);
+        EXPECT_EQ(NifBullet::loadReferenceRagdollDefinition(mFile).mReferenceAssetRoot, 0u);
+        root.mTransform.mRotation = Nif::NiTransform::getIdentity().mRotation;
+        auto& controller = add<Nif::NiKeyframeController>();
+        Nif::Testing::init(static_cast<Nif::NiTimeController&>(controller));
+        root.mController = Nif::NiTimeControllerPtr(&controller);
+        const auto retained = NifBullet::loadReferenceRagdollDefinition(mFile);
+        EXPECT_EQ(retained.mReferenceRoot, mFile.mRecords.size()); EXPECT_EQ(retained.mReferenceAssetRoot, 0u);
+        EXPECT_EQ(root.mTransform.mTranslation, osg::Vec3f(3, 4, 5)); EXPECT_EQ(root.mTransform.mScale, 2);
     }
 
     TEST_F(ActorRagdollTest, ReferenceRelocationUsesSecondLiteralChildInsteadOfDeepFirstBody)

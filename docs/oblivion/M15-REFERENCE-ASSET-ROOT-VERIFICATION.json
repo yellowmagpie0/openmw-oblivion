@@ -1,0 +1,415 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Ordinary retained asset-root mapping integrated in definition loading and detached model preparation; full M15S4 incomplete",
+  "parent_commit": "18bfcf33200f5f48c926a433bc411d82a90950de",
+  "implementation_sha256": {
+    "components/nifbullet/actorragdoll.hpp": "8be9b833f249a3d4f65404f98a9dad346abd48350402903eaf26cb0e368d4312",
+    "components/nifbullet/actorragdoll.cpp": "60c422c3e18bd22e520e8e5ad036b7fe1873dff8ed0f06e189915835e6286b6e",
+    "apps/openmw/mwrender/animation.cpp": "a5729b414f15941403f6c534abd3e44cbc21ab1e2fbf63a9f90d8d2fa994842b",
+    "apps/openmw/mwrender/looseobjectscenebinding.hpp": "c54ed68621375ef74b4a6113cd4c93c8b2748c9d3145068d1d794df69949ff4c",
+    "apps/openmw/mwrender/looseobjectscenebinding.cpp": "7a0bb6d202d427489ffa1796e8a3180174788d87a541b0ab7e1ca25555a8fa1d",
+    "apps/components_tests/nifloader/testactorragdoll.cpp": "ad0cd9fff3ffc4b5995586e8fbf0c31560f6a8546990e6de4bec2509e27c8139",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2bec8df0e4cff37e79526138935e13189bc0f9fe5c7291b0374e6bf563fe5b9e"
+  },
+  "native": {
+    "path": "build/oblivion-compat/m15/S4/reference-wrapper-policy-oracle-01/verification.json",
+    "sha256": "362ce35e3c77060b4a2994896a34aad3b6a9f52f4d664f5161b772cc483a4fbc",
+    "report": {
+      "passed": true,
+      "contexts": 312,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "probe_sha256": "f1f9c70b3ae9cfb31979d75d614909bc605291723aa147ff5b9cd7a0f2340a88",
+      "cases_sha256": "a21454d1e3cfc93505ecb04d28badbac86969237d36bee9e42465121a32d0688",
+      "scope": "Original BSFadeNode constructor decision4A133E through original ordinary NiNode RTTI getter and matrix equality70FF20. Stop before first allocation/transfer in all three branches; no replaced functions. Root own-controller presence, identity/negative-zero/adjacent-float rotation fields, nonzero translations and different scales. Original global identity matrix supplied; actual startup RTTI chain construction is not run. Ordinary NiNode only: special-type branch classification not established. Does not execute whole wrapper construction, copies, registration or gameplay."
+    }
+  },
+  "static_audit": {
+    "path": "build/oblivion-compat/m15/S4/reference-wrapper-audit-01/verification.json",
+    "sha256": "7ef29d3e681e7cfd73cbfc810c62f03fdf52e8a133ba215b343782e8b38374db",
+    "report": {
+      "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "artifacts": {
+        "strings.json": "00888e8fd37bf7854b376079fe8397673a1d782c3cdb7e26c89f23173f17e3f7",
+        "wrap-file-root.txt": "c0e5f42f0e24613d2750e0c9c56deb436c9a2069ca89ae117a4df35b348305dc",
+        "wrapper-rest.txt": "e8a935549cf70cc18091be3d2af8c70461d01640ef70c78a99ee14bdee4d1760",
+        "transform-equality.txt": "06195a46d8c49b39d3cdab7fcbd525a24f5b817e02d7421519bfc2e50eeb3437",
+        "special-rtti-identity.json": "e5a157a9fe49301cbf937b06f436add8e8af63c9b89c7944fe8fea2802a80033",
+        "special-rtti-09.txt": "3e9e8ca2f8a16689914d53457b9b1efbfb1e54c13840628fd3bdfa2abe644f49",
+        "scabbard.txt": "94fe3f5908e08573b073c7c090b8421dc528fe38f1530acf2af0da7ec34c7558",
+        "compare-ascii.txt": "3a25f0d99e093dddf39f53d478499c511258ce5d0288ba448a69b21155d6fa90",
+        "prefix-ascii.txt": "11056ba0b3ce3ec59896ddf6c357fe7fb5a4d13398d0a0197d8f78dace8984b6"
+      },
+      "findings": [
+        "BSFadeNode constructor4A12E0 copies source name, then retains root on own-controller presence or NiBillboardNode RTTI ancestry. Otherwise70FF20 compares only the nine rotation floats to identity; numerical negative zero compares equal, adjacent/subnormal nonzero fields differ. Translation and scale are excluded from this predicate.",
+        "For ordinary nonidentity rotation, a temporary ordinary NiNode holds the source, source renamed FadeNode Rot. For controller/billboard branch a temporary node holds source, source renamed FadeNode Anim. Wrapper then takes temporary children. Rotation/T/abs(scale) are taken from the temporary identity node. For folded ordinary identity-rotation root, collision/properties/children move to wrapper and wrapper initially takes source R/T/abs(scale); factory footer subsequently normalizes wrapper R/T/scale.",
+        "Special ancestor B3FD4C is NiBillboardNode, independently named by actual startup A09FE0 with name pointerA7F7E4 and parentB3FAB0; source runtime names/class hints alone were not used. Current new C++ retained-root policy is deliberately ordinary exact NiNode only; other model-specific policies remain outside this checkpoint.",
+        "Native scabbard removal480770 compares complete Scb case-insensitively and first9chars FadeNode case-insensitively with trailing space. It descends only into the first encountered matching-prefix NiNode and does not resume siblings after descent; missing/non-node returnsfalse. A Scb match removes its branch via +8C then releases. This algorithm is located but not implemented/claimed by the retained-root change."
+      ]
+    }
+  },
+  "comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/reference-wrapper-policy-compare-01/normal-verification.json",
+      "sha256": "4794f15cdfa7133c7da542a36c8e5d562707167df557b81e62f2bc20cded1906",
+      "report": {
+        "passed": true,
+        "contexts": 312,
+        "failures": [],
+        "corpus_sha256": "a21454d1e3cfc93505ecb04d28badbac86969237d36bee9e42465121a32d0688",
+        "probe_sha256": "f6b849d64ed11ce3336b15b796ff9de248c878bf0dd236f5a85961114e2f7c98",
+        "comparator_sha256": "dfebe401a35ba7af6543f38f86f2e3037e52ff417aafb0e914f83fe9361b50c1",
+        "binary_sha256": "3d67cee26779ac1b3549c6100d702cdedffa90e02ffea6170081867ed8b2437f",
+        "scope": "Actual reference definition loader vs original ordinary NiNode constructor root-retention branch. Also verifies source-local preservation, disjoint synthetic identity and registration selection relative to prepared hierarchy, combined with prior independently verified first-child selection. Does not execute full original template constructor, special model policies, renderer, controller clocks or gameplay."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/reference-wrapper-policy-compare-01/sanitized-verification.json",
+      "sha256": "423aa167b6ce19e2aa2ce7ca56304d6fe14112eec9b01bf3fe0ef8cd775da52a",
+      "report": {
+        "passed": true,
+        "contexts": 312,
+        "failures": [],
+        "corpus_sha256": "a21454d1e3cfc93505ecb04d28badbac86969237d36bee9e42465121a32d0688",
+        "probe_sha256": "f6b849d64ed11ce3336b15b796ff9de248c878bf0dd236f5a85961114e2f7c98",
+        "comparator_sha256": "dfebe401a35ba7af6543f38f86f2e3037e52ff417aafb0e914f83fe9361b50c1",
+        "binary_sha256": "2accc4ea15fd33358210241e2ccb9716b02bff93b3480e49c809cc5af06e0b16",
+        "scope": "Actual reference definition loader vs original ordinary NiNode constructor root-retention branch. Also verifies source-local preservation, disjoint synthetic identity and registration selection relative to prepared hierarchy, combined with prior independently verified first-child selection. Does not execute full original template constructor, special model policies, renderer, controller clocks or gameplay."
+      }
+    }
+  },
+  "stock_comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/stock-reference-root-compare-01/normal-verification.json",
+      "sha256": "d8a4ab6215d38ba2e86e495573aa07b4e6d2cb509069a3be6c9e281cfb103611",
+      "report": {
+        "passed": true,
+        "asset_sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+        "capture_sha256": "7be1c2ccc7becd78a63f7638ccc3ba77a464194791f0b89ad7e8318bda688331",
+        "probe_sha256": "9dc16a50589d4ee5f452157f9245a354bb79ec52a9ad91e7a37c1e1d9b09ba7e",
+        "comparator_sha256": "b174b83a146bdf7c4ebbeca2ab00d75e37d280551a681053c791459f63dd5fc0",
+        "binary_sha256": "24d5c40063e6ad203150621be40b8c005a7720f03d7bca30b9ca77ea827405c2",
+        "actual": {
+          "records": 20,
+          "root": 20,
+          "asset_root": 0,
+          "target": 20,
+          "bodyT": 1,
+          "local13": [
+            1065353216,
+            3025276992,
+            0,
+            877793344,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ],
+          "offset7": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            869404736,
+            1065353216
+          ]
+        },
+        "expected_local13": [
+          1065353216,
+          3025276992,
+          0,
+          877793344,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216
+        ],
+        "expected_offset7": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          869404736,
+          1065353216
+        ],
+        "scope": "Archived stock short sword through actual parser/reference-definition loader vs independently captured original cached asset-root local13 and real-World registered bodyT local7. Wrapper identity maps outside source records. No claim of current winning asset resolution, native physical state reset/World scheduling, fork rendering/input/gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/stock-reference-root-compare-01/sanitized-verification.json",
+      "sha256": "fab7780e74608c6e494944cffc75c84853fe52005a29f0adb53da69d228cbd89",
+      "report": {
+        "passed": true,
+        "asset_sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+        "capture_sha256": "7be1c2ccc7becd78a63f7638ccc3ba77a464194791f0b89ad7e8318bda688331",
+        "probe_sha256": "9dc16a50589d4ee5f452157f9245a354bb79ec52a9ad91e7a37c1e1d9b09ba7e",
+        "comparator_sha256": "b174b83a146bdf7c4ebbeca2ab00d75e37d280551a681053c791459f63dd5fc0",
+        "binary_sha256": "a5b29081c6f94fd3b89e7c6df8efd8cb352de73fe713aa0a6a7988fde93a8e28",
+        "actual": {
+          "records": 20,
+          "root": 20,
+          "asset_root": 0,
+          "target": 20,
+          "bodyT": 1,
+          "local13": [
+            1065353216,
+            3025276992,
+            0,
+            877793344,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ],
+          "offset7": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            869404736,
+            1065353216
+          ]
+        },
+        "expected_local13": [
+          1065353216,
+          3025276992,
+          0,
+          877793344,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216
+        ],
+        "expected_offset7": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          869404736,
+          1065353216
+        ],
+        "scope": "Archived stock short sword through actual parser/reference-definition loader vs independently captured original cached asset-root local13 and real-World registered bodyT local7. Wrapper identity maps outside source records. No claim of current winning asset resolution, native physical state reset/World scheduling, fork rendering/input/gameplay acceptance."
+      }
+    }
+  },
+  "behavior": [
+    "Ordinary exact NiNode file roots with an own controller or any numerically nonidentity rotation are retained beneath a normalized private reference wrapper. Identity rotation, including negative zero, with no own controller keeps the existing folded-root identity mapping; source translation/scale do not decide retention. No controller activation/class heuristic is used.",
+    "mReferenceAssetRoot identifies a retained source record. mReferenceRoot is then a disjoint synthetic ID equal to source record count. Bind matrices retain authored asset R/T/scale and registration selects relative to the prepared hierarchy: the retained root is its literal first child. A collision on that source root relocates to the synthetic root; deeper children are not searched.",
+    "ObjectAnimation creates a private dynamic unit NifOsg transform above the retained asset root, leaves its source locals/metadata/callbacks intact, and binds the actual synthetic physical target. Source templates and carried models remain unchanged. The generated wrapper starts with loaded flags14. Loose scene leases include retained-root mapping in identity checks.",
+    "Two added component regressions plus the corrected rotated-root regression cover rotation/controller predicates, negative zero/adjacent float, original relocation bits, source/clone preservation and selection without deep search. A new actual factory engine regression publishes a rotated-root NIF, checks private wrapper/source/cached identity, steps physics and synchronizes the REFR while source locals/template remain unchanged."
+  ],
+  "limits": [
+    "312 independent original constructor branch contexts execute4A133E through real ordinary NiNode RTTI getter and rotation equality70FF20; stop at all three branches before allocation/transfer. No functions replaced. Original global identity matrix supplied; startup RTTI chains not constructed. Both actual definition loaders match all312cases and preserve source locals.",
+    "Each build parses the hash-identified archived stock short sword and exactly matches all13asset-root local fields and7registered bodyT offset/quaternion fields captured independently in the original real World. This is an archived-source/definition comparison, not complete winning loose/BSA/mod resolution or fork gameplay acceptance.",
+    "New retention policy is deliberately ordinary exact NiNode only. Special root policies, native names/classes/culling, folded-root source flag/visibility transfer and full original template construction are not established by this change. Native renames retained roots FadeNode Rot/FadeNode Anim; existing renderer/source identity names remain stable here. No claim of complete synthetic BSFadeNode semantics.",
+    "Scabbard selection/removal is not part of this implementation. Independent selector corpus reference-scabbard-oracle01 is retained for subsequent work. Real-World physical replacement policy/initial capture, controllerless-generation owner, clock/physics scheduling, one live traversal authority, migration/save/fresh recreation and remaining M15S4 melee/drop/effect/input/runtime gates remain open.",
+    "Native policy comparison initial setup failure used zero maximum body velocities and was rejected by the existing loader; complete failed harness retained in reference-wrapper-policy-compare-setup-failure01. First preflight failed compilation from using FileView numRecords on NIFFile and the native controller class name instead of parser NiKeyframeController; fixed tests retain the original failed evidence directory. No test failures are concealed.",
+    "Complete309case original scabbard-removal corpus has162 removals/147absent results, original parent/child-slot/refcount changes and Windows Interlocked boundaries only. Interior holes survive; trailing used extent shrinks. Failed full-remove setup02/diagnostic03 lacked the SEH low page; retained separately. This evidence prepares later implementation and is not a C++ scabbard comparison or runtime gate."
+  ],
+  "checks": {
+    "retained-reference-root-preflight-02": {
+      "path": "build/oblivion-compat/m15/S4/retained-reference-root-preflight-02/verification.json",
+      "sha256": "033866842179ebf0ea9eda09840379b7abfdaabbe65351a4ea62bc173b537e41",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 55,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.*:OblivionWorldTest.NativeWeaponFactory*",
+          "binary_sha256": "4136b8c940acfb3e5dd6c6a52e4a318b27e99855b76ca6c915b062658a0fc87f",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "92611647cfa3ffe9bd7d0a296f14a73a6b2f9620d421430a2dd8b20a1ae8223a",
+          "inventory_sha256": "13be9f83ca15e125bfebaabc0dc811529c3611b77118175fa0257dd3823343e9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 30,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollTest.*:OblivionWorldTest.NativeWeaponFactory*",
+          "binary_sha256": "8e71dcbbaa8e4b846c0e56262e1e0d694c6bf6897964740797f07a64ec756642",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "4fd2537439666de9b94dbb36f963dcf2384305fe9ef19d681b188159577fc4a6",
+          "inventory_sha256": "3ab24803d1a4ebbbd99afe1c5548cf7574fa8d4b4d66870248e5e417a19e6500",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      },
+      "source_after": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      }
+    },
+    "retained-reference-root-normal-01": {
+      "path": "build/oblivion-compat/m15/S4/retained-reference-root-normal-01/verification.json",
+      "sha256": "b7141a6a71cc1504b1eecba0f42b41a189232f0d9c2bbf6ad19ecdc6e01fc6f7",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2786,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4136b8c940acfb3e5dd6c6a52e4a318b27e99855b76ca6c915b062658a0fc87f",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "201ec7e4f92beeaff25b613c66b19dc992df49854136f8f498c5c02cce2effd7",
+          "inventory_sha256": "94aaef54619fe1342d08f7b7afc213acfabe20de82e4c7c2a70768cd1587c33b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1612,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8e71dcbbaa8e4b846c0e56262e1e0d694c6bf6897964740797f07a64ec756642",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "e76bf5f83ab3464b862703d63db18afdbaeee637b4e9cdd97f758b83ab322e15",
+          "inventory_sha256": "3ab24803d1a4ebbbd99afe1c5548cf7574fa8d4b4d66870248e5e417a19e6500",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      },
+      "source_after": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      }
+    },
+    "retained-reference-root-sanitized-01": {
+      "path": "build/oblivion-compat/m15/S4/retained-reference-root-sanitized-01/verification.json",
+      "sha256": "366c0f9070795bb6c71b9971bdcf0e80b64d1fcd6ef3121b8bf3e5ff33fa184a",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2786,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9103fe83dcea0725b0c20e8d922057668d59cc1484e5b79b8f8409736a0ed449",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "99299af8d55d37929e41ba110e06a6bae2eabc639983ee96ab39ed134565e568",
+          "inventory_sha256": "977a0f4e867a468183418ce0d36133e6aec452479eae7f28dfc10fefaab8f40a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1612,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "92e5ebc39b7acd27bd3c6fb3925ce0d06055cabe5f11c7daf91661ae80c60d3a",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "77a1a9801f881f319da63e73521f8760835b085f7a3c971376d369377473caeb",
+          "inventory_sha256": "3ab24803d1a4ebbbd99afe1c5548cf7574fa8d4b4d66870248e5e417a19e6500",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      },
+      "source_after": {
+        "head": "18bfcf33200f5f48c926a433bc411d82a90950de",
+        "source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278"
+      }
+    }
+  },
+  "tested_source_fingerprint": "2784b47b077e8792341038567c75bfb1f44e42e2ce674df8834c57881ebe6278",
+  "check_scope": "Full normal and ASan/UBSan each2786components/266suites and1612engine/122suites, complete inventories, no failures/skips. ASan leak detection disabled. Engine includes actual factory publication and physics step but is not normal-input original/fork gameplay or fresh-process acceptance.",
+  "subsequent_scabbard_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-scabbard-oracle-01/verification.json",
+      "sha256": "a6174ffa3fb819eb7a3aa0c7a15200ba8ccbf132059e9800e0069cafc4da19ac",
+      "report": {
+        "passed": true,
+        "contexts": 309,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "90ff6fce503a22754c905db718fad3c0d63e9f6380fc95c060734cf05cedb2be",
+        "cases_sha256": "235b3a2ca613b3928eba92aced142c835b3c9c481c146311e130ea2fda4c23f3",
+        "scope": "Original weapon scabbard selector480770, actual ASCII case-insensitive full/prefix CRT functions and real NiNode/geometry cast virtuals. Observation stop at4807E2 immediately before removal, or complete false return. Null slots/names/root, exact vs extended Scb names, matching/short/nonmatching FadeNode prefixes, non-node prefix, first-descent sibling behavior and random acyclic trees. No function replacements. Actual detach/release, wrapper preparation, renderer/physics/gameplay excluded. CRT global locale-count remains zero (ASCII path)."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-scabbard-oracle-04/verification.json",
+      "sha256": "c4c5c18962f8994540d217b0b174ebaf4a6beb3d62f547fab4fada05bc8ce680",
+      "report": {
+        "passed": true,
+        "contexts": 309,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "29d6e643607775a4f3411259a49b411826437afcbf2ece5b932045979bad354d",
+        "cases_sha256": "e4e12bb45cd3f044544140cb10c83efb57774804497f2986595407c74e5e7f8c",
+        "scope": "Complete original weapon scabbard removal480770 including real +8C detach and reference-release path, actual ASCII case-insensitive full/prefix CRT functions and real NiNode/geometry casts. Complete true/false returns, post-removal parent/child-slot/reference-count capture. Null slots/names/root, exact vs extended Scb names, matching/short/nonmatching FadeNode prefixes, non-node prefix, first-descent sibling behavior and random acyclic trees. Only Windows InterlockedIncrement/Decrement imports supplied as checked pointer/count ABI boundaries; no game functions replaced. All nodes start with10 references, so no destructor/heap free is triggered. Wrapper preparation, renderer/physics/gameplay excluded. CRT global locale-count remains zero (ASCII path)."
+      }
+    }
+  ]
+}
