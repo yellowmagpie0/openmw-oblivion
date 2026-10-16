@@ -6,6 +6,22 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 script state on fresh factory references — 2026-10-16
+
+Native script commands can now persist state on a newly published dynamic
+reference before pickup. The first cache-dependent command imports only that
+live reference through the existing save projection, preserving unrelated
+cached script state. Unpublished or unavailable dynamic keys cannot create a
+cache entry through this fallback.
+
+Normal and ASan/UBSan builds each pass all **1,545 engine tests/122 suites**.
+The new factory/command regression fails against the preceding implementation;
+it also verifies independent cached state, live item metadata and binary save
+round-trip. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-script-state-on-fresh-factory-references)
+records scope and evidence. Loose-body frame/save wiring, production
+break/mastery dispatch, replacement/sound, pickup cleanup and normal-input
+acceptance remain open. S4 is incomplete.
+
 ## S4 prepared Lua scene admission — 2026-10-16
 
 The equipped-weapon factory now publishes Lua object-list membership, prepared

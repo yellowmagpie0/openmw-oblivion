@@ -21729,6 +21729,45 @@ TEST(OblivionWorldTest, NativeWeaponFactoryQueuesLuaSceneAdmissionWithPublicatio
     EXPECT_TRUE(after->isValid()); // No duplicate scene event after consumption.
 }
 
+TEST(OblivionWorldTest, NativeWeaponFactoryNewReferenceAcceptsPersistentScriptCommandsBeforePickup)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto& world=fixture.mWorld;
+    auto& scripts=*world.getOblivionScriptManager();
+    const auto resident=fixture.mResident.getCellRef().getFormKey();
+    const auto call=[&](std::string_view name,const ESM::FormKey& key,
+                        std::vector<ObScript::Value> arguments={}) {
+        ObScript::RuntimeContext context; context.mSelf=key;
+        return scripts.call(name,{},arguments,context,{});
+    };
+    // Establish a cache containing unrelated script state before the factory
+    // creates the dynamic reference. Importing it must preserve this state.
+    call("SetDestroyed",resident,{std::int64_t{1}});
+    ASSERT_EQ(ObScript::asInteger(call("GetDestroyed",resident)),1);
+    const auto before=world.captureOblivionRuntimeState();
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto dropped=plan->commit(); ASSERT_FALSE(dropped.isEmpty());
+    const auto key=dropped.getCellRef().getFormKey(); ASSERT_TRUE(key.isDynamic());
+    ASSERT_EQ(world.getStore().getFormKeyIndex().resolve(key),nullptr);
+    call("SetDestroyed",key,{std::int64_t{1}});
+    ASSERT_EQ(ObScript::asInteger(call("GetDestroyed",key)),1);
+    EXPECT_EQ(ObScript::asInteger(call("GetDestroyed",resident)),1);
+    const auto after=world.captureOblivionRuntimeState();
+    ASSERT_EQ(after.mReferences.size(),before.mReferences.size()+1);
+    const auto found=std::find_if(after.mReferences.begin(),after.mReferences.end(),
+        [&](const auto& reference) { return reference.mKey==key; });
+    ASSERT_NE(found,after.mReferences.end());
+    EXPECT_EQ(found->mBase,ESM::FormKey::content("headless.esm",0x940));
+    EXPECT_EQ(found->mItemCondition,std::optional<float>(0.f));
+    EXPECT_EQ(found->mItemCharge,std::optional<float>(7.25f));
+    EXPECT_TRUE(std::get<bool>(found->mCustomState.at("obscript.destroyed")));
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()),after);
+    call("SetDestroyed",key,{std::int64_t{0}});
+    EXPECT_EQ(ObScript::asInteger(call("GetDestroyed",key)),0);
+    EXPECT_EQ(ObScript::asInteger(call("GetDestroyed",resident)),1);
+    EXPECT_EQ(dropped.getCellRef().getCount(),1); // No pickup/cache-refresh prerequisite.
+}
+
 TEST(OblivionWorldTest, NativeWeaponFactoryLuaAdmissionRejectsQueueMutationAndRestoresRetainedSelection)
 {
     NativeWeaponFactoryFixture fixture;

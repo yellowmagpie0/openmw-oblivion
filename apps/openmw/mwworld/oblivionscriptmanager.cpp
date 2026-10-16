@@ -1132,26 +1132,44 @@ namespace MWWorld
         if (found != references.end())
             return &*found;
 
-        const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(key);
-        const auto base = mReferenceBases.find(key);
-        if (metadata == nullptr || !metadata->mParent || base == mReferenceBases.end())
-            return nullptr;
-
         ESM4::RuntimeReferenceState state;
-        state.mKey = key;
-        state.mBase = base->second;
-        state.mCell = *metadata->mParent;
-        if (const Ptr ptr = ptrFor(key); !ptr.isEmpty())
+        if (key.isDynamic())
         {
-            state.mEnabled = ptr.getRefData().isEnabled();
-            state.mDeleted = ptr.mRef->isDeleted();
-            state.mPosition = ptr.getRefData().getPosition();
-            try
+            // A new factory reference has no static FormKeyIndex entry. Use
+            // the same live projection as saves/pickup, importing only this
+            // reference so unrelated cached script state remains authoritative.
+            // Private preparations and unavailable keys cannot create state.
+            if (mWorld.mWorldModel.getDynamicNativePtr(key).isEmpty())
+                return nullptr;
+            auto live = mWorld.captureOblivionRuntimeState();
+            const auto current = std::find_if(live.mReferences.begin(), live.mReferences.end(),
+                [&](const ESM4::RuntimeReferenceState& value) { return value.mKey == key; });
+            if (current == live.mReferences.end())
+                return nullptr;
+            state = std::move(*current);
+        }
+        else
+        {
+            const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(key);
+            const auto base = mReferenceBases.find(key);
+            if (metadata == nullptr || !metadata->mParent || base == mReferenceBases.end())
+                return nullptr;
+
+            state.mKey = key;
+            state.mBase = base->second;
+            state.mCell = *metadata->mParent;
+            if (const Ptr ptr = ptrFor(key); !ptr.isEmpty())
             {
-                state.mLockLevel = ptr.getCellRef().getLockLevel();
-            }
-            catch (const std::logic_error&)
-            {
+                state.mEnabled = ptr.getRefData().isEnabled();
+                state.mDeleted = ptr.mRef->isDeleted();
+                state.mPosition = ptr.getRefData().getPosition();
+                try
+                {
+                    state.mLockLevel = ptr.getCellRef().getLockLevel();
+                }
+                catch (const std::logic_error&)
+                {
+                }
             }
         }
         references.push_back(std::move(state));

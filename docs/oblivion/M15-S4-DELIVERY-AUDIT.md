@@ -1821,3 +1821,50 @@ sound follow-up, pickup ExtraScale/dropper/list cleanup, and actual normal-input
 break/drop/pickup/fresh-process courses remain required. The wider power attack,
 creature, mastery, reaction/effect, controller and FPS matrix remains open.
 **S4 is incomplete.**
+
+
+## Native script state on fresh factory references
+
+Checkpoint **2026-10-16** fixes the cache-dependent command path for newly
+published dynamic references. `OblivionScriptManager::referenceState` previously
+required static FormKeyIndex metadata and a compiled reference/base mapping for
+any missing cache entry. Fresh factory drops have neither, so `SetDestroyed`
+silently wrote no state and `GetDestroyed` continued returning zero.
+
+For a missing dynamic entry, the manager now requires a registered live dynamic
+Ptr, captures the existing native runtime-state projection and imports only the
+matching reference into its cache. Already-cached state and the static fallback
+retain their behavior. Private preparations and unavailable keys are rejected
+before snapshot capture. This is lazy admission at the first cache-dependent
+script call; the factory publication phase does not perform a snapshot or gain
+allocation work. Snapshot work can fail through existing capture validation.
+There is no new native arithmetic, command rule or save schema in this change.
+
+The new factory integration test first establishes unrelated cached script
+state, publishes an actual carried-NIF weapon drop, and immediately executes
+`SetDestroyed`/`GetDestroyed` before pickup. It verifies the command's stored
+result, preservation of the unrelated entry, native condition/charge, exact
+binary save round-trip and independent subsequent updates. The one-test
+`S4/drop-script-admission-baseline-01` run fails on the preceding production
+implementation specifically because the dropped reference still reports zero.
+Its negative-control report and copied baseline test ELF are retained.
+
+`S4/drop-script-admission-normal-01` and
+`S4/drop-script-admission-sanitized-01` each pass all **1545 engine tests/122
+suites**, unfiltered with exact inventory/XML agreement and zero failures/skips.
+No sanitizer diagnostic occurred; ASan leak checking is disabled and ASan/UBSan
+halt on errors. Both preserve identical before/after source state atop
+`1cf2569f146bcfd674881f90457660f439d28c05`, with source fingerprint
+`ba38535d31527eef45adbe99126b37e3e0094b3280ac770d5ef0ad20a54ff64f`.
+`S4/drop-script-admission-review-01` freezes both implementation file hashes and
+the complete patch before documentation updates. Component/Python implementation
+is unchanged; those suites were not rerun. The Lua/factory publication code is
+unchanged from the prior allocation traces; allocation tracing was not repeated
+for this command-cache change.
+
+This closes command access to persistent state on a fresh drop. It does not
+prove actual gameplay drop/pickup or fresh-process scene reconstruction. Loose
+body frame synchronization and physical save/recreation, production break/mastery
+dispatch, retained Player/quest unequips, NPC replacement/sound, pickup metadata
+cleanup and all broader S4 gameplay/controller/FPS gates remain open.
+**S4 is incomplete.**
