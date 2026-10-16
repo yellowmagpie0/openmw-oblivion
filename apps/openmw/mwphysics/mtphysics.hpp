@@ -135,7 +135,8 @@ namespace MWPhysics
         std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {},
+            LooseObjectSceneInitialization sceneInitialization = LooseObjectSceneInitialization::SuppliedPhysicalPose);
         bool validatePreparedLooseObject(const PreparedLooseObject& object);
         bool commitLooseObject(PreparedLooseObject& object);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
@@ -143,6 +144,8 @@ namespace MWPhysics
         LooseObjectSceneTarget captureLooseObjectSceneTarget(const MWWorld::Ptr& ptr);
         std::optional<Nif::NiTransform> captureLooseObjectTargetPose(
             const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target);
+        LooseObjectSceneTarget synchronizeLooseObjectFirstScenePose(const MWWorld::Ptr& ptr,
+            const LooseObjectSceneTarget& target, const Nif::NiTransform& world);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native

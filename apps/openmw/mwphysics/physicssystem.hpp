@@ -95,6 +95,10 @@ namespace ESM4
 
 namespace MWPhysics
 {
+    // SuppliedPhysicalPose retains existing admission flags. PendingReference
+    // registers pending40 and selected dynamic-root0xC separately from the
+    // immutable authored graph. Caller schedules first sync before stepping.
+    enum class LooseObjectSceneInitialization { SuppliedPhysicalPose, PendingReference };
     // Metadata for one admitted physical target, without reading its motion.
     // The weak identity rejects replacement bodies even on the same REFR/model.
     struct LooseObjectSceneTarget
@@ -297,7 +301,8 @@ namespace MWPhysics
         std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {},
+            LooseObjectSceneInitialization sceneInitialization = LooseObjectSceneInitialization::SuppliedPhysicalPose);
         bool validatePreparedLooseObject(const PreparedLooseObject& prepared);
         bool commitLooseObject(PreparedLooseObject& prepared);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
@@ -310,6 +315,12 @@ namespace MWPhysics
         // first-sync flags reject. Active conversion requires native length units.
         std::optional<Nif::NiTransform> captureLooseObjectTargetPose(
             const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target);
+        // Exact current descriptor, native units and pending40 required. Reset
+        // velocities/force scene-to-body with live precision, then clear40 and
+        // return fresh metadata. World rotation/T are consumed; scale is unused.
+        // Stale/invalid inputs leave motion and flags unchanged. No REFR/node writes.
+        LooseObjectSceneTarget synchronizeLooseObjectFirstScenePose(const MWWorld::Ptr& ptr,
+            const LooseObjectSceneTarget& target, const Nif::NiTransform& world);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native

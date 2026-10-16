@@ -52,7 +52,8 @@ namespace NifBullet
     // Original bhk position adapters store binary32 after multiplying by
     // these separately stored constants. The reverse is not computed as 1/k.
     inline constexpr float RagdollNativeLengthScale = 6.999040126800537f;
-    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position);
+    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position,
         Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
 
@@ -412,7 +413,8 @@ namespace NifBullet
         // Forced scene input (e.g. SetPos/SetAngle), without changing modes.
         // Apply89EE00's independent conditional velocity resets, preserve
         // forces and refresh current/previous poses and broadphase bounds.
-        void synchronizeNativeForcedPoses(std::span<const RagdollNativeScenePoseRequest> poses);
+        void synchronizeNativeForcedPoses(std::span<const RagdollNativeScenePoseRequest> poses,
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
         // Stage an entire sparse controller batch before publishing modes,
         // scene synchronization or velocities. Return renderer targets and
         // updated native collision flags; caller owns node writes and clock.
@@ -531,7 +533,8 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
-        void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool forced);
+        void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool forced,
+            Nif::NativeTransformPrecision precision);
         void validateRestore(std::span<const RagdollBodyState> states) const;
         void validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const;
         std::vector<RagdollNativeBlendControllerState> prepareNativeBlendControllerRestore(

@@ -406,14 +406,18 @@ namespace NifBullet
         ~Impl() { removePublished(); }
     };
 
-    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position)
+    osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position, Nif::NativeTransformPrecision precision)
     {
+        const Nif::Detail::NativeTransformMath math(precision);
+        require(math.valid(), "invalid native scene arithmetic precision");
         osg::Vec3f result;
         for (unsigned axis = 0; axis < 3; ++axis)
         {
             require(std::isfinite(position[axis]), "nonfinite world position");
-            result[axis] = float(double(position[axis]) * 0.1428767293691635);
-            require(std::isfinite(result[axis]), "position exceeds native float domain");
+            // Original4529E0 FMUL retains the x87 exponent range; rounding
+            // before FSTP matters when the final float result is subnormal.
+            require(Nif::tryStoreNativeTransformFloat(math.multiply(position[axis], 0.1428767293691635),
+                result[axis]), "position exceeds native float domain");
         }
         return result;
     }
@@ -452,7 +456,7 @@ namespace NifBullet
             for (unsigned col = 0; col < 3; ++col)
                 matrix[row * 3 + col] = worldPose(col, row);
         RagdollNativeTargetPose result;
-        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans());
+        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans(), precision);
         auto& q = result.mRotation;
         // Actual7150F0 stores the trace, square-root input/result and reciprocal
         // factor as binary32. Arithmetic between stores follows x87 precision;
@@ -1631,18 +1635,19 @@ namespace NifBullet
     void ActorRagdollPhysics::synchronizeNativeKeyframedPoses(
         std::span<const RagdollNativeScenePoseRequest> poses)
     {
-        synchronizeNativeScenePoses(poses, false);
+        synchronizeNativeScenePoses(poses, false, Nif::NativeTransformPrecision::Double);
     }
 
     void ActorRagdollPhysics::synchronizeNativeForcedPoses(
-        std::span<const RagdollNativeScenePoseRequest> poses)
+        std::span<const RagdollNativeScenePoseRequest> poses, Nif::NativeTransformPrecision precision)
     {
-        synchronizeNativeScenePoses(poses, true);
+        synchronizeNativeScenePoses(poses, true, precision);
     }
 
     void ActorRagdollPhysics::synchronizeNativeScenePoses(
-        std::span<const RagdollNativeScenePoseRequest> poses, bool forced)
+        std::span<const RagdollNativeScenePoseRequest> poses, bool forced, Nif::NativeTransformPrecision precision)
     {
+        require(Nif::Detail::NativeTransformMath(precision).valid(), "invalid native scene arithmetic precision");
         struct Pending
         {
             Impl::Body* mOwned;
@@ -1661,7 +1666,7 @@ namespace NifBullet
             require(found != mImpl->mBodies.end(), "unknown native scene pose identity");
             require(forced || found->mMotion == RagdollNativeMotion::Keyframed,
                 "native scene pose publication requires keyframed motion");
-            const auto native = ragdollNativeSceneBodyTargetPose(request.mWorldPose, found->mSceneOffset);
+            const auto native = ragdollNativeSceneBodyTargetPose(request.mWorldPose, found->mSceneOffset, precision);
             auto pose = btTransform(btQuaternion(native.mRotation[0], native.mRotation[1],
                 native.mRotation[2], native.mRotation[3]), vector(native.mPosition));
             pose.setOrigin(pose.getOrigin() * btScalar(mImpl->mLengthScale));

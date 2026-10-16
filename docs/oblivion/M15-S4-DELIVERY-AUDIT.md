@@ -3675,3 +3675,62 @@ REFR-before-child/cell migration/lifetime handling remains required. Existing Wo
 root-only and ObjectAnimation local-root adapters remain unchanged. All remaining
 admission/property/node, loose save/fresh recreation, production melee/drop/effect
 and normal-input/FPS/fresh-process gates remain open. M15S4 is active and incomplete.
+
+
+## 2026-10-16 — guarded loose-physics first synchronization checkpoint
+
+An explicit `PendingReference` admission mode now derives pending40 and selected
+root0xC flags separately from immutable authored definitions. Default supplied-pose
+admission retains its behavior. Scheduler/facade `synchronizeLooseObjectFirstScenePose`
+waits for workers and validates exact body epoch, node/root/flags and a published
+renderer link when supplied under the exclusive collision lock. It consumes world
+R/T independently of separate Ni scale, invokes the actual staged forced-scene
+operation with Single precision, then clears only40 and returns fresh metadata.
+Old pending descriptors reject after success. Invalid inputs preserve motion and
+flags; no REFR/node/local-cache writes occur. The physical operation reuses the
+independently verified strict89EE00 threshold, preserving forces while refreshing
+pose/interpolation/AABBs. Five worker-parameterized patterns add15engine executions.
+
+Native i386 hardware revealed another live precision requirement: original4529E0
+rounds FMUL before subnormal FSTP. The previous Double-only converter differs in
+1,193 of5,158live cases/1,330fields. Explicit position precision now follows the
+scene target's precision, retaining Double by default. Full native hardware02
+executes15,474contexts twice identically. Both C++builds match5,158live007F and
+5,158original027F contexts:30,948exact float outputs per build. The5,158extended
+037F contexts also match Double diagnostically. Inputs include selected sensitive
+vectors, seeded tiny/general finite triples and explicit edges. Two component tests
+and an actual scheduler test pin eight literal hardware sensitivities.
+
+Direct scheduler and combined root-builder/NIF-traversal/scheduler replays each
+pass536original007F cases at workers0/1/2, or1,608contexts per build. Exact native
+position/packed-velocity fields total17,688, with3,216before/afterflags. Combined
+replay adds41,808exact root/target cache floats. Bullet's normalized representation
+of the independently supplied native target quaternion agrees within1e-12, with
+maximum observed error0; this is not native quaternion/basis bit identity or Havok
+stepping equivalence. The combined replay reconstructs rootR9 with production Euler
+code from literal angles/T/scale, computes actual OSG hierarchy worlds and invokes
+the actual scheduler handler, refreshing its descriptor for flag reinspection.
+Registered body-local offsets remain native fixtures. Physics is renderer-unlinked;
+empty OSG Group substitutes a native null slot. No clocks, World callbacks, native
+registration/property-copy replay or normal-input acceptance is established.
+
+Final normal and ASan/UBSan checks each pass all2,760components/264suites and
+1,610engine/122suites, with exact inventories and no failures/skips. Leak detection
+is disabled; two pre-existing World-test compiler warnings remain. Preflight01's
+owned build was stopped and recorded terminal before correcting the hardware-found
+position gap; earlier sanitized component01 is not final-source coverage.
+[Editable verification](M15-LOOSE-FIRST-SYNCHRONIZATION-VERIFICATION.json) pins code,
+source fingerprint, checks and native/comparison hashes. Evidence is under the
+`loose-first-sync-*` and `world-to-native-position-*` S4 directories. No new game
+runtime course is claimed at this checkpoint.
+
+Caller still schedules first sync before stepping. No production caller selects
+the new admission mode or connects the manual callback yet. Next wire global root/
+ReferenceWorld capture/drawing setup before prepared checkpoint capture, establish
+one update owner and verified first-update/physics/controller clock order, suppress
+duplicate viewer traversal, and support safe REFR-before-child reanchoring/cell
+migration/lifetime guards. Existing ObjectAnimation and World retain their legacy
+local-root/root-only adapters. Pending/save/fresh recreation, forced World/script
+continuation, all property/admission/node policies and the remaining production
+melee/drop/effect and normal-input/FPS/fresh-process gates remain open. Full M15S4
+is active and incomplete.

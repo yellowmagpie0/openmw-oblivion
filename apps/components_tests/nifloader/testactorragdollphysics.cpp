@@ -5464,3 +5464,42 @@ namespace
         }
     }
 }
+
+namespace
+{
+    TEST(RagdollNativeSceneTarget, LivePositionConversionMatchesOriginalSubnormalHardwareStores)
+    {
+        // Complete original4529E0 executed on i386 hardware.007F rounds
+        // FMUL before subnormal FSTP, while027F retains the existing contract.
+        const std::array<std::array<std::uint32_t, 3>, 8> cases{{
+            {0x1c423e6u, 0x701872u, 0x701873u},
+            {0x139f77bu, 0x352400u, 0x352401u},
+            {0x177ea76u, 0x46d7c2u, 0x46d7c3u},
+            {0xf2a13eu, 0x22aa8au, 0x22aa89u},
+            {0x19310ceu, 0x540c8eu, 0x540c8du},
+            {0x76a5a2u, 0x10f3b0u, 0x10f3afu},
+            {0x79636du, 0x1157f4u, 0x1157f5u},
+            {0xa1cdecu, 0x171e3au, 0x171e3bu},
+        }};
+        for (const auto& row : cases)
+        for (const auto precision : {Nif::NativeTransformPrecision::Single, Nif::NativeTransformPrecision::Double})
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            osg::Vec3f input; input[axis] = std::bit_cast<float>(row[0]);
+            const auto expected = row[precision == Nif::NativeTransformPrecision::Single ? 1 : 2];
+            const auto actual = NifBullet::ragdollWorldToNativePosition(input, precision);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actual[axis]), expected);
+            const auto target = NifBullet::ragdollNativeSceneTargetPose(osg::Matrixf::translate(input), precision);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mPosition[axis]), expected);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(input[axis]), row[0]);
+        }
+    }
+
+    TEST(RagdollNativeSceneTarget, WorldToNativePositionRejectsUnknownPrecisionBeforeConversion)
+    {
+        const osg::Vec3f input(1, 2, 3);
+        EXPECT_THROW(NifBullet::ragdollWorldToNativePosition(input,
+            static_cast<Nif::NativeTransformPrecision>(99)), std::invalid_argument);
+        EXPECT_EQ(input, osg::Vec3f(1, 2, 3));
+    }
+}

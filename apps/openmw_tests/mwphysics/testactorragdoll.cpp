@@ -2153,3 +2153,230 @@ namespace
         }
     }
 }
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, PendingSceneInitializationPublishesOriginalFirstTargetsAndFreshFlags)
+    {
+        struct Case
+        {
+            bool mRoot, mBodyT;
+            std::array<std::uint32_t, 13> mWorld;
+            std::array<std::uint32_t, 3> mOffset;
+            std::array<std::uint32_t, 4> mLocalRotation;
+            std::array<std::uint32_t, 7> mMotion;
+            std::uint16_t mBefore, mAfter;
+        };
+        // Original first-sync corpus02,007F. Values precede production conversion.
+        const std::array<Case, 3> cases{{
+            {true, true, {0xbeee13b1u, 0x3f4b899cu, 0x3ec761d7u, 0x3f6112c4u, 0x3eb9e473u, 0x3e9df98eu, 0x3dd4d7fcu, 0x3ef8c0b0u, 0xbf5e2b09u, 0x41200000u, 0x41a00000u, 0x41f00000u, 0x3f2147aeu},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3f76b28bu, 0x403bcca5u, 0x407d7f12u, 0x3ed80f3eu, 0x3f406663u, 0xbed1a3b6u, 0xbe991c18u}, 0x4c, 0xc},
+            {false, true, {0xbf1d8dc8u, 0x3f3b0df5u, 0x3e974e6du, 0xbf3636ceu, 0xbf2d20bcu, 0x3e4259e6u, 0x3ead547au, 0xbdbf8f0cu, 0x3f6fb0edu, 0x417a8391u, 0x41af8af5u, 0x4204d06fu, 0x3f2147aeu},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fe09c82u, 0x40546b38u, 0x409fc22bu, 0xbe22e5a8u, 0x3f277717u, 0x3f1dc43fu, 0xbed136d6u}, 0x40, 0x0},
+            {false, false, {0x0u, 0x3f800000u, 0x0u, 0xbf800000u, 0x0u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x413e3d71u, 0x41b428f6u, 0x4204999au, 0x3f2147aeu},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fd9726cu, 0x404dece5u, 0x4097904bu, 0x0u, 0x0u, 0xbf3504f3u, 0x3f3504f3u}, 0x40, 0x0},
+        }};
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        for (const auto& row : cases)
+        {
+            auto& body = mGraph.mBodies.front();
+            mGraph.mReferenceRoot = 0; body.mNodeRecord = row.mRoot ? 0 : 3;
+            body.mCollisionFlags = 0; body.mUsesRigidBodyTransform = row.mBodyT;
+            for (unsigned i = 0; i < 3; ++i) body.mTranslation[i] = std::bit_cast<float>(row.mOffset[i]);
+            for (unsigned i = 0; i < 4; ++i) body.mRotation[i] = std::bit_cast<float>(row.mLocalRotation[i]);
+            auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+                mPoses, 1, -1, {}, MWPhysics::LooseObjectSceneInitialization::PendingReference);
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            const auto before = scheduler.captureLooseObjectSceneTarget(mPtr);
+            EXPECT_EQ(before.mCollisionFlags, row.mBefore);
+            EXPECT_THROW(scheduler.captureLooseObjectTargetPose(mPtr, before), std::invalid_argument);
+            auto scene = Nif::NiTransform::getIdentity();
+            for (unsigned i = 0; i < 9; ++i) scene.mRotation.mValues[i / 3][i % 3] = std::bit_cast<float>(row.mWorld[i]);
+            for (unsigned i = 0; i < 3; ++i) scene.mTranslation[i] = std::bit_cast<float>(row.mWorld[9 + i]);
+            // Original scene-to-body consumes no separate scale, even when poisoned.
+            scene.mScale = std::numeric_limits<float>::quiet_NaN();
+            const auto settled = scheduler.synchronizeLooseObjectFirstScenePose(mPtr, before, scene);
+            EXPECT_EQ(settled.mCollisionFlags, row.mAfter);
+            EXPECT_EQ(scheduler.captureLooseObjectSceneTarget(mPtr).mCollisionFlags, row.mAfter);
+            EXPECT_EQ(body.mCollisionFlags, 0); // Source metadata remains authored.
+            const auto state = scheduler.captureLooseObject(mPtr).front();
+            btQuaternion rotation;
+            for (unsigned i = 0; i < 4; ++i) rotation[i] = std::bit_cast<float>(row.mMotion[3 + i]);
+            const btMatrix3x3 expected(rotation);
+            for (unsigned i = 0; i < 3; ++i)
+            {
+                EXPECT_DOUBLE_EQ(state.mPose.getOrigin()[i],
+                    double(std::bit_cast<float>(row.mMotion[i])) * NifBullet::RagdollNativeLengthScale);
+                for (unsigned j = 0; j < 3; ++j)
+                    EXPECT_NEAR(state.mPose.getBasis()[i][j], expected[i][j], 1e-12);
+            }
+            EXPECT_THROW(scheduler.captureLooseObjectTargetPose(mPtr, before), std::invalid_argument);
+            EXPECT_FALSE(scheduler.captureLooseObjectTargetPose(mPtr, settled)); // Inactive first sync still ran.
+            EXPECT_THROW(scheduler.synchronizeLooseObjectFirstScenePose(mPtr, settled, scene), std::invalid_argument);
+            scheduler.removeLooseObject(mPtr);
+        }
+    }
+
+    TEST_P(RagdollSchedulerTest, FirstScenePoseKeepsStrictNativeVelocityBoundaryAndIndependentPackedLanes)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mReferenceRoot = 0; mGraph.mBodies.front().mNodeRecord = 3;
+        const std::array<std::pair<std::uint32_t, bool>, 6> samples{{
+            {0u, false}, {0x80000000u, false}, {0x3a83126eu, false}, {0x3a83126fu, false},
+            {0x3a831270u, true}, {0xba831270u, true}}};
+        for (const auto [bits, resets] : samples)
+        for (unsigned selected = 0; selected < 6; ++selected)
+        {
+            auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+                mPoses, 1, -1, {}, MWPhysics::LooseObjectSceneInitialization::PendingReference);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            auto state = scheduler.captureLooseObject(mPtr);
+            auto packed = scheduler.captureLooseObjectPackedVelocities(mPtr);
+            auto& input = packed[0].mVelocities;
+            input.mLinear = {-0.f, 0.f, -0.f, 7.f}; input.mAngular = {0.f, -0.f, 0.f, 9.f};
+            (selected < 3 ? input.mLinear : input.mAngular)[selected % 3] = std::bit_cast<float>(bits);
+            for (unsigned i = 0; i < 3; ++i)
+            {
+                state[0].mLinearVelocity[i] = double(input.mLinear[i]) * NifBullet::RagdollNativeLengthScale;
+                state[0].mAngularVelocity[i] = input.mAngular[i];
+            }
+            scheduler.restoreLooseObject(mPtr, state, packed);
+            auto* rigid = btRigidBody::upcast(world.getCollisionObjectArray()[0]);
+            rigid->applyCentralForce(btVector3(3, 4, 5)); rigid->applyTorque(btVector3(6, 7, 8));
+            const auto force = rigid->getTotalForce(), torque = rigid->getTotalTorque();
+            const auto target = scheduler.captureLooseObjectSceneTarget(mPtr);
+            auto scene = Nif::NiTransform::getIdentity(); scene.mTranslation = {10, 20, 30};
+            scheduler.synchronizeLooseObjectFirstScenePose(mPtr, target, scene);
+            const auto output = scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities;
+            for (unsigned i = 0; i < 4; ++i)
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mLinear[i]),
+                    resets && selected < 3 ? 0u : std::bit_cast<std::uint32_t>(input.mLinear[i]));
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(output.mAngular[i]),
+                    resets && selected >= 3 ? 0u : std::bit_cast<std::uint32_t>(input.mAngular[i]));
+            }
+            EXPECT_EQ(rigid->getTotalForce(), force); EXPECT_EQ(rigid->getTotalTorque(), torque);
+            scheduler.removeLooseObject(mPtr);
+        }
+    }
+
+    TEST_P(RagdollSchedulerTest, FirstScenePoseRejectsStaleAndInvalidInputsBeforeStateChanges)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mReferenceRoot = 0;
+        auto prepare = [&] { return scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+            mPoses, 1, -1, {}, MWPhysics::LooseObjectSceneInitialization::PendingReference); };
+        auto prepared = prepare(); ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        const auto target = scheduler.captureLooseObjectSceneTarget(mPtr);
+        auto scene = Nif::NiTransform::getIdentity();
+        const auto before = scheduler.captureLooseObject(mPtr);
+        const auto packed = scheduler.captureLooseObjectPackedVelocities(mPtr);
+        for (unsigned field = 0; field < 5; ++field)
+        {
+            auto invalid = target;
+            if (field == 0) ++invalid.mBodyRecord;
+            if (field == 1) ++invalid.mNodeRecord;
+            if (field == 2) invalid.mReferenceRoot = 999;
+            if (field == 3) invalid.mCollisionFlags ^= 8;
+            if (field == 4) invalid = {};
+            EXPECT_THROW(scheduler.synchronizeLooseObjectFirstScenePose(mPtr, invalid, scene), std::invalid_argument);
+        }
+        scene.mRotation.mValues[0][0] = 2;
+        EXPECT_THROW(scheduler.synchronizeLooseObjectFirstScenePose(mPtr, target, scene), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObjectSceneTarget(mPtr).mCollisionFlags, target.mCollisionFlags);
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, before[0].mPose);
+        EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, packed[0].mVelocities);
+        auto* rigid = btRigidBody::upcast(world.getCollisionObjectArray()[0]);
+        rigid->setLinearVelocity(btVector3(std::numeric_limits<btScalar>::quiet_NaN(), 0, 0));
+        scene = Nif::NiTransform::getIdentity();
+        EXPECT_THROW(scheduler.synchronizeLooseObjectFirstScenePose(mPtr, target, scene), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObjectSceneTarget(mPtr).mCollisionFlags, target.mCollisionFlags);
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, before[0].mPose);
+        rigid->setLinearVelocity(btVector3(0, 0, 0));
+        scheduler.removeLooseObject(mPtr);
+        auto replacement = prepare(); ASSERT_TRUE(scheduler.commitLooseObject(*replacement));
+        EXPECT_THROW(scheduler.synchronizeLooseObjectFirstScenePose(mPtr, target, scene), std::invalid_argument);
+        scheduler.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemFirstScenePoseRequiresNativeReferenceInitialization)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        using Initialization = MWPhysics::LooseObjectSceneInitialization;
+        EXPECT_THROW(physics.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+            mPoses, 1, -1, {}, Initialization::PendingReference), std::invalid_argument);
+        mGraph.mReferenceRoot = 0;
+        EXPECT_THROW(physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1, {}, Initialization::PendingReference),
+            std::invalid_argument);
+        EXPECT_THROW(physics.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+            mPoses, 1, -1, {}, static_cast<Initialization>(99)), std::invalid_argument);
+        auto prepared = physics.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+            mPoses, 1, -1, {}, Initialization::PendingReference);
+        ASSERT_TRUE(physics.commitLooseObject(*prepared));
+        const auto target = physics.captureLooseObjectSceneTarget(mPtr);
+        const auto settled = physics.synchronizeLooseObjectFirstScenePose(mPtr, target, Nif::NiTransform::getIdentity());
+        EXPECT_EQ(target.mCollisionFlags, 0x4d); EXPECT_EQ(settled.mCollisionFlags, 0xd);
+        EXPECT_TRUE(physics.captureLooseObjectTargetPose(mPtr, settled));
+        EXPECT_THROW(physics.synchronizeLooseObjectFirstScenePose(mPtr, target, Nif::NiTransform::getIdentity()),
+            std::invalid_argument);
+        physics.removeLooseObject(mPtr);
+        // Existing supplied-pose mode keeps its supplied collision flags.
+        prepared = physics.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*prepared));
+        const auto supplied = physics.captureLooseObjectSceneTarget(mPtr);
+        EXPECT_EQ(supplied.mCollisionFlags, 1);
+        EXPECT_THROW(physics.synchronizeLooseObjectFirstScenePose(mPtr, supplied, Nif::NiTransform::getIdentity()),
+            std::invalid_argument);
+        physics.removeLooseObject(mPtr);
+        mGraph.mBodies.front().mCollisionFlags = 0x40;
+        prepared = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*prepared));
+        const auto wrongUnits = physics.captureLooseObjectSceneTarget(mPtr);
+        EXPECT_THROW(physics.synchronizeLooseObjectFirstScenePose(mPtr, wrongUnits, Nif::NiTransform::getIdentity()),
+            std::invalid_argument);
+        EXPECT_EQ(physics.captureLooseObjectSceneTarget(mPtr).mCollisionFlags, 0x40);
+        physics.removeLooseObject(mPtr);
+    }
+}
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, FirstScenePoseUsesLivePositionStoresBeforeBulletPublication)
+    {
+        const std::array<std::array<std::uint32_t, 2>, 8> cases{{
+            {0x1c423e6u, 0x701872u},
+            {0x139f77bu, 0x352400u},
+            {0x177ea76u, 0x46d7c2u},
+            {0xf2a13eu, 0x22aa8au},
+            {0x19310ceu, 0x540c8eu},
+            {0x76a5a2u, 0x10f3b0u},
+            {0x79636du, 0x1157f4u},
+            {0xa1cdecu, 0x171e3au},
+        }};
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mReferenceRoot = 0; mGraph.mBodies.front().mNodeRecord = 3;
+        for (const auto& row : cases)
+        {
+            auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+                mPoses, 1, -1, {}, MWPhysics::LooseObjectSceneInitialization::PendingReference);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            const auto target = scheduler.captureLooseObjectSceneTarget(mPtr);
+            auto scene = Nif::NiTransform::getIdentity(); scene.mTranslation.x() = std::bit_cast<float>(row[0]);
+            scheduler.synchronizeLooseObjectFirstScenePose(mPtr, target, scene);
+            const auto pose = scheduler.captureLooseObject(mPtr)[0].mPose;
+            EXPECT_DOUBLE_EQ(pose.getOrigin().x(),
+                double(std::bit_cast<float>(row[1])) * NifBullet::RagdollNativeLengthScale);
+            scheduler.removeLooseObject(mPtr);
+        }
+    }
+}
