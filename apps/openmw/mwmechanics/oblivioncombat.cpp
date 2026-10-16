@@ -961,6 +961,7 @@ namespace MWMechanics
         std::optional<float> mTimer;
         float mClock = 0;
         std::optional<float> mExpectedCondition;
+        std::optional<float> mExpectedExtraScale;
         int mExpectedCharge = -1;
         float mExpectedRemainder = 0;
         std::uint32_t mExpectedEnchantmentCharge = 0;
@@ -1045,6 +1046,9 @@ namespace MWMechanics
         prepared->mTimer = mPlayerBowTimer;
         prepared->mClock = animationClock(key);
         prepared->mExpectedCondition = reference.getNativeItemCondition();
+        prepared->mExpectedExtraScale = reference.getNativeItemScale();
+        if (prepared->mExpectedExtraScale && !std::isfinite(*prepared->mExpectedExtraScale))
+            throw std::invalid_argument("Invalid native bow ExtraScale");
         prepared->mExpectedCharge = reference.getCharge();
         prepared->mExpectedRemainder = reference.getChargeIntRemainder();
         prepared->mExpectedEnchantmentCharge = std::bit_cast<std::uint32_t>(reference.getEnchantmentCharge());
@@ -1134,6 +1138,7 @@ namespace MWMechanics
         return ref.supportsNativeItemCondition()
             && (!prepared->mCondition || prepared->mCondition->supportsNativeItemCondition())
             && ref.getCount() == 1 && ref.getNativeItemCondition() == prepared->mExpectedCondition
+            && ref.hasNativeItemScale(prepared->mExpectedExtraScale)
             && ref.getCharge() == prepared->mExpectedCharge
             && ref.getChargeIntRemainder() == prepared->mExpectedRemainder
             && std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()) == prepared->mExpectedEnchantmentCharge
@@ -1604,9 +1609,11 @@ namespace MWMechanics
             throw std::invalid_argument("invalid native physical condition candidate");
         const auto& ref = item.getCellRef();
         const auto native = ref.getNativeItemCondition();
-        if (native && (!std::isfinite(*native) || *native < 0))
+        if ((ref.getNativeItemScale() && !std::isfinite(*ref.getNativeItemScale()))
+            || (native && (!std::isfinite(*native) || *native < 0)))
             throw std::invalid_argument("invalid native physical condition snapshot");
-        return {owner, item, native, ref.getCharge(), ref.getChargeIntRemainder(), ref.getCount(), condition};
+        return {owner, item, native, ref.getCharge(), ref.getChargeIntRemainder(), ref.getCount(), condition,
+            ref.getNativeItemScale()};
     }
 
     OblivionCombatRandomTransition OblivionCombatService::prepareCombatRandom(unsigned draws) const
@@ -1630,6 +1637,7 @@ namespace MWMechanics
             int mCount, mCharge;
             float mRemainder;
             std::uint32_t mEnchantment;
+            std::optional<float> mExtraScale;
         };
         struct Participant
         {
@@ -1669,9 +1677,11 @@ namespace MWMechanics
                         if (const auto item = mInventory->getSlot(slot); item != mInventory->end())
                         {
                             const auto& ref = item->getCellRef();
+                            if (ref.getNativeItemScale() && !std::isfinite(*ref.getNativeItemScale()))
+                                throw std::invalid_argument("Invalid equipped ExtraScale snapshot");
                             mSlots[slot] = Gear{*item, item->getRefData().prepareRuntimeIdentity(), ref.getRefId(),
                                 ref.getNativeItemCondition(), ref.getCount(), ref.getCharge(), ref.getChargeIntRemainder(),
-                                std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge())};
+                                std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()), ref.getNativeItemScale()};
                         }
                 }
                 mPosition = actor.getRefData().getPosition();
@@ -1725,6 +1735,7 @@ namespace MWMechanics
                         const auto& ref = item->getCellRef();
                         if (ref.getRefId() != expected->mBase || ref.getCount() != expected->mCount
                             || ref.getNativeItemCondition() != expected->mCondition || ref.getCharge() != expected->mCharge
+                            || !ref.hasNativeItemScale(expected->mExtraScale)
                             || ref.getChargeIntRemainder() != expected->mRemainder
                             || std::bit_cast<std::uint32_t>(ref.getEnchantmentCharge()) != expected->mEnchantment)
                             return false;
@@ -1912,7 +1923,8 @@ namespace MWMechanics
                 || (request.mItem.getType() != ESM::REC_WEAP && request.mItem.getType() != ESM::REC_ARMO)
                 || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>())
                 throw std::invalid_argument("native contact condition requires a native weapon or armor instance");
-            if (!std::isfinite(request.mCondition) || request.mCondition < 0
+            if ((request.mExpectedExtraScale && !std::isfinite(*request.mExpectedExtraScale))
+                || !std::isfinite(request.mCondition) || request.mCondition < 0
                 || !std::isfinite(request.mExpectedRemainder)
                 || (request.mExpectedNativeCondition
                     && (!std::isfinite(*request.mExpectedNativeCondition) || *request.mExpectedNativeCondition < 0)))
@@ -1931,6 +1943,7 @@ namespace MWMechanics
             auto& ref = found->mReference;
             if (request.mExpectedCount != 1 || ref.getCount() != request.mExpectedCount
                 || ref.getNativeItemCondition() != request.mExpectedNativeCondition
+                || !ref.hasNativeItemScale(request.mExpectedExtraScale)
                 || ref.getCharge() != request.mExpectedCharge
                 || ref.getChargeIntRemainder() != request.mExpectedRemainder)
                 throw std::invalid_argument("stale or stacked native contact condition request");

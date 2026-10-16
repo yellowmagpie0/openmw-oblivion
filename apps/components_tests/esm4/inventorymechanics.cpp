@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <bit>
 #include <limits>
@@ -413,4 +414,21 @@ TEST(ESM4InventoryMechanics, OwnershipRankPresenceAndGlobalKeepDifferentInstance
     ASSERT_TRUE(ESM4::addInventoryItem(inventory, item));
     EXPECT_EQ(inventory.size(), 6u);
     EXPECT_EQ(inventory.back().mCount, 2);
+}
+
+TEST(ESM4InventoryMechanics, InventoryExtraScaleSeparatesAbsentDefaultAndFiniteValues)
+{
+    std::vector<ESM4::RuntimeInventoryItem> items;
+    ESM4::RuntimeInventoryItem item; item.mBase = ESM::FormKey::content("items.esm",1); item.mCount = 1;
+    for (const auto scale : std::array<std::optional<float>,6>{std::nullopt, 1.f, .13f, -2.f, 0.f, -0.f})
+    {
+        item.mExtraScale = scale;
+        ASSERT_TRUE(ESM4::addInventoryItem(items,item));
+    }
+    ASSERT_EQ(items.size(),5u);
+    EXPECT_EQ(items.back().mCount,2);
+    ESM4::normalizeInventory(items);
+    EXPECT_EQ(items.size(),5u);
+    item.mExtraScale = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_FALSE(ESM4::addInventoryItem(items,item));
 }

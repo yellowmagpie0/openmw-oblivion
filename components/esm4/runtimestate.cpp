@@ -346,6 +346,11 @@ namespace ESM4
                     writeKey(writer, item.mOwner);
                     writer.floating(item.mRemainingUsageTime);
                     if (version >= 41) writeOwnershipExtras(writer, item.mOwnershipRank, item.mOwnershipGlobal);
+                    if (version >= 48)
+                    {
+                        writer.integer<std::uint8_t>(item.mExtraScale.has_value());
+                        if (item.mExtraScale) writer.floating(*item.mExtraScale);
+                    }
                 }
             }
         }
@@ -370,6 +375,12 @@ namespace ESM4
                     item.mOwner = readKey(reader);
                     item.mRemainingUsageTime = reader.float32();
                     if (version >= 41) readOwnershipExtras(reader, item.mOwnershipRank, item.mOwnershipGlobal);
+                    if (version >= 48)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1) throw std::runtime_error("Invalid inventory scale presence flag");
+                        if (present) item.mExtraScale = reader.float32();
+                    }
                 }
                 result.push_back(std::move(item));
             }
@@ -400,6 +411,13 @@ namespace ESM4
                            << "\",\"remaining_usage_time\":" << std::setprecision(17)
                            << item.mRemainingUsageTime;
                     if (version >= 41) writeJsonOwnershipExtras(stream, item.mOwnershipRank, item.mOwnershipGlobal);
+                    if (version >= 48)
+                    {
+                        stream << ",\"extra_scale\":";
+                        if (!item.mExtraScale) stream << "null";
+                        else if (*item.mExtraScale == 0 && std::signbit(*item.mExtraScale)) stream << "-0.0";
+                        else stream << std::setprecision(17) << *item.mExtraScale;
+                    }
                 }
                 stream << '}';
             }
@@ -1192,6 +1210,8 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (item.mExtraScale && (mVersion < 48 || !std::isfinite(*item.mExtraScale)))
+                    throw std::runtime_error("Invalid or unsupported native inventory scale");
                 if (item.mBase.isNull() || item.mCount == 0 || (mVersion >= 4 && item.mCount < 0))
                     throw std::runtime_error("Invalid TES4 runtime-state " + std::string(label) + " entry");
                 if (mVersion < 4)

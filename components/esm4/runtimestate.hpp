@@ -39,7 +39,7 @@ namespace ESM4
     // to agree at whole-save admission. Earlier v44 saves may have stale views.
     // v46 adds exact Player reference Fame/Infamy and optional accumulation.
     // v47 carries exact native dropped-item relation extras on references.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 47;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 48;
 
     struct RuntimeContentIdentity
     {
@@ -73,6 +73,9 @@ namespace ESM4
         // v41: native ownership extras of this exact inventory instance.
         std::optional<std::int32_t> mOwnershipRank = std::nullopt;
         ESM::FormKey mOwnershipGlobal = {};
+
+        // v48: inventory ExtraScale, distinct from world-reference mesh scale.
+        std::optional<float> mExtraScale = std::nullopt;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };

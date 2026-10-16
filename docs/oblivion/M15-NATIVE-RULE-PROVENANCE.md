@@ -14769,3 +14769,23 @@ contexts are diagnostics. The [editable contract](M15-ORIGINAL-DROP-SCALE-PROBES
 retains fixtures, expected matrix and hashes. Native-01's missing-FS setup fault
 is preserved. Complete inventory stacking/pickup and production inventory scale
 persistence remain open.
+
+
+## S4 inventory ExtraScale persistence and bounded merge search — 2026-10-15
+
+Schema 48 and projected-inventory NSCL storage now preserve optional finite scale
+presence/bits independently of reference scale. Native stack equality includes
+presence and numerical value, while pending operation guards compare exact bits.
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#optional-native-inventory-extrascale-persistence-and-identity)
+records the 730-byte independently assembled schema fixture, full normal/sanitizer
+component and engine inventories, 303 Python tests, two-process runtime regression
+and Morrowind profile-isolation resave. Pickup/factory gameplay remains open.
+
+`S4/inventory-scale-merge-search-oracle-01` executes original 5D27C6's two-candidate
+search under Unicorn with complete 41E550 and actual ExtraScale comparison in
+686 finite contexts. Expected selections come from the prior native hardware comparator
+corpus. It stops at selected 5D281B or append 5D27EA before counts/publication;
+critical sections and synthetic TLS are boundaries. Stack, registers, FPCW and
+input lists remain unchanged. The [editable contract](M15-ORIGINAL-DROP-SCALE-PROBES.json)
+pins the fixture grid, stops and hashes. This establishes that bounded search,
+not the entire outer function, general stacking, pickup or original-game behavior.

@@ -1069,6 +1069,7 @@ struct MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::Impl
     std::shared_ptr<const char> mIdentity;
     std::weak_ptr<const char> mStorageIdentity;
     Ptr mItem;
+    std::optional<float> mExtraScale;
     bool mCommitted = false;
     bool mNotified = false;
 };
@@ -1121,6 +1122,7 @@ MWWorld::InventoryStore::prepareEquippedWeaponRemoval()
     impl->mIdentity = mPreparedAmmunitionIdentity;
     impl->mStorageIdentity = prepareStorageIdentity();
     impl->mItem = item;
+    impl->mExtraScale = item.getCellRef().getNativeItemScale();
     return std::unique_ptr<PreparedEquippedWeaponRemoval>(new PreparedEquippedWeaponRemoval(std::move(impl)));
 }
 
@@ -1135,7 +1137,7 @@ bool MWWorld::InventoryStore::validatePreparedEquippedWeaponRemoval(
     if (slot == end() || slot.getType() != ContainerStore::Type_Weapon || *slot != value->mItem)
         return false;
     const auto* ref = std::get_if<ESM::CellRef>(&value->mItem.getCellRef().mCellRef.mVariant);
-    if (!ref || ref->mCount != 1) return false;
+    if (!ref || ref->mCount != 1 || !value->mItem.getCellRef().hasNativeItemScale(value->mExtraScale)) return false;
     for (int i = 0; i < Slots; ++i)
         if (i != Slot_CarriedRight && mSlots[i] != end() && *mSlots[i] == value->mItem)
             return false;

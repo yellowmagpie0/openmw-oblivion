@@ -1236,6 +1236,7 @@ namespace
         ESM4::RuntimeInventoryItem equipped;
         equipped.mBase = weapon; equipped.mCount = 1; equipped.mCondition = 55.125f;
         equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+        equipped.mExtraScale = .13f;
         equipped.mOwner = ESM::FormKey::content("headless.esm", 0x800);
         auto other = equipped; other.mCount = 2; other.mCondition = 43.125f;
         other.mEquippedSlots = 0; other.mOwner = {};
@@ -20402,7 +20403,7 @@ namespace
 {
     TEST(OblivionWorldTest, PreparedPhysicalContactGuardsEquippedConditionsAndPreservesOwnershipMetadata)
     {
-        for (int change = 0; change < 5; ++change)
+        for (int change = 0; change < 8; ++change)
         {
             SCOPED_TRACE(change);
             NativeWorldFixture fixture;
@@ -20412,17 +20413,28 @@ namespace
             ESM4::RuntimeInventoryItem equipped;
             equipped.mBase = addEquipmentWeapon(fixture); equipped.mCount = 1; equipped.mCondition = 55.125f;
             equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+            equipped.mExtraScale = -0.f;
             installEquipmentInventory(fixture, b, {equipped});
             auto& inventory = b.getClass().getInventoryStore(b);
             const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             const auto action = world.beginOblivionPhysicalAction(a);
             MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, -1};
             deltas.mConditionChanges.push_back(MWMechanics::captureOblivionPhysicalConditionChange(b, item, 50.25f));
+            if (change == 7)
+            {
+                item.getCellRef().setNativeItemScale(0.f);
+                const auto before = contactSnapshot(fixture,{a,b});
+                EXPECT_THROW(prepareContact(fixture,action,a,b,deltas),std::invalid_argument);
+                EXPECT_EQ(contactSnapshot(fixture,{a,b}),before);
+                continue;
+            }
             auto prepared = prepareContact(fixture, action, a, b, deltas); ASSERT_TRUE(prepared);
             if (change == 0) item.getCellRef().setNativeItemCondition(54.125f);
             else if (change == 1) inventory.clear();
             else if (change == 2) installEquipmentInventory(fixture, b, {equipped});
             else if (change == 3) item.getRefData().setCustomData({});
+            else if (change == 5) item.getCellRef().setNativeItemScale(.13f);
+            else if (change == 6) item.getCellRef().setNativeItemScale(0.f);
             else item.getCellRef().setOwner(ESM::RefId::stringRefId("new-owner"));
             if (change == 4)
             {
@@ -20724,7 +20736,7 @@ TEST(OblivionWorldTest, NativeDropRelationsCaptureRestoreExactPresenceOrderAndLe
         actor.setNativeDropRelations(relations);
         item.setNativeDropRelations(dropper ? fixture.itemRelations() : ESM4::DropRelations{});
         const auto saved = world.captureOblivionRuntimeState();
-        ASSERT_EQ(saved.mVersion, 47u);
+        ASSERT_EQ(saved.mVersion, ESM4::CurrentRuntimeStateVersion);
         const auto expectedItem = item.getNativeDropRelations();
         actor.setNativeDropRelations({}); item.setNativeDropRelations({});
         readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
@@ -20818,4 +20830,154 @@ TEST(OblivionWorldTest, NativeDropRelationsRestoreNewDynamicReferenceBeforeResol
         ASSERT_NE(found, captured.mReferences.end());
         EXPECT_EQ(found->mDropRelations, fixture.itemRelations());
     }
+}
+
+TEST(OblivionWorldTest, InventoryExtraScaleOwnsPresenceAndBitsSeparatelyFromPlacedScale)
+{
+    ESM::CellRef raw; raw.blank(); raw.mScale = .75f;
+    MWWorld::CellRef item(raw);
+    EXPECT_FALSE(item.getNativeItemScale());
+    for (const auto scale : std::array<std::optional<float>,5>{std::nullopt,1.f,-0.f,.13f,-2.f})
+    {
+        item.setNativeItemScale(scale);
+        EXPECT_EQ(item.getNativeItemScale(),scale);
+        EXPECT_TRUE(item.hasNativeItemScale(scale));
+        EXPECT_EQ(item.getScale(),.75f);
+        ESM::ObjectState state; item.writeState(state);
+        MWWorld::CellRef copy(state.mRef);
+        EXPECT_TRUE(copy.hasNativeItemScale(scale));
+    }
+    item.setNativeItemScale(-0.f);
+    EXPECT_FALSE(item.hasNativeItemScale(0.f));
+    EXPECT_THROW(item.setNativeItemScale(std::numeric_limits<float>::quiet_NaN()),std::invalid_argument);
+    EXPECT_TRUE(item.hasNativeItemScale(-0.f));
+    ESM4::Reference placed{}; placed.mScale = 2;
+    MWWorld::CellRef world(placed);
+    EXPECT_FALSE(world.getNativeItemScale());
+    EXPECT_THROW(world.setNativeItemScale(1),std::invalid_argument);
+    EXPECT_EQ(world.getScale(),2);
+}
+
+TEST(OblivionWorldTest, InventoryExtraScaleCaptureAndRestorePreservesBothActorInventories)
+{
+    NativeCellClaimFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Race race{}; race.mId = {0x810,0};
+    race.mAttribMale = {40,40,40,40,40,40,40,40}; race.mAttribFemale = race.mAttribMale;
+    world.getStore().getWritable<ESM4::Race>().insertStatic(
+        race,ESM::FormKey::content("headless.esm",0x810));
+    auto npc = *fixture.mNpc.get<ESM4::Npc>()->mBase;
+    npc.mRace = race.mId;
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(npc,npc.mFormKey);
+    MWClass::Weapon::registerSelf();
+    ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(ESM::FormId{0x940,0});
+    shared.mData.mType = ESM::Weapon::MarksmanBow; shared.mData.mHealth = 100;
+    world.getStore().insertStatic(shared);
+    const auto player = world.getPlayerPtr();
+    std::vector<ESM4::RuntimeInventoryItem> items;
+    const std::array<std::optional<unsigned>,7> scales{std::nullopt,0x3f800000u,0x80000000u,
+        0u,0x3e051eb8u,0xc0000000u,0x7f7fffffu};
+    for (unsigned i=0; i<scales.size(); ++i)
+    {
+        ESM4::RuntimeInventoryItem item; item.mBase = ESM::FormKey::content("headless.esm",0x940);
+        item.mCount = 1; item.mCondition = 20+i; item.mCharge = 7.25f;
+        if (scales[i]) item.mExtraScale = std::bit_cast<float>(*scales[i]);
+        if (i==2) item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        items.push_back(item);
+    }
+    installEquipmentInventory(fixture,player,items);
+    installEquipmentInventory(fixture,fixture.mNpc,items);
+    // Restore registers resident NPC AI. Register the outgoing actor too, so
+    // the full-state comparison covers an already initialized actor graph.
+    ASSERT_TRUE(world.getOblivionAiService()->setRestrained(fixture.mNpc,false));
+    fixture.mItem.getCellRef().setScale(2);
+    const auto saved = world.captureOblivionRuntimeState();
+    ASSERT_EQ(saved.mVersion,48u);
+    for (const auto actor : {player,fixture.mNpc})
+        for (const auto item : actor.getClass().getInventoryStore(actor))
+            item.getCellRef().setNativeItemScale(std::nullopt);
+    fixture.mItem.getCellRef().setScale(9);
+    readNativeSnapshot(fixture,ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(fixture.mItem.getCellRef().getScale(),2);
+    for (const auto actor : {world.getPlayerPtr(),fixture.mNpc})
+    {
+        const auto actual = world.captureOblivionActorInventory(actor);
+        ASSERT_EQ(actual.size(),items.size());
+        for (unsigned i=0; i<actual.size(); ++i)
+        {
+            EXPECT_EQ(actual[i],items[i]);
+            if (scales[i])
+            {
+                ASSERT_TRUE(actual[i].mExtraScale);
+                EXPECT_EQ(std::bit_cast<unsigned>(*actual[i].mExtraScale),*scales[i]);
+            }
+        }
+    }
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(),saved.serializeBinary());
+}
+
+TEST(OblivionWorldTest, InventoryExtraScaleStackingAndPreparedOperationsRetainInstanceIdentity)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture,true);
+    auto& world = fixture.mWorld;
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("headless.esm",0x940); item.mCount = 1; item.mCondition = 100;
+    auto sources = MWWorld::OblivionProfileServices::prepareActorInventory(
+        world.getStore(),ESM::FormKeyResolver({"headless.esm"}),{item,item});
+    const auto first = sources[0].mReference.getPtr(), second = sources[1].mReference.getPtr();
+    // Original complete41E550 and inventory merge-search caller: absent differs
+    // from explicit1; finite values compare numerically, including signed zero.
+    const std::array<std::optional<float>,5> scales{std::nullopt,1.f,.13f,0.f,-0.f};
+    for (unsigned left=0; left<scales.size(); ++left)
+    for (unsigned right=0; right<scales.size(); ++right)
+    {
+        first.getCellRef().setNativeItemScale(scales[left]);
+        second.getCellRef().setNativeItemScale(scales[right]);
+        const bool expected = left==right || (left>=3 && right>=3);
+        EXPECT_EQ(inventory.stacks(first,second),expected);
+    }
+    {
+        MWWorld::World legacy(nullptr,-1,"",{},ESM::GameProfile::Morrowind);
+        fixture.mEnvironment.setWorld(legacy);
+        first.getCellRef().setNativeItemScale(std::nullopt);
+        second.getCellRef().setNativeItemScale(1.f);
+        EXPECT_TRUE(inventory.stacks(first,second));
+        fixture.mEnvironment.setWorld(world);
+    }
+    first.getCellRef().setNativeItemScale(-0.f);
+    auto staged = inventory.prepareItemAddition(first,1);
+    ASSERT_TRUE(staged->isValid());
+    staged->getItem().getCellRef().setNativeItemScale(0.f);
+    EXPECT_FALSE(staged->isValid()); EXPECT_TRUE(staged->commit().isEmpty());
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    bow.getCellRef().setNativeItemScale(.13f);
+    auto removal = inventory.prepareEquippedWeaponRemoval(); ASSERT_TRUE(removal->isValid());
+    bow.getCellRef().setNativeItemScale(1.f);
+    EXPECT_FALSE(removal->isValid()); EXPECT_FALSE(removal->commit());
+    bow.getCellRef().setNativeItemScale(.13f);
+    EXPECT_TRUE(removal->isValid());
+    auto& service = *world.getOblivionCombatService();
+    const auto action = admitPreparedBowRelease(fixture,actors.actor);
+    auto release = service.prepareBowRelease(world,actors.actor,action);
+    bow.getCellRef().setNativeItemScale(std::nullopt);
+    EXPECT_FALSE(service.validateBowRelease(*release,inventory));
+    bow.getCellRef().setNativeItemScale(.13f);
+    EXPECT_TRUE(service.validateBowRelease(*release,inventory));
+}
+
+TEST(OblivionWorldTest, InventoryExtraScaleCaptureRejectsCorruptMetadataWithoutDroppingTheItem)
+{
+    NativeWorldFixture fixture;
+    const auto actors = installPreparedBowRelease(fixture,true);
+    auto& inventory = actors.actor.getClass().getInventoryStore(actors.actor);
+    const auto bow = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    ESM::ObjectState raw; bow.getCellRef().writeState(raw);
+    raw.mRef.mNativeItemScale = std::numeric_limits<float>::quiet_NaN();
+    bow.getCellRef() = MWWorld::CellRef(raw.mRef);
+    EXPECT_THROW(fixture.mWorld.captureOblivionActorInventory(actors.actor),std::runtime_error);
+    EXPECT_EQ(bow.getCellRef().getCount(),1);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),bow);
 }

@@ -414,7 +414,7 @@ namespace
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
                                  "\"condition\":125,\"charge\":80,\"equipped_slots\":4,\"hotkey\":2,"
                                  "\"owner\":\"content:oblivion.esm:000007\","
-                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\"}]"),
+                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\",\"extra_scale\":null}]"),
             std::string::npos);
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
@@ -3495,6 +3495,7 @@ TEST(ESM4RuntimeState, Reputation46OwnsExactSignedCountersAndIndependentAccumula
 TEST(ESM4RuntimeState, DropRelations47IndependentWirePresenceOrderAndLegacyBoundary)
 {
     auto state = makeState();
+    state.mVersion = 47;
     auto& reference = state.mReferences.front();
     reference.mOwnershipGlobal = ESM::FormKey::content("oblivion.esm", 0xdeadbe);
     auto legacy = state; legacy.mVersion = 46;
@@ -3587,4 +3588,71 @@ TEST(ESM4RuntimeState, DropRelations47RejectNullDuplicateAndLossyIdentities)
     const auto position = std::search(bad.begin(), bad.end(), text.begin(), text.end());
     ASSERT_NE(position, bad.end()); *position = 'D';
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::exception);
+}
+
+TEST(ESM4RuntimeState, InventoryExtraScale48PreservesPresenceAndBits)
+{
+    for (const auto bits : std::array<std::optional<unsigned>,10>{std::nullopt, 0u, 0x80000000u, 1u,
+            0x80000001u, 0x3f800000u, 0x3e051eb8u, 0xc0000000u, 0x7f7fffffu, 0xff7fffffu})
+    {
+        auto state = makeState();
+        auto scale = bits ? std::optional(std::bit_cast<float>(*bits)) : std::nullopt;
+        state.mPlayer.mInventory.front().mExtraScale = scale;
+        state.mReferences.front().mInventory.front().mExtraScale = scale;
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        for (const auto& item : {restored.mPlayer.mInventory.front(), restored.mReferences.front().mInventory.front()})
+        {
+            ASSERT_EQ(item.mExtraScale.has_value(), bits.has_value());
+            if (bits) EXPECT_EQ(std::bit_cast<unsigned>(*item.mExtraScale), *bits);
+        }
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        if (bits == 0x80000000u) EXPECT_NE(restored.canonicalJson().find("\"extra_scale\":-0.0"), std::string::npos);
+    }
+    for (const float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto state = makeState(); state.mPlayer.mInventory.front().mExtraScale = invalid;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, InventoryExtraScale48RejectsLossyLegacyWritesAndDefaultsToAbsent)
+{
+    for (unsigned version=1; version<48; ++version)
+    {
+        ESM4::RuntimeState state; state.mVersion = version;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player",1);
+        state.mPlayer.mCell = ESM::FormKey::content("items.esm",1);
+        if (version >= 3)
+        {
+            state.mPlayer.mRace = ESM::FormKey::content("items.esm",2);
+            state.mPlayer.mClass = ESM::FormKey::content("items.esm",3);
+        }
+        ESM4::RuntimeInventoryItem item; item.mBase = ESM::FormKey::content("items.esm",4); item.mCount = 1;
+        state.mPlayer.mInventory.push_back(item);
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mPlayer.mInventory.front().mExtraScale);
+        state.mPlayer.mInventory.front().mExtraScale = 1;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+}
+
+TEST(ESM4RuntimeState, InventoryExtraScale48ReadsIndependentlyConstructedWireAndRejectsBadPresence)
+{
+    const std::vector<std::uint8_t> bytes{
+#include "native_inventory_scale_schema48_expected.inc"
+    };
+    auto state = ESM4::RuntimeState::deserializeBinary(bytes);
+    ASSERT_TRUE(state.mPlayer.mInventory.front().mExtraScale);
+    EXPECT_EQ(std::bit_cast<unsigned>(*state.mPlayer.mInventory.front().mExtraScale),0x80000000u);
+    EXPECT_EQ(state.mReferences.front().mInventory.front().mExtraScale,1.f);
+    EXPECT_EQ(state.serializeBinary(),bytes);
+    const std::string base = "content:items.esm:000004";
+    const auto found = std::search(bytes.begin(),bytes.end(),base.begin(),base.end());
+    ASSERT_NE(found,bytes.end());
+    const auto offset = std::size_t(found-bytes.begin())+base.size()+38;
+    auto corrupt = bytes; corrupt[offset] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt),std::runtime_error);
+    corrupt = bytes; const unsigned infinity = 0x7f800000u;
+    for (unsigned i=0;i<4;++i) corrupt[offset+1+i] = (infinity>>(i*8))&255;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt),std::runtime_error);
 }

@@ -162,6 +162,51 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             "inventory": [], "custom_state": {}}]
         return state
 
+    def test_inventory_extra_scale48_preserves_presence_bits_and_rejects_bad_wire(self):
+        state = self.ownership_state(); state["schema_version"] = 48
+        item = state["player"]["inventory"][0]
+        state["references"][0]["inventory"] = [copy.deepcopy(item)]
+        state["references"][0]["inventory"][0]["hotkey"] = -1
+        for bits in (None, 0, 0x80000000, 1, 0x80000001, 0x3F800000,
+                     0x3E051EB8, 0xC0000000, 0x7F7FFFFF, 0xFF7FFFFF):
+            value = None if bits is None else struct.unpack("<f", struct.pack("<I", bits))[0]
+            for target in (item, state["references"][0]["inventory"][0]):
+                target["extra_scale"] = value
+            payload = state_io.encode_payload(state)
+            restored = state_io.decode_payload(payload)
+            for target in (restored["player"]["inventory"][0], restored["references"][0]["inventory"][0]):
+                if bits is None: self.assertIsNone(target["extra_scale"])
+                else: self.assertEqual(struct.unpack("<I", struct.pack("<f", target["extra_scale"]))[0], bits)
+            self.assertEqual(state_io.encode_payload(restored), payload)
+            prefix = struct.pack("<f", 812.5) + b"\0" + struct.pack("<I", 4) + b"null"
+            offset = payload.index(prefix) + len(prefix)
+            bad = bytearray(payload); bad[offset] = 2
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+            if bits is not None:
+                bad = bytearray(payload); bad[offset+1:offset+5] = struct.pack("<I", 0x7F800000)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+
+    def test_inventory_extra_scale48_rejects_bad_types_and_lossy_legacy_writes(self):
+        for value in (True, False, "1", [], float("inf"), float("-inf"), float("nan"), 10**400):
+            state = self.ownership_state(); state["schema_version"] = 48
+            state["player"]["inventory"][0]["extra_scale"] = value
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for version in range(1, 48):
+            state = {"schema_version": version, "profile": "oblivion", "next_dynamic_serial": 1,
+                     "content": [], "clock": {"year": 1, "month": 0, "day": 1, "hour": 0., "time_scale": 30.},
+                     "player": {"reference": "dynamic:player:0000000000000001", "cell": "content:items.esm:000001",
+                                "position": [0.] * 6, "actor_values": {},
+                                "inventory": [{"base": "content:items.esm:000004", "count": 1}]},
+                     "globals": {}, "references": [], "ai_rng_state": 1}
+            if version >= 3:
+                state["player"].update(name="", race="content:items.esm:000002", **{"class": "content:items.esm:000003"})
+            restored = state_io.decode_payload(state_io.encode_payload(state))
+            self.assertNotIn("extra_scale", restored["player"]["inventory"][0])
+            for value in (0., 1., -.5):
+                state["player"]["inventory"][0]["extra_scale"] = value
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+            state["player"]["inventory"][0].pop("extra_scale")
+
     def test_drop_relations47_independent_wire_order_presence_and_legacy(self):
         state = self.ownership_state()
         state["schema_version"] = 46
@@ -232,7 +277,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             source.write_bytes(record + tail)
             state_io.write_save(source, target, state)
             decoded = state_io.load_save(target)
-            self.assertEqual(decoded["schema_version"], 47)
+            self.assertEqual(decoded["schema_version"], state_io.CURRENT_VERSION)
             self.assertIsNone(decoded["references"][0]["dropper"])
             self.assertIsNone(decoded["references"][0]["dropped_items"])
             self.assertEqual(decoded["next_dynamic_serial"], state["next_dynamic_serial"])

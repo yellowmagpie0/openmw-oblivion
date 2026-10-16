@@ -16,6 +16,7 @@ namespace ESM4
                 && left.mCharge == right.mCharge && left.mRemainingUsageTime == right.mRemainingUsageTime
                 && left.mEquippedSlots == right.mEquippedSlots
                 && left.mHotkey == right.mHotkey && left.mOwner == right.mOwner
+                && left.mExtraScale == right.mExtraScale
                 && left.mOwnershipRank == right.mOwnershipRank && left.mOwnershipGlobal == right.mOwnershipGlobal;
         }
 
@@ -92,7 +93,8 @@ namespace ESM4
 
     bool addInventoryItem(std::vector<RuntimeInventoryItem>& inventory, RuntimeInventoryItem item)
     {
-        if (item.mBase.isNull() || item.mCount <= 0 || !std::isfinite(item.mCharge)
+        if (item.mBase.isNull() || item.mCount <= 0 || (item.mExtraScale && !std::isfinite(*item.mExtraScale))
+            || !std::isfinite(item.mCharge)
             || !std::isfinite(item.mRemainingUsageTime))
             return false;
         item.mEquippedSlots &= InventorySlotMask;

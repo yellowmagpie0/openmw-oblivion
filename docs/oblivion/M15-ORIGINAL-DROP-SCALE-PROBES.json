@@ -1143,7 +1143,7 @@
       "S4/drop-reference-scale-normal-01",
       "S4/drop-reference-scale-sanitized-01"
     ],
-    "scope": "Arithmetic only; scene/body/factory/runtime integration remains open."
+    "scope": "Arithmetic checkpoint only; resolved loose scene/body admission is verified separately in S4/drop-scaled-admission-normal-03 and -sanitized-03. Compound factory/source transfer and actual break/drop remain open."
   },
   "inventory_extra_scale_comparison": {
     "native": {
@@ -1285,9 +1285,57 @@
     ],
     "retained_failure": "Native-01 returned SIGSEGV after20 contexts because FS Windows TLS was not initialized; native-02 supplies the fixture.",
     "not_established": [
-      "Complete inventory stacking caller",
+      "Complete inventory stacking outer function including counts/publication",
       "Pickup conversion of reference scale into inventory extras",
-      "Production inventory scale persistence and identity guards"
-    ]
+      "Actual factory or break/drop gameplay acceptance"
+    ],
+    "merge_search_prefix": {
+      "passed": true,
+      "cases": 686,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "b4699d1206ee862fa497a138a51e33442f78a75aa5f7ac160adcfc68c0c549c5",
+      "corpus_sha256": "bf17c0336238fea932be8d7f5e2e95fde4f3e3203df53cf18d134147c3375f30",
+      "scope": "Actual original5D27C6 two-candidate extra-list merge-search loop, complete41E550 and actual ExtraScale comparison. Stops at selected5D281B or append5D27EA before count/publication changes. Critical sections and synthetic TLS are boundaries. EBX/ESI/stack/FPCW and input lists/links remain unchanged. Expected candidate selection is from prior native hardware comparator corpus. Not full outer function, general stacking, pickup or gameplay.",
+      "evidence": "S4/inventory-scale-merge-search-oracle-01",
+      "entry": "0x005D27C6",
+      "selected_stop": "0x005D281B",
+      "append_stop": "0x005D27EA",
+      "fixture_scale_bits": [
+        null,
+        1065353216,
+        1040522936,
+        1073741824,
+        2147483648,
+        0,
+        3221225472
+      ],
+      "fixture": "Two existing optional-scale lists and one source list, all 7^3 combinations under both control words. First equal candidate wins; otherwise append branch.",
+      "execution_platform": "Unicorn x86-32; expected comparisons come from separate prior native i386 hardware executions.",
+      "expected_selection": "Prior native i386 comparator corpus, not production stack logic.",
+      "control_words": [
+        639,
+        895
+      ]
+    },
+    "production_inventory_persistence": {
+      "status": "implemented and verified",
+      "schema_version": 48,
+      "shared_inventory_subrecord": "NSCL",
+      "domain": "Optional finite binary32, presence significant; explicit 1 and signed-zero bits retained. Independent of world reference/mesh scale.",
+      "stack_equality": "Presence plus numeric equality, including equal signed zeros. Other preexisting stack policy remains unchanged.",
+      "prepared_operation_guards": "Exact optional presence and binary32 bits for addition, equipped removal, bow release, physical-contact gear and condition requests.",
+      "schema_fixture_bytes": 730,
+      "schema_fixture_sha256": "fd764ef60752ef463ce7a97a58e4e063c268e3e75e2018df16948346be082360",
+      "checks": [
+        "S4/inventory-extra-scale-full-normal-03",
+        "S4/inventory-extra-scale-full-sanitized-03"
+      ],
+      "runtime": [
+        "S4/inventory-extra-scale-runtime-normal-01",
+        "S4/inventory-extra-scale-runtime-sanitized-01"
+      ],
+      "profile_isolation": "S4/inventory-extra-scale-morrowind-01",
+      "scope": "Inventory metadata storage, identity guards and bounded equality only. No visual carried-scale, pickup conversion or actual factory/break/drop acceptance."
+    }
   }
 }

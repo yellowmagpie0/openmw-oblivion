@@ -6,6 +6,22 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native inventory scale persistence — 2026-10-15
+
+Schema 48 now preserves optional inventory ExtraScale independently of world
+reference scale, including explicit 1 and signed-zero bits. Actor inventory
+capture/restore and prepared-operation guards retain this instance metadata;
+native stacking preserves the independently verified presence/value distinction.
+Normal and sanitizer checks each pass all 2,684 component and 1,519 engine tests;
+all 303 Python tests pass. Both profiles pass two-process input/contact/save
+regressions with exact scale bits and audio/no-replay checks. A Morrowind
+load/resave confirms profile isolation.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#optional-native-inventory-extrascale-persistence-and-identity)
+records the evidence and retained failures. Compound drop publication, replacement
+equipment, pickup and actual break/drop/restart acceptance remain open. S4 remains
+incomplete.
+
 ## S4 scaled loose-weapon admission — 2026-10-15
 
 Loose-weapon admission now uses resolved reference scale for scene and native

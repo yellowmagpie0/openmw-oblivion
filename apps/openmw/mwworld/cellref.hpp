@@ -128,6 +128,13 @@ namespace MWWorld
         }
         void setScale(float scale);
 
+        // Exact inventory ExtraScale presence/value. This does not change the
+        // placed reference's mesh scale or normalize explicit 1 to absence.
+        std::optional<float> getNativeItemScale() const noexcept;
+        void setNativeItemScale(std::optional<float> scale);
+        // Snapshot validation compares bits, including signed zero, without allocation.
+        bool hasNativeItemScale(std::optional<float> expected) const noexcept;
+
         // The *original* position and rotation as it was given in the Construction Set.
         // Current position and rotation of the object is stored in RefData.
         const ESM::Position& getPosition() const

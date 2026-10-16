@@ -1597,6 +1597,7 @@ namespace MWWorld
                 const ESM::RefId itemOwner = itemPtr.getCellRef().getOwner();
                 if (const ESM::FormId* ownerId = itemOwner.getIf<ESM::FormId>())
                     item.mOwner = inventoryResolver.toFormKey(*ownerId);
+                item.mExtraScale = itemPtr.getCellRef().getNativeItemScale();
                 item.mOwnershipRank = itemPtr.getCellRef().getNativeOwnershipRank();
                 item.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
                     mStore, inventoryResolver, itemPtr.getCellRef());
@@ -1605,7 +1606,8 @@ namespace MWWorld
                     item.mHotkey = previous->second;
                     previousHotkeys.erase(previous);
                 }
-                ESM4::addInventoryItem(result, std::move(item));
+                if (!ESM4::addInventoryItem(result, std::move(item)))
+                    throw std::runtime_error("Invalid native inventory metadata during capture");
             }
             return result;
         }

@@ -1401,3 +1401,92 @@ Compound source/contact/key/scene/body/relation publication, replacement
 equipment, pickup cleanup and actual normal-input break/drop/restart acceptance
 remain open, along with the broader S4 melee/mastery/reaction/input matrix.
 S4 remains incomplete.
+
+
+## Optional native inventory ExtraScale persistence and identity
+
+Schema 48 appends an optional binary32 ExtraScale to every Player/reference
+inventory item. Missing metadata differs from explicit 1; negative finite values,
+signed zeros, denormals and extrema retain their bits. Legacy 1..47 decode absent;
+a downgrade with present scale rejects instead of losing information. Canonical
+JSON uses `extra_scale` with null or a finite value. C++ and Python codecs agree on a 730-byte independently assembled wire fixture with
+Player -0 and NPC explicit 1. Presence flags outside 0/1 and nonfinite payloads
+reject. The fixture SHA256 is
+`fd764ef60752ef463ce7a97a58e4e063c268e3e75e2018df16948346be082360`.
+
+Projected inventory CellRefs own this optional field separately from their
+ordinary placement/mesh scale. The fork's NSCL save subrecord preserves it
+through shared object-state serialization; native placed references cannot use the inventory setter. World
+capture/staging and lazy NPC/creature inventory restoration preserve the field.
+Capture rejects corrupt metadata rather than silently omitting an item. Native
+stacking includes optional scale using numerical equality, including signed-zero
+equality. Prepared addition, equipped removal, bow release, physical-contact
+gear snapshots and condition requests guard exact presence/bits, so an instance
+change invalidates a pending operation without publication. Condition wear
+preserves the metadata. Morrowind stacking retains its existing profile policy.
+
+The emulated original two-candidate merge-search block
+5D27C6..5D281B/5D27EA selects the first equal extra list or takes the append branch in all 686 declared contexts.
+Complete 41E550 and actual ExtraScale comparison run; expected selection comes
+from the prior native hardware comparator corpus. Critical sections and synthetic
+TLS are boundaries. The probe stops before count/publication changes and checks
+input lists/links, stack, EBX/ESI and FPCW preservation. It does not establish the
+complete outer function, all stacking fields, pickup conversion or gameplay.
+Evidence: `S4/inventory-scale-merge-search-oracle-01`.
+
+Final normal evidence: `S4/inventory-extra-scale-full-normal-03` passes 2684
+component tests/255 suites, 1519 engine tests/122 suites and 303 Python tests.
+C++ inventories are unfiltered/exact with zero failures/skips. Before/after:
+`32ac62f3acf88b19dcf368e96db41f49996f526b` plus
+`7cf6c184a16d00017f5fa445ecfa4de30ddc8a9183e39e1c8b5638d5523943f0`.
+
+`S4/inventory-extra-scale-runtime-normal-01` passes all 8 commands with distinct
+terminal PIDs 574344/574456, binary SHA
+`93dd34f4c1c6ebb4b44cd44e57aadd519aac711fa5cb01f417431470d6c22f1b`.
+Player weapon 0x090615 explicitly carries scale bits 3e051eb8; Valen Dreth's
+0x01fc43 inventory explicitly carries 3f800000. Both save epochs retain bits;
+all 9 actor arrays, exact Health delta -0.9841405749320984, Player/NPC weapon
+conditions 55.84976577758789/55.70000076293945, RNG and action ownership match.
+Stock block PCM correlation 0.9941326175376067 appears once; restart has no replay.
+Both gameplay screenshots were directly reviewed. These are inventory metadata
+persistence regressions during ordinary activation/block/contact; no visual
+carried-scale, pickup, factory or actual break/drop acceptance is claimed.
+
+`S4/inventory-extra-scale-morrowind-01` passes an actual Morrowind load/resave
+with the same pinned normal game, 102 output records and no GPRO/T4VR/T4ST,
+OMW4STATE or NSCL. Original input SHA
+`c4b8bb69e43f5b80a760834e3dbd6dc2b9507ebe4d8979d2f1943e05c3b4f915`
+is unchanged. Its screenshot was directly reviewed; this is profile isolation,
+not broad Morrowind gameplay or audio acceptance.
+
+Retained full-normal-01 failed an existing schema 47 fixture that inherited
+CurrentVersion 48; it now explicitly chooses 47. Sanitized-01 was stopped before
+that correction. Full-normal-02 passed 1518/1519 engine cases; the new roundtrip
+fixture lacked native NPC race metadata. Sanitized-02 was stopped before the
+fixture correction. A focused correction run then revealed only actor_ai 0->1
+registration after restore, independently diagnosed via GDB JSON snapshots;
+explicitly initialize outgoing resident NPC AI before taking the baseline.
+The corrected test preserves complete byte-equality and literal scale assertions
+and passes. These failed/stopped runs are not accepted evidence.
+
+
+`S4/inventory-extra-scale-full-sanitized-03` also passes all **2684 component
+and 1519 engine tests**, with exact unfiltered inventories and zero failures or
+skips. Its before/after source matches the final normal report above. ASan leak
+checking is disabled and both sanitizers halt on errors. The sanitizer game
+build continuation is retained separately; this final helper supplies the
+accepted source/binary/inventory checks.
+
+`S4/inventory-extra-scale-runtime-sanitized-01` passes all 8 commands with
+separate terminal PIDs 578973/579153, executable SHA
+`21468df907733bb4383e2e0e5a3fd191e331bcb09317ee0b114cda240f34e1a7`.
+Exact scale bits and the same contact/state/audio/restart invariants pass. Both sanitizer screenshots were directly reviewed. No ASan/UBSan diagnostic
+appeared. This adds instrumented runtime regression coverage, not actual
+break/drop or visual scale acceptance.
+
+All 20 implementation-file hashes match the frozen review manifest. The remaining
+production work includes compound contact/source/key/scene/body/relation
+publication, replacement equipment, pickup conversion/cleanup and actual
+normal-input break/drop/restart acceptance. Broader S4 power, creature, mastery,
+reaction, effect and input/controller/FPS requirements remain open. S4 remains
+incomplete.

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 47
+CURRENT_VERSION = 48
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -345,6 +345,11 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
             })
             if version >= 41:
                 _read_ownership_extras(reader, item)
+            if version >= 48:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid inventory scale presence flag")
+                item["extra_scale"] = reader.unpack("<f") if present else None
         result.append(item)
     return result
 
@@ -365,6 +370,11 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
             writer.pack("<f", float(item.get("remaining_usage_time", -1.0)))
             if version >= 41:
                 _write_ownership_extras(writer, item)
+            if version >= 48:
+                scale = item.get("extra_scale")
+                writer.pack("<B", int(scale is not None))
+                if scale is not None:
+                    writer.pack("<f", scale)
 
 
 def _finite_float(reader: _Reader, label: str) -> float:
@@ -1559,6 +1569,10 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     }
     for item in value:
         _validate_ownership_extras(item, version)
+        scale = item.get("extra_scale")
+        if scale is not None and (version < 48 or type(scale) not in (int, float)
+                or abs(scale) > 3.4028234663852886e38 or not math.isfinite(scale)):
+            raise RuntimeStateError("Invalid or unsupported native inventory scale")
         count = int(item.get("count", 0))
         if str(item.get("base", "null")) == "null" or count == 0 or (version >= 4 and count < 0):
             raise RuntimeStateError("Invalid TES4 runtime-state inventory entry")
@@ -1603,6 +1617,7 @@ def _upgrade_inventory(value: list[dict[str, Any]]) -> None:
         item.setdefault("remaining_usage_time", -1.0)
         item.setdefault("ownership_rank", None)
         item.setdefault("ownership_global", "null")
+        item.setdefault("extra_scale", None)
 
 
 def decode_payload(payload: bytes) -> dict[str, Any]:

@@ -465,7 +465,8 @@ bool MWWorld::ContainerStore::stacks(const ConstPtr& ptr1, const ConstPtr& ptr2,
         && (MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion
             || (ptr1.getCellRef().getOwner() == ptr2.getCellRef().getOwner()
                 && ptr1.getCellRef().getNativeOwnershipRank() == ptr2.getCellRef().getNativeOwnershipRank()
-                && ptr1.getCellRef().getNativeOwnershipGlobal() == ptr2.getCellRef().getNativeOwnershipGlobal()))
+                && ptr1.getCellRef().getNativeOwnershipGlobal() == ptr2.getCellRef().getNativeOwnershipGlobal()
+                && ptr1.getCellRef().getNativeItemScale() == ptr2.getCellRef().getNativeItemScale()))
         && ptr1.getCellRef().getSoul() == ptr2.getCellRef().getSoul()
 
         && ptr1.getClass().getRemainingUsageTime(ptr1) == ptr2.getClass().getRemainingUsageTime(ptr2)
@@ -524,6 +525,7 @@ struct MWWorld::ContainerStore::PreparedItemAddition::Impl
             && actual.getSoul() == expected.getSoul()
             && actual.getCharge() == expected.getCharge()
             && actual.getNativeItemCondition() == expected.getNativeItemCondition()
+            && actual.hasNativeItemScale(expected.getNativeItemScale())
             && actual.getEnchantmentCharge() == expected.getEnchantmentCharge()
             && ptr.getClass().getRemainingUsageTime(ptr) == mUsage;
     }

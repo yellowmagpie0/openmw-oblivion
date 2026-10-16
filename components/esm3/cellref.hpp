@@ -64,6 +64,7 @@ namespace ESM
         };
         float mChargeIntRemainder; // Fractional part of mChargeInt
         std::optional<float> mNativeItemCondition; // TES4 live inventory authority; not light/enchantment charge.
+        std::optional<float> mNativeItemScale; // TES4 inventory ExtraScale, independent of placed mesh scale.
         // Native projected inventory extras, independent of TES3 INDX/BNAM.
         std::optional<std::int32_t> mNativeOwnershipRank;
         ESM::RefId mNativeOwnershipGlobal;

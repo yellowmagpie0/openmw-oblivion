@@ -802,6 +802,7 @@ namespace MWWorld
             }
             ptr.getCellRef().setNativeOwnershipGlobal(resolveOwnershipGlobal(store, resolver, item.mOwnershipGlobal));
             ptr.getCellRef().setNativeOwnershipRank(item.mOwnershipRank);
+            ptr.getCellRef().setNativeItemScale(item.mExtraScale);
             std::optional<int> slot;
             if (item.mEquippedSlots != 0)
             {

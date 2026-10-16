@@ -132,6 +132,17 @@ namespace ESM
                         }
                         else esm.skipHRefId();
                         break;
+                    case fourCC("NSCL"):
+                        if constexpr (load)
+                        {
+                            float value;
+                            esm.getHT(value);
+                            if (cellRef.mNativeItemScale || !std::isfinite(value))
+                                throw std::runtime_error("Invalid native inventory scale");
+                            cellRef.mNativeItemScale = value;
+                        }
+                        else esm.skipHT<float>();
+                        break;
                     case fourCC("NCHL"):
                         if constexpr (load)
                         {
@@ -266,6 +277,12 @@ namespace ESM
             esm.writeHNRefId("NOGB", mNativeOwnershipGlobal);
         }
 
+        if (mNativeItemScale)
+        {
+            if (!std::isfinite(*mNativeItemScale))
+                throw std::runtime_error("Invalid native inventory scale");
+            esm.writeHNT("NSCL", *mNativeItemScale);
+        }
         if (mNativeItemCondition)
         {
             if (!std::isfinite(*mNativeItemCondition) || *mNativeItemCondition < 0)
@@ -315,6 +332,7 @@ namespace ESM
         mChargeInt = -1;
         mChargeIntRemainder = 0.0f;
         mNativeItemCondition.reset();
+        mNativeItemScale.reset();
         mNativeOwnershipRank.reset();
         mNativeOwnershipGlobal = {};
         mEnchantmentCharge = -1;

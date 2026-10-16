@@ -192,6 +192,7 @@ namespace MWMechanics
         float mExpectedRemainder = 0;
         int mExpectedCount = 1;
         float mCondition = 0;
+        std::optional<float> mExpectedExtraScale = std::nullopt;
     };
     OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
         const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition);

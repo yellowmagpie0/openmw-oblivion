@@ -1,6 +1,7 @@
 #include "cellref.hpp"
 
 #include <cassert>
+#include <bit>
 #include <cmath>
 #include <stdexcept>
 
@@ -17,6 +18,29 @@
 
 namespace MWWorld
 {
+    std::optional<float> CellRef::getNativeItemScale() const noexcept
+    {
+        if (const auto* item = std::get_if<ESM::CellRef>(&mCellRef.mVariant))
+            return item->mNativeItemScale;
+        return std::nullopt;
+    }
+
+    void CellRef::setNativeItemScale(std::optional<float> scale)
+    {
+        auto* item = std::get_if<ESM::CellRef>(&mCellRef.mVariant);
+        if (!item || (scale && !std::isfinite(*scale)))
+            throw std::invalid_argument("Native inventory scale requires a projected item and finite value");
+        item->mNativeItemScale = scale;
+        mChanged = true;
+    }
+
+    bool CellRef::hasNativeItemScale(std::optional<float> expected) const noexcept
+    {
+        const auto left = getNativeItemScale(), right = expected;
+        return left.has_value() == right.has_value()
+            && (!left || std::bit_cast<std::uint32_t>(*left) == std::bit_cast<std::uint32_t>(*right));
+    }
+
     CellRef::CellRef(const ESM::CellRef& ref)
         : mCellRef(ESM::ReferenceVariant(ref))
     {

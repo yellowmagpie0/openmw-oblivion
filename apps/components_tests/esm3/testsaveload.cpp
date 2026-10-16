@@ -338,6 +338,54 @@ namespace ESM
             EXPECT_EQ(record.mPaidCrimeId, result.mPaidCrimeId);
         }
 
+        TEST_P(Esm3SaveLoadRecordTest, nativeInventoryScaleRetainsPresenceBitsAndSeparatePlacement)
+        {
+            for (const std::uint32_t bits : {0u, 0x80000000u, 1u, 0x80000001u, 0x3f800000u,
+                    0x3e051eb8u, 0xc0000000u, 0x7f7fffffu, 0xff7fffffu})
+            {
+                CellRef record; record.blank();
+                record.mRefID = ESM::RefId::stringRefId("native_inventory_scale");
+                record.mScale = .75f; record.mNativeItemScale = std::bit_cast<float>(bits);
+                CellRef restored; saveAndLoadRecord(record, GetParam(), restored);
+                ASSERT_TRUE(restored.mNativeItemScale);
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(*restored.mNativeItemScale), bits);
+                EXPECT_EQ(restored.mScale,.75f);
+                restored.blank(); EXPECT_FALSE(restored.mNativeItemScale);
+            }
+            CellRef record; record.blank(); record.mRefID = ESM::RefId::stringRefId("ordinary_item");
+            CellRef restored; saveAndLoadRecord(record,GetParam(),restored);
+            EXPECT_FALSE(restored.mNativeItemScale);
+            for (const float invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            {
+                record.mNativeItemScale = invalid;
+                EXPECT_THROW(saveAndLoadRecord(record,GetParam(),restored),std::runtime_error);
+            }
+        }
+
+        struct NativeScaleWireRecord
+        {
+            CellRef mRef;
+            std::vector<float> mScales;
+            void save(ESMWriter& writer) const
+            {
+                mRef.save(writer,true,true);
+                for (const float scale : mScales) writer.writeHNT("NSCL",scale);
+            }
+            void load(ESMReader& reader) { bool deleted = false; mRef.load(reader,deleted,true); }
+        };
+        TEST_P(Esm3SaveLoadRecordTest, nativeInventoryScaleRejectsDuplicateAndNonfiniteWire)
+        {
+            for (const auto& scales : {std::vector<float>{1.f,2.f}, std::vector<float>{0.f,-0.f},
+                    std::vector<float>{std::numeric_limits<float>::infinity()},
+                    std::vector<float>{std::numeric_limits<float>::quiet_NaN()}})
+            {
+                NativeScaleWireRecord record; record.mRef.blank();
+                record.mRef.mRefID = ESM::RefId::stringRefId("bad_scale"); record.mScales = scales;
+                NativeScaleWireRecord restored;
+                EXPECT_THROW(saveAndLoadRecord(record,GetParam(),restored),std::runtime_error);
+            }
+        }
+
         TEST_P(Esm3SaveLoadRecordTest, nativeConditionRetainsBitsAndDoesNotAliasCharges)
         {
             for (const std::uint32_t bits : {0u, 0x80000000u, 1u, 0x33800000u,
