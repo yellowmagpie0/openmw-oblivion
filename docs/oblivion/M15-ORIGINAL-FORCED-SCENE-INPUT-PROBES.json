@@ -34,7 +34,7 @@
   "observations": [
     "For each linear/angular vector independently: any XYZ abs strictly greater than binary32 0x3a83126f resets all four lanes to positive zero. Otherwise every lane, including W and signed zeros, survives unchanged.",
     "Forced flag0x40 selects velocity reset and actual body pose setter; clears flag0x40 without changing body motion mode.",
-    "Native SetAngle uses4D7AF0, whose previously verified order matches direct Z*Y*X conversion. Current script host still selects legacy inverse order; that remains a required follow-up."
+    "Native SetAngle uses4D7AF0, whose previously verified order matches direct Z*Y*X conversion. The forced-scene checkpoint still selected legacy inverse order; subsequent correction and actual command/scene/physics evidence are recorded in M15-NATIVE-SETANGLE-RUNTIME-PROBES.json."
   ],
   "literal_cases": [
     {

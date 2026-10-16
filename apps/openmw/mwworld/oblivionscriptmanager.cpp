@@ -1888,7 +1888,9 @@ namespace MWWorld
                     const float* currentRotation = ptr.getRefData().getPosition().rot;
                     osg::Vec3f rotation(currentRotation[0], currentRotation[1], currentRotation[2]);
                     rotation[index] = static_cast<float>(ObScript::asNumber(argument(firstArg + 1)) * osg::PI / 180.0);
-                    mWorld.rotateObject(ptr, rotation);
+                    // Native SetAngle rebuilds the reference matrix through
+                    // 4D7AF0, using the direct Z/Y/X order.
+                    mWorld.rotateObject(ptr, rotation, MWBase::RotationFlag_none);
                 }
             }
             return std::int64_t(0);

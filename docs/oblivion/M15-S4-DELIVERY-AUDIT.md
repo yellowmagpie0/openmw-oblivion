@@ -2095,3 +2095,76 @@ must survive preparation to avoid scaling already rounded properties. Physical
 save/retention/recreation remains actor-only. Production break/mastery policy,
 replacement/sound, pickup cleanup, actual normal-input gameplay and the full
 controller/FPS/restart matrix remain required. **S4 is incomplete.**
+
+
+## Native SetAngle rotation order
+
+Checkpoint **2026-10-16** changes the native script host's `SetAngle` call to
+explicit `RotationFlag_none`. World's default inverse order previously routed
+native object commands through Scene's legacy X/Y/Z composition. Native
+`509110` builds its matrix with `4D7AF0`, matching Scene's direct Z/Y/X order.
+The actor-specific node rotation path is unchanged. This supersedes the
+preceding checkpoint's known command-order gap, without changing the default
+World order or the Morrowind command host.
+
+The editable [runtime probe manifest](M15-NATIVE-SETANGLE-RUNTIME-PROBES.json)
+records the six actual native command diagnostics, reference/base/cell identity,
+input-save hash and all12 original matrix outputs. The commands address the
+resident weapon `content:oblivion.esm:000f1f`, zero X/Y/Z then set X90/Y90/Z30.
+`S4/setangle-order-oracle-01` executes full original `4D7AF0` through real REFR
+vtable/+190 dispatch with WEAP base, no stubs, for each stored binary32 angle
+state and x87 control words027F/037F. Complete return, EAX output pointer,
+stack, callee-saved registers and unchanged reference are checked. Original
+executable SHA256 is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+This executes the matrix builder, not the original command argument parser.
+
+`S4/setangle-runtime-baseline-03` uses the preceding normal engine binary.
+Read-only GDB observes actual host -> World -> Scene -> PhysicsSystem calls,
+stored reference angles, rendered placement-node quaternion and independent
+Object rotation storage. The same comparison against original matrices fails
+with maximum error **1.5000000504735647**, including combined-axis failures.
+This is a real pre-change binary, not a controlled function bypass.
+
+`S4/setangle-runtime-normal-01` and `S4/setangle-runtime-sanitized-02` execute
+the corrected host in actual engines with renderer/physics and the exact saved
+content dependencies. All six command returns succeed; scene attitudes and
+independently observed Object rotation storage agree. The normal observer also
+reads the actual PhysicsSystem parameter. Sanitizer debug information omits
+both that parameter and Scene's caller local, so the instrumented observer
+reads the rendered node at PhysicsSystem entry, then independently checks
+Object's stored quaternion and the actual committed Bullet collision basis.
+Both runtimes match the original matrices with maximum error
+**3.731898345904483e-8**; the final committed collision basis differs by at most
+**3.011408766795398e-8**, below the preregistered `2e-6` tolerance. No sanitizer
+diagnostic occurs; ASan leak checking is disabled and ASan/UBSan halt on errors.
+The observers perform no gameplay writes and deliberately kill the engine after
+final collision commit. This is bounded command-path evidence, not ordinary
+process-exit, save/restart, audio or normal-input melee acceptance. The resident
+weapon uses ordinary Object physics; loose-body bodyT/scaled input dispatch is
+covered separately by the six worker cases in `04e84ad0d8`.
+
+Runtime normal executable SHA256:
+`1455a65c4dc2e5bb2c47d27a14c35beacfbdc3e27ae875a4bcffcbacf2652409`.
+Runtime sanitizer executable SHA256:
+`3847c85dff96c357abfa649c4d933a3effb9b402ebe6cdc61b459ff11e33b0e0`.
+Provenance files hash the binaries, input saves, command events, exact saved
+script dependencies, configs and observer sources. Baseline attempt01 omitted
+the saved script dependency; attempt02 supplied a placeholder rejected by the
+saved content fingerprint. Both were stopped after confirmed load failures.
+Sanitizer runtime01 stopped at the first command because GDB could not read an
+optimized-out quaternion; attempt02 adds the explicitly reported fallback and
+independent storage/collision checks. Retained failures are not acceptance.
+
+`S4/setangle-order-normal-01` and `S4/setangle-order-sanitized-01` each pass all
+**1,553 engine tests/122 suites**, unfiltered with exact inventory/XML agreement
+and zero failures/skips. Both preserve identical before/after source state atop
+`04e84ad0d8fdf95e6fa7b36e61ba6a5504701cca`, fingerprint
+`efb11ba4ec28c3e7089a6d23cb69ab2b29e6521fa41e8d1716927398b86e3dd3`.
+The single implementation-file hash and patch are frozen in
+`S4/setangle-order-review-01` before documentation updates. Component/Python
+code is unchanged and those suites were not rerun for this host-call correction.
+
+Live scaling, physical loose-body retention/save/recreation, production
+break/mastery dispatch, replacement/sound, pickup cleanup and the complete
+normal-input/restart/controller/FPS matrix remain required. **S4 is incomplete.**

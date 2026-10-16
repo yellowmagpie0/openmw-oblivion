@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native SetAngle rotation order — 2026-10-16
+
+Native `SetAngle` now explicitly requests the direct object rotation order used
+by the original reference matrix builder. Actual command diagnostics in normal
+and ASan/UBSan engines verify stored reference angles, scene-node rotation,
+physics rotation storage and committed Bullet collision orientation against
+12 independently executed original matrix contexts. Maximum matrix error is
+`3.8e-8` with a declared `2e-6` tolerance; the preceding binary fails the same
+comparison with error1.5. Both full engine suites pass **1,553 tests**.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-setangle-rotation-order)
+records observation limits and retained setup failures. Live scaling, physical
+save/recreation, production break/mastery and the full normal-input gameplay
+acceptance matrix remain open. S4 is incomplete.
+
 ## S4 loose-weapon position and rotation input — 2026-10-16
 
 PhysicsSystem position and rotation updates now move existing loose weapon

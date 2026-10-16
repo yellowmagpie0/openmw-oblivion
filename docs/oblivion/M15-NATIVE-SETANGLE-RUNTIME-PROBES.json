@@ -1,0 +1,350 @@
+{
+  "date": "2026-10-16",
+  "status": "native SetAngle direct order verified through actual command, scene and physics in normal and sanitized runtimes; full S4 incomplete",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_functions": {
+    "command": "00509110",
+    "reference_matrix_builder": "004D7AF0"
+  },
+  "original_builder_boundary_stubs": {},
+  "original_builder_contexts": 12,
+  "matrix_tolerance": 2e-06,
+  "target_reference": "content:oblivion.esm:000f1f",
+  "target_base": "content:oblivion.esm:047aca",
+  "target_cell": "content:oblivion.esm:01fbb9",
+  "input_save_sha256": "798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a",
+  "commands": [
+    "at 1 command content:oblivion.esm:000f1f setangle x 0",
+    "at 1 command content:oblivion.esm:000f1f setangle y 0",
+    "at 1 command content:oblivion.esm:000f1f setangle z 0",
+    "at 1 command content:oblivion.esm:000f1f setangle x 90",
+    "at 1 command content:oblivion.esm:000f1f setangle y 90",
+    "at 1 command content:oblivion.esm:000f1f setangle z 30"
+  ],
+  "original_matrix_cases": [
+    {
+      "rotation_bits": [
+        0,
+        1039115352,
+        3176549518
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        1065215690,
+        3176447118,
+        3186563185,
+        1029059464,
+        1065330259,
+        0,
+        1039058096,
+        3150450319,
+        1065238490
+      ]
+    },
+    {
+      "rotation_bits": [
+        0,
+        1039115352,
+        3176549518
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        1065215690,
+        3176447118,
+        3186563185,
+        1029059464,
+        1065330259,
+        0,
+        1039058096,
+        3150450319,
+        1065238490
+      ]
+    },
+    {
+      "rotation_bits": [
+        0,
+        0,
+        3176549518
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        1065330259,
+        3176543112,
+        0,
+        1029059464,
+        1065330259,
+        0,
+        0,
+        0,
+        1065353216
+      ]
+    },
+    {
+      "rotation_bits": [
+        0,
+        0,
+        3176549518
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        1065330259,
+        3176543112,
+        0,
+        1029059464,
+        1065330259,
+        0,
+        0,
+        0,
+        1065353216
+      ]
+    },
+    {
+      "rotation_bits": [
+        0,
+        0,
+        0
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ]
+    },
+    {
+      "rotation_bits": [
+        0,
+        0,
+        0
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        0,
+        0
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        3007036718,
+        1065353216,
+        0,
+        3212836864,
+        3007036718
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        0,
+        0
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        3007036718,
+        1065353216,
+        0,
+        3212836864,
+        3007036718
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        1070141403,
+        0
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        3007036718,
+        0,
+        3212836864,
+        1065353216,
+        3007036718,
+        3007036718,
+        3007036718,
+        3212836864,
+        654945773
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        1070141403,
+        0
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        3007036718,
+        0,
+        3212836864,
+        1065353216,
+        3007036718,
+        3007036718,
+        3007036718,
+        3212836864,
+        654945773
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        1070141403,
+        1057360530
+      ],
+      "control_word": 639,
+      "matrix_bits": [
+        3005388340,
+        2998648110,
+        3212836864,
+        1063105495,
+        1056964607,
+        3007036718,
+        1056964607,
+        3210589143,
+        654945773
+      ]
+    },
+    {
+      "rotation_bits": [
+        1070141403,
+        1070141403,
+        1057360530
+      ],
+      "control_word": 895,
+      "matrix_bits": [
+        3005388340,
+        2998648110,
+        3212836864,
+        1063105495,
+        1056964607,
+        3007036718,
+        1056964607,
+        3210589143,
+        654945773
+      ]
+    }
+  ],
+  "scope": [
+    "Native host call selects RotationFlag_none, giving direct object Z/Y/X composition. Actor-specific node rotation remains shared.",
+    "Diagnostic events call the actual command host; they are not keyboard combat acceptance or original argument-parser execution.",
+    "Read-only GDB observes actual reference storage, scene placement node, PhysicsSystem dispatch, Object rotation storage and final committed Bullet basis.",
+    "Observer deliberately kills engine after final collision commit; no normal process-exit, fresh restart or save acceptance.",
+    "Resident weapon uses ordinary Object physics; loose-body offset/scale input dispatch has separate six-worker-case coverage in04e84ad0d8.",
+    "No physical save/recreation, scaling, production break/mastery or full S4 gameplay acceptance."
+  ],
+  "evidence": {
+    "setangle-order-oracle-01": {
+      "passed": true,
+      "cases": 12,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "harness_sha256": "5491b609a597bed4c8c8b8c83c3d004e65ed355853339653115e19e9da9e3223",
+      "cases_sha256": "71a51384ae4b68dba137b60b2c6dc601913db546e2b833dfd715c1e68e74454f",
+      "boundary_stubs": {},
+      "control_words": [
+        639,
+        895
+      ],
+      "scope": "Full original4D7AF0 reference matrix builder through actual REFR A46C44/+190 virtual dispatch and WEAP base21; actual stored binary32 angle inputs from six command diagnostic states. No stubs. Complete return, EAX output pointer, stack, callee-saved registers and unchanged reference checked. Excludes original command argument parser, native scene/world publication and gameplay."
+    },
+    "setangle-runtime-baseline-03": {
+      "passed": false,
+      "cases": 6,
+      "original_control_word_contexts": 12,
+      "matrix_tolerance": 2e-06,
+      "maximum_matrix_error": 1.5000000504735647,
+      "case_matrix_errors": [
+        0.006105251315739978,
+        1.1782974262963819e-08,
+        0.0,
+        1.7763568394002505e-15,
+        1.00000004371139,
+        1.5000000504735647
+      ],
+      "reference_node_physics_agree": true,
+      "scope": "Real native command diagnostic, World, Scene, rendered placement node and PhysicsSystem/Object rotation storage; original4D7AF0 matrices independently executed. No normal-input break/drop, loose-body save/restart, native argument parser or audio acceptance."
+    },
+    "setangle-runtime-normal-01": {
+      "passed": true,
+      "cases": 6,
+      "original_control_word_contexts": 12,
+      "matrix_tolerance": 2e-06,
+      "maximum_matrix_error": 3.731898345904483e-08,
+      "case_matrix_errors": [
+        3.731898345904483e-08,
+        1.1782974262963819e-08,
+        0.0,
+        1.7763568394002505e-15,
+        1.9984014443252818e-15,
+        3.011408766795398e-08
+      ],
+      "reference_node_physics_agree": true,
+      "scope": "Actual command host/World/Scene, rendered node, independently observed Object rotation storage and committed Bullet basis. Normal also captures PhysicsSystem parameter; sanitized uses rendered-node fallback because parameter and caller local are optimized out. Read-only observer, deliberate kill; no save/restart or normal-input combat acceptance.",
+      "committed_collision_matrix_error": 3.011408766795398e-08,
+      "capture_sources": [
+        "PhysicsSystem parameter"
+      ],
+      "six_actual_command_returns": true,
+      "sanitizer_diagnostics": false,
+      "binary_sha256": "1455a65c4dc2e5bb2c47d27a14c35beacfbdc3e27ae875a4bcffcbacf2652409"
+    },
+    "setangle-runtime-sanitized-02": {
+      "passed": true,
+      "cases": 6,
+      "original_control_word_contexts": 12,
+      "matrix_tolerance": 2e-06,
+      "maximum_matrix_error": 3.731898345904483e-08,
+      "case_matrix_errors": [
+        3.731898345904483e-08,
+        1.1782974262963819e-08,
+        0.0,
+        1.7763568394002505e-15,
+        1.9984014443252818e-15,
+        3.011408766795398e-08
+      ],
+      "reference_node_physics_agree": true,
+      "scope": "Actual command host/World/Scene, rendered node, independently observed Object rotation storage and committed Bullet basis. Normal also captures PhysicsSystem parameter; sanitized uses rendered-node fallback because parameter and caller local are optimized out. Read-only observer, deliberate kill; no save/restart or normal-input combat acceptance.",
+      "committed_collision_matrix_error": 3.011408766795398e-08,
+      "capture_sources": [
+        "Rendered node at actual PhysicsSystem entry; actual Object storage independently checked"
+      ],
+      "six_actual_command_returns": true,
+      "sanitizer_diagnostics": false,
+      "binary_sha256": "3847c85dff96c357abfa649c4d933a3effb9b402ebe6cdc61b459ff11e33b0e0"
+    }
+  },
+  "full_engine_suites": {
+    "tests_each": 1553,
+    "suites_each": 122,
+    "normal": "build/oblivion-compat/m15/S4/setangle-order-normal-01",
+    "sanitized": "build/oblivion-compat/m15/S4/setangle-order-sanitized-01",
+    "tested_parent": "04e84ad0d8fdf95e6fa7b36e61ba6a5504701cca",
+    "source_fingerprint": "efb11ba4ec28c3e7089a6d23cb69ab2b29e6521fa41e8d1716927398b86e3dd3"
+  }
+}
