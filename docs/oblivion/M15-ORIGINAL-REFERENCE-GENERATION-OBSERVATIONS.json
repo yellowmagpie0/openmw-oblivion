@@ -1,0 +1,350 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Load-time NIF flags preserved; original generation observations correct future integration requirements; M15S4 incomplete",
+  "parent_commit": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+  "implementation_sha256": {
+    "components/nifosg/nifloader.cpp": "52d9860c1a556345562f0e217c983fbdd699a30461a3c889953437733d197f48",
+    "apps/components_tests/nifosg/testnifloader.cpp": "73fc66c431c0e06131bfcc7cf99520b7537314f8258c5cf80b01741a47c6471d"
+  },
+  "tested_source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012",
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-oracle-01/verification.json",
+      "sha256": "102b2fc4fa83317a2b502e8b8bee179400b96d13132a5b11bf4684b040ca9e4c",
+      "report": {
+        "passed": true,
+        "contexts": 65536,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_sha256": "6422d9ff412b4aa1267263485a30b8bb4f83e309f82ad04d4d68af68e5dd55f1",
+        "flags_sha256": "906a4e31ddc1e7779f6e9947c06e53d8e422ea8a75666a2911fff17a8188f1fa",
+        "scope": "Actual modern NiAVObject LoadBinary tail708188..70819A for every uint16 source flag, including final WORD store. No hooks. Upper adjacent padding word preserved. Earlier old-version load conversions, model template wrapping, recomputation events, rendering/physics/gameplay excluded."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-compare-01/normal-verification.json",
+      "sha256": "dc70aa2b75416794d24a0cec1c7a52d623be2d074cda2ac758392ccdaa64b02d",
+      "report": {
+        "passed": true,
+        "contexts": 131072,
+        "versions": [
+          335544324,
+          335544325
+        ],
+        "failures": [],
+        "source_sha256": "906a4e31ddc1e7779f6e9947c06e53d8e422ea8a75666a2911fff17a8188f1fa",
+        "oracle_source_sha256": "6422d9ff412b4aa1267263485a30b8bb4f83e309f82ad04d4d68af68e5dd55f1",
+        "probe_sha256": "35fed66e369ff3f22dc666dbd04cb6db182cad27689f5a7b2cb1493e06bd1288",
+        "comparator_sha256": "0b657d2f943c881e28a191d10650bc74898182a4f89d8212ca4ceaf876051ab9",
+        "binary_sha256": "90f60191d4083ccc4bd96375cdb4473af4823c2da9f9e2a024862036a7340836",
+        "scope": "Actual production NIF-to-OSG loader metadata against all65536 original LoadBinary flag words, both supported physical TES4 versions. Verify full authored value and parsed source remain unchanged. No template wrapping/recompute/frame/physics/gameplay acceptance."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-compare-01/sanitized-verification.json",
+      "sha256": "2c992fddd2c61a0cec54a75c8439dcaf59f49fecaf51fc1378fcd6189beb97f5",
+      "report": {
+        "passed": true,
+        "contexts": 131072,
+        "versions": [
+          335544324,
+          335544325
+        ],
+        "failures": [],
+        "source_sha256": "906a4e31ddc1e7779f6e9947c06e53d8e422ea8a75666a2911fff17a8188f1fa",
+        "oracle_source_sha256": "6422d9ff412b4aa1267263485a30b8bb4f83e309f82ad04d4d68af68e5dd55f1",
+        "probe_sha256": "35fed66e369ff3f22dc666dbd04cb6db182cad27689f5a7b2cb1493e06bd1288",
+        "comparator_sha256": "0b657d2f943c881e28a191d10650bc74898182a4f89d8212ca4ceaf876051ab9",
+        "binary_sha256": "057c77f64e572001fda171e2532b07a320ee7e3115af16e7e1ba5d0db62cadf7",
+        "scope": "Actual production NIF-to-OSG loader metadata against all65536 original LoadBinary flag words, both supported physical TES4 versions. Verify full authored value and parsed source remain unchanged. No template wrapping/recompute/frame/physics/gameplay acceptance."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/original-selective-flags-01/verification.json",
+      "sha256": "5dd8c005c69e6a7896d94b180d61a2f2bdc42fb1ca1634b3e761d3040279a830",
+      "report": {
+        "passed": true,
+        "policy_calls_during_load": 13,
+        "policy_caller": "0x6C9B54",
+        "policy_inherited_transform": 1,
+        "weapon_reference_id": "0xFF000800",
+        "weapon_base_id": "0x00090615",
+        "weapon_generation_stages": 3,
+        "weapon_outer_frames": 32,
+        "weapon_node_flags": 14,
+        "weapon_collision_flags_after_registration": 13,
+        "weapon_policy_calls_in_interval": 0,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/original-selective-flags-01/weapon-root-vtable.json",
+      "sha256": "a649310e09ebc8a3070f4f9d3b826a5d9785942a7aa4582ebf12b5ab91ceddee",
+      "report": {
+        "vtable": "0xa3f944",
+        "rtti_name": ".?AVBSFadeNode@@",
+        "methods": {
+          "0x50": "0x70a9c0",
+          "0x5c": "0x70aa20",
+          "0x60": "0x70a0d0",
+          "0x64": "0x4a0d50",
+          "0x68": "0x70a280"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/original-selective-flags-01/cleanup.json",
+      "sha256": "baac4824dbe89c0424d1d752195c158ee41996404a5681e971ed6817dbbd90db",
+      "report": {
+        "game_wrapper_exit_code": 0,
+        "steam_shutdown_command": 0,
+        "restored": {
+          "ini": {
+            "after_game_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+            "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46"
+          },
+          "plugins": {
+            "after_game_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+            "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234"
+          },
+          "save": {
+            "after_game_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+            "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+          }
+        },
+        "source_prefix_pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/original-reference-hierarchy-01/verification.json",
+      "sha256": "d98bfaa7a3047909e3f0a63657a3843817b71475d61e8fe6cd8a443b0f6126c3",
+      "report": {
+        "passed": true,
+        "stages": 7,
+        "frames": 32,
+        "template_nodes": 5,
+        "generated_nodes": 3,
+        "wrapper_type": ".?AVBSFadeNode@@",
+        "selected_asset_root_type": ".?AVNiNode@@",
+        "before_body_type": ".?AVbhkRigidBody@@",
+        "after_body_type": ".?AVbhkRigidBodyT@@",
+        "same_hk_object_and_motion": true,
+        "body_position_xyz_preserved": true,
+        "body_quaternion_z_one_stored_float_step": true,
+        "live_flags": 14,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/original-reference-hierarchy-01/cleanup.json",
+      "sha256": "e56d4ae001dd364304a8703cdac719f3c51680d20c173ad8f7085e6f06f2ad0d",
+      "report": {
+        "game_wrapper_exit_code": 0,
+        "steam_shutdown_command": 0,
+        "steam_wrapper_exit_code": 0,
+        "restored": {
+          "ini": {
+            "after_game_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+            "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46"
+          },
+          "plugins": {
+            "after_game_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+            "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234"
+          },
+          "save": {
+            "after_game_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+            "restored_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+          }
+        },
+        "source_prefix_pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-early-generation-trace-01/verification.json",
+      "sha256": "8befa8d4adee70c9caa4e01f384f2f480e475702a6319182007f1e2ed825f910",
+      "report": {
+        "passed": true,
+        "contexts": 1,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_sha256": "221da7a1289842fb3eb6604eb7407e4140eaa720fc8999f73f33db22c9d6d8f8",
+        "cases_sha256": "e23f9945e55c543ffd642715ed47808bcf40714d8fbc84528348d931f5f33271",
+        "scope": "Actual4B3BEC..4B3C37 model-factory footer normalizes rootI/T0/scale1 and clears hidden bit before Generate R/T copy. BodyT original8B8E70 prefix with actual cached getter scales original cached translation at reference scale0.63/2, quaternion unchanged; supply resulting cached translation to output wrapper, no full clone claim. Then actual reference R/T copy, recursive pending mark, full4E3490 empty-controller early pass, final scale+virtual50, reference prefix/World registration and forced later707370. One first-child bodyT single-precision context; early-pass call edges recorded. Not a corpus expansion. Ni child locals unchanged. Source/output cached/world/physical snapshots retained. Full model virtual114/EC,clone cache/heap/generic rigidbody/shape copying, optional property-copy/model/special branches, real World/clock/stepping/gameplay excluded; inherited heap/Windows/TLS/critical boundaries and nullnativeWorld remain."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selective-flags-source-inspection-02/verification.json",
+      "sha256": "bc69924c005cd6c0b8f2bf7b1d6bd67920be9c7d7eaeeebd0cb603a9506fbb84",
+      "report": {
+        "archive": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Meshes.bsa",
+        "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+        "asset": "build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/shortsword.nif",
+        "asset_sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+        "binary_sha256": "507f26080fd1feec2389d5cc7710ac5b21f880d83ae7d5833bf712232a410f59",
+        "probe_sha256": "7e3703bf6edcd58dcec78b67be85973cd899c16d9249051ea6cf5d1da4bf88bc",
+        "build_script_sha256": "cfbf019667f8a2bd6567b118d9354dea27a9b8b376943cc85816adc3572f1f7d",
+        "result_sha256": "4ecd038b6dd9c40ad78f707866d12de65142deb7d91497f5b19a2c7845a3be4b",
+        "scope": "Fresh hash check against the previously extracted archived stock short sword, plus actual current NIF parser source record names, flags, controller/property presence, collision target presence and source body wrapper type. This is an archived-source inspection, not full winning loose/BSA/mod resolution."
+      }
+    }
+  ],
+  "checks": {
+    "nif-loaded-flags-preflight-02": {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-preflight-02/verification.json",
+      "sha256": "a751c72a3bf4a04419ff77ec89ed8f99738ef50957e6f344691cde3ee6981089",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 43,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "NifOsgLoaderTest.*:NifSceneTraversalTest.*:NifSelectiveUpdatePolicy.*",
+          "binary_sha256": "a212a11388195e9f5790eb5b165b5f89ed5f9c15a7b5de99d9c91c1bb99548cd",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "78fe7914744405fb81b693e021078673171f1d0e013dd6e8849bd67798e201fc",
+          "inventory_sha256": "b858c59871e3a687387225cc73872d5bcfbcb19c4c2fc6c61eefc85a3ff80a14",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      },
+      "source_after": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      }
+    },
+    "nif-loaded-flags-normal-01": {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-normal-01/verification.json",
+      "sha256": "6ff0d8dfbfa334294913abe3e126f4254c22c6f8bb1151804046e5bf523e1e8c",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2782,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a212a11388195e9f5790eb5b165b5f89ed5f9c15a7b5de99d9c91c1bb99548cd",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "f11dea3682b182ecfe25a0bf532e408aa9a1dc90c78280231042bc4350c6661a",
+          "inventory_sha256": "0924a7b8ccf72dc53053b990736aeccf677c9618bfac73948b57e13795d04a99",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1611,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4662fbca70afad81990dc6eb2990091c51e949b08a636888f90f7bb1bb9587e7",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "8f4d59ce5c759259d83aafddaf8270d73fc8680594487546b959bac3aafc860a",
+          "inventory_sha256": "c792e153626283604b95ff614ebb3b4e2a9cc1844071366a577c9f07d02bcad2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      },
+      "source_after": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      }
+    },
+    "nif-loaded-flags-sanitized-01": {
+      "path": "build/oblivion-compat/m15/S4/nif-loaded-flags-sanitized-01/verification.json",
+      "sha256": "dbf9856869350cf8325b5cf63e86380a14f79549a7e8fb7fbdb6ec6cc74d1a63",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2782,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6892222b3b92880f7cc560e9c2fc3918e2e97e95e234bae2fe63a214ab0fcbca",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "a2401d1d45ab579a1a030da1f732f11fc1dc27b1000021e5163b5f17fb81eee4",
+          "inventory_sha256": "a1007715a6d809701ab9b58e3f6870ab484793f6ec92cf1913886118c4a85240",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1611,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "293aada83d62543f5a452658a9e52ebaa6969077a4b54fae31556e8229880f23",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "bb1d5823f46cf42ef6e97df5def853dbd744626dc3e3045dada35f4fd8d71529",
+          "inventory_sha256": "c792e153626283604b95ff614ebb3b4e2a9cc1844071366a577c9f07d02bcad2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      },
+      "source_after": {
+        "head": "bf02d05b90bbc01fa48161c90100dfaccedd42c4",
+        "source_fingerprint": "aad8dd30be1098ec5f95da470040aa3c77574c688fd13ba6520a18e59d2be012"
+      }
+    }
+  },
+  "behavior": [
+    "Physical TES4 20.0.0.4/5 hierarchies retain immutable nativeNifLoadedFlags = (uint16(authored) & 0xffef) | 0x000e, independently of full nativeNifFlags and private live selective flags. Other versions/nonphysical hierarchies are unchanged.",
+    "All 65536 source flag WORDs execute the original modern LoadBinary tail708188..70819A without hooks; upper adjacent padding is preserved. Production loader comparisons cover both versions (131072 cases each normal/sanitized), including unchanged full authored values and parsed source.",
+    "Regression checks actual CopyOp clones and optimizer-preserved physical hierarchies. A raw flag16 loads14; subsequent explicit empty-controller/inherited=false recomputation yields16 without changing either immutable snapshot. Generation must not substitute recomputation for load initialization."
+  ],
+  "original_observations": [
+    "Two independent isolated original-game probes load the pristine save and use declared console setup player.additem/player.drop 00090615 1. Actual base090615/type21 and dynamic REFR FF000800 are verified from memory. These are console-assisted original observations, not normal-input fork acceptance.",
+    "13 nonrecursive selective-policy calls during save load return to6C9B54 with inherited=true. Names are actor-named/Player1stPerson; no full typed actor audit claimed. No selective-policy calls occur during the observed weapon generation and32outer frames. Root BSFadeNode flags remain000E; collision flags become000D after registration, with pending0040 already consumed.",
+    "Native cached stock sword template has five private-cloned nodes: synthetic BSFadeNode -> NiNode FadeNode Rot -> Scb -> Scb:0, and blade ShortSword:0. All13local words/flags survive clone. Generation removes Scb, preserving its null child slot and all13 asset-root local words; generated hierarchy has three nodes. Factory normalization targets the synthetic wrapper, not the raw NIF record0.",
+    "Registration relocates plain bhkRigidBody from asset root to the synthetic reference wrapper and replaces its wrapper with bhkRigidBodyT. Native Hk entity/motion pointers and physical XYZ bits survive; quaternionZ changes one stored float step. This real-World BoxInertia4 example refutes unconditional zero/identity replacement inferred from earlier null-World Sphere2 fixtures. Cause is not isolated to World or motion type.",
+    "Actual early ordinary-reference path4E37FD..4E380C calls root virtual60 with time0 and controllers=false. Recursive70A0D0 bypasses47C930 while still projecting world/physical state. Single traced context inherits null-World/sphere boundaries; it is not a new corpus or gameplay proof.",
+    "Archived stock NIF has raw source flags16, no own/property controllers, plain bhkRigidBody motion4 and four source nodes. Native template adds/renames nodes and load initializes flags14. Archive/asset hashes pinned separately; no full winning loose/BSA/mod audit claimed."
+  ],
+  "retained_failures": [
+    "nif-loaded-flags-preflight-01 failed only because the new test cast Loader enclosing Group instead of finding record0; corrected test passes in preflight02.",
+    "Original flag probe first launch lacked Linux Steam (Application load error); GDB startup Wine movie-thread first-chance exception was passed on reattach. Initial process check incorrectly used STEAM_COMPAT_DATA_PATH; WINEPREFIX and DISPLAY then verified private ownership. First console attempt lacked focus; unquoted text lost spaces through split and was rejected; shlex/quoted corrected commands are retained. Optional xset executable was absent; no dependency installed.",
+    "Original probes exited through qqq without saving; owned game, GDB, Steam and Xvfb processes ended. Exact private INI/plugin/save bytes restored and pristine source-prefix save hash verified. Proprietary captures, disassembly, assets and large corpora remain ignored."
+  ],
+  "remaining": [
+    "Correct production generated-reference wrapper/source-root mapping, preserve asset R/T, reproduce scoped scabbard removal, seed private flags from actual prepared graph, and distinguish early controllers-disabled projection from live updates.",
+    "Resolve real World replacement behavior, initial physical capture, model-specific culling, controller policy/events, clock/physics scheduling and one live traversal owner with cell migration/save/fresh recreation.",
+    "Complete all remaining M15S4 melee/drop/effect/input and normal-input/fresh-process runtime gates. These component/original probes do not close them. ASan leak detection is disabled."
+  ]
+}

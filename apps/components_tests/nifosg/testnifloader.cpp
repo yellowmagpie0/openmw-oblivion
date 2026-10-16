@@ -1192,6 +1192,14 @@ namespace
                 // between copied containers; live flags belong to the owner.
                 ASSERT_TRUE(b->getUserValue("nativeNifFlags", flags)); EXPECT_EQ(flags, records[i]->mFlags);
                 ASSERT_TRUE(source->getUserValue("nativeNifFlags", flags)); EXPECT_EQ(flags, records[i]->mFlags);
+                // Literal original LoadBinary tail outputs; higher authored
+                // padding is not part of the native runtime WORD field.
+                const std::array<unsigned, 4> loadedFlags{14, 14, 46, 46};
+                for (auto* instance : {source, a, b})
+                {
+                    ASSERT_TRUE(instance->getUserValue("nativeNifLoadedFlags", flags));
+                    EXPECT_EQ(flags, loadedFlags[i]);
+                }
             }
             auto* firstRoot = find(*first, 0); auto* firstTarget = find(*first, 2);
             firstRoot->setTranslation({100, 0, 0});
@@ -1220,5 +1228,32 @@ namespace
         unsigned flags;
         EXPECT_FALSE(visitor.mFound->getUserValue("nativeNifFlags", flags));
         EXPECT_FALSE(visitor.mFound->getUserValue("nativeNifRecordType", flags));
+        EXPECT_FALSE(visitor.mFound->getUserValue("nativeNifLoadedFlags", flags));
     }
+    TEST_F(NifOsgLoaderTest, NativeLoadedFlagSnapshotIsDistinctFromControllerRecomputation)
+    {
+        Nif::NiNode root{}; init(root); root.mRecordType = Nif::RC_NiNode;
+        root.mRecordIndex = 0; root.mFlags = 16;
+        Nif::bhkCollisionObject collision{}; collision.mRecordType = Nif::RC_bhkCollisionObject;
+        collision.mTarget = Nif::NiAVObjectPtr(&root); root.mCollision = Nif::NiCollisionObjectPtr(&collision);
+        Nif::NIFFile file(testNif); file.mVersion = Nif::NIFFile::VER_OB; file.mRoots.push_back(&root);
+        auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+        FindGroupByRecordIndex visitor(0); loaded->accept(visitor);
+        auto* native = dynamic_cast<NifOsg::MatrixTransform*>(visitor.mFound); ASSERT_NE(native, nullptr);
+        unsigned flags = 0;
+        ASSERT_TRUE(native->getUserValue("nativeNifLoadedFlags", flags)); EXPECT_EQ(flags, 14);
+        SceneUtil::NifSceneTraversal traversal(*native);
+        const auto result = traversal.recomputeSelectiveUpdateFlags([&](const auto&) {
+            SceneUtil::NifSceneTraversal::SelectiveUpdatePolicy policy;
+            policy.mFlags = flags; return policy;
+        }, false);
+        EXPECT_FALSE(result.mNeedsUpdate); EXPECT_TRUE(result.mRigid);
+        EXPECT_EQ(traversal.selectiveUpdateFlags(*native), 16);
+        // Recomputing from empty lists at generation would disable projection;
+        // it is a separate native event, not initialization from the file.
+        ASSERT_TRUE(native->getUserValue("nativeNifLoadedFlags", flags)); EXPECT_EQ(flags, 14);
+        ASSERT_TRUE(native->getUserValue("nativeNifFlags", flags)); EXPECT_EQ(flags, 16);
+        EXPECT_EQ(root.mFlags, 16u);
+    }
+
 }

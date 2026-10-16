@@ -1017,6 +1017,12 @@ namespace NifOsg
                 // caches even when no controller or body is attached to them.
                 node->setUserValue("nativeNifRecordType", static_cast<unsigned>(nifNode->mRecordType));
                 node->setUserValue("nativeNifFlags", nifNode->mFlags);
+                // Original modern NiAVObject::LoadBinary708188 resets these
+                // selection bits independently of later controller-based
+                // recomputation. Keep this immutable WORD snapshot separate
+                // from the full authored value and an instance's live flags.
+                node->setUserValue("nativeNifLoadedFlags",
+                    (static_cast<unsigned>(static_cast<std::uint16_t>(nifNode->mFlags)) & 0xffefu) | 0xeu);
             }
 
             std::string extraData;

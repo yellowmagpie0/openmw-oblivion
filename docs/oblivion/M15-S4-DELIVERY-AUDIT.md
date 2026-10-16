@@ -4026,3 +4026,42 @@ Model-specific overrides/culling, initial physical capture/replacement, clock an
 physics scheduling, one production owner, real reference/cell migration, save/
 fresh recreation and the remaining M15S4 melee/drop/effect/input/runtime gates
 remain open. M15S4 remains active and incomplete.
+
+## 2026-10-16 — preserve load flags and correct generated-reference assumptions
+
+Physical TES4 hierarchies now retain an immutable low-WORD loaded flag snapshot,
+separate from authored flags and private live recomputation. The original modern
+reader clears bit4 and sets bits1..3. A no-hook original-instruction oracle covers
+all65,536words; actual production loaders match131,072cases in each normal and
+sanitized build over both supported versions. Clone/source preservation and the
+load14-versus-empty-controller-recompute16 distinction are covered. Full normal
+and ASan/UBSan runs each pass2,782components/266suites and1,611engine/122suites,
+complete inventories, no failures/skips; leak detection is disabled.
+
+Two isolated original-game probes correct assumptions in earlier entries. The
+stock weapon's generated root is a synthetic BSFadeNode above the file root.
+Factory normalization applies to that wrapper; all13asset-root local words survive
+cloning and generation. Scb is removed before registration, leaving its null slot.
+Plain collision moves from the asset root to the wrapper and becomes bodyT.
+The native Hk entity/motion and physical XYZ survive real-World registration;
+quaternionZ changes one stored float step. Thus earlier null-World/sphere reset
+observations cannot justify unconditional physical zero/identity replacement.
+The earlier statement that production raw-root neutralization agrees with the
+factory footer is superseded: production must represent the separate wrapper.
+
+The weapon root retains flags000E throughout generation and32outer updates;
+collision flags become000D after registration. No selective recomputation occurs
+in that interval. Thirteen save-load calls from6C9B54 instead use inherited=true.
+A separate one-context original trace confirms that the early ordinary-reference
+Full pass uses time0/controllers=false, bypassing controller evaluation while
+still projecting scene/physics. These findings constrain the future owner;
+neither authored flags nor an empty-list recomputation models generation.
+
+[Editable evidence](M15-ORIGINAL-REFERENCE-GENERATION-OBSERVATIONS.json) pins
+reports, hashes, archived-source inspection, corrected assumptions, retained
+setup/test failures and probe cleanup. Original probes use declared console
+add/drop setup; they are not normal-input acceptance. Private inputs and pristine
+saves were restored, and owned processes exited. Production wrapper preparation,
+real-World replacement policy, controller-disabled initialization, clocks/physics,
+one traversal owner, lifetimes and remaining gameplay/restart gates remain open.
+M15S4 remains active and incomplete.
