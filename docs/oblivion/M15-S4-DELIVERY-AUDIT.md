@@ -1649,3 +1649,99 @@ Native carried-NIF factory construction, source/ownership/drop relations,
 retained Player/quest unequips, replacement and sound follow-up, native pickup
 ExtraScale/dropper/list cleanup, and real normal-input break/drop/pickup/restart
 acceptance remain required. The wider S4 matrix above remains incomplete.
+
+## Carried-NIF weapon resource factory
+
+`prepareEquippedWeaponDrops` now constructs one or more native NPC weapon drops
+from actual `ESM4NpcAnimation::captureCarriedWeaponDrop` bindings. It resolves
+winning WEAP/CELL/NPC records, reserves a contiguous dynamic-key range, prepares
+exact source removals and final condition writes, copies/normalizes native
+ownership extras, applies the independently verified CELL-claim owner suffix,
+and stages actor dropped lists/reference droppers. The rendered model and
+physical definition come from the same identified carried NIF bytes. Inventory
+ExtraScale is independently resolved to reference scale; actor/attachment scale
+does not replace it. Fresh reference rotation uses the original extracted Euler
+through the existing `makeOsgQuat`, not the carried anchor matrix. Initial rigid
+bone targets scale bind translation once; body properties/bodyT offsets use the
+native graph-scaling helper, and admission receives the unscaled original graph.
+
+The factory uses one grouped scene/body/registry admission. Its publication hook
+can compose with a prepared physical contact; source wear/debits, actor relation
+swaps, serial advance and deferred removal-notification queues then commit
+without observers. Source metadata, legacy health/remainder, winning records,
+CELL ownership/factions, carried binding/placement and private destination
+metadata are revalidated after fallible resource work. Lifetime tokens precede
+borrowed World/inventory/animation/cell dereferences. Cancellation and rejection
+leave source resources and serials unpublished. Borrowed reference views retain
+the underlying prepared-admission ownership rules; they do not own a published
+World's lifetime.
+
+This reuses the accepted native placement/render/scale, transfer, owner-suffix
+and relation evidence, including complete original reference rotation builder
+`004D7AF0` (356 contexts), the final WEAP owner suffix (96), native relation
+predicates (2880) and raw WEAP-header predicate (72). No new original-executable
+or original-game acceptance probe is claimed. The relevant contracts remain
+`M15-ORIGINAL-NPC-PLACEMENT-PROBES.json` and
+`M15-ORIGINAL-DROP-RELATION-PROBES.json`; their declared boundaries still apply.
+Legacy projected health is an engine adaptation: integer plus fractional health
+without a native extra becomes an explicit placed condition rather than full
+health. The caller still owns policy, wear calculation, retained-item unequips,
+replacement and handling sound.
+
+Nine new `NativeWeaponFactory*` tests use owned NIF/skeleton assets, real managed
+cells, native NPC inventories, Objects, PhysicsSystem and registry ownership.
+They cover exact condition/charge/scale, legacy fractional health, explicit
+owner/rank/global and CELL claims, relation prepend/quest-header behavior,
+observer-visible once-only deferred publication, two-drop success and late
+rollback, prepared-contact success and stale-contact rejection, private metadata
+changes, cancellation, erased winning records, animation destruction, World
+clear, and preparations outliving all their owners. Contact tests supply
+precomputed deltas to verify atomic publication; they are not normal-input
+combat or native damage-formula acceptance.
+
+`S4/carried-weapon-factory-normal-02` and
+`S4/carried-weapon-factory-sanitized-02` each pass all **1537 engine tests/122
+suites**, unfiltered with exact inventory/XML agreement, zero failures/skips and
+no sanitizer diagnostic. ASan leak checking is disabled; ASan/UBSan halt on
+errors. Both reports have identical before/after source state atop
+`9a6d16660e777429dafea18b4b80419912a96a7d`, with tested source fingerprint
+`1f47e3fd5e0ef090772c429ec916f5640954438ea052f7584cca20fb3fceb32d`.
+Component/Python implementation is unchanged; those suites were not rerun.
+
+`S4/carried-weapon-factory-allocation-01` traces the successful two-drop
+publication hook through the outer factory commit return: two wear/source
+writes, relation swaps, serial-range and deferred-queue publication, plus
+registry/cell splices. One publication/return has zero allocations from the
+main-thread malloc/calloc/realloc/aligned_alloc/posix_memalign entry points. The
+same detector catches one deliberate allocation in its positive control.
+Normal test ELF SHA256:
+`7d243e2d0035e29558a6b7bd2788f8dd5d6e7740c88dcb274ef3496ff7b29145`.
+Prepublication validation/resource work, other threads/APIs, production contact
+dispatch and gameplay are excluded from that allocation claim.
+
+Retained preflights found and corrected an ESM::Path comparison, an overly
+specific injected-scene exception expectation, and the destination identity
+guard: native `REFR.mId` is the local RefNum assigned by private registry
+preparation, independently of its stable key. Registry revision increases per
+inserted entry (two here), even though the group performs one registry swap.
+The normal-01 and sanitized-01 helpers were intentionally stopped before fixing
+legacy integer/remainder health preservation and adding its regression test.
+These attempts and prototype logs remain diagnosis, not final acceptance.
+`S4/carried-weapon-factory-review-02` freezes all four implementation hashes and
+the complete patch before these documentation updates, with a concrete handoff.
+
+The resource factory is not yet called by the production break/mastery path.
+Complete scene admission still needs Lua ObjectLists/OnActive/autostart handling:
+`Scene::addObject` normally calls `LuaManager::objectAddedToScene`, whereas this
+factory currently admits Objects/Physics/WorldModel only. Multiple prepared
+additions need one coherent queue/registry publication. Newly created dynamic
+references also need immediate native script-state admission: the script
+manager's missing-cache fallback currently relies on static metadata, while
+pickup imports only on Take. Preserve unrelated cached state when fixing that
+boundary. Initial physical/rendered alignment does not prove falling-object
+synchronization or save/recreation; no World/render call site currently consumes
+`looseObjectOwners`/`captureLooseObjectRootPose`. Audit and implement those paths
+before runtime acceptance. Replacement selection/application, sound follow-up,
+retained Player/quest unequips, pickup ExtraScale/dropper/list cleanup, and the
+real normal-input break/drop/pickup/fresh-process course remain required. All
+broader S4 requirements above remain open; S4 is incomplete.

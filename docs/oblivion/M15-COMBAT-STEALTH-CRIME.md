@@ -6,6 +6,23 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 carried-NIF weapon resource factory — 2026-10-15
+
+The equipped-NPC weapon factory now prepares the native reference, exact source
+wear/debit, ownership and drop relations, rendered model and one-body physics
+from the actual bound carried NIF. It uses the independently verified native
+drop Euler/scale rules and publishes multiple drops through one grouped
+transaction, with equipment observers deferred until afterward. Stale metadata,
+resources or owner lifetimes reject publication.
+
+Normal and ASan/UBSan builds each pass all **1,537 engine tests/122 suites**.
+The two-drop publication tail has zero traced main-thread heap allocations,
+with a passing positive control. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#carried-nif-weapon-resource-factory)
+records the exact scope and evidence. This is engine integration coverage.
+Production break/mastery dispatch, Lua/script-state admission, loose-body frame
+and save/recreation wiring, replacement/sound follow-up, pickup metadata cleanup
+and normal-input break/drop/pickup/restart acceptance remain open. S4 is incomplete.
+
 ## S4 immediate pickup of newly admitted references — 2026-10-15
 
 Native pickup now accepts a live reference admitted after the runtime cache was
