@@ -266,18 +266,45 @@ namespace SceneUtil
         Impl& mBinding;
         const Callbacks& mCallbacks;
         Placement& mPlacement;
+        Mode mMode;
+        bool mRunProperties = true;
         bool mRunningControllers = false;
-        Visitor(Impl& binding, const Callbacks& callbacks, Placement& placement)
-            : mBinding(binding), mCallbacks(callbacks), mPlacement(placement)
+        Visitor(Impl& binding, const Callbacks& callbacks, Placement& placement, Mode mode)
+            : mBinding(binding), mCallbacks(callbacks), mPlacement(placement), mMode(mode)
         {
             setTraversalMode(TRAVERSE_ALL_CHILDREN);
             setNodeMaskOverride(~0u);
+        }
+        std::uint16_t nodeFlags(const NifOsg::MatrixTransform& node)
+        {
+            const auto flags = mCallbacks.mNodeFlags(node);
+            require(mBinding.valid(), "NIF update policy changed the bound hierarchy");
+            mBinding.requirePlacement(mPlacement);
+            return flags;
         }
         void visit(osg::Node& node)
         {
             if (mRunningControllers) return;
             osg::ref_ptr<osg::Node> lease(&node);
             osg::ref_ptr<osg::Callback> callbackLease(node.getUpdateCallback());
+            struct RestorePolicy
+            {
+                Visitor& mVisitor;
+                Mode mMode;
+                bool mRunProperties;
+                ~RestorePolicy() { mVisitor.mMode = mMode; mVisitor.mRunProperties = mRunProperties; }
+            } restorePolicy{*this, mMode, mRunProperties};
+            const auto found = mBinding.mIndices.find(&node);
+            if (mMode != Mode::Full && found != mBinding.mIndices.end())
+            {
+                const auto flags = nodeFlags(static_cast<NifOsg::MatrixTransform&>(node));
+                if (found->second != 0)
+                {
+                    if (!(flags & 2)) return;
+                    if (flags & 0x10) mMode = Mode::Rigid;
+                }
+                mRunProperties = flags & 8;
+            }
             {
                 struct Restore
                 {
@@ -287,12 +314,16 @@ namespace SceneUtil
                 } restore{*this, getTraversalMode()};
                 mRunningControllers = true;
                 setTraversalMode(TRAVERSE_NONE);
-                handle_callbacks_and_traverse(node);
+                if (mRunProperties) handle_callbacks(node.getStateSet());
+                // Native47C930 reads the node's controller list after property
+                // controllers; a property callback may replace that list.
+                osg::ref_ptr<osg::Callback> currentCallback(node.getUpdateCallback());
+                if (currentCallback) currentCallback->run(&node, this);
             }
             require(mBinding.valid(), "NIF controller changed the bound hierarchy");
             mBinding.requirePlacement(mPlacement);
-            const auto found = mBinding.mIndices.find(&node);
-            if (found != mBinding.mIndices.end())
+            if (found != mBinding.mIndices.end()
+                && (mMode == Mode::Full || (nodeFlags(static_cast<NifOsg::MatrixTransform&>(node)) & 4)))
             {
                 const auto projection = mBinding.project(found->second, mCallbacks, mPlacement.mWorld, getNodePath());
                 require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
@@ -321,6 +352,25 @@ namespace SceneUtil
         void apply(osg::Group& node) override { visit(node); }
         void apply(osg::Transform& node) override { visit(node); }
         void apply(osg::Geode& node) override { visit(node); }
+        void apply(osg::Drawable& drawable) override
+        {
+            if (mRunningControllers) return;
+            // Preserve OSG's drawable callback ordering and callback forms,
+            // while applying the containing native node's property decision.
+            osg::ref_ptr<osg::Drawable> lease(&drawable);
+            osg::ref_ptr<osg::Callback> callback(drawable.getUpdateCallback());
+            if (callback)
+            {
+                auto* update = callback->asDrawableUpdateCallback();
+                auto* node = callback->asNodeCallback();
+                if (update) update->update(this, &drawable);
+                if (node) (*node)(&drawable, this);
+                if (!update && !node) callback->run(&drawable, this);
+            }
+            if (mRunProperties) handle_callbacks(drawable.getStateSet());
+            require(mBinding.valid(), "NIF drawable callback changed the bound hierarchy");
+            mBinding.requirePlacement(mPlacement);
+        }
     };
 
     NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision)
@@ -338,18 +388,26 @@ namespace SceneUtil
         const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
         return native && native->mBinding.mRoot.get() == node;
     }
-    void NifSceneTraversal::update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks)
+    std::optional<NifSceneTraversal::Mode> NifSceneTraversal::updateMode(const osg::NodeVisitor* visitor) noexcept
     {
-        updateImpl(stamp, traversalNumber, callbacks, false);
+        const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
+        return native ? std::optional(native->mMode) : std::nullopt;
+    }
+    void NifSceneTraversal::update(const osg::FrameStamp& stamp, unsigned traversalNumber,
+        const Callbacks& callbacks, Mode mode)
+    {
+        updateImpl(stamp, traversalNumber, callbacks, false, mode);
     }
     void NifSceneTraversal::refreshReferenceRootCache()
     {
-        updateImpl(osg::FrameStamp{}, 0, {}, true);
+        updateImpl(osg::FrameStamp{}, 0, {}, true, Mode::Full);
     }
     void NifSceneTraversal::updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
-        const Callbacks& callbacks, bool rootOnly)
+        const Callbacks& callbacks, bool rootOnly, Mode mode)
     {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
+        require(mode == Mode::Full || mode == Mode::Selected || mode == Mode::Rigid, "unknown NIF update mode");
+        require(mode == Mode::Full || bool(callbacks.mNodeFlags), "missing NIF selected update policy");
         require(!mImpl->mUpdating, "reentrant NIF scene traversal");
         struct Reset
         {
@@ -368,7 +426,7 @@ namespace SceneUtil
             mImpl->project(0, callbacks, placement.mWorld, placement.mPath);
         else
         {
-            Impl::Visitor visitor(*mImpl, callbacks, placement);
+            Impl::Visitor visitor(*mImpl, callbacks, placement, mode);
             visitor.setFrameStamp(new osg::FrameStamp(stamp));
             visitor.setTraversalNumber(traversalNumber);
             for (auto* node : placement.mPath) visitor.pushOntoNodePath(node);

@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <osg/FrameStamp>
+#include <osg/Geometry>
 #include <osg/StateSet>
 #include <osgUtil/UpdateVisitor>
 
@@ -821,5 +822,186 @@ namespace
         EXPECT_EQ(references, 2u); EXPECT_EQ(children, 2u);
         EXPECT_FLOAT_EQ(mRoot->getControllerTransform().mTranslation.x(), 40);
         EXPECT_NEAR(mLeaf->getWorldMatrices().front().getTrans().x(), 47, 1e-10);
+    }
+}
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, SelectedAlwaysRunsOwnControllersButSeparatelyGatesPropertiesAndProjection)
+    {
+        Binding binding(*mRoot);
+        unsigned own = 0, child = 0, properties = 0, projected = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor& visitor) {
+            ++own;
+            EXPECT_EQ(Binding::updateMode(&visitor), Binding::Mode::Selected);
+            node.setTranslation({20, 0, 0});
+        }));
+        mRoot->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++properties; }));
+        mChild->setUpdateCallback(new Callback([&](Node&, auto&) { ++child; }));
+        Binding::Callbacks callbacks;
+        std::uint16_t rootFlags = 0, childFlags = 0;
+        callbacks.mNodeFlags = [&](const Node& node) { return &node == mRoot ? rootFlags : childFlags; };
+        callbacks.mProjected = [&](Node&, const auto&, auto) { ++projected; };
+        binding.update(mStamp, 42, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 1u); EXPECT_EQ(child, 0u); EXPECT_EQ(properties, 0u); EXPECT_EQ(projected, 0u);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 10);
+        EXPECT_FLOAT_EQ(mRoot->getControllerTransform().mTranslation.x(), 20);
+        childFlags = 2;
+        binding.update(mStamp, 43, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 2u); EXPECT_EQ(child, 1u); EXPECT_EQ(properties, 0u); EXPECT_EQ(projected, 0u);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 15);
+        rootFlags = 12; childFlags = 6;
+        binding.update(mStamp, 44, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 3u); EXPECT_EQ(child, 2u); EXPECT_EQ(properties, 1u); EXPECT_EQ(projected, 3u);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 27);
+    }
+
+    TEST_F(NifSceneTraversalTest, SelectedRigidChildModePropagatesAndRestoresAcrossSiblings)
+    {
+        auto sibling = makeNode(); mRoot->addChild(sibling);
+        Binding binding(*mRoot);
+        Binding::Callbacks callbacks;
+        callbacks.mNodeFlags = [&](const Node& node) -> std::uint16_t { return &node == mChild ? 0x12 : 2; };
+        std::vector<Binding::Mode> modes;
+        for (auto* node : {mRoot.get(), mChild.get(), mLeaf.get(), sibling.get()})
+            node->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor& visitor) {
+                ASSERT_TRUE(Binding::updateMode(&visitor)); modes.push_back(*Binding::updateMode(&visitor));
+            }));
+        binding.update(mStamp, 42, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(modes, (std::vector{Binding::Mode::Selected, Binding::Mode::Rigid,
+            Binding::Mode::Rigid, Binding::Mode::Selected}));
+        modes.clear();
+        binding.update(mStamp, 43, callbacks, Binding::Mode::Rigid);
+        EXPECT_EQ(modes, (std::vector(4, Binding::Mode::Rigid)));
+        osgUtil::UpdateVisitor ordinary;
+        EXPECT_FALSE(Binding::updateMode(&ordinary));
+        EXPECT_FALSE(Binding::updateMode(nullptr));
+    }
+
+    TEST_F(NifSceneTraversalTest, SelectedReinspectsFlagsAndNodeControllerListAfterPropertyWork)
+    {
+        Binding binding(*mRoot);
+        std::uint16_t rootFlags = 8, childFlags = 0;
+        std::vector<std::string> events;
+        mRoot->setUpdateCallback(new Callback([](Node&, auto&) { FAIL() << "replaced controller ran"; }));
+        mRoot->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) {
+            events.push_back("property"); rootFlags = 4;
+            mRoot->setUpdateCallback(new Callback([&](Node& node, auto&) {
+                events.push_back("root"); childFlags = 6; node.setTranslation({20, 0, 0});
+            }));
+        }));
+        mChild->setUpdateCallback(new Callback([&](Node&, auto&) {
+            events.push_back("child");
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 20);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 15);
+        }));
+        mLeaf->setUpdateCallback(new Callback([&](Node&, auto&) { events.push_back("leaf"); }));
+        Binding::Callbacks callbacks;
+        callbacks.mNodeFlags = [&](const Node& node) -> std::uint16_t {
+            return &node == mRoot ? rootFlags : &node == mChild ? childFlags : 2;
+        };
+        callbacks.mProjected = [&](Node& node, const auto&, auto) {
+            events.push_back(&node == mRoot ? "project root" : "project child");
+        };
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) { events.push_back("reference"); };
+        binding.update(mStamp, 42, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(events, (std::vector<std::string>{"property", "root", "project root", "reference",
+            "child", "project child", "leaf"}));
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 25);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 17);
+        EXPECT_NEAR(mLeaf->getWorldMatrices().front().getTrans().x(), 17, 1e-10);
+    }
+
+    TEST_F(NifSceneTraversalTest, SelectedScaffoldingAndDrawablesInheritNativePropertyPolicy)
+    {
+        osg::ref_ptr<osg::Group> wrapper = new osg::Group;
+        mRoot->removeChild(mChild); mRoot->addChild(wrapper); wrapper->addChild(mChild);
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<osg::Geometry> drawable = new osg::Geometry;
+        mChild->addChild(geode); geode->addDrawable(drawable);
+        Binding binding(*mRoot);
+        unsigned rootProperties = 0, childProperties = 0, geometryProperties = 0, drawableCalls = 0;
+        wrapper->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++rootProperties; }));
+        geode->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++childProperties; }));
+        drawable->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++geometryProperties; }));
+        struct Update : osg::DrawableUpdateCallback
+        {
+            unsigned& mCalls;
+            explicit Update(unsigned& calls) : mCalls(calls) {}
+            void update(osg::NodeVisitor*, osg::Drawable*) override { ++mCalls; }
+        };
+        drawable->setUpdateCallback(new Update(drawableCalls));
+        std::uint16_t childFlags = 2;
+        Binding::Callbacks callbacks;
+        callbacks.mNodeFlags = [&](const Node& node) -> std::uint16_t { return &node == mChild ? childFlags : 2; };
+        binding.update(mStamp, 42, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(rootProperties, 0u); EXPECT_EQ(childProperties, 0u); EXPECT_EQ(geometryProperties, 0u);
+        EXPECT_EQ(drawableCalls, 1u);
+        childFlags = 10;
+        binding.update(mStamp, 43, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(rootProperties, 0u); EXPECT_EQ(childProperties, 1u); EXPECT_EQ(geometryProperties, 1u);
+        EXPECT_EQ(drawableCalls, 2u);
+    }
+
+    TEST_F(NifSceneTraversalTest, SelectedMissingOrMutatingPolicyRejectsWithoutAdvancingControllers)
+    {
+        Binding binding(*mRoot);
+        const auto projected = mRoot->getTraversalMatrix();
+        unsigned own = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node&, auto&) { ++own; }));
+        EXPECT_THROW(binding.update(mStamp, 42, {}, Binding::Mode::Selected), std::invalid_argument);
+        EXPECT_THROW(binding.update(mStamp, 42, {}, static_cast<Binding::Mode>(255)), std::invalid_argument);
+        EXPECT_EQ(projected, mRoot->getTraversalMatrix());
+        EXPECT_EQ(own, 0u);
+        Binding::Callbacks callbacks;
+        callbacks.mNodeFlags = [&](const Node&) -> std::uint16_t { mRoot->removeChild(mChild); return 14; };
+        EXPECT_THROW(binding.update(mStamp, 42, callbacks, Binding::Mode::Selected), std::invalid_argument);
+        EXPECT_EQ(own, 0u);
+    }
+}
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, SelectedProjectionGatePreservesPendingPhysicsUntilAnEnabledPass)
+    {
+        Binding binding(*mRoot);
+        std::uint16_t updateFlags = 0, collisionFlags = 0x4d;
+        unsigned own = 0, flagsRead = 0, forced = 0, physicalReads = 0, references = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node& node, auto&) { ++own; node.setTranslation({20, 0, 0}); }));
+        Binding::Callbacks callbacks;
+        callbacks.mNodeFlags = [&](const Node& node) -> std::uint16_t { return &node == mRoot ? updateFlags : 0; };
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            EXPECT_EQ(&node, mRoot.get()); ++flagsRead; return collisionFlags;
+        };
+        callbacks.mPhysicalWorld = [&](const Node&) {
+            ++physicalReads;
+            auto world = Nif::NiTransform::getIdentity(); world.mTranslation.x() = 30;
+            return world;
+        };
+        callbacks.mReferenceUpdate = [&](Node&, const auto& frame, auto settled) {
+            ++references;
+            ASSERT_TRUE(settled); EXPECT_EQ(*settled, 0xd);
+            EXPECT_EQ(frame.mWorldChangeMask, references == 1 ? 0 : 1);
+        };
+        binding.update(mStamp, 42, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 1u); EXPECT_EQ(flagsRead, 0u); EXPECT_EQ(collisionFlags, 0x4d);
+        EXPECT_EQ(physicalReads, 0u); EXPECT_EQ(references, 0u);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 10);
+        updateFlags = 4;
+        EXPECT_THROW(binding.update(mStamp, 43, callbacks, Binding::Mode::Selected), std::invalid_argument);
+        EXPECT_EQ(collisionFlags, 0x4d);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 10);
+        callbacks.mFirstSynchronization = [&](const Node&, const auto& world, auto pending) {
+            ++forced; EXPECT_EQ(pending, 0x4d); EXPECT_FLOAT_EQ(world.mTranslation.x(), 20);
+            EXPECT_EQ(references, 0u); collisionFlags &= ~0x40u;
+        };
+        binding.update(mStamp, 44, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(forced, 1u); EXPECT_EQ(references, 1u); EXPECT_EQ(physicalReads, 0u);
+        binding.update(mStamp, 45, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 4u); EXPECT_EQ(forced, 1u); EXPECT_EQ(references, 2u); EXPECT_EQ(physicalReads, 1u);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 30);
+        EXPECT_FLOAT_EQ(mRoot->getControllerTransform().mTranslation.x(), 30);
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 15);
+        EXPECT_NEAR(mChild->getWorldMatrices().front().getTrans().x(), 15, 1e-10);
     }
 }

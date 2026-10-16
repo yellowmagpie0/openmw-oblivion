@@ -1,0 +1,459 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Ordinary selected/rigid NIF node policies implemented; outer model policies and production World integration incomplete",
+  "parent_commit": "e8f0542ecd",
+  "tested_source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66",
+  "implementation_sha256": {
+    "components/sceneutil/nifscenetraversal.hpp": "a70a84180a0bd8eebf36c80b7ec00480a949ac17c5b9c5f480620654583cdb3b",
+    "components/sceneutil/nifscenetraversal.cpp": "4da9cfd18f5b7488e542c9e5070bec0ec9cbbfb803fa2313288b233d623f4c55",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "29e5997430eafd9d9d39ac8a4045dfa309b8ec250c0b21f4ea348f6fc733bef1"
+  },
+  "behavior": [
+    "NifSceneTraversal Mode::Full remains default. Selected and Rigid require an explicit live computed NiAVObject mNodeFlags provider, independent of collision flags. Root entry is explicit regardless bit1. A child without bit1 skips the whole subtree. Selected chooses child rigid mode using bit4; Rigid propagates to all entered descendants. Callback updateMode context exposes actual entered mode.",
+    "Selected/rigid ordinary node entry always executes own node callbacks. Bit3 gates property callbacks only. Projection bit2 is reinspected after property and own controllers, so controller-driven flag mutations immediately affect world/collision projection. Missing provider or unknown mode rejects before drawing changes; hierarchy/placement/provider/reentrancy guards remain.",
+    "Property callbacks can replace the own controller list; inspect the current list after property work, retaining old/current callback leases. Rendering Group/Geode/Drawable scaffolding inherits containing native property policy; preserve OSG drawable callback forms/order and require hierarchy/placement validity afterward.",
+    "Skipping projection does not read collision/physics state, settle pending40 or publish a reference. Enabled projection reuses existing native composition/drawing compensation/first-sync/settled writeback and explicit reference migration before children. A missing first-sync handler leaves cached world and pending flags unchanged; retry can complete.",
+    "Six tests cover independent properties/own/projection gates, rigid propagation/sibling restoration and foreign visitor context, property/controller-list/child flag mutations, old native child caches/draw worlds, Group/Geode/Drawable policy inheritance, missing/mutating provider/unknown mode rejection, and pending-first-sync/settled physical state gating."
+  ],
+  "native_oracle": {
+    "path": "build/oblivion-compat/m15/S4/node-selected-traversal-oracle-01/verification.json",
+    "sha256": "9969255374549991d5dec1d3fc35a2c868f1f1506ccda83c9ae02d5095d55cdc",
+    "report": {
+      "passed": true,
+      "contexts": 7680,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "e5880a3a9dc1b106c7db88afda3b705ce8eee2063d24991807af36c1cd3b2624",
+      "cases_sha256": "b7980e98844d600abe71155d2bfa2d8aa7722ae298fa9095266d4bd9dcc51230",
+      "scope": "Original70A190/70A280,47C930,70C120 and actual child dispatch/bounds routines on three ordinary NiNodes. All32root and32child low flag combinations; leafflags deterministic covering32values; three x87precisionmodes and both selected/rigid entry points. Additional own-controller mutations toggle own projection bit and root toggles child dispatch bits. Property and own controller virtual suppliers are instrumented, recording native cached contexts and time; own supplier writes translation100+i. No collision objects, model-specific virtual overrides, culling, controller interpolation/clock derivation, physics, World callbacks or gameplay."
+    }
+  },
+  "native_manifest": {
+    "entry_points": [
+      "70A190 selected ordinary NiNode",
+      "70A280 rigid ordinary NiNode"
+    ],
+    "actual_dispatch_and_math": [
+      "47C930 property/own controller dispatch",
+      "70C120 world composition",
+      "actual child virtual+64/+68 dispatch and native bounds routines"
+    ],
+    "source_virtuals": {
+      "own": "instrumented supplier2017000, records context/time, writes node local X=100+index",
+      "property": "instrumented supplier2017010, records context/time"
+    },
+    "hierarchy": "Three ordinary NiNodes root->child->leaf; identityR/scale1; locals X10/5/2,Y0/2/4,Z0/3/6; seeded native worlds X10/15/17,Y0/2/6,Z0/3/9. No collision objects.",
+    "matrix": "All32root and32child low flags; leaf=(root*7+child*3)&31. Both entry modes and007F/027F/037F. Additional mutation cases for childflags0/2/4/8/16/6/14/30: own callback flips own bit2 and root flips child bits1/4. Supplied controller time26.",
+    "contexts": 7680,
+    "limits": "Original math/dispatch/bounds execute; C++ replay compares callback mode/order/contexts, final author/world13 and flags, not native bounds or external model overrides. Instrumented suppliers do not establish controller interpolation/time derivation or nonempty native controller implementations."
+  },
+  "checks": {
+    "preflight_earlier": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-preflight-01/verification.json",
+      "sha256": "6969a955956491dbf809440c9b68900e672e933519d5ff33585b0f29855226c2",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 30.56
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-selected-traversal-preflight-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 34,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+            "binary_sha256": "6953319e33540fd8446e55569e906bc2a87b76a3c2e2e076b29576860e3f5ea9",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "792a1efbc3087636c3d8002af92717187da6fe822ab6c8da3ada7c99a36d3e86",
+            "inventory_sha256": "369fc0990d12ed8958d53fc42e55232ca517dc4f426012286dc540909106816e",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "cc1670089778a94f6fc585367776d0c6a829325e8f420b9f0660685ac1a979bf"
+        },
+        "source_after": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "cc1670089778a94f6fc585367776d0c6a829325e8f420b9f0660685ac1a979bf"
+        }
+      }
+    },
+    "preflight": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-preflight-02/verification.json",
+      "sha256": "64909271ed9f11dae179ec11af22586ffc7ce2ef1ed164f9fe39fa077e0989c7",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 19.624
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-selected-traversal-preflight-02/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 35,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+            "binary_sha256": "682d6585337fccb82f542760b1b9eb96976a20a4f963ea6c7e0e619ad205fff4",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "eac114290e1979f3818ef852cbe9bbeab79cb63b1a55ce5f8d62c60a9c41d6e7",
+            "inventory_sha256": "a2dfed0f821193c7a64cc912fc12906de3c5325d3470308fa709d4d0286d45c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        },
+        "source_after": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        }
+      }
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-normal-01/verification.json",
+      "sha256": "c97ed391720a77ccf7d37d66a6109bba543c34b83b9750dc1144d499e829b2bb",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 0.966
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-selected-traversal-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 14.201
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2773,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "682d6585337fccb82f542760b1b9eb96976a20a4f963ea6c7e0e619ad205fff4",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "bf74c6db21fff1a35bff7708d28199ba92235bb74755d6652bb3df08ad6cea9e",
+            "inventory_sha256": "a3e2d412acddd6b16f0608744198e408d977f3549aac54fcf7c4a753133f9f0f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        },
+        "source_after": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-sanitized-01/verification.json",
+      "sha256": "5d5f48e2d8c7e82de1c09fdf9a80cac5dc10ad5a4ae851e47c0c9460922f7e70",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 58.136
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-selected-traversal-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 68.72
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2773,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "156049a8b8368de3e0310fb24de5575801790990831cc363a56bbbf7215c462c",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "e61034f34140c6b2988b393c0f867fa63ffb184486c9fd4278449ee20998a078",
+            "inventory_sha256": "41cd7d3c1e5b3431b9a85d5f39a143ff9f9753a18ce2647fd416415b97537ea5",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        },
+        "source_after": {
+          "head": "e8f0542ecd22192b9487ba7d25b2c3d6c5c605a0",
+          "source_fingerprint": "f4db0db4f215aaa3db16db2cdbb8e6f2369a6c21e6698962d25a0b31583f1b66"
+        }
+      }
+    }
+  },
+  "selected_comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-compare-01/normal-verification.json",
+      "sha256": "8b38f7de7acd519d6ffcd3d3d47443edd18fa95325e7781e8800f8e04767b183",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "supported_exact_field_checks": 1575680,
+        "failures": [],
+        "max_drawing_absolute_error": 0,
+        "drawing_tolerance": 1e-09,
+        "source_sha256": "b7980e98844d600abe71155d2bfa2d8aa7722ae298fa9095266d4bd9dcc51230",
+        "probe_sha256": "b973de895e01e747d163ecaf537e781941610f097934ef8334f539dba3aadb46",
+        "comparator_sha256": "f5feef1e2be550acdb37c5aec95cc7ce9cd5d9c0ea46a068c25e693286741457",
+        "binary_sha256": "4bf629d9b0b925c07e3469e7995dbeac4c4ae554f9a7d23fa3a36d9f58e24e19",
+        "scope": "Actual NifSceneTraversal selected/rigid policies and OSG property/own callbacks, native caches/author locals, flags reinspection and entry-mode context. Compare original ordinary NiNode corpus including controller flag mutations. 007FSingle/027FDouble supported,037FDouble diagnostic. No native bounds, outer model/visibility dispatch, collision/physics, controller interpolation/clock derivation or full-game owner. Geometry scaffolding tested separately in unit tests."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-compare-01/sanitized-verification.json",
+      "sha256": "14d8a0d6e5a371fbefd8b7db8768536f8508895200d9c3d760e4e0c3c9a6cf30",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 2560,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "supported_exact_field_checks": 1575680,
+        "failures": [],
+        "max_drawing_absolute_error": 0,
+        "drawing_tolerance": 1e-09,
+        "source_sha256": "b7980e98844d600abe71155d2bfa2d8aa7722ae298fa9095266d4bd9dcc51230",
+        "probe_sha256": "b973de895e01e747d163ecaf537e781941610f097934ef8334f539dba3aadb46",
+        "comparator_sha256": "f5feef1e2be550acdb37c5aec95cc7ce9cd5d9c0ea46a068c25e693286741457",
+        "binary_sha256": "a213df57645cd3123d1f7ae23f92607429fb3326edbf77491f43097db8adb835",
+        "scope": "Actual NifSceneTraversal selected/rigid policies and OSG property/own callbacks, native caches/author locals, flags reinspection and entry-mode context. Compare original ordinary NiNode corpus including controller flag mutations. 007FSingle/027FDouble supported,037FDouble diagnostic. No native bounds, outer model/visibility dispatch, collision/physics, controller interpolation/clock derivation or full-game owner. Geometry scaffolding tested separately in unit tests."
+      }
+    }
+  },
+  "full_migration_regression": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-full-regression-01/normal-verification.json",
+      "sha256": "6d856835f4976909be0aa29dc0c1618600b1fc2dabbe2ce9fd9cd9447809fd28",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 3.55271e-13,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "ae86bd4af36ca7525c663120eda3262ba8114d2b9c15f55d1dce54190bf45693",
+        "comparator_sha256": "4abbec088bab867c4f26e01c04bd6208e9b293a4e9db7530c642f1ff62eac2aa",
+        "binary_sha256": "cf12d755128b33e11fb7d2f32c7b2607b8764ab34dbd27de127460c212e7046a",
+        "reanchor_scope": "Every root projection migrates to a fresh rotated/scaled/translated synthetic OSG placement before children. Every controller asserts the current ancestor path. Native caches and callback fields still compare the unchanged independent native corpus; migration is a rendering utility stress, not an original World callback or cell-migration replay.",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-selected-traversal-full-regression-01/sanitized-verification.json",
+      "sha256": "87881e5e324c315ade17bc03babe575dc67a01c85b8a54896bd8a92cd92d2bdc",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 3.55271e-13,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "ae86bd4af36ca7525c663120eda3262ba8114d2b9c15f55d1dce54190bf45693",
+        "comparator_sha256": "4abbec088bab867c4f26e01c04bd6208e9b293a4e9db7530c642f1ff62eac2aa",
+        "binary_sha256": "2fbf0bff9d56bc485f4d1b58d079563ba12114836ebee13fe22fd2811353ac12",
+        "reanchor_scope": "Every root projection migrates to a fresh rotated/scaled/translated synthetic OSG placement before children. Every controller asserts the current ancestor path. Native caches and callback fields still compare the unchanged independent native corpus; migration is a rendering utility stress, not an original World callback or cell-migration replay.",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    }
+  },
+  "limits": [
+    "Final preflight02 passes35tests. Full normal and ASan/UBSan each2773components/265suites with complete inventories and no failures/skips. Earlier preflight01 predates pending-gate test; final-source claims use02/full. Leak detection disabled. No engine implementation changed and no fresh engine check claimed.",
+    "Selected comparison each5120supported007F/027F contexts/1575680exact fields, plus2560extended037F diagnostics; all match. Drawing maximum0 within1e-9. Separate full+rendering-migration regression each512supportedframes/8128field checks plus256extendeddiagnostics; no mismatches, drawing maximum3.55271e-13 within1e-9.",
+    "Production ObjectAnimation/World still use legacy local-root/root-only adapters. mNodeFlags is an explicit owner responsibility; this change does not derive flags from an asset or decide outer virtual policies/culling. No full original-game loop, physics stepping, World reference/cell migration, save/fresh recreation or gameplay acceptance.",
+    "Read-only follow-up physics-order audit identified8984A0 as a small global time-parameter setter, not a simulation step. Calling it before B33A30 addition does not establish physics-before-scene stepping. Actual frame order/clock reset lifecycle and outer admission/node/property policies remain required before production ownership wiring."
+  ]
+}

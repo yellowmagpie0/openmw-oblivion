@@ -3857,3 +3857,46 @@ fresh-process gameplay acceptance is claimed. No C++ change occurred at this
 evidence checkpoint. Next verify native selected-node/visibility policies and
 clock lifecycle/scheduling, then connect generation/capture and one production
 owner. Legacy adapters and all remaining M15S4 delivery gates remain open.
+
+## 2026-10-16 — ordinary selected and rigid NIF traversal policies
+
+Manual NIF traversal now supports Selected/Rigid modes with explicit live node
+flags; Full remains the default. Root entry is explicit. Child bit1 admits the
+subtree, bit4 selects rigid dispatch, and a rigid pass propagates that mode to
+entered descendants. Original47C930 revealed a key distinction: node controllers
+always execute on an entered selected node, while bit3 gates only property work.
+Projection bit2 is reinspected after controllers. Property callbacks may replace
+the own controller list, which is then read fresh with callback leases retained.
+Rendering scaffolding inherits native property policy, including OSG drawable
+callback forms/order. Skipping projection leaves pending physics flags/cache and
+REFR publication untouched. Enabled passes retain first-sync/settled writeback,
+child-cache compensation and explicit reference migration before children.
+
+An independent original-instruction matrix executes7,680contexts over all32root
+and32child low flags, two entry modes, three precision modes and extra controller
+flag mutations. Actual ordinary selected/rigid/controller-dispatch/composition/
+child/bounds instructions execute. Property/own controller suppliers are declared
+instrumentation; they record cached contexts and write chosen author translation.
+Both C++builds match5,120supported contexts/1,575,680exact fields and2,560extended
+diagnostic contexts. Drawing error is0within1e-9. This compares modes, callback
+order/contexts, author/world caches and flags, not native model bounds or culling.
+
+Six tests cover gates, rigid propagation/sibling restoration, current controller
+list and mutable flags, renderer scaffolding, malformed policy and pending physics
+retry/settled reads. Final preflight02 passes35tests. Full normal and ASan/UBSan
+runs each pass2,773components/265suites with no failures/skips; leak detection is
+disabled. Full traversal with synthetic parent migration also still matches512
+supported frames/8,128field checks per build plus256extended diagnostics; drawing
+maximum3.55271e-13within1e-9. No fresh engine check is claimed for this component
+checkpoint. [Editable verification](M15-NIF-SELECTED-TRAVERSAL-VERIFICATION.json)
+pins code, native probe manifest, fingerprints and `nif-selected-traversal-*` /
+`node-selected-traversal-oracle-01` evidence.
+
+Follow-up static inspection shows8984A0 only sets global time parameters; its
+position before clock accumulation does not establish simulation stepping order.
+The actual producer must still derive live node flags, resolve model-specific
+outer dispatch/culling, initialize/capture in native generation order, own the
+per-world clock lifecycle and schedule one traversal with real World reference
+lifetimes/migration and physics order. Legacy ObjectAnimation/World adapters and
+remaining property/admission/save/recreation/melee/drop/effect/input/runtime gates
+are unchanged. M15S4 remains active and incomplete.

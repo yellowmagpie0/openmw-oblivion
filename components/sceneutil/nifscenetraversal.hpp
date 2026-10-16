@@ -30,6 +30,7 @@ namespace SceneUtil
     class NifSceneTraversal
     {
     public:
+        enum class Mode { Full, Selected, Rigid };
         struct Callbacks
         {
             std::function<std::optional<std::uint16_t>(const NifOsg::MatrixTransform&)> mCollisionFlags;
@@ -55,6 +56,12 @@ namespace SceneUtil
             // Exceptions leave completed projection/writes in place.
             std::function<void(NifOsg::MatrixTransform&, const NifBullet::RagdollBonePoseWriteback&,
                 std::optional<std::uint16_t>)> mReferenceUpdate;
+            // Required for Selected/Rigid. Live computed NiAVObject flags,
+            // not the original file flags: child admission bit1, projection
+            // bit2, property controllers bit3, rigid child dispatch bit4.
+            // Own node controllers run whenever a selected node is entered.
+            // Reinspect projection flags after controllers, as native does.
+            std::function<std::uint16_t(const NifOsg::MatrixTransform&)> mNodeFlags;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,
@@ -74,15 +81,22 @@ namespace SceneUtil
         // Invokes existing property/node callbacks once, including callbacks
         // with work after traverse(), then projects and visits children. The
         // scheduling owner must prevent an additional ordinary update pass.
-        void update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks = {});
+        // Selected/Rigid execute ordinary NiNode base policies. The scheduling
+        // owner must resolve model-specific outer dispatch/culling first. Root
+        // entry is explicit; bit1 only gates children. Rigid dispatch propagates
+        // to entered descendants; Selected uses each child's bit4. Rendering
+        // scaffolding inherits the containing native node's property policy.
+        void update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks = {},
+            Mode mode = Mode::Full);
 
         // Controller context query: the synthetic OSG ancestors of this root
         // must not be treated as native parents by a world-space controller.
         static bool isReferenceRoot(const osg::NodeVisitor* visitor, const osg::Node* node) noexcept;
+        static std::optional<Mode> updateMode(const osg::NodeVisitor* visitor) noexcept;
 
     private:
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
-            const Callbacks& callbacks, bool rootOnly);
+            const Callbacks& callbacks, bool rootOnly, Mode mode);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };
