@@ -6,6 +6,8 @@
 
 namespace Nif
 {
+    enum class NativeTransformPrecision { Single, Double };
+
     // Nearest-even binary32 store. Values just above FLT_MAX can still round
     // to finite FLT_MAX; the overflow midpoint and nonfinite values reject.
     // Failure leaves destination unchanged.
@@ -15,8 +17,11 @@ namespace Nif
     // scaled-vector and translation stores. Separate scale may be zero or
     // negative. Unsupported nonfinite inputs/results return empty without
     // allocating, throwing, changing inputs, or invoking observers.
+    // Double retains the original API's 53-bit intermediate contract. Single
+    // models observed live007F arithmetic, including its wider exponent range.
     std::optional<NiTransform> tryComposeNativeTransform(
-        const NiTransform& parent, const NiTransform& local) noexcept;
+        const NiTransform& parent, const NiTransform& local,
+        NativeTransformPrecision precision = NativeTransformPrecision::Double) noexcept;
 }
 
 #endif

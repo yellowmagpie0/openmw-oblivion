@@ -94,6 +94,52 @@ namespace
         }
     }
 
+    TEST(NifNativeTransform, SinglePrecisionRoundsEachInstructionWithNearestEvenTies)
+    {
+        // Original 0053D7A0, FPCW007F, native-single-compose-oracle-01/ties.
+        auto parent = Nif::NiTransform::getIdentity(), local = parent;
+        for (auto& row : parent.mRotation.mValues) for (auto& value : row) value = 0;
+        for (auto& row : local.mRotation.mValues) for (auto& value : row) value = 0;
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[0][1]
+            = parent.mRotation.mValues[0][2] = 1;
+        local.mRotation.mValues[0][0] = 1;
+        local.mRotation.mValues[1][0] = local.mRotation.mValues[2][0] = 0x1p-24f;
+        local.mTranslation = {1, 0x1p-24f, 0x1p-24f};
+        const auto single = Nif::tryComposeNativeTransform(parent, local, Nif::NativeTransformPrecision::Single);
+        const auto oldDefault = Nif::tryComposeNativeTransform(parent, local);
+        ASSERT_TRUE(single);
+        ASSERT_TRUE(oldDefault);
+        EXPECT_EQ(single->mRotation.mValues[0][0], 1.f);
+        EXPECT_EQ(single->mTranslation.x(), 1.f);
+        EXPECT_EQ(oldDefault->mRotation.mValues[0][0], 0x1.000002p0f);
+        EXPECT_EQ(oldDefault->mTranslation.x(), 0x1.000002p0f);
+        EXPECT_FALSE(Nif::tryComposeNativeTransform(parent, local, static_cast<Nif::NativeTransformPrecision>(99)));
+    }
+
+    TEST(NifNativeTransform, SinglePrecisionKeepsWideExponentUntilTheNativeFloatStore)
+    {
+        // Original wide-cancel/tiny-sum cases. A float cast after every
+        // arithmetic instruction would overflow or lose both tiny products.
+        auto parent = Nif::NiTransform::getIdentity(), local = parent;
+        for (auto& row : parent.mRotation.mValues) for (auto& value : row) value = 0;
+        for (auto& row : local.mRotation.mValues) for (auto& value : row) value = 0;
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[0][1] = 2;
+        local.mRotation.mValues[0][0] = std::numeric_limits<float>::max();
+        local.mRotation.mValues[1][0] = -std::numeric_limits<float>::max();
+        local.mTranslation = {std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 0};
+        auto result = Nif::tryComposeNativeTransform(parent, local, Nif::NativeTransformPrecision::Single);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mRotation.mValues[0][0], 0.f);
+        EXPECT_EQ(result->mTranslation.x(), 0.f);
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[0][1] = 0x1p-75f;
+        local.mRotation.mValues[0][0] = local.mRotation.mValues[1][0] = 0x1p-75f;
+        local.mTranslation = {0x1p-75f, 0x1p-75f, 0};
+        result = Nif::tryComposeNativeTransform(parent, local, Nif::NativeTransformPrecision::Single);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mRotation.mValues[0][0]), 1u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mTranslation.x()), 1u);
+    }
+
     TEST(NifNativeTransform, OriginalStoresRoundFiniteMaximumUntilTheOverflowMidpoint)
     {
         // Independent original 0053D7A0 matrix/vector/translation cases,

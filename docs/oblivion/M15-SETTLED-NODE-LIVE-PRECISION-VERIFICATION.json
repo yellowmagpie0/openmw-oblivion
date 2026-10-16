@@ -1,0 +1,582 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "settled-node frame dispatcher and explicit live-observed single precision implemented; live per-node World/controller integration and full M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "b02c387739e05a3005ff6f068ec2aa466283a720",
+  "source_fingerprint": "3ea25e2a2690f05a44833c5305c2ef41c57968d5e5ae0f640c18deb2129267fa",
+  "implementation_digests": {
+    "components/CMakeLists.txt": "f1d6c9de2b894d1eb385183480c70d96aec9f9cc945aa982f8b2a6613ad8411c",
+    "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+    "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+    "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8",
+    "components/nifbullet/ragdollbonepose.hpp": "752aa2b66752e7e20cfd8bd51567d48ed346f022c997ed8c28d1b8bd9099765e",
+    "components/nifbullet/ragdollbonepose.cpp": "b8aa31e80b1cc815a96a3fa991df9761f2f4ef0377b4065551d554e836b55cfc",
+    "apps/components_tests/nifloader/testnativetransform.cpp": "8e1cf550bee2f83899d09d896d962bcb6727e063ee43f7efc34b7eac8cadea74",
+    "apps/components_tests/nifloader/testragdollbonepose.cpp": "b61e86180b773b7211a12b11b6acc03f92a25a58080855aed4d430298c647953"
+  },
+  "behavior": [
+    "Settled nodes first compose current controller/local with parent cached world, then gate physical writeback on collision bit0. Inactive does not read desired physical state; active retains or writes local according to settled bit8. Child masks are not reference callback authorization.",
+    "Registered-root helper delegates to the same dispatcher, adding registration bits0xC without enabling inactive bit0. Root adapter remains otherwise unchanged.",
+    "New settled-node API defaults to Single, observed live x87 control007F. Explicit Single/Double arithmetic rounds each operation to24/53-bit significands; Single retains wide exponents until native binary32 memory stores. Existing composition/writeback API defaults remain Double pending caller-specific migration.",
+    "Finite stores share the reviewed nearest-even overflow-midpoint guard. Unknown precision values reject. Seven new tests cover child frame semantics and single-precision ties, wide-exponent cancellation and tiny products."
+  ],
+  "original_live_precision": {
+    "path": "original-node-precision-01/verification.json",
+    "report_sha256": "7d6306c28144b6b0c025a95f5a48cea3bd1584dc64fbc8aefce379044997b2ef",
+    "passed": true,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "source_and_private_save_unchanged": true,
+    "game_exit_code": 0,
+    "samples": {
+      "reloaded-idle-02": {
+        "address": "0x707370",
+        "count": 64,
+        "control_word": 127,
+        "unique_this_pointers": 22,
+        "unique_manager_times": 3,
+        "sha256": "25b7d3ed675a58004e10a2db263e903b8b26c2f74ccf80ea144d27e5a1a93228",
+        "path": "reloaded-idle-02-samples.json",
+        "this_pointer_field": "node stores ECX at entry; collision-writeback ECX is the collision object"
+      },
+      "composition": {
+        "address": "0x7100a0",
+        "count": 64,
+        "control_word": 127,
+        "unique_this_pointers": 46,
+        "unique_manager_times": 1,
+        "sha256": "470b1ca1b2a9df16bbafa8f466046cdbf192be6a69a3ffd5fbdb747db2a498ac",
+        "path": "composition-samples.json",
+        "this_pointer_field": "node stores ECX at entry; collision-writeback ECX is the collision object"
+      },
+      "collision-writeback": {
+        "address": "0x8978d0",
+        "count": 64,
+        "control_word": 127,
+        "unique_this_pointers": 64,
+        "unique_manager_times": 1,
+        "sha256": "9df4034fffea3cd427e0b85e9e51b9ed04aed4e0718148daf0f46c89a604d48e",
+        "path": "collision-writeback-samples.json",
+        "this_pointer_field": "node stores ECX at entry; collision-writeback ECX is the collision object"
+      }
+    },
+    "scope": "Read-only debugger register sampling after normal-input Continue/F9 in an isolated private Proton prefix.64 entries each at707370,7100A0,8978D0. Observes this run and these sites only; does not prove all game contexts/platforms use007F or complete OpenMW live integration/gameplay acceptance. No code/register/pose changes requested by debugger; temporary software breakpoints restored on detach. First debugger attempt stopped in Wine signal handling and captured no samples; retained log. Retry passes SIGSEGV to Wine and captures all samples.",
+    "inputs_sha256": "5b12ae7eea3e40d7f80b3c6824f3d1e3fbd9b55eff821ff8dce0f35ddd8a0259",
+    "sampler_sha256": "e75ca74552cbec266bc3b0d51954de9defd0ae05da8a76b0d911d0dcdc0bced2"
+  },
+  "source_prefix_isolation": {
+    "path": "original-node-precision-01/source-isolation.json",
+    "report_sha256": "7f254e5b24211e6e1fbe331e0be327f29e0de00633a598867a69884d6ddedd9b",
+    "ini": {
+      "source_sha256_unchanged": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+      "source_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S2/original-06/compat/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini",
+      "private_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/original-node-precision-01/compat/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini"
+    },
+    "plugins": {
+      "source_sha256_unchanged": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+      "source_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S2/original-06/compat/pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt",
+      "private_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/original-node-precision-01/compat/pfx/drive_c/users/steamuser/AppData/Local/Oblivion/Plugins.txt"
+    }
+  },
+  "original_node_frames": {
+    "path": "unselected-child-live-flags-oracle-01/verification.json",
+    "report_sha256": "424ed6d6a05885c2b416719ead4f2f004461ac65b8a02d7f34f878d394fee0ad",
+    "passed": true,
+    "contexts": 768,
+    "sequences": 96,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "62d8aed5bae4dbf591d023f6937ea355c387e29d330b95edea8769c5d13a2b0a",
+    "cases_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+    "scope": "Full original nonactor reference prefix/World registration over four unselected deep/null-first child topologies, plain/bodyT, x87 control words007F/027F/037F and authored collision flags0/1/8/9. Actual first707370 consumes pending0x40 leaving authored flags. Eight subsequent single-traversal requests supply chosen physical positions/quaternion and, at frame4, new parent/root author transforms; execute full native dispatch/inverse/writeback and hierarchy composition. Inactive skips body read/helper; active retains or updates child local according to8 and thresholds cached world. Root local/entire REFR/physical storage unchanged within each traversal, no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping, full game-frame/controller dispatch, renderer integration or gameplay acceptance."
+  },
+  "original_single_composition": {
+    "path": "native-single-compose-oracle-01/verification.json",
+    "report_sha256": "4a4cd7dd9a5fde74435dd56f1d8bf2ef9676acf47480827692b1febbe9b1154b",
+    "passed": true,
+    "cases": 347,
+    "finite_results": 335,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Complete original 0053D7A0 composition and actual 007100A0/007101F0 helpers; no stubs. Live-observed007F single-precision mode:320 parent/local contexts,24 signed near-FLT_MAX store cases and three nearest-even/wide-exponent cancellation/tiny-product cases. Preserved inputs/registers and full return verified. No scene traversal, actor policy or runtime acceptance.",
+    "source_sha256": "ba8f3614093f34f91ab9f43e2d833d78ab6df19ee5fa702102ebd991c11af472",
+    "cases_sha256": "18725855579e0cca0ab72ce91506c692d4f23a5fd68395289418346faf50b224"
+  },
+  "node_comparisons": {
+    "normal": {
+      "path": "unselected-child-flags-compare-03/normal-verification.json",
+      "report_sha256": "1ef2358cdd952fd92967bd502fc2b9a8423b5f64893c22c62685126b7e60d31b",
+      "passed": true,
+      "selection": "x87 FPCW007F and027F, explicit24/53-bit intermediates",
+      "cases": 512,
+      "mismatching_cases": 0,
+      "comparison": "exact binary32 bits for 13 recomposed world lanes, 13 resulting local lanes, 13 resulting cached-world lanes and change mask",
+      "extended_precision_diagnostic": {
+        "passed": false,
+        "selection": "x87 FPCW037F (64-bit intermediates)",
+        "cases": 256,
+        "mismatching_cases": 3,
+        "differences": [
+          {
+            "case": 285,
+            "flags": 9,
+            "frame": 5,
+            "lanes": [
+              1,
+              27
+            ]
+          },
+          {
+            "case": 286,
+            "flags": 9,
+            "frame": 6,
+            "lanes": [
+              1,
+              27
+            ]
+          },
+          {
+            "case": 287,
+            "flags": 9,
+            "frame": 7,
+            "lanes": [
+              1
+            ]
+          }
+        ],
+        "scope": "Retained unresolved precision differences, not counted as canonical passes; no tolerance relaxation."
+      },
+      "binary_sha256": "b2200ddf608725b067f905a9c2dd4917ace1ef38e5d820849ceb12ee58d0be06",
+      "original_corpus_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+      "input_sha256": "03c23dc5c5252a4eaf1811eb25ee98e6380491b453366b712bd2a8ee65aebb4e",
+      "source_hashes": {
+        "components/nifbullet/ragdollbonepose.cpp": "b8aa31e80b1cc815a96a3fa991df9761f2f4ef0377b4065551d554e836b55cfc",
+        "components/nifbullet/ragdollbonepose.hpp": "752aa2b66752e7e20cfd8bd51567d48ed346f022c997ed8c28d1b8bd9099765e",
+        "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+        "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+        "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8"
+      },
+      "scope": "Supplied native instruction frames against actual C++ composed-node dispatcher. Final C++ explicitly selects observed live24-bit or retained53-bit arithmetic; exact acceptance covers512 cases in those modes. Original64-bit differs for identical inputs. No live World/controller/render/input acceptance; Live sampling establishes007F at three observed original entry points; other contexts remain open."
+    },
+    "sanitized": {
+      "path": "unselected-child-flags-compare-03/sanitized-verification.json",
+      "report_sha256": "5587883a95debef5bb89e17ed5410fa2ea79f1c2e296cfe47919a1400ddaf18a",
+      "passed": true,
+      "selection": "x87 FPCW007F and027F, explicit24/53-bit intermediates",
+      "cases": 512,
+      "mismatching_cases": 0,
+      "comparison": "exact binary32 bits for 13 recomposed world lanes, 13 resulting local lanes, 13 resulting cached-world lanes and change mask",
+      "extended_precision_diagnostic": {
+        "passed": false,
+        "selection": "x87 FPCW037F (64-bit intermediates)",
+        "cases": 256,
+        "mismatching_cases": 3,
+        "differences": [
+          {
+            "case": 285,
+            "flags": 9,
+            "frame": 5,
+            "lanes": [
+              1,
+              27
+            ]
+          },
+          {
+            "case": 286,
+            "flags": 9,
+            "frame": 6,
+            "lanes": [
+              1,
+              27
+            ]
+          },
+          {
+            "case": 287,
+            "flags": 9,
+            "frame": 7,
+            "lanes": [
+              1
+            ]
+          }
+        ],
+        "scope": "Retained unresolved precision differences, not counted as canonical passes; no tolerance relaxation."
+      },
+      "binary_sha256": "4bc2f723dd15c64282eba50c02cd51c49350aec33c71aedb23be5a09280370f2",
+      "original_corpus_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+      "input_sha256": "03c23dc5c5252a4eaf1811eb25ee98e6380491b453366b712bd2a8ee65aebb4e",
+      "source_hashes": {
+        "components/nifbullet/ragdollbonepose.cpp": "b8aa31e80b1cc815a96a3fa991df9761f2f4ef0377b4065551d554e836b55cfc",
+        "components/nifbullet/ragdollbonepose.hpp": "752aa2b66752e7e20cfd8bd51567d48ed346f022c997ed8c28d1b8bd9099765e",
+        "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+        "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+        "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8"
+      },
+      "scope": "Supplied native instruction frames against actual C++ composed-node dispatcher. Final C++ explicitly selects observed live24-bit or retained53-bit arithmetic; exact acceptance covers512 cases in those modes. Original64-bit differs for identical inputs. No live World/controller/render/input acceptance; Live sampling establishes007F at three observed original entry points; other contexts remain open."
+    }
+  },
+  "composition_comparisons": {
+    "normal": {
+      "path": "native-single-compose-compare-01/normal-verification.json",
+      "report_sha256": "357fc2601e78d322cb7f850c0a8ebea6f9dfcca6a15d4568ea0a6921ad60f900",
+      "passed": true,
+      "cases": 347,
+      "finite_exact": 335,
+      "nonfinite_rejected": 12,
+      "mismatching_cases": [],
+      "binary_sha256": "c7e0d416c44f1a8a00b069b586ac6a3a6649f9dd4c17a98260bc70d7f2c5e0c6",
+      "original_corpus_sha256": "18725855579e0cca0ab72ce91506c692d4f23a5fd68395289418346faf50b224",
+      "input_sha256": "524d2c3eabf6b2de0d8dce552d7ee55243c885d27ff9d17e6264f01414505290",
+      "source_hashes": {
+        "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+        "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+        "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8"
+      },
+      "scope": "Explicit Single composition against actual007F original53D7A0 instructions, including exponent/cancellation/tiny-product boundaries. No live renderer/gameplay acceptance."
+    },
+    "sanitized": {
+      "path": "native-single-compose-compare-01/sanitized-verification.json",
+      "report_sha256": "f467e25d7c3f5249ee022a328c33c018f1d407a62111c0382435b135a28c981d",
+      "passed": true,
+      "cases": 347,
+      "finite_exact": 335,
+      "nonfinite_rejected": 12,
+      "mismatching_cases": [],
+      "binary_sha256": "e66ae0fe0bcfd63af031b732aafb90c23bd0f4ea947a686fe6a62ddf05600bbb",
+      "original_corpus_sha256": "18725855579e0cca0ab72ce91506c692d4f23a5fd68395289418346faf50b224",
+      "input_sha256": "524d2c3eabf6b2de0d8dce552d7ee55243c885d27ff9d17e6264f01414505290",
+      "source_hashes": {
+        "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+        "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+        "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8"
+      },
+      "scope": "Explicit Single composition against actual007F original53D7A0 instructions, including exponent/cancellation/tiny-product boundaries. No live renderer/gameplay acceptance."
+    }
+  },
+  "double_only_baseline": {
+    "path": "unselected-child-flags-compare-03/normal-baseline-verification.json",
+    "report_sha256": "5eaa37e5da6805a72b47464b5ec3c06f905af9a2239d5915e2ffd1785fd385e4",
+    "passed": false,
+    "selection": "x87 FPCW007F and027F, explicit24/53-bit intermediates",
+    "cases": 512,
+    "mismatching_cases": 32,
+    "comparison": "exact binary32 bits for 13 recomposed world lanes, 13 resulting local lanes, 13 resulting cached-world lanes and change mask",
+    "extended_precision_diagnostic": {
+      "passed": false,
+      "selection": "x87 FPCW037F (64-bit intermediates)",
+      "cases": 256,
+      "mismatching_cases": 3,
+      "differences": [
+        {
+          "case": 285,
+          "flags": 9,
+          "frame": 5,
+          "lanes": [
+            1,
+            27
+          ]
+        },
+        {
+          "case": 286,
+          "flags": 9,
+          "frame": 6,
+          "lanes": [
+            1,
+            27
+          ]
+        },
+        {
+          "case": 287,
+          "flags": 9,
+          "frame": 7,
+          "lanes": [
+            1
+          ]
+        }
+      ],
+      "scope": "Retained unresolved precision differences, not counted as canonical passes; no tolerance relaxation."
+    },
+    "binary_sha256": "4d0173cd02257c45044f39ced02a1de5ee1e40cf66a47cbc6d636d26c2b0ef17",
+    "original_corpus_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+    "input_sha256": "76855b5309be1213165de72fa0179f2060170057c42885ab17c36d1876de73e1",
+    "source_hashes": {
+      "components/nifbullet/ragdollbonepose.cpp": "d18c6e33c993e877aa2d8394d83136cb9f182b098a24dd53cb4b52e0cb758323",
+      "components/nifbullet/ragdollbonepose.hpp": "b0a169fb2fe9322946ddca017a700532ceff4dffba507a4778a2d6a7c06db215",
+      "components/nif/nativetransform.cpp": "4f5512ad1810d339ebdb1adba5160e844dada91c138bfd13fa6dd131c2985f36"
+    },
+    "scope": "Supplied native instruction frames against actual C++ composed-node dispatcher. Final C++ explicitly selects observed live24-bit or retained53-bit arithmetic; exact acceptance covers512 cases in those modes. Original64-bit differs for identical inputs. No live World/controller/render/input acceptance; actual game/controller precision initialization remains to be checked.",
+    "source_hash_note": "Raw report retained a metadata mistake: its source_hashes describe the later worktree. This record uses the older binary source hashes from compare02 and baseline-provenance.json. Binary/input hashes and mismatch counts are unchanged."
+  },
+  "checks": {
+    "normal": {
+      "path": "settled-node-live-precision-normal-01/verification.json",
+      "report_sha256": "699b6590687b40c5c5a15d221fb02e46e508ca13ca53888af01e70df057ec2d9",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "components-tests",
+            "-j",
+            "4"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 28.032
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.065
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/settled-node-live-precision-normal-01/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 16.703
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "4"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 98.055
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.215
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/settled-node-live-precision-normal-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 20.522
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 2725,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "df8c02c9eca50ee91e95efda264afd8e41ec8ebb7a88b5b2622ccf39fc7973d3",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "41a69255aa88fd868916dd86b8fc85ef53360adb3113b6a83830bea338d81fd9",
+          "inventory_sha256": "14c13c2f6bcad33ea164266e5da6537961b336affdec4b8e8af508cfb2c3b544",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b870478446499d513fa830bb6701c6f416f966289aca0349293cfb8bd6f57879",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "edb6185dbb68640ea2620c3bb4cf7e819030dbaf7d998bbdb376bd647915f783",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "b02c387739e05a3005ff6f068ec2aa466283a720",
+        "source_fingerprint": "3ea25e2a2690f05a44833c5305c2ef41c57968d5e5ae0f640c18deb2129267fa"
+      },
+      "source_after": {
+        "head": "b02c387739e05a3005ff6f068ec2aa466283a720",
+        "source_fingerprint": "3ea25e2a2690f05a44833c5305c2ef41c57968d5e5ae0f640c18deb2129267fa"
+      },
+      "suites": {
+        "components": 261,
+        "engine": 122
+      }
+    },
+    "sanitized": {
+      "path": "settled-node-live-precision-sanitized-01/verification.json",
+      "report_sha256": "5fda73f79f8623c93520788640653b08e6011cd4475c2062eab5b3c91d892497",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "components-tests",
+            "-j",
+            "2"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 43.867
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.365
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/settled-node-live-precision-sanitized-01/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 87.987
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 175.528
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.616
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/settled-node-live-precision-sanitized-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 136.146
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 2725,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "efab50e3b08e2a315820e23a2651ebadcc1b6ba8f6bd9f99d7583e9c59fe9f60",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "22d293528d2135f6d5b550ab4925bb409baa82c28b4e8647526abedf1e9e193c",
+          "inventory_sha256": "a661ee49fdadd9f81cc02cc47ba2d9c3bf84c30c57a41a4130a69f74e244a5c2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4801a1ffdfb92374148d7b3b8586a1255f2c784322035b1e167896b199827c7a",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "bc46336510ec7736a50d0792e6cd27178e9a656658494983975e155bd9151a65",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "b02c387739e05a3005ff6f068ec2aa466283a720",
+        "source_fingerprint": "3ea25e2a2690f05a44833c5305c2ef41c57968d5e5ae0f640c18deb2129267fa"
+      },
+      "source_after": {
+        "head": "b02c387739e05a3005ff6f068ec2aa466283a720",
+        "source_fingerprint": "3ea25e2a2690f05a44833c5305c2ef41c57968d5e5ae0f640c18deb2129267fa"
+      },
+      "suites": {
+        "components": 261,
+        "engine": 122
+      }
+    }
+  },
+  "sanitizer_scope": "ASan/UBSan halt on error; leak checks disabled.",
+  "retained_diagnostics": [
+    "unselected-child-flags-compare-01: low-level writer without dispatch mismatches259 frames:256 inactive-frame failures and three64-bit precision differences. Initial assertion expected256; retained failed report/log.",
+    "unselected-child-flags-compare-02: earlier double-only node helper matches256 canonical027F frames but differs in three037F frames. Complete normal/sanitized settled-node-frame-*-01 checks pass2722 components/1572 engine on that earlier source; superseded after live007F evidence.",
+    "unselected-child-flags-compare-03 baseline uses the retained preceding double-only binary and fails32 live007F cases. Its source-hash metadata mistake is preserved in the raw report and corrected with independent compare02 provenance above.",
+    "original-node-precision-01/reloaded-idle-gdb.log: first debugger attachment stops in Wine save_context on SIGSEGV and captures no samples. Retry passes the signal to Wine, captures64 entries and detaches. Composition and writeback each capture64 more entries; game exits normally through UI. Steam started by this probe also shuts down normally."
+  ],
+  "remaining_gates": [
+    "Native037F64-bit precision is not modeled; three tiny rotation-lane differences remain explicitly failing diagnostic cases, not tolerated/counted as passes. Other live precision contexts/platforms require verification.",
+    "Existing actor/drop composition and physical desired-pose/bodyT conversion callers retain their previous arithmetic contract. Audit and migrate actual runtime contexts rather than globally changing defaults from this sample.",
+    "Wire live loose per-node traversal and safe renderer owner lifetime, controller/first pending sync ordering, native root-reference alias initialization and safe reference callbacks. Current World root-only and inverse-bind child adapters remain open.",
+    "Actual World/script scale/forced transforms, all admission modes, loose physical retention/save/recreation, production break/mastery/drop/pickup/sound/power/creature/reactions/effects and full normal-input/controller/FPS/windup/block/recovery restart acceptance. Full M15S4 active and incomplete."
+  ]
+}

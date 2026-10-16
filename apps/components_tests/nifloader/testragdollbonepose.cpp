@@ -51,6 +51,99 @@ namespace
         return { Nif::Matrix3(), translation, scale };
     }
 
+    TEST(RagdollBoneFrame, InactiveChildComposesParentWithoutReadingPhysicalInputOrWritingLocal)
+    {
+        auto parent = pose({10, 20, 30}, 2);
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[1][1] = 0;
+        parent.mRotation.mValues[0][1] = -1;
+        parent.mRotation.mValues[1][0] = 1;
+        const auto local = pose({2, 3, 4}, .25f);
+        auto unused = pose();
+        unused.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        unused.mScale = -1;
+        for (std::uint16_t flags : {0, 8})
+        {
+            const auto result = NifBullet::ragdollBoneFrame(local, unused, &parent, flags);
+            EXPECT_EQ(result.mLocal.mTranslation, local.mTranslation);
+            EXPECT_EQ(result.mLocal.mScale, .25f);
+            EXPECT_EQ(result.mWorld.mTranslation, osg::Vec3f(4, 24, 38));
+            EXPECT_EQ(result.mWorld.mScale, .5f);
+            EXPECT_EQ(result.mWorld.mRotation.mValues[0][1], -1);
+            EXPECT_EQ(result.mWorldChangeMask, 0);
+        }
+        parent.mTranslation.x() = -10;
+        EXPECT_EQ(NifBullet::ragdollBoneFrame(local, unused, &parent, 8).mWorld.mTranslation,
+            osg::Vec3f(-16, 24, 38));
+    }
+
+    TEST(RagdollBoneFrame, ActiveChildPreservesAuthoredLocalUnlessSettledBitEightRequestsWriteback)
+    {
+        const auto parent = pose({10, 20, 30}, 2);
+        const auto local = pose({2, 3, 4}, .25f);
+        const auto desired = pose({20, 40, 60}, 9);
+        const auto worldOnly = NifBullet::ragdollBoneFrame(local, desired, &parent, 1);
+        EXPECT_EQ(worldOnly.mLocal.mTranslation, local.mTranslation);
+        EXPECT_EQ(worldOnly.mLocal.mScale, .25f);
+        EXPECT_EQ(worldOnly.mWorld.mTranslation, desired.mTranslation);
+        EXPECT_EQ(worldOnly.mWorld.mScale, .5f);
+        EXPECT_EQ(worldOnly.mWorldChangeMask, 1);
+        const auto writeLocal = NifBullet::ragdollBoneFrame(local, desired, &parent, 9);
+        EXPECT_EQ(writeLocal.mLocal.mTranslation, osg::Vec3f(5, 10, 15));
+        EXPECT_EQ(writeLocal.mLocal.mScale, .25f);
+        EXPECT_EQ(writeLocal.mWorld.mTranslation, desired.mTranslation);
+        EXPECT_EQ(writeLocal.mWorld.mScale, .5f);
+        EXPECT_EQ(writeLocal.mWorldChangeMask, 1);
+    }
+
+    TEST(RagdollBoneFrame, EachTraversalRecomposesBeforeThresholdAndStillWritesSubthresholdLocal)
+    {
+        const auto parent = pose({10, 0, 0}, 2);
+        const auto local = pose({2, 0, 0}, .25f);
+        const auto desired = pose({14.005f, 0, 0}, 9);
+        const auto first = NifBullet::ragdollBoneFrame(local, desired, &parent, 9);
+        EXPECT_EQ(first.mWorldChangeMask, 0);
+        EXPECT_EQ(first.mWorld.mTranslation, osg::Vec3f(14, 0, 0));
+        EXPECT_GT(first.mLocal.mTranslation.x(), local.mTranslation.x());
+        const auto second = NifBullet::ragdollBoneFrame(first.mLocal, desired, &parent, 9);
+        EXPECT_EQ(second.mWorldChangeMask, 0);
+        EXPECT_EQ(second.mLocal.mTranslation, first.mLocal.mTranslation);
+        EXPECT_EQ(second.mWorld.mTranslation, desired.mTranslation);
+        EXPECT_EQ(second.mWorld.mScale, .5f);
+        const auto worldOnly = NifBullet::ragdollBoneFrame(local, desired, &parent, 1);
+        EXPECT_EQ(worldOnly.mLocal.mTranslation, local.mTranslation);
+        EXPECT_EQ(worldOnly.mWorld.mTranslation, osg::Vec3f(14, 0, 0));
+    }
+
+    TEST(RagdollBoneFrame, ReadsParentForCompositionEvenWithoutLocalWritebackAndDistinguishesRootRegistration)
+    {
+        auto invalid = pose({}, 0);
+        for (std::uint16_t flags : {0, 1, 8, 9})
+            EXPECT_THROW(NifBullet::ragdollBoneFrame(pose(), pose(), &invalid, flags), std::invalid_argument);
+        invalid = pose({std::numeric_limits<float>::max(), 0, 0}, 2);
+        EXPECT_THROW(NifBullet::ragdollBoneFrame(pose({std::numeric_limits<float>::max(), 0, 0}),
+            pose(), &invalid, 0), std::invalid_argument);
+        const auto desired = pose({20, 30, 40}, 7);
+        EXPECT_EQ(NifBullet::ragdollBoneFrame(pose(), desired, nullptr, 1).mLocal.mTranslation,
+            osg::Vec3f());
+        EXPECT_EQ(NifBullet::ragdollReferenceRootFrame(pose(), desired, 1).mLocal.mTranslation,
+            desired.mTranslation);
+    }
+
+    TEST(RagdollBoneFrame, DefaultUsesObservedLiveSinglePrecisionAndRejectsUnknownPrecision)
+    {
+        auto parent = pose(), local = pose();
+        parent.mRotation.mValues[0][0] = parent.mRotation.mValues[0][1]
+            = parent.mRotation.mValues[0][2] = 1;
+        local.mTranslation = {1, 0x1p-24f, 0x1p-24f};
+        const auto live = NifBullet::ragdollBoneFrame(local, pose(), &parent, 0);
+        const auto doublePrecision = NifBullet::ragdollBoneFrame(local, pose(), &parent, 0,
+            Nif::NativeTransformPrecision::Double);
+        EXPECT_EQ(live.mWorld.mTranslation.x(), 1.f);
+        EXPECT_EQ(doublePrecision.mWorld.mTranslation.x(), 0x1.000002p0f);
+        EXPECT_THROW(NifBullet::ragdollBoneFrame(local, pose(), nullptr, 0,
+            static_cast<Nif::NativeTransformPrecision>(99)), std::invalid_argument);
+    }
+
     TEST(RagdollBoneWriteback, ComposesSeparateParentAndLocalScalesWithNativePositionStores)
     {
         auto parent = pose({10, 20, 30}, 2);

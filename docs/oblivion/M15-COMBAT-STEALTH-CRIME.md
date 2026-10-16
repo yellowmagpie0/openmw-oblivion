@@ -6,6 +6,32 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 settled-node frames and live precision — 2026-10-16
+
+Settled-node dispatch now composes controller locals with the parent's cached
+world before checking collision bit0. Inactive nodes skip physical input; active
+unselected children preserve or update locals according to bit8. The registered
+root helper delegates to this dispatcher with its separate registration flags.
+
+Original-game sampling found **x87 control 007F, 24-bit precision**, at 64 entries
+each in scene update, matrix composition and collision writeback. Explicit Single
+arithmetic now models instruction rounding with wide exponents; existing APIs
+retain their Double default while their live callers await individual review.
+The new settled-node API defaults to the observed Single mode.
+
+Normal and ASan/UBSan each pass **2,725 component tests / 261 suites and 1,572
+engine tests / 122 suites**. Both production comparisons match 512 supplied node
+frames exactly in explicit 24/53-bit modes and 347 single-precision composition
+cases (335 finite exact, 12 nonfinite rejected). Three 64-bit diagnostic differences
+remain open and are not counted as passes. The earlier double-only node binary
+fails 32 live-mode frames. Private/source pristine saves remain unchanged.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#settled-node-dispatch-and-original-live-precision)
+and [verification record](M15-SETTLED-NODE-LIVE-PRECISION-VERIFICATION.json)
+record scope. Per-node World/controller publication, first-sync/root initialization,
+other arithmetic callers, save/recreation, production combat and the complete
+normal-input acceptance matrix remain open. S4 is incomplete.
+
 ## S4 projected poses in CPU skinning — 2026-10-16
 
 Skeleton bone palettes now consume explicit NIF traversal poses, including

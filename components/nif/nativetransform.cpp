@@ -1,4 +1,5 @@
 #include "nativetransform.hpp"
+#include "nativetransformmath.hpp"
 
 #include <cmath>
 #include <limits>
@@ -33,26 +34,26 @@ namespace Nif
     }
 
     std::optional<NiTransform> tryComposeNativeTransform(
-        const NiTransform& parent, const NiTransform& local) noexcept
+        const NiTransform& parent, const NiTransform& local, NativeTransformPrecision precision) noexcept
     {
-        if (!finite(parent) || !finite(local)) return std::nullopt;
+        const Detail::NativeTransformMath math(precision);
+        if (!math.valid() || !finite(parent) || !finite(local)) return std::nullopt;
         NiTransform result;
-        if (!tryStoreNativeTransformFloat(double(parent.mScale) * local.mScale, result.mScale)) return std::nullopt;
+        if (!tryStoreNativeTransformFloat(math.multiply(parent.mScale, local.mScale), result.mScale))
+            return std::nullopt;
         for (unsigned row = 0; row < 3; ++row)
         {
             const auto& axis = parent.mRotation.mValues[row];
             for (unsigned column = 0; column < 3; ++column)
-                if (!tryStoreNativeTransformFloat(double(axis[0]) * local.mRotation.mValues[0][column]
-                        + double(axis[1]) * local.mRotation.mValues[1][column]
-                        + double(axis[2]) * local.mRotation.mValues[2][column],
+                if (!tryStoreNativeTransformFloat(math.dot(axis[0], local.mRotation.mValues[0][column],
+                        axis[1], local.mRotation.mValues[1][column], axis[2], local.mRotation.mValues[2][column]),
                         result.mRotation.mValues[row][column]))
                     return std::nullopt;
             float rotated, scaled;
-            if (!tryStoreNativeTransformFloat(double(axis[0]) * local.mTranslation[0]
-                    + double(axis[1]) * local.mTranslation[1]
-                    + double(axis[2]) * local.mTranslation[2], rotated)
-                || !tryStoreNativeTransformFloat(double(rotated) * parent.mScale, scaled)
-                || !tryStoreNativeTransformFloat(double(scaled) + parent.mTranslation[row], result.mTranslation[row]))
+            if (!tryStoreNativeTransformFloat(math.dot(axis[0], local.mTranslation[0],
+                    axis[1], local.mTranslation[1], axis[2], local.mTranslation[2]), rotated)
+                || !tryStoreNativeTransformFloat(math.multiply(rotated, parent.mScale), scaled)
+                || !tryStoreNativeTransformFloat(math.add(scaled, parent.mTranslation[row]), result.mTranslation[row]))
                 return std::nullopt;
         }
         return result;

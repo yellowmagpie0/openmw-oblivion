@@ -3027,3 +3027,86 @@ publication remain open. Actual World/script continuation, complete admission
 modes, loose retention/save/recreation, production break/mastery, pickup/sound,
 power/creature/reaction/effects and the entire normal-input/controller/FPS/restart
 S4 matrix remain required. Full S4 is active and incomplete.
+
+## Settled-node dispatch and original live precision
+
+`ragdollBoneFrame` composes the current controller/local with the parent's cached
+world before settled collision dispatch. It checks bit0 before reading physical
+input. Inactive children retain locals and use ordinary composed world output;
+active children preserve or write locals according to bit8, including local writes
+below cached-world thresholds. A child change mask does not itself authorize a
+reference callback. The registered-root helper delegates with registration bits
+0xC while preserving inactive bit0. First pending0x40 synchronization is separate
+and remains an admission/ordering gate.
+
+An expanded original instruction probe executes actual registration and eight
+subsequent 707370 traversals over four unselected deep/null-first topologies,
+plain/bodyT bodies, flags0/1/8/9 and three x87 modes. It supplies motion fields and
+changes parent/root author transforms at frame4. The 768 frames preserve root
+local, entire REFR and physical storage within each traversal, with no reference
+callback. This exposes why the existing inverse-bind root adapter cannot represent
+unselected-child behavior. It does not replace that live adapter in this chunk.
+
+The initial 512-frame comparison exposed three extended-precision rotation-lane
+differences: identical inputs produce different bits under027F versus037F. A
+private original-game Proton prefix then provides a stronger check. Normal-input
+Continue/F9 loads the isolated save; read-only debugger sampling records 64 entries
+each at 707370, 7100A0 and 8978D0, all with **FPCW 007F (24-bit significands)**. Three
+manager times occur in the scene-entry sample; the arithmetic/writeback samples
+are short observations, not a universal precision guarantee. The game exits via
+its UI with wrapper status0. The started Steam client also shuts down normally.
+Source/private quicksaves retain SHA256
+`67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66`;
+source config/plugin inputs remain unchanged and resolve separately from private
+copies. First debugger attachment stops in Wine save_context on SIGSEGV without
+samples; the retained retry passes that signal to Wine and captures all entries.
+
+`NativeTransformPrecision` now selects Single or Double explicitly. Single rounds
+every arithmetic instruction to 24 significand bits while retaining a wider
+exponent until each native binary32 memory store. An ordinary float cast after
+every operation would incorrectly overflow cancelling products or erase two tiny
+products whose sum is representable. Exact original nearest-even ties, wide
+cancellation and tiny-product examples are in the unit tests. Store validation
+shares the reviewed overflow-midpoint guard. Unknown precision values reject.
+The new settled-node API defaults to observed live Single. Existing composition
+and low-level writeback API defaults remain Double; this is not a global migration
+of actor/drop/bodyT/physical-target arithmetic from their earlier contracts.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `original-node-precision-01`: 192 live original register samples at three
+  entry points, pristine saves, normal exit and independent source-prefix audit.
+- `unselected-child-live-flags-oracle-01`: 768 original frame contexts / 96
+  sequences, including007F/027F/037F. Callee saves, stack, control word and input/
+  physical/reference invariants are checked. Null native World and disabled
+  property-copy/special gates remain declared boundaries, with retained heap/
+  Windows/TLS/critical-section suppliers. No actual Havok stepping.
+- `unselected-child-flags-compare-03`: both builds match all 512 supplied node
+  frames for explicit007F/027F, across 13 recomposed-world, 13 resulting-local,
+  13 resulting-cache float lanes and the mask. The retained preceding double-only
+  binary mismatches 32 live007F frames. Three 037F differences remain failing
+  diagnostic cases; no tolerance is substituted for their exact comparison.
+- `native-single-compose-oracle-01` and `native-single-compose-compare-01`:
+  actual 53D7A0/7100A0/7101F0 with007F, no stubs; both production builds match
+  335 finite outputs exactly and reject 12 nonfinite outputs across 347 cases.
+- `settled-node-live-precision-normal-01` and
+  `settled-node-live-precision-sanitized-01`: fresh unfiltered 2,725 component
+  tests / 261 suites and 1,572 engine tests / 122 suites each; exact inventory/XML
+  agreement, no failures/skips. ASan/UBSan halt on error; leak checks disabled.
+
+Earlier retained diagnostics include compare01's 259 mismatches (256 missing
+inactive dispatch plus three 64-bit differences), compare02's double-only canonical
+pass/extended failures and the pre-live source's passing full normal/sanitized
+checks. Compare03's baseline raw report mistakenly hashes later source files;
+`baseline-provenance.json` preserves the older binary's actual compare02 hashes
+and original input file. The [editable verification record](M15-SETTLED-NODE-LIVE-PRECISION-VERIFICATION.json)
+uses that corrected provenance without replacing the raw report.
+
+Live loose per-node renderer publication, safe owner lifetime, controller/first-sync
+ordering, root-reference alias initialization and safe reference callbacks remain
+open. Other live precision contexts, existing actor/drop composition and physical
+desired/bodyT conversion callers require review and selective migration. Actual
+World/script continuation, full admission modes, loose retention/save/recreation,
+production break/mastery/drop/pickup/sound/power/creature/reactions/effects and the
+entire normal-input/controller/FPS/restart S4 matrix remain required. Full S4 is
+active and incomplete.

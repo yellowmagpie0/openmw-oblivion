@@ -14809,3 +14809,30 @@ live asset resolution remain unproven. Gate semantics are unassigned. Unknown
 subtypes 6/255 are diagnostics. The retained first attempt falsified its
 null-manager/no-ID assumption. No production sound behavior or full factory/
 normal-input break/drop acceptance is claimed by these instruction probes.
+
+
+### S4 settled node dispatch and live x87 precision
+
+The [settled-node verification](M15-SETTLED-NODE-LIVE-PRECISION-VERIFICATION.json)
+records a new live precision boundary. In an isolated original-game Proton run,
+64 entries each at 707370, 7100A0 and 8978D0 all observe FPCW007F: 24-bit
+significands. This is evidence for those sampled scene/composition/writeback
+contexts, not a universal precision statement about all game systems/platforms.
+The initial 027F/037F emulated frame corpus did not establish live precision.
+
+The new settled-node dispatcher composes current local with parent cached world,
+then gates physical input on bit0 and local writeback on bit8. Its default Single
+arithmetic follows the observed mode, preserving wide exponents between binary32
+stores. Explicit Double retains the older 53-bit API contract. Native007F tie,
+wide-cancellation and tiny-product cases independently establish why casting
+every intermediate to float is insufficient.
+
+Both production builds match 512 supplied original node frames exactly for
+explicit 007F/027F and 347 original007F composition cases: 335 finite exact,
+12 nonfinite rejected. The preceding double-only binary fails 32 live-mode frames.
+Three 037F differences remain failing diagnostics; no tolerance is substituted.
+The audit records raw failures, corrected baseline source-hash metadata, source/
+private save preservation, clean original UI exit and full normal/sanitizer checks.
+Existing actor/drop/physical-target arithmetic callers still need context-specific
+precision review and selective migration. Live loose-node/controller integration
+and the complete M15S4 gameplay acceptance matrix remain open.
