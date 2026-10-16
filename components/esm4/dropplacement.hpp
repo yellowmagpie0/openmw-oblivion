@@ -14,9 +14,14 @@ namespace ESM4
 {
     // Fresh dropped-reference scale from the source item's ExtraScale. Absence
     // selects the constructor's 1, independently of the actor/attachment scale.
-    // Original SetScale formats two decimal places, parses binary32, then
+    // Original reference setter 4DB520 formats two decimal places, parses binary32, then
     // clamps to [0.01, 10]. Nonfinite extras reject. No caller state changes.
     float droppedReferenceScale(std::optional<float> sourceExtraScale);
+
+    // Script command 5093B0 clamps to [0.5, 2] before invoking 4DB520.
+    // This narrower command limit does not apply to fresh dropped items.
+    // Nonfinite command inputs reject without changing caller state.
+    float scriptReferenceScale(float requestedScale);
 
     struct DroppedItemPlacement
     {

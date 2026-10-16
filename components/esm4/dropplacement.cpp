@@ -23,6 +23,13 @@ namespace ESM4
         return std::max(.01f, static_cast<float>(std::floor(double(scale) * 100. + .5) / 100.));
     }
 
+    float scriptReferenceScale(float requestedScale)
+    {
+        if (!std::isfinite(requestedScale))
+            throw std::invalid_argument("Nonfinite script reference scale");
+        return droppedReferenceScale(std::clamp(requestedScale, .5f, 2.f));
+    }
+
     namespace
     {
         constexpr float halfPi = 1.57079637050628662109375f;

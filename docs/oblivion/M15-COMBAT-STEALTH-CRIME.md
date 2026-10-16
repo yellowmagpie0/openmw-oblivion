@@ -6,6 +6,22 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native SetScale command limits — 2026-10-16
+
+Native script `SetScale` now clamps finite input to `[0.5, 2]` and applies the
+original two-decimal reference setter before passing the result to World.
+Fresh dropped-item ExtraScale keeps its separate `[0.01, 10]` rule.
+All 488 original-command scale outputs match normal and ASan/UBSan C++ bit for
+bit. Both actual engine command/query courses verify six reference/node scale
+updates; the pre-change binary fails five of those cases. Both full builds pass
+**2,690 component tests and 1,553 engine tests**.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-setscale-command-limits-and-live-body-observation)
+records the original live-body observation: scaling retains admitted dynamic
+physics state while updating node/reference scale. Loose-owner scale binding,
+physical save/recreation, production break/mastery and the full normal-input
+acceptance matrix remain open. S4 is incomplete.
+
 ## S4 native SetAngle rotation order — 2026-10-16
 
 Native `SetAngle` now explicitly requests the direct object rotation order used

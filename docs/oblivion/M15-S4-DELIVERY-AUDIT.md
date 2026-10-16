@@ -2168,3 +2168,103 @@ code is unchanged and those suites were not rerun for this host-call correction.
 Live scaling, physical loose-body retention/save/recreation, production
 break/mastery dispatch, replacement/sound, pickup cleanup and the complete
 normal-input/restart/controller/FPS matrix remain required. **S4 is incomplete.**
+
+
+## Native SetScale command limits and live-body observation
+
+Checkpoint **2026-10-16** adds immutable `scriptReferenceScale` and routes the
+native script host's `SetScale` input through it before World mutation. Original
+command `5093B0` clamps to binary32 **0.5** (`A3D65C`) and **2** (`A379B4`), then
+calls reference setter `4DB520` for decimal formatting/parsing. The existing
+fresh-drop helper supplies that verified rounding operation; its own wider
+`[0.01,10]` source-ExtraScale rule remains unchanged. For example script input 0.125
+stores 0.5, script input 0.625 stores 0.63 and script input 7 stores 2, while fresh-drop input 0.125
+stores 0.13 and fresh-drop input 7 stores 7. Nonfinite typed command inputs explicitly
+reject before World mutation; original nonfinite command behavior is excluded.
+
+The editable [original script-scale manifest](M15-ORIGINAL-SCRIPT-SCALE-PROBES.json)
+records 32 independent literal scale outputs, original constants, boundary stubs,
+comparison and actual runtime reports. Original executable SHA256:
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/live-scale-command-oracle-05` executes **488 full original-command contexts**:
+122 finite binary32 inputs, both x87 control words027F/037F and ordinary/bodyT
+bodies. Cases include signed zero, extreme finite floats, clamp-adjacent values,
+exact half cents and a regular interior grid. Argument extraction `4FAE80`
+supplies the chosen float at the real output pointer; RTTI `9832E6` supplies the
+nonactor result. Actual `4DB520`, original CRT sprintf/atof and buffer getter,
+NiNode vtable `A7E38C`, two complete `707370` updates and ordinary/bodyT dynamic
+collision/motion dispatch execute. Windows thread/locale/error imports,
+critical-section no-ops and change-record capture are declared boundaries.
+The final probe removes the preliminary buffer-provider stub.
+
+The ordinary/bodyT fixture has nonzero bodyT quaternion at+20 and translation
+at+30, native sphere-motion type 2, no native World, an already active island
+and an undereferenced poisoned shape sentinel at hkp+14. All **20KB of body,
+hkp, motion, island and sentinel storage remain byte-for-byte unchanged**.
+Reference/node scale updates correctly. Actual final REFR virtual+90 is
+`4D6DB0` -> `46C640`, which marks the reference altered (temporary flags 0x4000
+become 0x4002). It is not a body-rebuild request. This corrects the earlier
+handoff assumption about that virtual slot.
+
+`S4/live-scale-command-oracle-06` repeats all 488 contexts with collision flags 0x5,
+actual global callback `BA7A88=4E2160`, actual TESObjectExtraData/REFR lookup
+and the original TLS mutation guard. The collision target is the root NiNode;
+null reference cell and engine config+34=1 skip terrain/cell migration. Body
+storage still remains byte-identical; reference position/rotation follow the
+physical target and modification masks 4/8 are captured. The scale results are
+identical to probe 05. Full ALtrue return, stack, callee-saved registers, FPCW,
+base and reference-outside-pose/scale/altered flags are checked. Original argument
+parsing, attached native World broadphase/activation, hierarchy and actor/fixed/
+keyframed motion branches are not proved by these fixtures.
+
+`S4/script-scale-compare-01` compares production C++ against all 488 original
+scale outputs in normal and ASan/UBSan executables: **zero bit mismatches**.
+Two new component tests cover 32 literal native outputs, the distinction between
+script/drop ranges and nonfinite rejection. Earlier bounded scene/command
+probes remain retained development evidence. Command01 covers 22 plain-body
+contexts;02 adds bodyT rotation but placed translation in an unused slot;
+03 corrects translation+30;04 extends to 488;05 executes the real buffer getter;
+06 enables the actual physical reference callback. Only05/06 support the final
+claims above.
+
+`S4/script-scale-runtime-baseline-01` pins the preceding normal engine binary
+and runs six actual `SetScale`/`GetScale` pairs on resident weapon
+`content:oblivion.esm:000f1f`. Inputs 0.125/0.625/7/-2/1.375/1 reach World,
+reference storage, rendered node and query unchanged. The independent original
+comparison fails exactly the first five cases. This is a true pre-change binary,
+SHA256 `1455a65c4dc2e5bb2c47d27a14c35beacfbdc3e27ae875a4bcffcbacf2652409`.
+`S4/script-scale-runtime-normal-01` and `-sanitized-01` repeat the same sequence
+with the corrected host. All six stored reference and node scale values match
+original binary32 outputs; all twelve command returns complete and `GetScale`
+agrees. The read-only GDB observer captures actual World arguments where debug
+information permits, native reference storage and all three rendered scale
+lanes after World returns. The launcher deliberately SIGKILLs the engine after
+all command returns, so this is not normal exit/save/restart acceptance.
+Input-save SHA256 is
+`798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a`.
+Each course pins binary, commands, private save, exact saved dependency scripts,
+configs, observer and launcher hashes. Corrected normal engine SHA256:
+`e2dd93b947cbb3825f25b6b957726b2a5551d4a64390842568e4eba05c43b12a`;
+ASan/UBSan engine SHA256:
+`69f3aa2b6dc7a3271335e105afc2b88208ec67af5e3de80bbfd49daf4144a107`.
+
+`S4/script-scale-normal-01` and `S4/script-scale-sanitized-01` each pass all
+**2,690 component tests/255 suites and 1,553 engine tests/122 suites**,
+unfiltered with exact inventory/XML agreement and zero failures/skips. Both
+preserve identical before/after source state atop
+`9119c3db8713c9280f647d31b31d7323fbf99dde`, fingerprint
+`5a6acdfa0636bbe53b969293b8b05ab0f7586cc12c4fb411b144f6ffd17138bc`.
+No sanitizer diagnostic occurs; ASan leak checking is disabled and ASan/UBSan
+halt on errors. Four implementation/test hashes and the complete patch are
+frozen in `S4/script-scale-review-01` before documentation updates. Python is
+unchanged and its suite was not rerun.
+
+This delivers the command-input arithmetic and host wiring. PhysicsSystem still
+ignores loose-owner scale updates, and subsequent loose pose capture rejects a
+changed reference scale. Separate visible reference scale from admitted
+physical scale using the verified body-preserving behavior; first resolve
+parent/child NIF/reference callback behavior and subsequent forced transforms.
+Ordinary Object collision resizing is also outside this command/node runtime
+acceptance. Physical save/retention/recreation, production break/mastery policy,
+replacement/sound, pickup cleanup and the full normal-input/restart/controller/
+FPS matrix remain required. **S4 is incomplete.**

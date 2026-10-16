@@ -1,6 +1,7 @@
 #include "oblivionscriptmanager.hpp"
 #include "oblivioninteraction.hpp"
 #include <components/esm4/observation.hpp>
+#include <components/esm4/dropplacement.hpp>
 
 #include <algorithm>
 #include <array>
@@ -1872,7 +1873,8 @@ namespace MWWorld
             if (ptr.isEmpty()) return std::int64_t(0);
             const std::size_t firstArg = target ? 0 : 1;
             if (name == "setscale")
-                mWorld.scaleObject(ptr, static_cast<float>(ObScript::asNumber(argument(firstArg))), true);
+                mWorld.scaleObject(ptr,
+                    ESM4::scriptReferenceScale(static_cast<float>(ObScript::asNumber(argument(firstArg)))), true);
             else
             {
                 const std::string axis = lower(ObScript::valueString(argument(firstArg)));

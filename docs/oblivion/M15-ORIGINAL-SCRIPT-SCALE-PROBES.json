@@ -1,0 +1,381 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "script command scale arithmetic and host/node/query paths verified; full loose live-scale binding and S4 incomplete",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "functions": {
+    "command": "005093B0",
+    "reference_setter": "004DB520",
+    "node_update": "00707370",
+    "node_world_update": "0070C120",
+    "reference_altered_override": "004D6DB0",
+    "form_altered_marking": "0046C640"
+  },
+  "command_limits": {
+    "lower": {
+      "value": 0.5,
+      "binary32": "3F000000",
+      "original_address": "00A3D65C"
+    },
+    "upper": {
+      "value": 2.0,
+      "binary32": "40000000",
+      "original_address": "00A379B4"
+    }
+  },
+  "rule": "For finite binary32 script input clamp to[0.5,2], then execute the shared two-decimal-format/parse reference setter. Fresh dropped ExtraScale uses[0.01,10] and must not use the script clamp.",
+  "curated_original_cases": [
+    {
+      "input_bits": 1008981770,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1040187392,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1040522936,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1052770304,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1056931054,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1056964608,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1056981385,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1057048494,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1057132380,
+      "scale_bits": 1057132380
+    },
+    {
+      "input_bits": 1059061760,
+      "scale_bits": 1059145646
+    },
+    {
+      "input_bits": 1063256064,
+      "scale_bits": 1063339950
+    },
+    {
+      "input_bits": 1065353216,
+      "scale_bits": 1065353216
+    },
+    {
+      "input_bits": 1066401792,
+      "scale_bits": 1066443735
+    },
+    {
+      "input_bits": 1068498944,
+      "scale_bits": 1068540887
+    },
+    {
+      "input_bits": 1073699881,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1073741824,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1088421888,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1092616192,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 0,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 2147483648,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 3221225472,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1094713344,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1056964607,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1056964609,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1059061759,
+      "scale_bits": 1058977874
+    },
+    {
+      "input_bits": 1059061761,
+      "scale_bits": 1059145646
+    },
+    {
+      "input_bits": 1073741823,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1073741825,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 2147483649,
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 2139095039,
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 4286578687,
+      "scale_bits": 1056964608
+    }
+  ],
+  "original_probe": {
+    "passed": true,
+    "contexts": 488,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "4d8014de230e8ec8b169f9b058f5e42bfcf7ed0d585ce87cf136e8d1a54e0594",
+    "corpus_sha256": "137ff72d15886ba17c71fb42f876cdf8146cc703724db03fc694c1778782bbfd",
+    "boundaries": {
+      "004FAE80": "Argument extraction supplies a chosen binary32 value at the actual output pointer; real command parsing excluded.",
+      "009832E6": "RTTI boundary returns null for the WEAP-backed nonactor fixture; actor-specific branch excluded.",
+      "REFR virtual+40": "Records actual scale change mask16 without external change-record storage.",
+      "Windows imports": "GetLastError/SetLastError/TlsGetValue/FlsGetValue fixtures with original CRT thread/locale data.",
+      "0043F2E0/0043F300": "No-op critical-section boundaries; no native synchronization acceptance."
+    },
+    "scope": "Full5093B0 through real4DB520, original sprintf/atof/7616D0, realNiNode A7E38C updates707370 twice and actual ordinary/bodyT dynamic collision/motion dispatch. Temporary REFRflags4000 selects real4D6DB0/46C640 altered marking, final4002. NativeWorld null and island alreadyactive. Poisoned shape sentinel at hkp+14 is not dereferenced; body/HK/motion/island/sentinel20KB remain byte-identical. BodyT nonzero quaternion+20/translation+30, bothCW, 122finiteinputs, fullstack/callee-save/FPCW/refexceptscaleandflags/base invariants. Not original argument parser, actor/fixed/keyframed modes, broadphase/activation, hierarchy, native gameplay or complete live-scale engine support."
+  },
+  "comparison_results": {
+    "normal": {
+      "passed": true,
+      "cases": 488,
+      "mismatches": [],
+      "binary_sha256": "5e609856bd9b99c50fecbf1ad1f29917690ee59230992a8463f4c65db502acca",
+      "production_source_sha256": "689508c9c2e97b33369c173af490b20311ed3054a672ac3935df081917db97d9",
+      "scope": "Production scriptReferenceScale output bits against full original SetScale command outputs, including original CRT and both x87 words; no engine/runtime acceptance."
+    },
+    "sanitized": {
+      "passed": true,
+      "cases": 488,
+      "mismatches": [],
+      "binary_sha256": "8b24d837d1c5aecbbe0c55472ec3c18694781fff7985326991061d49ece28181",
+      "production_source_sha256": "689508c9c2e97b33369c173af490b20311ed3054a672ac3935df081917db97d9",
+      "scope": "Production scriptReferenceScale output bits against full original SetScale command outputs, including original CRT and both x87 words; no engine/runtime acceptance."
+    }
+  },
+  "runtime_command_sequence": [
+    "at 1 command content:oblivion.esm:000f1f setscale 0.125",
+    "at 1 command content:oblivion.esm:000f1f getscale",
+    "at 1 command content:oblivion.esm:000f1f setscale 0.625",
+    "at 1 command content:oblivion.esm:000f1f getscale",
+    "at 1 command content:oblivion.esm:000f1f setscale 7",
+    "at 1 command content:oblivion.esm:000f1f getscale",
+    "at 1 command content:oblivion.esm:000f1f setscale -2",
+    "at 1 command content:oblivion.esm:000f1f getscale",
+    "at 1 command content:oblivion.esm:000f1f setscale 1.375",
+    "at 1 command content:oblivion.esm:000f1f getscale",
+    "at 1 command content:oblivion.esm:000f1f setscale 1",
+    "at 1 command content:oblivion.esm:000f1f getscale"
+  ],
+  "runtime_results": {
+    "script-scale-runtime-baseline-01": {
+      "passed": false,
+      "cases": 6,
+      "failed_scale_cases": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "engine_pid": 647987,
+      "binary_sha256": "1455a65c4dc2e5bb2c47d27a14c35beacfbdc3e27ae875a4bcffcbacf2652409",
+      "input_sha256": "798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a",
+      "expected_scale_bits": [
+        1056964608,
+        1059145646,
+        1073741824,
+        1056964608,
+        1068540887,
+        1065353216
+      ],
+      "actual_scale_bits": [
+        1040187392,
+        1059061760,
+        1088421888,
+        3221225472,
+        1068498944,
+        1065353216
+      ],
+      "getscale_results": [
+        0.125,
+        0.625,
+        7.0,
+        -2.0,
+        1.375,
+        1.0
+      ],
+      "world_reference_node_and_query_agree": true,
+      "observer_writes_gameplay_state": false,
+      "normal_exit_or_restart_acceptance": false,
+      "scope": "Actual native SetScale/GetScale host calls, World call argument where debug-visible, stored reference and rendered placement node. Deliberate SIGKILL after all12 command returns. Collision resizing, loose-body scale binding/save/recreation and normal-input melee acceptance excluded."
+    },
+    "script-scale-runtime-normal-01": {
+      "passed": true,
+      "cases": 6,
+      "failed_scale_cases": [],
+      "engine_pid": 648103,
+      "binary_sha256": "e2dd93b947cbb3825f25b6b957726b2a5551d4a64390842568e4eba05c43b12a",
+      "input_sha256": "798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a",
+      "expected_scale_bits": [
+        1056964608,
+        1059145646,
+        1073741824,
+        1056964608,
+        1068540887,
+        1065353216
+      ],
+      "actual_scale_bits": [
+        1056964608,
+        1059145646,
+        1073741824,
+        1056964608,
+        1068540887,
+        1065353216
+      ],
+      "getscale_results": [
+        0.5,
+        0.6299999952316284,
+        2.0,
+        0.5,
+        1.3799999952316284,
+        1.0
+      ],
+      "world_reference_node_and_query_agree": true,
+      "observer_writes_gameplay_state": false,
+      "normal_exit_or_restart_acceptance": false,
+      "scope": "Actual native SetScale/GetScale host calls, World call argument where debug-visible, stored reference and rendered placement node. Deliberate SIGKILL after all12 command returns. Collision resizing, loose-body scale binding/save/recreation and normal-input melee acceptance excluded."
+    },
+    "script-scale-runtime-sanitized-01": {
+      "passed": true,
+      "cases": 6,
+      "failed_scale_cases": [],
+      "engine_pid": 648370,
+      "binary_sha256": "69f3aa2b6dc7a3271335e105afc2b88208ec67af5e3de80bbfd49daf4144a107",
+      "input_sha256": "798f1c48d404650099618c213a5f5bd793d19f647ea2be86b19d537ade42b66a",
+      "expected_scale_bits": [
+        1056964608,
+        1059145646,
+        1073741824,
+        1056964608,
+        1068540887,
+        1065353216
+      ],
+      "actual_scale_bits": [
+        1056964608,
+        1059145646,
+        1073741824,
+        1056964608,
+        1068540887,
+        1065353216
+      ],
+      "getscale_results": [
+        0.5,
+        0.6299999952316284,
+        2.0,
+        0.5,
+        1.3799999952316284,
+        1.0
+      ],
+      "world_reference_node_and_query_agree": true,
+      "observer_writes_gameplay_state": false,
+      "normal_exit_or_restart_acceptance": false,
+      "scope": "Actual native SetScale/GetScale host calls, World call argument where debug-visible, stored reference and rendered placement node. Deliberate SIGKILL after all12 command returns. Collision resizing, loose-body scale binding/save/recreation and normal-input melee acceptance excluded."
+    }
+  },
+  "implementation_scope": [
+    "New immutable scriptReferenceScale, existing fresh-drop arithmetic unchanged.",
+    "Native script host resolves command scale before passing it to World; nonfinite typed inputs explicitly reject.",
+    "Two component regressions cover32 independent native literals, range separation and invalid input.",
+    "Actual runtime command/query/reference/rendered-node checks do not establish collision/loose-body scaling or save/recreation semantics."
+  ],
+  "remaining": [
+    "Loose-owner visible scale must be distinguished from admitted physical scale; do not implement body-property rescaling based on the earlier assumption.",
+    "The actual original dynamic-body fixture keeps all physical20KB byte-identical during scaling; nativeWorld/broadphase/activation, hierarchy and other motion modes remain outside that fixture.",
+    "Parent/child NIF transforms, reference pose callback after scaling, subsequent forced transforms and saved recreation need independent checks before integrating live loose scale.",
+    "Static Object collision scaling, physical save/recreation, production break/mastery, pickup/replacement/sound and full normal-input S4 matrix remain open."
+  ],
+  "original_probe_with_reference_callback": {
+    "passed": true,
+    "contexts": 488,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "cec0e2740d345a4f386ca2a3eda80346716041b10bc9f163952cb96077ed9a7f",
+    "corpus_sha256": "98a3afea43182006a2d977c1c27926dca2b2ece49215841ac7497ec68942f4b8",
+    "boundaries": {
+      "004FAE80": "Argument extraction supplies a chosen binary32 value at the actual output pointer; real command parsing excluded.",
+      "009832E6": "RTTI boundary returns null for the WEAP-backed nonactor fixture; actor-specific branch excluded.",
+      "REFR virtual+40": "Records actual scale change mask16 without external change-record storage.",
+      "Windows imports": "GetLastError/SetLastError/TlsGetValue/FlsGetValue fixtures with original CRT thread/locale data.",
+      "0043F2E0/0043F300": "No-op critical-section boundaries; no native synchronization acceptance.",
+      "0046ABF0": "Records physics callback modification masks4/8 without external change-record storage."
+    },
+    "scope": "Full5093B0/4DB520 with realNiNode A7E38C, ordinary/bodyT dynamic collision updates twice, actual globalBA7A88=4E2160 physics-to-reference callback and actual parent-capable4DC270 extra lookup. Direct rootcollision fixture with TESObjectExtraData/REFR binding; collisionflags5 enable callback. OriginalTLSguard supplied thread storage; null reference cell and config+34=1 skip terrain/cell migration. All20KB physical memory byte-identical; reference position/rotation follow target scene and callbacks request modification masks4/8, scale unchangedbycallback, flags4002. Complete ALtrue/fullreturn/SP/callee-save/FPCW, base/refoutsidepose-scale-flags invariants. Other prior boundaries retained. NativeWorld absent/islandalreadyactive. Does not prove hierarchy, actor/fixed/keyframed modes, native broadphase/activation, original command parsing or gameplay.",
+    "scale_outputs_identical_to_no_callback_corpus": true
+  },
+  "full_build_results": [
+    {
+      "evidence": "script-scale-normal-01",
+      "source": {
+        "head": "9119c3db8713c9280f647d31b31d7323fbf99dde",
+        "source_fingerprint": "5a6acdfa0636bbe53b969293b8b05ab0f7586cc12c4fb411b144f6ffd17138bc"
+      },
+      "counts": {
+        "components": 2690,
+        "engine": 1553
+      },
+      "test_binaries": {
+        "components": "4b37a5226874709916c108df0d634f555b7d84fb9c9da44fd26b43538a929c8d",
+        "engine": "5d8f98c40b276b963ead28c8090e2c8a7102e81308db6b28b3c4e8d11eab388f"
+      }
+    },
+    {
+      "evidence": "script-scale-sanitized-01",
+      "source": {
+        "head": "9119c3db8713c9280f647d31b31d7323fbf99dde",
+        "source_fingerprint": "5a6acdfa0636bbe53b969293b8b05ab0f7586cc12c4fb411b144f6ffd17138bc"
+      },
+      "counts": {
+        "components": 2690,
+        "engine": 1553
+      },
+      "test_binaries": {
+        "components": "da6d6653441c0e6967835685ea7ce0bad33f85cb7835cf4e8320f1d8eef5af50",
+        "engine": "02f6bebf7101428a18667152912a1af89e8cfd4485fe40be0fde3f051132408c"
+      }
+    }
+  ],
+  "evidence_root": "build/oblivion-compat/m15/S4"
+}

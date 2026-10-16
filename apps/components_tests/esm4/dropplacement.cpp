@@ -275,4 +275,61 @@ namespace
         }
     }
 
+    TEST(ESM4DropPlacement, ScriptScaleMatchesOriginalCommandLimitsAndDecimalStores)
+    {
+        // Original5093B0 ->4DB520, live-scale-command-oracle-04. Both x87
+        // words and ordinary/bodyT fixtures agree on these stored results.
+        const std::array<std::array<unsigned, 2>, 32> commandCases{{
+            {0x3c23d70au, 0x3f000000u},
+            {0x3e000000u, 0x3f000000u},
+            {0x3e051eb8u, 0x3f000000u},
+            {0x3ec00000u, 0x3f000000u},
+            {0x3eff7ceeu, 0x3f000000u},
+            {0x3f000000u, 0x3f000000u},
+            {0x3f004189u, 0x3f000000u},
+            {0x3f0147aeu, 0x3f000000u},
+            {0x3f028f5cu, 0x3f028f5cu},
+            {0x3f200000u, 0x3f2147aeu},
+            {0x3f600000u, 0x3f6147aeu},
+            {0x3f800000u, 0x3f800000u},
+            {0x3f900000u, 0x3f90a3d7u},
+            {0x3fb00000u, 0x3fb0a3d7u},
+            {0x3fff5c29u, 0x40000000u},
+            {0x40000000u, 0x40000000u},
+            {0x40e00000u, 0x40000000u},
+            {0x41200000u, 0x40000000u},
+            {0x00000000u, 0x3f000000u},
+            {0x80000000u, 0x3f000000u},
+            {0xc0000000u, 0x3f000000u},
+            {0x41400000u, 0x40000000u},
+            {0x3effffffu, 0x3f000000u},
+            {0x3f000001u, 0x3f000000u},
+            {0x3f1fffffu, 0x3f1eb852u},
+            {0x3f200001u, 0x3f2147aeu},
+            {0x3fffffffu, 0x40000000u},
+            {0x40000001u, 0x40000000u},
+            {0x00000001u, 0x3f000000u},
+            {0x80000001u, 0x3f000000u},
+            {0x7f7fffffu, 0x40000000u},
+            {0xff7fffffu, 0x3f000000u},
+        }};
+        for (const auto& sample : commandCases)
+        {
+            const auto result = ESM4::scriptReferenceScale(std::bit_cast<float>(sample[0]));
+            EXPECT_EQ(std::bit_cast<unsigned>(result), sample[1]);
+        }
+        // Source ExtraScale takes the separate wider reference-setter path.
+        EXPECT_EQ(ESM4::droppedReferenceScale(.125f), .13f);
+        EXPECT_EQ(ESM4::scriptReferenceScale(.125f), .5f);
+        EXPECT_EQ(ESM4::droppedReferenceScale(7.f), 7.f);
+        EXPECT_EQ(ESM4::scriptReferenceScale(7.f), 2.f);
+    }
+
+    TEST(ESM4DropPlacement, ScriptScaleRejectsNonfiniteInputs)
+    {
+        for (float invalid : {std::numeric_limits<float>::infinity(),
+                -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            EXPECT_THROW(ESM4::scriptReferenceScale(invalid), std::invalid_argument);
+    }
+
 }
