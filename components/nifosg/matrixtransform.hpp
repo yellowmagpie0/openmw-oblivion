@@ -59,6 +59,11 @@ namespace NifOsg
         virtual void setRotation(const osg::Quat& rotation);
         virtual void setRotation(const Nif::Matrix3& rotation);
         virtual void setTranslation(const osg::Vec3f& translation);
+        // Float author/controller local, independent of traversal projection.
+        // Preserve the separate NIF rotation when it matches drawing storage;
+        // reconstruct only for raw procedural matrix writes. Throws on invalid
+        // affine components or nonfinite/zero scale. Does not mutate either.
+        Nif::NiTransform getControllerTransform() const;
 
     private:
         TraversalMatrix mTraversalMatrix;

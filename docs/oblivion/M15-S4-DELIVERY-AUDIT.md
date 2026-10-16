@@ -3486,3 +3486,55 @@ other precision contexts, loose physical retention/save/fresh recreation,
 production break/mastery/quest-retained/group-NPC drop/pickup/replacement/sound/
 power/creature/reactions/effects and the complete normal-input/FPS/fresh-process
 S4 matrix remain open. Full M15S4 is active and incomplete.
+
+
+## 2026-10-16 — explicit global-reference pose capture checkpoint
+
+`ActorRagdollPoseBinding::RootSpace::ReferenceWorld` now captures an initialized
+native global root without applying synthetic OSG placement R/T again. It requires
+a declared single physical hierarchy root, composes descendants in observed Single
+precision and uses the corresponding root/child dynamic snapshot writeback. The
+existing scale admission remains. Default ObjectLocal behavior is unchanged.
+A shared `MatrixTransform::getControllerTransform` preserves separate native
+rotation bits when the scaled drawing matrix agrees and handles raw procedural
+controller matrices independently of traversal projection handles. The manual
+scene visitor uses the shared reader. Four new tests cover capture, writeback,
+checkpoint restore, native cache precision/projection independence and rejection.
+
+Fresh normal and ASan/UBSan checks pass all2750 component tests/262 suites and
+1595 engine tests/122 suites per build, with exact inventory/XML agreement and no
+failures or skips. Leak detection is disabled; existing unrelated compiler warnings
+remain. The original72-case root-initialization/composition probe supplies24 live
+007F root inputs to each actual pose-binding replay:576 exact root/child R/T fields
+per build, zero differences. This consumes recorded Euler-builder output as input;
+it does not implement Euler construction. A separate native Linux i386 harness runs
+the complete ordinary nonactor4D7AF0 builder plus the actual scale getter/FABS/store
+prefix:3912 hardware contexts repeat identically, and all72 common emulated root
+R/scale outputs match hardware. Those are pinned expectations, not a production
+Euler-builder comparison or whole GenerateNiNode/gameplay acceptance. The unchanged manual
+traversal replay passes512 supported frames/8128 field checks in each build after
+the reader move, with drawing error5.68434e-14 within1e-9.
+
+A separate384-context original probe combines actual initialization segments,
+registration and first707370 update. Pending40 clears even with inactive bit0;
+first sync force-dispatches scene-to-body. Controller lists are empty. Synthetic
+heap/Windows/TLS/critical boundaries, null native World and disabled property-copy/
+special gates remain. The middle GenerateNiNode path and virtual50, controller
+timing/interpolation, native stepping and actual gameplay are unproven. A retained
+forward-adapter diagnostic finds32/128 live007F cases differ in64 quaternion fields;
+027F/037F each match128 cases. First sync must resolve this precision gap.
+
+[Editable verification](M15-REFERENCE-WORLD-POSE-VERIFICATION.json) pins sources,
+reports, corpora and comparisons under `build/oblivion-compat/m15/S4/` in the
+`reference-world-pose-*`, `reference-world-traversal-compare-01`,
+`reference-root-world-capture-oracle-01`, `reference-root-first-sync-oracle-01`
+and `reference-first-sync-target-baseline-01` directories.
+
+This is an opt-in adapter checkpoint without a production ReferenceWorld caller.
+ObjectAnimation still initializes its legacy local root; World still uses the
+root-only/inverse-bind adapter. Correct native global initialization and initial
+capture, mutable registered/pending flags and first sync, one update owner with
+verified controller clocks, safe native REFR-before-child/cell migration callbacks,
+all property/admission/node policies, loose save/fresh recreation and the full
+production melee/drop/pickup/reaction/effect and normal-input/FPS/fresh-process
+S4 gates remain open. Full M15S4 is active and incomplete.

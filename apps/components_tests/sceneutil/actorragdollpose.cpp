@@ -16,6 +16,9 @@
 #include <limits>
 #include <stdexcept>
 #include <cstring>
+#include <array>
+#include <bit>
+#include <cstdint>
 
 namespace
 {
@@ -674,5 +677,101 @@ namespace
         binding.restoreLocalPose(original);
         EXPECT_EQ(mPelvis->getTraversalMatrix().getMatrix(), nullptr);
         EXPECT_TRUE(binding.matchesLocalPose(original));
+    }
+}
+
+namespace
+{
+    using RootSpace = SceneUtil::ActorRagdollPoseBinding::RootSpace;
+
+    TEST_F(ActorRagdollPoseTest, ReferenceWorldRootCapturesOriginalGlobalHierarchyWithoutDoublePlacement)
+    {
+        // reference-root-world-capture-oracle-01: actual root initialization
+        // segments then707370 ordinary composition,007F, angles(.2,-.3,.7),scale2.
+        const std::array<std::uint32_t, 9> rotation{0x3f3b0df5u,0x3f1d8dc8u,0x3e974e6du,
+            0xbf2d20bcu,0x3f3636ceu,0x3e4259e6u,0xbdbf8f0cu,0xbead547au,0x3f6fb0edu};
+        const std::array<std::uint32_t, 3> childPosition{0x41b21a51u,0x41bc4696u,0x42105fb0u};
+        auto root = Nif::NiTransform::getIdentity();
+        for (unsigned i = 0; i < 9; ++i) root.mRotation.mValues[i / 3][i % 3] = std::bit_cast<float>(rotation[i]);
+        root.mTranslation = {10,20,30}; root.mScale = 2;
+        mGraph.mReferenceRoot = 8;
+        mPelvis->setScale(root.mScale); mPelvis->setRotation(root.mRotation); mPelvis->setTranslation(root.mTranslation);
+        mConnector->setTranslation({3,4,5}); mHand->setTranslation({0,0,0});
+        auto placement = Nif::NiTransform::getIdentity(); placement.mScale = 2;
+        placement.mTranslation = {10000,20000,30000};
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot, RootSpace::ReferenceWorld);
+        const auto result = binding.captureWorldBones(placement); ASSERT_EQ(result.size(), 2u);
+        for (unsigned i = 0; i < 9; ++i)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[1].mPose(i % 3,i / 3)), rotation[i]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[0].mPose(i % 3,i / 3)), rotation[i]);
+        }
+        EXPECT_EQ(result[1].mPose.getTrans(), osg::Vec3f(10,20,30));
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[0].mPose(3,i)), childPosition[i]);
+        EXPECT_FLOAT_EQ(mPelvis->mScale, 2);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10,20,30));
+    }
+
+    TEST_F(ActorRagdollPoseTest, ReferenceWorldPhysicalSnapshotWritesGlobalRootAndRelativeChildren)
+    {
+        mGraph.mReferenceRoot = 8;
+        mPelvis->setScale(2); mPelvis->setTranslation({100,20,30});
+        auto placement = Nif::NiTransform::getIdentity(); placement.mScale = 2; placement.mTranslation = {100,20,30};
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot, RootSpace::ReferenceWorld);
+        const auto saved = binding.captureLocalPose();
+        const std::array<NifBullet::RagdollBoneWorldPose, 2> poses{{
+            {28,osg::Matrixf::translate(125,26,30)}, {8,osg::Matrixf::translate(120,20,30)}}};
+        binding.applyWorldBones(poses, placement);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(120,20,30));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(2.5,1,0));
+        EXPECT_FLOAT_EQ(mPelvis->mScale, 2); EXPECT_FLOAT_EQ(mHand->mScale, 1);
+        const auto result = binding.captureWorldBones(placement);
+        EXPECT_EQ(result[0].mPose, poses[0].mPose); EXPECT_EQ(result[1].mPose, poses[1].mPose);
+        binding.restoreLocalPose(saved);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(100,20,30));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(1,0,0));
+        EXPECT_TRUE(binding.matchesLocalPose(saved));
+    }
+
+    TEST_F(ActorRagdollPoseTest, ReferenceWorldReaderPreservesNativeRotationBitsAndIgnoresTraversalProjection)
+    {
+        const std::array<std::uint32_t, 9> rotation{0x3f3b0df4u,0xbe974e6du,0x3f1d8dc8u,
+            0x3e677372u,0x3f7490efu,0x3e42f2ceu,0xbf24eb73u,0u,0x3f43ccb3u};
+        Nif::Matrix3 native;
+        for (unsigned i = 0; i < 9; ++i) native.mValues[i / 3][i % 3] = std::bit_cast<float>(rotation[i]);
+        mGraph.mReferenceRoot = 8;
+        mPelvis->setScale(1.25f); mPelvis->setRotation(native);
+        mPelvis->setTraversalMatrix(osg::Matrixd::translate(999,999,999));
+        auto placement = Nif::NiTransform::getIdentity(); placement.mScale = 1.25f;
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot, RootSpace::ReferenceWorld);
+        const auto result = binding.captureWorldBones(placement);
+        for (unsigned i = 0; i < 9; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[1].mPose(i % 3,i / 3)), rotation[i]);
+        EXPECT_EQ(result[1].mPose.getTrans(), osg::Vec3f(10,0,0));
+        // A raw procedural write leaves the separate NIF rotation cache stale.
+        osg::Matrixd raw; raw(0,0)=raw(1,1)=0; raw(0,1)=1.25; raw(1,0)=-1.25; raw(2,2)=1.25;
+        mPelvis->setMatrix(raw);
+        const auto procedural = binding.captureWorldBones(placement);
+        EXPECT_FLOAT_EQ(procedural[1].mPose(0,1), 1); EXPECT_FLOAT_EQ(procedural[1].mPose(1,0), -1);
+        EXPECT_FLOAT_EQ(procedural[1].mPose(0,0), 0);
+        for (unsigned i = 0; i < 9; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(mPelvis->mRotationScale.mValues[i / 3][i % 3]), rotation[i]);
+    }
+
+    TEST_F(ActorRagdollPoseTest, ReferenceWorldModeRequiresADeclaredSingleHierarchyRoot)
+    {
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot, RootSpace::ReferenceWorld)), std::invalid_argument);
+        mGraph.mReferenceRoot = 18;
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot, RootSpace::ReferenceWorld)), std::invalid_argument);
+        mGraph.mReferenceRoot = 8;
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot, static_cast<RootSpace>(99))), std::invalid_argument);
+        osg::ref_ptr<NifOsg::MatrixTransform> other = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        other->setName("Other"); other->setUserValue("recordIndex", 48u); mRoot->addChild(other);
+        auto body = mGraph.mBodies.back(); body.mNodeRecord=48; body.mRecord=49; body.mBone="Other";
+        mGraph.mBodies.push_back(body);
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot, RootSpace::ReferenceWorld)), std::invalid_argument);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10,0,0));
+        EXPECT_EQ(mPelvis->getTraversalMatrix().getMatrix(), nullptr);
     }
 }

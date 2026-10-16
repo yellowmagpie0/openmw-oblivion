@@ -1,5 +1,7 @@
 #include "matrixtransform.hpp"
 
+#include <components/nif/nativetransform.hpp>
+
 #include <bit>
 #include <cmath>
 #include <cstdint>
@@ -78,6 +80,47 @@ namespace NifOsg
         , mRotationScale(copy.mRotationScale)
         , mTraversalMatrix(copy.mTraversalMatrix)
     {
+    }
+
+    Nif::NiTransform MatrixTransform::getControllerTransform() const
+    {
+        const auto& node = *this;
+        const auto require = [](bool condition, const char* message) {
+            if (!condition) throw std::invalid_argument(message);
+        };
+        require(std::isfinite(node.mScale) && node.mScale != 0, "singular NIF controller scale");
+        const auto& matrix = node.getMatrix();
+        require(matrix(3, 3) == 1, "nonaffine NIF controller matrix");
+        auto local = Nif::NiTransform::getIdentity();
+        local.mScale = node.mScale;
+        bool cacheMatchesDrawing = true;
+        for (unsigned row = 0; row < 3; ++row)
+        {
+            require(matrix(row, 3) == 0, "projective NIF controller matrix");
+            require(Nif::tryStoreNativeTransformFloat(matrix(3, row), local.mTranslation[row]),
+                "invalid NIF controller translation");
+            for (unsigned column = 0; column < 3; ++column)
+            {
+                const float cached = node.mRotationScale.mValues[row][column];
+                require(std::isfinite(cached), "invalid NIF controller rotation cache");
+                float drawing;
+                require(Nif::tryStoreNativeTransformFloat(matrix(column, row), drawing),
+                    "invalid NIF controller drawing rotation");
+                const float scaled = cached * node.mScale;
+                cacheMatchesDrawing &= std::bit_cast<std::uint32_t>(drawing)
+                    == std::bit_cast<std::uint32_t>(scaled);
+            }
+        }
+        if (cacheMatchesDrawing)
+            local.mRotation = node.mRotationScale;
+        else
+            // Raw procedural controllers can deliberately leave the NIF
+            // rotation cache unchanged. Only that path needs reconstruction.
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    require(Nif::tryStoreNativeTransformFloat(matrix(column, row) / double(node.mScale),
+                        local.mRotation.mValues[row][column]), "invalid NIF controller rotation");
+        return local;
     }
 
     void MatrixTransform::setScale(float scale)

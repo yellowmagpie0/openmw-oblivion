@@ -9,7 +9,6 @@
 #include <osg/observer_ptr>
 #include <osgUtil/UpdateVisitor>
 
-#include <bit>
 #include <cmath>
 #include <stdexcept>
 #include <typeinfo>
@@ -24,43 +23,6 @@ namespace SceneUtil
         void require(bool condition, const char* message)
         {
             if (!condition) throw std::invalid_argument(message);
-        }
-
-        Nif::NiTransform readLocal(const NifOsg::MatrixTransform& node)
-        {
-            require(std::isfinite(node.mScale) && node.mScale != 0, "singular NIF controller scale");
-            const auto& matrix = node.getMatrix();
-            require(matrix(3, 3) == 1, "nonaffine NIF controller matrix");
-            auto local = Nif::NiTransform::getIdentity();
-            local.mScale = node.mScale;
-            bool cacheMatchesDrawing = true;
-            for (unsigned row = 0; row < 3; ++row)
-            {
-                require(matrix(row, 3) == 0, "projective NIF controller matrix");
-                require(Nif::tryStoreNativeTransformFloat(matrix(3, row), local.mTranslation[row]),
-                    "invalid NIF controller translation");
-                for (unsigned column = 0; column < 3; ++column)
-                {
-                    const float cached = node.mRotationScale.mValues[row][column];
-                    require(std::isfinite(cached), "invalid NIF controller rotation cache");
-                    float drawing;
-                    require(Nif::tryStoreNativeTransformFloat(matrix(column, row), drawing),
-                        "invalid NIF controller drawing rotation");
-                    const float scaled = cached * node.mScale;
-                    cacheMatchesDrawing &= std::bit_cast<std::uint32_t>(drawing)
-                        == std::bit_cast<std::uint32_t>(scaled);
-                }
-            }
-            if (cacheMatchesDrawing)
-                local.mRotation = node.mRotationScale;
-            else
-                // Raw procedural controllers can deliberately leave the NIF
-                // rotation cache unchanged. Only that path needs reconstruction.
-                for (unsigned row = 0; row < 3; ++row)
-                    for (unsigned column = 0; column < 3; ++column)
-                        require(Nif::tryStoreNativeTransformFloat(matrix(column, row) / double(node.mScale),
-                            local.mRotation.mValues[row][column]), "invalid NIF controller rotation");
-            return local;
         }
 
         osg::Matrixd inverse(const osg::Matrixd& matrix)
@@ -119,7 +81,7 @@ namespace SceneUtil
                     require(transform.getReferenceFrame() == osg::Transform::RELATIVE_RF
                             && transform.getNumParents() <= 1, "ambiguous NIF scene transform");
                     require(!transform.getTraversalMatrix().getMatrix(), "NIF scene transform is already projected");
-                    const auto local = readLocal(transform);
+                    const auto local = transform.getControllerTransform();
                     auto world = parent ? Nif::tryComposeNativeTransform(mNodes[*parent].mWorld, local, precision)
                                         : std::optional<Nif::NiTransform>(local);
                     require(world.has_value(), "invalid initial NIF scene composition");
@@ -207,7 +169,7 @@ namespace SceneUtil
         {
             auto& entry = mNodes[index];
             auto& node = *entry.mTransform;
-            const auto local = readLocal(node);
+            const auto local = node.getControllerTransform();
             const auto* parent = entry.mParent ? &mNodes[*entry.mParent].mWorld : nullptr;
             const auto world = parent ? Nif::tryComposeNativeTransform(*parent, local, mPrecision)
                                       : std::optional<Nif::NiTransform>(local);

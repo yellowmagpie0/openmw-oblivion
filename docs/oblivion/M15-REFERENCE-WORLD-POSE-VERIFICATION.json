@@ -1,0 +1,1012 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "ReferenceWorld pose adapter implemented and checked; production root initialization, first synchronization, update ownership and M15S4 remain incomplete",
+  "parent_commit": "4633e17a3780352f91a70317d3def29c750ee66f",
+  "tested_source_fingerprint": "eec7dd061f7a4a531c48d7384abd99e9eae16749d78f108f9bb763b7986e2239",
+  "implementation_sha256": {
+    "components/nifosg/matrixtransform.hpp": "fc04b807b70df24698906d1b247428a4d178852e88ab526869afdee1b08d47a3",
+    "components/nifosg/matrixtransform.cpp": "21d42c90957c5450f4b0d191aecd5cdbd1f40268feb63e2170a90556999c4814",
+    "components/sceneutil/nifscenetraversal.cpp": "a22da24ddf30a66b3ceca92ca3457168c27491eb489d2fe9828d982b7dec8602",
+    "components/sceneutil/actorragdollpose.hpp": "ecb9f8820acbcbe0e15346baeb039f96c13c1c5471504f2f41a26ac5254eb453",
+    "components/sceneutil/actorragdollpose.cpp": "cea273c4d892bc180021306a2868060a4fc83f260b9dd81976a5fcfc75be49a6",
+    "apps/components_tests/sceneutil/actorragdollpose.cpp": "2f6f53409769bc289fb0c99daaf8bc2b04e366a6b2099d035cc53285723945ac"
+  },
+  "behavior": [
+    "Explicit opt-in RootSpace::ReferenceWorld requires a declared single physical hierarchy root. Its author transform is already global and is copied without applying placement R/T again. Descendants compose with observed Single precision. Placement scale still participates in existing physical-scale admission; this does not widen admitted graph policies.",
+    "Default ObjectLocal behavior and Double precision remain unchanged. ReferenceWorld dynamic snapshot writeback has no synthetic native parent at the root and uses Single precision for children. Checkpoint capture and restore retain controller locals.",
+    "Shared MatrixTransform::getControllerTransform preserves separately cached NIF rotation bits when the scaled drawing matrix agrees. Raw procedural controller matrices can reconstruct rotation if the cache is stale. It reads author state independently of traversal projection handles. NifSceneTraversal now uses this same reader.",
+    "No production caller selects ReferenceWorld in this checkpoint. ObjectAnimation retains its current local-root binding and World retains root-only inverse-bind synchronization. This adapter alone cannot establish native attachment or live manual traversal."
+  ],
+  "checks": {
+    "normal": {
+      "path": "reference-world-pose-normal-01/verification.json",
+      "sha256": "080adeb52c793b0af8c28dd21c0a46796efc5115c172a97f98c54e020cb2c8c5",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.719
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-world-pose-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.701
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "4"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 413.004
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.215
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-world-pose-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 21.62
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2750,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "62067a90b921c8d1b7157ab820d0f519fe0f832b5934aff0e211a91809614e80",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "823c87c1864c01660b1afd08ae35059d26db75a8faeaa764d54ad07f3cb0ccc9",
+            "inventory_sha256": "de9ac8fa2a8154206785ad573c339085ccff290d6383eaad2b22890855f7cf7b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 262
+          },
+          "engine": {
+            "executed": 1595,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e114f4bc47cd51337a86734b77d3a078d4dbbfd36454e9840e76a7553dafcb0d",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "942a6eedd80119de58c5403a59bb709b3b2d68b7181e64bc51df0a48f17c2e44",
+            "inventory_sha256": "e06203b17ab8c8c840b0fa1311827160b4c1ad985d88e749e1c2f1525170a693",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 122
+          }
+        },
+        "source_before": {
+          "head": "4633e17a3780352f91a70317d3def29c750ee66f",
+          "source_fingerprint": "eec7dd061f7a4a531c48d7384abd99e9eae16749d78f108f9bb763b7986e2239"
+        },
+        "source_after": {
+          "head": "4633e17a3780352f91a70317d3def29c750ee66f",
+          "source_fingerprint": "eec7dd061f7a4a531c48d7384abd99e9eae16749d78f108f9bb763b7986e2239"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "reference-world-pose-sanitized-01/verification.json",
+      "sha256": "46d7be2fe2107dd032e5cbf63efd6b693b71e2bae665e0fff1500e8e6df7157e",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 126.478
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-world-pose-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 74.228
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 801.572
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.567
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-world-pose-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 137.29
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2750,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "5c33f4ff574ef2eb0a27ddb8a9bc8f5be3935d965c25a69f838897611de8c8ea",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "dd8290be3b35766bb5babe9a0a82571137c167b07acc2ecee3b04173613492fd",
+            "inventory_sha256": "8962d8a5f35ee7bbe0a022b63d24dbeb31a1a9374ac31fd432903069e2e5f0f7",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 262
+          },
+          "engine": {
+            "executed": 1595,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "6590f442b64ee9df81a7db737a0eedaf520b8221a84a222912b2017fd0063631",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "e55cccd514947b103c9ed62e74b054764a3da897a608c2ff67bda232617aea53",
+            "inventory_sha256": "e06203b17ab8c8c840b0fa1311827160b4c1ad985d88e749e1c2f1525170a693",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 122
+          }
+        },
+        "source_before": {
+          "head": "4633e17a3780352f91a70317d3def29c750ee66f",
+          "source_fingerprint": "eec7dd061f7a4a531c48d7384abd99e9eae16749d78f108f9bb763b7986e2239"
+        },
+        "source_after": {
+          "head": "4633e17a3780352f91a70317d3def29c750ee66f",
+          "source_fingerprint": "eec7dd061f7a4a531c48d7384abd99e9eae16749d78f108f9bb763b7986e2239"
+        }
+      }
+    }
+  },
+  "native_root_capture": {
+    "path": "reference-root-world-capture-oracle-01/verification.json",
+    "sha256": "bfe295d8ca13670f62e6a788374189ee9e9be6af648fa8d0003ddcc62f4e6d1d",
+    "report": {
+      "passed": true,
+      "cases": 72,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "02a33cc8c3d086f5e2100982ce45a1595da9ec412c9bd72f1604511f7d1a7df2",
+      "cases_sha256": "644c7f9019f98a85682aeec984e4951c4310ec5eacc45b48e417ec7c31c2f322",
+      "scope": "Two actual GenerateNiNode initialization segments:004E4244..004E426E runs reference position stores, complete4D7AF0 placement builder and native9-dword rotation copy;004E43C8..004E43E9 runs actual4D7260 scale getter,FABS and root scale store. Ordinary nonactor WEAP base, three angle triplets,two positions,four signed scales,three x87 controls. Authored root rotation/translation replaced, authored root scale retained until later segment, child/reference/base bytes unchanged; stack,EBX,EBP,FPCW preserved. Then actual707370 ordinary root/child composition executes with collision dispatch suppressed and no controllers. Root cached world equals initialized local and child cached world is captured. Stops before4D6F20 branch and node virtual+50; intervening registration/property-copy/full GenerateNiNode/first synchronization/controller clocks are not executed or established. No full game or runtime acceptance."
+    }
+  },
+  "native_first_sync": {
+    "path": "reference-root-first-sync-oracle-01/verification.json",
+    "sha256": "5509f1177ad9c9ae72e3d2637befd7a2bcf03381f31f384f22b29df85715568a",
+    "report": {
+      "passed": true,
+      "contexts": 384,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "a2d8cf90f28cb584d9d851a81faff5fb2875258ca74ebb309edad06ede07acb0",
+      "cases_sha256": "ceaf0ec25df9209b5c8f4c5b9d70392fb66285c7b50203b0a854c063744ddb1b",
+      "scope": "Actual GenerateNiNode R/T and scale initialization segments followed by original reference prefix/World registration and first707370 for root/direct-child/deep/null-first,plain/bodyT,authored0/1/8/9,two angle triplets,two scales,three x87 controls. Original first-sync clears40 even inactive; original47C930 dispatch executes but controller lists empty. Actual root/child composition, physical synchronization and pending-clear execute. Supplied synthetic heap/Windows/TLS/critical services, nullnativeWorld, property-copy/special gates disabled. GenerateNiNode middle/virtual50 skipped; no whole GenerateNiNode,controller timing/interpolation,Havok stepping or gameplay acceptance."
+    }
+  },
+  "native_root_hardware": {
+    "path": "reference-root-placement-native-01/verification.json",
+    "sha256": "0289b25439adf6c561261dbe0542e18e0bcdc9a760222ec8fb71f9ef5976276e",
+    "report": {
+      "passed": true,
+      "cases": 3912,
+      "seed": 1504016,
+      "repeats_identical": 2,
+      "emulator_common_cases": 72,
+      "emulator_common_mismatches": [],
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "harness_sha256": "ffb84bb735a52e25b5edc3be0149a7358d377de92d64edb079028b1c03565ed9",
+      "source_sha256": "d12d66531250728a398e1b2b6805db767d590a5ac123c99d97cc617c350c96f2",
+      "driver_sha256": "02acb1381b3f71547ad8346cf0cd7657d4f4cfde240e87f2648bc9fb4a906f53",
+      "cases_sha256": "986916d6d661f1d4aa6c1df3f6814dd2c3004da2fcf839978070168274335c37",
+      "cpu_model": "Intel(R) Core(TM) i7-7820X CPU @ 3.60GHz",
+      "build_command": "cc -m32 -nostdlib -static -fno-pie -no-pie -fno-stack-protector -O2 probe.c -o probe",
+      "scope": "Actual complete4D7AF0 ordinary nonactor WEAP reference placement builder on Linux i386 hardware, plus actual4D7260/FABS/store4E43C8..4E43E9; actual native callees, callee-save/input checks inherited from pinned NPC harness. Root virtual50 declared boundary. 72 common emulated contexts,1024 random ordinary angle triplets and256 random float-bit triplets under007F/027F/037F. Repeated hardware outputs are expectations only; no production comparison or whole GenerateNiNode/scene attach/controller/Havok/gameplay acceptance."
+    }
+  },
+  "pose_replays": {
+    "normal": {
+      "path": "reference-world-pose-compare-01/normal-verification.json",
+      "sha256": "e90d90b0a7190db95d32424580c50c6312c6bb2690b3ab403884829ed8e04028",
+      "report": {
+        "passed": true,
+        "cases": 24,
+        "exact_float_fields": 576,
+        "mismatches": [],
+        "source_sha256": "644c7f9019f98a85682aeec984e4951c4310ec5eacc45b48e417ec7c31c2f322",
+        "probe_sha256": "d6a195ac1565d662b8468d208076fd7d83a6c4abf11b868e56322775f01091fc",
+        "comparator_sha256": "f9b7f2befd41cd0a57c54f894e429f8967fddaed671275aebef9f3271c7a20e6",
+        "binary_sha256": "4a457d34ab4e745d0489e46fb05049b256794e6a37421a2082fbdeafc5f94df7",
+        "scope": "ReferenceWorld author pose capture from recorded initialized root inputs; exact root and child R/T against original 707370 at x87 007F. Euler builder, pending synchronization, controller timing, Havok and runtime acceptance are not established."
+      }
+    },
+    "sanitized": {
+      "path": "reference-world-pose-compare-01/sanitized-verification.json",
+      "sha256": "a582e762def75577a85c53a44d9ac6cf255706774fad97bf8b03b41187c83cdf",
+      "report": {
+        "passed": true,
+        "cases": 24,
+        "exact_float_fields": 576,
+        "mismatches": [],
+        "source_sha256": "644c7f9019f98a85682aeec984e4951c4310ec5eacc45b48e417ec7c31c2f322",
+        "probe_sha256": "d6a195ac1565d662b8468d208076fd7d83a6c4abf11b868e56322775f01091fc",
+        "comparator_sha256": "f9b7f2befd41cd0a57c54f894e429f8967fddaed671275aebef9f3271c7a20e6",
+        "binary_sha256": "15e2ad89de0339778d32cb49644df921279f8eb25cc63ac8c0ad0198497eb619",
+        "scope": "ReferenceWorld author pose capture from recorded initialized root inputs; exact root and child R/T against original 707370 at x87 007F. Euler builder, pending synchronization, controller timing, Havok and runtime acceptance are not established."
+      }
+    }
+  },
+  "traversal_replays": {
+    "normal": {
+      "path": "reference-world-traversal-compare-01/normal-verification.json",
+      "sha256": "10ac6d3ededac6c95edb7e4a5781b4bd61aad5b2645b6878904e528621ff1483",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "2a1b50436078968812f2a4e99dc677c0d85d473841deff48c8d02fe70518b5aa",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    },
+    "sanitized": {
+      "path": "reference-world-traversal-compare-01/sanitized-verification.json",
+      "sha256": "629e7e29a1bfb0d59e956e02adb2af55717b605478a1c9a2a075f09efd1f3c60",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "d7b368da02e4d34adfabf9127d517b175cb355cd6e942709f8236ba1a31aab11",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    }
+  },
+  "first_sync_diagnostic": {
+    "path": "reference-first-sync-target-baseline-01/verification.json",
+    "sha256": "bd44f4b874fad5315fa3bbacc83b31972a43ebbbd74e06e6be886a12d176d05a",
+    "report": {
+      "status": "diagnostic baseline, not an acceptance check",
+      "counts": {
+        "127": {
+          "cases": 128,
+          "mismatching_cases": 32,
+          "mismatching_fields": 64
+        },
+        "639": {
+          "cases": 128,
+          "mismatching_cases": 0,
+          "mismatching_fields": 0
+        },
+        "895": {
+          "cases": 128,
+          "mismatching_cases": 0,
+          "mismatching_fields": 0
+        }
+      },
+      "failures": [
+        {
+          "row": 194,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 195,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 198,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 199,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 202,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 203,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 206,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 207,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 242,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 243,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 246,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 247,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 250,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 251,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 254,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 255,
+          "control_word": 127,
+          "topology": "deep-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 290,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 291,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 294,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 295,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 298,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 299,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 302,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 303,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": false,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 3189958054,
+              "expected": 3189958056
+            },
+            {
+              "field": 6,
+              "actual": 3201382101,
+              "expected": 3201382102
+            }
+          ]
+        },
+        {
+          "row": 338,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 339,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 342,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 343,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 346,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 347,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 350,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        },
+        {
+          "row": 351,
+          "control_word": 127,
+          "topology": "null-first",
+          "plain": true,
+          "fields": [
+            {
+              "field": 3,
+              "actual": 1043640347,
+              "expected": 1043640348
+            },
+            {
+              "field": 6,
+              "actual": 3201140627,
+              "expected": 3201140628
+            }
+          ]
+        }
+      ],
+      "scope": "Existing forward scene-to-body adapter versus recorded native first pending synchronization. Native world and final body-local offset are inputs. All controls are diagnostic until independently audited.",
+      "source_sha256": "ceaf0ec25df9209b5c8f4c5b9d70392fb66285c7b50203b0a854c063744ddb1b",
+      "probe_sha256": "372a1f9b28ca7e38465b650582fc9f45160eb846459213ee45a159dd86b17541",
+      "comparator_sha256": "370b5850046b455e0cf6df683cf5c3fa183f0bc2ea29b92cf65ebae1244c105a",
+      "binary_sha256": "dc52993515101295557cd12b49028fc6bf4db714703e9b6090573233ee6788c0"
+    }
+  },
+  "limitations": [
+    "Original root probe uses two initialization segments and ordinary 707370 composition. Original first-sync probe executes initialization segments, registration and first scene update with empty controller lists, synthetic boundary services, null native World and disabled property-copy/special gates. Intervening GenerateNiNode/virtual50, production Euler-builder equivalence, controller clocks, Havok stepping and normal-input gameplay are not established.",
+    "Pose replay consumes original initialized root R/T/scale as fixture input, not a reimplementation of the Euler builder. Only live007F composition is replayed:24 cases and576 exact root/child R/T fields per build. Traversal replay retains512 supported frames and8128 field checks per build; max drawing matrix error5.68434e-14 within1e-9.",
+    "Existing forward scene-to-body adapter diagnostic differs from live007F in32/128 cases and64 quaternion fields. Both027F/037F diagnostic sets match128 cases each. This is a retained known gap, not passing first-sync acceptance. Pending40 must force scene-to-body synchronization even when bit0 is inactive; mutable registered flags and a production consumer remain required.",
+    "ASan/UBSan halt on error; leak detection disabled. Existing unrelated compiler warnings remain. No original-game process or normal-input runtime course launched for this checkpoint.",
+    "Full M15S4 still requires correct global root initialization/first capture and pending synchronization, one authoritative traversal/update owner and controller clocks, REFR-before-child callbacks with safe placement/cell/lifetime handling, forced World/script continuation, admission/property/node policies, loose physical save/fresh recreation, production break/mastery/drop/pickup/replacement/sound/power/creature/reaction/effect wiring and full first/third-person keyboard/mouse/gamepad FPS fresh-process acceptance."
+  ]
+}

@@ -114,10 +114,13 @@ namespace SceneUtil
         std::vector<Node> mNodes;
         std::vector<Body> mBodies;
         std::optional<Body> mReferenceSource;
+        RootSpace mRootSpace;
 
-        Impl(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root)
-            : mRoot(&root), mSourceHash(definition.mSourceHash)
+        Impl(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root, RootSpace rootSpace)
+            : mRoot(&root), mSourceHash(definition.mSourceHash), mRootSpace(rootSpace)
         {
+            require(rootSpace == RootSpace::ObjectLocal || rootSpace == RootSpace::ReferenceWorld,
+                "unknown ragdoll renderer root space");
             require(!definition.mBodies.empty() && !mSourceHash.empty(), "empty ragdoll renderer definition");
             std::string rootHash;
             if (root.getUserValue(Misc::OsgUserValues::sFileHash, rootHash))
@@ -214,7 +217,7 @@ namespace SceneUtil
                     require(!dynamic_cast<osg::Transform*>(node.get())
                             || dynamic_cast<NifOsg::MatrixTransform*>(node.get()),
                         "unadmitted ragdoll renderer transform type");
-                localPose(*entry.mTransform);
+                readLocal(*entry.mTransform);
                 if (entry.mParent)
                     entry.mParent = remap[*entry.mParent];
                 remap[i] = selected.size();
@@ -224,6 +227,29 @@ namespace SceneUtil
                 body.mNode = remap[body.mNode];
             if (mReferenceSource) mReferenceSource->mNode = remap[mReferenceSource->mNode];
             mNodes = std::move(selected);
+            if (mRootSpace == RootSpace::ReferenceWorld)
+            {
+                require(definition.mReferenceRoot && !mNodes.empty()
+                    && mNodes.front().mNodeRecord == *definition.mReferenceRoot && !mNodes.front().mParent,
+                    "native reference root must be the physical hierarchy root");
+                for (std::size_t i = 1; i < mNodes.size(); ++i)
+                    require(mNodes[i].mParent.has_value(), "multiple native reference roots");
+            }
+        }
+
+        Nif::NiTransform readLocal(const NifOsg::MatrixTransform& node) const
+        {
+            if (mRootSpace == RootSpace::ObjectLocal) return localPose(node);
+            require(std::isfinite(node.mScale) && node.mScale > 0, "invalid native reference node scale");
+            return node.getControllerTransform();
+        }
+
+        Nif::NiTransform compose(const Nif::NiTransform& parent, const Nif::NiTransform& local) const
+        {
+            if (mRootSpace == RootSpace::ObjectLocal) return NifBullet::composeRagdollBonePose(parent, local);
+            const auto result = Nif::tryComposeNativeTransform(parent, local, Nif::NativeTransformPrecision::Single);
+            require(result.has_value(), "invalid native reference composition");
+            return *result;
         }
 
         void validateRoot() const
@@ -293,7 +319,7 @@ namespace SceneUtil
             std::vector<Nif::NiTransform> result;
             result.reserve(mNodes.size());
             for (const auto& entry : mNodes)
-                result.push_back(localPose(*entry.mTransform));
+                result.push_back(readLocal(*entry.mTransform));
             return result;
         }
 
@@ -305,14 +331,16 @@ namespace SceneUtil
             for (std::size_t i = 0; i < mNodes.size(); ++i)
             {
                 const auto& parent = mNodes[i].mParent ? result[*mNodes[i].mParent] : objectWorld;
-                result.push_back(NifBullet::composeRagdollBonePose(parent, local[i]));
+                result.push_back(!mNodes[i].mParent && mRootSpace == RootSpace::ReferenceWorld
+                    ? local[i] : compose(parent, local[i]));
             }
             return result;
         }
     };
 
-    ActorRagdollPoseBinding::ActorRagdollPoseBinding(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root)
-        : mImpl(std::make_unique<Impl>(definition, root))
+    ActorRagdollPoseBinding::ActorRagdollPoseBinding(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root,
+        RootSpace rootSpace)
+        : mImpl(std::make_unique<Impl>(definition, root, rootSpace))
     {
     }
 
@@ -440,13 +468,16 @@ namespace SceneUtil
             {
                 // This adapter is explicitly for a dynamic physical snapshot.
                 // Local writes are required to drive OSG's derived world/skinning matrices.
+                const bool native = mImpl->mRootSpace == RootSpace::ReferenceWorld;
                 const auto projected = NifBullet::ragdollBonePoseWriteback(local[i], previousWorld[i],
-                    target->second, &parent, 9, true);
+                    target->second, native && !mImpl->mNodes[i].mParent ? nullptr : &parent, 9, true,
+                    native ? Nif::NativeTransformPrecision::Single : Nif::NativeTransformPrecision::Double);
                 local[i] = projected.mLocal;
                 candidateWorld.push_back(projected.mWorld);
             }
             else
-                candidateWorld.push_back(NifBullet::composeRagdollBonePose(parent, local[i]));
+                candidateWorld.push_back(!mImpl->mNodes[i].mParent && mImpl->mRootSpace == RootSpace::ReferenceWorld
+                    ? local[i] : mImpl->compose(parent, local[i]));
         }
         // Every identity, path and projection is validated before the first write.
         for (const auto& body : mImpl->mBodies)
