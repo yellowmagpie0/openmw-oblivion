@@ -6,6 +6,7 @@
 #include <apps/openmw/mwrender/objects.hpp>
 #include <apps/openmw/mwrender/vismask.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/dropplacement.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm3/readerscache.hpp>
 #include <memory>
@@ -176,7 +177,7 @@ namespace
         {
             auto value = source();
             if (field == 0) value.mRef.setCount(2);
-            if (field == 1) value.mRef.setScale(2);
+            if (field == 1) value.mRef.setScale(.125f);
             if (field == 2) value.mRef.setNativeItemCondition(101);
             if (field == 3) value.mRef.setEnchantmentCharge(21);
             if (field == 4)
@@ -558,4 +559,99 @@ TEST_F(LooseWeaponAdmissionTest, PreparedPickupResourceStaticCollisionCancelsAnd
     EXPECT_EQ(physics.getObject(ptr), nullptr);
     EXPECT_EQ(ptr.getCellRef().getCount(), 1);
     EXPECT_EQ(mWorld->getPtr(ptr.getCellRef().getRefNum()), ptr);
+}
+
+TEST_F(LooseWeaponAdmissionTest, ResolvedScaleKeepsSceneCollisionAndRigidRootInAgreement)
+{
+    unsigned serial = 1;
+    for (const float scale : {.01f, .13f, 2.f, 10.f})
+    for (const bool bodyT : {false, true})
+    {
+        SCOPED_TRACE(scale);
+        SCOPED_TRACE(bodyT);
+        auto value = source(serial++);
+        value.mRef.setScale(scale);
+        auto& body = mDefinition.mBodies.front();
+        body.mNodeRecord = 0;
+        body.mBoneBind = osg::Matrixf::translate(3,-4,5);
+        body.mUsesRigidBodyTransform = bodyT;
+        body.mTranslation = {.05f,-.1f,.2f};
+        body.mRotation = osg::Quat(.3, osg::Vec3f(1,0,0));
+        const osg::Quat rotation(osg::PI_2, osg::Vec3f(0,0,1));
+        const auto expected = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(0,0,2);
+        // A rigid physical bone keeps scaled translation and unit rotation.
+        // Its renderer counterpart retains scale on the reference node.
+        const auto boneWorld = osg::Matrixf::translate(3*scale,-4*scale,5*scale) * expected;
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{0,boneWorld}}};
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(mDefinition, scale);
+        const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
+        auto position = value.mRef.getPosition(); position.rot[2] = -osg::PI_2f;
+        value.mRef.setPosition(position); value.mData.setPosition(position);
+        auto prepared = mWorld->prepareLooseWeaponAdmission(*mCell, value, *mObjects, *mPhysics,
+            "weapon.osgt", rotation, MWRender::Mask_Object, mDefinition,
+            NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        ASSERT_TRUE(prepared->isValid());
+        const auto ptr = prepared->commit(); ASSERT_FALSE(ptr.isEmpty());
+        EXPECT_EQ(ptr.getCellRef().getScale(), scale);
+        EXPECT_EQ(ptr.getRefData().getBaseNode()->getScale(), osg::Vec3f(scale,scale,scale));
+        const auto root = mPhysics->captureLooseObjectRootPose(ptr);
+        for (unsigned i=0; i<16; ++i) EXPECT_NEAR(root.ptr()[i], expected.ptr()[i], .0003f) << i;
+        const auto states = mPhysics->captureLooseObject(ptr);
+        const auto center = states[0].mPose.getOrigin();
+        const float radius = .5f * scale * NifBullet::RagdollNativeLengthScale;
+        const osg::Vec3f to(center.x(),center.y(),center.z());
+        const auto hit = mPhysics->castRay(to + osg::Vec3f(radius+100,0,0), to, {}, {}, -1, -1);
+        ASSERT_TRUE(hit.mHit); EXPECT_EQ(hit.mHitObject, ptr);
+        EXPECT_NEAR(hit.mHitPos.x(), to.x()+radius, .003f);
+        auto packed = mPhysics->captureLooseObjectPackedVelocities(ptr);
+        packed[0].mVelocities.mLinear = {.125f,-.25f,.5f,7.f};
+        packed[0].mVelocities.mAngular = {.1f,.2f,-.3f,-0.f};
+        mPhysics->restoreLooseObject(ptr, states, packed);
+        const auto restored = mPhysics->captureLooseObject(ptr);
+        for (unsigned axis=0; axis<3; ++axis)
+            EXPECT_NEAR(restored[0].mLinearVelocity[axis],
+                double(packed[0].mVelocities.mLinear[axis])*NifBullet::RagdollNativeLengthScale, 1e-6);
+        EXPECT_EQ(mPhysics->captureLooseObjectPackedVelocities(ptr)[0].mVelocities, packed[0].mVelocities);
+        ptr.getCellRef().setScale(1);
+        EXPECT_THROW(mPhysics->captureLooseObjectRootPose(ptr), std::invalid_argument);
+        ptr.getCellRef().setScale(scale);
+        EXPECT_NO_THROW(mPhysics->captureLooseObjectRootPose(ptr));
+        // Rebuild the physical owner from its saved pose/velocity payload.
+        // Scene/reference scale stays authoritative across readmission.
+        mPhysics->removeLooseObject(ptr);
+        auto resumed = mPhysics->prepareLooseObject(ptr,scaled,
+            NifBullet::RagdollNativeLengthScale,poses,1,-1);
+        ASSERT_TRUE(mPhysics->commitLooseObject(*resumed));
+        mPhysics->restoreLooseObject(ptr,restored,packed);
+        EXPECT_EQ(mPhysics->captureLooseObjectPackedVelocities(ptr)[0].mVelocities,packed[0].mVelocities);
+        const auto resumedRoot = mPhysics->captureLooseObjectRootPose(ptr);
+        for (unsigned i=0; i<16; ++i) EXPECT_NEAR(resumedRoot.ptr()[i],expected.ptr()[i],.0003f) << i;
+        mPhysics->removeLooseObject(ptr); mObjects->removeObject(ptr);
+    }
+}
+
+TEST_F(LooseWeaponAdmissionTest, UnresolvedOrNonfiniteReferenceScalesNeverPublish)
+{
+    for (const float scale : {-2.f,0.f,.005f,.125f,10.01f,
+            std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto value = source(); value.mRef.setScale(scale);
+        EXPECT_THROW(prepare(value), std::invalid_argument);
+        emptyPublication();
+    }
+}
+
+TEST_F(LooseWeaponAdmissionTest, PreparedCollisionRejectsChangedReferenceScale)
+{
+    auto value = source();
+    const MWWorld::Ptr ptr(&value,mCell);
+    auto prepared = mPhysics->prepareLooseObject(ptr,mDefinition,1.f,mPoses,1,-1);
+    ASSERT_TRUE(mPhysics->validatePreparedLooseObject(*prepared));
+    value.mRef.setScale(2);
+    EXPECT_FALSE(mPhysics->validatePreparedLooseObject(*prepared));
+    EXPECT_FALSE(mPhysics->commitLooseObject(*prepared));
+    EXPECT_FALSE(mPhysics->hasLooseObject(ptr));
+    value.mRef.setScale(1);
+    ASSERT_TRUE(mPhysics->commitLooseObject(*prepared));
+    mPhysics->removeLooseObject(ptr);
 }

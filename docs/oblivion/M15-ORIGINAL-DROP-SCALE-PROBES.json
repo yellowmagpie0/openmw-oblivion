@@ -1144,5 +1144,150 @@
       "S4/drop-reference-scale-sanitized-01"
     ],
     "scope": "Arithmetic only; scene/body/factory/runtime integration remains open."
+  },
+  "inventory_extra_scale_comparison": {
+    "native": {
+      "passed": true,
+      "cases": 162,
+      "identical_repeats": 2,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "daf7282c2194083ff387efd4477c18aa44dc16d25ab4c20a25ec3fa7d956e825",
+      "harness_sha256": "2df6c3f8eefe60539d57a8b209721186a125c4689ec17c7735aa087b19a8d8eb",
+      "corpus_sha256": "f9822f5b7725edb69377f78a21aeb8795ac331428c641f2e2c2ccbe9a4e1a2f9",
+      "scope": "Complete original41E550 and actual ExtraScale virtual comparison on native i386 hardware. Critical enter/leave are declared noop boundaries. A Linux thread-area FS selector supplies synthetic Windows TLS to original list lookup. Callee-saved canaries, stack return, FPCW and input list/node preservation pass. Boolean result is AL, not full EAX. All162 emulated results agree, including64 nonfinite diagnostic contexts. Not complete inventory stacking caller, pickup, persistence or gameplay."
+    },
+    "evidence": "S4/drop-inventory-scale-compare-native-02",
+    "entry": "0x0041E550",
+    "extra_scale_vtable": "0x00A35890",
+    "fixture": "Two private 20-byte extra lists; each optional 16-byte ExtraScale node has type0x37 and exact payload bits below. Presence bit and linked node agree.",
+    "control_words": [
+      639,
+      895
+    ],
+    "scale_bits_in_matrix_order": [
+      null,
+      1065353216,
+      1040522936,
+      1073741824,
+      2147483648,
+      0,
+      3221225472,
+      2143289344,
+      2139095040
+    ],
+    "different_matrix": [
+      [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    ],
+    "result_lane": "AL; full EAX is not a canonical boolean.",
+    "finite_expected": "98 finite contexts: differing presence or differing present float value. Present1 differs from absence; signed zeros compare equal.",
+    "nonfinite_scope": "64 diagnostic contexts only; no production nonfinite support is inferred.",
+    "boundaries": [
+      "Critical-section enter/leave noops",
+      "Synthetic Windows TLS via a Linux thread-area FS selector"
+    ],
+    "retained_failure": "Native-01 returned SIGSEGV after20 contexts because FS Windows TLS was not initialized; native-02 supplies the fixture.",
+    "not_established": [
+      "Complete inventory stacking caller",
+      "Pickup conversion of reference scale into inventory extras",
+      "Production inventory scale persistence and identity guards"
+    ]
   }
 }

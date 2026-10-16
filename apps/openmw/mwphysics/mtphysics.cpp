@@ -470,10 +470,13 @@ namespace MWPhysics
             : PtrHolder(ptr, {})
             , mDefinition(definition)
             , mLengthScale(lengthScale)
+            , mReferenceScale(ptr.getCellRef().getScale())
             , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this),
                 nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred)
             , mLinearDeltas(definition.mBodies.size())
         {
+            if (!std::isfinite(mReferenceScale) || mReferenceScale <= 0)
+                throw std::invalid_argument("invalid loose reference scale");
             for (auto* object : mPhysics.collisionObjects())
             {
                 auto* body = btRigidBody::upcast(object);
@@ -483,6 +486,7 @@ namespace MWPhysics
         }
         const NifBullet::ActorRagdollDefinition mDefinition;
         const float mLengthScale;
+        const float mReferenceScale;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
     };
@@ -493,6 +497,7 @@ namespace MWPhysics
         std::weak_ptr<const char> mIdentity;
         LooseObjectMap::node_type mNode;
         int mExpectedCount = 0;
+        float mExpectedScale = 1;
     };
     PhysicsTaskScheduler::PreparedLooseObject::PreparedLooseObject(std::unique_ptr<Impl> impl)
         : mImpl(std::move(impl)) {}
@@ -522,6 +527,7 @@ namespace MWPhysics
         impl->mOwner = this;
         impl->mIdentity = mLoosePreparationIdentity;
         impl->mExpectedCount = ptr.getCellRef().getCount();
+        impl->mExpectedScale = ptr.getCellRef().getScale();
         impl->mNode = staged.extract(staged.begin());
         return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(impl)));
     }
@@ -533,7 +539,8 @@ namespace MWPhysics
         const auto identity = impl->mIdentity.lock();
         if (!identity || identity != mLoosePreparationIdentity) return false;
         return !mLooseObjects.contains(impl->mNode.key()) && !mActorRagdolls.contains(impl->mNode.key())
-            && impl->mNode.mapped()->getPtr().getCellRef().getCount() == impl->mExpectedCount;
+            && impl->mNode.mapped()->getPtr().getCellRef().getCount() == impl->mExpectedCount
+            && impl->mNode.mapped()->getPtr().getCellRef().getScale() == impl->mExpectedScale;
     }
 
     bool PhysicsTaskScheduler::validatePreparedLooseObject(const PreparedLooseObject& object)
@@ -605,6 +612,8 @@ namespace MWPhysics
         if (found == mLooseObjects.end())
             throw std::invalid_argument("reference has no loose physics");
         const auto& object = *found->second;
+        if (ptr.getCellRef().getScale() != object.mReferenceScale)
+            throw std::invalid_argument("loose native scene pose requires its admitted reference scale");
         if (object.mLengthScale != NifBullet::RagdollNativeLengthScale)
             throw std::invalid_argument("loose native scene pose requires the native length scale");
         const auto& body = object.mDefinition.mBodies.front();
@@ -620,8 +629,13 @@ namespace MWPhysics
                 osg::Vec3f(float(origin.x()), float(origin.y()), float(origin.z()))),
             {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
         const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+        // The renderer retains reference scale on its placement node. The
+        // physical target is rigid, with that scale already applied to the
+        // bind translation and cached body properties, not to its rotation.
+        auto bind = body.mBoneBind;
+        bind.setTrans(bind.getTrans() * object.mReferenceScale);
         osg::Matrixf inverse;
-        if (!inverse.invert(body.mBoneBind))
+        if (!inverse.invert(bind))
             throw std::invalid_argument("loose native model bind is not invertible");
         const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(target);
         (void)NifBullet::ragdollNativeSceneTargetPose(root);

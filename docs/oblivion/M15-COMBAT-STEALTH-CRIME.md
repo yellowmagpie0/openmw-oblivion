@@ -6,6 +6,20 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 scaled loose-weapon admission — 2026-10-15
+
+Loose-weapon admission now uses resolved reference scale for scene and native
+collision properties while preserving the physics unit conversion. Rigid-root
+reconstruction removes scaled bind offsets; stale prepared scales reject. Both
+normal and sanitizer builds pass all 1,515 engine tests, including collision rays,
+velocity units and reconstruction from captured physical state at four scales.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#resolved-scale-in-loose-weapon-scene-and-collision-admission)
+records exact evidence and the next dependency: optional inventory ExtraScale
+persistence/identity. Original comparator probes confirm presence matters.
+Contact-driven factory publication, replacement equipment, pickup and actual
+break/drop/restart acceptance remain open. S4 remains incomplete.
+
 ## S4 fresh dropped-reference scale arithmetic — 2026-10-15
 
 The native scale rule now matches all 14,440 independently executed original

@@ -14749,3 +14749,23 @@ constructor scale 1; nonfinite explicit extras reject. The
 [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-dropped-reference-scale-rule) records
 2,642 full component tests per profile and negative controls. This proves the
 numeric dependency; scaled body/scene admission and factory gameplay remain open.
+
+
+## S4 scaled loose-weapon admission and inventory ExtraScale comparison — 2026-10-15
+
+Loose admission now consumes the verified scale rule and existing native
+property-copy rules, retaining physics units separately. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#resolved-scale-in-loose-weapon-scene-and-collision-admission)
+records normal/sanitized 1,515-test engine inventories, collision rays and
+in-process physical reconstruction. These do not close factory/runtime gates.
+
+`S4/drop-inventory-scale-compare-native-02` executes complete original 0041E550
+and actual ExtraScale virtual comparison in 162 hardware contexts, repeated twice
+and matching the separate emulator. Critical-section noops and synthetic Windows
+TLS/FS are declared boundaries. In 98 finite contexts, presence or float-value
+difference makes lists differ: absent differs from explicit 1; signed zeros agree.
+AL is the result; full EAX contains unrelated bits. The remaining 64 nonfinite
+contexts are diagnostics. The [editable contract](M15-ORIGINAL-DROP-SCALE-PROBES.json)
+retains fixtures, expected matrix and hashes. Native-01's missing-FS setup fault
+is preserved. Complete inventory stacking/pickup and production inventory scale
+persistence remain open.

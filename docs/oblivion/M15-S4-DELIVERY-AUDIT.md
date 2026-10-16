@@ -1341,3 +1341,63 @@ root reconstruction, compound source/reference publication and actual break/drop
 acceptance must consume this rule before the factory gate closes. Existing scale
 save storage is `custom_state["scale"]`; no schema change is required here.
 S4 remains incomplete.
+
+
+## Resolved scale in loose-weapon scene and collision admission
+
+`WorldModel::prepareLooseWeaponAdmission` now accepts resolved native reference
+scales and rejects unrounded, out-of-range or nonfinite values before publication.
+It retains scale on the renderer placement and owns a copy of the existing native
+property-scaled body graph for collision admission. The independent Havok/world
+length factor stays unchanged, so packed velocities retain their original units.
+The source authored graph remains unchanged. Existing independently verified
+mass/inertia/shape/bodyT property rules supply the scaling; no new native
+property law is inferred from the integration tests.
+
+The loose physical owner retains its admitted reference scale. Prepared collision
+validation rejects changed scale, and rigid-root reconstruction rejects stale
+scale. Reconstruction removes the scaled bind translation while keeping renderer
+scale separate from rigid rotation. This avoids both an incorrect root offset
+and multiplying the world-unit conversion by reference scale.
+
+Three new engine cases cover 0.01, 0.13, 2 and 10 under ordinary/bodyT forms:
+actual scene scale, independent rigid-root expectations, collision-sphere ray
+intersections, native packed velocity units and physical-owner reconstruction
+from captured pose/velocity data. Unrounded/nonfinite scales and changed prepared
+scale reject without publication. This is in-process physical reconstruction,
+not fresh-process save acceptance or contact-driven drop gameplay.
+
+`S4/drop-scaled-admission-normal-03` and `-sanitized-03` each pass all **1515
+engine tests/122 suites**, unfiltered with exact inventories, zero failures and
+zero skips. Before/after state is `88a55a3f43b64035b7f67c8dfcb6d4e105f924c5` plus fingerprint
+`967bdaabf1667c09dbfc53efecefccb6fb335ec93c2676aa64fbe0923c03ef1a`. All three implementation-file hashes match
+the frozen review manifest. ASan leak detection is disabled; UBSan halts.
+The component arithmetic is unchanged from the preceding 2642-test checkpoint;
+no Python codec changed. No new normal-input runtime course is claimed here,
+since the new scale path still awaits the production contact/drop factory.
+
+Retained full-01 attempts contain a missing direct body-definition include; the
+parallel sanitizer build was stopped before correction. Full-02 attempts were
+stopped after a test-only duplicate SCOPED_TRACE name was diagnosed. The direct
+include and separate macro lines are corrected. The affected test file compiled
+before final full-03 runs. Failed/stopped attempts are not accepted evidence.
+
+The [scale probe contract](M15-ORIGINAL-DROP-SCALE-PROBES.json) additionally
+records 162 original extra-list comparator contexts, repeated on native i386
+hardware with actual 0041E550/ExtraScale virtual comparison. Critical sections
+and synthetic Windows TLS are explicit boundaries. All results agree with the
+separate emulator. In 98 finite contexts, presence and float value participate:
+missing scale differs from explicit1; signed zeros compare equal. The result is
+AL, not full EAX. The other 64 contexts are nonfinite diagnostics. The first
+native harness's missing-FS fault is retained; no game failure is inferred.
+This is not the complete stacking or pickup caller.
+
+Read-only source inspection identifies the next dependency: RuntimeInventoryItem
+and World actor-inventory capture/staging omit scale; native stacking and
+prepared-add matching omit it too. Inventory ExtraScale needs optional presence
+and value authority, separately from the world reference's existing
+custom_state["scale"]. Original stacking/pickup callers still need verification.
+Compound source/contact/key/scene/body/relation publication, replacement
+equipment, pickup cleanup and actual normal-input break/drop/restart acceptance
+remain open, along with the broader S4 melee/mastery/reaction/input matrix.
+S4 remains incomplete.

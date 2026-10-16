@@ -4,6 +4,8 @@
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwrender/objects.hpp"
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/dropplacement.hpp>
+#include <components/nifbullet/actorragdoll.hpp>
 #include <cmath>
 #include <stdexcept>
 
@@ -111,8 +113,11 @@ namespace MWWorld
             || placed->mParent != cell.getCell()->getId() || placed->mParentKey != *cellKey
             || !placed->mId.isZeroOrUnset() || !placed->mFormKey.isDynamic()
             || placed->mFormKey.mValue == 0 || reference.mRef.getCount(false) != 1
-            || reference.mRef.getScale() != 1.f || model.empty())
+            || model.empty())
             throw std::invalid_argument("loose weapon admission requires an identified native instance and managed native cell");
+        const float scale = reference.mRef.getScale();
+        if (ESM4::droppedReferenceScale(scale) != scale)
+            throw std::invalid_argument("loose weapon admission requires a resolved native reference scale");
         // A caller can construct a FormKey struct directly, bypassing the
         // validated factory. Do not publish an identity its save reader rejects.
         ESM::FormKey::dynamic(placed->mFormKey.mNamespace, placed->mFormKey.mValue);
@@ -139,7 +144,12 @@ namespace MWWorld
         data->mObjects = &objects;
         data->mModel = objects.prepareModel(data->mPtr, model, rotation, nodeMask);
         data->mPhysics = &physics;
-        data->mBody = physics.prepareLooseObject(data->mPtr, definition, lengthScale, poses,
+        // Reference scale changes cached native shape/mass/bodyT properties;
+        // lengthScale remains the independent Havok-to-world unit conversion.
+        std::optional<NifBullet::ActorRagdollDefinition> scaled;
+        if (scale != 1.f)
+            scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, scale);
+        data->mBody = physics.prepareLooseObject(data->mPtr, scaled ? *scaled : definition, lengthScale, poses,
             collisionGroup, collisionMask);
         return std::unique_ptr<PreparedLooseWeaponAdmission>(new PreparedLooseWeaponAdmission(std::move(data)));
     }
