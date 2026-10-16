@@ -100,6 +100,8 @@ namespace MWLua
         void gameEnded() override;
         void noGame() override;
         void objectAddedToScene(const MWWorld::Ptr& ptr) override;
+        std::unique_ptr<PreparedSceneAdditions> prepareSceneAdditions(
+            std::span<const MWWorld::Ptr> references) override;
         std::unique_ptr<PreparedSceneRemoval> prepareSceneRemoval(const MWWorld::Ptr& ptr) override;
         void objectRemovedFromScene(const MWWorld::Ptr& ptr) override;
         void inputEvent(const InputEvent& event) override;
@@ -229,6 +231,11 @@ namespace MWLua
 
     private:
         void initConfiguration(bool reload);
+        class SceneAdditions;
+        SceneAdditions* mPreparedSceneAdditions = nullptr;
+        void discardPreparedSceneAdditions() noexcept;
+        std::shared_ptr<LocalScripts> makeLocalScripts(const MWWorld::Ptr& ptr,
+            std::optional<LuaUtil::ScriptIdsWithInitializationData> autoStartConf);
         LocalScripts* createLocalScripts(const MWWorld::Ptr& ptr,
             std::optional<LuaUtil::ScriptIdsWithInitializationData> autoStartConf = std::nullopt);
         void reloadAllScriptsImpl();

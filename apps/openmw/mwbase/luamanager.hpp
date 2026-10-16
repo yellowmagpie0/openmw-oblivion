@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <variant>
 #include <vector>
@@ -79,6 +80,18 @@ namespace MWBase
         virtual void gameEnded() = 0;
         virtual void noGame() = 0;
         virtual void objectAddedToScene(const MWWorld::Ptr& ptr) = 0;
+        class PreparedSceneAdditions
+        {
+        public:
+            virtual ~PreparedSceneAdditions() = default;
+            virtual bool isValid() const noexcept = 0;
+            virtual bool commit() noexcept = 0;
+        };
+        // New private references with reserved RefNums. Caller must publish
+        // their Ptr registrations in the same callback-free transaction before
+        // any Lua update/event dispatch. No scripts or observers run here.
+        virtual std::unique_ptr<PreparedSceneAdditions> prepareSceneAdditions(
+            std::span<const MWWorld::Ptr> references) = 0;
         class PreparedSceneRemoval
         {
         public:

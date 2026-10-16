@@ -110,20 +110,22 @@ namespace MWLua
         void exchangeRuntime(EngineEvents& other) noexcept { mQueue.swap(other.mQueue); }
         void addToQueue(Event e) { mQueue.push_back(std::move(e)); }
         std::size_t queueSize() const { return mQueue.size(); }
-        void reserveNextEvent()
+        void reserveEvents(std::size_t count)
         {
-            if (mQueue.size() == mQueue.max_size())
+            if (count > mQueue.max_size() - mQueue.size())
                 throw std::length_error("engine event queue reservation overflow");
-            if (mQueue.size() == mQueue.capacity())
+            const auto required = mQueue.size() + count;
+            if (required > mQueue.capacity())
             {
                 const auto grown = mQueue.capacity() > mQueue.max_size() / 2
                     ? mQueue.max_size() : mQueue.capacity() * 2;
-                mQueue.reserve(std::max(mQueue.size() + 1, grown));
+                mQueue.reserve(std::max(required, grown));
             }
         }
-        bool canPushPrepared(std::size_t size) const
+        void reserveNextEvent() { reserveEvents(1); }
+        bool canPushPrepared(std::size_t size, std::size_t count = 1) const noexcept
         {
-            return mQueue.size() == size && mQueue.capacity() > size;
+            return mQueue.size() == size && count <= mQueue.capacity() - mQueue.size();
         }
         void callEngineHandlers();
 

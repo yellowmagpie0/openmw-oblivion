@@ -2,6 +2,8 @@
 #define MWLUA_OBJECTLISTS_H
 
 #include <set>
+#include <span>
+#include <cstdint>
 
 #include "object.hpp"
 
@@ -12,6 +14,21 @@ namespace MWLua
     class ObjectLists
     {
     public:
+        class PreparedSceneAdditions
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedSceneAdditions(std::unique_ptr<Data> data);
+            friend class ObjectLists;
+        public:
+            ~PreparedSceneAdditions();
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        // Membership only: supplied references already have reserved identities.
+        // Does not register pointers or run scripts. Cancellation changes no list.
+        std::unique_ptr<PreparedSceneAdditions> prepareSceneAdditions(std::span<const MWWorld::Ptr> references);
+
         class RetainedRuntime
         {
             friend class ObjectLists;
@@ -73,6 +90,8 @@ namespace MWLua
         ObjectIdList mPlayers = std::make_shared<std::vector<ObjectId>>();
         RetainedRuntime::Data* mRetainedRuntime = nullptr;
         bool mParkedRuntime = false;
+        std::shared_ptr<const char> mPreparationIdentity = std::make_shared<const char>(0);
+        std::uint64_t mRevision = 0;
         void requireMutableRuntime() const;
         void swapRuntime(ObjectLists& other) noexcept;
     };

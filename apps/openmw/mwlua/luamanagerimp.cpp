@@ -362,12 +362,14 @@ namespace MWLua
 
     LuaManager::~LuaManager()
     {
+        discardPreparedSceneAdditions();
         if (mRetainedRuntime) mRetainedRuntime->ownerDestroyed();
         LuaUi::clearSettings();
     }
 
     void LuaManager::initConfiguration(bool reload)
     {
+        mScenePreparationIdentity = std::make_shared<const char>(0);
         mConfiguration.init(MWBase::Environment::get().getESMStore()->getLuaScriptsCfg(), reload);
         Log(Debug::Verbose) << "Lua scripts configuration (" << mConfiguration.size() << " scripts):";
         for (size_t i = 0; i < mConfiguration.size(); ++i)
@@ -1009,6 +1011,149 @@ namespace MWLua
             mActiveLocalScripts.insert(localScripts->getWeakPointer());
     }
 
+    class LuaManager::SceneAdditions final : public MWBase::LuaManager::PreparedSceneAdditions
+    {
+        friend class LuaManager;
+        using ActiveSet = std::set<LuaUtil::ScriptsContainerWeakPtr, std::less<>>;
+        struct Entry
+        {
+            MWWorld::Ptr mPtr;
+            ESM::FormKey mKey;
+            LocalScripts* mExpectedScripts;
+            std::shared_ptr<LocalScripts> mCreated;
+            std::optional<LuaUtil::ScriptsContainerWeakPtr> mScripts;
+            ActiveSet::node_type mActiveNode;
+        };
+        LuaManager* mOwner;
+        SceneAdditions* mPrevious = nullptr;
+        SceneAdditions* mNext = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        MWWorld::WorldModel* mWorld;
+        std::unique_ptr<MWWorld::WorldModel::PreparedPtrReplacement> mRegistry;
+        std::unique_ptr<ObjectLists::PreparedSceneAdditions> mLists;
+        std::vector<Entry> mEntries;
+        std::size_t mQueueSize, mAutoStartSize, mNewScripts = 0;
+
+        void unlink() noexcept
+        {
+            if (!mOwner) return;
+            if (mPrevious) mPrevious->mNext = mNext;
+            else mOwner->mPreparedSceneAdditions = mNext;
+            if (mNext) mNext->mPrevious = mPrevious;
+            mOwner = nullptr; mPrevious = mNext = nullptr;
+        }
+        void ownerDestroyed() noexcept
+        {
+            unlink();
+            // Destroy unpublished Lua containers while their LuaState and
+            // tracker still exist, even when the preparation outlives us.
+            for (auto& e : mEntries) e.mCreated.reset();
+        }
+    public:
+        SceneAdditions(LuaManager& owner, std::span<const MWWorld::Ptr> references)
+            : mOwner(nullptr), mIdentity(owner.mScenePreparationIdentity)
+            , mWorld(MWBase::Environment::get().getWorldModel())
+            , mRegistry(std::make_unique<MWWorld::WorldModel::PreparedPtrReplacement>(mWorld->preparePtrReplacement({}, {})))
+            , mLists(owner.mObjectLists.prepareSceneAdditions(references))
+            , mQueueSize(owner.mEngineEvents.queueSize()), mAutoStartSize(owner.mQueuedAutoStartedScripts.size())
+        {
+            mEntries.reserve(references.size());
+            const auto validatePreparation = [&] {
+                if (mIdentity.expired() || mIdentity.lock() != owner.mScenePreparationIdentity
+                    || !mRegistry->isValid() || !mLists->isValid())
+                    throw std::logic_error("Lua scene inputs changed during preparation");
+            };
+            for (const auto& ptr : references)
+            {
+                validatePreparation();
+                if (!mWorld->getPtr(getId(ptr)).isEmpty())
+                    throw std::invalid_argument("prepared Lua scene addition requires an unpublished reference");
+                const auto key = ptr.getCellRef().getFormKey();
+                if (!key.isNull() && owner.mPendingNativeScripts.contains(key))
+                    throw std::invalid_argument("new Lua scene reference has pending saved script state");
+                Entry e{ptr, key, ptr.getRefData().getLuaScripts(), {}, {}, {}};
+                LocalScripts* scripts = e.mExpectedScripts;
+                if (!scripts)
+                {
+                    auto config = owner.mConfiguration.getLocalConf(getLiveCellRefType(ptr.mRef),
+                        ptr.getCellRef().getRefId(), getId(ptr));
+                    if (!config.empty())
+                    {
+                        e.mCreated = owner.makeLocalScripts(ptr, std::move(config));
+                        scripts = e.mCreated.get(); ++mNewScripts;
+                    }
+                }
+                if (scripts)
+                {
+                    e.mScripts.emplace(scripts->getWeakPointer());
+                    ActiveSet staged; staged.insert(*e.mScripts);
+                    e.mActiveNode = staged.extract(staged.begin());
+                }
+                mEntries.push_back(std::move(e));
+            }
+            validatePreparation();
+            owner.mEngineEvents.reserveEvents(mEntries.size());
+            if (mNewScripts > owner.mQueuedAutoStartedScripts.max_size() - mAutoStartSize)
+                throw std::length_error("prepared Lua autostart reservation overflow");
+            owner.mQueuedAutoStartedScripts.reserve(mAutoStartSize + mNewScripts);
+            // Intrusive owner tracking allocates nothing and lets owner teardown
+            // revoke unpublished Lua payloads before destroying the LuaState.
+            mOwner = &owner; mNext = owner.mPreparedSceneAdditions;
+            if (mNext) mNext->mPrevious = this;
+            owner.mPreparedSceneAdditions = this;
+        }
+        ~SceneAdditions() override { unlink(); }
+        bool isValid() const noexcept override
+        {
+            if (!mOwner || mIdentity.expired() || !mRegistry->isValid() || !mLists->isValid()) return false;
+            if (mIdentity.lock() != mOwner->mScenePreparationIdentity || mOwner->mRunningUpdates
+                || (mOwner->mRetainedRuntime && !mOwner->mRetainedRuntime->mDetached)
+                || MWBase::Environment::get().getWorldModel() != mWorld
+                || MWBase::Environment::get().getLuaManager() != mOwner
+                || !mOwner->mEngineEvents.canPushPrepared(mQueueSize, mEntries.size())
+                || mOwner->mQueuedAutoStartedScripts.size() != mAutoStartSize
+                || mOwner->mQueuedAutoStartedScripts.capacity() - mAutoStartSize < mNewScripts) return false;
+            for (const auto& e : mEntries)
+            {
+                if (e.mPtr.getRefData().getLuaScripts() != e.mExpectedScripts
+                    || (e.mScripts && **e.mScripts != (e.mCreated ? e.mCreated.get() : e.mExpectedScripts))) return false;
+                const auto& ref = e.mPtr.getCellRef();
+                const auto* placed = ref.getNativeReference(); const auto* actor = ref.getNativeActor();
+                if (placed ? placed->mFormKey != e.mKey : actor ? actor->mFormKey != e.mKey : !e.mKey.isNull()) return false;
+            }
+            return true;
+        }
+        bool commit() noexcept override
+        {
+            if (!isValid()) return false;
+            if (!mLists->commit()) std::terminate();
+            for (auto& e : mEntries)
+            {
+                if (e.mCreated)
+                {
+                    e.mPtr.getRefData().setLuaScripts(std::move(e.mCreated));
+                    mOwner->mQueuedAutoStartedScripts.push_back(*e.mScripts);
+                }
+                if (e.mScripts) mOwner->mActiveLocalScripts.insert(std::move(e.mActiveNode));
+                mOwner->mEngineEvents.addToQueue(EngineEvents::OnActive{getId(e.mPtr)});
+            }
+            unlink();
+            return true;
+        }
+    };
+    void LuaManager::discardPreparedSceneAdditions() noexcept
+    {
+        while (mPreparedSceneAdditions) mPreparedSceneAdditions->ownerDestroyed();
+    }
+    std::unique_ptr<MWBase::LuaManager::PreparedSceneAdditions> LuaManager::prepareSceneAdditions(
+        std::span<const MWWorld::Ptr> references)
+    {
+        requireMutableRuntime();
+        if (mRunningUpdates || !mInitialized)
+            throw std::logic_error("prepared Lua scene addition requires an initialized idle manager");
+        return std::make_unique<SceneAdditions>(*this, references);
+    }
+
     class LuaManager::SceneRemoval final : public MWBase::LuaManager::PreparedSceneRemoval
     {
         LuaManager& mOwner;
@@ -1117,7 +1262,7 @@ namespace MWLua
         localScripts->addCustomScript(scriptId, initData);
     }
 
-    LocalScripts* LuaManager::createLocalScripts(
+    std::shared_ptr<LocalScripts> LuaManager::makeLocalScripts(
         const MWWorld::Ptr& ptr, std::optional<LuaUtil::ScriptIdsWithInitializationData> autoStartConf)
     {
         assert(mInitialized);
@@ -1143,9 +1288,14 @@ namespace MWLua
         }
         scripts->setSerializer(mLocalSerializer.get());
 
-        MWWorld::RefData& refData = ptr.getRefData();
-        refData.setLuaScripts(std::move(scripts));
-        return refData.getLuaScripts();
+        return scripts;
+    }
+
+    LocalScripts* LuaManager::createLocalScripts(
+        const MWWorld::Ptr& ptr, std::optional<LuaUtil::ScriptIdsWithInitializationData> autoStartConf)
+    {
+        ptr.getRefData().setLuaScripts(makeLocalScripts(ptr, std::move(autoStartConf)));
+        return ptr.getRefData().getLuaScripts();
     }
 
     void LuaManager::write(ESM::ESMWriter& writer, Loading::Listener& progress)

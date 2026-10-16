@@ -41,6 +41,8 @@ namespace MWLua
         swapGroup(mDoorsInScene, other.mDoorsInScene);
         swapGroup(mItemsInScene, other.mItemsInScene);
         mPlayers.swap(other.mPlayers);
+        mPreparationIdentity.swap(other.mPreparationIdentity);
+        std::swap(mRevision, other.mRevision);
     }
     ObjectLists::~ObjectLists()
     { if (mRetainedRuntime) mRetainedRuntime->release(); }
@@ -118,6 +120,9 @@ namespace MWLua
     void ObjectLists::clear()
     {
         requireMutableRuntime();
+        auto identity = std::make_shared<const char>(0);
+        mPreparationIdentity.swap(identity);
+        ++mRevision;
         mActivatorsInScene.clear();
         mActorsInScene.clear();
         mContainersInScene.clear();
@@ -182,13 +187,98 @@ namespace MWLua
 
     void ObjectLists::addToGroup(ObjectGroup& group, const MWWorld::Ptr& ptr)
     {
+        ++mRevision;
         group.mSet.insert(getId(ptr));
         group.mChanged = true;
     }
 
     void ObjectLists::removeFromGroup(ObjectGroup& group, const MWWorld::Ptr& ptr)
     {
+        ++mRevision;
         group.mSet.erase(getId(ptr));
         group.mChanged = true;
+    }
+}
+
+namespace MWLua
+{
+    struct ObjectLists::PreparedSceneAdditions::Data
+    {
+        struct Entry
+        {
+            MWWorld::Ptr mPtr;
+            std::weak_ptr<const char> mReferenceIdentity;
+            ObjectId mId;
+            ESM::RefId mRecord;
+            unsigned mType;
+            int mCount;
+            bool mEnabled;
+            ObjectGroup* mGroup;
+            std::set<ObjectId>::node_type mNode;
+        };
+        ObjectLists* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mRevision;
+        std::vector<Entry> mEntries;
+        bool mConsumed = false;
+        bool current() const noexcept
+        {
+            if (mConsumed || mIdentity.expired()) return false;
+            if (mIdentity.lock() != mOwner->mPreparationIdentity || mRevision != mOwner->mRevision
+                || mOwner->mParkedRuntime
+                || (mOwner->mRetainedRuntime && !mOwner->mRetainedRuntime->mDetached)) return false;
+            for (const auto& e : mEntries)
+            {
+                if (e.mReferenceIdentity.expired()) return false;
+                if (getId(e.mPtr) != e.mId || e.mPtr.getType() != e.mType
+                    || e.mPtr.getCellRef().getRefId() != e.mRecord
+                    || e.mPtr.getCellRef().getCount(false) != e.mCount
+                    || e.mPtr.getRefData().isEnabled() != e.mEnabled
+                    || mOwner->chooseGroup(e.mPtr) != e.mGroup
+                    || (e.mGroup && e.mGroup->mSet.contains(e.mId))) return false;
+            }
+            return true;
+        }
+    };
+    ObjectLists::PreparedSceneAdditions::PreparedSceneAdditions(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    ObjectLists::PreparedSceneAdditions::~PreparedSceneAdditions() = default;
+    bool ObjectLists::PreparedSceneAdditions::isValid() const noexcept { return mData && mData->current(); }
+    bool ObjectLists::PreparedSceneAdditions::commit() noexcept
+    {
+        if (!isValid()) return false;
+        for (auto& e : mData->mEntries)
+            if (e.mGroup)
+            {
+                if (!e.mGroup->mSet.insert(std::move(e.mNode)).inserted) std::terminate();
+                e.mGroup->mChanged = true;
+            }
+        ++mData->mOwner->mRevision;
+        mData->mConsumed = true;
+        return true;
+    }
+    std::unique_ptr<ObjectLists::PreparedSceneAdditions> ObjectLists::prepareSceneAdditions(
+        std::span<const MWWorld::Ptr> references)
+    {
+        requireMutableRuntime();
+        if (references.empty()) throw std::invalid_argument("empty prepared Lua object-list addition");
+        auto data = std::make_unique<PreparedSceneAdditions::Data>();
+        data->mOwner = this; data->mIdentity = mPreparationIdentity; data->mRevision = mRevision;
+        data->mEntries.reserve(references.size());
+        std::set<ObjectId> seen;
+        for (const auto& ptr : references)
+        {
+            if (ptr.isEmpty() || !getId(ptr).isSet() || ptr.getCellRef().getCount(false) <= 0
+                || !ptr.getRefData().isEnabled() || !seen.insert(getId(ptr)).second)
+                throw std::invalid_argument("Lua scene addition requires distinct live reserved references");
+            auto* group = chooseGroup(ptr);
+            if (group && group->mSet.contains(getId(ptr)))
+                throw std::invalid_argument("Lua scene reference is already active");
+            std::set<ObjectId> staged;
+            if (group) staged.insert(getId(ptr));
+            data->mEntries.push_back({ptr, ptr.getRefData().prepareRuntimeIdentity(), getId(ptr),
+                ptr.getCellRef().getRefId(), ptr.getType(), ptr.getCellRef().getCount(false),
+                ptr.getRefData().isEnabled(), group, group ? staged.extract(staged.begin()) : std::set<ObjectId>::node_type{}});
+        }
+        return std::unique_ptr<PreparedSceneAdditions>(new PreparedSceneAdditions(std::move(data)));
     }
 }

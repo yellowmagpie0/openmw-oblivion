@@ -1,3 +1,7 @@
+#include <components/l10n/manager.hpp>
+#include "apps/openmw/mwinput/inputmanagerimp.hpp"
+#include <SDL.h>
+#include <osgViewer/Viewer>
 #include "apps/openmw/mwworld/oblivionweapondrop.hpp"
 #include "apps/openmw/mwdialogue/journalimp.hpp"
 #include "apps/openmw/mwscript/interpretercontext.hpp"
@@ -148,13 +152,13 @@ namespace
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
 
         explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false,
-            const std::string& scriptSource = {})
+            const std::string& scriptSource = {}, const std::filesystem::path& luaLibs = {})
         {
             mEnvironment.setResourceSystem(mResources);
             mEnvironment.setWorld(mWorld);
             mEnvironment.setWorldModel(mWorld.getWorldModel());
             mEnvironment.setESMStore(mWorld.getStore());
-            mLuaManager = std::make_unique<MWLua::LuaManager>(&mVfs, std::filesystem::path{});
+            mLuaManager = std::make_unique<MWLua::LuaManager>(&mVfs, luaLibs);
             mEnvironment.setLuaManager(*mLuaManager);
             mSoundManager = std::make_unique<MWSound::SoundManager>(&mVfs, false);
             mEnvironment.setSoundManager(*mSoundManager);
@@ -21252,6 +21256,23 @@ namespace
 {
     struct NativeWeaponFactoryFixture : NativeWorldFixture
     {
+        struct Windows : TestingOpenMW::InventoryWindowManager
+        {
+            float getScalingFactor() const override { return 1.f; }
+            bool getCursorVisible() override { return false; }
+        } mWindows;
+        L10n::Manager mLocalization{&mVfs};
+        MWDialogue::Journal mJournal;
+        MWMechanics::MechanicsManager mMechanics;
+        struct Sdl
+        {
+            static constexpr Uint32 mSubsystems=SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER|SDL_INIT_SENSOR;
+            Sdl() { if (SDL_InitSubSystem(mSubsystems)!=0) throw std::runtime_error(SDL_GetError()); }
+            ~Sdl() { SDL_QuitSubSystem(mSubsystems); }
+        } mSdl;
+        std::unique_ptr<SDL_Window,decltype(&SDL_DestroyWindow)> mWindow{nullptr,SDL_DestroyWindow};
+        osg::ref_ptr<osgViewer::Viewer> mViewer=new osgViewer::Viewer;
+        std::unique_ptr<MWInput::InputManager> mInput;
         MWWorld::Ptr mResident = installNativeLooseItemCapture(*this);
         MWWorld::Ptr mActor;
         MWWorld::Ptr mItem;
@@ -21261,6 +21282,7 @@ namespace
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
         NativeWeaponFactoryFixture()
+            : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
             const auto draft = addNativeNpc(*this, 0x900);
@@ -21312,7 +21334,26 @@ namespace
             mAnimation->showWeapons(true);
             mObjects = std::make_unique<MWRender::Objects>(&mResources,mRoot,mUnref);
             mPhysics = &mWorld.initializePhysics(new osg::Group);
+            mEnvironment.setWindowManager(mWindows);
+            mEnvironment.setL10nManager(mLocalization);
+            mEnvironment.setJournal(mJournal);
+            mEnvironment.setMechanicsManager(mMechanics);
+            mWindow.reset(SDL_CreateWindow("native weapon factory",0,0,160,120,SDL_WINDOW_HIDDEN));
+            if (!mWindow) throw std::runtime_error(SDL_GetError());
+            mInput=std::make_unique<MWInput::InputManager>(mWindow.get(),mViewer,nullptr,mDirectory/"bindings.xml",false,
+                std::filesystem::path{},std::filesystem::path{},false,ESM::GameProfile::Oblivion);
+            mEnvironment.setInputManager(*mInput);
+            const auto libraries=mDirectory/"lua_libs";
+            const std::filesystem::path source=OPENMW_PROJECT_SOURCE_DIR;
+            std::filesystem::create_directories(libraries);
+            std::filesystem::copy_file(source/"components/lua/util.lua",libraries/"util.lua",
+                std::filesystem::copy_options::overwrite_existing);
+            std::filesystem::copy_file(source/"components/lua_ui/content.lua",libraries/"content.lua",
+                std::filesystem::copy_options::overwrite_existing);
+            mLuaManager->initPreLoad();
+            mLuaManager->initPostLoad();
         }
+        ~NativeWeaponFactoryFixture() { mLuaManager.reset(); }
         auto prepare(std::optional<float> condition = 0.f)
         {
             const std::array<MWWorld::EquippedWeaponDrop,1> requests{{{mActor,mItem,*mAnimation,condition}}};
@@ -21663,4 +21704,146 @@ TEST(OblivionWorldTest, NativeWeaponFactoryPreservesLegacyFractionalConditionAnd
             EXPECT_EQ(source.getCharge(),43); EXPECT_EQ(source.getChargeIntRemainder(),-.875f);
         }
     }
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryQueuesLuaSceneAdmissionWithPublication)
+{
+    // An unrelated registered script makes the real manager's prepared-removal
+    // queue guard observable without exposing its internal event queue.
+    VFS::Manager vfs;
+    LuaUtil::ScriptsConfiguration configuration;
+    LuaUtil::LuaState state(&vfs,&configuration);
+    NativeWeaponFactoryFixture fixture;
+    auto scripts=std::make_shared<MWLua::LocalScripts>(&state,
+        MWLua::LObject(fixture.mResident.getCellRef().getRefNum()));
+    fixture.mResident.getRefData().setLuaScripts(std::shared_ptr<MWLua::LocalScripts>(scripts));
+    auto& lua=*fixture.mLuaManager;
+    lua.objectAddedToScene(fixture.mResident);
+    auto queueProbe=lua.prepareSceneRemoval(fixture.mResident); ASSERT_TRUE(queueProbe->isValid());
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    EXPECT_TRUE(queueProbe->isValid()); // Preparation publishes no event.
+    ASSERT_FALSE(plan->commit().isEmpty());
+    EXPECT_FALSE(queueProbe->isValid()); // OnActive was queued with the drop.
+    auto after=lua.prepareSceneRemoval(fixture.mResident); ASSERT_TRUE(after->isValid());
+    EXPECT_TRUE(plan->commit().isEmpty());
+    EXPECT_TRUE(after->isValid()); // No duplicate scene event after consumption.
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryLuaAdmissionRejectsQueueMutationAndRestoresRetainedSelection)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto& lua=*fixture.mLuaManager;
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    {
+        auto retained=lua.retainRuntime(false);
+        EXPECT_FALSE(plan->isValid());
+        ASSERT_TRUE(retained.detach()); EXPECT_FALSE(plan->isValid());
+        ASSERT_TRUE(retained.restore()); EXPECT_TRUE(plan->isValid());
+    }
+    lua.objectTeleported(fixture.mResident);
+    EXPECT_FALSE(plan->isValid()); EXPECT_TRUE(plan->commit().isEmpty());
+    EXPECT_EQ(fixture.mItem.getCellRef().getCount(),1);
+    EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(),50.f);
+    EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+    EXPECT_EQ(fixture.mRoot->getNumChildren(),0u);
+}
+
+namespace
+{
+    void configureSceneAutostart(NativeWeaponFactoryFixture& fixture)
+    {
+        {
+            std::ofstream script(fixture.mDirectory/"scene-autostart.lua");
+            script << R"(local self = require('openmw.self')
+local nearby = require('openmw.nearby')
+local calls = 0
+return {engineHandlers = {
+ onActive = function()
+  local found = false
+  for _, actor in ipairs(nearby.actors) do if actor == self.object then found = true end end
+  assert(found, 'activated actor missing from nearby list')
+  calls = calls + 1
+ end,
+ onSave = function() return {calls = calls} end,
+}})";
+            if (!script) throw std::runtime_error("cannot write scene autostart script");
+        }
+        const auto config=fixture.mDirectory/"scene-autostart.omwscripts";
+        { std::ofstream file(config); file << "ESM4_NPC: scene-autostart.lua\n"; }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        fixture.mWorld.getStore().addOMWScripts(config);
+        fixture.mLuaManager->contentFilesLoaded();
+    }
+}
+
+TEST(OblivionWorldTest, PreparedLuaSceneGroupAttachesAutostartAndDeliversActivationAfterRegistryPublication)
+{
+    VFS::Manager decoderVfs;
+    LuaUtil::ScriptsConfiguration decoderConfig;
+    LuaUtil::LuaState decoder(&decoderVfs,&decoderConfig);
+    NativeWeaponFactoryFixture fixture;
+    configureSceneAutostart(fixture);
+    auto& world=fixture.mWorld;
+    auto& lua=*fixture.mLuaManager;
+    lua.setupPlayer(world.getPlayerPtr());
+    ASSERT_NO_THROW(lua.update());
+    auto placed=*fixture.mActor.getCellRef().getNativeActor(); placed.mId={};
+    placed.mFormKey=ESM::FormKey::dynamic("scene-autostart",1);
+    MWWorld::LiveCellRef<ESM4::Npc> live(placed,fixture.mActor.get<ESM4::Npc>()->mBase);
+    auto& cell=*fixture.mActor.getCell();
+    auto insertion=cell.prepareInsertion(live);
+    placed.mFormKey=ESM::FormKey::dynamic("scene-autostart",2);
+    MWWorld::LiveCellRef<ESM4::Npc> secondLive(placed,fixture.mActor.get<ESM4::Npc>()->mBase);
+    auto secondInsertion=cell.prepareInsertion(secondLive);
+    const std::array<MWWorld::Ptr,2> refs{{MWWorld::Ptr(insertion->get(),&cell),MWWorld::Ptr(secondInsertion->get(),&cell)}};
+    auto registration=world.getWorldModel().preparePtrReplacement({},refs);
+    const auto revision=world.getWorldModel().getPtrRegistryRevision();
+    auto group=lua.prepareSceneAdditions(refs); ASSERT_TRUE(group->isValid());
+    EXPECT_EQ(refs[0].getRefData().getLuaScripts(),nullptr);
+    ASSERT_TRUE(group->commit());
+    EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(),revision); // Lua never registers a prefix.
+    auto* scripts=refs[0].getRefData().getLuaScripts(); ASSERT_NE(scripts,nullptr);
+    EXPECT_FALSE(scripts->isActive());
+    ESM::LuaScripts before; scripts->save(before); EXPECT_TRUE(before.mScripts.empty());
+    registration.commit(); ASSERT_NE(cell.commitPreparedInsertion(*insertion),nullptr);
+    ASSERT_NE(cell.commitPreparedInsertion(*secondInsertion),nullptr);
+    ASSERT_NO_THROW(lua.update()); EXPECT_TRUE(scripts->isActive());
+    const auto calls=[&](MWLua::LocalScripts* target) {
+        ESM::LuaScripts saved; target->save(saved);
+        if (saved.mScripts.size()!=1) { ADD_FAILURE()<<"autostart script missing"; return -1; }
+        return LuaUtil::deserialize(decoder.unsafeState(),saved.mScripts[0].mData).as<sol::table>()["calls"].get<int>();
+    };
+    EXPECT_EQ(calls(scripts),1);
+    EXPECT_EQ(calls(refs[1].getRefData().getLuaScripts()),1);
+    ASSERT_NO_THROW(lua.update()); EXPECT_EQ(calls(scripts),1);
+    EXPECT_EQ(calls(refs[1].getRefData().getLuaScripts()),1);
+    EXPECT_FALSE(group->commit());
+    for (const auto& ref : refs) ref.getRefData().setLuaScripts({});
+    world.getPlayerPtr().getRefData().setLuaScripts({});
+}
+
+TEST(OblivionWorldTest, PreparedLuaAutostartCancellationAndManagerDeathReleaseUnpublishedScriptPayloads)
+{
+    std::unique_ptr<MWBase::LuaManager::PreparedSceneAdditions> orphan;
+    auto fixture=std::make_unique<NativeWeaponFactoryFixture>();
+    configureSceneAutostart(*fixture);
+    auto placed=*fixture->mActor.getCellRef().getNativeActor(); placed.mId={};
+    placed.mFormKey=ESM::FormKey::dynamic("scene-autostart",1);
+    MWWorld::LiveCellRef<ESM4::Npc> live(placed,fixture->mActor.get<ESM4::Npc>()->mBase);
+    auto insertion=fixture->mActor.getCell()->prepareInsertion(live);
+    const std::array<MWWorld::Ptr,1> refs{{MWWorld::Ptr(insertion->get(),fixture->mActor.getCell())}};
+    auto registration=fixture->mWorld.getWorldModel().preparePtrReplacement({},refs);
+    {
+        auto cancelled=fixture->mLuaManager->prepareSceneAdditions(refs); ASSERT_TRUE(cancelled->isValid());
+        EXPECT_EQ(refs[0].getRefData().getLuaScripts(),nullptr);
+    }
+    orphan=fixture->mLuaManager->prepareSceneAdditions(refs); ASSERT_TRUE(orphan->isValid());
+    auto competing=fixture->mLuaManager->prepareSceneAdditions(refs); ASSERT_TRUE(competing->isValid());
+    fixture->mLuaManager.reset();
+    EXPECT_FALSE(competing->isValid()); EXPECT_FALSE(competing->commit());
+    competing.reset();
+    EXPECT_FALSE(orphan->isValid()); EXPECT_FALSE(orphan->commit());
+    EXPECT_EQ(refs[0].getRefData().getLuaScripts(),nullptr);
+    orphan.reset(); // May not retain a LuaState-dependent payload after manager destruction.
 }

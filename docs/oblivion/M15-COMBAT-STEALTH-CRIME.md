@@ -6,6 +6,23 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 prepared Lua scene admission — 2026-10-16
+
+The equipped-weapon factory now publishes Lua object-list membership, prepared
+local-script containers, autostart and activation queues with the grouped
+reference transaction. Preparation executes no scripts and leaves references
+private; callbacks run after registry/cell publication. Cancellation, stale
+queues, retained-runtime selection and manager destruction reject safely.
+
+Normal and ASan/UBSan builds each pass all **1,544 engine tests/122 suites**.
+Real Lua callbacks verify grouped nearby membership and exactly-once activation;
+publication allocation traces pass with a detecting positive control. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#prepared-lua-scene-admission-for-grouped-weapon-drops)
+records scope and evidence. This is engine integration coverage. Native script
+cache admission, loose-body frame/save wiring, production break/mastery dispatch,
+replacement/sound, pickup cleanup and normal-input gameplay acceptance remain
+open. S4 is incomplete.
+
 ## S4 carried-NIF weapon resource factory — 2026-10-15
 
 The equipped-NPC weapon factory now prepares the native reference, exact source

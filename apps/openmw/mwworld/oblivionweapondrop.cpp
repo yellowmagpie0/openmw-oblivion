@@ -4,6 +4,8 @@
 #include "oblivionownership.hpp"
 #include "oblivionprofileservices.hpp"
 #include "class.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/luamanager.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/vismask.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -73,12 +75,13 @@ namespace MWWorld
         std::unique_ptr<World::PreparedOblivionDynamicReferenceKey> mKeys;
         std::vector<Entry> mEntries;
         std::unique_ptr<WorldModel::PreparedLooseWeaponAdmission> mAdmission;
+        std::unique_ptr<MWBase::LuaManager::PreparedSceneAdditions> mLua;
         bool mConsumed = false;
         WorldModel::LooseWeaponPublicationHooks mHooks;
 
         bool current() const noexcept
         {
-            if (mConsumed || !mKeys->isValid() || mWorld->getRayCasting() != mPhysics) return false;
+            if (mConsumed || !mKeys->isValid() || mWorld->getRayCasting() != mPhysics || !mLua->isValid()) return false;
             const auto& store = mWorld->getStore();
             if (mAdmission->references().size() != mEntries.size()) return false;
             for (std::size_t index = 0; index < mEntries.size(); ++index)
@@ -157,7 +160,7 @@ namespace MWWorld
                     || !e.mRemoval->commit() || !e.mActor.getCellRef().swapNativeDropRelations(e.mActorAfter))
                     std::terminate(); // Validated participants cannot fail in this callback-free interval.
             }
-            if (!d.mKeys->commit()) std::terminate();
+            if (!d.mLua->commit() || !d.mKeys->commit()) std::terminate();
             for (auto& e : d.mEntries)
                 if (!e.mNotification->commit()) std::terminate();
         }
@@ -298,6 +301,7 @@ namespace MWWorld
         // stable dynamic key; guard that assigned identity from this point.
         for (std::size_t i = 0; i < data->mEntries.size(); ++i)
             data->mEntries[i].mDestination.setRefNum(data->mAdmission->references()[i].getCellRef().getRefNum());
+        data->mLua = MWBase::Environment::get().getLuaManager()->prepareSceneAdditions(data->mAdmission->references());
         return std::unique_ptr<PreparedEquippedWeaponDrops>(new PreparedEquippedWeaponDrops(std::move(data)));
     }
 }

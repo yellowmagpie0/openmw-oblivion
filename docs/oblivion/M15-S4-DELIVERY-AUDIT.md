@@ -1745,3 +1745,79 @@ before runtime acceptance. Replacement selection/application, sound follow-up,
 retained Player/quest unequips, pickup ExtraScale/dropper/list cleanup, and the
 real normal-input break/drop/pickup/fresh-process course remain required. All
 broader S4 requirements above remain open; S4 is incomplete.
+
+
+## Prepared Lua scene admission for grouped weapon drops
+
+Checkpoint **2026-10-16** closes the Lua admission gap identified in the preceding
+factory checkpoint. `PreparedSceneAdditions` stages grouped ObjectLists set
+nodes, unstarted LocalScripts containers, active-set nodes and capacity for
+activation/autostart queues. The factory publishes these within its existing
+callback-free reference transaction. Lua preparation neither registers private
+references nor attaches scripts; publication executes no modules or handlers.
+The normal Lua update starts scripts and delivers activation after registry/cell
+publication. Ordinary scene admission retains its existing behavior.
+
+List revisions, RefData/owner identities, registry guards, script bindings,
+configuration identity, queue sizes/capacity and runtime selection reject stale
+preparations. Intrusive owner tracking revokes unpublished Lua containers before
+LuaState/tracker destruction, including competing preparations held past manager
+teardown. Retaining, detaching and restoring the original runtime preserves the
+selection contract; frozen/incoming selections cannot publish an old plan.
+
+Seven new tests cover grouped membership without premature registry/vector
+writes, duplicates and mutation, clear/retention/reference and owner death,
+factory activation queue publication, queue mutation/retained selection, actual
+two-NPC autostart and callbacks, cancellation and manager death. The real Lua
+handler asserts both actors are in `nearby.actors` and saves exactly one
+activation per actor across two updates. The fixture initializes the real Lua
+manager with its internal libraries, real InputManager, journal, mechanics and
+localization services, and a strict window-manager facade. These are headless
+engine tests, not normal-input combat or gameplay acceptance.
+
+`S4/drop-lua-admission-normal-03` and
+`S4/drop-lua-admission-sanitized-04` each pass all **1544 engine tests/122 suites**,
+unfiltered with exact inventory/XML agreement and zero failures/skips. No
+sanitizer diagnostic occurred; leak checking is disabled and ASan/UBSan halt on
+errors. Both reports preserve identical before/after source state atop
+`1a2c5d52dcf1bffc50cc6bee949e9100e53425e4`, with source fingerprint
+`9141672667cfd94d65d4e84e62ec2a02344d19651c3ec73b62ec952bb36e38dc`.
+The focused sanitizer preflight also passes all 18 selected cases. Component
+and Python implementation is unchanged; those suites were not rerun.
+
+`S4/drop-lua-admission-baseline-01` retains the old factory plus the queue
+regression only: its one test fails specifically because publication omits the
+activation event. The copied baseline ELF is hash-pinned, and symbol inspection
+confirms it lacks the new admission method. This is a negative control, not
+acceptance. `S4/drop-lua-admission-review-03` freezes the final nine implementation
+file hashes and complete patch before documentation updates.
+
+`S4/drop-lua-admission-allocation-03` records one publication/return and zero
+selected main-thread allocations in each of two scopes: (1) the actual two-drop
+factory publication hook through outer commit return, including Lua membership,
+events, source wear/debits, relations, serial, deferred notifications and
+registry/cell splices; (2) prepared-list commit entry through outer Lua scene
+commit return for two new script containers, including attachments, active-set,
+autostart and activation queues. The latter excludes caller registry/cell
+publication and later Lua module/handler execution. Both exclude preparation,
+other threads/APIs and gameplay. The malloc/calloc/realloc/aligned_alloc/
+posix_memalign detector catches one deliberate allocation in its control.
+Final normal test ELF SHA256:
+`54f21efd4e0dc8af495352f25237b7565f90cb511d9263df3bcda71202d16e03`.
+
+Retained unsuccessful attempts document a compile-time NotNullPtr accessor
+mistake, initially uninitialized headless Lua fixtures, missing internal
+util/content modules, an incorrect Lua comparison with SelfObject rather than
+`self.object`, and missing fixture localization/journal services exposed by
+assertions. The journal fix also binds the eagerly required real mechanics
+service. Stopped helper runs were terminal before editing; failed attempts and
+older-source passes remain diagnosis and do not replace the final evidence.
+
+The factory still needs production break/mastery dispatch. Newly created dynamic
+references need immediate native script-state cache admission; Take currently
+imports only on pickup. Loose-body frame synchronization and physical save/
+recreation remain unwired. Retained Player/quest unequips, NPC replacement and
+sound follow-up, pickup ExtraScale/dropper/list cleanup, and actual normal-input
+break/drop/pickup/fresh-process courses remain required. The wider power attack,
+creature, mastery, reaction/effect, controller and FPS matrix remains open.
+**S4 is incomplete.**

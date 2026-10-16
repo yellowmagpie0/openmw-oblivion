@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <array>
 
 #include <stdexcept>
 #include <string_view>
@@ -228,4 +229,58 @@ namespace
         EXPECT_FALSE(orphan.restore()); EXPECT_FALSE(orphan.exchange());
     }
 
+}
+
+namespace
+{
+    TEST(LuaObjectListsTest, PreparedGroupPublishesMembershipWithoutRegisteringOrUpdatingBorrowedVectorsEarly)
+    {
+        withScripts([](auto&,auto&,auto&,auto& model,auto& first) {
+            auto second=first; second.mRef.unsetRefNum();
+            const std::array<MWWorld::Ptr,2> refs{{MWWorld::Ptr(&first),MWWorld::Ptr(&second)}};
+            model.registerPtr(refs[1]);
+            const auto revision=model.getPtrRegistryRevision();
+            MWLua::ObjectLists lists;
+            const auto view=lists.getActorsInScene();
+            { auto cancelled=lists.prepareSceneAdditions(refs); ASSERT_TRUE(cancelled->isValid()); }
+            lists.update(); EXPECT_TRUE(view->empty());
+            auto group=lists.prepareSceneAdditions(refs); ASSERT_TRUE(group->isValid());
+            EXPECT_TRUE(view->empty()); ASSERT_TRUE(group->commit());
+            EXPECT_EQ(model.getPtrRegistryRevision(),revision);
+            EXPECT_TRUE(view->empty()); // Ordinary per-frame list publication remains deferred.
+            lists.update(); EXPECT_EQ(*view,(std::vector<MWLua::ObjectId>{MWLua::getId(refs[0]),MWLua::getId(refs[1])}));
+            EXPECT_FALSE(group->isValid()); EXPECT_FALSE(group->commit());
+            EXPECT_THROW(lists.prepareSceneAdditions(refs),std::invalid_argument);
+        });
+    }
+    TEST(LuaObjectListsTest, PreparedGroupRejectsDuplicateChangedMembershipAndClearedOwners)
+    {
+        withScripts([](auto&,auto&,auto&,auto&,auto& live) {
+            const std::array<MWWorld::Ptr,1> refs{{MWWorld::Ptr(&live)}};
+            const std::array<MWWorld::Ptr,2> duplicate{{refs[0],refs[0]}};
+            MWLua::ObjectLists lists;
+            EXPECT_THROW(lists.prepareSceneAdditions(duplicate),std::invalid_argument);
+            auto pending=lists.prepareSceneAdditions(refs);
+            lists.objectAddedToScene(refs[0]); EXPECT_FALSE(pending->isValid()); EXPECT_FALSE(pending->commit());
+            lists.clear();
+            auto cleared=lists.prepareSceneAdditions(refs); lists.clear();
+            EXPECT_FALSE(cleared->isValid()); EXPECT_FALSE(cleared->commit());
+            lists.update(); EXPECT_TRUE(lists.getActorsInScene()->empty());
+        });
+    }
+    TEST(LuaObjectListsTest, PreparedMembershipTracksRetainedSelectionAndReferenceOrOwnerDestruction)
+    {
+        std::unique_ptr<MWLua::ObjectLists::PreparedSceneAdditions> orphan;
+        auto lists=std::make_unique<MWLua::ObjectLists>();
+        withScripts([&](auto&,auto&,auto&,auto&,auto& live) {
+            const std::array<MWWorld::Ptr,1> refs{{MWWorld::Ptr(&live)}};
+            auto pending=lists->prepareSceneAdditions(refs);
+            auto retained=lists->retainRuntime(); EXPECT_FALSE(pending->isValid());
+            ASSERT_TRUE(retained.detach()); EXPECT_FALSE(pending->isValid());
+            ASSERT_TRUE(retained.restore()); EXPECT_TRUE(pending->isValid());
+            orphan=std::move(pending);
+        });
+        EXPECT_FALSE(orphan->isValid()); EXPECT_FALSE(orphan->commit());
+        lists.reset(); EXPECT_FALSE(orphan->isValid()); EXPECT_FALSE(orphan->commit());
+    }
 }
