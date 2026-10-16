@@ -1,4 +1,5 @@
 #include "controller.hpp"
+#include <components/sceneutil/nifscenetraversal.hpp>
 
 #include <osg/Material>
 #include <osg/MatrixTransform>
@@ -1222,7 +1223,7 @@ namespace NifOsg
         worldDir /= len;
 
         osg::Matrixf parentWorldInv;
-        if (nodePath.size() > 1)
+        if (nodePath.size() > 1 && !SceneUtil::NifSceneTraversal::isReferenceRoot(nv, node))
         {
             osg::NodePath parentPath(nodePath.begin(), nodePath.end() - 1);
             osg::Matrixf parentWorld = osg::computeLocalToWorld(parentPath);

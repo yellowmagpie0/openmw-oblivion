@@ -14864,3 +14864,28 @@ controller entries see their previous cached world despite updated parent state;
 all 768 leaf entries see the parent's current post-projection cache. This is a
 native scheduling contract for the next integration, not original controller
 interpolation/timing proof or an implemented OSG per-node dispatcher.
+
+
+### Ordinary NIF controller/cache traversal and root-initialization prefix
+
+`M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json` records the new manual OSG traversal's
+comparison against the unchanged original controller-order corpus (SHA256
+`1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c`).
+Both normal and ASan/UBSan match512 supported24/53-bit frames and8128 raw field
+checks, with separate1e-9 OSG matrix tolerance. The actual47C930 controller list
+and NiNode composition/collision/child dispatch execute in the native corpus;
+controller virtual Update bodies are supplied translations. This proves cache
+phase behavior for the supported domain, not native interpolation/time math,
+Havok stepping, global scheduler or normal-input acceptance.256 extended-x87
+frames match this corpus only; earlier037F diagnostic differences remain open.
+
+The separate `S4/reference-root-initialization-oracle-01` executes72 contexts in
+hash-identified original1.2.0416 instructions (SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`).
+GenerateNiNode004E4244..004E426E copies reference position into root+54..5C,
+calls complete4D7AF0 and copies nine rotation dwords into root+30..50, replacing
+authored asset R/T.004E43C8..004E43E9 calls actual4D7260, applies FABS and stores
+root+60. Child, reference/base input bytes, stack,EBX,EBP and x87 control stay
+unchanged. The skipped middle of GenerateNiNode,4D6F20 branch, node virtual+50,
+registration and first synchronization remain explicit boundaries. This is a
+next-step initialization basis, not a new original-game or full attachment run.

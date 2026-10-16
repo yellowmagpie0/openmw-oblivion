@@ -6,6 +6,28 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 manual ordinary-NIF scene traversal — 2026-10-16
+
+`NifSceneTraversal` now runs existing property/node callbacks before each native
+world projection and visits children afterward. It retains independent global
+caches, rebasing unvisited children immediately after a parent changes. A child's
+own controller therefore sees its previous global cache and the parent's current
+cache. Author locals and relative OSG drawing projections remain separate.
+
+Eighteen component cases cover phase order, real Keyframe/Roll/LookAt consumers,
+collision flags, native rotation bits, repeated-frame palettes and callback-driven
+retirement. Both builds match **512 original supported-precision frames / 8,128
+field checks exactly**; OSG matrix error remains below the declared tolerance.
+Normal and ASan/UBSan each pass **2,746 component tests / 262 suites and 1,575
+engine tests / 122 suites**, without failures or skips. Leak checks are disabled.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#manual-ordinary-nif-controller-and-projection-traversal)
+and [verification record](M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json) retain failures,
+limits and an independent next-step root-initialization probe. The new traversal
+has no production World/ObjectAnimation caller yet. Live scheduling, first-sync,
+reference callbacks/cell migration, controller clocks, save/recreation, remaining
+combat branches and normal-input acceptance are open. S4 remains incomplete.
+
 ## S4 ordinary physical scene precision — 2026-10-16
 
 Loose-root capture now explicitly selects the observed live single-precision

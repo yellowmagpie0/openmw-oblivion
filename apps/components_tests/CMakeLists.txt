@@ -145,6 +145,7 @@ file(GLOB UNITTEST_SRC_FILES
     sceneutil/osgacontroller.cpp
     sceneutil/actorragdollpose.cpp
     sceneutil/riggeometry.cpp
+    sceneutil/nifscenetraversal.cpp
 
     bsa/testbsafile.cpp
     bsa/testcompressedbsafile.cpp

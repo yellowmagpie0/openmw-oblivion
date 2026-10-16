@@ -3196,3 +3196,101 @@ the inverse-bind child adapter is unchanged. Actual World/script continuation,
 complete admission modes, loose physical save/recreation, production break/mastery/
 drop/pickup/sound/power/creature/reactions/effects and the entire normal-input/
 controller/FPS/restart S4 matrix remain required. Full S4 is active and incomplete.
+
+
+## Manual ordinary-NIF controller and projection traversal
+
+`SceneUtil::NifSceneTraversal` owns a manual settled traversal for a private
+ordinary NIF hierarchy. Each node retains its native binary32 world cache
+independently of the author/controller local and immutable relative OSG drawing
+projection. After a parent projects, its nearest NIF children are immediately
+rebased to their previous globals. Own controllers then see the previous own
+cache together with the updated parent; children see the parent's post-collision
+cache. A diagnostic ordinary OSG traversal instead observes25 where the retained
+native fixture requires15 after parent10->20 with child local5.
+
+Existing StateSet/property and node callback chains run once with child traversal
+suppressed, including work after `traverse()`, before own projection and explicit
+child traversal. FrameStamp is copied, and traversal number and external NodePath
+are forwarded. Reference-root LookAt excludes synthetic OSG placement as a native
+parent. Real Keyframe missing channels preserve author rotation/scale; real Roll
+post-traverse work finishes before projection. These test existing controller
+consumers, not independent native interpolation, Roll timing or LookAt formulas.
+
+Inactive bit0 skips physical input; active bits1/9 retain or update author locals
+according to bit8. Pending0x40 rejects. Optional per-node publication runs after
+projection and child rebasing, before children. A child mask does not authorize
+a REFR callback. Precision is explicit Single/Double. A consistent separate NIF
+rotation cache survives scaled drawing storage without an inverse round trip;
+procedural raw matrix writes still reconstruct rotation. The native nonunit-scale
+fixture first falsified that earlier reconstruction-only reader.
+
+Constructor validation prepares all projections before writing any. The binding
+checks private hierarchy identities and projection ownership. Root, current node,
+callback and external-ancestor leases prevent retirement while borrowed. Guards
+follow collision/physical suppliers, and final placement validation checks both
+ancestor identities and matrix. A new test caught an identity ancestor detaching
+without changing the world matrix. Exceptions do not roll back controller writes
+or completed nodes. Reentrant calls reject, and explicit later passes are allowed.
+Skeleton palettes invalidate even when traversal numbers repeat; cached Bone
+identity survives world-only physical publication while author locals stay put.
+
+The domain is relative ordinary `NifOsg::MatrixTransform` nodes through transparent
+Group/Geode, with an external Skeleton permitted. Invertible drawing transforms
+are required. Nested Skeleton, billboard, Switch/LOD, absolute transforms, shared
+or ambiguous hierarchy/placement and zero-scale paths need separate policies.
+The root author local must already contain native global placement. Placement
+can change between passes; an owning scheduler must prevent a second ordinary
+OSG update. These requirements are not an assertion that current World satisfies
+them. Current root-only/inverse-bind child publication remains unchanged.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `nif-scene-traversal-baseline-01`: retained existing OSG25-vs15 diagnostic.
+- `nif-scene-traversal-preflight-01` through08: retained build/test attempts.
+  01 catches ambiguous matrix types;03 catches native rotation-bit loss;05
+  catches the StateSet test's wrong callback type;07 catches detached identity
+  ancestry. Final08 passes all18 focused cases. Earlier02/04/06 pass their then
+  smaller inventories.
+- `nif-scene-traversal-compare-01`: driver compile failure from wrong mask field.
+  02 passes the initial traversal;03 rebuilds both final binaries and compares
+  the unchanged `node-controller-order-oracle-01` corpus. Each matches512
+  supported-precision frames and8128 fields exactly across four topologies,
+  plain/bodyT supplied world inputs, flags0/1/8/9 and eight retained-state frames.
+  Own local-before/after, previous cache, current parent, final target local/world,
+  mask, read count and controller order are compared. Native frame0 leaf previous
+  cache is excluded because that fixture inserted it after first sync with zero
+  world storage; later leaf observations are compared. A native null child slot
+  becomes an empty OSG Group. All256 extended-precision diagnostic frames also
+  match here, without closing prior037F differences from another corpus. OSG
+  matrix tolerance1e-9 was declared before execution; max error5.68434e-14.
+- `nif-scene-traversal-full-normal-01` and `full-sanitized-01`: intentionally
+  interrupted owned builds before adding ancestor/supplier lifetime guards.
+  Helpers were terminal before source edits. These are not full passing runs.
+- `nif-scene-traversal-full-normal-02` and `full-sanitized-02`: unfiltered2746
+  component tests/262 suites and1575 engine tests/122 suites in each build,
+  exact inventory/XML agreement, no failures or skips. ASan/UBSan halt on error;
+  leak detection disabled. No new compiler warnings appear in these build logs.
+- `reference-root-initialization-oracle-01`: next-step72 original instruction
+  contexts. Actual GenerateNiNode004E4244..004E426E stores reference T, executes
+  complete4D7AF0 and copies nine rotation lanes into the asset root. Later
+  004E43C8..004E43E9 executes4D7260, FABS and root scale store. Three angles,
+  two positions, four signed scales and three x87 controls preserve child,
+  reference/base bytes, stack,EBX,EBP and control word. Stops before4D6F20 and
+  node virtual+50; intervening registration, first synchronization and complete
+  GenerateNiNode are not executed. This is preparation for live root binding.
+
+The [editable verification](M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json) pins the
+source fingerprint, code and evidence hashes. The controller corpus executes
+native47C930/node/collision dispatch with declared controller virtual Update
+suppliers; interpolation/clocks/math and Havok dynamics remain boundaries. No
+new original-game process is launched by this checkpoint.
+
+Next integrate correct global root initialization with renderer/physics ownership,
+first-sync/controller order and an independent lifetime token. World publication
+must preserve native REFR-before-children semantics and safe cell migration while
+avoiding a duplicate viewer callback pass. Real controller clocks, unsupported
+node/admission/property-copy modes, forced World/script continuation, other live
+precision callers, loose retention/save/recreation, production break/mastery/drop/
+pickup/sound/power/creature/reactions/effects and the full normal-input/FPS/fresh-
+process acceptance matrix remain open. Full M15S4 is active and incomplete.
