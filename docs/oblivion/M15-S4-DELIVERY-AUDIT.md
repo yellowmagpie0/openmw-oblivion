@@ -1948,3 +1948,69 @@ World still has no loose-body frame consumer. This helper does not implement
 body/renderer synchronization, logical cell migration, physical save/recreation,
 production break/mastery dispatch or normal-input acceptance. Those and all
 other broader S4 gates remain open. **S4 is incomplete.**
+
+
+## Loose-weapon frame pose publication
+
+Checkpoint **2026-10-16** wires `synchronizeLooseWeaponPoses` into World immediately
+after physics actor movement. It accepts only the supplied World's current
+physics owner in the Oblivion profile. Before publishing any captured pose, it
+checks all loose owners' native WEAP identity, cell/registry membership and
+current admitted resource/scale binding through rigid-root capture. It stages
+rigid roots and the independently verified physical reference-Euler conversion.
+
+Publication writes RefData position/rotation and the rendered placement node's
+position/attitude, retaining reference scale on that node. It keeps the physical
+rotation separately from its approximate Euler projection. Interior/same-cell
+updates need no rendering-manager service or reference re-registration.
+Exterior cell crossings use World's existing `moveObject(..., false)` path for
+Ptr/render/physics/script ownership migration. Physics poses, velocities and
+packed velocity authority are not rewritten by the frame consumer.
+
+Two new engine integration cases use an actual carried-NIF factory drop with
+scale2, real Objects/PhysicsSystem and managed cell/registry ownership. The first
+sets initial native velocity and advances a real physics worker step, verifies
+movement and gravity while scene/reference are still stale, then verifies their
+publication, script `GetPos`, reference snapshot/binary round-trip and unchanged
+physical pose/linear/angular/packed velocity state. The second applies an
+independent +90 Z global rigid transform to the body, checks the known root
+translation (-6,123,65), reference angles and rendered axis, preserves scale2,
+and verifies repeated publication does not rewrite physics. A stale reference
+scale rejects before reference/node publication and permits retry after restoring
+the admitted scale.
+
+`S4/drop-frame-world-normal-01` and `S4/drop-frame-world-sanitized-01` each pass
+all **1547 engine tests/122 suites**, unfiltered with exact inventory/XML agreement
+and zero failures/skips. No sanitizer diagnostic occurred; ASan leak checking is
+disabled and ASan/UBSan halt on errors. Both preserve identical before/after
+source state atop `34026b579e016b4b64851e2686819aef9fc64730`, with fingerprint
+`2e08f32fbd98a8bd121eeec09662849559b0a23794ca9302acd835927566a699`.
+`S4/drop-frame-world-review-01` freezes the four implementation file hashes and
+complete patch before documentation updates. Component/Python code is unchanged;
+those suites were not rerun for this wiring addition.
+
+`S4/drop-frame-world-bypass-01` uses the same normal test ELF and returns the new
+synchronization function at entry exactly once. Its single selected test fails
+with exactly three stale-pose assertions: reference position, scene-node position
+and `GetPos`, while physics advancement and unchanged-physics checks succeed.
+This is a controlled function bypass, not a previous-source implementation build.
+Normal test ELF SHA256:
+`d1b233a514f184175df0d1d71741d11b9522a4722547899c8861536a064c73a9`.
+The earlier compile preflight incorrectly used World's ray-casting interface as
+a full physics owner; it was stopped before correcting the API to accept the
+explicit owner. The second preflight passed pose/rotation/scale/physics checks
+but its GetPos host call omitted the explicit reference target and queried X.
+The corrected final test uses a reference target; explicit binary32 translation
+conversion also removes new narrowing warnings. Failed/stopped attempts remain
+retained diagnosis, not acceptance.
+
+These tests call the real frame consumer directly; the compiled World call site
+is installed, but no new normal-input gameplay or exterior crossing acceptance
+is claimed. The binary round-trip covers the reference snapshot, not a physical
+loose-body save/recreation contract. World physical capture still handles actors
+only. Generic PhysicsSystem `updatePosition`, `updateRotation` and `updateScale`
+also lack loose-body branches; wire script-driven transforms and live rescaling
+before claiming complete related command semantics. The stale-scale guard does
+not implement live rescaling. Physical retention/recreation, production break/
+mastery policy, replacement/sound, pickup metadata cleanup and the complete
+normal-input/restart/controller/FPS matrix remain required. **S4 is incomplete.**

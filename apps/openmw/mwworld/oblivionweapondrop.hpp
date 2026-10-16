@@ -45,5 +45,10 @@ namespace MWWorld
     std::unique_ptr<PreparedEquippedWeaponDrops> prepareEquippedWeaponDrops(
         World& world, MWRender::Objects& objects, MWPhysics::PhysicsSystem& physics,
         std::span<const EquippedWeaponDrop> drops);
+
+    // After physics workers finish, publish loose native weapon root poses to
+    // their reference and placement node. Cell crossings use World's normal
+    // ownership migration without feeding the pose back into the rigid body.
+    void synchronizeLooseWeaponPoses(World& world, MWPhysics::PhysicsSystem& physics);
 }
 #endif

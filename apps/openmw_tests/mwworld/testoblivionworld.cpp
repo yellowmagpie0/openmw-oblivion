@@ -21886,3 +21886,87 @@ TEST(OblivionWorldTest, PreparedLuaAutostartCancellationAndManagerDeathReleaseUn
     EXPECT_EQ(refs[0].getRefData().getLuaScripts(),nullptr);
     orphan.reset(); // May not retain a LuaState-dependent payload after manager destruction.
 }
+
+TEST(OblivionWorldTest, NativeWeaponFactoryFallingBodyPublishesSceneAndReferencePoseWithoutPhysicsFeedback)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto& world=fixture.mWorld;
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference=plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto& physics=*fixture.mPhysics;
+    auto state=physics.captureLooseObject(reference);
+    auto packed=physics.captureLooseObjectPackedVelocities(reference);
+    ASSERT_EQ(packed.size(),1u);
+    packed[0].mVelocities.mLinear={2,0,0,0};
+    physics.restoreLooseObject(reference,state,packed);
+    const auto before=reference.getRefData().getPosition();
+    auto* node=reference.getRefData().getBaseNode(); ASSERT_NE(node,nullptr);
+    osg::ref_ptr<osg::Stats> stats=new osg::Stats("native loose weapon frame");
+    physics.stepSimulation(.05f,false,osg::Timer::instance()->tick(),1,*stats);
+    const auto root=physics.captureLooseObjectRootPose(reference); // Wait for the actual worker step.
+    ASSERT_GT(root.getTrans().x(),before.pos[0]);
+    ASSERT_LT(root.getTrans().z(),before.pos[2]);
+    EXPECT_EQ(reference.getRefData().getPosition(),before);
+    EXPECT_EQ(node->getPosition(),before.asVec3());
+    const auto stepped=physics.captureLooseObject(reference);
+    const auto velocities=physics.captureLooseObjectPackedVelocities(reference);
+    MWWorld::synchronizeLooseWeaponPoses(world,physics);
+    EXPECT_EQ(reference.getRefData().getPosition().asVec3(),root.getTrans());
+    EXPECT_EQ(node->getPosition(),root.getTrans());
+    EXPECT_EQ(node->getScale(),osg::Vec3f(2,2,2));
+    const auto after=physics.captureLooseObject(reference);
+    ASSERT_EQ(after.size(),stepped.size());
+    EXPECT_EQ(after[0].mPose,stepped[0].mPose);
+    EXPECT_EQ(after[0].mLinearVelocity,stepped[0].mLinearVelocity);
+    EXPECT_EQ(after[0].mAngularVelocity,stepped[0].mAngularVelocity);
+    EXPECT_EQ(physics.captureLooseObjectPackedVelocities(reference)[0].mVelocities,velocities[0].mVelocities);
+    ObScript::RuntimeContext context; context.mSelf=reference.getCellRef().getFormKey();
+    EXPECT_EQ(ObScript::asNumber(world.getOblivionScriptManager()->call("GetPos",ObScript::Value{ObScript::ReferenceValue{context.mSelf,{}}},
+        {std::string("z")},context,{})),double(root.getTrans().z()));
+    const auto saved=world.captureOblivionRuntimeState();
+    const auto found=std::find_if(saved.mReferences.begin(),saved.mReferences.end(),
+        [&](const auto& value) { return value.mKey==context.mSelf; });
+    ASSERT_NE(found,saved.mReferences.end());
+    EXPECT_EQ(found->mPosition,reference.getRefData().getPosition());
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()),saved);
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryPhysicalRotationAndScaleGuardPreserveRigidAuthority)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference=plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto& physics=*fixture.mPhysics;
+    auto state=physics.captureLooseObject(reference);
+    const auto packed=physics.captureLooseObjectPackedVelocities(reference);
+    ASSERT_EQ(state.size(),1u);
+    // Apply an independent global rigid transform to the actual body. The
+    // original root (103,16,35) becomes (-6,123,65) under +90 Z and (10,20,30).
+    const btTransform delta(btQuaternion(btVector3(0,0,1),SIMD_HALF_PI),btVector3(10,20,30));
+    state[0].mPose=delta*state[0].mPose;
+    physics.restoreLooseObject(reference,state,packed);
+    const auto before=reference.getRefData().getPosition();
+    auto* node=reference.getRefData().getBaseNode(); ASSERT_NE(node,nullptr);
+    const auto attitude=node->getAttitude();
+    reference.getCellRef().setScale(4.f);
+    EXPECT_THROW(MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld,physics),std::invalid_argument);
+    EXPECT_EQ(reference.getRefData().getPosition(),before);
+    EXPECT_EQ(node->getPosition(),before.asVec3());
+    EXPECT_EQ(node->getAttitude(),attitude);
+    reference.getCellRef().setScale(2.f);
+    MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld,physics);
+    const auto position=reference.getRefData().getPosition();
+    EXPECT_NEAR(position.pos[0],-6,.0003f);
+    EXPECT_NEAR(position.pos[1],123,.0003f);
+    EXPECT_NEAR(position.pos[2],65,.0003f);
+    EXPECT_NEAR(position.rot[0],0,.00001f);
+    EXPECT_NEAR(position.rot[1],0,.00001f);
+    EXPECT_NEAR(position.rot[2],-osg::PI_2f,.00001f);
+    const auto axis=node->getAttitude()*osg::Vec3f(1,0,0);
+    EXPECT_NEAR(axis.x(),0,.00001f); EXPECT_NEAR(axis.y(),1,.00001f); EXPECT_NEAR(axis.z(),0,.00001f);
+    EXPECT_EQ(node->getScale(),osg::Vec3f(2,2,2));
+    const auto physical=physics.captureLooseObject(reference);
+    MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld,physics);
+    EXPECT_EQ(reference.getRefData().getPosition(),position);
+    EXPECT_EQ(physics.captureLooseObject(reference)[0].mPose,physical[0].mPose);
+}

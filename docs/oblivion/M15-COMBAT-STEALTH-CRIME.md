@@ -6,6 +6,24 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 loose-weapon frame pose publication — 2026-10-16
+
+World now synchronizes loose native weapon root poses after physics movement.
+The consumer stages and validates the current owners, updates stored reference
+position/rotation with the verified native frame extractor, and publishes the
+physical placement to the rendered node while preserving reference scale.
+Exterior crossings route through World's existing migration path without
+feeding the pose back into the rigid body.
+
+Normal and ASan/UBSan builds each pass all **1,547 engine tests/122 suites**.
+A real worker-step integration test verifies falling motion, scene/reference
+position, `GetPos`, reference snapshot and unchanged rigid-body state. A
+controlled synchronization bypass produces the expected stale-pose failures.
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#loose-weapon-frame-pose-publication)
+records the evidence and untested boundaries. Physical save/recreation,
+script-driven loose transforms, production break/mastery dispatch and actual
+normal-input acceptance remain open. S4 is incomplete.
+
 ## S4 physical scene to reference pose arithmetic — 2026-10-16
 
 The native physical-frame callback uses a different Euler extractor from initial

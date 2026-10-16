@@ -18,6 +18,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/misc/convert.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
 #include <bit>
 #include <cmath>
 #include <set>
@@ -25,6 +26,60 @@
 
 namespace MWWorld
 {
+    void synchronizeLooseWeaponPoses(World& world, MWPhysics::PhysicsSystem& physics)
+    {
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion) return;
+        if (world.getRayCasting() != &physics)
+            throw std::invalid_argument("loose weapon synchronization requires the current World physics owner");
+        struct Pose
+        {
+            Ptr mPtr;
+            osg::Matrixf mRoot;
+            ESM::Position mPosition;
+        };
+        std::vector<Pose> poses;
+        const auto owners = physics.looseObjectOwners();
+        poses.reserve(owners.size());
+        // Validate every borrowed reference and captured rigid root before
+        // publishing a prefix of a frame. Capture waits for physics workers.
+        for (const auto& ptr : owners)
+        {
+            if (ptr.isEmpty() || !ptr.isInCell() || ptr.getType() != ESM::REC_WEAP4
+                || !ptr.getCellRef().getNativeReference()
+                || world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()) != ptr)
+                throw std::logic_error("loose weapon pose has no live native world reference");
+            const auto root = physics.captureLooseObjectRootPose(ptr);
+            std::array<float,9> rotation;
+            for (unsigned row=0;row<3;++row)
+                for (unsigned column=0;column<3;++column)
+                    rotation[row*3+column]=root(column,row);
+            const osg::Vec3f translation(root.getTrans());
+            const auto placement=ESM4::physicalDroppedItemPlacement(rotation,
+                {translation.x(),translation.y(),translation.z()});
+            poses.push_back({ptr,root,placement.mPosition});
+        }
+        for (const auto& pose : poses)
+        {
+            auto ptr=pose.mPtr;
+            ptr.getRefData().setPosition(pose.mPosition);
+            const auto* cell=ptr.getCell()->getCell();
+            if (cell->isExterior())
+            {
+                const auto location=ESM::positionToExteriorCellLocation(
+                    pose.mPosition.pos[0],pose.mPosition.pos[1],cell->getWorldSpace());
+                if (location != cell->getExteriorCellLocation())
+                    ptr=world.moveObject(ptr,pose.mPosition.asVec3(),false);
+            }
+            if (auto* node=ptr.getRefData().getBaseNode())
+            {
+                // Keep the physical rotation, independently of its approximate
+                // Euler projection. Reference scale remains on this node.
+                node->setPosition(pose.mPosition.asVec3());
+                node->setAttitude(pose.mRoot.getRotate());
+            }
+        }
+    }
+
     namespace
     {
         bool sameFloat(std::optional<float> a, std::optional<float> b) noexcept

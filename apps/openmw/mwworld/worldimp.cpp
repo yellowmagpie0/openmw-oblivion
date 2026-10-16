@@ -1,4 +1,5 @@
 #include "worldimp.hpp"
+#include "oblivionweapondrop.hpp"
 #include "savedreference.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
 
@@ -5101,6 +5102,7 @@ namespace MWWorld
         mProjectileManager->processHits();
         mDiscardMovements = false;
         mPhysics->moveActors();
+        synchronizeLooseWeaponPoses(*this,*mPhysics);
     }
 
     void World::updateNavigator()
