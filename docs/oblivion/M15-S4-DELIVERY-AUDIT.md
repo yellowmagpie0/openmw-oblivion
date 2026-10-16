@@ -3777,3 +3777,40 @@ controller clocks/physics order, remaining node/property/admission policies,
 pending save/fresh recreation and melee/drop/effect/input/runtime gates remain
 open. ObjectAnimation and World still use their legacy adapters. M15S4 remains
 active and incomplete.
+
+## 2026-10-16 — explicit root reference update and rendering migration
+
+Manual NIF traversal now offers root-only `mReferenceUpdate` after final own
+projection/first synchronization and `mProjected`, before child controllers. The
+owner receives final writeback/mask and settled flags and decides REFR publication
+eligibility. Only this callback may change rendering ancestors during a pass.
+Traversal validates and leases the new invertible unique path, compensates root
+drawing against unchanged native caches, rebuilds the visitor's borrowed path and
+invalidates old/new Skeleton palettes before releasing old ancestors. Children
+retain their old native/drawing world until their own update. This utility does
+not itself retain a REFR or implement World movement/cell publication.
+
+Five tests cover ancestor release during migration, callback order/current paths,
+old child caches, same-traversal skinning invalidation, unauthorized placement
+mutation rejection, singular placement, callback exceptions/retry, hierarchy
+mutation, reentrancy and pending/settled physical flags/masks before children.
+Preflight01 failed compilation from a nonexistent test accessor; it was terminal
+before correction and remains retained. Final preflight02 passes29tests. Full
+normal and ASan/UBSan runs each pass2,767components/265suites, no failures/skips;
+leak detection is disabled. No fresh engine check is claimed at this checkpoint.
+
+Both builds replay512supported original precision frames/8,128field checks with
+no mismatches, plus256matching extended diagnostic frames. Every root publication
+moves to a fresh rotated/scaled/translated synthetic rendering parent; every
+controller checks its current ancestor path. Maximum drawing error3.55271e-13 is
+within1e-9. This compares preserved native caches against an independent existing
+corpus; it is not original World cell-migration or controller-clock evidence.
+[Editable verification](M15-NIF-REFERENCE-REANCHOR-VERIFICATION.json) pins source,
+checks, retained failure and `nif-reference-reanchor-*` evidence.
+
+Production ObjectAnimation/World adapters remain unchanged. Next connect verified
+native generation/capture and selected-root registration ordering, then one actual
+manual traversal owner with native controller clocks/physics order and safe live
+REFR migration. Remaining property/admission/node, pending save/fresh recreation,
+melee/drop/effect and normal-input/FPS/fresh-process gates remain open. M15S4 is
+active and incomplete.

@@ -646,3 +646,180 @@ namespace
         EXPECT_EQ(mRoot->getTraversalMatrix(), projected);
     }
 }
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, ReferenceUpdateMigratesBeforeChildrenAndRetainsNativeWorldCaches)
+    {
+        osg::ref_ptr<SceneUtil::Skeleton> previous = new SceneUtil::Skeleton;
+        previous->addChild(mRoot);
+        osg::observer_ptr<SceneUtil::Skeleton> old = previous;
+        osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform(
+            osg::Matrixd::scale(2, 2, 2) * osg::Matrixd::translate(-300, 40, 50));
+        osg::ref_ptr<SceneUtil::Skeleton> next = new SceneUtil::Skeleton;
+        placement->addChild(next);
+        Binding binding(*mRoot);
+        unsigned updates = 0, children = 0;
+        std::vector<std::string> events;
+        mRoot->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+            events.push_back("controller"); node.setTranslation({20, 0, 0});
+        }));
+        mChild->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor& visitor) {
+            ++children;
+            events.push_back("child");
+            EXPECT_FALSE(old.valid());
+            EXPECT_EQ(visitor.getNodePath(), (osg::NodePath{placement, next, mRoot, mChild}));
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 20);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(node).mTranslation.x(), 15);
+            EXPECT_NEAR(node.getWorldMatrices().front().getTrans().x(), 15, 1e-10);
+            EXPECT_FLOAT_EQ(node.getControllerTransform().mTranslation.x(), 5);
+        }));
+        Binding::Callbacks callbacks;
+        callbacks.mProjected = [&](Node& node, const auto&, auto) {
+            if (&node == mRoot) events.push_back("projected");
+        };
+        callbacks.mReferenceUpdate = [&](Node& node, const auto& frame, auto flags) {
+            ++updates;
+            events.push_back("reference");
+            EXPECT_EQ(&node, mRoot.get());
+            EXPECT_FALSE(flags);
+            EXPECT_FLOAT_EQ(frame.mWorld.mTranslation.x(), 20);
+            EXPECT_THROW(binding.update(mStamp, 42), std::invalid_argument);
+            previous->removeChild(&node);
+            previous = nullptr;
+            EXPECT_TRUE(old.valid());
+            next->addChild(&node);
+        };
+        binding.update(mStamp, 42, callbacks);
+        EXPECT_EQ(updates, 1u); EXPECT_EQ(children, 1u);
+        EXPECT_EQ(events, (std::vector<std::string>{"controller", "projected", "reference", "child"}));
+        EXPECT_FLOAT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 27);
+        EXPECT_NEAR(mLeaf->getWorldMatrices().front().getTrans().x(), 27, 1e-10);
+        EXPECT_TRUE(binding.isValid());
+    }
+
+    TEST_F(NifSceneTraversalTest, ReferenceUpdateReanchorsAndInvalidatesNewSkeletonBeforeChildControllers)
+    {
+        osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform;
+        osg::ref_ptr<SceneUtil::Skeleton> skeleton = new SceneUtil::Skeleton;
+        placement->addChild(skeleton); skeleton->addChild(mRoot);
+        mChild->setName("child");
+        auto* bone = skeleton->getBone("child"); ASSERT_NE(bone, nullptr);
+        Binding binding(*mRoot);
+        Binding::Callbacks callbacks;
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) {
+            placement->setMatrix(osg::Matrixd::translate(100, 0, 0));
+            // Cache the temporary rendering pose in this same traversal. The
+            // reanchor must invalidate it before a child requests skinning.
+            skeleton->invalidateBoneMatrices();
+            skeleton->updateBoneMatrices(42);
+            EXPECT_FLOAT_EQ(bone->mMatrixInSkeletonSpace.getTrans().x(), 15);
+        };
+        mChild->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+            skeleton->updateBoneMatrices(42);
+            EXPECT_FLOAT_EQ(bone->mMatrixInSkeletonSpace.getTrans().x(), -85);
+            EXPECT_NEAR(node.getWorldMatrices().front().getTrans().x(), 15, 1e-10);
+        }));
+        binding.update(mStamp, 42, callbacks);
+    }
+
+    TEST_F(NifSceneTraversalTest, PlacementMutationOutsideReferenceUpdateRejectsBeforeMoreChildren)
+    {
+        osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform;
+        placement->addChild(mRoot);
+        Binding binding(*mRoot);
+        for (unsigned source = 0; source < 3; ++source)
+        {
+            SCOPED_TRACE(source);
+            placement->setMatrix(osg::Matrixd::identity());
+            unsigned references = 0, leaves = 0;
+            auto move = [&] { placement->setMatrix(osg::Matrixd::translate(100, 0, 0)); };
+            mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { if (source == 0) move(); }));
+            mChild->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { if (source == 2) move(); }));
+            mLeaf->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++leaves; }));
+            Binding::Callbacks callbacks;
+            callbacks.mProjected = [&](Node& node, const auto&, auto) { if (source == 1 && &node == mRoot) move(); };
+            callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) { ++references; };
+            EXPECT_THROW(binding.update(mStamp, 42, callbacks), std::invalid_argument);
+            EXPECT_EQ(references, source == 2 ? 1u : 0u);
+            EXPECT_EQ(leaves, 0u);
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, ReferenceUpdateRejectsInvalidPlacementAndHierarchyAndAllowsRetry)
+    {
+        osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform;
+        placement->addChild(mRoot);
+        Binding binding(*mRoot);
+        unsigned children = 0;
+        mChild->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++children; }));
+        Binding::Callbacks callbacks;
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) {
+            placement->setMatrix(osg::Matrixd::scale(0, 1, 1));
+        };
+        EXPECT_THROW(binding.update(mStamp, 42, callbacks), std::invalid_argument);
+        EXPECT_EQ(children, 0u);
+        placement->setMatrix(osg::Matrixd::translate(100, 0, 0));
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) { throw std::runtime_error("reference write"); };
+        EXPECT_THROW(binding.update(mStamp, 42, callbacks), std::runtime_error);
+        EXPECT_EQ(children, 0u);
+        callbacks.mReferenceUpdate = {};
+        EXPECT_NO_THROW(binding.update(mStamp, 42, callbacks));
+        EXPECT_EQ(children, 1u);
+        EXPECT_NEAR(mLeaf->getWorldMatrices().front().getTrans().x(), 17, 1e-10);
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) { mRoot->removeChild(mChild); };
+        EXPECT_THROW(binding.update(mStamp, 42, callbacks), std::invalid_argument);
+        EXPECT_EQ(children, 1u);
+    }
+}
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, ReferenceUpdateSeesSettledFlagsAndProjectedPhysicsBeforeChildren)
+    {
+        osg::ref_ptr<osg::MatrixTransform> placement = new osg::MatrixTransform;
+        placement->addChild(mRoot);
+        Binding binding(*mRoot);
+        std::uint16_t flags = 0x49;
+        unsigned forces = 0, reads = 0, references = 0, children = 0;
+        mRoot->setTranslation({30, 0, 0});
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional(flags) : std::nullopt;
+        };
+        callbacks.mFirstSynchronization = [&](const Node&, const auto& world, auto pending) {
+            ++forces;
+            EXPECT_EQ(pending, 0x49);
+            EXPECT_FLOAT_EQ(world.mTranslation.x(), 30);
+            EXPECT_EQ(references, 0u); EXPECT_EQ(children, 0u);
+            flags &= ~0x40u;
+        };
+        callbacks.mPhysicalWorld = [&](const Node&) {
+            ++reads;
+            auto world = Nif::NiTransform::getIdentity(); world.mTranslation.x() = 40;
+            return world;
+        };
+        callbacks.mReferenceUpdate = [&](Node& node, const auto& frame, auto settled) {
+            ++references;
+            ASSERT_TRUE(settled); EXPECT_EQ(*settled, 9);
+            EXPECT_EQ(frame.mWorldChangeMask, references == 1 ? 0 : 1);
+            EXPECT_EQ(forces, 1u); EXPECT_EQ(reads, references - 1);
+            EXPECT_EQ(children, references - 1);
+            const float x = references == 1 ? 30 : 40;
+            EXPECT_FLOAT_EQ(frame.mWorld.mTranslation.x(), x);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(node).mTranslation.x(), x);
+            placement->setMatrix(osg::Matrixd::translate(x, 0, 0));
+        };
+        mChild->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+            ++children;
+            EXPECT_EQ(references, children);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(node).mTranslation.x(), children == 1 ? 15 : 35);
+            EXPECT_NEAR(node.getWorldMatrices().front().getTrans().x(), children == 1 ? 15 : 35, 1e-10);
+        }));
+        binding.update(mStamp, 42, callbacks);
+        binding.update(mStamp, 43, callbacks);
+        EXPECT_EQ(references, 2u); EXPECT_EQ(children, 2u);
+        EXPECT_FLOAT_EQ(mRoot->getControllerTransform().mTranslation.x(), 40);
+        EXPECT_NEAR(mLeaf->getWorldMatrices().front().getTrans().x(), 47, 1e-10);
+    }
+}

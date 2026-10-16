@@ -53,6 +53,17 @@ namespace SceneUtil
             std::vector<osg::observer_ptr<osg::Node>> mChildren;
         };
         struct Visitor;
+        struct Placement
+        {
+            osg::NodePath mPath;
+            std::vector<osg::ref_ptr<osg::Node>> mLeases;
+            osg::Matrixd mWorld;
+        };
+        struct Projection
+        {
+            NifBullet::RagdollBonePoseWriteback mFrame;
+            std::optional<std::uint16_t> mFlags;
+        };
         osg::observer_ptr<NifOsg::MatrixTransform> mRoot;
         Nif::NativeTransformPrecision mPrecision;
         std::vector<Node> mNodes;
@@ -164,7 +175,30 @@ namespace SceneUtil
             return true;
         }
 
-        void project(std::size_t index, const Callbacks& callbacks, const osg::Matrixd& external,
+        Placement placement() const
+        {
+            auto path = externalPath();
+            std::vector<osg::ref_ptr<osg::Node>> leases(path.begin(), path.end());
+            const auto world = osg::computeLocalToWorld(path);
+            inverse(world);
+            return {std::move(path), std::move(leases), world};
+        }
+
+        void requirePlacement(const Placement& placement) const
+        {
+            require(externalPath() == placement.mPath
+                    && osg::computeLocalToWorld(placement.mPath) == placement.mWorld,
+                "NIF scene placement changed outside reference update");
+        }
+
+        void reanchor(const Placement& placement)
+        {
+            mRoot->setTraversalMatrix(osg::Matrixd(mNodes[0].mWorld.toMatrix()) * inverse(placement.mWorld));
+            mNodes[0].mPublished = mRoot->getTraversalMatrix();
+            invalidateSkeletons(placement.mPath);
+        }
+
+        Projection project(std::size_t index, const Callbacks& callbacks, const osg::Matrixd& external,
             const osg::NodePath& path)
         {
             auto& entry = mNodes[index];
@@ -223,6 +257,7 @@ namespace SceneUtil
                 require(flags && *flags == expected, "NIF first synchronization did not settle collision flags");
             }
             if (callbacks.mProjected) callbacks.mProjected(node, frame, flags);
+            return {frame, flags};
         }
     };
 
@@ -230,10 +265,10 @@ namespace SceneUtil
     {
         Impl& mBinding;
         const Callbacks& mCallbacks;
-        osg::Matrixd mExternal;
+        Placement& mPlacement;
         bool mRunningControllers = false;
-        Visitor(Impl& binding, const Callbacks& callbacks, const osg::Matrixd& external)
-            : mBinding(binding), mCallbacks(callbacks), mExternal(external)
+        Visitor(Impl& binding, const Callbacks& callbacks, Placement& placement)
+            : mBinding(binding), mCallbacks(callbacks), mPlacement(placement)
         {
             setTraversalMode(TRAVERSE_ALL_CHILDREN);
             setNodeMaskOverride(~0u);
@@ -255,9 +290,31 @@ namespace SceneUtil
                 handle_callbacks_and_traverse(node);
             }
             require(mBinding.valid(), "NIF controller changed the bound hierarchy");
+            mBinding.requirePlacement(mPlacement);
             const auto found = mBinding.mIndices.find(&node);
-            if (found != mBinding.mIndices.end()) mBinding.project(found->second, mCallbacks, mExternal, getNodePath());
+            if (found != mBinding.mIndices.end())
+            {
+                const auto projection = mBinding.project(found->second, mCallbacks, mPlacement.mWorld, getNodePath());
+                require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
+                mBinding.requirePlacement(mPlacement);
+                if (found->second == 0 && mCallbacks.mReferenceUpdate)
+                {
+                    mCallbacks.mReferenceUpdate(static_cast<NifOsg::MatrixTransform&>(node),
+                        projection.mFrame, projection.mFlags);
+                    require(mBinding.valid(), "NIF reference update changed the bound hierarchy");
+                    auto placement = mBinding.placement();
+                    mBinding.reanchor(placement);
+                    // NodeVisitor paths borrow their nodes. Switch paths before
+                    // releasing the previous ancestors, including old Skeletons.
+                    while (!getNodePath().empty()) popFromNodePath();
+                    for (auto* ancestor : placement.mPath) pushOntoNodePath(ancestor);
+                    pushOntoNodePath(&node);
+                    Impl::invalidateSkeletons(mPlacement.mPath);
+                    mPlacement = std::move(placement);
+                }
+            }
             require(mBinding.valid(), "NIF publisher changed the bound hierarchy");
+            mBinding.requirePlacement(mPlacement);
             traverse(node);
         }
         void apply(osg::Node& node) override { visit(node); }
@@ -302,25 +359,22 @@ namespace SceneUtil
         mImpl->mUpdating = true;
         osg::ref_ptr<NifOsg::MatrixTransform> root;
         require(mImpl->mRoot.lock(root), "expired NIF scene root");
-        const auto path = mImpl->externalPath();
         // NodeVisitor's NodePath is borrowed. A callback can detach this root
         // and release its ancestors before the final placement guard rejects
         // the pass, including Skeletons used during projection invalidation.
-        std::vector<osg::ref_ptr<osg::Node>> ancestorLeases(path.begin(), path.end());
-        const auto external = osg::computeLocalToWorld(path);
-        mImpl->mRoot->setTraversalMatrix(osg::Matrixd(mImpl->mNodes[0].mWorld.toMatrix()) * inverse(external));
-        mImpl->mNodes[0].mPublished = mImpl->mRoot->getTraversalMatrix();
+        auto placement = mImpl->placement();
+        mImpl->reanchor(placement);
         if (rootOnly)
-            mImpl->project(0, callbacks, external, path);
+            mImpl->project(0, callbacks, placement.mWorld, placement.mPath);
         else
         {
-            Impl::Visitor visitor(*mImpl, callbacks, external);
+            Impl::Visitor visitor(*mImpl, callbacks, placement);
             visitor.setFrameStamp(new osg::FrameStamp(stamp));
             visitor.setTraversalNumber(traversalNumber);
-            for (auto* node : path) visitor.pushOntoNodePath(node);
+            for (auto* node : placement.mPath) visitor.pushOntoNodePath(node);
             mImpl->mRoot->accept(visitor);
         }
-        require(mImpl->valid() && mImpl->externalPath() == path && osg::computeLocalToWorld(path) == external,
-            "NIF scene placement changed during traversal");
+        require(mImpl->valid(), "NIF publisher changed the bound hierarchy");
+        mImpl->requirePlacement(placement);
     }
 }

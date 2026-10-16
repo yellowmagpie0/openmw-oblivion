@@ -22,7 +22,7 @@ namespace SceneUtil
     // OSG placement ancestors are rendering scaffolding, not native parents.
     // Retains native global caches separately from controller locals and OSG
     // relative drawing matrices. Requires invertible transforms and an unchanged
-    // hierarchy/placement during a pass. Admission, physical first synchronization,
+    // hierarchy. Placement may change only inside mReferenceUpdate. Admission, physical first synchronization,
     // controller clocks, physics stepping and reference callbacks have owners.
     // Publishing a pass leaves its projection handles on the model. Retire or
     // explicitly reinitialize the model when changing update ownership. Exceptions
@@ -47,6 +47,14 @@ namespace SceneUtil
             // Missing handler rejects; exceptions do not roll back published caches.
             std::function<void(const NifOsg::MatrixTransform&, const Nif::NiTransform&, std::uint16_t)>
                 mFirstSynchronization;
+            // Root only, after mProjected and before children. The owner may
+            // publish the REFR and change rendering ancestors here (including
+            // cell migration). Reanchors drawing/visitor paths without changing
+            // native caches or controller locals. The owner retains the REFR
+            // and new placement; this traversal leases old/new ancestors.
+            // Exceptions leave completed projection/writes in place.
+            std::function<void(NifOsg::MatrixTransform&, const NifBullet::RagdollBonePoseWriteback&,
+                std::optional<std::uint16_t>)> mReferenceUpdate;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,
