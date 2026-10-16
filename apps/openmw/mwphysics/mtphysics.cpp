@@ -22,6 +22,7 @@
 #include <components/misc/barrier.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollvelocity.hpp>
+#include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/nifbullet/nativedynamicsworld.hpp>
 #include <components/settings/values.hpp>
 
@@ -508,6 +509,40 @@ namespace MWPhysics
             bind.setTrans(bind.getTrans() * mReferenceScale);
             return bind;
         }
+
+        std::optional<Nif::NiTransform> mRootLocal;
+
+        static Nif::NiTransform rootTransform(const osg::Matrixf& matrix, float scale)
+        {
+            (void)NifBullet::ragdollNativeSceneTargetPose(matrix);
+            auto result = Nif::NiTransform::getIdentity();
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    result.mRotation.mValues[row][column] = matrix(column, row);
+            result.mTranslation = matrix.getTrans();
+            result.mScale = scale;
+            return result;
+        }
+
+        osg::Matrixf rootPose(float visibleScale) const
+        {
+            const auto bind = sceneBind(visibleScale);
+            const auto& body = mDefinition.mBodies.front();
+            const auto pose = mPhysics.capture().front().mPose;
+            const auto& origin = pose.getOrigin();
+            const auto rotation = pose.getRotation();
+            NifBullet::RagdollNativeTargetPose physical{
+                NifBullet::ragdollWorldToNativePosition(
+                    osg::Vec3f(float(origin.x()), float(origin.y()), float(origin.z()))),
+                {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
+            const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+            osg::Matrixf inverse;
+            if (!inverse.invert(bind))
+                throw std::invalid_argument("loose native model bind is not invertible");
+            const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(target);
+            (void)NifBullet::ragdollNativeSceneTargetPose(root);
+            return root;
+        }
     };
 
     struct PhysicsTaskScheduler::PreparedLooseObject::Impl
@@ -630,27 +665,46 @@ namespace MWPhysics
         const auto found = mLooseObjects.find(ptr.mRef);
         if (found == mLooseObjects.end())
             throw std::invalid_argument("reference has no loose physics");
+        return found->second->rootPose(ptr.getCellRef().getScale());
+    }
+
+    NifBullet::RagdollBonePoseWriteback PhysicsTaskScheduler::captureLooseObjectRootFrame(
+        const MWWorld::Ptr& ptr, const osg::Matrixf& initialRoot)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
         const auto& object = *found->second;
-        const auto bind = object.sceneBind(ptr.getCellRef().getScale());
-        const auto& body = object.mDefinition.mBodies.front();
-        const auto states = object.mPhysics.capture();
-        const auto& pose = states.front().mPose;
-        const auto& origin = pose.getOrigin();
-        const auto rotation = pose.getRotation();
-        NifBullet::RagdollNativeTargetPose physical{
-            NifBullet::ragdollWorldToNativePosition(
-                osg::Vec3f(float(origin.x()), float(origin.y()), float(origin.z()))),
-            {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
-        const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
-        // The renderer retains reference scale on its placement node. The
-        // physical target is rigid, with that scale already applied to the
-        // bind translation and cached body properties, not to its rotation.
-        osg::Matrixf inverse;
-        if (!inverse.invert(bind))
-            throw std::invalid_argument("loose native model bind is not invertible");
-        const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(target);
-        (void)NifBullet::ragdollNativeSceneTargetPose(root);
-        return root;
+        const float scale = ptr.getCellRef().getScale();
+        const auto desired = LooseObject::rootTransform(object.rootPose(scale), scale);
+        if (object.mDefinition.mReferenceRoot != object.mDefinition.mBodies.front().mNodeRecord)
+        {
+            // Retain the existing authored-bind adapter until non-root cached
+            // world projection is integrated. It has no native root profile.
+            return {desired, desired, 3};
+        }
+        auto local = object.mRootLocal ? *object.mRootLocal : LooseObject::rootTransform(initialRoot, scale);
+        local.mScale = scale;
+        // Full707370 composes the root world from its previous local before
+        // collision writeback. The world threshold does not prevent the next
+        // local write, and callbacks select independent reference fields.
+        return NifBullet::ragdollBonePoseWriteback(local, local, desired, nullptr, 13, false);
+    }
+
+    void PhysicsTaskScheduler::commitLooseObjectRootFrame(const MWWorld::Ptr& ptr,
+        const NifBullet::RagdollBonePoseWriteback& frame)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        auto& object = *found->second;
+        if (frame.mWorldChangeMask & ~3)
+            throw std::invalid_argument("invalid loose root publication mask");
+        (void)NifBullet::composeRagdollBonePose(Nif::NiTransform::getIdentity(), frame.mLocal);
+        if (object.mDefinition.mReferenceRoot == object.mDefinition.mBodies.front().mNodeRecord)
+            object.mRootLocal = frame.mLocal;
     }
 
     std::vector<NifBullet::RagdollNativePackedVelocityState>
@@ -675,6 +729,10 @@ namespace MWPhysics
         const auto& body = object.mDefinition.mBodies.front();
         const std::array<NifBullet::RagdollNativeScenePoseRequest,1> request{{{body.mRecord,bind * root}}};
         object.mPhysics.synchronizeNativeForcedPoses(request);
+        // A forced scene transform changes the native local before the next
+        // physics-to-scene traversal; do not compare against a pre-command pose.
+        if (object.mDefinition.mReferenceRoot == body.mNodeRecord)
+            object.mRootLocal = LooseObject::rootTransform(root, ptr.getCellRef().getScale());
     }
 
     void PhysicsTaskScheduler::restoreLooseObject(const MWWorld::Ptr& ptr,

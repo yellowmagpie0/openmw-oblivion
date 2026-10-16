@@ -60,6 +60,7 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
+    struct RagdollBonePoseWriteback;
     struct RagdollNativePackedVelocityState;
     struct RagdollNativeWorldSceneRequest;
     struct RagdollNativeVelocityDrive;
@@ -290,6 +291,12 @@ namespace MWPhysics
         // one-body model. Read-only; waits for the prior physical frame.
         // Requires the native length scale, independently of actor ragdolls.
         osg::Matrixf captureLooseObjectRootPose(const MWWorld::Ptr& ptr);
+        // Prepare one native root scene traversal without advancing its local
+        // state. Commit only after validating the complete World frame.
+        NifBullet::RagdollBonePoseWriteback captureLooseObjectRootFrame(
+            const MWWorld::Ptr& ptr, const osg::Matrixf& initialRoot);
+        void commitLooseObjectRootFrame(const MWWorld::Ptr& ptr,
+            const NifBullet::RagdollBonePoseWriteback& frame);
         std::vector<NifBullet::RagdollNativePackedVelocityState> captureLooseObjectPackedVelocities(
             const MWWorld::Ptr& ptr);
         void restoreLooseObject(const MWWorld::Ptr& ptr,

@@ -18,6 +18,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/misc/convert.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <bit>
 #include <cmath>
@@ -34,6 +35,7 @@ namespace MWWorld
         struct Pose
         {
             Ptr mPtr;
+            NifBullet::RagdollBonePoseWriteback mFrame;
             osg::Matrixf mRoot;
             ESM::Position mPosition;
         };
@@ -48,7 +50,14 @@ namespace MWWorld
                 || !ptr.getCellRef().getNativeReference()
                 || world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()) != ptr)
                 throw std::logic_error("loose weapon pose has no live native world reference");
-            const auto root = physics.captureLooseObjectRootPose(ptr);
+            const auto* node = ptr.getRefData().getBaseNode();
+            const auto initial = node
+                ? osg::Matrixf::rotate(node->getAttitude()) * osg::Matrixf::translate(node->getPosition())
+                : osg::Matrixf::rotate(Misc::Convert::makeOsgQuat(ptr.getRefData().getPosition()))
+                    * osg::Matrixf::translate(ptr.getRefData().getPosition().asVec3());
+            const auto frame = physics.captureLooseObjectRootFrame(ptr, initial);
+            auto root = frame.mWorld.mRotation.toOsgMatrix();
+            root.setTrans(frame.mWorld.mTranslation);
             std::array<float,9> rotation;
             for (unsigned row=0;row<3;++row)
                 for (unsigned column=0;column<3;++column)
@@ -56,14 +65,25 @@ namespace MWWorld
             const osg::Vec3f translation(root.getTrans());
             const auto placement=ESM4::physicalDroppedItemPlacement(rotation,
                 {translation.x(),translation.y(),translation.z()});
-            poses.push_back({ptr,root,placement.mPosition});
+            auto position = ptr.getRefData().getPosition();
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                if (frame.mWorldChangeMask & 1) position.pos[axis] = placement.mPosition.pos[axis];
+                if (frame.mWorldChangeMask & 2) position.rot[axis] = placement.mPosition.rot[axis];
+            }
+            poses.push_back({ptr,frame,root,position});
         }
+        // Advance retained locals only after every reference/frame is valid,
+        // before cell migration can dispatch any external observers.
+        for (const auto& pose : poses)
+            physics.commitLooseObjectRootFrame(pose.mPtr, pose.mFrame);
         for (const auto& pose : poses)
         {
             auto ptr=pose.mPtr;
-            ptr.getRefData().setPosition(pose.mPosition);
+            if (pose.mFrame.mWorldChangeMask)
+                ptr.getRefData().setPosition(pose.mPosition);
             const auto* cell=ptr.getCell()->getCell();
-            if (cell->isExterior())
+            if ((pose.mFrame.mWorldChangeMask & 1) && cell->isExterior())
             {
                 const auto location=ESM::positionToExteriorCellLocation(
                     pose.mPosition.pos[0],pose.mPosition.pos[1],cell->getWorldSpace());
@@ -74,7 +94,7 @@ namespace MWWorld
             {
                 // Keep the physical rotation, independently of its approximate
                 // Euler projection. Reference scale remains on this node.
-                node->setPosition(pose.mPosition.asVec3());
+                node->setPosition(pose.mFrame.mWorld.mTranslation);
                 node->setAttitude(pose.mRoot.getRotate());
             }
         }

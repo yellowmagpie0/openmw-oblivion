@@ -9,6 +9,7 @@
 #include <apps/openmw/mwworld/livecellref.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollvelocity.hpp>
+#include <components/nifbullet/ragdollbonepose.hpp>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <components/esm3/loadstat.hpp>
 #include <components/settings/values.hpp>
@@ -1806,5 +1807,49 @@ namespace
             EXPECT_EQ(rigid->getTotalForce(), btVector3(3, 4, 5));
             scheduler.removeLooseObject(mPtr);
         }
+    }
+}
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, RegisteredRootFramePreparationRetainsLocalUntilCommitAndForcedTransformsResetIt)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mReferenceRoot = 0; mGraph.mBodies[0].mNodeRecord = 0;
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        const auto initial = scheduler.captureLooseObjectRootPose(mPtr);
+        auto state = scheduler.captureLooseObject(mPtr);
+        const auto velocities = scheduler.captureLooseObjectPackedVelocities(mPtr);
+        state[0].mPose.getOrigin() += btVector3(.005, 0, 0);
+        scheduler.restoreLooseObject(mPtr, state, velocities);
+        const auto physical = scheduler.captureLooseObjectRootPose(mPtr);
+        const auto first = scheduler.captureLooseObjectRootFrame(mPtr, initial);
+        const auto repeated = scheduler.captureLooseObjectRootFrame(mPtr, initial);
+        EXPECT_EQ(first.mWorldChangeMask, 0u); EXPECT_EQ(repeated.mWorldChangeMask, 0u);
+        EXPECT_EQ(first.mWorld.mTranslation, initial.getTrans());
+        EXPECT_EQ(repeated.mWorld.mTranslation, initial.getTrans());
+        EXPECT_EQ(first.mLocal.mTranslation, physical.getTrans());
+        auto invalid = first; invalid.mLocal.mScale = -1;
+        EXPECT_THROW(scheduler.commitLooseObjectRootFrame(mPtr, invalid), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObjectRootFrame(mPtr, initial).mWorld.mTranslation, initial.getTrans());
+        scheduler.commitLooseObjectRootFrame(mPtr, first);
+        const auto next = scheduler.captureLooseObjectRootFrame(mPtr, initial);
+        EXPECT_EQ(next.mWorldChangeMask, 0u);
+        EXPECT_EQ(next.mWorld.mTranslation, physical.getTrans());
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, state[0].mPose);
+        EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, velocities[0].mVelocities);
+        const auto forced = osg::Matrixf::translate(50, 60, 70);
+        scheduler.updateLooseObjectRootPose(mPtr, forced);
+        const auto afterForce = scheduler.captureLooseObjectRootFrame(mPtr, initial);
+        EXPECT_EQ(afterForce.mWorldChangeMask, 0u);
+        EXPECT_EQ(afterForce.mWorld.mTranslation, forced.getTrans());
+        scheduler.removeLooseObject(mPtr);
+        auto replacement = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*replacement));
+        const auto fresh = scheduler.captureLooseObjectRootFrame(mPtr, initial);
+        EXPECT_EQ(fresh.mWorldChangeMask, 0u); EXPECT_EQ(fresh.mWorld.mTranslation, initial.getTrans());
+        scheduler.removeLooseObject(mPtr);
     }
 }

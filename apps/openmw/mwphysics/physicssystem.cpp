@@ -1,4 +1,5 @@
 #include "physicssystem.hpp"
+#include <components/nifbullet/ragdollbonepose.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -897,6 +898,12 @@ namespace MWPhysics
     { return mTaskScheduler->captureLooseObject(ptr); }
     osg::Matrixf PhysicsSystem::captureLooseObjectRootPose(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObjectRootPose(ptr); }
+    NifBullet::RagdollBonePoseWriteback PhysicsSystem::captureLooseObjectRootFrame(
+        const MWWorld::Ptr& ptr, const osg::Matrixf& initialRoot)
+    { return mTaskScheduler->captureLooseObjectRootFrame(ptr, initialRoot); }
+    void PhysicsSystem::commitLooseObjectRootFrame(const MWWorld::Ptr& ptr,
+        const NifBullet::RagdollBonePoseWriteback& frame)
+    { mTaskScheduler->commitLooseObjectRootFrame(ptr, frame); }
     std::vector<NifBullet::RagdollNativePackedVelocityState>
     PhysicsSystem::captureLooseObjectPackedVelocities(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObjectPackedVelocities(ptr); }

@@ -2670,3 +2670,142 @@ fingerprints and are not reported as new runs.
 original executable/corpus hashes, curated forced cases, actual-ELF observations,
 engine checks, retained failures and remaining gates. Full S4 stays active and
 incomplete.
+
+## Registered root traversal and masked reference publication
+
+Owned active registered root-targeted drops now retain a native local pose separately
+from the scene's cached world output. One normal scene traversal first composes
+root world from its previous local, then performs collision writeback. The
+native .01 position/.001 rotation thresholds select the world/callback mask;
+local rotation/translation can advance when that mask is zero. The next frame
+can therefore display a changed world transform without changing REFR storage.
+World now updates only the reference position/rotation fields selected by the
+mask, and renders the separately projected cached world. It considers exterior
+cell migration only when the position mask is set. Euler storage and visible
+physical rotation remain independent.
+
+The loose physics owner retains this local state across frames and owner
+transfers, and destroys it with the body. Frame capture is read-only; World
+validates all borrowed references and projected frames before committing locals
+and before any cell migration observers. Invalid frame/scale data do not advance
+locals. Forced root transforms establish the next local pose after physical
+synchronization. Removal/readmission starts fresh, without reusing old locals.
+The existing authored-bind path for unselected/non-root targets is unchanged;
+its unconditional publication and per-node cached-world semantics still require
+integration. Root metadata is not a universal callback profile.
+
+The original course executes full reference registration and consumes its
+pending first scene-to-body update, then establishes a settled motion fixture.
+Eight subsequent requests per context each execute one full original 707370 scene
+traversal, real collision/bodyT reverse math and actual 4E2160 REFR callback.
+There are 512 cases across 64 sequences: root/child registration sources,
+plain/bodyT wrappers, two old offsets/quaternions/child rotations and both x87
+words. They cover all four callback masks: 320 zero, 64 position-only,24
+rotation-only and 104 both. Every helper entry's previous root world equals its
+previous local, proving the root composition order. Root local/world outputs and
+independently masked reference fields are recorded; physical state and child
+locals remain byte-identical per traversal.
+
+This uses motion position/quaternion input fixtures, not actual Havok dynamics.
+Native World/cell are null and configuration skips migration; allocation/free,
+Windows imports/TLS/critical sections, command argument/nonactor RTTI suppliers
+from retained initialization and change-record marks are declared boundaries.
+Constructors, registration, scene traversal, writeback and reference callback
+execute original instructions. The original desired-transform scale slot is
+uninitialized and unused; comparisons canonicalize it to 1 for the typed adapter.
+Full game-frame dispatch, actual native World broadphase and ordinary gameplay
+are not established by this instruction course.
+
+Existing production bone-pose writeback plus physical reference Euler conversion
+matches every local/world float lane, callback mask and six masked REFR lanes in
+all 512 cases in normal and ASan/UBSan libraries. No component sources or tests
+change in this chunk, so prior full component regression coverage is reused.
+
+New engine tests exercise actual owned factory drops with direct and relocated
+roots. Small physical changes retain stored REFR fields while the renderer cache
+lags the local by one traversal. Later position-only updates preserve deliberately
+distinct reference angles; rotation-only updates preserve deliberately distinct
+stored reference coordinates. Body pose and packed velocities remain unchanged
+by publication. Parameterized scheduler tests across 0/1/2 workers verify that
+capture/rejected commit do not advance state, successful commit does, forced
+transforms reset it and removal/readmission discards it.
+
+Preflight01 retains 67 passing cases and one outdated scale assertion failure:
+it demanded copying subthreshold inverse-transform rounding residue into REFR.
+The corrected assertion checks exact preservation of the initial stored pose;
+no numerical tolerance is relaxed. All new frame/mask cases already passed.
+
+Pre-change actual-ELF observation uses an owned NIF input whose linear damping is
+changed 0->39.6 before VFS open. The existing real falling-body test performs a
+.025s physics step and World publication. Physical root position changes from
+(103,16,35) to approximately(103.003494,15.999998,34.996780), below the independently
+verified native callback threshold in every lane, yet the preceding World copies
+it to REFR. The existing old test passes while the independent observer confirms
+the bug. No post-load gameplay fields are injected by the observer. Earlier
+baseline01 changes max linear velocity but native loading fixes it at 250, so the
+step remains large and is not a counterexample; baseline02 damping59 suppresses
+motion and hits the test's positive-X precondition before World publication.
+Both failed attempts remain retained.
+
+Additional original probes delimit the next integration work. Full registration
+and four subsequent traversals cover 64 unselected deep/null-first child cases:
+flags 0x41 become 0x01 after the initial forced update, child cached world follows
+physical R/T, while child/root locals, entire REFR and physical state stay
+unchanged. A 1,024-frame authored-flags 0/1 cross-check confirms that inactive
+roots (flags 0x0C after initial synchronization) skip node writeback/callbacks,
+whereas active roots use 0x0D. The current definition still lacks authored
+collision flags; preserving that metadata and dispatching inactive profiles is
+required next. Root identity alone does not establish active callback semantics.
+The active subset reproduces the preceding 512-case corpus exactly.
+
+Remaining gates include authored collision flags/inactive root dispatch,
+unselected/deep target per-node and callback semantics,
+actual World/script scale/forced-transform continuation, complete native
+Havok-enable/special-reference/cell/property-copy admission, loose physical
+retention/save/recreation, production break/mastery and pickup/replacement/sound,
+power/creature/reaction/effect/controller integration, and the entire normal-input,
+FPS and windup/block/recovery restart S4 matrix. Full S4 remains active and
+incomplete; these are bounded instruction and engine integration checks.
+
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `registered-root-frame-oracle-01`: 512 original one-traversal frame cases.
+  `registered-root-frame-compare-01`: every local/world/mask/reference lane
+  matches bit for bit in both normal and sanitized component-library diagnostics.
+- `registered-root-frame-baseline-03`: retained preceding engine ELF, owned
+  pre-open NIF damping input and actual .025s physics step; independent observer
+  verifies incorrect reference publication below native thresholds. Its one
+  existing engine case passes with exact inventory/XML agreement.
+- `registered-root-frame-runtime-01`: final-ELF read-only inspection of eight
+  actual factory frame returns, mask sequence `[0,0,0,1]` twice, local/world
+  position splits and unselected reference fields preserved. Its one selected
+  engine case passes with exact inventory/XML agreement.
+- `registered-root-frame-normal-01` and `registered-root-frame-sanitized-01`:
+  all 1,568 engine tests / 122 suites each, exact inventory/XML, no failures or
+  skips. ASan leak checks disabled; ASan/UBSan halt on errors. Existing unrelated
+  compiler warnings remain. Component sources/tests are unchanged relative to
+  the parent; prior full 2,703-case normal/sanitized passes retain their own
+  fingerprints and are reused, not reported as new runs.
+- `unselected-child-frame-oracle-01`: 64 original child-frame cases delimit
+  still-open per-node projection/reference semantics.
+- `registered-root-active-flags-oracle-02`: 1,024 original active/inactive frame
+  cases. `subset-verification.json` proves its 512 active cases exactly reproduce
+  the earlier corpus; 512 inactive cases skip helper/callback. The preliminary01
+  has identical cases but an ambiguous inherited scope description;02 corrects
+  that description and records a fresh source hash/run.
+
+Current engine checks freeze source fingerprint
+`11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d`
+on parent `e667cf31dccfbee1c0c2bb94dd2c9e8086608a47`, before documentation.
+Normal engine ELF SHA256:
+`cbb76f9c15767fa84ecc7756b9a5b558fcf3116b51df8a31d8f1793aafe74bbb`.
+Sanitized engine ELF SHA256:
+`48c944a825a3d6352a46d293d95fefd0662957047b8c0550aa805aee95493358`.
+Review01 preserves the failed preflight implementation/test snapshot; review02
+freezes the final seven implementation/test hashes and exact patch. No sources
+changed during authoritative checks.
+
+[Editable provenance](M15-ORIGINAL-REGISTERED-ROOT-FRAME-PROBES.json) records
+hashes, boundaries, literal sequence values, current checks, retained failures
+and remaining gates. Full S4 remains active and incomplete.

@@ -1,0 +1,541 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "active registered-root local/world split and masked reference publication integrated; authored inactive flags and full M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+  "source_fingerprint": "11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d",
+  "implementation_digests": {
+    "apps/openmw/mwphysics/mtphysics.cpp": "22763521e6d4864bc74b2a942a2a0c94b2824a4c322a615fe7000505e4beba7a",
+    "apps/openmw/mwphysics/mtphysics.hpp": "ed5ea1c5131fedc4ad5b7bc017772e8ff19a71e880367e2a13f254218f586836",
+    "apps/openmw/mwphysics/physicssystem.cpp": "97de27aa214e9bfe8a60d64869b48c596b5f577e9db6829f0fc6404f1ae56d08",
+    "apps/openmw/mwphysics/physicssystem.hpp": "bced4d47819a6c3db5dfb6d5527ab0e424a3455cb9ea2b2ca1555ddb93a12583",
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "ada8e9f91919653a0cc5678404cb70c5487d5ce4ead003c8bed07754fc8d7aa4",
+    "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "b25075c172c03ace6d6504f36ffb376df4b77b0c23f1e28cbd6462511997a033",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "cea43f340a984781a9cc25ccc72c102fa83d0945aa81426226ccb9f69d50c9b0"
+  },
+  "implementation_patch_sha256": "aa5f1d80d01a31865d190bf8a79a47b2d4d97e6db13fec283f259796a635ba5d",
+  "behavior": [
+    "For an active owned registered root, one scene traversal composes previous local into root world, then physics writeback may change local even when world/callback mask is zero.",
+    "World retains exact unselected reference fields, considers exterior migration only with position mask, and renders separately projected cached world. Reference Euler storage and visible rotation remain independent.",
+    "Capture prepares without advancing owned local state; World validates every borrowed reference/frame before committing locals and cell-migration observers. Forced root transforms reset retained local after physical synchronization. Removal/readmission starts fresh.",
+    "Existing authored-bind path for unselected/non-root targets is unchanged, including its still-required per-node/cached-world/reference publication integration. Root metadata is not a universal callback profile."
+  ],
+  "original_single_traversal": {
+    "path": "registered-root-frame-oracle-01/verification.json",
+    "report_sha256": "f3877f538b5fe9e946cd274fb7a944532bf0e1f03a305743b062320e28376586",
+    "passed": true,
+    "contexts": 512,
+    "sequences": 64,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "2ab97d2cb046cffde3d4c4e378fd1ada77da07bd1e524fc1a6831bebcb118873",
+    "cases_sha256": "be9d477206b872a59ae5a57f46eec80cdfd11d71f53bac605d534ff991a28abe",
+    "scope": "Full actual nonactor reference registration through real World virtual method, first scene consumes pending0x40, settled motion fixture pulled by second scene. Eight subsequent frame requests execute one full707370 traversal each with flags13, actual bodyT reverse/matrix math and actual reference callback. Each frame motion fixture supplies chosen position/quaternion; no actual Havok dynamics stepping. Root helper entry captures local/world/desired transforms. Root world recomposes from prior local before helper; local/world outputs, mask, REFR fields, callee saves/SP/FPCW and physical storage invariants checked. Null native World and null cell/config skip broadphase/activation/migration; allocations/free, command extraction/nonactor RTTI, Windows imports/TLS/critical sections and change marks retain prior declared boundaries. Not actual full game frame dispatch or gameplay."
+  },
+  "original_unselected_child_frames": {
+    "path": "unselected-child-frame-oracle-01/verification.json",
+    "report_sha256": "7b8502e97d49e498ed62d39e2d8f10d32a462bec75facad89df55e360f47bcd3",
+    "passed": true,
+    "contexts": 64,
+    "sequences": 16,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "a692380539cb0c6d53272b75d87a50ffdceacffd18ef292f6604e92215da17a7",
+    "cases_sha256": "9ce56527c553453f91af564f234c387fa33eabce1af653f2c96b396db42b600a",
+    "scope": "Full original nonactor reference prefix/World registration over4 unselected deep/null-first child topologies, plain/bodyT and both x87. Actual first707370 consumes pending0x40 leaving flags1. Four subsequent single-traversal requests supply chosen motion positions/quaternion, execute full native collision inverse/writeback and all hierarchy composition. Child local/root local/entire REFR/physical storage unchanged; child cached world follows physical desired R/T, no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping/full game-frame dispatch, renderer integration or gameplay acceptance."
+  },
+  "original_active_inactive_flags": {
+    "path": "registered-root-active-flags-oracle-02/verification.json",
+    "report_sha256": "e52d703651a33c880bbb1765498f30db4adb446974244cfe9275f888f9289c49",
+    "passed": true,
+    "contexts": 1024,
+    "sequences": 128,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "2850f9a9b0bbd59a9908b2118cefc6a653e5ebaaa444a415ef7a939663152f63",
+    "cases_sha256": "634c41c5d668d3d894af5d168b1a04e9078ab590141fac29a9a37b276c965c33",
+    "scope": "Full actual nonactor reference prefix/World registration, pending first actual707370 scene synchronization, then128 sequences of eight single traversals across authored collision flags0/1, root/selected-child sources, plain/bodyT, two old offsets/quaternions/child rotations and both x87. Active512 frames use flags13 and execute actual bodyT reverse/matrix math, node helper and masked4E2160 callback. Inactive512 frames use flags12 and skip the helper/callback entirely, preserving node local and reference pose despite physical fixture movement. Per-frame stop/SP/callee-saves/FPCW and physical/child-local storage invariants verified. Motion positions/quaternions supplied per frame, no actual Havok dynamics. Null native World/cell and disabled property-copy/special gates skip broadphase/activation/migration; declared fresh allocation/free, Windows imports/TLS/critical sections, retained initialization command/nonactor RTTI suppliers and change-record boundaries. No full game-frame dispatch or gameplay acceptance."
+  },
+  "original_mask_counts": {
+    "0": 320,
+    "1": 64,
+    "2": 24,
+    "3": 104
+  },
+  "production_component_comparisons": {
+    "normal": {
+      "path": "registered-root-frame-compare-01/normal-verification.json",
+      "report_sha256": "f14b4eaab087c23f7d379499ec94332b143dcdfc4508bc0a0c302d82398ac845",
+      "passed": true,
+      "cases": 512,
+      "node_float_lanes": 26,
+      "mask_lanes": 1,
+      "reference_float_lanes": 6,
+      "mismatches": [],
+      "binary_sha256": "f417d9eaf6e2078c6c444bfde621539639f396ba968a31d3cd26aa3dc3269f17",
+      "scope": "Existing production bone-pose writeback and physical reference Euler conversion composed against512 actual registered-root single707370 traversal cases. All local/world float lanes, change mask and masked reference fields compare bit exact. Original desired scale is uninitialized/unused, canonicalized1 for typed adapter. Physics motion/registration boundaries and full-game-frame/input acceptance remain outside this comparison."
+    },
+    "sanitized": {
+      "path": "registered-root-frame-compare-01/sanitized-verification.json",
+      "report_sha256": "c3e7582250e1647a61e204e517ebb4c65e36637151ebae74c3a985020efda44f",
+      "passed": true,
+      "cases": 512,
+      "node_float_lanes": 26,
+      "mask_lanes": 1,
+      "reference_float_lanes": 6,
+      "mismatches": [],
+      "binary_sha256": "6758e62582db8b2afd411149d6586cec3ed85a13b271783d8a34e247416b57bb",
+      "scope": "Existing production bone-pose writeback and physical reference Euler conversion composed against512 actual registered-root single707370 traversal cases. All local/world float lanes, change mask and masked reference fields compare bit exact. Original desired scale is uninitialized/unused, canonicalized1 for typed adapter. Physics motion/registration boundaries and full-game-frame/input acceptance remain outside this comparison."
+    }
+  },
+  "production_component_sources": {
+    "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2",
+    "components/esm4/dropplacement.cpp": "689508c9c2e97b33369c173af490b20311ed3054a672ac3935df081917db97d9"
+  },
+  "preceding_elf": {
+    "path": "registered-root-frame-baseline-03/verification.json",
+    "report_sha256": "aea5726c26bef663f3118edf5b12db6c5dd8312ab22b9032701f66028a184ad4",
+    "binary_sha256": "b91fd395343d19278e1a8aaef90e1e61fe3f65575dc3f432dbb229c7883fe358",
+    "input_rewrites": [
+      {
+        "file": "/tmp/openmw/tests/1792151772000513935/OblivionWorldTest.NativeWeaponFactoryFallingBodyPublishesSceneAndReferencePoseWithoutPhysicsFeedback/meshes/factory-weapon.nif",
+        "old_sha256": "7fa21648184262bea6dc8fc713b40963f8535032e36570daf7b476dde19f5ea2",
+        "new_sha256": "86803b841843e9ccd1ce0ccb2222f43510f6fb5d496adbc8372318c1b07c018e",
+        "offset": 445,
+        "bytes": 524,
+        "linear_damping": 39.6,
+        "phase": "Before VFS open; owned source fixture input preparation"
+      }
+    ],
+    "world_captures": [
+      {
+        "root": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          103.00349426269531,
+          15.999998092651367,
+          34.99678039550781,
+          1.0
+        ],
+        "reference_address": 62727824,
+        "before": [
+          -0.0,
+          -0.0,
+          -0.0,
+          103.0,
+          16.0,
+          35.0
+        ]
+      }
+    ],
+    "world_returns": [
+      [
+        -0.0,
+        -0.0,
+        -0.0,
+        103.00349426269531,
+        15.999998092651367,
+        34.99678039550781
+      ]
+    ],
+    "exit_code": 0,
+    "scope": "Preceding ELF actual falling-body factory/physics-step/World publication test. Owned NIF linear damping0->39.6 is amended before VFS open to produce a real small physics step. No post-load gameplay mutations. Read-only observers capture stored reference before/after actual World publication and physical root at capture return; independent native thresholds require no callback for this motion. Not normal-input gameplay acceptance.",
+    "physics_step_durations": [
+      0.02500000037252903
+    ],
+    "native_position_mask": 0,
+    "native_rotation_mask": 0,
+    "baseline_failure_verified": true
+  },
+  "final_elf": {
+    "path": "registered-root-frame-runtime-01/verification.json",
+    "report_sha256": "4eac9f196ebf9b978b9d8002ec0814eca67df29869c7bd66e25455fcf2de5863",
+    "binary_sha256": "cbb76f9c15767fa84ecc7756b9a5b558fcf3116b51df8a31d8f1793aafe74bbb",
+    "exit_code": 0,
+    "scope": "Read-only final-ELF actual owned factory small-motion World publication integration test. Hidden result RDI / this RSI / Ptr RDX at PhysicsSystem::captureLooseObjectRootFrame; exact return stack/thread guards. Captures native local/world split, mask, reference fields before and after actual World return. No input or gameplay writes; test itself establishes physical states and sentinels. Not normal-input gameplay acceptance.",
+    "passed": true,
+    "observed_calls": 8,
+    "masks": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    "local_world_position_split_count": 4,
+    "unselected_reference_fields_preserved": true
+  },
+  "component_reuse": {
+    "unchanged_relative_to": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+    "component_code_and_tests_unchanged": true,
+    "normal": "reference-collision-retarget-normal-01/verification.json",
+    "sanitized": "reference-collision-retarget-sanitized-01/verification.json",
+    "executed_per_build": 2703,
+    "scope": "Prior full component passes reused; no component source/test edits in this chunk. Current engine source fingerprints differ and are independently frozen."
+  },
+  "engine_checks": {
+    "registered-root-frame-normal-01": {
+      "passed": true,
+      "source_before": {
+        "head": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+        "source_fingerprint": "11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d"
+      },
+      "source_after": {
+        "head": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+        "source_fingerprint": "11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d"
+      },
+      "suites": 122,
+      "results": {
+        "engine": {
+          "executed": 1568,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cbb76f9c15767fa84ecc7756b9a5b558fcf3116b51df8a31d8f1793aafe74bbb",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "99f9e26a6e0500367182a1826aae8cbcaf0fa0ca26787650f08e6764d1703dde",
+          "inventory_sha256": "956868abfeddca7b27d90b2d3d9d661290edf6b19139d3e1d3fca714e5213d02",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "registered-root-frame-sanitized-01": {
+      "passed": true,
+      "source_before": {
+        "head": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+        "source_fingerprint": "11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d"
+      },
+      "source_after": {
+        "head": "e667cf31dccfbee1c0c2bb94dd2c9e8086608a47",
+        "source_fingerprint": "11a8fa806522277f80b238e422f8b9b2c68a27c8eacd568e5d3cd0fe756d743d"
+      },
+      "suites": 122,
+      "results": {
+        "engine": {
+          "executed": 1568,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "48c944a825a3d6352a46d293d95fefd0662957047b8c0550aa805aee95493358",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "9689bd014a1fbf8309391724a7ff6907f4cc8b59aac02ba0ad1b15ddc9e32fba",
+          "inventory_sha256": "956868abfeddca7b27d90b2d3d9d661290edf6b19139d3e1d3fca714e5213d02",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_scope": "ASan/UBSan halt on error; ASan leak checking disabled.",
+  "original_boundaries": [
+    "Physical motion position/quaternion supplied per frame fixture; no actual Havok dynamics integration.",
+    "Actual reference attach prefix, real World registration dispatch/constructors/RTTI, pending initial scene synchronization, then one full707370 traversal per request and actual4E2160 callback.",
+    "Null native World/cell, optional property-copy/special flags zero and configuration skip broadphase/activation/migration.",
+    "Fresh allocations/owned frees, Windows imports/TLS/critical sections, retained command-extraction/nonactor RTTI initialization suppliers and change-record capture are boundaries.",
+    "Original desired transform scale slot is uninitialized and unused; adapter input canonicalizes it to1. Original initialized local/world scale lanes compare bit for bit."
+  ],
+  "retained_failures": [
+    "registered-root-frame-preflight-01 passes67/68 selected cases; old scale test incorrectly demands reference copy of subthreshold physical inverse-transform rounding residue. Review02 checks exact preservation of initial reference pose; no tolerance relaxed. All new mask/state cases passed in preflight01.",
+    "registered-root-frame-baseline-01 authored max linear velocity100->.005 has no desired effect because native loaded motion limit is fixed250. Actual movement is large; observer correctly rejects it as a counterexample.",
+    "registered-root-frame-baseline-02 damping59 suppresses movement and fails existing positive-X precondition before World publication. Baseline03 damping39.6 yields actual small .025s physics step and verifies the old unconditional-reference bug."
+  ],
+  "remaining_gates": [
+    "Preserve authored collision flags in owned definitions and dispatch inactive roots; root identity alone cannot select an active callback profile.",
+    "Unselected/deep physical target per-node local/cached-world/callback semantics; existing non-root authored-bind path still publishes unconditionally.",
+    "Actual World/script scale/forced-transform continuation and root-controller interaction across normal inputs.",
+    "Complete Havok-enable/special-reference/cell/property-copy admission.",
+    "Loose physical retention/save/recreation in fresh processes.",
+    "Production break/mastery, retained/quest unequip, drawn NPC/grouped drops, replacement/sound/pickup cleanup.",
+    "Power/creature/reaction/effect integration and complete first/third-person keyboard/mouse/gamepad FPS and normal-input windup/block/recovery restart S4 matrix."
+  ],
+  "curated_sequence": [
+    {
+      "frame": 0,
+      "input_physical_shift": 0.0005,
+      "input_physical_angle": 0.0,
+      "mask": 0,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108082348,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108081430,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 1,
+      "input_physical_shift": 0.001,
+      "input_physical_angle": 0.0,
+      "mask": 0,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108083264,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108082348,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 2,
+      "input_physical_shift": 0.0015,
+      "input_physical_angle": 0.0,
+      "mask": 0,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108084182,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108083264,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 3,
+      "input_physical_shift": 0.02,
+      "input_physical_angle": 0.0,
+      "mask": 1,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 4,
+      "input_physical_shift": 0.02,
+      "input_physical_angle": 0.0002,
+      "mask": 0,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 5,
+      "input_physical_shift": 0.02,
+      "input_physical_angle": 0.0004,
+      "mask": 0,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 6,
+      "input_physical_shift": 0.02,
+      "input_physical_angle": 0.02,
+      "mask": 2,
+      "reference_before_bits": [
+        0,
+        0,
+        0,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        2147483648,
+        2147483648,
+        3164852599,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108118125,
+        1109916186,
+        1111750943
+      ]
+    },
+    {
+      "frame": 7,
+      "input_physical_shift": 0.03,
+      "input_physical_angle": 0.03,
+      "mask": 3,
+      "reference_before_bits": [
+        2147483648,
+        2147483648,
+        3164852599,
+        1108118125,
+        1109916186,
+        1111750943
+      ],
+      "reference_after_bits": [
+        2147483648,
+        2147483648,
+        3170220620,
+        1108136473,
+        1109916186,
+        1111750943
+      ],
+      "local_xyz_bits": [
+        1108136473,
+        1109916186,
+        1111750943
+      ],
+      "world_xyz_bits": [
+        1108136473,
+        1109916186,
+        1111750943
+      ]
+    }
+  ],
+  "original_active_inactive_subset": {
+    "path": "registered-root-active-flags-oracle-02/subset-verification.json",
+    "report_sha256": "3cbb5219ca720a779383708a72330a078cb97505e50aec1d4ae09efb3896d028",
+    "passed": true,
+    "active_frames": 512,
+    "inactive_frames": 512,
+    "active_subset_identical_to": "registered-root-frame-oracle-01/cases.json",
+    "inactive_helper_entries": 0
+  }
+}

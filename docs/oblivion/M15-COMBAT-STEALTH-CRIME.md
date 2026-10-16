@@ -6,6 +6,28 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 active loose-root traversal and reference masks — 2026-10-16
+
+Active registered root-targeted drops now retain native locals independently of
+cached world output. World updates only reference fields selected by the native
+position/rotation mask, while rendering the projected world pose. Small motions
+can therefore advance the visible cache without changing stored coordinates.
+Forced transforms and removal/readmission reset retained local state correctly.
+
+All **1,568 engine tests / 122 suites** pass in normal and ASan/UBSan builds.
+Existing component helpers match all 512 original single-traversal cases across
+26 local/world float lanes, the mask and six reference fields in both builds.
+The preceding binary reproduces incorrect subthreshold publication during a real
+physics step; final-ELF inspection verifies eight corrected factory updates.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#registered-root-traversal-and-masked-reference-publication)
+and [editable provenance](M15-ORIGINAL-REGISTERED-ROOT-FRAME-PROBES.json) record
+scope and failures. Additional native probes establish the next requirements:
+preserve authored collision flags and skip inactive-root writeback, then integrate
+unselected child cached-world projection. Root identity alone cannot select a
+universal callback profile. World/script continuation, loose save/recreation,
+production combat and the complete gameplay gates remain open. S4 is incomplete.
+
 ## S4 registered loose-root scale separation — 2026-10-16
 
 Registered root-targeted drops now permit a changed visible reference scale
