@@ -2893,3 +2893,87 @@ fixed/keyframed/no-physics routes. Loose retention/save/recreation, production
 break/mastery, pickup/replacement/sound, power/creature/reaction/effects and the
 full normal-input/controller/FPS/windup/block/recovery restart S4 matrix remain
 required. Full S4 is active and incomplete.
+
+## NIF controller-local and traversal matrix separation
+
+`NifOsg::MatrixTransform::TraversalMatrix` is an optional immutable local-to-parent
+traversal pose and cached inverse. `getMatrix()`, the author inverse and NIF
+rotation/scale fields remain controller/local state. World/inverse traversal and
+bounds can therefore follow cached physics output without destroying authored
+locals. This is the representation required by original unselected-child flags 1,
+where local state stays authored while cached world follows physics. The current
+World adapter is not wired to select or apply per-node frames yet.
+
+Numeric preparation rejects nonfinite/singular matrices and nonfinite inverses
+before changing a node. Prepared handles retain immutable shared values; setter,
+clone and checkpoint restoration cannot mutate another node's value. Default or
+cleared state delegates to the original OSG path, including relative/absolute
+reference frames. AutoTransform honors an explicit traversal pose and resumes its
+existing camera-facing path after clearing; this tests OSG behavior, not native
+billboard gameplay semantics.
+
+Actor local checkpoints now retain traversal handles along with their double
+local matrix, float rotation cache and separate scale. Guard comparison includes
+presence and exact projection bits, including signed zero, while equivalent
+prepared values compare equal. Animation target capture still reads controller
+locals and does not feed traversal projection back into physics input. Restoring
+projection handles after existing hierarchy validation needs no new allocation;
+this does not claim that the whole hierarchy-validating restore is allocation-free.
+
+Seven new NIF tests cover default/clear behavior, relative and absolute traversal,
+noncommuting parent transforms, world/inverse/bounds, independent author writes,
+clones, rejected input, a real keyframe controller with missing channels and the
+billboard path. A new actor checkpoint case covers author-target independence,
+projection restoration, equivalent values and signed-zero rejection. The actual
+factory rollback case expands from five to six mutations: changing traversal
+alone now rejects before source wear/count, serial, registry or physics publication.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `nif-traversal-projection-normal-01` and
+  `nif-traversal-projection-sanitized-01`: freshly rebuilt full 2,714 component
+  tests / 258 suites and 1,572 engine tests / 122 suites each, unfiltered with
+  exact inventory/XML agreement and no failures/skips. ASan leak checks disabled;
+  ASan/UBSan halt on errors. Existing unrelated compiler warnings remain.
+- `nif-traversal-projection-compare-01`: real production traversal API plus OSG
+  world/inverse/bounds against all 64 supplied original unselected-child frames,
+  both builds. Declared tolerances are `1e-10` for world/inverse matrix entries,
+  exact author-matrix preservation and `2e-5` for bounds center. Observed world,
+  author and bounds errors are zero; maximum inverse error is
+  `3.552713678800501e-15`. Cached NIF rotation/scale fields also remain exact.
+  These supplied frame comparisons do not execute live World/controller order
+  or original Havok dynamics and do not establish normal-input gameplay.
+- `nif-traversal-projection-allocation-01/guard-verification.json`: 35 exact
+  guard calls, 29 accepts / six rejects, zero observed allocations in the
+  selected five main-thread heap allocators. Projection construction and other
+  APIs/threads are excluded. The unchanged detector's prior positive control
+  remains in `loose-scene-binding-allocation-01/control-verification.json`.
+- `nif-traversal-projection-allocation-02/setter-verification.json`: ten prepared
+  handle setter calls, including projection checkpoint restoration, with zero
+  observed allocations. Raw matrix preparation and existing hierarchy validation
+  occur outside this fence. The void setter's raw AL bytes have no boolean meaning.
+  Allocation01's setter log retains an early launch before script configuration
+  completed; it produced no setter evidence. 02 waits for existing script/config
+  and passes. The allocation01 guard trace independently passes.
+
+Both full checks preserve source fingerprint
+`5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1`
+on parent `4bff6493262cc003bf2bac9f30f7bfff4039b891`, before documentation.
+Normal engine ELF SHA256:
+`7516a7f8c66a3c8fc1f45c88084ef76c6b04b717ffe7526d9be875dde26a94f0`.
+Sanitized engine ELF SHA256:
+`a58a539961644062cce68330ba6f38e5715ddaeedf26af1f694f6c54741e4d58`.
+The review directory freezes eight implementation/test hashes and the exact patch.
+[Editable verification](M15-NIF-TRAVERSAL-PROJECTION-VERIFICATION.json) records
+current reports, original corpus identity, comparison tolerances and boundaries.
+
+Live loose per-node dispatch, controller/first-synchronization ordering and root
+reference alias initialization remain open. Rendering consumers that bypass
+traversal also require integration: Skeleton::Bone::update reads `getMatrix()`
+directly, and RigGeometry's skin-root inverse skips a transform when that author
+matrix is identity. This representation is not accepted for live skinned
+projection until those paths are handled and tested. Actual World/script
+continuation, complete admission modes, loose physical save/recreation, production
+break/mastery, pickup/replacement/sound, power/creature/reactions/effects and the
+entire normal-input/controller/FPS/restart S4 matrix remain required. Full S4 is
+active and incomplete.

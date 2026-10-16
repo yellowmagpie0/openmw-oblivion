@@ -54,6 +54,8 @@ namespace NifOsg
 
     bool AutoTransform::computeLocalToWorldMatrix(osg::Matrix& matrix, osg::NodeVisitor* nv) const
     {
+        if (getTraversalMatrix().getMatrix())
+            return MatrixTransform::computeLocalToWorldMatrix(matrix, nv);
         if (_referenceFrame == RELATIVE_RF)
             matrix.preMult(computeMatrix(nv));
         else
@@ -63,6 +65,8 @@ namespace NifOsg
 
     bool AutoTransform::computeWorldToLocalMatrix(osg::Matrix& matrix, osg::NodeVisitor* nv) const
     {
+        if (getTraversalMatrix().getMatrix())
+            return MatrixTransform::computeWorldToLocalMatrix(matrix, nv);
         if (_referenceFrame == RELATIVE_RF)
             matrix.postMult(osg::Matrix::inverse(computeMatrix(nv)));
         else

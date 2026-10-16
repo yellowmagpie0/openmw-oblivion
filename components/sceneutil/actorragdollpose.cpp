@@ -65,9 +65,9 @@ namespace SceneUtil
         {
             require(std::isfinite(node.mScale) && node.mScale > 0, "invalid ragdoll renderer node scale");
             // Quaternion callbacks retain double precision in OSG's matrix.
-            // Procedural rotate controllers also deliberately leave the cached
-            // NIF rotation unchanged. Capture the currently rendered rotation
-            // using its separately stored scale, rather than that cached base.
+            // Procedural rotate controllers deliberately leave the cached NIF
+            // rotation unchanged. Capture their current local matrix using its
+            // separate scale; traversal projections must not feed back here.
             osg::Matrixf rigid(node.getMatrix());
             for (unsigned row = 0; row < 3; ++row)
                 for (unsigned column = 0; column < 3; ++column)
@@ -86,6 +86,7 @@ namespace SceneUtil
             osg::Matrixd mMatrix;
             Nif::Matrix3 mRotationScale;
             float mScale;
+            NifOsg::MatrixTransform::TraversalMatrix mTraversalMatrix;
         };
         std::shared_ptr<const char> mAuthority;
         std::vector<Node> mNodes;
@@ -333,6 +334,7 @@ namespace SceneUtil
             const auto& node = *mImpl->mNodes[i].mTransform;
             const auto& expected = state->mNodes[i];
             if (node.getMatrix() != expected.mMatrix
+                || node.getTraversalMatrix() != expected.mTraversalMatrix
                 || std::bit_cast<unsigned>(node.mScale) != std::bit_cast<unsigned>(expected.mScale))
                 return false;
             for (unsigned row = 0; row < 3; ++row)
@@ -360,7 +362,8 @@ namespace SceneUtil
             // Both representations must be valid before retaining a checkpoint.
             worldPose(entry.mTransform->mRotationScale.toOsgMatrix());
             state->mNodes.push_back({entry.mTransform->getMatrix(),
-                entry.mTransform->mRotationScale, entry.mTransform->mScale});
+                entry.mTransform->mRotationScale, entry.mTransform->mScale,
+                entry.mTransform->getTraversalMatrix()});
         }
         ActorRagdollLocalPose result;
         result.mState = std::move(state);
@@ -384,6 +387,7 @@ namespace SceneUtil
             node.mScale = saved.mScale;
             node.mRotationScale = saved.mRotationScale;
             node.setMatrix(saved.mMatrix);
+            node.setTraversalMatrix(saved.mTraversalMatrix);
         }
         if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get()))
             skeleton->invalidateBoneMatrices();

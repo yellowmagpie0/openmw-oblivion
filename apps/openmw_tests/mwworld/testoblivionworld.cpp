@@ -22326,7 +22326,7 @@ TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedSourceRemainsGuardedBeforePu
 
 TEST(OblivionWorldTest, NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication)
 {
-    for (unsigned mutation = 0; mutation < 5; ++mutation)
+    for (unsigned mutation = 0; mutation < 6; ++mutation)
     {
         SCOPED_TRACE(mutation);
         NativeWeaponFactoryFixture fixture;
@@ -22340,6 +22340,7 @@ TEST(OblivionWorldTest, NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBe
             ASSERT_TRUE(find.mTarget); changed = true;
             if (mutation == 0) find.mTarget->setTranslation({7, 8, 9});
             if (mutation == 1) find.mTarget->mRotationScale.mValues[0][1] = -0.f;
+            if (mutation == 5) find.mTarget->setTraversalMatrix(osg::Matrixd::translate(7, 8, 9));
             if (mutation == 2) find.mTarget->setName("retired prepared physical target");
             if (mutation == 3) find.mTarget->getParent(0)->removeChild(find.mTarget);
             if (mutation == 4)

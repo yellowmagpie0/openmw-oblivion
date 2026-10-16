@@ -643,3 +643,36 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPoseTest, TraversalProjectionIsCheckpointedWithoutFeedingBackIntoAnimationTargets)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto original = binding.captureLocalPose();
+        const auto author = binding.captureWorldBones(osg::Matrixf::identity());
+        mPelvis->setTraversalMatrix(osg::Matrixd::translate(40, 0, 0));
+        EXPECT_FALSE(binding.matchesLocalPose(original));
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10, 0, 0));
+        const auto targets = binding.captureWorldBones(osg::Matrixf::identity());
+        ASSERT_EQ(targets.size(), author.size());
+        for (unsigned i = 0; i < targets.size(); ++i) EXPECT_EQ(targets[i].mPose, author[i].mPose);
+        const auto worlds = mPelvis->getWorldMatrices(); ASSERT_EQ(worlds.size(), 1u);
+        EXPECT_EQ(worlds[0].getTrans(), osg::Vec3d(40, 0, 0));
+        const auto projected = binding.captureLocalPose();
+        mPelvis->clearTraversalMatrix(); mPelvis->setTranslation({7, 8, 9});
+        EXPECT_FALSE(binding.matchesLocalPose(projected));
+        binding.restoreLocalPose(projected);
+        EXPECT_TRUE(binding.matchesLocalPose(projected));
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10, 0, 0));
+        EXPECT_EQ(mPelvis->getWorldMatrices()[0].getTrans(), osg::Vec3d(40, 0, 0));
+        mPelvis->setTraversalMatrix(osg::Matrixd::translate(40, 0, 0));
+        EXPECT_TRUE(binding.matchesLocalPose(projected));
+        auto negativeZero = *mPelvis->getTraversalMatrix().getMatrix(); negativeZero(0, 1) = -0.;
+        mPelvis->setTraversalMatrix(negativeZero);
+        EXPECT_FALSE(binding.matchesLocalPose(projected));
+        binding.restoreLocalPose(original);
+        EXPECT_EQ(mPelvis->getTraversalMatrix().getMatrix(), nullptr);
+        EXPECT_TRUE(binding.matchesLocalPose(original));
+    }
+}

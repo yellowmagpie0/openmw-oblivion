@@ -32,6 +32,8 @@ namespace SceneUtil
     // It captures live world bones and applies complete physical world poses
     // atomically through the verified native local-pose projection. Actor
     // mode selection, physics stepping and persistence belong to their owners.
+    // Capture uses controller/local matrices, independently of optional NIF
+    // traversal projections. Checkpoints retain both representations.
     // Matrix placement is rigid. Native placement additionally admits separate
     // uniform scale; physical bones retain neighboring-unit authored scales.
     // Call on the renderer update thread, without concurrent topology changes.

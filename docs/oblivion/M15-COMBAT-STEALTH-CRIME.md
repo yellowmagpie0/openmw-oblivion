@@ -6,6 +6,28 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 authored and traversal matrix separation — 2026-10-16
+
+NIF transforms can now retain controller/local matrices independently of an
+optional traversal pose used by OSG world matrices, inverse queries and bounds.
+Immutable prepared handles support cloning and checkpoint restoration without
+allocating during handle publication. Admission checkpoints include projection
+state and reject projection-only mutations before inventory/physics publication.
+Default and cleared transforms keep their original behavior.
+
+All **2,714 component tests / 258 suites and 1,572 engine tests / 122 suites**
+pass in normal and ASan/UBSan builds. Supplied frames from 64 original child
+traversals reproduce world poses and bounds exactly in both builds; maximum
+inverse error is `3.6e-15`. Selected guard and prepared-handle traces observe
+zero allocations across 35 and 10 calls respectively, within their stated scope.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#nif-controller-local-and-traversal-matrix-separation)
+and [editable verification record](M15-NIF-TRAVERSAL-PROJECTION-VERIFICATION.json)
+record the checks and retained diagnostic setup failure. This is representation
+support: live per-node World dispatch, controller ordering and skinning consumers
+still need integration. Save/recreation, production combat and full normal-input
+acceptance remain open. S4 is incomplete.
+
 ## S4 authored collision flags and inactive roots — 2026-10-16
 
 Owned body definitions now preserve authored collision-object flags separately

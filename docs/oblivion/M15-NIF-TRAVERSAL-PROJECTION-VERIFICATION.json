@@ -1,0 +1,252 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "optional immutable NIF traversal matrix and complete local checkpoints implemented; live per-node World/controller/skinning integration and full M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "4bff6493262cc003bf2bac9f30f7bfff4039b891",
+  "source_fingerprint": "5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1",
+  "implementation_digests": {
+    "apps/components_tests/nifosg/testnifloader.cpp": "c3ba0c88d8b425af1f2bb9b50c7570125c576e7f1078de509b42e4e122778577",
+    "apps/components_tests/sceneutil/actorragdollpose.cpp": "7875b88d4e4a154860d9f7e90cfd267c7a426ecfafa1d9755b12e3a5e1bfe425",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "e873ec74a55bd3882fba5916ca2b83384e20954d77275b26508dd7a9f25b4a3e",
+    "components/nifosg/autotransform.cpp": "371e1387d5ff45875546c2cdd32e7ab3284039f56501ce1bbd987fe457fb8d1c",
+    "components/nifosg/matrixtransform.cpp": "5ac47937c25a11ab81232b2b4f33b47c3cd0bba6746063803ced7418a14ccf34",
+    "components/nifosg/matrixtransform.hpp": "9ffeada1afd77c32108bbea0fc5bf83193de28ff6067670ef693e71363ee3e70",
+    "components/sceneutil/actorragdollpose.cpp": "d53918419181ce2f956eec3e65ef5b27cf7ef9e1f693f7863a9b030911448891",
+    "components/sceneutil/actorragdollpose.hpp": "c04e62106f4d877bc3c7e19809dd7443f5549eeeb9848d585b99c83415a50b67"
+  },
+  "implementation_patch_sha256": "6aa5815a7a0df69149e7ac29e7e432e811585b00e9ccf80a50834a3dc0fc8a85",
+  "behavior": [
+    "NifOsg MatrixTransform retains getMatrix/NIF components as controller/local state, with an optional immutable local-to-parent traversal matrix/inverse for OSG world traversal and bounds. Default and cleared paths delegate to original OSG behavior.",
+    "Numeric preparation validates finite matrix, invertibility and finite inverse before changing a node. Publishing/restoring a prepared handle copies immutable shared state and dirties bounds without allocating. Clones share values, not mutable node state.",
+    "AutoTransform honors an explicit traversal matrix; clearing resumes its existing camera-facing behavior. This is OSG representation support, not native billboard gameplay acceptance.",
+    "Actor local checkpoints retain traversal handles as well as local matrix and NIF components. Exact projection-value equality includes presence and signed-zero bits; equal numeric preparations with identical bits compare equal. Capture of animation targets still uses controller/local matrices.",
+    "Actual factory rollback guard now rejects a traversal-only target mutation before inventory, serial, registry or physics publication."
+  ],
+  "original_frame_reference": {
+    "path": "unselected-child-frame-oracle-01/verification.json",
+    "report_sha256": "7b8502e97d49e498ed62d39e2d8f10d32a462bec75facad89df55e360f47bcd3",
+    "passed": true,
+    "contexts": 64,
+    "sequences": 16,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "a692380539cb0c6d53272b75d87a50ffdceacffd18ef292f6604e92215da17a7",
+    "cases_sha256": "9ce56527c553453f91af564f234c387fa33eabce1af653f2c96b396db42b600a",
+    "scope": "Full original nonactor reference prefix/World registration over4 unselected deep/null-first child topologies, plain/bodyT and both x87. Actual first707370 consumes pending0x40 leaving flags1. Four subsequent single-traversal requests supply chosen motion positions/quaternion, execute full native collision inverse/writeback and all hierarchy composition. Child local/root local/entire REFR/physical storage unchanged; child cached world follows physical desired R/T, no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping/full game-frame dispatch, renderer integration or gameplay acceptance."
+  },
+  "renderer_comparisons": {
+    "normal": {
+      "path": "nif-traversal-projection-compare-01/normal-verification.json",
+      "report_sha256": "5e367f65287bcce88720398c032f76c3f26a4fe361eb46ef8a1b911d2d23c179",
+      "passed": true,
+      "cases": 64,
+      "mode": "normal",
+      "maximum_errors": {
+        "world_matrix": 0.0,
+        "world_inverse": 3.552713678800501e-15,
+        "author_matrix": 0.0,
+        "bounds_center": 0.0
+      },
+      "declared_tolerances": {
+        "world_matrix": 1e-10,
+        "world_inverse": 1e-10,
+        "author_matrix": 0.0,
+        "bounds_center": 2e-05
+      },
+      "binary_sha256": "95d4d10833cc30de83ad9c0f53642121b640f025d24e7aba0c3f5b0c2493ce12",
+      "input_sha256": "a7eeb406c5ccb86574c0c7b0e107856deeb1c75746433c80dd1e9aecfbe0741e",
+      "production_source_hashes": {
+        "components/nifosg/matrixtransform.cpp": "5ac47937c25a11ab81232b2b4f33b47c3cd0bba6746063803ced7418a14ccf34",
+        "components/nifosg/matrixtransform.hpp": "9ffeada1afd77c32108bbea0fc5bf83193de28ff6067670ef693e71363ee3e70"
+      },
+      "original_corpus": "unselected-child-frame-oracle-01/cases.json",
+      "original_corpus_sha256": "9ce56527c553453f91af564f234c387fa33eabce1af653f2c96b396db42b600a",
+      "scope": "Actual new NIF traversal matrix API and OSG world/inverse/bounds against64 original unselected-child cached-world/local/parent outputs. Local author matrix and cached NIF fields remain unchanged. This validates representation with supplied native frames; no live World node/frame/controller integration or gameplay acceptance."
+    },
+    "sanitized": {
+      "path": "nif-traversal-projection-compare-01/sanitized-verification.json",
+      "report_sha256": "911f4865b96c5d6d942a24027692491daf4c64dc442a59019b1284f8aba6f638",
+      "passed": true,
+      "cases": 64,
+      "mode": "sanitized",
+      "maximum_errors": {
+        "world_matrix": 0.0,
+        "world_inverse": 3.552713678800501e-15,
+        "author_matrix": 0.0,
+        "bounds_center": 0.0
+      },
+      "declared_tolerances": {
+        "world_matrix": 1e-10,
+        "world_inverse": 1e-10,
+        "author_matrix": 0.0,
+        "bounds_center": 2e-05
+      },
+      "binary_sha256": "42ec18ff09c98f7e891c639cfc3432778651837809fa49b6eef2906fe9f7c5ae",
+      "input_sha256": "a7eeb406c5ccb86574c0c7b0e107856deeb1c75746433c80dd1e9aecfbe0741e",
+      "production_source_hashes": {
+        "components/nifosg/matrixtransform.cpp": "5ac47937c25a11ab81232b2b4f33b47c3cd0bba6746063803ced7418a14ccf34",
+        "components/nifosg/matrixtransform.hpp": "9ffeada1afd77c32108bbea0fc5bf83193de28ff6067670ef693e71363ee3e70"
+      },
+      "original_corpus": "unselected-child-frame-oracle-01/cases.json",
+      "original_corpus_sha256": "9ce56527c553453f91af564f234c387fa33eabce1af653f2c96b396db42b600a",
+      "scope": "Actual new NIF traversal matrix API and OSG world/inverse/bounds against64 original unselected-child cached-world/local/parent outputs. Local author matrix and cached NIF fields remain unchanged. This validates representation with supplied native frames; no live World node/frame/controller integration or gameplay acceptance."
+    }
+  },
+  "allocation_traces": {
+    "factory_guard": {
+      "path": "nif-traversal-projection-allocation-01/guard-verification.json",
+      "report_sha256": "8f957fd05271e1cc99f2763b695ac327ac4ef580f77286d94e54f0df52a96bdd",
+      "config": {
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "binary_sha256": "7516a7f8c66a3c8fc1f45c88084ef76c6b04b717ffe7526d9be875dde26a94f0",
+        "main": 7942160,
+        "guard": 40600000,
+        "expect_allocations": false,
+        "require_both_results": true,
+        "scope": "Main thread selected five heap allocators during exact matchesLocalPose entry through return. Six-mutation factory rollback test, including traversal-projection-only mutation. Immutable projection preparation, hierarchy-validating restore and other allocation APIs/threads excluded."
+      },
+      "entries": 35,
+      "allocations": [],
+      "exit_code": 0,
+      "passed": true,
+      "accepted": 30,
+      "rejected": 5
+    },
+    "prepared_projection_setter": {
+      "path": "nif-traversal-projection-allocation-02/setter-verification.json",
+      "report_sha256": "39aaba61c95765db0167503a28e6a8f44302e0864b5505cdf695d71bb65a8499",
+      "config": {
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+        "binary_sha256": "ccdbc573f8d5411d1d341bf3f686939ef9dabcdb275247f153063ba6318638e1",
+        "main": 6816608,
+        "guard": 18338832,
+        "expect_allocations": false,
+        "require_both_results": false,
+        "scope": "Main thread selected five heap allocators during prepared immutable TraversalMatrix setter entry through return, including checkpoint projection restoration. Raw matrix validation/inversion/allocation before setter, whole hierarchy validation and other allocation APIs/threads excluded."
+      },
+      "entries": 10,
+      "allocations": [],
+      "exit_code": 0,
+      "passed": true,
+      "return_scope": "Void setter; raw AL bytes recorded by the generic detector have no boolean meaning and are omitted here."
+    },
+    "unchanged_detector_positive_control": "loose-scene-binding-allocation-01/control-verification.json"
+  },
+  "checks": {
+    "nif-traversal-projection-normal-01": {
+      "passed": true,
+      "source_before": {
+        "head": "4bff6493262cc003bf2bac9f30f7bfff4039b891",
+        "source_fingerprint": "5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1"
+      },
+      "source_after": {
+        "head": "4bff6493262cc003bf2bac9f30f7bfff4039b891",
+        "source_fingerprint": "5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1"
+      },
+      "results": {
+        "components": {
+          "executed": 2714,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ccdbc573f8d5411d1d341bf3f686939ef9dabcdb275247f153063ba6318638e1",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "0f5156d7ebbca1711e9e8f9d100531eebed23aaf2be3767f1d4af3c056e338ad",
+          "inventory_sha256": "b60372ab20fc152474f6be6a22b6a83c843bfa94faa8cf906d9f26a40271fe34",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7516a7f8c66a3c8fc1f45c88084ef76c6b04b717ffe7526d9be875dde26a94f0",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "b9530db2a763f381c8349135b18cbed7350152d0fc4455a3bee40b1682d32df1",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 258,
+        "engine": 122
+      }
+    },
+    "nif-traversal-projection-sanitized-01": {
+      "passed": true,
+      "source_before": {
+        "head": "4bff6493262cc003bf2bac9f30f7bfff4039b891",
+        "source_fingerprint": "5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1"
+      },
+      "source_after": {
+        "head": "4bff6493262cc003bf2bac9f30f7bfff4039b891",
+        "source_fingerprint": "5323678d01523d0f9100b9667af5b93869cc8cb04fe0313bde7dce786d5cc1e1"
+      },
+      "results": {
+        "components": {
+          "executed": 2714,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "272c546580d5967fea59ceabeff8fb96e5d481733ee411a36dcba3efc24065b3",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "4256b9c619fbbbda12cd1d6b416957b5501d84f25ef09428856f37748d53b01d",
+          "inventory_sha256": "fa8ad3bb0a692eac4511859596c952571dcf20d989eebb5783ce33a10a66481c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a58a539961644062cce68330ba6f38e5715ddaeedf26af1f694f6c54741e4d58",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "34669fe94b147bb5dd8e0b131f1da10053953f1196c4f6a0331bb20c72a06a9c",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 258,
+        "engine": 122
+      }
+    }
+  },
+  "sanitizer_scope": "ASan/UBSan halt on error; leak checking disabled.",
+  "retained_failure": "nif-traversal-projection-allocation-01/setter.log: launched before configuration completed, so GDB did not find setter-trace.py. No setter evidence produced. Fresh allocation02 runs only after the script/config are present and passes; allocation01 guard trace independently passes.",
+  "remaining_gates": [
+    "Wire native per-node local/cached-world/collision-flag projection into live loose owners, with correct controller and reference callback ordering.",
+    "Skeleton Bone::update reads getMatrix directly; RigGeometry skin-root inverse has a getMatrix().isIdentity fast path. These consumers must honor projection before live skinned projection acceptance. Current API tests cover ordinary OSG world/inverse/bounds and checkpoint representation, not skinning.",
+    "Root reference alias/initialization and controller/first pending synchronization semantics; actual World/script scale/forced current-target continuation.",
+    "Complete Havok-enable/special-reference/cell/property-copy/fixed/keyframed/no-physics admission.",
+    "Loose physical retention/save/recreation with fresh-process continuation.",
+    "Production break/mastery, retained/quest unequip, drawn NPC/grouped drops, pickup/replacement/sound, power/creature/reaction/effects and entire controls/FPS/normal-input windup/block/recovery restart S4 matrix."
+  ]
+}

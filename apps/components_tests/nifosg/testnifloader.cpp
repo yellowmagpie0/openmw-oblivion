@@ -15,6 +15,9 @@
 #include <components/sceneutil/serialize.hpp>
 #include <components/sceneutil/optimizer.hpp>
 #include <osg/Geometry>
+#include <osg/Geode>
+#include <osg/ShapeDrawable>
+#include <osg/Transform>
 #include <algorithm>
 #include <components/vfs/manager.hpp>
 
@@ -964,5 +967,164 @@ namespace
         osg::ref_ptr<SceneUtil::KeyframeHolder> empty = new SceneUtil::KeyframeHolder;
         NifOsg::Loader::loadKf(noSequence, *empty);
         EXPECT_TRUE(empty->mControllerSequences.empty());
+    }
+}
+
+namespace
+{
+    void expectTraversalMatrixNear(const osg::Matrixd& actual, const osg::Matrixd& expected)
+    {
+        for (unsigned i = 0; i < 16; ++i) EXPECT_NEAR(actual.ptr()[i], expected.ptr()[i], 1e-12) << i;
+    }
+
+    TEST(NifTraversalMatrixTest, DefaultAndClearRetainOriginalRelativeAndAbsoluteTransformBehavior)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> node = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        node->setRotation(osg::Quat(.3, osg::Vec3d(0, 1, 0)));
+        node->setTranslation({3, 4, 5}); node->setScale(2);
+        osg::ref_ptr<osg::MatrixTransform> original = new osg::MatrixTransform(node->getMatrix());
+        for (auto frame : {osg::Transform::RELATIVE_RF, osg::Transform::ABSOLUTE_RF,
+                 osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT})
+        {
+            node->setReferenceFrame(frame); original->setReferenceFrame(frame);
+            for (bool clear : {false, true})
+            {
+                if (clear)
+                {
+                    node->setTraversalMatrix(osg::Matrixd::translate(40, 50, 60));
+                    node->clearTraversalMatrix();
+                }
+                ASSERT_EQ(node->getTraversalMatrix().getMatrix(), nullptr);
+                auto actual = osg::Matrixd::translate(100, 200, 300), expected = actual;
+                node->computeLocalToWorldMatrix(actual, nullptr); original->computeLocalToWorldMatrix(expected, nullptr);
+                expectTraversalMatrixNear(actual, expected);
+                actual.makeTranslate(100, 200, 300); expected = actual;
+                node->computeWorldToLocalMatrix(actual, nullptr); original->computeWorldToLocalMatrix(expected, nullptr);
+                expectTraversalMatrixNear(actual, expected);
+            }
+        }
+    }
+
+    TEST(NifTraversalMatrixTest, WorldInverseAndBoundsUseProjectionWhileLocalMatrixAndNifCachesStayAuthored)
+    {
+        osg::ref_ptr<osg::MatrixTransform> outer = new osg::MatrixTransform;
+        outer->setMatrix(osg::Matrixd::rotate(.4, osg::Vec3d(0, 0, 1)) * osg::Matrixd::translate(100, 20, 50));
+        osg::ref_ptr<NifOsg::MatrixTransform> root = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        osg::ref_ptr<NifOsg::MatrixTransform> child = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        root->setTranslation({1000, 2000, 3000}); root->setTraversalMatrix(osg::Matrixd::identity());
+        child->setTranslation({3, 4, 5}); child->setScale(2);
+        const auto author = child->getMatrix(); const auto rotation = child->mRotationScale;
+        const auto desired = osg::Matrixd::rotate(.7, osg::Vec3d(0, 1, 0)) * osg::Matrixd::translate(120, 30, 40);
+        const auto local = desired * osg::Matrixd::inverse(outer->getMatrix());
+        child->setTraversalMatrix(local);
+        outer->addChild(root); root->addChild(child);
+        osg::ref_ptr<osg::Geode> geometry = new osg::Geode;
+        geometry->addDrawable(new osg::ShapeDrawable(new osg::Sphere({}, 1)));
+        child->addChild(geometry);
+        const auto worlds = child->getWorldMatrices(); ASSERT_EQ(worlds.size(), 1u);
+        expectTraversalMatrixNear(worlds[0], desired);
+        const osg::NodePath path{outer.get(), root.get(), child.get()};
+        expectTraversalMatrixNear(osg::computeWorldToLocal(path), osg::Matrixd::inverse(desired));
+        EXPECT_EQ(child->getMatrix(), author); EXPECT_EQ(child->mScale, 2.f);
+        for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+            EXPECT_EQ(child->mRotationScale.mValues[r][c], rotation.mValues[r][c]);
+        EXPECT_NEAR((osg::Vec3d(child->getBound().center()) - local.getTrans()).length(), 0, 1e-5);
+        child->setTranslation({-8, 9, 10}); child->setScale(3);
+        EXPECT_EQ(child->getMatrix().getTrans(), osg::Vec3d(-8, 9, 10));
+        expectTraversalMatrixNear(child->getWorldMatrices()[0], desired);
+        child->clearTraversalMatrix();
+        expectTraversalMatrixNear(child->getWorldMatrices()[0], child->getMatrix() * outer->getMatrix());
+    }
+
+    TEST(NifTraversalMatrixTest, PreparedImmutableHandlesCloneAndRestoreIndependently)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> node = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        const NifOsg::MatrixTransform::TraversalMatrix saved(osg::Matrixd::translate(40, 50, 60));
+        node->setTraversalMatrix(saved);
+        osg::ref_ptr<NifOsg::MatrixTransform> copy
+            = new NifOsg::MatrixTransform(*node, osg::CopyOp::DEEP_COPY_ALL);
+        node->setTraversalMatrix(osg::Matrixd::translate(70, 80, 90));
+        ASSERT_NE(copy->getTraversalMatrix().getMatrix(), nullptr);
+        EXPECT_EQ(copy->getTraversalMatrix().getMatrix()->getTrans(), osg::Vec3d(40, 50, 60));
+        copy->clearTraversalMatrix();
+        node->setTraversalMatrix(saved);
+        EXPECT_EQ(node->getTraversalMatrix(), saved);
+        EXPECT_EQ(copy->getTraversalMatrix().getMatrix(), nullptr);
+        node->setTraversalMatrix(osg::Matrixd::translate(40, 50, 60));
+        EXPECT_EQ(node->getTraversalMatrix(), saved);
+        auto signedZero = *saved.getMatrix(); signedZero(0, 1) = -0.;
+        node->setTraversalMatrix(signedZero);
+        EXPECT_NE(node->getTraversalMatrix(), saved);
+    }
+
+    TEST(NifTraversalMatrixTest, InvalidProjectionRejectsBeforeChangingEitherPose)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> node = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        node->setTranslation({3, 4, 5});
+        node->setTraversalMatrix(osg::Matrixd::translate(10, 20, 30));
+        const auto author = node->getMatrix(); const auto saved = node->getTraversalMatrix();
+        auto nonfinite = osg::Matrixd::identity(); nonfinite(0, 0) = std::numeric_limits<double>::quiet_NaN();
+        auto infinite = osg::Matrixd::identity(); infinite(3, 0) = std::numeric_limits<double>::infinity();
+        for (const auto& invalid : {nonfinite, infinite, osg::Matrixd::scale(0, 1, 1),
+                 osg::Matrixd::scale(std::numeric_limits<double>::denorm_min(), 1, 1)})
+        {
+            EXPECT_THROW(node->setTraversalMatrix(invalid), std::invalid_argument);
+            EXPECT_EQ(node->getMatrix(), author); EXPECT_EQ(node->getTraversalMatrix(), saved);
+        }
+    }
+
+    TEST(NifTraversalMatrixTest, ProjectionUsesAbsoluteReferenceFramesWithoutMutatingAuthorInverse)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> node = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        node->setTranslation({3, 4, 5});
+        const auto projection = osg::Matrixd::rotate(.7, osg::Vec3d(0, 0, 1)) * osg::Matrixd::translate(10, 20, 30);
+        node->setTraversalMatrix(projection);
+        for (auto frame : {osg::Transform::ABSOLUTE_RF, osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT})
+        {
+            node->setReferenceFrame(frame);
+            auto world = osg::Matrixd::translate(100, 200, 300), inverse = world;
+            node->computeLocalToWorldMatrix(world, nullptr); node->computeWorldToLocalMatrix(inverse, nullptr);
+            expectTraversalMatrixNear(world, projection); expectTraversalMatrixNear(inverse, osg::Matrixd::inverse(projection));
+        }
+        EXPECT_EQ(node->getInverseMatrix().getTrans(), osg::Vec3d(-3, -4, -5));
+    }
+
+    TEST(NifTraversalMatrixTest, KeyframeMissingChannelsReadAuthoredComponentsWhileTraversalStaysProjected)
+    {
+        constexpr float unset = -std::numeric_limits<float>::max();
+        Nif::NiTransformInterpolator interpolator;
+        interpolator.mRecordType = Nif::RC_NiTransformInterpolator; interpolator.mData = nullptr;
+        interpolator.mDefaultValue = {osg::Vec3f(4, 5, 6), osg::Quat(unset, unset, unset, unset), unset};
+        class Source : public SceneUtil::ControllerSource
+        {
+            float getValue(osg::NodeVisitor*) override { return .5f; }
+        };
+        NifOsg::KeyframeController controller({{0.f, 1.f, 0.f, 1.f, &interpolator}});
+        controller.setSource(std::make_shared<Source>());
+        osg::ref_ptr<NifOsg::MatrixTransform> node = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        node->setRotation(osg::Quat(.3, osg::Vec3d(0, 0, 1))); node->setScale(3);
+        const auto rotation = node->mRotationScale;
+        const auto projection = osg::Matrixd::translate(100, 200, 300);
+        node->setTraversalMatrix(projection);
+        osg::NodeVisitor visitor(osg::NodeVisitor::UPDATE_VISITOR);
+        controller(node.get(), &visitor);
+        EXPECT_EQ(node->getMatrix().getTrans(), osg::Vec3d(4, 5, 6)); EXPECT_EQ(node->mScale, 3.f);
+        for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+            EXPECT_EQ(node->mRotationScale.mValues[r][c], rotation.mValues[r][c]);
+        expectTraversalMatrixNear(node->getWorldMatrices()[0], projection);
+    }
+
+    TEST(NifTraversalMatrixTest, BillboardHonorsPreparedTraversalAndClearsBackToItsCameraMode)
+    {
+        osg::ref_ptr<NifOsg::AutoTransform> node = new NifOsg::AutoTransform(Nif::NiTransform::getIdentity());
+        node->setTranslation({3, 4, 5});
+        osg::Matrixd before; node->computeLocalToWorldMatrix(before, nullptr);
+        const auto projection = osg::Matrixd::rotate(.4, osg::Vec3d(0, 1, 0)) * osg::Matrixd::translate(100, 200, 300);
+        node->setTraversalMatrix(projection);
+        osg::Matrixd world, inverse;
+        node->computeLocalToWorldMatrix(world, nullptr); node->computeWorldToLocalMatrix(inverse, nullptr);
+        expectTraversalMatrixNear(world, projection); expectTraversalMatrixNear(inverse, osg::Matrixd::inverse(projection));
+        node->clearTraversalMatrix(); world.makeIdentity(); node->computeLocalToWorldMatrix(world, nullptr);
+        expectTraversalMatrixNear(world, before);
     }
 }
