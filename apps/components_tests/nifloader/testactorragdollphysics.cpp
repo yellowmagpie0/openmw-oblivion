@@ -5289,3 +5289,98 @@ TEST_F(ActorRagdollPhysicsTest, WeaponShapeTransformIgnoresNativeFourthLanePaddi
         EXPECT_NEAR(high.x(),4.25,1e-6); EXPECT_NEAR(high.y(),-1.75,1e-6); EXPECT_NEAR(high.z(),7.25,1e-6);
     }
 }
+
+namespace
+{
+    TEST(RagdollBodyTReverseScene, LiveSinglePrecisionMatchesOriginalNearZeroOriginsAndNoncommutingOffsets)
+    {
+        // Original full707370/89EA70 route, image a8f31384...,007F.
+        // physical-scene-live-precision-oracle-02 cases6,15,16,19.
+        struct Example
+        {
+            std::array<std::uint32_t, 7> mPhysical, mLocal, mNative;
+            std::array<std::uint32_t, 12> mWorld;
+        };
+        const std::array<Example, 4> examples{{
+            {{0x3a902de0u, 0xb951b717u, 0x399d4952u, 0x3f800000u, 0x0u, 0x0u, 0x0u},
+             {0x3e800000u, 0xbf000000u, 0x3e000000u, 0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+             {0xbe7edfa2u, 0x3dff971fu, 0x3f0013a9u, 0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+             {0x3f800000u, 0x0u, 0x0u, 0x0u, 0x33800000u, 0xbf7fffffu, 0x0u, 0x3f7fffffu, 0x33800000u, 0xbfdefbdau, 0x3f5f9c61u, 0x40601a8au}},
+            {{0x3ca4a8c1u, 0xb951b717u, 0x399d4952u, 0x0u, 0x0u, 0x3f800000u, 0x0u},
+             {0x3e800000u, 0xbf000000u, 0x3e000000u, 0x3e8b5948u, 0xbed105ecu, 0x3f0b5948u, 0x3f2e2f9au},
+             {0xbde9cc58u, 0xbec27907u, 0xbed07064u, 0xbed105ecu, 0xbe8b5948u, 0x3f2e2f9au, 0x3f0b5948u},
+             {0xbd97b430u, 0xbf04bda2u, 0xbf5a12f8u, 0x3f7684beu, 0xbe84bda4u, 0x3d97b428u, 0xbe84bda1u, 0xbf5097b5u, 0x3f04bda1u, 0xbf4c8b9fu, 0xc02a23edu, 0xc0365bf0u}},
+            {{0x40a00000u, 0x40c00000u, 0x40e00000u, 0x0u, 0x0u, 0x0u, 0x3f800000u},
+             {0xbf9d70a4u, 0x4091eb85u, 0x410e6666u, 0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+             {0x40c75c28u, 0xc0399998u, 0x4138f5c2u, 0xbf3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+             {0x3f800000u, 0x80000000u, 0x0u, 0x0u, 0x33800000u, 0x3f7fffffu, 0x80000000u, 0xbf7fffffu, 0x33800000u, 0x422e6a83u, 0xc1a260b2u, 0x42a1d15bu}},
+            {{0x40a0a3d7u, 0x40c00000u, 0x40e00000u, 0x3f000000u, 0x3f000000u, 0x3f000000u, 0x3f000000u},
+             {0xbf9d70a4u, 0x4091eb85u, 0x410e6666u, 0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+             {0x411947aeu, 0x40e75c29u, 0xbff33328u, 0x0u, 0x0u, 0x3f3504f3u, 0x3f3504f3u},
+             {0x33800000u, 0xbf7fffffu, 0x0u, 0x3f7fffffu, 0x33800000u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x42861a03u, 0x424a6989u, 0xc154c54bu}},
+        }};
+        for (const auto& sample : examples)
+        {
+            NifBullet::RagdollNativeTargetPose physical;
+            NifBullet::RagdollBodyDefinition body{};
+            body.mUsesRigidBodyTransform = true;
+            for (unsigned i = 0; i < 3; ++i)
+            {
+                physical.mPosition[i] = std::bit_cast<float>(sample.mPhysical[i]);
+                body.mTranslation[i] = std::bit_cast<float>(sample.mLocal[i]);
+            }
+            for (unsigned i = 0; i < 4; ++i)
+            {
+                physical.mRotation[i] = std::bit_cast<float>(sample.mPhysical[3 + i]);
+                body.mRotation[i] = std::bit_cast<float>(sample.mLocal[3 + i]);
+            }
+            const auto single = NifBullet::ragdollNativeSceneTargetFromBodyPose(
+                physical, body, Nif::NativeTransformPrecision::Single);
+            const auto oldDefault = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+            bool differentOrigin = false;
+            for (unsigned i = 0; i < 3; ++i)
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(single.mPosition[i]), sample.mNative[i]);
+                differentOrigin |= oldDefault.mPosition[i] != single.mPosition[i];
+            }
+            EXPECT_TRUE(differentOrigin);
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(single.mRotation[i]), sample.mNative[3 + i]);
+            const auto world = NifBullet::ragdollBoneWorldFromNativePose(single, Nif::NativeTransformPrecision::Single);
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    EXPECT_EQ(std::bit_cast<std::uint32_t>(world(column, row)), sample.mWorld[row * 3 + column]);
+            for (unsigned i = 0; i < 3; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(world(3, i)), sample.mWorld[9 + i]);
+        }
+    }
+
+    TEST(RagdollNativePhysicsScene, LiveSinglePrecisionMatchesOriginalDiagonalAndPositionStores)
+    {
+        // Original ordinary-body case100, FPCW007F. Its diagonal differs
+        // from the previous double-only arithmetic before the final store.
+        const std::array<std::uint32_t, 7> input = {0x38d1b717u, 0xb951b717u, 0x399d4952u, 0x3e8b5948u, 0xbed105ecu, 0x3f0b5948u, 0x3f2e2f9au};
+        const std::array<std::uint32_t, 12> expected = {0x3d97b420u, 0xbf7684beu, 0xbe84bda1u, 0x3f04bda2u, 0x3e84bd9eu, 0xbf5097b5u, 0x3f5a12f8u, 0xbd97b428u, 0x3f04bda1u, 0x3a3779c3u, 0xbab779c3u, 0x3b099b53u};
+        NifBullet::RagdollNativeTargetPose physical;
+        for (unsigned i = 0; i < 3; ++i) physical.mPosition[i] = std::bit_cast<float>(input[i]);
+        for (unsigned i = 0; i < 4; ++i) physical.mRotation[i] = std::bit_cast<float>(input[3 + i]);
+        const auto single = NifBullet::ragdollBoneWorldFromNativePose(physical, Nif::NativeTransformPrecision::Single);
+        const auto oldDefault = NifBullet::ragdollBoneWorldFromNativePose(physical);
+        EXPECT_NE(single(0, 0), oldDefault(0, 0));
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(single(column, row)), expected[row * 3 + column]);
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(single(3, i)), expected[9 + i]);
+    }
+
+    TEST(RagdollNativePhysicsScene, InvalidPrecisionRejectsAtEveryPublicConversionBoundary)
+    {
+        const auto invalid = static_cast<Nif::NativeTransformPrecision>(99);
+        const NifBullet::RagdollNativeTargetPose physical{{0, 0, 0}, {0, 0, 0, 1}};
+        NifBullet::RagdollBodyDefinition ordinary{};
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, ordinary, invalid), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(physical, invalid), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeToWorldPosition({}, invalid), std::invalid_argument);
+    }
+}

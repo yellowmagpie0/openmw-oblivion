@@ -1,4 +1,5 @@
 #include "actorragdollphysics.hpp"
+#include <components/nif/nativetransformmath.hpp>
 #include "nativedynamicsworld.hpp"
 #include "ragdollconecoordinates.hpp"
 #include "ragdollvelocity.hpp"
@@ -417,14 +418,16 @@ namespace NifBullet
         return result;
     }
 
-    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position)
+    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position, Nif::NativeTransformPrecision precision)
     {
+        const Nif::Detail::NativeTransformMath math(precision);
+        require(math.valid(), "invalid native scene arithmetic precision");
         osg::Vec3f result;
         for (unsigned axis = 0; axis < 3; ++axis)
         {
             require(std::isfinite(position[axis]), "nonfinite native position");
-            result[axis] = float(double(position[axis]) * double(RagdollNativeLengthScale));
-            require(std::isfinite(result[axis]), "position exceeds world float domain");
+            require(Nif::tryStoreNativeTransformFloat(math.multiply(position[axis], RagdollNativeLengthScale),
+                result[axis]), "position exceeds world float domain");
         }
         return result;
     }
@@ -576,8 +579,9 @@ namespace NifBullet
         }
 
         osg::Vec3f nativeBodyTOffset(const std::array<float, 4>& q, const osg::Vec3f& translation,
-            bool conjugate = false)
+            bool conjugate = false, Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double)
         {
+            const Nif::Detail::NativeTransformMath math(precision);
             // Original8B9400/8B9150 rotate native-length local offset with
             // SSE binary32 products/sums and three x87 coefficient stores.
             const float dotX = q[0] * translation[0];
@@ -585,9 +589,9 @@ namespace NifBullet
             const float dotZ = q[2] * translation[2];
             const float dotXY = dotY + dotX;
             const float dot = dotZ + dotXY;
-            const float axisCoefficient = float(2.0 * dot);
-            const float scalarCoefficient = float(2.0 * double(q[3]) * q[3] - 1.0);
-            const float crossCoefficient = float((conjugate ? -2.0 : 2.0) * q[3]);
+            const float axisCoefficient = float(math.multiply(2.0, dot));
+            const float scalarCoefficient = float(math.add(math.multiply(math.multiply(2.0, q[3]), q[3]), -1.0));
+            const float crossCoefficient = float(math.multiply(conjugate ? -2.0 : 2.0, q[3]));
             osg::Vec3f result;
             for (unsigned axis = 0; axis < 3; ++axis)
             {
@@ -692,8 +696,10 @@ namespace NifBullet
     }
 
     RagdollNativeTargetPose ragdollNativeSceneTargetFromBodyPose(
-        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body)
+        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body,
+        Nif::NativeTransformPrecision precision)
     {
+        require(Nif::Detail::NativeTransformMath(precision).valid(), "invalid native scene arithmetic precision");
         validateNativeOffsetRotation(bodyPose.mRotation);
         for (unsigned axis = 0; axis < 3; ++axis)
             require(std::isfinite(bodyPose.mPosition[axis]), "nonfinite native body origin");
@@ -724,7 +730,7 @@ namespace NifBullet
         result.mRotation[3] = productYW + productXZ;
         for (const float value : result.mRotation)
             require(std::isfinite(value), "nonfinite bodyT reverse quaternion");
-        const auto offset = nativeBodyTOffset(result.mRotation, body.mTranslation);
+        const auto offset = nativeBodyTOffset(result.mRotation, body.mTranslation, false, precision);
         for (unsigned axis = 0; axis < 3; ++axis)
         {
             result.mPosition[axis] = bodyPose.mPosition[axis] - offset[axis];
@@ -770,8 +776,11 @@ namespace NifBullet
 
     namespace
     {
-        osg::Matrixf nativeSceneMatrix(const RagdollNativeTargetPose& pose, bool mixed)
+        osg::Matrixf nativeSceneMatrix(const RagdollNativeTargetPose& pose, bool mixed,
+            Nif::NativeTransformPrecision precision)
         {
+            const Nif::Detail::NativeTransformMath math(precision);
+            require(math.valid(), "invalid native scene arithmetic precision");
             double norm = 0;
             for (const auto value : pose.mRotation)
             {
@@ -780,48 +789,49 @@ namespace NifBullet
             }
             require(std::abs(norm - 1.) <= 1e-4, "nonunit native scene quaternion");
             const auto position = ragdollNativeToWorldPosition(
-                osg::Vec3f(pose.mPosition[0], pose.mPosition[1], pose.mPosition[2]));
+                osg::Vec3f(pose.mPosition[0], pose.mPosition[1], pose.mPosition[2]), precision);
             const auto& q = pose.mRotation;
             // Original47C600 stores all nine products. Original8B1DD0 keeps
             // WY and WZ at x87 precision until the final matrix stores. Both
             // subtract the summed diagonal products, without renormalizing.
-            const float tx = float(double(q[0]) * 2.);
-            const float ty = float(double(q[1]) * 2.);
-            const float tz = float(double(q[2]) * 2.);
-            const float wx = float(double(q[3]) * double(tx));
-            const double wy = mixed ? double(q[3]) * double(ty) : float(double(q[3]) * double(ty));
-            const double wz = mixed ? double(q[3]) * double(tz) : float(double(q[3]) * double(tz));
-            const float xx = float(double(q[0]) * double(tx));
-            const float xy = float(double(q[0]) * double(ty));
-            const float xz = float(double(q[0]) * double(tz));
-            const float yy = float(double(q[1]) * double(ty));
-            const float yz = float(double(q[1]) * double(tz));
-            const float zz = float(double(q[2]) * double(tz));
+            const float tx = float(math.multiply(q[0], 2.));
+            const float ty = float(math.multiply(q[1], 2.));
+            const float tz = float(math.multiply(q[2], 2.));
+            const float wx = float(math.multiply(q[3], tx));
+            const double wy = mixed ? math.multiply(q[3], ty) : float(math.multiply(q[3], ty));
+            const double wz = mixed ? math.multiply(q[3], tz) : float(math.multiply(q[3], tz));
+            const float xx = float(math.multiply(q[0], tx));
+            const float xy = float(math.multiply(q[0], ty));
+            const float xz = float(math.multiply(q[0], tz));
+            const float yy = float(math.multiply(q[1], ty));
+            const float yz = float(math.multiply(q[1], tz));
+            const float zz = float(math.multiply(q[2], tz));
             // OSG row vectors transpose the native NiMatrix3 column convention.
             osg::Matrixf result;
-            result(0, 0) = float(1. - (double(yy) + double(zz)));
-            result(0, 1) = float(double(xy) + double(wz));
-            result(0, 2) = float(double(xz) - double(wy));
-            result(1, 0) = float(double(xy) - double(wz));
-            result(1, 1) = float(1. - (double(xx) + double(zz)));
-            result(1, 2) = float(double(yz) + double(wx));
-            result(2, 0) = float(double(xz) + double(wy));
-            result(2, 1) = float(double(yz) - double(wx));
-            result(2, 2) = float(1. - (double(xx) + double(yy)));
+            result(0, 0) = float(math.add(1., -math.add(yy, zz)));
+            result(0, 1) = float(math.add(xy, wz));
+            result(0, 2) = float(math.add(xz, -wy));
+            result(1, 0) = float(math.add(xy, -wz));
+            result(1, 1) = float(math.add(1., -math.add(xx, zz)));
+            result(1, 2) = float(math.add(yz, wx));
+            result(2, 0) = float(math.add(xz, wy));
+            result(2, 1) = float(math.add(yz, -wx));
+            result(2, 2) = float(math.add(1., -math.add(xx, yy)));
             result.setTrans(position);
             return result;
         }
 
     }
 
-    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose)
+    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose,
+        Nif::NativeTransformPrecision precision)
     {
-        return nativeSceneMatrix(pose, false);
+        return nativeSceneMatrix(pose, false, precision);
     }
 
     osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose)
     {
-        return nativeSceneMatrix(pose, true);
+        return nativeSceneMatrix(pose, true, Nif::NativeTransformPrecision::Double);
     }
 
     RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,

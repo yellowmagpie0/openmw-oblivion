@@ -14836,3 +14836,31 @@ private save preservation, clean original UI exit and full normal/sanitizer chec
 Existing actor/drop/physical-target arithmetic callers still need context-specific
 precision review and selective migration. Live loose-node/controller integration
 and the complete M15S4 gameplay acceptance matrix remain open.
+
+
+### S4 live ordinary physical-to-scene conversion
+
+The [physical-scene verification](M15-PHYSICAL-SCENE-LIVE-PRECISION-VERIFICATION.json)
+expands the previous live 007F precision finding through complete original bodyT
+reverse getters, 47C600 matrix conversion and native world-length return. Eight
+physical rotations, two local offsets/quaternions, near-zero origins, four child
+topologies and three x87 control words produce 768 original contexts. The older
+C++ binary fails 120 007F cases; larger origins in the initial 192-case probe hid
+native bodyT position differences and exposed only 16 matrix-diagonal failures.
+
+Explicit Single/Double precision now controls x87 coefficients/intermediates;
+SSE float reductions keep their operation order. The actual loose-root scheduler
+selects Single. Public defaults remain Double pending other-context migration.
+Both final production builds match all 768 contexts across 19 float lanes exactly;
+027F/037F outputs coincide for this corpus without implying general 64-bit support.
+Three component cases preserve original expectations; worker 0/1/2 scheduler cases
+check original matrix bits through root-pose/frame APIs and preserve physics.
+Full normal/ASan checks pass 2,728 components and 1,575 engine tests each. Prior 037F
+node-composition diagnostics and full runtime/gameplay gates remain open.
+
+A separate 768-frame instrumented-controller supplier probe establishes original
+47C930/controller-before-projection-before-child ordering. 672 later-frame target
+controller entries see their previous cached world despite updated parent state;
+all 768 leaf entries see the parent's current post-projection cache. This is a
+native scheduling contract for the next integration, not original controller
+interpolation/timing proof or an implemented OSG per-node dispatcher.

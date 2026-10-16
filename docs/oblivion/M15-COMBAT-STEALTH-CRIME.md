@@ -6,6 +6,30 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 ordinary physical scene precision — 2026-10-16
+
+Loose-root capture now explicitly selects the observed live single-precision
+mode for reverse bodyT origin projection and ordinary quaternion-to-matrix
+conversion. The selected mode applies to x87 coefficients and intermediate sums;
+SSE operations retain their float ordering. Other callers keep their previous
+Double default pending individual runtime-context review.
+
+Both builds match **768 original physical-to-scene route cases exactly** across
+native origins, quaternions and desired world matrices. The preceding binary
+fails 120 live-mode cases. Near-zero origins expose bodyT position errors that
+larger origins hid in the initial probe.
+
+Normal and ASan/UBSan each pass **2,728 component tests / 261 suites and 1,575
+engine tests / 122 suites**. Three new component cases retain native expectations;
+a scheduler regression at worker counts 0/1/2 checks native rotation bits through
+the actual root-pose/frame APIs and preserves physical state.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#ordinary-physical-scene-precision-in-loose-root-capture)
+and [verification record](M15-PHYSICAL-SCENE-LIVE-PRECISION-VERIFICATION.json)
+record the retained failures and limits. These supplied-pose/engine checks do
+not close per-node World/controller dispatch, save/recreation, production combat
+or the complete normal-input acceptance matrix. S4 remains incomplete.
+
 ## S4 settled-node frames and live precision — 2026-10-16
 
 Settled-node dispatch now composes controller locals with the parent's cached

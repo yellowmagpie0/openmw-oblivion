@@ -1812,6 +1812,43 @@ namespace
 
 namespace
 {
+    TEST_P(RagdollSchedulerTest, RegisteredRootUsesLiveSinglePrecisionForPhysicalRotationProjection)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mReferenceRoot = 0;
+        mGraph.mBodies[0].mNodeRecord = 0;
+        mGraph.mBodies[0].mBoneBind = osg::Matrixf::identity();
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        auto state = scheduler.captureLooseObject(mPtr);
+        const auto velocities = scheduler.captureLooseObjectPackedVelocities(mPtr);
+        // Original ordinary physical-to-scene case100,007F. These input bits
+        // survive Bullet's basis/quaternion roundtrip, checked below.
+        const std::array<std::uint32_t, 4> input{0x3e8b5948u, 0xbed105ecu, 0x3f0b5948u, 0x3f2e2f9au};
+        const std::array<std::uint32_t, 9> expected{0x3d97b420u, 0xbf7684beu, 0xbe84bda1u,
+            0x3f04bda2u, 0x3e84bd9eu, 0xbf5097b5u, 0x3f5a12f8u, 0xbd97b428u, 0x3f04bda1u};
+        state[0].mPose.setRotation(btQuaternion(std::bit_cast<float>(input[0]), std::bit_cast<float>(input[1]),
+            std::bit_cast<float>(input[2]), std::bit_cast<float>(input[3])));
+        scheduler.restoreLooseObject(mPtr, state, velocities);
+        const auto restored = scheduler.captureLooseObject(mPtr);
+        const auto quaternion = restored[0].mPose.getRotation();
+        for (unsigned i = 0; i < 4; ++i)
+            ASSERT_EQ(std::bit_cast<std::uint32_t>(float(quaternion[i])), input[i]);
+        const auto projected = scheduler.captureLooseObjectRootPose(mPtr);
+        const auto frame = scheduler.captureLooseObjectRootFrame(mPtr, osg::Matrixf::identity());
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+            {
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(projected(column, row)), expected[row * 3 + column]);
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(frame.mWorld.mRotation.mValues[row][column]),
+                    expected[row * 3 + column]);
+            }
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, restored[0].mPose);
+        EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, velocities[0].mVelocities);
+        scheduler.removeLooseObject(mPtr);
+    }
+
     TEST_P(RagdollSchedulerTest, RegisteredRootFramePreparationRetainsLocalUntilCommitAndForcedTransformsResetIt)
     {
         NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);

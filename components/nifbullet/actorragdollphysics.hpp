@@ -8,6 +8,7 @@
 #include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/physicalvelocitycontroller.hpp>
 #include <components/esm4/physicalsceneworld.hpp>
+#include <components/nif/nativetransform.hpp>
 
 #include <functional>
 #include <memory>
@@ -52,7 +53,8 @@ namespace NifBullet
     // these separately stored constants. The reverse is not computed as 1/k.
     inline constexpr float RagdollNativeLengthScale = 6.999040126800537f;
     osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position);
-    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position);
+    osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
 
     // Original88C740 relocation of a selected child collision to the REFR
     // root. The visible child local pose stays authored. Plain wrappers become
@@ -83,7 +85,8 @@ namespace NifBullet
     // Ordinary bodies retain their native origin/quaternion unchanged.
     // Matrix/world-length publication remains a separate operation.
     RagdollNativeTargetPose ragdollNativeSceneTargetFromBodyPose(
-        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body);
+        const RagdollNativeTargetPose& bodyPose, const RagdollBodyDefinition& body,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     // Native8B9050 COM getter uses the physical motion basis, independently
     // of reverse scene-origin projection. All positions use native lengths.
     osg::Vec3f ragdollNativeSceneCenterOfMass(const osg::Vec3f& bodyCenter,
@@ -95,7 +98,10 @@ namespace NifBullet
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose);
     // Native motion origin/XYZW quaternion returned through bhk scene adapters.
     // Output uses world lengths; input quaternion must already be unit length.
-    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose);
+    // Single selects the observed live007F x87 coefficient/diagonal rounding;
+    // SSE reductions retain their binary32 operations in either mode.
+    osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     // Original mixed renderer uses8B1DD0 instead of ordinary47C600 stores.
     osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose);
 

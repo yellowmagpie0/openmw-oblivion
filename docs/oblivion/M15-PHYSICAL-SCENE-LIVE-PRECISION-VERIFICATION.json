@@ -1,0 +1,237 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "ordinary reverse bodyT/world-matrix precision integrated into loose-root capture; live per-node World/controller dispatch and full M15S4 incomplete",
+  "parent_commit": "c5a741233bc3d36987b84bc8be68befad3c25440",
+  "source_fingerprint": "fe63836a333298fdea78a3a7c963700d2172154e0cbf9f9151fe79f13fd1ea5f",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "implementation_digests": {
+    "components/nifbullet/actorragdollphysics.cpp": "14545116a159a4405ae5025f4e85d8d4d29a1f77c764ff287bf0c31df8af56aa",
+    "components/nifbullet/actorragdollphysics.hpp": "a95c59f0aeeb5085b6622a6979c3ab8b7a92f9fabadd848e183ee2d16ad93999",
+    "apps/openmw/mwphysics/mtphysics.cpp": "09b8fa813a2ab2c8bd3db55e28967928252e6cea748e3d6dcb8786d5da031195",
+    "apps/components_tests/nifloader/testactorragdollphysics.cpp": "e84a165b69329a2f1745bded0907c28d77aab92c5016101fdb6787d3393d693e",
+    "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "afaec34472d41bcd2d98d686a4cb26343bf1b41165be35868706a57a1c27225c"
+  },
+  "dependency_hashes": {
+    "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+    "components/nif/nativetransform.hpp": "b182212813b0fa0a7d454375dc476851bb45c49b148c46bebeb6451fc7ff5361",
+    "components/nif/nativetransformmath.hpp": "f830ead8f0d32fc9353ba5f8f65ec17597c71488df594a08ee9807a353a482c8"
+  },
+  "behavior": [
+    "Explicit Single/Double selection for reverse bodyT projection, native-to-world position stores and ordinary quaternion-to-matrix construction. Public defaults retain Double; loose-root capture explicitly selects observed live Single.",
+    "Only original x87 coefficients and matrix intermediates use the selected significand precision. Existing SSE reductions retain their binary32 operation order; quaternions are not renormalized.",
+    "Mode validation rejects unknown precision at all three public boundaries. Position stores use the existing finite overflow-midpoint guard.",
+    "Three component tests preserve independent original near-zero/noncommuting bodyT origin/quaternion/world-matrix examples, diagonal stores and invalid precision. Scheduler test at worker counts0/1/2 verifies original rotation bits through actual root-pose/frame APIs, checks Bullet readback input bits and preserves physical pose/velocities."
+  ],
+  "live_precision_basis": {
+    "path": "original-node-precision-01/verification.json",
+    "report_sha256": "7d6306c28144b6b0c025a95f5a48cea3bd1584dc64fbc8aefce379044997b2ef",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "samples": 192,
+    "observed_control_word": 127,
+    "scope": "Previous isolated original Proton run observes007F at707370,7100A0,8978D0; no additional original-game process launched in this checkpoint."
+  },
+  "original_route_probe": {
+    "path": "physical-scene-live-precision-oracle-02/verification.json",
+    "report_sha256": "1654e25eee25a6be8feb115048a3d455818051297befb455579d0367f7e548c9",
+    "passed": true,
+    "contexts": 768,
+    "sequences": 96,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "7481df2911e2093d4b7f31722fa7a5fc34c8a8f6c6fd209fba237004d6c98de3",
+    "cases_sha256": "af5df3ad03ecdbf521c059b2566294b34e7a166f4afbeeef5080b32704ecb346",
+    "scope": "Full original nonactor registration and physical-to-scene conversion over four unselected child topologies, plain/bodyT, x87007F/027F/037F and active flags1. Two local offsets, two local quaternions, near-zero native origins and eight distinct supplied physical quaternions include noncommuting arbitrary axes and180-degree cases. Capture actual native origin/quaternion and world desired matrix before node writeback; no conversion stubs. Actual first707370 consumes pending0x40 leaving authored flags. Eight subsequent single-traversal requests supply chosen physical positions/quaternion and, at frame4, new parent/root author transforms; execute full native dispatch/inverse/writeback and hierarchy composition. Inactive skips body read/helper; active retains or updates child local according to8 and thresholds cached world. Root local/entire REFR/physical storage unchanged within each traversal, no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping, full game-frame/controller dispatch, renderer integration or gameplay acceptance.",
+    "scope_clarification": "All768 contexts use active flags1. The inherited generic inactive sentence is not an inactive-case claim; inactive dispatch is covered by the separate previous node-frame corpus. Physical-to-scene conversion callees execute; native registration retains declared heap/Windows and null-World boundaries."
+  },
+  "baseline": {
+    "path": "physical-scene-live-precision-compare-03/normal-baseline-verification.json",
+    "report_sha256": "456ba03195b1a729ded5b68a09cc53b7141e30aa3670940c59068079fe2b20de",
+    "passed": false,
+    "cases": 768,
+    "mismatching_cases": 120,
+    "binary_sha256": "28cbe6ca20a7c04fa6193a1e55f025bef89ec3aca092ad3be6a6795a3163852c",
+    "corpus_sha256": "af5df3ad03ecdbf521c059b2566294b34e7a166f4afbeeef5080b32704ecb346",
+    "input_sha256": "f3947a31de3c85729f36c0e99fa3f58888920e823f4c5b53ea34087222b92f09",
+    "source_hashes": {
+      "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+      "components/nifbullet/actorragdollphysics.hpp": "894e321f39a8a66f0894dd61ae8520951b5cff980ecae48ca31de38a80ac6092"
+    },
+    "scope": "Exact bits for3 reverse native positions,4 quaternions and12 desired world rotation/position fields against complete original physical-to-scene route with supplied physical poses; no Bullet dynamics or live World/controller acceptance."
+  },
+  "comparisons": {
+    "normal": {
+      "path": "physical-scene-live-precision-compare-04/normal-verification.json",
+      "report_sha256": "b08f0a0b5cf4f97487a2ebdbfaf1cebcc2bc58f3236647d710180c069d93090d",
+      "passed": true,
+      "cases": 768,
+      "mismatching_cases": 0,
+      "binary_sha256": "eacef358397869bb2027184e14e45afa7aeaa38692c461d6d2958394c5ae8c99",
+      "corpus_sha256": "af5df3ad03ecdbf521c059b2566294b34e7a166f4afbeeef5080b32704ecb346",
+      "input_sha256": "f3947a31de3c85729f36c0e99fa3f58888920e823f4c5b53ea34087222b92f09",
+      "source_hashes": {
+        "components/nifbullet/actorragdollphysics.cpp": "14545116a159a4405ae5025f4e85d8d4d29a1f77c764ff287bf0c31df8af56aa",
+        "components/nifbullet/actorragdollphysics.hpp": "a95c59f0aeeb5085b6622a6979c3ab8b7a92f9fabadd848e183ee2d16ad93999"
+      },
+      "scope": "Exact bits for3 reverse native positions,4 quaternions and12 desired world rotation/position fields against complete original physical-to-scene route with supplied physical poses; no Bullet dynamics or live World/controller acceptance."
+    },
+    "sanitized": {
+      "path": "physical-scene-live-precision-compare-04/sanitized-verification.json",
+      "report_sha256": "e73a6b46d2c39fc92a7d2e7b03abe99583d547a1ec7675b9537d7ade232c30b2",
+      "passed": true,
+      "cases": 768,
+      "mismatching_cases": 0,
+      "binary_sha256": "45d6f632d7d0792c5a9c8f213db6a524487bcfd18b0b849fa6a0973cdbf8b6ca",
+      "corpus_sha256": "af5df3ad03ecdbf521c059b2566294b34e7a166f4afbeeef5080b32704ecb346",
+      "input_sha256": "f3947a31de3c85729f36c0e99fa3f58888920e823f4c5b53ea34087222b92f09",
+      "source_hashes": {
+        "components/nifbullet/actorragdollphysics.cpp": "14545116a159a4405ae5025f4e85d8d4d29a1f77c764ff287bf0c31df8af56aa",
+        "components/nifbullet/actorragdollphysics.hpp": "a95c59f0aeeb5085b6622a6979c3ab8b7a92f9fabadd848e183ee2d16ad93999"
+      },
+      "scope": "Exact bits for3 reverse native positions,4 quaternions and12 desired world rotation/position fields against complete original physical-to-scene route with supplied physical poses; no Bullet dynamics or live World/controller acceptance."
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "physical-scene-live-precision-normal-01/verification.json",
+      "report_sha256": "8e2cd2548881a56932bd00da985219224e0dcde9e26e67b23f9de83b4226373f",
+      "passed": true,
+      "source_before": {
+        "head": "c5a741233bc3d36987b84bc8be68befad3c25440",
+        "source_fingerprint": "fe63836a333298fdea78a3a7c963700d2172154e0cbf9f9151fe79f13fd1ea5f"
+      },
+      "source_after": {
+        "head": "c5a741233bc3d36987b84bc8be68befad3c25440",
+        "source_fingerprint": "fe63836a333298fdea78a3a7c963700d2172154e0cbf9f9151fe79f13fd1ea5f"
+      },
+      "results": {
+        "components": {
+          "executed": 2728,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3ab196699518b10262067544d4c795a24471e0b72db7afed2e331b630e6b2e3a",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "ac54585f53097b7c82760800d9eda77254b120ab65da21f78e4b3e27415813e3",
+          "inventory_sha256": "9bb1302db2e4cc606f67f4415c3f7b6e5352970a3d5c43947864ace93c541f25",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1575,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "03d5b8d361d9e8ca2f3f193f19013f88f6b9c203c16f0ad401a12e7740dc9934",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "6e80dbf6724170d32e4deab01e1308bb99ec6d56e930c31a436df83033d70359",
+          "inventory_sha256": "e17192ffb6c07b9ce9b15c2756af05782087103ff896d6283e03ba66f09a0bc3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 261,
+        "engine": 122
+      }
+    },
+    "sanitized": {
+      "path": "physical-scene-live-precision-sanitized-01/verification.json",
+      "report_sha256": "c25f7d5d9ca1bd20c296744bae256e6c761ef703a9950380881413f08082d91d",
+      "passed": true,
+      "source_before": {
+        "head": "c5a741233bc3d36987b84bc8be68befad3c25440",
+        "source_fingerprint": "fe63836a333298fdea78a3a7c963700d2172154e0cbf9f9151fe79f13fd1ea5f"
+      },
+      "source_after": {
+        "head": "c5a741233bc3d36987b84bc8be68befad3c25440",
+        "source_fingerprint": "fe63836a333298fdea78a3a7c963700d2172154e0cbf9f9151fe79f13fd1ea5f"
+      },
+      "results": {
+        "components": {
+          "executed": 2728,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1c66b7e70c4aa03d4208ac0219c9fc5c05d80fbff2c491141b46b2c9adf0a055",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "2370a5fab1ae1993d549711bcd9313b6fd49ac288e73a7a0670976ab5b31276d",
+          "inventory_sha256": "01a11f10e1cc8e6f76f2034a50f595df60beff38a5bdd483acedf5345db4d6a6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1575,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "655a27829c37f5289e981ad728338a4f15145949b0e9c9b82d7263c4583067c1",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "c30ded4236d044fa1d2d9c63f0222e6c47865ffc13a1d2ec2d606eeb60539f6f",
+          "inventory_sha256": "e17192ffb6c07b9ce9b15c2756af05782087103ff896d6283e03ba66f09a0bc3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 261,
+        "engine": 122
+      }
+    }
+  },
+  "retained_failures": [
+    "physical-scene-live-precision-compare-01: baseline probe compile failed because osg::Vec3f does not provide range-for iterators. Fresh compare02 uses indexed access and reproduces16 diagonal mismatches over192 initial original frames.",
+    "physical-scene-live-precision-oracle-02 expands offsets/quaternions and uses near-zero origins. Compare03 preceding binary mismatches120/768 cases, all007F, including native reverse positions hidden by earlier larger origins. These are retained failures, not tolerated matches."
+  ],
+  "comparison_scope": "Exact19 binary32 lanes:3 native scene positions,4 scene quaternion components and12 desired world rotation/position entries. Single is selected for native007F; Double is selected for027F/037F, whose outputs coincide for this corpus. This does not implement a general64-bit x87 mode; previous three037F node-composition diagnostic differences remain open.",
+  "sanitizer_scope": "ASan/UBSan halt on error; leak checks disabled.",
+  "remaining_gates": [
+    "Real World/renderer per-node publication, controller/first pending synchronization ordering, root reference alias initialization, safe owner lifetime and reference callbacks remain open. Current inverse-bind child adapter is unchanged.",
+    "Other actor/blend, forward scene-to-physics, relocation/COM and other live precision contexts need independent audit and selective migration. Body input here is supplied; no native Havok stepping or Bullet/native dynamics equivalence is established.",
+    "Actual World/script continuation, all admission modes, loose physical save/recreation, production break/mastery/drop/pickup/sound/power/creature/reactions/effects and full normal-input/controller/FPS/windup/block/recovery restart acceptance. Full M15S4 active and incomplete."
+  ],
+  "next_controller_order_probe": {
+    "path": "node-controller-order-oracle-01/verification.json",
+    "report_sha256": "11cc31e780be37070c94e6a13c527e4fa76c23a625872d47407d2bc548c7560a",
+    "passed": true,
+    "contexts": 768,
+    "sequences": 96,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "84af5005f55a77bb48113c6ca4403b3345019f62120265fbffbe50cf18ff9e1c",
+    "cases_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+    "scope": "Full original nonactor reference prefix/World registration over four unselected deep/null-first child topologies, plain/bodyT, x87 control words007F/027F/037F and authored collision flags0/1/8/9. Actual first707370 consumes pending0x40 leaving authored flags. Eight subsequent single-traversal requests supply chosen physical positions/quaternion and, at frame4, new parent/root author transforms; execute full native dispatch/inverse/writeback and hierarchy composition. Inactive skips body read/helper; active retains or updates child local according to8 and thresholds cached world. Instrumented root/child/leaf controller virtual Update suppliers write own local translation. Original47C930 dispatcher and node hierarchy/collision math execute; root/child/leaf order and leaf observation of current child post-writeback cachedworld are verified. Controller interpolation/timing/math is replaced, not established. Root local after its controller, entireREFR/physical storage unchanged within traversal; no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping, full game-frame/controller dispatch, renderer integration or gameplay acceptance."
+  },
+  "next_controller_cache_order": {
+    "path": "node-controller-order-oracle-01/cache-order-verification.json",
+    "report_sha256": "622842589f29ec75e64741891b25fe88b9a68646c27fd64843f07024d019ca29",
+    "passed": true,
+    "contexts": 768,
+    "own_previous_world_checks": 672,
+    "parent_current_world_checks": 768,
+    "leaf_post_projection_world_checks": 768,
+    "cases_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+    "scope": "Post-check of captured original native controller entry observations. Target own controller sees previous cached global despite parent already updated; leaf controller sees current target post-projection cache. This matters for OSG projection rebasing during controller traversal. Controller virtual Update bodies are explicit suppliers, not original interpolation/timing/math."
+  }
+}

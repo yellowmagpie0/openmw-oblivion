@@ -535,11 +535,13 @@ namespace MWPhysics
                 NifBullet::ragdollWorldToNativePosition(
                     osg::Vec3f(float(origin.x()), float(origin.y()), float(origin.z()))),
                 {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
-            const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, body);
+            const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(
+                physical, body, Nif::NativeTransformPrecision::Single);
             osg::Matrixf inverse;
             if (!inverse.invert(bind))
                 throw std::invalid_argument("loose native model bind is not invertible");
-            const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(target);
+            const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(
+                target, Nif::NativeTransformPrecision::Single);
             (void)NifBullet::ragdollNativeSceneTargetPose(root);
             return root;
         }

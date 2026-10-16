@@ -3110,3 +3110,89 @@ World/script continuation, full admission modes, loose retention/save/recreation
 production break/mastery/drop/pickup/sound/power/creature/reactions/effects and the
 entire normal-input/controller/FPS/restart S4 matrix remain required. Full S4 is
 active and incomplete.
+
+## Ordinary physical scene precision in loose-root capture
+
+Reverse bodyT origin projection, ordinary native quaternion-to-matrix conversion
+and native-to-world position stores now accept explicit Single/Double precision.
+LooseObject::rootPose selects Single in the actual scheduler path, matching the
+preceding checkpoint's observed live FPCW007F context. Public API defaults remain
+Double; other actor/blend/forward/relocation/COM contexts still need independent
+review and selective migration. No thread's floating-point control word changes.
+
+The bodyT vector rotation keeps its original SSE float products, reductions and
+cross terms. Only its x87 coefficient construction uses the selected intermediate
+precision. Ordinary matrix construction similarly retains float product stores
+but rounds each subsequent x87 instruction before final matrix stores. Position
+conversion uses the existing finite overflow-midpoint guard. Unknown precision
+values reject at each public boundary, including an ordinary body with unused
+bodyT metadata. Quaternions are not renormalized by these adapters.
+
+The first expanded original route probe supplies eight physical quaternions,
+including arbitrary noncommuting axes and 180-degree rotations. It captures
+actual native reverse origin/quaternion outputs and the desired world matrix
+before node writeback. The preceding C++ binary mismatches 16/192 initial cases,
+all in matrix diagonal lanes. A stronger second probe varies two local offsets,
+two local quaternions and near-zero physical origins: the same preceding binary
+mismatches 120/768 cases, all FPCW007F, including native bodyT origin fields that
+rounding at larger origins had hidden. No tolerance is substituted for exact bits.
+
+Both final production comparisons match all 768 cases across 19 binary32 lanes:
+three native scene positions, four quaternion components and 12 desired world
+rotation/position entries. Single is selected for 007F and Double for 027F/037F;
+the latter outputs coincide in this corpus. This is not a general 64-bit x87
+implementation. The prior three 037F node-composition diagnostic differences
+remain open.
+
+Three new component cases retain native near-zero/noncommuting bodyT examples,
+ordinary diagonal/position stores and invalid precision rejection. The real
+scheduler regression runs with worker counts 0/1/2, restores a supplied physical
+quaternion, verifies its Bullet readback bits and checks original matrix bits
+through captureLooseObjectRootPose and captureLooseObjectRootFrame. Queries
+preserve the physical pose and packed velocities. This fixture tests scheduler
+pose queries, not a normal-input game action or rendered gameplay result.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `physical-scene-live-precision-oracle-01`: 192 initial original contexts.
+- `physical-scene-live-precision-oracle-02`: 768 contexts / 96 sequences, four
+  unselected child topologies, plain/bodyT, active flags 1, three x87 controls,
+  supplied physical positions/rotations and parent-transform changes. Actual
+  registration, pending first sync and complete physical-to-scene math execute.
+  Conversion functions are observed, not replaced. Stack/callee saves/control
+  word and physical/root-local/reference preservation are checked. Declared heap/
+  Windows/TLS/critical-section suppliers, null native World and disabled property-
+  copy/special gates remain boundaries. The inherited inactive sentence in the
+  raw scope text is not an inactive-case claim; all these cases use active 1.
+- `physical-scene-live-precision-compare-01`: retained baseline harness build
+  failure from range-for over osg::Vec3f. Fresh02 uses indexed access and records
+  the initial 16 mismatches.03 records the stronger 120-case baseline failure.
+- `physical-scene-live-precision-compare-04`: both final builds match 768/768
+  cases exactly, retaining hashes of the unchanged original corpus and inputs.
+- `physical-scene-live-precision-normal-01` and
+  `physical-scene-live-precision-sanitized-01`: fresh unfiltered 2,728 component
+  tests / 261 suites and 1,575 engine tests / 122 suites each, exact inventory/XML
+  agreement and no failures/skips. ASan/UBSan halt on error; leak checks disabled.
+  Existing unrelated engine-test compiler warnings remain.
+
+The [editable verification](M15-PHYSICAL-SCENE-LIVE-PRECISION-VERIFICATION.json)
+pins the tested source identity, implementation hashes, reports and prior live
+precision basis. No new original-game process is launched in this checkpoint;
+normal-input/register observations are the preceding 192-sample original run.
+Current native route inputs are supplied physical poses, not Havok dynamics.
+
+A next-step independent `node-controller-order-oracle-01` also passes 768 frames
+with instrumented controller virtual Update suppliers on root/target/leaf. Actual
+47C930 dispatch, composition, collision and child traversal execute. All 768 leaf
+controller entries observe the target's current post-projection cache; 672 later
+frame target-controller entries retain their previous cached global even though
+the parent has already updated. The future OSG integration must preserve both
+observations; ordinary lazy world recomposition alone is insufficient. These
+suppliers do not establish real interpolation, controller clocks or Roll math.
+
+Live per-node World/renderer dispatch, controller/first-sync ordering, root-reference
+alias initialization, safe owner lifetime and reference callbacks remain open;
+the inverse-bind child adapter is unchanged. Actual World/script continuation,
+complete admission modes, loose physical save/recreation, production break/mastery/
+drop/pickup/sound/power/creature/reactions/effects and the entire normal-input/
+controller/FPS/restart S4 matrix remain required. Full S4 is active and incomplete.
