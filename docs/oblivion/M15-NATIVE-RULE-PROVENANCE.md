@@ -14889,3 +14889,28 @@ root+60. Child, reference/base input bytes, stack,EBX,EBP and x87 control stay
 unchanged. The skipped middle of GenerateNiNode,4D6F20 branch, node virtual+50,
 registration and first synchronization remain explicit boundaries. This is a
 next-step initialization basis, not a new original-game or full attachment run.
+
+
+### Physical target world source with zero-origin native fixtures
+
+`M15-LOOSE-SCENE-TARGET-VERIFICATION.json` pins the new actual scheduler target
+reader against `S4/physical-target-zero-origin-oracle-01`. The latter executes
+768 original registration/physical-to-scene contexts with supplied zero origins,
+eight physical quaternions, plain/bodyT, four unselected topologies, two local
+offsets/two local quaternions and x87007F/027F/037F. Executable SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+corpus SHA256 is`c3c09a9849d4dc58212709114c36fa70afb02559b575968b46b561f112cb3010`.
+No conversion function is replaced. Heap/Windows/TLS/critical-section services,
+null native World and disabled special/property-copy gates retain their declared
+boundaries. This supplies conversion expectations, not native Havok dynamics,
+controller clocks or a normal-input original-game course.
+
+Both builds replay the256 original live007F contexts through the actual admitted
+PhysicsTaskScheduler target API at worker counts0/1/2, matching9216 native R/T
+fields exactly per build. Bullet float quaternion readback must independently
+match original native input bits. API rigidscale1 and state preservation are
+separate checks; the native temporary scale lane is unused/uninitialized and
+excluded. No engine hierarchy traversal is claimed by the corpus topology names.
+Other controls are not replayed against the fixed liveSingle API. The unchanged
+world-to-native position conversion and nonzero input/unit boundaries remain
+separate from these zero-origin expectations.

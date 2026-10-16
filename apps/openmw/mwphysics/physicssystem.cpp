@@ -898,6 +898,11 @@ namespace MWPhysics
     std::shared_ptr<const MWRender::LooseObjectSceneBinding>
     PhysicsSystem::captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObjectSceneBinding(ptr); }
+    LooseObjectSceneTarget PhysicsSystem::captureLooseObjectSceneTarget(const MWWorld::Ptr& ptr)
+    { return mTaskScheduler->captureLooseObjectSceneTarget(ptr); }
+    std::optional<Nif::NiTransform> PhysicsSystem::captureLooseObjectTargetPose(
+        const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target)
+    { return mTaskScheduler->captureLooseObjectTargetPose(ptr, target); }
     std::vector<MWWorld::Ptr> PhysicsSystem::looseObjectOwners() { return mTaskScheduler->looseObjectOwners(); }
     std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureLooseObject(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObject(ptr); }

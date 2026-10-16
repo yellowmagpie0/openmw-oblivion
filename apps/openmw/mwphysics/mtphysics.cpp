@@ -491,6 +491,7 @@ namespace MWPhysics
         const float mReferenceScale;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
+        const std::shared_ptr<const char> mSceneTargetIdentity = std::make_shared<const char>(0);
         bool mHasSceneBinding = false;
         std::weak_ptr<const MWRender::LooseObjectSceneBinding> mSceneBinding;
 
@@ -534,9 +535,10 @@ namespace MWPhysics
             return result;
         }
 
-        osg::Matrixf rootPose(float visibleScale) const
+        Nif::NiTransform targetPose() const
         {
-            const auto bind = sceneBind(visibleScale);
+            if (mLengthScale != NifBullet::RagdollNativeLengthScale)
+                throw std::invalid_argument("loose native scene target requires the native length scale");
             const auto& body = mDefinition.mBodies.front();
             const auto pose = mPhysics.capture().front().mPose;
             const auto& origin = pose.getOrigin();
@@ -547,11 +549,17 @@ namespace MWPhysics
                 {float(rotation.x()), float(rotation.y()), float(rotation.z()), float(rotation.w())}};
             const auto target = NifBullet::ragdollNativeSceneTargetFromBodyPose(
                 physical, body, Nif::NativeTransformPrecision::Single);
+            return rootTransform(NifBullet::ragdollBoneWorldFromNativePose(
+                target, Nif::NativeTransformPrecision::Single), 1.f);
+        }
+
+        osg::Matrixf rootPose(float visibleScale) const
+        {
+            const auto bind = sceneBind(visibleScale);
             osg::Matrixf inverse;
             if (!inverse.invert(bind))
                 throw std::invalid_argument("loose native model bind is not invertible");
-            const auto root = inverse * NifBullet::ragdollBoneWorldFromNativePose(
-                target, Nif::NativeTransformPrecision::Single);
+            const auto root = inverse * targetPose().toMatrix();
             (void)NifBullet::ragdollNativeSceneTargetPose(root);
             return root;
         }
@@ -675,6 +683,46 @@ namespace MWPhysics
         if (!object.validSceneBinding(true))
             throw std::invalid_argument("loose physics scene binding is retired or replaced");
         return object.mSceneBinding.lock();
+    }
+
+    LooseObjectSceneTarget PhysicsTaskScheduler::captureLooseObjectSceneTarget(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end())
+            throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (!object.validSceneBinding(true))
+            throw std::invalid_argument("loose physics scene binding is retired or replaced");
+        const auto& body = object.mDefinition.mBodies.front();
+        LooseObjectSceneTarget target;
+        target.mBodyRecord = body.mRecord;
+        target.mNodeRecord = body.mNodeRecord;
+        target.mReferenceRoot = object.mDefinition.mReferenceRoot;
+        target.mCollisionFlags = body.mCollisionFlags;
+        target.mIdentity = object.mSceneTargetIdentity;
+        return target;
+    }
+
+    std::optional<Nif::NiTransform> PhysicsTaskScheduler::captureLooseObjectTargetPose(
+        const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end())
+            throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        const auto& body = object.mDefinition.mBodies.front();
+        if (target.mIdentity.lock() != object.mSceneTargetIdentity || target.mBodyRecord != body.mRecord
+            || target.mNodeRecord != body.mNodeRecord || target.mReferenceRoot != object.mDefinition.mReferenceRoot
+            || target.mCollisionFlags != body.mCollisionFlags || !object.validSceneBinding(true))
+            throw std::invalid_argument("loose scene target identity changed");
+        if (target.mCollisionFlags & 0x40)
+            throw std::invalid_argument("loose scene target requires first synchronization");
+        if (!(target.mCollisionFlags & 1)) return {};
+        return object.targetPose();
     }
 
     std::vector<MWWorld::Ptr> PhysicsTaskScheduler::looseObjectOwners()

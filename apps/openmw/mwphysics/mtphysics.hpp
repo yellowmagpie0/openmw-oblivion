@@ -140,6 +140,9 @@ namespace MWPhysics
         bool commitLooseObject(PreparedLooseObject& object);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
         std::shared_ptr<const MWRender::LooseObjectSceneBinding> captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr);
+        LooseObjectSceneTarget captureLooseObjectSceneTarget(const MWWorld::Ptr& ptr);
+        std::optional<Nif::NiTransform> captureLooseObjectTargetPose(
+            const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native

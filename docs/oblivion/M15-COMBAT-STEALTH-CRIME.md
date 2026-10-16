@@ -6,6 +6,29 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 admitted physical target world poses — 2026-10-16
+
+Loose physics now exposes the actual target's rigid native scene/world pose
+before inverse-bind adjustment. A weak body identity and exact metadata reject
+stale, replaced or tampered descriptors; owner transfer preserves a valid one.
+Inactive targets skip physical input, pending first-sync flags reject, and active
+conversion requires native length units. The live legacy root reader shares this
+conversion and applies its inverse bind afterward.
+
+Five parameterized patterns add15 cases across worker counts0/1/2. Both full
+normal and ASan/UBSan runs pass **1,595 engine tests / 122 suites**, with exact
+inventories and no failures/skips. Both actual-scheduler replays match **9,216
+native rotation/translation field checks** across256 original live-precision
+zero-origin contexts at each worker count. Leak checks are disabled; unchanged
+component coverage is reused from the preceding checkpoint.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#physical-target-world-source-before-inverse-bind)
+and [verification record](M15-LOOSE-SCENE-TARGET-VERIFICATION.json) separate these
+resource/conversion checks from hierarchy and gameplay acceptance. Native global
+root initialization, first-sync/controller order, live per-node traversal,
+reference callbacks/cell migration, save/recreation, remaining production combat
+branches and normal-input acceptance remain open. S4 is active and incomplete.
+
 ## S4 loose-model identity and physical publication — 2026-10-16
 
 Native loose-item preparation now links the exact private renderer model to its

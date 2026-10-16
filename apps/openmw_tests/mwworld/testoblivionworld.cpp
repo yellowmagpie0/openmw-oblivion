@@ -22410,6 +22410,9 @@ TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkLeasesTheExactPublishedAnima
     ASSERT_FALSE(plan->commit().isEmpty());
     const auto binding = fixture.mPhysics->captureLooseObjectSceneBinding(reference);
     ASSERT_TRUE(binding);
+    const auto sceneTarget = fixture.mPhysics->captureLooseObjectSceneTarget(reference);
+    EXPECT_EQ(sceneTarget.mNodeRecord, carried->mReferenceDefinition->mBodies.front().mNodeRecord);
+    EXPECT_TRUE(fixture.mPhysics->captureLooseObjectTargetPose(reference, sceneTarget));
     EXPECT_TRUE(binding->matches(*carried->mReferenceDefinition));
     EXPECT_TRUE(binding->isValidFor(reference, true));
     const auto lease = binding->lockAnimation(reference);
@@ -22446,6 +22449,7 @@ TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationC
         auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
         const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
         auto binding = fixture.mPhysics->captureLooseObjectSceneBinding(reference); ASSERT_TRUE(binding);
+        const auto sceneTarget = fixture.mPhysics->captureLooseObjectSceneTarget(reference);
         const auto lease = binding->lockAnimation(reference); ASSERT_TRUE(lease);
         const auto checkpoint = lease->getLoosePhysicalPose()->captureLocalPose();
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = reference.getRefData().getBaseNode();
@@ -22465,6 +22469,8 @@ TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationC
         EXPECT_FALSE(binding->isValidFor(reference));
         EXPECT_FALSE(binding->lockAnimation(reference));
         EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+        EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneTarget(reference), std::invalid_argument);
+        EXPECT_THROW(fixture.mPhysics->captureLooseObjectTargetPose(reference, sceneTarget), std::invalid_argument);
         // Restoring the old placement and retaining the local checkpoint cannot
         // resurrect this model registration, even while all objects survive.
         reference.getRefData().setBaseNode(placement);

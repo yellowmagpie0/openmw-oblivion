@@ -1,0 +1,377 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Guarded admitted physical target-world API and live shared conversion implemented; per-node World traversal/root initialization/first sync and full M15S4 incomplete",
+  "parent_commit": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+  "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "implementation_digests": {
+    "apps/openmw/mwphysics/physicssystem.hpp": "fc3b9374b3a21e1f2a04309c02f5b8b399108d12efe27d26bb2ebf5a9bbd933f",
+    "apps/openmw/mwphysics/physicssystem.cpp": "f2273de7794216cb7d9ef3251ffa36e409772f10ef879fb321b7394f9ab12d6b",
+    "apps/openmw/mwphysics/mtphysics.hpp": "1c3a22fcdaa67c34940052b9e5a5eeb49e5911f2b121936fb9a0bee43ab2e48f",
+    "apps/openmw/mwphysics/mtphysics.cpp": "284b6e43ddc6e6f2f918477e9f43b449ace2fc387785b388cb0e9f8bddb3b7c3",
+    "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "1bc0b1ceaaf4a368621afc2eabefb3be43caa7ebab993c9e050947437d1842c2",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "0a77e43a2b1f68a2f781e65e45775ce697a1f5188f6b02061a915b58766a65fe"
+  },
+  "behavior": [
+    "LooseObjectSceneTarget captures body/node records, reference-root identity and collision flags without reading motion. A private weak identity belongs to the exact admitted LooseObject instance. The metadata is copyable for a traversal, but stale, default and tampered descriptors reject before physical input; genuine owner transfer retains the same body identity.",
+    "captureLooseObjectTargetPose returns optional NiTransform in NIF drawing/world units, rigid scale1, before any inverse authored bind. It validates current body metadata and the published renderer link when supplied. Pending0x40 rejects before inactive dispatch. Inactive bit0 returns null without physical conversion; active input requires native length units.",
+    "The existing live rootPose now consumes the same targetPose conversion and applies its legacy inverse bind afterward. Native bodyT projection, ordinary quaternion matrix construction and native-to-world stores explicitly retain observed Single precision. World-to-native position conversion remains unchanged.",
+    "The descriptor does not retain a body, renderer, scheduler or reference. Callers retain the existing borrowed-REFR lifetime obligations. Capture/read wait for workers and use the collision lock; no simulation or local/cache publication occurs."
+  ],
+  "new_parameterized_tests": {
+    "suite": "WorkerCounts/RagdollSchedulerTest",
+    "worker_counts": [
+      0,
+      1,
+      2
+    ],
+    "patterns": [
+      "LooseSceneTargetIsPhysicalNodeWorldBeforeInverseBind",
+      "LooseSceneTargetRejectsTamperingAndReplacementButSurvivesOwnerTransfer",
+      "LooseSceneTargetInactiveAndPendingDispatchDoNotConsumePhysicalInput",
+      "LooseSceneTargetMatchesOriginalZeroOriginNoncommutingBodyTBits",
+      "PhysicsSystemSceneTargetRejectsWrongUnitsAndDoesNotConsumeAnInverseBind"
+    ],
+    "executions": 15
+  },
+  "coverage": [
+    "Ordinary/bodyT targets under noncommuting model bind/root transforms; expected target translation115,33,50 differs from legacy root100,40,80. Visible scale changes leave the admitted target unchanged. Physical state and packed velocities are preserved.",
+    "All descriptor metadata fields and default identity reject; replacement on the same reference rejects the previous body epoch. Real scheduler owner transfer preserves the descriptor; deleted old-reference lookup rejects before dereferencing it.",
+    "Inactive flags0/8 ignore poisoned physical origins even with nonnative fixture units. Active poison rejects; pending40/41 rejects specifically for first synchronization before poison conversion. Metadata reads remain independent of motion.",
+    "Three original007F zero-origin samples verify all12 R/T bits plus actual Bullet quaternion input bits. Includes ordinary, inverse quarter-turn local bodyT and arbitrary-axis local bodyT. Scale1 is the API rigid-pose contract, not the unused native temporary scale lane.",
+    "PhysicsSystem facade rejects active wrong units and reads the actual target independently of a nonrigid unused authored bind. Existing real owned-NIF factory tests obtain target metadata/pose through the facade and reject retired renderer links while the physical body still exists."
+  ],
+  "focused_check": {
+    "path": "loose-scene-target-preflight-02/verification.json",
+    "report_sha256": "4ab2f725be14929768053966ae1b6b2d98406c64ebf0376836eb27349bdb7bc0",
+    "schema_version": 1,
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+          "--target",
+          "openmw",
+          "openmw-tests",
+          "esmtool",
+          "-j",
+          "4"
+        ],
+        "log": "engine-build.log",
+        "returncode": 0,
+        "seconds": 222.959
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "engine-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.266
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_filter=*RagdollSchedulerTest*:*NativeWeaponFactorySceneLink*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-target-preflight-02/engine.xml"
+        ],
+        "log": "engine.log",
+        "returncode": 0,
+        "seconds": 1.118
+      }
+    ],
+    "results": {
+      "engine": {
+        "executed": 168,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*RagdollSchedulerTest*:*NativeWeaponFactorySceneLink*",
+        "binary_sha256": "795b133e47cb492c5899eb3a085bfedca6ae592c06d43e147e3383ec98f26246",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "f5e5df778a68d7044a479978fbb7f1a6eb8c0c668d0d0874ec1df6577e05ff9f",
+        "inventory_sha256": "e06203b17ab8c8c840b0fa1311827160b4c1ad985d88e749e1c2f1525170a693",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_before": {
+      "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+      "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+    },
+    "source_after": {
+      "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+      "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+    }
+  },
+  "original_zero_origin_route": {
+    "path": "physical-target-zero-origin-oracle-01/verification.json",
+    "report_sha256": "188af917bf74b6da0555473de62125794214e631b52242fdd8b4fb1a797b16c7",
+    "passed": true,
+    "contexts": 768,
+    "sequences": 96,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "1e6a0a2ec12bc0100b08b85fba9f2076dcb202210fc40e942f5f5e1e785754f0",
+    "cases_sha256": "c3c09a9849d4dc58212709114c36fa70afb02559b575968b46b561f112cb3010",
+    "scope": "Full original nonactor registration and physical-to-scene conversion over four unselected child topologies, plain/bodyT, x87007F/027F/037F and active flags1. Two local offsets, two local quaternions, zero native origins and eight distinct supplied physical quaternions include noncommuting arbitrary axes and180-degree cases. Capture actual native origin/quaternion and world desired matrix before node writeback; no conversion stubs. Actual first707370 consumes pending0x40 leaving authored flags. Eight subsequent single-traversal requests supply zero physical positions/chosen quaternion and, at frame4, new parent/root author transforms; execute full native dispatch/inverse/writeback and hierarchy composition. All cases use active flags1; child author local is retained and cached world uses native thresholds. Root local/entire REFR/physical storage unchanged within each traversal, no reference callback. Null World, optional property-copy/special flags disabled, inherited allocation/free/Windows critical/atomic boundaries. No actual Havok stepping, full game-frame/controller dispatch, renderer integration or gameplay acceptance."
+  },
+  "comparisons": {
+    "normal": {
+      "path": "loose-scene-target-compare-03/normal-verification.json",
+      "report_sha256": "a421165a5e2bd3ee677a5199b9c7cf34baff646e554a0618562c3870802689f0",
+      "passed": true,
+      "workers": {
+        "0": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        },
+        "1": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        },
+        "2": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        }
+      },
+      "native_frames_per_worker": 256,
+      "worker_contexts": 768,
+      "native_field_checks": 9216,
+      "source_sha256": "c3c09a9849d4dc58212709114c36fa70afb02559b575968b46b561f112cb3010",
+      "probe_sha256": "306dcd51694baf335594a810e1cec690a9ed870bfa39536bb0696335f24c1f67",
+      "comparator_sha256": "851d03dfedfd17ee7c51b5941ba110739e2cdb5c76937aa61b442009657e07ee",
+      "binary_sha256": "347dc392483830e2d5ee77d6ccdebb25e37e4bed7998259998b784dbf9c9827c",
+      "scope": "Actual admitted PhysicsTaskScheduler loose target API, fixed observed liveSingle mode,256 original007F zero-origin contexts at worker counts0/1/2. Input quaternion Double values reproduce original supplied mathematical unit quaternions; Float Bullet readback must match original native input bits independently. Compare12 native desired-world R/T fields exactly; rigidscale1 and physical/packed-velocity preservation checked separately. Binding is deliberately renderer-unlinked, no stepping/controllers/hierarchy or normal-input runtime acceptance. Source bodyT offsets/quaternions and plain variants reproduce independent native fixture; four original topologies are corpus contexts, not an engine hierarchy traversal."
+    },
+    "sanitized": {
+      "path": "loose-scene-target-compare-03/sanitized-verification.json",
+      "report_sha256": "0921565931f7b48de6e7ac9ab817597e77ebf3f3e69e2a726f1767c685d50ed9",
+      "passed": true,
+      "workers": {
+        "0": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        },
+        "1": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        },
+        "2": {
+          "passed": true,
+          "frames": 256,
+          "native_field_checks": 3072,
+          "fixture_quaternion_checks": 1024,
+          "mismatches": [],
+          "fixture_mismatches": []
+        }
+      },
+      "native_frames_per_worker": 256,
+      "worker_contexts": 768,
+      "native_field_checks": 9216,
+      "source_sha256": "c3c09a9849d4dc58212709114c36fa70afb02559b575968b46b561f112cb3010",
+      "probe_sha256": "306dcd51694baf335594a810e1cec690a9ed870bfa39536bb0696335f24c1f67",
+      "comparator_sha256": "851d03dfedfd17ee7c51b5941ba110739e2cdb5c76937aa61b442009657e07ee",
+      "binary_sha256": "e536afb9a0861cccec152a077fa3cd9b3f38857ec81bcc21de870393ffa6264a",
+      "scope": "Actual admitted PhysicsTaskScheduler loose target API, fixed observed liveSingle mode,256 original007F zero-origin contexts at worker counts0/1/2. Input quaternion Double values reproduce original supplied mathematical unit quaternions; Float Bullet readback must match original native input bits independently. Compare12 native desired-world R/T fields exactly; rigidscale1 and physical/packed-velocity preservation checked separately. Binding is deliberately renderer-unlinked, no stepping/controllers/hierarchy or normal-input runtime acceptance. Source bodyT offsets/quaternions and plain variants reproduce independent native fixture; four original topologies are corpus contexts, not an engine hierarchy traversal."
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "loose-scene-target-normal-01/verification.json",
+      "report_sha256": "f224d5ed2384bf5266001d9f9b412bccb2bb5bf8a8b77fad41f8af9c78d977ab",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "4"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 3.022
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.165
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-target-normal-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 22.921
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1595,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "795b133e47cb492c5899eb3a085bfedca6ae592c06d43e147e3383ec98f26246",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "7983c5512cf10d626c8748306db2a39fe1e286a7a45e16bb09e3398fc526a955",
+          "inventory_sha256": "e06203b17ab8c8c840b0fa1311827160b4c1ad985d88e749e1c2f1525170a693",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+        "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+      },
+      "source_after": {
+        "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+        "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+      },
+      "engine_suites": 122
+    },
+    "sanitized": {
+      "path": "loose-scene-target-sanitized-01/verification.json",
+      "report_sha256": "c84c212b8c513506900a2c74e9e1ca04c55d0fd5d77c4de66a739edb0332c2af",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 697.214
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.567
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-target-sanitized-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 137.834
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1595,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7cf9f5bc9da6a562b998f71127bdcf58e8c8f70d25743563d5e83cff2fe25df6",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "1441969c4205a13fdbda446571525e14849aaf0f17e3caefe24ef3ad4bcc80e3",
+          "inventory_sha256": "e06203b17ab8c8c840b0fa1311827160b4c1ad985d88e749e1c2f1525170a693",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+        "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+      },
+      "source_after": {
+        "head": "ed20b0996ff6bb21c14b1de7d2ae31815391122b",
+        "source_fingerprint": "f76832ea3b3b98e4a798d4e089b521926d00605a3a0c480f923b561f63a41094"
+      },
+      "engine_suites": 122
+    }
+  },
+  "reused_component_coverage": {
+    "commit": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+    "verification": "docs/oblivion/M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json",
+    "cases": 2746,
+    "suites": 262,
+    "scope": "Unchanged component sources/tests; prior normal/SAN coverage reused, not a fresh component run."
+  },
+  "retained_attempts": [
+    "loose-scene-target-preflight-01: build fails because new metadata variable reused an existing node-visitor name in a World test. Helper terminal before rename; preflight02 passes168 selected cases.",
+    "loose-scene-target-compare-01: standalone build missing MyGUI include paths. compare02 reads CMake include/definition flags but lacks the concrete ESM::Static header; the attempted comparator consequently finds no binary. No passing runtime claim. Fresh compare03 fixes the include, builds both modes and passes all comparisons."
+  ],
+  "comparison_scope": "Original corpus768 contexts across four topologies, plain/bodyT, two offsets/two local quaternions, eight supplied motion quaternions and three x87 controls. All physical origins are zero. The actual scheduler API is fixed to observed liveSingle; replay only the256 original007F contexts at worker counts0/1/2, yielding768 worker contexts and9216 exact native R/T field checks per build. Float Bullet quaternion readback must match native input bits independently (3072 checks per build). Input Double quaternions are the original mathematical unit values. API rigidscale1 and physical/packed-velocity preservation are checked separately. Four original topologies are corpus contexts, not engine hierarchy traversal. No native desired-scale comparison: that temporary lane is unused/uninitialized. No emulator-Havok or Bullet-native dynamics equivalence, controller clocks, scheduler ordering, renderer publication or gameplay acceptance is implied.",
+  "sanitizer_scope": "ASan/UBSan halt on error, leak detection disabled. Existing unrelated compiler warnings remain. No original-game process or normal-input course launched in this checkpoint.",
+  "remaining_gates": [
+    "NifSceneTraversal still lacks a production caller. Correct native global reference-root initialization and initial capture together, independently verify first-sync/controller clock/order, establish one authoritative per-reference update and suppress a duplicate ordinary viewer pass.",
+    "Preserve native REFR-before-child publication while safely rebasing placement/cell migration and guarding World/reference lifetimes across callbacks. The current root-only/inverse-bind World adapter is unchanged.",
+    "Scene active/pending flags here are admitted definition metadata, not a newly implemented mutable native collision state machine. Complete first synchronization and other modes/precision contexts, forced World/script continuation, all admission/property-copy/node policies and loose physical save/fresh recreation.",
+    "Wire production break/mastery/quest-retained/group-NPC drops/pickup/replacement/sound/power/creature/reactions/effects and complete first/third-person keyboard/mouse/gamepad FPS windup/block/recovery fresh-process acceptance. Full M15S4 remains active and incomplete."
+  ]
+}

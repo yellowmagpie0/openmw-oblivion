@@ -21,6 +21,7 @@
 #include <components/vfs/pathutil.hpp>
 #include <components/esm4/physicalcombat.hpp>
 #include <components/esm/formkey.hpp>
+#include <components/nif/niftypes.hpp>
 
 #include "../mwworld/ptr.hpp"
 
@@ -94,6 +95,19 @@ namespace ESM4
 
 namespace MWPhysics
 {
+    // Metadata for one admitted physical target, without reading its motion.
+    // The weak identity rejects replacement bodies even on the same REFR/model.
+    struct LooseObjectSceneTarget
+    {
+        std::uint32_t mBodyRecord = 0;
+        std::uint32_t mNodeRecord = 0;
+        std::optional<std::uint32_t> mReferenceRoot;
+        std::uint16_t mCollisionFlags = 0;
+    private:
+        std::weak_ptr<const char> mIdentity;
+        friend class PhysicsTaskScheduler;
+    };
+
     // Owns detached collision geometry and a prepared map node. Destruction
     // before commit has no world effect and does not consume a projectile ID.
     class PreparedProjectile
@@ -290,6 +304,12 @@ namespace MWPhysics
         // Null for a deliberately renderer-free body. A linked retired or
         // replaced model rejects; it must never become an unbound fallback.
         std::shared_ptr<const MWRender::LooseObjectSceneBinding> captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr);
+        LooseObjectSceneTarget captureLooseObjectSceneTarget(const MWWorld::Ptr& ptr);
+        // Native NIF drawing/world units, rigid scale1, before inverse bind.
+        // Inactive targets return null without reading physical input. Pending
+        // first-sync flags reject. Active conversion requires native length units.
+        std::optional<Nif::NiTransform> captureLooseObjectTargetPose(
+            const MWWorld::Ptr& ptr, const LooseObjectSceneTarget& target);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native
