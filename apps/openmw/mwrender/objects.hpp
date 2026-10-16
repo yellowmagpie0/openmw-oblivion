@@ -21,6 +21,11 @@ namespace Resource
     class ResourceSystem;
 }
 
+namespace NifBullet
+{
+    struct ActorRagdollDefinition;
+}
+
 namespace MWWorld
 {
     class CellStore;
@@ -91,7 +96,8 @@ namespace MWRender
         // Borrowed reference and cell must outlive preparation and registration.
         // Main-thread non-actor admission; no physics or game observers.
         std::unique_ptr<PreparedModel> prepareModel(const MWWorld::Ptr& ptr, const std::string& model,
-            const osg::Quat& rotation, unsigned nodeMask);
+            const osg::Quat& rotation, unsigned nodeMask,
+            const NifBullet::ActorRagdollDefinition* physicalDefinition = nullptr);
         bool validatePreparedModel(const PreparedModel& prepared) const;
         bool validatePublishedModel(const PreparedModel& prepared) const;
         // A previously published sibling can supply the cell root when both

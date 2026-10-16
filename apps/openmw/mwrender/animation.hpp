@@ -618,11 +618,20 @@ namespace MWRender
 
     class ObjectAnimation : public Animation
     {
+        std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mLoosePhysicalPose;
     public:
         ObjectAnimation(const MWWorld::Ptr& ptr, const std::string& model, Resource::ResourceSystem* resourceSystem,
             bool animated, bool allowLight);
         ObjectAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, const std::string& model,
             Resource::ResourceSystem* resourceSystem, bool animated, bool allowLight);
+        ~ObjectAnimation() override;
+
+        // Passive model binding: preparation does not change controller or
+        // animation ownership. Physical scene publication belongs to World.
+        void bindLoosePhysicalPose(const NifBullet::ActorRagdollDefinition& definition,
+            const Nif::NiTransform& objectWorld);
+        SceneUtil::ActorRagdollPoseBinding* getLoosePhysicalPose() noexcept { return mLoosePhysicalPose.get(); }
+        const SceneUtil::ActorRagdollPoseBinding* getLoosePhysicalPose() const noexcept { return mLoosePhysicalPose.get(); }
 
         bool canBeHarvested() const override;
         void harvest(const MWWorld::Ptr& ptr) override;

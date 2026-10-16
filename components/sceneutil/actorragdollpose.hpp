@@ -43,6 +43,11 @@ namespace SceneUtil
         ActorRagdollPoseBinding(const ActorRagdollPoseBinding&) = delete;
         ActorRagdollPoseBinding& operator=(const ActorRagdollPoseBinding&) = delete;
 
+        // Borrowed asset/record/name/path identities only. No allocations or
+        // transform writes; suitable for a prepared scene publication guard.
+        bool isValid() const noexcept;
+        bool matchesLocalPose(const ActorRagdollLocalPose& pose) const noexcept;
+
         ActorRagdollLocalPose captureLocalPose() const;
         // Requires this exact binding and unchanged asset/hierarchy identities.
         // Validate all identities before writing; can recover corrupted live

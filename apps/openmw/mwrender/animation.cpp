@@ -2824,6 +2824,18 @@ namespace MWRender
         }
     }
 
+    ObjectAnimation::~ObjectAnimation() = default;
+
+    void ObjectAnimation::bindLoosePhysicalPose(const NifBullet::ActorRagdollDefinition& definition,
+        const Nif::NiTransform& objectWorld)
+    {
+        if (mLoosePhysicalPose || !mObjectRoot)
+            throw std::logic_error("loose physical model requires an unbound object root");
+        auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
+        binding->captureWorldBones(objectWorld);
+        mLoosePhysicalPose = std::move(binding);
+    }
+
     void ObjectAnimation::harvest(const MWWorld::Ptr& ptr)
     {
         const MWWorld::ContainerStore& store = ptr.getClass().getContainerStore(ptr);

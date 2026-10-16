@@ -400,6 +400,26 @@ namespace
         EXPECT_FLOAT_EQ(helper->mScale, .1f);
     }
 
+    TEST_F(ActorRagdollPoseTest, PreservesUnrelatedEffectTransformsButRejectsThemOnPhysicalPaths)
+    {
+        osg::ref_ptr<osg::MatrixTransform> effect = new osg::MatrixTransform;
+        mRoot->addChild(effect);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto checkpoint = binding.captureLocalPose();
+        const auto effectMatrix = osg::Matrixd::translate(4, 5, 6);
+        effect->setMatrix(effectMatrix);
+        EXPECT_TRUE(binding.matchesLocalPose(checkpoint));
+        binding.applyWorldBones(desired(), mObjectWorld);
+        EXPECT_EQ(binding.captureWorldBones(mObjectWorld)[0].mPose.getTrans(), osg::Vec3f(120, 5, 0));
+        EXPECT_EQ(effect->getMatrix(), effectMatrix);
+
+        mConnector->removeChild(mHand);
+        effect->addChild(mHand);
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot)), std::invalid_argument);
+        EXPECT_EQ(effect->getMatrix(), effectMatrix);
+    }
+
     TEST_F(ActorRagdollPoseTest, RetainsStockNearUnitSeparateBoneScale)
     {
         const float scale = .9999999403953552f; // Stock SideWeapon NiTransform.
@@ -566,4 +586,39 @@ namespace
         EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime, 1.f);
         EXPECT_EQ(cache.mCycle, 2u);
     }
+    TEST_F(ActorRagdollPoseTest, PreparedLocalGuardRejectsForeignOrChangedStateWithoutWritingScene)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        const auto checkpoint = binding.captureLocalPose();
+        SceneUtil::ActorRagdollPoseBinding other(mGraph, *mRoot);
+        EXPECT_TRUE(binding.isValid());
+        EXPECT_TRUE(binding.matchesLocalPose(checkpoint));
+        EXPECT_FALSE(other.matchesLocalPose(checkpoint));
+        EXPECT_FALSE(binding.matchesLocalPose({}));
+        const auto matrix = mHand->getMatrix();
+        mHand->setTranslation({9, 8, 7});
+        EXPECT_TRUE(binding.isValid());
+        EXPECT_FALSE(binding.matchesLocalPose(checkpoint));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(9, 8, 7));
+        binding.restoreLocalPose(checkpoint);
+        EXPECT_EQ(mHand->getMatrix(), matrix);
+        mHand->mRotationScale.mValues[0][1] = -0.f;
+        EXPECT_FALSE(binding.matchesLocalPose(checkpoint));
+        binding.restoreLocalPose(checkpoint);
+        mHand->setName("retired");
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_FALSE(binding.matchesLocalPose(checkpoint));
+        mHand->setName("Hand");
+        EXPECT_TRUE(binding.matchesLocalPose(checkpoint));
+        mConnector->removeChild(mHand);
+        EXPECT_FALSE(binding.isValid());
+        mConnector->addChild(mHand);
+        EXPECT_TRUE(binding.matchesLocalPose(checkpoint));
+        mRoot->setUserValue(Misc::OsgUserValues::sFileHash, std::string("another resource hash"));
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_FALSE(binding.matchesLocalPose(checkpoint));
+        mRoot->setUserValue(Misc::OsgUserValues::sFileHash, mGraph.mSourceHash);
+        EXPECT_TRUE(binding.matchesLocalPose(checkpoint));
+    }
+
 }

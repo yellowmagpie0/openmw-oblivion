@@ -218,7 +218,8 @@ namespace MWWorld
             const auto& admission = admissions[i];
             auto& entry = data->mEntries[i];
             const auto& ptr = data->mReferences[i];
-            entry.mModel = entry.mObjects->prepareModel(ptr, admission.mModel, admission.mRotation, admission.mNodeMask);
+            entry.mModel = entry.mObjects->prepareModel(ptr, admission.mModel, admission.mRotation, admission.mNodeMask,
+                admission.mDefinition.mSourceHash.empty() ? nullptr : &admission.mDefinition);
             const float scale = ptr.getCellRef().getScale();
             std::optional<NifBullet::ActorRagdollDefinition> scaled;
             if (scale != 1.f)

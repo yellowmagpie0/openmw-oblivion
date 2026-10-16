@@ -6,6 +6,27 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 loose-weapon physical node bindings — 2026-10-16
+
+Owned factory drops now retain and bind their actual mutable TES4 collision
+nodes. The passive renderer binding preserves embedded controllers and keeps
+carried/cached models independent. Publication checks reject changed node
+identity, hierarchy or exact local state before inventory wear or publication.
+Unrelated effect transforms remain supported outside physical ancestor paths.
+
+Both full builds pass **2,694 component tests and 1,556 engine tests** in normal
+and ASan/UBSan configurations. The publication guard passes 29 allocation-free
+accept/reject calls; bypassing it causes the expected rollback failures.
+Independent original hierarchy probes cover 48 contexts and establish that
+reference publication follows callback masks. Existing local projection matches
+all 13 binary32 transform lanes in every context in both builds.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#loose-weapon-physical-node-bindings-and-native-hierarchy-evidence)
+and [editable provenance](M15-ORIGINAL-LOOSE-SCENE-HIERARCHY-PROBES.json) record the
+boundaries. World still needs per-node/masked reference integration, visible
+scale ownership and loose save/recreation. Production break/mastery and the
+full normal-input acceptance matrix remain open. S4 is incomplete.
+
 ## S4 native SetScale command limits — 2026-10-16
 
 Native script `SetScale` now clamps finite input to `[0.5, 2]` and applies the

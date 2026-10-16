@@ -9,8 +9,10 @@
 #include <osg/Group>
 #include <osg/Transform>
 #include <osg/observer_ptr>
+#include <osg/ValueObject>
 
 #include <optional>
+#include <bit>
 #include <cmath>
 #include <stdexcept>
 #include <unordered_map>
@@ -151,9 +153,6 @@ namespace SceneUtil
                     mNodes.push_back({transform, path, parent, record});
                     parent = index;
                 }
-                else
-                    require(dynamic_cast<osg::Transform*>(&node) == nullptr,
-                        "unadmitted ragdoll renderer transform type");
                 if (auto* group = node.asGroup())
                     for (unsigned i = 0; i < group->getNumChildren(); ++i)
                         self(self, *group->getChild(i), path, parent);
@@ -189,6 +188,12 @@ namespace SceneUtil
                 if (!needed[i])
                     continue;
                 auto entry = std::move(mNodes[i]);
+                // Unrelated effects may use other transform types. Physical
+                // targets still require a fully representable ancestor path.
+                for (const auto& node : entry.mPath)
+                    require(!dynamic_cast<osg::Transform*>(node.get())
+                            || dynamic_cast<NifOsg::MatrixTransform*>(node.get()),
+                        "unadmitted ragdoll renderer transform type");
                 localPose(*entry.mTransform);
                 if (entry.mParent)
                     entry.mParent = remap[*entry.mParent];
@@ -206,6 +211,31 @@ namespace SceneUtil
             require(mRoot.valid() && mAssetRoot.valid()
                     && mAssetRoot->getUserValue(Misc::OsgUserValues::sFileHash, hash) && hash == mSourceHash,
                 "expired or mismatched ragdoll renderer asset");
+        }
+
+        bool isValid() const noexcept
+        {
+            if (!mRoot.valid() || !mAssetRoot.valid()) return false;
+            const auto* data = mAssetRoot->getUserDataContainer();
+            if (!data) return false;
+            const auto index = data->getUserObjectIndex(Misc::OsgUserValues::sFileHash);
+            if (index >= data->getNumUserObjects()) return false;
+            const auto* hash = dynamic_cast<const osg::StringValueObject*>(data->getUserObject(index));
+            if (!hash || hash->getValue() != mSourceHash) return false;
+            for (const auto& entry : mNodes)
+            {
+                if (!entry.mTransform.valid()) return false;
+                unsigned record;
+                if (!entry.mTransform->getUserValue("recordIndex", record) || record != entry.mNodeRecord)
+                    return false;
+                for (std::size_t i = 0; i < entry.mPath.size(); ++i)
+                    if (!entry.mPath[i].valid() || (i && (entry.mPath[i]->getNumParents() != 1
+                            || entry.mPath[i]->getParent(0) != entry.mPath[i - 1].get())))
+                        return false;
+            }
+            for (const auto& body : mBodies)
+                if (mNodes[body.mNode].mTransform->getName() != body.mBone) return false;
+            return true;
         }
 
         void validateHierarchy() const
@@ -261,6 +291,33 @@ namespace SceneUtil
     }
 
     ActorRagdollPoseBinding::~ActorRagdollPoseBinding() = default;
+
+    bool ActorRagdollPoseBinding::isValid() const noexcept
+    {
+        return mImpl->isValid();
+    }
+
+    bool ActorRagdollPoseBinding::matchesLocalPose(const ActorRagdollLocalPose& pose) const noexcept
+    {
+        const auto* state = pose.mState.get();
+        if (!state || state->mAuthority != mImpl->mLocalAuthority || !isValid()
+            || state->mNodes.size() != mImpl->mNodes.size())
+            return false;
+        for (std::size_t i = 0; i < state->mNodes.size(); ++i)
+        {
+            const auto& node = *mImpl->mNodes[i].mTransform;
+            const auto& expected = state->mNodes[i];
+            if (node.getMatrix() != expected.mMatrix
+                || std::bit_cast<unsigned>(node.mScale) != std::bit_cast<unsigned>(expected.mScale))
+                return false;
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    if (std::bit_cast<unsigned>(node.mRotationScale.mValues[row][column])
+                        != std::bit_cast<unsigned>(expected.mRotationScale.mValues[row][column]))
+                        return false;
+        }
+        return true;
+    }
 
     ActorRagdollLocalPose ActorRagdollPoseBinding::captureLocalPose() const
     {

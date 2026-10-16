@@ -1,0 +1,737 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "passive physical-node renderer binding verified; live scale, masked reference publication, loose save/recreation and S4 incomplete",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "original_hierarchy_probe": {
+    "passed": true,
+    "contexts": 48,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "1e1a82c3fb6d7a91e1118dbbd1d26dcb95cbadcf7e656c0bed440f16708b4587",
+    "cases_sha256": "df6ac33ea3cf5b6957f5dd3aefceff41a8ce6d272d32870cfa7e3c2b992b93c3",
+    "scope": "Full original SetScale command5093B0/reference setter4DB520, NiNode parent/child updates, dynamic plain/bodyT body dispatch, actual physics-reference callback4E2160/parent lookup4DC270 with synthetic TLS. Includes original Euler initializersA09B90/A09BB0 and CRT initializer982837.48contexts:3scaleinputs*2x87*2bodytypes*4collisionflagsets(1,5,9,13). Rootworld10/20/30 unchanged, childphysicalpose preserved, all20KB physical state unchanged, bit8 localwrite andbit4 referencecallback independently selected. Records every actual callback mask and target world pose before executing callback; final reference position exactly last bit1-selected callback target, not necessarily final recomposed child world. ReturnALtrue/SP/callee-save/FPCW/base/refoutsidepose-scaleflags invariants. Argument extraction/nonactorRTTI/change-record/Windows imports/critical sections are declared boundaries as script-scale oracle06; nativeWorld absent, islandactive, nullreferencecell/config+34=1 skipterrain/cell. Not nativeWorld registration/gameplay, actor/fixed/keyframed modes or complete loose binding/scale/save integration.",
+    "last_published_reference_differs_from_final_node_cases": [
+      3,
+      11,
+      35,
+      39,
+      43,
+      47
+    ],
+    "local_pose_corpus_identical_to_oracle02": true
+  },
+  "local_projection_comparisons": {
+    "normal": {
+      "passed": true,
+      "contexts": 48,
+      "local_float_lanes": 13,
+      "mismatches": [],
+      "binary_sha256": "8de5dbf803fba6a891b17af563ae4aea5ec441ff8cdb3c64c69493c9728d76dd",
+      "production_sources": {
+        "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2",
+        "components/nif/nativetransform.cpp": "4f5512ad1810d339ebdb1adba5160e844dada91c138bfd13fa6dd131c2985f36"
+      },
+      "scope": "Existing production local node projection compared against full original scaled hierarchy outputs; final original physical child/parent poses are explicit adapter inputs. No new body conversion or engine/gameplay acceptance."
+    },
+    "sanitized": {
+      "passed": true,
+      "contexts": 48,
+      "local_float_lanes": 13,
+      "mismatches": [],
+      "binary_sha256": "6ed54d00e0422f35624c65cea06e92aa06d4615fa36f11d5baa7a2a2bdfe3dce",
+      "production_sources": {
+        "components/nifbullet/ragdollbonepose.cpp": "5ce0558ea500cc46207274340b33723469d2137f1efc41e28a299e99168849d2",
+        "components/nif/nativetransform.cpp": "4f5512ad1810d339ebdb1adba5160e844dada91c138bfd13fa6dd131c2985f36"
+      },
+      "scope": "Existing production local node projection compared against full original scaled hierarchy outputs; final original physical child/parent poses are explicit adapter inputs. No new body conversion or engine/gameplay acceptance."
+    }
+  },
+  "production_binding": {
+    "implementation_digests": {
+      "apps/components_tests/nifosg/testnifloader.cpp": "862f9094313938c4f13756a3e87aa8c1b92ab95bc48ecce02d40d5bfcef0d64f",
+      "apps/components_tests/sceneutil/actorragdollpose.cpp": "555c8e4761766cfdcc2324f88386970572f7aaa96ca27eb30b10dd0a46c57ef6",
+      "apps/openmw/mwrender/animation.cpp": "ccf1edba665d9ce25554ef5e073c9820e20a54e698512ee3df8497c583a892a2",
+      "apps/openmw/mwrender/animation.hpp": "bc16c66b17fb03235759547658258ca0cbf0317caffddeb62c5d2eb5d8df2555",
+      "apps/openmw/mwrender/objects.cpp": "4b3aea3084384908c3b88478a720316e366ef891173c2766b448674c5849c15c",
+      "apps/openmw/mwrender/objects.hpp": "2874eed154963d3b3b3a4698eb974c7fc9f2155ac47ed1330cc41f1b6b0e860b",
+      "apps/openmw/mwworld/oblivionlooseweapon.cpp": "0db8b487868c0842ef0856888d4d1c249a3cacc0956332ecf5d7de67b6680c9e",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "9884fc18e0d6678501c3926112f179c01f9bdc5663cec770ec2578362f32aa89",
+      "components/nifosg/nifloader.cpp": "02339d7b3f4a52e30b49345b6f94c0e5258e1bfd4fa68b8467524f1375079837",
+      "components/sceneutil/actorragdollpose.cpp": "60139ccd9cc17645fcfdada80d0e5ed47f3894478eb096ceffe7bb2d36d00064",
+      "components/sceneutil/actorragdollpose.hpp": "504a236cf0754765cc96d27fe47cde61944b87e97a04b6bc93c769f06f77336d"
+    },
+    "patch_sha256": "aa9a60eacec9643af70dec53376096720329f6b1d26a25e793251e24deb2b069",
+    "behavior": [
+      "Retain mutable NifOsg TES4 collision-target transforms, including identity roots, through optimization.",
+      "Own passive physical-node bindings in ObjectAnimation without actor frozen-mode/controller detachment.",
+      "Prepared/published factory model guards validate asset/record/name/parent identities and exact local matrices/separate binary32 caches without writes.",
+      "Allow unrelated effect transforms; reject unsupported transforms on required physical ancestor paths."
+    ],
+    "tests": [
+      "NifOsgLoaderTest.OblivionCollisionTargetsRetainMutableRecordTransformsAfterOptimization",
+      "NifOsgLoaderTest.MorrowindIdentityRootKeepsStaticGroupOptimization",
+      "ActorRagdollPoseTest.PreparedLocalGuardRejectsForeignOrChangedStateWithoutWritingScene",
+      "ActorRagdollPoseTest.PreservesUnrelatedEffectTransformsButRejectsThemOnPhysicalPaths",
+      "OblivionWorldTest.NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCarriedAndCachedModels",
+      "OblivionWorldTest.NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication",
+      "OblivionWorldTest.NativeWeaponFactoryPassiveBindingPreservesEmbeddedControllerTraversal"
+    ]
+  },
+  "full_build_results": [
+    {
+      "evidence": "loose-scene-binding-normal-02",
+      "source": {
+        "head": "6b59a22b7e78e87b2917550688cb6396707832c2",
+        "source_fingerprint": "2bcaf7e37f4296ef132141d5efa9498504d67c598ca43b06023b787b92952a49"
+      },
+      "results": {
+        "components": {
+          "executed": 2694,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "00933b317dd2a78fd9dc0a2ff04e8c6970879c549efb0ba4c07402d7a143261b",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "60c6e727ae9f8727cbf27aaea34f0597c0538d77a59869f97165738703606418",
+          "inventory_sha256": "a697a51faf961347a47bfd3bacff6ff734e0f1efa2c38515d04adc882fe11581",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1556,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e18a71aab1b6f0ce25cca473dbc8806742b758ac674ea19d0f809afbb1a77975",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "f8b590a6a2de538eea79acf7a2fb44fd0102cf6e0f5781ff99d672625c348dc4",
+          "inventory_sha256": "5b6bfaaaed0c082c6de9473feb3b75cd85c94b901b80d0236fca8af4c300a4d5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": "loose-scene-binding-sanitized-03",
+      "source": {
+        "head": "6b59a22b7e78e87b2917550688cb6396707832c2",
+        "source_fingerprint": "2bcaf7e37f4296ef132141d5efa9498504d67c598ca43b06023b787b92952a49"
+      },
+      "results": {
+        "components": {
+          "executed": 2694,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f827546317fa7c327757f2c6e43db378b1b79f6a502bbac0d9fa9c61330f5aab",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "1701cefa3ff45c22f96b6a1941ad327838b6539bb80d128220399b67211eee79",
+          "inventory_sha256": "1ffd48f783bbf9a73c99a9c259547a3753fcd2f1414dd07f869f5fccbd49c90e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1556,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6f1c70b58d79bc3379dca3528890a9789911d32c5bc711a741271dfce3f2665b",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "160e4c5bc75ec498f4b4c642c9aaa5058ec90794daa2d2f5ea913f95529b1768",
+          "inventory_sha256": "5b6bfaaaed0c082c6de9473feb3b75cd85c94b901b80d0236fca8af4c300a4d5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "allocation_and_negative_controls": {
+    "guard": {
+      "config": {
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "binary_sha256": "e18a71aab1b6f0ce25cca473dbc8806742b758ac674ea19d0f809afbb1a77975",
+        "main": 7930512,
+        "guard": 40500192,
+        "expect_allocations": false,
+        "require_both_results": true,
+        "scope": "Main thread malloc/calloc/realloc/aligned_alloc/posix_memalign during matchesLocalPose entry through return. Selected five-mutation engine factory test; preparation and other allocation APIs/threads excluded."
+      },
+      "entries": 29,
+      "returns": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "allocations": [],
+      "exit_code": 0,
+      "passed": true
+    },
+    "factory": {
+      "active": false,
+      "thread": 1,
+      "outer_entries": 2,
+      "publication_entries": 1,
+      "returns": 1,
+      "allocations": [],
+      "exit_code": 0,
+      "config": {
+        "mode": "factory",
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "binary_sha256": "e18a71aab1b6f0ce25cca473dbc8806742b758ac674ea19d0f809afbb1a77975",
+        "symbols": {
+          "main": {
+            "name": "main",
+            "address": 7930512
+          },
+          "outer": {
+            "name": "MWWorld::PreparedEquippedWeaponDrops::commit(MWWorld::WorldModel::LooseWeaponPublicationHooks const&)",
+            "address": 30288880
+          },
+          "publish": {
+            "name": "MWWorld::PreparedEquippedWeaponDrops::Data::publish(void*)",
+            "address": 30307216
+          }
+        },
+        "expected_no_allocations": true,
+        "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded."
+      },
+      "load_bias": 0,
+      "boundaries": [
+        {
+          "return_address": 15781933,
+          "return_sp": 140737488333824,
+          "publication_sp": 140737488333624
+        }
+      ],
+      "no_allocations": true,
+      "passed": true,
+      "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded."
+    },
+    "control": {
+      "config": {
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-binding-allocation-01/control",
+        "binary_sha256": "857cb0faa147170b7b70499ec7ba14436a68ead14ae440d6613cf646b1ce343f",
+        "main": 4195502,
+        "guard": 4195446,
+        "expect_allocations": true,
+        "scope": "Positive allocation control: publication_hook allocates37 bytes then frees."
+      },
+      "entries": 1,
+      "returns": [
+        1
+      ],
+      "allocations": [
+        {
+          "allocator": "malloc",
+          "backtrace": "#0  0x00007ffff7e1f3a0 in malloc () from /lib64/libc.so.6\n#1  0x0000000000400488 in publication_hook () at build/oblivion-compat/m15/S4/contact-drop-group-allocation-01/control.c:2\n#2  0x00000000004004ab in group_commit () at build/oblivion-compat/m15/S4/contact-drop-group-allocation-01/control.c:3\n#3  0x00000000004004b7 in main () at build/oblivion-compat/m15/S4/contact-drop-group-allocation-01/control.c:4\n"
+        }
+      ],
+      "exit_code": 0,
+      "passed": true
+    },
+    "bypass": {
+      "binary_sha256": "e18a71aab1b6f0ce25cca473dbc8806742b758ac674ea19d0f809afbb1a77975",
+      "bypassed": 37,
+      "exit_code": 1,
+      "scope": "Controlled GDB return true at matchesLocalPose entry; selected five-mutation factory rollback regression must fail. Detached-model attachment check remains independent.",
+      "passed": true
+    }
+  },
+  "retained_attempts": {
+    "loose-scene-binding-preflight-01": "Compile failure from mixed unsigned/NIFVersion initializer-list; fixed explicit std::array<unsigned,2>.",
+    "loose-scene-binding-preflight-02_to_04": "Stopped owned build groups and awaited helper termination before source refinements.",
+    "loose-scene-binding-preflight-05": "Rollback mutation used original translation(1,2,3); test wrongly expected rejection. Corrected actual mutation to(7,8,9).",
+    "loose-scene-binding-sanitized-01": "All2693 component tests passed; engine build stopped and helper awaited before correcting test mutation.",
+    "loose-scene-binding-normal-01_and_sanitized-02": "Both complete2693 components/1556 engine passed before final effect-branch refinement.",
+    "live-scale-hierarchy-oracle-01_and_02": "Exploratory24/48contexts retained. Stronger03 initializes original Euler globals and traces actual callback masks.",
+    "loose-scene-binding-review-02/analysis-control.json": "Rejected assumption that stored reference always equals final child-world position; six contexts require last mask-selected callback target."
+  },
+  "remaining": [
+    "World frame consumer still derives placement root and publishes reference unconditionally; integrate per-node projection and native callback masks.",
+    "Separate visible reference scale from admitted physical properties; do not rescale body/shape from the disproved rebuild assumption.",
+    "Verify native root normalization/registration and subsequent forced transforms against current local node state.",
+    "Implement physical loose-owner retention/save/unload/fresh NIF recreation.",
+    "Complete production break/mastery, pickup/replacement/sound and complete normal-input/restart/controller/FPS S4 matrix."
+  ],
+  "acceptance_limits": "Original-instruction and actual factory/resource/controller engine integration only. No new normal-input gameplay or save/restart acceptance. ASan leak checking disabled.",
+  "hierarchy_inputs": {
+    "script_scales": [
+      0.625,
+      1.0,
+      1.375
+    ],
+    "stored_scales": [
+      0.63,
+      1.0,
+      1.38
+    ],
+    "x87_control_words": [
+      "027F",
+      "037F"
+    ],
+    "body_types": [
+      "ordinary sphere motion2",
+      "bodyT sphere motion2"
+    ],
+    "collision_flags": [
+      1,
+      5,
+      9,
+      13
+    ],
+    "parent_local_rotation": "identity",
+    "parent_local_translation": [
+      10,
+      20,
+      30
+    ],
+    "parent_initial_scale": 1,
+    "child_local_rotation_rows": [
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        -1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "child_local_translation": [
+      3,
+      4,
+      5
+    ],
+    "child_initial_scale": 1,
+    "motion_translation_native_units": [
+      5,
+      6,
+      7
+    ],
+    "bodyT_quaternion_xyzw": [
+      0,
+      0,
+      0.7071067690849304,
+      0.7071067690849304
+    ],
+    "bodyT_translation": [
+      0.25,
+      -0.5,
+      0.125
+    ]
+  },
+  "curated_original_cases": [
+    {
+      "input_bits": 1059061760,
+      "control_word": 639,
+      "scale_bits": 1059145646,
+      "node_local_scale_bits": 1059145646,
+      "node_world_scale_bits": 1059145646,
+      "marks": [
+        16
+      ],
+      "reference_position_bits": [
+        0,
+        0,
+        0
+      ],
+      "reference_rotation_bits": [
+        0,
+        0,
+        0
+      ],
+      "callbacks": [],
+      "collision_flags": 1,
+      "callback": false,
+      "child_local_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        1077936128,
+        1082130432,
+        1084227584,
+        1065353216
+      ],
+      "child_world_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1108081430,
+        1109916186,
+        1111750943,
+        1059145646
+      ],
+      "body_t": false,
+      "node_world_pose_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1092616192,
+        1101004800,
+        1106247680,
+        1059145646
+      ],
+      "physical_memory_unchanged": true,
+      "scene_calls": 2,
+      "reference_flags": 16386
+    },
+    {
+      "input_bits": 1059061760,
+      "control_word": 639,
+      "scale_bits": 1059145646,
+      "node_local_scale_bits": 1059145646,
+      "node_world_scale_bits": 1059145646,
+      "marks": [
+        16,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8,
+        4,
+        8
+      ],
+      "reference_position_bits": [
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_rotation_bits": [
+        2147483648,
+        2147483648,
+        2147483648
+      ],
+      "callbacks": [
+        {
+          "mask": 3,
+          "target_world_bits": [
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            1108081430,
+            1109916186,
+            1111750943,
+            1059145646
+          ]
+        },
+        {
+          "mask": 3,
+          "target_world_bits": [
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            1108081430,
+            1109916186,
+            1111750943,
+            1059145646
+          ]
+        }
+      ],
+      "collision_flags": 5,
+      "callback": true,
+      "child_local_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        1077936128,
+        1082130432,
+        1084227584,
+        1065353216
+      ],
+      "child_world_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1108081430,
+        1109916186,
+        1111750943,
+        1059145646
+      ],
+      "body_t": false,
+      "node_world_pose_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1092616192,
+        1101004800,
+        1106247680,
+        1059145646
+      ],
+      "physical_memory_unchanged": true,
+      "scene_calls": 2,
+      "reference_flags": 16386
+    },
+    {
+      "input_bits": 1059061760,
+      "control_word": 639,
+      "scale_bits": 1059145646,
+      "node_local_scale_bits": 1059145646,
+      "node_world_scale_bits": 1059145646,
+      "marks": [
+        16
+      ],
+      "reference_position_bits": [
+        0,
+        0,
+        0
+      ],
+      "reference_rotation_bits": [
+        0,
+        0,
+        0
+      ],
+      "callbacks": [],
+      "collision_flags": 9,
+      "callback": false,
+      "child_local_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1109308191,
+        1108059486,
+        1106325308,
+        1065353216
+      ],
+      "child_world_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1108081430,
+        1109916186,
+        1111750942,
+        1059145646
+      ],
+      "body_t": false,
+      "node_world_pose_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1092616192,
+        1101004800,
+        1106247680,
+        1059145646
+      ],
+      "physical_memory_unchanged": true,
+      "scene_calls": 2,
+      "reference_flags": 16386
+    },
+    {
+      "input_bits": 1059061760,
+      "control_word": 639,
+      "scale_bits": 1059145646,
+      "node_local_scale_bits": 1059145646,
+      "node_world_scale_bits": 1059145646,
+      "marks": [
+        16,
+        4,
+        8,
+        4,
+        8
+      ],
+      "reference_position_bits": [
+        1108081430,
+        1109916186,
+        1111750943
+      ],
+      "reference_rotation_bits": [
+        2147483648,
+        2147483648,
+        2147483648
+      ],
+      "callbacks": [
+        {
+          "mask": 3,
+          "target_world_bits": [
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            1108081430,
+            1109916186,
+            1111750943,
+            1059145646
+          ]
+        }
+      ],
+      "collision_flags": 13,
+      "callback": true,
+      "child_local_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1109308191,
+        1108059486,
+        1106325308,
+        1065353216
+      ],
+      "child_world_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1108081430,
+        1109916186,
+        1111750942,
+        1059145646
+      ],
+      "body_t": false,
+      "node_world_pose_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        1092616192,
+        1101004800,
+        1106247680,
+        1059145646
+      ],
+      "physical_memory_unchanged": true,
+      "scene_calls": 2,
+      "reference_flags": 16386
+    }
+  ]
+}

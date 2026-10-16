@@ -49,6 +49,7 @@
 #include <components/nif/niffile.hpp>
 #include <components/nif/node.hpp>
 #include <components/nif/particle.hpp>
+#include <components/nif/physics.hpp>
 #include <components/nif/property.hpp>
 #include <components/nif/texture.hpp>
 #include <components/sceneutil/depth.hpp>
@@ -903,8 +904,11 @@ namespace NifOsg
         osg::ref_ptr<osg::Group> createNode(const Nif::NiAVObject* nifNode) const
         {
             osg::ref_ptr<osg::Group> node;
+            const bool nativePhysicalTarget = (mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
+                && !nifNode->mCollision.empty()
+                && dynamic_cast<const Nif::bhkCollisionObject*>(nifNode->mCollision.getPtr());
 
-            osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode)
+            osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode) || nativePhysicalTarget
                 ? osg::Object::DYNAMIC : osg::Object::STATIC;
 
             if (nifNode->mRecordType == Nif::RC_NiBillboardNode)
@@ -936,7 +940,8 @@ namespace NifOsg
                 // The Root node can be created as a Group if no transformation is required.
                 // This takes advantage of the fact root nodes can't have additional controllers
                 // loaded from an external .kf file (original engine just throws "can't find node" errors if you try).
-                if (nifNode->mParents.empty() && nifNode->mController.empty() && nifNode->mTransform.isIdentity()
+                if (!nativePhysicalTarget && nifNode->mParents.empty() && nifNode->mController.empty()
+                    && nifNode->mTransform.isIdentity()
                     && !mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(nifNode->mName)))
                     node = new osg::Group;
                 else

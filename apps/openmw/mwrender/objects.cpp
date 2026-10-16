@@ -14,6 +14,7 @@
 #include <components/misc/strings/algorithm.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/unrefqueue.hpp>
+#include <components/sceneutil/actorragdollpose.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
@@ -66,6 +67,8 @@ namespace MWRender
         bool mNewCell = false;
         bool mPublished = false;
         bool mConsumed = false;
+        ObjectAnimation* mPhysicalBinding = nullptr;
+        SceneUtil::ActorRagdollLocalPose mPhysicalLocal;
     };
 
     Objects::PreparedModel::PreparedModel(std::unique_ptr<Data> data) : mData(std::move(data)) {}
@@ -74,7 +77,8 @@ namespace MWRender
     { return mData && !mData->mIdentity.expired(); }
 
     std::unique_ptr<Objects::PreparedModel> Objects::prepareModel(const MWWorld::Ptr& ptr,
-        const std::string& model, const osg::Quat& rotation, unsigned nodeMask)
+        const std::string& model, const osg::Quat& rotation, unsigned nodeMask,
+        const NifBullet::ActorRagdollDefinition* physicalDefinition)
     {
         if (ptr.isEmpty() || !ptr.isInCell() || ptr.getClass().isActor() || ptr.getClass().useAnim()
             || ptr.getContainerStore()
@@ -122,8 +126,22 @@ namespace MWRender
             mResourceSystem->getSceneManager()->getTemplate(VFS::Path::toNormalized(model), true, true);
         // Build the actual animation/model on its detached parent, without
         // changing the live reference's base node.
-        data->mAnimation = new ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(data->mInsert),
+        osg::ref_ptr<ObjectAnimation> animation = new ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(data->mInsert),
             model, mResourceSystem, false, true);
+        data->mAnimation = animation;
+        if (physicalDefinition)
+        {
+            auto placement = Nif::NiTransform::getIdentity();
+            placement.mTranslation = data->mPosition.asVec3();
+            placement.mScale = data->mScale;
+            const auto matrix = osg::Matrixf::rotate(rotation);
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    placement.mRotation.mValues[row][column] = matrix(column, row);
+            animation->bindLoosePhysicalPose(*physicalDefinition, placement);
+            data->mPhysicalLocal = animation->getLoosePhysicalPose()->captureLocalPose();
+            data->mPhysicalBinding = animation;
+        }
         PtrAnimationMap stagedObjects;
         stagedObjects.emplace(ptr.mRef, data->mAnimation);
         data->mObjectEntry = stagedObjects.extract(stagedObjects.begin());
@@ -150,6 +168,13 @@ namespace MWRender
             || data->mPublished || data->mConsumed || data->mObjectEntry.empty())
             return false;
         const auto& ptr = data->mPtr;
+        if (data->mPhysicalBinding)
+        {
+            const auto* root = data->mAnimation->getObjectRoot();
+            if (!root || root->getNumParents() != 1 || root->getParent(0) != data->mInsert
+                || !data->mInsert->containsNode(root)
+                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)) return false;
+        }
         if (ptr.getCell() != data->mCell || ptr.getCellRef().getCount() != data->mCount
             || ptr.getRefData().getBaseNode() || mObjects.contains(ptr.mRef)
             || std::bit_cast<std::uint32_t>(ptr.getCellRef().getScale()) != std::bit_cast<std::uint32_t>(data->mScale))
@@ -171,6 +196,13 @@ namespace MWRender
         if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
             || !data->mPublished || data->mConsumed)
             return false;
+        if (data->mPhysicalBinding)
+        {
+            const auto* root = data->mAnimation->getObjectRoot();
+            if (!root || root->getNumParents() != 1 || root->getParent(0) != data->mInsert
+                || !data->mInsert->containsNode(root)
+                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)) return false;
+        }
         const auto object = mObjects.find(data->mPtr.mRef);
         const auto cell = mCellSceneNodes.find(data->mCell);
         if (object == mObjects.end() || object->second != data->mAnimation

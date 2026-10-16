@@ -1,3 +1,4 @@
+#include <components/sceneutil/actorragdollpose.hpp>
 #include <components/l10n/manager.hpp>
 #include "apps/openmw/mwinput/inputmanagerimp.hpp"
 #include <SDL.h>
@@ -21969,4 +21970,131 @@ TEST(OblivionWorldTest, NativeWeaponFactoryPhysicalRotationAndScaleGuardPreserve
     MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld,physics);
     EXPECT_EQ(reference.getRefData().getPosition(),position);
     EXPECT_EQ(physics.captureLooseObject(reference)[0].mPose,physical[0].mPose);
+}
+
+namespace
+{
+    struct NativeWeaponTargetVisitor : osg::NodeVisitor
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> mTarget;
+        NativeWeaponTargetVisitor() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) { setNodeMaskOverride(~0u); }
+        void apply(osg::Node& node) override
+        {
+            unsigned record;
+            if (node.getUserValue("recordIndex", record) && record == 0)
+                if (auto* target = dynamic_cast<NifOsg::MatrixTransform*>(&node)) mTarget = target;
+            traverse(node);
+        }
+    };
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCarriedAndCachedModels)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference)); ASSERT_NE(animation, nullptr);
+    EXPECT_FALSE(animation->hasPhysicalPose());
+    auto* binding = animation->getLoosePhysicalPose(); ASSERT_NE(binding, nullptr);
+    EXPECT_TRUE(binding->isValid());
+    const auto checkpoint = binding->captureLocalPose();
+    EXPECT_TRUE(binding->matchesLocalPose(checkpoint));
+    NativeWeaponTargetVisitor owned;
+    animation->getObjectRoot()->accept(owned); ASSERT_TRUE(owned.mTarget);
+    EXPECT_EQ(owned.mTarget->getDataVariance(), osg::Object::DYNAMIC);
+    const auto model = fixture.mResources.getSceneManager()->getTemplate(
+        VFS::Path::NormalizedView("meshes/factory-weapon.nif"), true, true);
+    NativeWeaponTargetVisitor cached;
+    const_cast<osg::Node*>(model.get())->accept(cached); ASSERT_TRUE(cached.mTarget);
+    EXPECT_NE(owned.mTarget, cached.mTarget);
+    const auto templateMatrix = cached.mTarget->getMatrix();
+    auto placement = Nif::NiTransform::getIdentity();
+    placement.mTranslation = reference.getRefData().getPosition().asVec3();
+    placement.mScale = 2;
+    const auto before = reference.getRefData().getPosition();
+    const auto parentPosition = reference.getRefData().getBaseNode()->getPosition();
+    const auto initial = binding->captureWorldBones(placement); ASSERT_EQ(initial.size(), 1u);
+    const std::array<NifBullet::RagdollBoneWorldPose, 1> desired{{{initial[0].mNodeRecord,
+        osg::Matrixf::translate(112, 23, 44)}}};
+    binding->applyWorldBones(desired, placement);
+    const auto after = binding->captureWorldBones(placement); ASSERT_EQ(after.size(), 1u);
+    EXPECT_EQ(after[0].mPose.getTrans(), osg::Vec3f(112, 23, 44));
+    EXPECT_EQ(reference.getRefData().getPosition(), before);
+    EXPECT_EQ(reference.getRefData().getBaseNode()->getPosition(), parentPosition);
+    EXPECT_EQ(cached.mTarget->getMatrix(), templateMatrix);
+    EXPECT_TRUE(binding->isValid());
+    EXPECT_FALSE(binding->matchesLocalPose(checkpoint));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication)
+{
+    for (unsigned mutation = 0; mutation < 5; ++mutation)
+    {
+        SCOPED_TRACE(mutation);
+        NativeWeaponFactoryFixture fixture;
+        const auto serial = fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial;
+        const auto revision = fixture.mWorld.getWorldModel().getPtrRegistryRevision();
+        const auto count = fixture.mActor.getCell()->count();
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        bool changed = false;
+        fixture.mRoot->mAfterInsert = [&] {
+            NativeWeaponTargetVisitor find; fixture.mRoot->accept(find);
+            ASSERT_TRUE(find.mTarget); changed = true;
+            if (mutation == 0) find.mTarget->setTranslation({7, 8, 9});
+            if (mutation == 1) find.mTarget->mRotationScale.mValues[0][1] = -0.f;
+            if (mutation == 2) find.mTarget->setName("retired prepared physical target");
+            if (mutation == 3) find.mTarget->getParent(0)->removeChild(find.mTarget);
+            if (mutation == 4)
+            {
+                auto* asset = find.mTarget->getParent(0);
+                ASSERT_EQ(asset->getNumParents(), 1u);
+                asset->getParent(0)->removeChild(asset);
+            }
+        };
+        EXPECT_THROW(plan->commit(), std::logic_error);
+        EXPECT_TRUE(changed);
+        EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 1);
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 50.f);
+        EXPECT_EQ(fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial, serial);
+        EXPECT_EQ(fixture.mWorld.getWorldModel().getPtrRegistryRevision(), revision);
+        EXPECT_EQ(fixture.mActor.getCell()->count(), count);
+        EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+        EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+    }
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryPassiveBindingPreservesEmbeddedControllerTraversal)
+{
+    NativeWeaponFactoryFixture fixture;
+    const auto carried = fixture.mAnimation->captureCarriedWeaponBody(fixture.mItem);
+    ASSERT_TRUE(carried); ASSERT_TRUE(carried->mDefinition);
+    osg::ref_ptr<osg::Group> parent = new osg::Group;
+    MWRender::ObjectAnimation animation(fixture.mResident, parent, "meshes/factory-weapon.nif",
+        &fixture.mResources, false, true);
+    NativeWeaponTargetVisitor find;
+    animation.getObjectRoot()->accept(find); ASSERT_TRUE(find.mTarget);
+    struct Controller : SceneUtil::KeyframeController, osg::NodeCallback
+    {
+        unsigned mVisits = 0;
+        osg::Callback* getAsCallback() override { return this; }
+        void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
+        {
+            ++mVisits;
+            traverse(node, visitor);
+        }
+    };
+    osg::ref_ptr<Controller> controller = new Controller;
+    find.mTarget->addUpdateCallback(controller);
+    const auto* callback = find.mTarget->getUpdateCallback();
+    animation.bindLoosePhysicalPose(*carried->mDefinition, Nif::NiTransform::getIdentity());
+    EXPECT_EQ(find.mTarget->getUpdateCallback(), callback);
+    EXPECT_FALSE(animation.hasPhysicalPose());
+    animation.runAnimation(.1f);
+    osgUtil::UpdateVisitor visitor;
+    osg::ref_ptr<osg::FrameStamp> stamp = new osg::FrameStamp;
+    stamp->setFrameNumber(1); stamp->setSimulationTime(.1); stamp->setReferenceTime(.1);
+    visitor.setFrameStamp(stamp); visitor.setTraversalNumber(1);
+    animation.getObjectRoot()->accept(visitor);
+    EXPECT_EQ(controller->mVisits, 1u);
+    EXPECT_TRUE(animation.getLoosePhysicalPose()->isValid());
 }

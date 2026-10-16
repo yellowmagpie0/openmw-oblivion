@@ -4,6 +4,8 @@
 #include <components/nif/extra.hpp>
 #include <components/sceneutil/keyframe.hpp>
 #include <components/nif/property.hpp>
+#include <components/nif/physics.hpp>
+#include <components/nifosg/matrixtransform.hpp>
 #include <components/nifosg/nifloader.hpp>
 #include <components/nifosg/autotransform.hpp>
 #include <components/nifosg/controller.hpp>
@@ -188,6 +190,72 @@ osg::Group {
         EXPECT_EQ(after.meshes.front()->getName(), "ShortSword:0");
         ASSERT_NE(after.meshes.front()->getVertexArray(), nullptr);
         EXPECT_EQ(after.meshes.front()->getVertexArray()->getNumElements(), 3);
+    }
+
+    TEST_F(NifOsgLoaderTest, OblivionCollisionTargetsRetainMutableRecordTransformsAfterOptimization)
+    {
+        for (const auto version : std::array<unsigned, 2>{0x14000004u, Nif::NIFFile::VER_OB})
+        for (const bool childTarget : {false, true})
+        {
+            SCOPED_TRACE(version);
+            SCOPED_TRACE(childTarget);
+            Nif::NiNode root{}, child{};
+            init(root); init(child);
+            root.mRecordType = child.mRecordType = Nif::RC_NiNode;
+            root.mRecordIndex = 0; child.mRecordIndex = 1;
+            root.mName = "WeaponRoot"; child.mName = "PhysicalChild";
+            Nif::bhkCollisionObject collision{};
+            collision.mRecordType = Nif::RC_bhkCollisionObject;
+            auto& target = childTarget ? child : root;
+            collision.mTarget = Nif::NiAVObjectPtr(&target);
+            target.mCollision = Nif::NiCollisionObjectPtr(&collision);
+            if (childTarget)
+            {
+                child.mParents.push_back(&root);
+                child.mTransform.mTranslation = {3, 4, 5};
+                root.mChildren = {Nif::NiAVObjectPtr(&child)};
+            }
+            Nif::NIFFile file(testNif);
+            file.mVersion = version; file.mRoots.push_back(&root);
+            auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+            struct Permissions : SceneUtil::Optimizer::IsOperationPermissibleForObjectCallback
+            {
+                bool isOperationPermissibleForObjectImplementation(const SceneUtil::Optimizer* optimizer,
+                    const osg::Node* node, unsigned option) const override
+                {
+                    return node->getDataVariance() != osg::Object::DYNAMIC
+                        && (option & optimizer->getPermissibleOptimizationsForObject(node)) != 0;
+                }
+            };
+            SceneUtil::Optimizer optimizer;
+            optimizer.setIsOperationPermissibleForObjectCallback(new Permissions);
+            osg::ref_ptr<osgDB::SharedStateManager> shared = new osgDB::SharedStateManager;
+            optimizer.setSharedStateManager(shared, nullptr);
+            optimizer.optimize(loaded, SceneUtil::Optimizer::FLATTEN_STATIC_TRANSFORMS
+                | SceneUtil::Optimizer::REMOVE_REDUNDANT_NODES);
+            FindGroupByRecordIndex find(target.mRecordIndex);
+            loaded->accept(find);
+            auto* transform = dynamic_cast<NifOsg::MatrixTransform*>(find.mFound);
+            ASSERT_NE(transform, nullptr);
+            EXPECT_EQ(transform->getDataVariance(), osg::Object::DYNAMIC);
+            EXPECT_EQ(transform->getName(), target.mName);
+            EXPECT_EQ(transform->getMatrix().getTrans(), osg::Vec3d(target.mTransform.mTranslation));
+            EXPECT_EQ(transform->mScale, 1.f);
+        }
+    }
+
+    TEST_F(NifOsgLoaderTest, MorrowindIdentityRootKeepsStaticGroupOptimization)
+    {
+        Nif::NiNode root{};
+        init(root); root.mRecordType = Nif::RC_NiNode; root.mRecordIndex = 0;
+        Nif::bhkCollisionObject collision{};
+        root.mCollision = Nif::NiCollisionObjectPtr(&collision);
+        Nif::NIFFile file(testNif); file.mVersion = Nif::NIFFile::VER_MW; file.mRoots.push_back(&root);
+        auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+        FindGroupByRecordIndex find(0); loaded->accept(find);
+        ASSERT_NE(find.mFound, nullptr);
+        EXPECT_EQ(dynamic_cast<osg::Transform*>(find.mFound), nullptr);
+        EXPECT_EQ(find.mFound->getDataVariance(), osg::Object::STATIC);
     }
 
     struct NativePathFixture

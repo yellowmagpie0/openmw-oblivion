@@ -2268,3 +2268,79 @@ Ordinary Object collision resizing is also outside this command/node runtime
 acceptance. Physical save/retention/recreation, production break/mastery policy,
 replacement/sound, pickup cleanup and the full normal-input/restart/controller/
 FPS matrix remain required. **S4 is incomplete.**
+
+
+## Loose-weapon physical node bindings and native hierarchy evidence
+
+This prerequisite retains mutable TES4 collision-target nodes through NIF
+loading/optimization and binds each owned factory model to its actual hashed
+NIF nodes. The passive ObjectAnimation binding preserves embedded controller
+traversal. It provides per-node physical projection without moving the outer
+reference placement or mutating the carried/cached model. Prepared and published
+model validation now checks the binding's asset, record, bone and parent-path
+identities, exact local matrices and separately cached binary32 NIF fields.
+The publication guard performs no transform writes or heap allocations.
+Unsupported transforms are rejected on physical ancestor paths; unrelated effect
+branches remain admissible and untouched.
+
+Independent original-executable hierarchy probes execute full SetScale with a
+physical child beneath a separately scaled parent. Forty-eight contexts cover
+three input scales, both x87 precision words, ordinary/bodyT dynamics and
+collision flags 1/5/9/13. Bit8 controls child-local writeback; bit4 enables the
+actual physics-to-reference callback. The final reference position equals the
+last callback target selected by its change mask. In six contexts it differs
+slightly from the final recomposed child world position, so publishing the final
+node unconditionally is incorrect. All 20KB of admitted physical state remain
+byte-identical. Existing production local projection matches all 13 binary32
+local-transform lanes in all 48 cases in normal and ASan/UBSan comparisons.
+
+These are instruction and factory/resource/controller integration checks, not
+ordinary-input gameplay acceptance. The current World consumer still derives a
+placement-root pose and does not implement child callback-mask semantics.
+Visible scale versus admitted physical scale, native root normalization,
+subsequent forced transforms and loose save/recreation remain open. Production
+break/mastery, pickup/replacement/sound and the complete S4 normal-input matrix
+remain open. S4 is incomplete.
+
+The editable [hierarchy/binding manifest](M15-ORIGINAL-LOOSE-SCENE-HIERARCHY-PROBES.json)
+records the original executable identity, fixture matrix, four curated original
+outputs, exact production hashes and all verification layers. Evidence root:
+`build/oblivion-compat/m15/S4`.
+
+- `live-scale-hierarchy-oracle-03`: 48 original contexts, including original
+  Euler and CRT initializers, actual callback masks and full return/invariant
+  checks. Argument extraction, nonactor RTTI, change-record capture, Windows
+  imports/TLS and critical sections are declared boundaries. No native World;
+  island already active; null cell/config skips terrain/cell migration.
+- `live-scale-hierarchy-compare-01`: normal and ASan/UBSan production projection
+  comparisons, 48 contexts each, zero mismatched lanes. Adapter inputs are the
+  original parent/physical-child poses; body conversion is excluded.
+- `loose-scene-binding-normal-02` and `loose-scene-binding-sanitized-03`: all
+  **2,694 component tests/255 suites and 1,556 engine tests/122 suites** each,
+  exact inventory/XML agreement, no failures/skips or sanitizer diagnostics.
+  ASan leak checking is disabled. Both preserve identical before/after source
+  fingerprint `2bcaf7e37f4296ef132141d5efa9498504d67c598ca43b06023b787b92952a49` atop
+  `6b59a22b7e78e87b2917550688cb6396707832c2`. The 11 implementation/test-file
+  hashes and patch were frozen in `loose-scene-binding-review-03` before these
+  documentation updates.
+- `loose-scene-binding-allocation-01`: final normal test ELF, 29 exact guard
+  entry/return pairs including both Boolean results, zero observed allocations.
+  The two-drop publication-through-factory-return trace also observes zero.
+  Both measure main-thread malloc/calloc/realloc/aligned_alloc/posix_memalign;
+  other APIs/threads and preparation are excluded. The positive control detects
+  one deliberate allocation. A controlled GDB return-true bypass (37 calls)
+  makes the rollback test fail with actual unwanted publication/debits; the
+  independent detached-model guard still rejects that fifth mutation.
+
+Retained preflight01 failed to compile a mixed unsigned/enum initializer list;
+explicit `std::array<unsigned,2>` fixed it. Preflights02–04 were stopped and
+awaited before admission/controller refinements. Preflight05 used the fixture's
+unchanged translation(1,2,3) as a supposed mutation, so its rollback assertion
+failed; the corrected test mutates to(7,8,9). Sanitized01 passed all 2,693
+components, then its engine build was stopped and awaited before that test fix.
+Normal01 and sanitized02 subsequently passed all 2,693 components/1,556 engine
+cases before the final effect-branch refinement. All failures/stops remain in
+place. Earlier hierarchy probes01/02 are exploratory; review02's analysis
+control preserves the rejected assumption that the stored reference must always
+equal the final recomposed child position. Stronger probe03 finds six exceptions
+and verifies the exact last mask-selected callback target instead.
