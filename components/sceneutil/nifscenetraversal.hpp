@@ -57,6 +57,12 @@ namespace SceneUtil
 
         bool isValid() const noexcept;
         Nif::NiTransform cachedWorld(const NifOsg::MatrixTransform& node) const;
+        // Native selected-root registration refreshes this cache after assigning
+        // final reference scale, with collision dispatch suppressed. Update only
+        // the root world/drawing pose and rebase immediate child drawing handles
+        // to retain their previous caches. No controllers, physics or REFR writes.
+        // The preparation owner decides whether registration selected this root.
+        void refreshReferenceRootCache();
         // Invokes existing property/node callbacks once, including callbacks
         // with work after traverse(), then projects and visits children. The
         // scheduling owner must prevent an additional ordinary update pass.
@@ -67,6 +73,8 @@ namespace SceneUtil
         static bool isReferenceRoot(const osg::NodeVisitor* visitor, const osg::Node* node) noexcept;
 
     private:
+        void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
+            const Callbacks& callbacks, bool rootOnly);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

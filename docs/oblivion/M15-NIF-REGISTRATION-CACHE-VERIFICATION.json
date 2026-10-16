@@ -1,0 +1,381 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Native registration cache ordering represented; production ownership and full M15S4 delivery remain incomplete",
+  "parent_commit": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+  "tested_source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509",
+  "implementation_sha256": {
+    "components/sceneutil/nifscenetraversal.hpp": "4e765c702d2ddd7cb74c688f0b4144f8a7b3b2324222bcd5d3d11f83dcf9910a",
+    "components/sceneutil/nifscenetraversal.cpp": "c90ab055a65d0a14bc5f12199554c7edc5cbb9925bd009303c70dd1771137066",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "474f22b54692053baa32cb3fbb027dbf2cc8beab0aa257254d30e28b8d4e97e5"
+  },
+  "behavior": [
+    "Construct traversal at authored root scale after copying native reference R/T. Setting final reference scale changes author fields without updating native world caches. Only selected-root registration calls refreshReferenceRootCache; children retain earlier cached native worlds and matching drawing worlds until their own updates.",
+    "refreshReferenceRootCache uses existing composition, drawing compensation, skeleton invalidation, hierarchy/placement/reentrancy guards. It invokes no property/node controllers, physics or REFR callbacks. Selection is the preparation owner responsibility. Existing full update implementation is shared.",
+    "Two tests cover selected/unselected registration, authored1.75/final2 mixed caches, old self/new parent controller context, no callbacks during refresh, one callback per next pass, reentrancy and invalid binding rejection."
+  ],
+  "native": {
+    "path": "build/oblivion-compat/m15/S4/reference-generation-order-oracle-04/verification.json",
+    "sha256": "499cd3bf712e549c0039d78ffe516b1abbc8a8fc64f945fd7fd2a610df7e006d",
+    "report": {
+      "passed": true,
+      "contexts": 1536,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "4691ed0902426b4a1cd4941a4e9f06ac9dab69ef4be735a4d60bca031ad14bd1",
+      "cases_sha256": "287783e3b076a83e8cf7b623890c90dca815d78fffacd2fd459f7325c488a187",
+      "scope": "Actual reference R/T copy and4D7AF0; actual4E42E5..4E42F0 recursive pending mark; COMPLETE4E3490 nonactor update setup with empty controller lists; actual4D7260/FABS/store ANDvirtual+50; then original reference-prefix/World registration and first707370.1536contexts:fourtopologies,plain/bodyT,authored0/1/8/9,eightangles,twofinalscales,threeCW. Pre-scale root authored scale1.75; full early update time0/controllersFALSE, first force clears40. Final visible scale setter/bounds leaves native cache and motion unchanged. Registration refreshes selected root cache only to final local scale, preserving child world caches. Plain direct-child to root bodyT replacement resets physical pose tozero/identity; other contexts preserve motion; unselected root cache stays authored-scale. Exact assertions for all1536contexts. Registration and post-registration cached states recorded separately. Synthetic inherited heap/Windows/TLS/critical services; nullnativeWorld; property-copy/special gates disabled. Skips asset cloning,earlierproperty-scaling/model-specific generation branches and rest ofGenerateNiNode; no frame scheduling,nonemptycontroller clock,Havok stepping or gameplay acceptance."
+    }
+  },
+  "native_instruction_findings": [
+    "Generate4E4244..4E426E copies reference R/T before final reference scale.4E42E5..4E42F0 invokes897A20 recursively setting pending40. Complete4E3490 ordinary nonactor no-animation-data path reaches4E37FD/root+60 at time0 with controllersFALSE, forcing initial collision pose and clearing40 under authored scale1.75.",
+    "4E43C8..4E43EB applies actual4D7260/FABS/local-scale store then root+50=70A9C0. This bounds-related virtual does not refresh world13 or motion in these contexts.",
+    "4E1FD0..4E20E6/88C740 registration re-marks40 and refreshes only selected root world13 to final scale. Child world13 stays authored-scale. Plain direct-child collision relocated into root bodyT resets physical pose tozero/identity; other contexts preserve early pose. Subsequent707370 updates consume final author scale.",
+    "Reference flag0x100000 special early passes, earlier property/model-generation branches, asset cloning, rest ofGenerate, nonempty controller clock, real Havok and full-game scheduling are outside this probe."
+  ],
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-order-oracle-01",
+      "status": "Executed1536contexts, but inherited final scope incorrectly said middle/virtual50 skipped and registration_events also included later update; superseded by04."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-order-oracle-02",
+      "status": "Passed1536contexts; corrected scope and pre/post-scale snapshots; did not separately capture post-registration child cache for root-selected contexts; superseded by04."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-order-oracle-03/failure.txt",
+      "status": "All1536original executions completed; postcondition incorrectly assuming registration always preserves motion failed for192plain direct-child replacements. Retained failure;04 asserts explicit zero/identity exception."
+    }
+  ],
+  "checks": {
+    "preflight": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-preflight-01/verification.json",
+      "sha256": "9b28e3e426fd913be80f2d5a9fd6a70f9ed28e16b0e8ee1107da653c02d1666c",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 28.254
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-registration-cache-preflight-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 24,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+            "binary_sha256": "28966467fe29c0e83056d7d3576ce46ecc6fb9da6efdcfe7b4540eb0b6016c50",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "b37bbef47d0466b7bbb7b0228bc0302c974858b5cb0bee364fcf194977ad000b",
+            "inventory_sha256": "955795e3a7ba830b8a88d9190d731a2096520206bf830bb66ee328bdb1843e93",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        },
+        "source_after": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        }
+      }
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-normal-01/verification.json",
+      "sha256": "907bf59d6154a4e690b3c2cad40a8f1e1e85d0de518d14fa9ff890f2882ef52b",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.568
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-registration-cache-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 15.808
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2762,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "28966467fe29c0e83056d7d3576ce46ecc6fb9da6efdcfe7b4540eb0b6016c50",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "9b970a91341f0b464d8cc73c398d6c9e29cd7d2f45fbd386f719588e2df2bb06",
+            "inventory_sha256": "da4f5c13880eafe773e45c29232a31c68672d0727b934ac4b87506f359050831",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        },
+        "source_after": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-sanitized-01/verification.json",
+      "sha256": "52fda663d7973f357047018871282f316bb75c3269b83c647e970c2a285d8a31",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 53.475
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-registration-cache-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 68.165
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2762,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "694f8b3d64d055f3c41d644aafb76d21cf51baaac997a3f887b4fbe0c1b85ded",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "f65720d00bb21ec3e96a6042292b226d6017af4f9b007db6543819e6ae271648",
+            "inventory_sha256": "a656ddad259d507ddb5edef2fd61625f342629c72da91f73171e285dc20e85ec",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        },
+        "source_after": {
+          "head": "de9571ef110a3cc10e4d5329e1aa4b185bece827",
+          "source_fingerprint": "ddc4891b4170e6969604b2a8c25aa679628c4d2561a3e9a296192c1b07428509"
+        }
+      }
+    }
+  },
+  "registration_comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-compare-01/normal-verification.json",
+      "sha256": "3b2d3f3cb98cb2aea20c2010cdb70925545992794545ef8f8bc577c3b6290402",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "max_drawing_absolute_error": 7.10543e-15,
+        "drawing_tolerance": 1e-09,
+        "source_sha256": "287783e3b076a83e8cf7b623890c90dca815d78fffacd2fd459f7325c488a187",
+        "probe_sha256": "4ed24c1771f6ec11502fccb65164c4697985631d6de9b26beeb42927474d0182",
+        "comparator_sha256": "58eba1e4d69b700b3693c71b359d9a9d9f4d1e82e8dbfc3ee2b53283b8431204",
+        "binary_sha256": "749e24f4fbfe747ce1a14daa43da1234f68e765084cbd8f7bc5bf3c0a316c07c",
+        "scope": "Actual NifSceneTraversal constructor seed at authoredscale1.75, author finalscale assignment, selected-root-only refresh and normal callback pass. Native R/T fixture and registration-selected decision are inputs. Before/own-callback/after cached world fields compare original full4E3490+scale+registration probe04.007FSingle/027FDouble supported;037FDouble diagnostic. No callbacks during root refresh; one fake nonmutating callback per root/child next pass. Root/child drawing checked against current cached transform within1e-9. Native physics/bodyT replacement,registration/property-copy,controller interpolation/clock and full-game owner are not executed by C++replay; no gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-compare-01/sanitized-verification.json",
+      "sha256": "e766daed8c7b559bbd84c6bf6102b286d2d024e52bd3dad7f4d78bbb58d00033",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "max_drawing_absolute_error": 7.10543e-15,
+        "drawing_tolerance": 1e-09,
+        "source_sha256": "287783e3b076a83e8cf7b623890c90dca815d78fffacd2fd459f7325c488a187",
+        "probe_sha256": "4ed24c1771f6ec11502fccb65164c4697985631d6de9b26beeb42927474d0182",
+        "comparator_sha256": "58eba1e4d69b700b3693c71b359d9a9d9f4d1e82e8dbfc3ee2b53283b8431204",
+        "binary_sha256": "4b8fd8f058d528d60b21de0be64304a62ee3a2cf6ce02380f39ba4219baa9d2a",
+        "scope": "Actual NifSceneTraversal constructor seed at authoredscale1.75, author finalscale assignment, selected-root-only refresh and normal callback pass. Native R/T fixture and registration-selected decision are inputs. Before/own-callback/after cached world fields compare original full4E3490+scale+registration probe04.007FSingle/027FDouble supported;037FDouble diagnostic. No callbacks during root refresh; one fake nonmutating callback per root/child next pass. Root/child drawing checked against current cached transform within1e-9. Native physics/bodyT replacement,registration/property-copy,controller interpolation/clock and full-game owner are not executed by C++replay; no gameplay acceptance."
+      }
+    }
+  },
+  "settled_regression": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-settled-regression-01/normal-verification.json",
+      "sha256": "fdbc5471580cc15d624519267a87286a4ba7e40c1df7bd642b86c9753804dd1e",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "60aa3e680662eac41a956943d27ca51df2b29b0caffabd45cc5a18911f61ac8f",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-registration-cache-settled-regression-01/sanitized-verification.json",
+      "sha256": "c1de830f4ac46304a437e9b3e5c916e384f8adc4e4cb20dd8b592f58f8c90ebd",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "424db347b545c715424c43cb8f68754baaee4b24569c157ba4255103b3089455",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    }
+  },
+  "limits": [
+    "Full components checks each2762tests/265suites, no failures/skips. ASan/UBSan leak detection disabled. No engine implementation changed and no fresh engine build/test claimed for this checkpoint.",
+    "Registration replay compares59exact uint32 fields per context across1024supported007F/027F cases per build, plus512diagnostic037F. Drawing tolerance1e-9, maximum7.10543e-15. Nonmutating OSG callbacks stand in for controller observation; native physical registration and bodyT replacement are fixture inputs, not C++ replay.",
+    "Settled replay512supported frames/8128field checks per build plus256diagnostic extended frames; no mismatches, drawing maximum5.68434e-14 within1e-9. Controller translations/physical worlds supplied, not controller math or clocks.",
+    "Production ObjectAnimation/World still use legacy local-root/root-only adapters. Actual native preparation, initial physical capture including replacement exception, one traversal owner, REFR-before-child migration/lifetime handling, clock/physics order, node/property/admission policy, pending save/recreation and remaining melee/drop/effect/runtime gates remain open. No normal-input or fresh-process acceptance claimed."
+  ]
+}

@@ -283,6 +283,15 @@ namespace SceneUtil
     }
     void NifSceneTraversal::update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks)
     {
+        updateImpl(stamp, traversalNumber, callbacks, false);
+    }
+    void NifSceneTraversal::refreshReferenceRootCache()
+    {
+        updateImpl(osg::FrameStamp{}, 0, {}, true);
+    }
+    void NifSceneTraversal::updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
+        const Callbacks& callbacks, bool rootOnly)
+    {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
         require(!mImpl->mUpdating, "reentrant NIF scene traversal");
         struct Reset
@@ -301,11 +310,16 @@ namespace SceneUtil
         const auto external = osg::computeLocalToWorld(path);
         mImpl->mRoot->setTraversalMatrix(osg::Matrixd(mImpl->mNodes[0].mWorld.toMatrix()) * inverse(external));
         mImpl->mNodes[0].mPublished = mImpl->mRoot->getTraversalMatrix();
-        Impl::Visitor visitor(*mImpl, callbacks, external);
-        visitor.setFrameStamp(new osg::FrameStamp(stamp));
-        visitor.setTraversalNumber(traversalNumber);
-        for (auto* node : path) visitor.pushOntoNodePath(node);
-        mImpl->mRoot->accept(visitor);
+        if (rootOnly)
+            mImpl->project(0, callbacks, external, path);
+        else
+        {
+            Impl::Visitor visitor(*mImpl, callbacks, external);
+            visitor.setFrameStamp(new osg::FrameStamp(stamp));
+            visitor.setTraversalNumber(traversalNumber);
+            for (auto* node : path) visitor.pushOntoNodePath(node);
+            mImpl->mRoot->accept(visitor);
+        }
         require(mImpl->valid() && mImpl->externalPath() == path && osg::computeLocalToWorld(path) == external,
             "NIF scene placement changed during traversal");
     }

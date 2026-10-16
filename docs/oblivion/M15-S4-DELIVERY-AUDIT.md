@@ -3734,3 +3734,46 @@ local-root/root-only adapters. Pending/save/fresh recreation, forced World/scrip
 continuation, all property/admission/node policies and the remaining production
 melee/drop/effect and normal-input/FPS/fresh-process gates remain open. Full M15S4
 is active and incomplete.
+
+## 2026-10-16 — native generation and registration cache ordering
+
+The actual original Generate path exposes an initialization requirement before
+production ownership can be wired. After reference R/T copy and recursive pending40
+mark, complete4E3490 runs the ordinary nonactor update at time0/controllersFALSE.
+This first collision force consumes authored root scale and clears40. The later
+reference-scale store and root virtual+50 update bounds without refreshing native
+world caches. Registration re-marks40 and refreshes only a selected root cache to
+final scale; child caches retain authored scale until their own updates. Plain
+direct-child collision replacement into root bodyT additionally resets physical
+pose to zero/identity. Earlier assumptions that registration always preserved that
+pose failed and are retained in oracle03. Oracle04 asserts the exception and passes
+all1,536contexts over four topologies, plain/bodyT, four flags, eight angles, two
+final scales and three precision modes. Asset/model/property branches, special
+reference flag0x100000, nonempty controllers, clocks and real Havok remain excluded.
+
+`NifSceneTraversal::refreshReferenceRootCache` represents the selected-root cache
+refresh without executing controllers, physics or REFR writes. Construction at
+authored scale, final author-scale assignment and optional root-only refresh retain
+native old-self/current-parent controller observations and compensate child drawing
+matrices. Two tests cover mixed caches, callback counts and existing safety guards.
+Full normal and ASan/UBSan component runs each pass2,762tests/265suites without
+failures/skips; leak detection is disabled. No fresh engine test is claimed here.
+
+Both replay builds match59exact fields in each of1,024supported registration cases;
+512extended-precision cases also match diagnostically. Drawing maximum error is
+7.10543e-15 within1e-9. The existing settled traversal corpus also passes512supported
+frames/8,128field checks per build, with256extended diagnostic frames and drawing
+maximum5.68434e-14. Native selection/R/T and registration snapshots are inputs;
+the replay uses nonmutating observation callbacks and does not execute native
+registration, bodyT replacement, controller interpolation or a game frame.
+[Editable verification](M15-NIF-REGISTRATION-CACHE-VERIFICATION.json) pins source,
+hashes, retained failures and evidence under `reference-generation-order-oracle-*`
+and `nif-registration-cache-*`.
+
+Next connect native global root preparation with the newly verified authored-scale
+early capture and selected-root cache refresh, including the replacement-pose
+exception. Production update ownership, safe REFR-before-child migration/lifetimes,
+controller clocks/physics order, remaining node/property/admission policies,
+pending save/fresh recreation and melee/drop/effect/input/runtime gates remain
+open. ObjectAnimation and World still use their legacy adapters. M15S4 remains
+active and incomplete.

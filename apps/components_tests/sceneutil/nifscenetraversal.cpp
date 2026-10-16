@@ -578,3 +578,71 @@ namespace
                 std::bit_cast<unsigned>(before.mValues[i / 3][i % 3]));
     }
 }
+
+namespace
+{
+    TEST(NifSceneRegistrationCache, FinalScaleAndSelectedRootRefreshPreserveOriginalMixedCaches)
+    {
+        // Actual Generate/update/registration corpus: root authored scale1.75,
+        // reference scale2. Registration refreshes a selected root but leaves
+        // child world caches at their earlier scale until their own update.
+        for (const bool selected : {false, true})
+        {
+            SCOPED_TRACE(selected);
+            auto root = makeNode(), child = makeNode();
+            root->setTranslation({10, 20, 30}); root->setScale(1.75f);
+            auto rotation = Nif::NiTransform::getIdentity().mRotation;
+            rotation.mValues[0][0] = rotation.mValues[1][1] = 0;
+            rotation.mValues[0][1] = 1; rotation.mValues[1][0] = -1;
+            child->setRotation(rotation); child->setTranslation({3, 4, 5}); root->addChild(child);
+            Binding binding(*root);
+            unsigned own = 0, properties = 0, children = 0;
+            root->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+                ++own;
+                EXPECT_FLOAT_EQ(node.mScale, 2);
+                EXPECT_FLOAT_EQ(binding.cachedWorld(node).mScale, selected ? 2 : 1.75f);
+            }));
+            root->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback(
+                [&](osg::NodeVisitor&) { ++properties; }));
+            child->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+                ++children;
+                EXPECT_FLOAT_EQ(binding.cachedWorld(node).mScale, 1.75f);
+                EXPECT_FLOAT_EQ(binding.cachedWorld(*root).mScale, 2);
+                EXPECT_EQ(node.getWorldMatrices().front().getTrans(), osg::Vec3d(15.25, 27, 38.75));
+            }));
+            root->setScale(2);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*root).mScale, 1.75f);
+            if (selected) binding.refreshReferenceRootCache();
+            EXPECT_EQ(own, 0u); EXPECT_EQ(properties, 0u); EXPECT_EQ(children, 0u);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*root).mScale, selected ? 2 : 1.75f);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*child).mScale, 1.75f);
+            EXPECT_EQ(binding.cachedWorld(*child).mTranslation, osg::Vec3f(15.25, 27, 38.75));
+            EXPECT_EQ(child->getWorldMatrices().front().getTrans(), osg::Vec3d(15.25, 27, 38.75));
+            binding.update(osg::FrameStamp{}, 1);
+            EXPECT_EQ(own, 1u); EXPECT_EQ(properties, 1u); EXPECT_EQ(children, 1u);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*child).mScale, 2);
+            EXPECT_EQ(binding.cachedWorld(*child).mTranslation, osg::Vec3f(16, 28, 40));
+            EXPECT_EQ(root->getMatrix().getTrans(), osg::Vec3d(10, 20, 30));
+            EXPECT_FLOAT_EQ(root->mScale, 2);
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, RegistrationRootRefreshRetainsReentrancyAndBindingGuards)
+    {
+        Binding binding(*mRoot);
+        unsigned calls = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) {
+            ++calls;
+            EXPECT_THROW(binding.refreshReferenceRootCache(), std::invalid_argument);
+        }));
+        binding.refreshReferenceRootCache();
+        EXPECT_EQ(calls, 0u);
+        binding.update(mStamp, 1);
+        EXPECT_EQ(calls, 1u);
+        const auto projected = mRoot->getTraversalMatrix();
+        mChild->clearTraversalMatrix();
+        EXPECT_THROW(binding.refreshReferenceRootCache(), std::invalid_argument);
+        EXPECT_EQ(calls, 1u);
+        EXPECT_EQ(mRoot->getTraversalMatrix(), projected);
+    }
+}
