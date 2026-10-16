@@ -2977,3 +2977,53 @@ continuation, complete admission modes, loose physical save/recreation, producti
 break/mastery, pickup/replacement/sound, power/creature/reactions/effects and the
 entire normal-input/controller/FPS/restart S4 matrix remain required. Full S4 is
 active and incomplete.
+
+## NIF traversal poses in CPU skinning
+
+Bone::update now uses virtual local-to-world composition when a NIF node has an
+explicit traversal pose. Projected ancestors and unsimulated connectors therefore
+contribute to the skinning palette while controller locals remain independent.
+An explicit absolute projection resets the parent as OSG traversal does. Nodes
+without a projection retain their prior bone behavior, including absolute and
+billboard author locals; this does not change legacy camera-facing skinning rules.
+The existing caller requirement to invalidate cached skeleton matrices after
+same-frame pose changes remains in force.
+
+RigGeometry's skin-root inverse no longer skips a projected node just because
+its controller-local matrix is identity. It calls the transform's inverse
+traversal method and cancels the drawing pose. Clearing a projection restores
+ordinary local composition and inverse calculation.
+
+Two bone cases cover rotated parent/connector/child projections, retained author
+matrices, same-frame invalidation, stable bone identities, explicit absolute
+projection and clearing. Two parameterized rig cases exercise both case-insensitive
+named-root lookup and missing-root fallback. They run actual CPU update/cull
+skinning and check vertices, normals, tangent direction/handedness and bounds with
+a `2e-5` float tolerance. Three frames cover identity controller locals with a
+projection, author writes under that same projection, and clearing to the new
+locals. Source vertex/direction arrays stay unchanged. The cull capture stops
+before graphics submission and needs no GL context.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `nif-skin-traversal-regression-01`: retained test build failure caused by an
+  unsupported OSG array initializer. Tests were corrected using push_back.
+- `nif-skin-traversal-regression-02`: before the production fix, the corrected
+  four selected tests all fail and reproduce the palette/inverse bypasses. This
+  filtered diagnostic failure is not a full validation run.
+- `nif-skin-traversal-normal-01` and `nif-skin-traversal-sanitized-01`: fresh full
+  2,718 component tests / 260 suites and 1,572 engine tests / 122 suites each,
+  unfiltered, exact inventory/XML agreement and no failures/skips. ASan/UBSan
+  halt on error; leak checks disabled. No compiler warnings were emitted by
+  these incremental builds.
+
+The [editable verification](M15-NIF-SKIN-TRAVERSAL-VERIFICATION.json) pins both
+reports, implementation/test hashes, regression XML and tested source identity.
+This closes the identified bone-palette/skin-root CPU consumer bypasses for
+supplied traversal poses. It does not execute original-game dynamics, a display
+or normal gameplay input. Live loose per-node projection, controller/first-sync
+ordering, root-reference alias initialization and safe reference-callback
+publication remain open. Actual World/script continuation, complete admission
+modes, loose retention/save/recreation, production break/mastery, pickup/sound,
+power/creature/reaction/effects and the entire normal-input/controller/FPS/restart
+S4 matrix remain required. Full S4 is active and incomplete.

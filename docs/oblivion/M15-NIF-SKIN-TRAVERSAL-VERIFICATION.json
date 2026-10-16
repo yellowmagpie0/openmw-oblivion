@@ -1,0 +1,145 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "NIF traversal poses consumed by bone palettes and skin-root inverses; live loose World/controller integration and full M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "264dc219805643a7e0415e7ba91a58fb5a74aebf",
+  "source_fingerprint": "66158809266bae368ce8d664f3fcd86182a5f540d7bc243a2a766f4ac6ef8938",
+  "implementation_digests": {
+    "apps/components_tests/CMakeLists.txt": "385a723c9a05a170978d5317c8dfe4e0a603fd53d0d0a53d3b4ce29691f171f5",
+    "apps/components_tests/sceneutil/riggeometry.cpp": "febb5bf514e8f943000369de76f90fdfab5e9a9fea172c1a5497e5af0486308d",
+    "components/sceneutil/riggeometry.cpp": "e60003c6f87966434344a96bc358b3065a454824988b80656240a101bc6c1356",
+    "components/sceneutil/skeleton.cpp": "7d3513066ed10fc70b128895383726742a88d562a5a7987eb20effa352532412"
+  },
+  "regression": {
+    "path": "nif-skin-traversal-regression-02/components.xml",
+    "xml_sha256": "3c433b2cd96b965e6d49a572783d5858c726e83d2cd988e32e208d4ee87f8c61",
+    "failed_cases_before_fix": 4,
+    "scope": "New four tests against preceding production implementation; all reproduce projection bypasses. This is a filtered diagnostic failure, not a full check."
+  },
+  "retained_build_failure": "nif-skin-traversal-regression-01: unsupported OSG array initializer in new tests. Corrected using push_back; no production fix yet in regression02.",
+  "checks": {
+    "normal": {
+      "path": "nif-skin-traversal-normal-01/verification.json",
+      "report_sha256": "0f53db916111a30e5d925c37acdb26ac959510b99714bc45765f5abf3ac416b5",
+      "passed": true,
+      "source_before": {
+        "head": "264dc219805643a7e0415e7ba91a58fb5a74aebf",
+        "source_fingerprint": "66158809266bae368ce8d664f3fcd86182a5f540d7bc243a2a766f4ac6ef8938"
+      },
+      "source_after": {
+        "head": "264dc219805643a7e0415e7ba91a58fb5a74aebf",
+        "source_fingerprint": "66158809266bae368ce8d664f3fcd86182a5f540d7bc243a2a766f4ac6ef8938"
+      },
+      "results": {
+        "components": {
+          "executed": 2718,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "30ab924dd16fa13ef3d6af3f0ae0a01a17045e1e0b940d8faf9e8ed8a9540fd6",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "aa5f8c557b91a9334b281583affa95fb2314caab63d31eee15dbd0da02849e2c",
+          "inventory_sha256": "c49eaa3697ec94f35de21e9fe8f2cfc5889a430ce930a9b8bdba0863e1f77ccc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0d8362ed46d995c59c22710fbac31ca1a808ac01c83e166d8a3e76b4cf987f4f",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "9f16bb2e78226ab92483174e7074712a34255699abb1681eb8c424e1c621fa6e",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 260,
+        "engine": 122
+      }
+    },
+    "sanitized": {
+      "path": "nif-skin-traversal-sanitized-01/verification.json",
+      "report_sha256": "6369805bc2d53b9f4274d9f147925fe849ef268be54b9eb07e9fe2cafacc8490",
+      "passed": true,
+      "source_before": {
+        "head": "264dc219805643a7e0415e7ba91a58fb5a74aebf",
+        "source_fingerprint": "66158809266bae368ce8d664f3fcd86182a5f540d7bc243a2a766f4ac6ef8938"
+      },
+      "source_after": {
+        "head": "264dc219805643a7e0415e7ba91a58fb5a74aebf",
+        "source_fingerprint": "66158809266bae368ce8d664f3fcd86182a5f540d7bc243a2a766f4ac6ef8938"
+      },
+      "results": {
+        "components": {
+          "executed": 2718,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "41a9468399be4392a6f7e5a42941b29e9871c371120502f7bfd6c345e23aac2d",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "e7e6ad810981eb8c07b84a04d8106b5e8706bdc1ba66ad93bc191a1a171c840a",
+          "inventory_sha256": "022b7f2167b1cb2ae25e630a2c4d97c5465698cb3658a52747fd7e01aaffc177",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1572,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5eb44dcbedcc19b7ca3b05c1ce68a9f5abc4e0df6983b595339ec57151c12c14",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "0c3c4ecd0c0af58605f0121b47344d02fcb32f948593bb5ad3c83293a47db4fa",
+          "inventory_sha256": "93c13e21b098ca296908c7c75ee051469537c64bacfc46ac6391c1e80c291395",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "suites": {
+        "components": 260,
+        "engine": 122
+      }
+    }
+  },
+  "coverage": [
+    "Explicit NIF traversal pose drives bone matrices through parent/unsimulated-connector/child hierarchy; same-frame invalidation preserves bone identities; clear restores author locals.",
+    "An explicit absolute projection resets its parent; nodes without a projection retain legacy bone behavior, including absolute/billboard author locals and ordinary OSG MatrixTransforms.",
+    "Actual RigGeometry CPU skinning, bounds, normals and tangents use a projected skin-root inverse even with identity author locals; both case-insensitive named-root selection and missing-root fallback are covered.",
+    "Three frames cover projected identity locals, controller writes while projection stays active, and clearing to author locals; source vertex/direction arrays stay unchanged. Float tolerance is 2e-5."
+  ],
+  "sanitizer_scope": "ASan/UBSan halt on errors. Leak checking disabled.",
+  "limitations": [
+    "CPU update/cull consumers with synthetic supplied poses, capture before GL submission; no display, original-game execution, native Havok dynamics, or normal-input runtime acceptance in this checkpoint.",
+    "Caller still invalidates cached skeleton matrices after same-frame pose changes; this retains existing update/cull caching semantics.",
+    "Live per-node loose dispatch, controller/first-synchronization ordering, root-reference alias initialization and safe reference-callback publication remain open.",
+    "Actual World/script scale/forced transforms, full admission modes, physical save/recreation, production combat/drop/pickup/reaction/effects and complete controls/FPS/restart gameplay acceptance remain open. Full M15S4 active and incomplete."
+  ]
+}

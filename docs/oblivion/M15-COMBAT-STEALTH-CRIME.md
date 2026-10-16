@@ -6,6 +6,26 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 projected poses in CPU skinning — 2026-10-16
+
+Skeleton bone palettes now consume explicit NIF traversal poses, including
+projected ancestors and unsimulated connectors. Skin-root inverse calculation
+also handles projected nodes whose controller-local matrices are identity.
+Clearing the projection restores the existing author-local skinning behavior.
+
+All **2,718 component tests / 260 suites and 1,572 engine tests / 122 suites**
+pass in normal and ASan/UBSan builds. Four new cases first reproduce the old
+failures, then verify palette composition, same-frame invalidation, absolute
+projection, CPU-skinned vertices/directions and bounds across projection,
+controller writes and clearing. Both named skin-root lookup and its missing-root
+fallback are covered, with immutable source arrays.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#nif-traversal-poses-in-cpu-skinning)
+and [verification record](M15-NIF-SKIN-TRAVERSAL-VERIFICATION.json) record evidence
+and limits. These are supplied-pose CPU consumer checks. Live per-node World
+publication, controller ordering, save/recreation, production combat and the
+full normal-input acceptance matrix remain open. S4 is incomplete.
+
 ## S4 authored and traversal matrix separation — 2026-10-16
 
 NIF transforms can now retain controller/local matrices independently of an

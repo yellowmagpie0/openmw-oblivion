@@ -4,6 +4,7 @@
 
 #include <components/debug/debuglog.hpp>
 #include <components/misc/strings/lower.hpp>
+#include <components/nifosg/matrixtransform.hpp>
 
 #include <algorithm>
 
@@ -165,7 +166,18 @@ namespace SceneUtil
             Log(Debug::Error) << "Error: Bone without node";
             return;
         }
-        if (parentMatrixInSkeletonSpace)
+        const auto* nifNode = dynamic_cast<const NifOsg::MatrixTransform*>(mNode);
+        if (nifNode && nifNode->getTraversalMatrix().getMatrix())
+        {
+            // An explicit traversal pose is drawing state, independent of the
+            // local matrix that animation controllers continue to read/write.
+            osg::Matrix matrix;
+            if (parentMatrixInSkeletonSpace)
+                matrix = *parentMatrixInSkeletonSpace;
+            nifNode->computeLocalToWorldMatrix(matrix, nullptr);
+            mMatrixInSkeletonSpace = matrix;
+        }
+        else if (parentMatrixInSkeletonSpace)
             mMatrixInSkeletonSpace = mNode->getMatrix() * (*parentMatrixInSkeletonSpace);
         else
             mMatrixInSkeletonSpace = mNode->getMatrix();

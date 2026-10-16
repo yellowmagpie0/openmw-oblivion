@@ -6,6 +6,7 @@
 
 #include <components/debug/debuglog.hpp>
 #include <components/misc/strings/algorithm.hpp>
+#include <components/nifosg/matrixtransform.hpp>
 #include <components/resource/scenemanager.hpp>
 
 #include "skeleton.hpp"
@@ -315,7 +316,13 @@ namespace SceneUtil
             {
                 const osg::MatrixTransform* matrixTrans = trans->asMatrixTransform();
                 if (matrixTrans && matrixTrans->getMatrix().isIdentity())
-                    continue;
+                {
+                    // Identity controller locals can still have a projected
+                    // traversal pose that must be canceled from skin space.
+                    const auto* nifNode = dynamic_cast<const NifOsg::MatrixTransform*>(matrixTrans);
+                    if (!nifNode || !nifNode->getTraversalMatrix().getMatrix())
+                        continue;
+                }
                 if (!mSkinToSkelMatrix)
                     mSkinToSkelMatrix = new osg::RefMatrix;
                 trans->computeWorldToLocalMatrix(*mSkinToSkelMatrix, nullptr);
