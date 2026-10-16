@@ -6,10 +6,10 @@
 namespace MWWorld
 {
     World::PreparedOblivionDynamicReferenceKey::PreparedOblivionDynamicReferenceKey(
-        World& owner, ESM::FormKey key,
+        World& owner, std::vector<ESM::FormKey> keys,
         std::unique_ptr<WorldModel::PreparedPtrReplacement> registry)
         : mOwner(&owner), mIdentity(owner.mOblivionDynamicReferenceIdentity),
-          mKey(std::move(key)), mRegistry(std::move(registry)) {}
+          mKeys(std::move(keys)), mRegistry(std::move(registry)) {}
 
     bool World::PreparedOblivionDynamicReferenceKey::isValid() const noexcept
     {
@@ -17,14 +17,14 @@ namespace MWWorld
         // Never touch the borrowed World after destruction or address reuse.
         return identity && !mCommitted
             && identity == mOwner->mOblivionDynamicReferenceIdentity
-            && mOwner->mNextOblivionDynamicSerial == mKey.mValue
+            && mOwner->mNextOblivionDynamicSerial == mKeys.front().mValue
             && mRegistry->isValid();
     }
 
     bool World::PreparedOblivionDynamicReferenceKey::commit() noexcept
     {
         if (!isValid()) return false;
-        ++mOwner->mNextOblivionDynamicSerial;
+        mOwner->mNextOblivionDynamicSerial += mKeys.size();
         mCommitted = true;
         return true;
     }
@@ -32,10 +32,18 @@ namespace MWWorld
     std::unique_ptr<World::PreparedOblivionDynamicReferenceKey>
     World::prepareOblivionDynamicReferenceKey()
     {
+        return prepareOblivionDynamicReferenceKeys(1);
+    }
+
+    std::unique_ptr<World::PreparedOblivionDynamicReferenceKey>
+    World::prepareOblivionDynamicReferenceKeys(std::size_t count)
+    {
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::invalid_argument("native reference identity requires the Oblivion profile");
+        if (count == 0)
+            throw std::invalid_argument("native reference identity group must not be empty");
         if (mNextOblivionDynamicSerial == 0
-            || mNextOblivionDynamicSerial == std::numeric_limits<std::uint64_t>::max())
+            || count > std::numeric_limits<std::uint64_t>::max() - mNextOblivionDynamicSerial)
             throw std::overflow_error("native reference identity namespace is exhausted");
         const auto key = ESM::FormKey::dynamic("native-reference", mNextOblivionDynamicSerial);
         const auto check = [&](const ESM::FormKey& existing) {
@@ -52,7 +60,11 @@ namespace MWWorld
             mWorldModel.preparePtrReplacement({}, {}));
         if (!mOblivionDynamicReferenceIdentity)
             mOblivionDynamicReferenceIdentity = std::make_shared<const char>();
+        std::vector<ESM::FormKey> keys;
+        keys.reserve(count);
+        for (std::size_t i = 0; i < count; ++i)
+            keys.push_back(ESM::FormKey::dynamic("native-reference", mNextOblivionDynamicSerial + i));
         return std::unique_ptr<PreparedOblivionDynamicReferenceKey>(
-            new PreparedOblivionDynamicReferenceKey(*this, key, std::move(registry)));
+            new PreparedOblivionDynamicReferenceKey(*this, std::move(keys), std::move(registry)));
     }
 }

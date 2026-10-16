@@ -9,6 +9,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include <osg/Quat>
 
 #include <components/esm/exteriorcelllocation.hpp>
 #include <components/misc/algorithm.hpp>
@@ -153,8 +154,12 @@ namespace MWWorld
             PreparedLooseWeaponAdmission(const PreparedLooseWeaponAdmission&) = delete;
             PreparedLooseWeaponAdmission& operator=(const PreparedLooseWeaponAdmission&) = delete;
             bool isValid() const;
+            // Borrowed stable nodes, private until commit. Keep this plan alive
+            // while borrowing them; successful publication transfers to cells.
+            std::span<const Ptr> references() const noexcept;
             // Scene/physical admission may throw. Failed publication rolls back
-            // both before any cell or registry change. No game observers.
+            // every member before any cell or registry change. No observers.
+            // Commit the entire group and return its first reference on success.
             Ptr commit();
             Ptr commit(const LooseWeaponPublicationHooks& hooks);
         };
@@ -168,6 +173,25 @@ namespace MWWorld
             const std::string& model, const osg::Quat& rotation, unsigned nodeMask,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+
+        struct LooseWeaponAdmission
+        {
+            CellStore& mCell;
+            const LiveCellRef<ESM4::Weapon>& mReference;
+            MWRender::Objects& mObjects;
+            MWPhysics::PhysicsSystem& mPhysics;
+            std::string mModel;
+            osg::Quat mRotation;
+            unsigned mNodeMask;
+            const NifBullet::ActorRagdollDefinition& mDefinition;
+            float mLengthScale;
+            std::span<const btTransform> mPoses;
+            int mCollisionGroup, mCollisionMask;
+        };
+        // One registry reservation and one final publication hook for all drops
+        // caused by a contact, including two weapons in the same managed cell.
+        std::unique_ptr<PreparedLooseWeaponAdmission> prepareLooseWeaponAdmissions(
+            std::span<const LooseWeaponAdmission> admissions);
 
         WorldModel(const WorldModel&) = delete;
         WorldModel& operator=(const WorldModel&) = delete;

@@ -655,3 +655,128 @@ TEST_F(LooseWeaponAdmissionTest, PreparedCollisionRejectsChangedReferenceScale)
     ASSERT_TRUE(mPhysics->commitLooseObject(*prepared));
     mPhysics->removeLooseObject(ptr);
 }
+
+namespace
+{
+    using Admission = MWWorld::WorldModel::LooseWeaponAdmission;
+
+    TEST_F(LooseWeaponAdmissionTest, GroupSharesNewCellRootAndPublishesDistinctStableReferencesTogether)
+    {
+        const std::array values{source(1),source(2)};
+        const std::array<Admission,2> requests{{
+            {*mCell,values[0],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1},
+            {*mCell,values[1],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1}}};
+        const auto last = mWorld->getLastGeneratedRefNum();
+        auto prepared = mWorld->prepareLooseWeaponAdmissions(requests);
+        ASSERT_EQ(prepared->references().size(),2u);
+        const auto first = prepared->references()[0], second = prepared->references()[1];
+        EXPECT_NE(first.getCellRef().getRefNum(),second.getCellRef().getRefNum());
+        EXPECT_EQ(mWorld->getLastGeneratedRefNum(),last);
+        emptyPublication();
+        ASSERT_EQ(prepared->commit(),first);
+        EXPECT_EQ(mCell->count(),2u);
+        ASSERT_EQ(mRoot->getNumChildren(),1u);
+        EXPECT_EQ(mRoot->getChild(0)->asGroup()->getNumChildren(),2u);
+        EXPECT_EQ(mWorld->getDynamicNativePtr(values[0].mRef.getFormKey()),first);
+        EXPECT_EQ(mWorld->getDynamicNativePtr(values[1].mRef.getFormKey()),second);
+        EXPECT_TRUE(mPhysics->hasLooseObject(first)); EXPECT_TRUE(mPhysics->hasLooseObject(second));
+        EXPECT_EQ(mPhysics->looseObjectOwners().size(),2u);
+        EXPECT_FALSE(values[0].mRef.getRefNum().isSet()); EXPECT_FALSE(values[1].mRef.getRefNum().isSet());
+        EXPECT_FALSE(prepared->isValid()); EXPECT_TRUE(prepared->commit().isEmpty());
+        prepared.reset();
+        EXPECT_TRUE(mPhysics->hasLooseObject(first)); EXPECT_TRUE(mPhysics->hasLooseObject(second));
+    }
+
+    TEST_F(LooseWeaponAdmissionTest, GroupCancellationAndMalformedSecondMemberPreservePublicIdentities)
+    {
+        std::array values{source(1),source(2)};
+        const std::array<Admission,2> requests{{
+            {*mCell,values[0],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1},
+            {*mCell,values[1],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1}}};
+        const auto last = mWorld->getLastGeneratedRefNum();
+        const auto revision = mWorld->getPtrRegistryRevision();
+        { auto cancelled = mWorld->prepareLooseWeaponAdmissions(requests); EXPECT_TRUE(cancelled->isValid()); }
+        emptyPublication();
+        EXPECT_THROW(mWorld->prepareLooseWeaponAdmissions({}),std::invalid_argument);
+        values[1].mRef.setScale(.125f);
+        EXPECT_THROW(mWorld->prepareLooseWeaponAdmissions(requests),std::invalid_argument);
+        values[1] = source(1);
+        EXPECT_THROW(mWorld->prepareLooseWeaponAdmissions(requests),std::invalid_argument);
+        emptyPublication();
+        EXPECT_EQ(mWorld->getLastGeneratedRefNum(),last); EXPECT_EQ(mWorld->getPtrRegistryRevision(),revision);
+        EXPECT_FALSE(values[0].mRef.getRefNum().isSet()); EXPECT_FALSE(values[1].mRef.getRefNum().isSet());
+    }
+
+    TEST_F(LooseWeaponAdmissionTest, SecondCellSceneFailureRollsBackEveryEarlierGroupMember)
+    {
+        ESM4::Cell cell{}; cell.mId = ESM::RefId(ESM::FormId{2,0});
+        cell.mFormKey = ESM::FormKey::content("owned.esm",2); cell.mCellFlags = ESM4::CELL_Interior;
+        cell.mEditorId = "SecondLooseWeaponAdmissionCell";
+        mStore.getWritable<ESM4::Cell>().insertStatic(cell,cell.mFormKey);
+        auto& secondCell = mWorld->getCell(cell.mId);
+        const auto first = source(1);
+        auto placed = *source(2).mRef.getNativeReference();
+        placed.mParent = cell.mId; placed.mParentKey = cell.mFormKey;
+        MWWorld::LiveCellRef<ESM4::Weapon> second(placed,mBase);
+        const std::array<Admission,2> requests{{
+            {*mCell,first,*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1},
+            {secondCell,second,*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1}}};
+        for (int outcome = 0; outcome < 4; ++outcome)
+        {
+            SCOPED_TRACE(outcome);
+            const auto failure = outcome == 0 ? LooseWeaponRoot::Failure::Reject
+                : outcome == 1 ? LooseWeaponRoot::Failure::InsertThrow : LooseWeaponRoot::Failure::None;
+            unsigned calls = 0;
+            mRoot->mFailure = LooseWeaponRoot::Failure::None;
+            auto prepared = mWorld->prepareLooseWeaponAdmissions(requests);
+            mRoot->mAfterInsert = [&] {
+                ++calls;
+                if (failure == LooseWeaponRoot::Failure::Reject || calls == 2) mRoot->mFailure = failure;
+                if (outcome == 2 && calls == 2)
+                {
+                    const auto ptr = prepared->references()[0];
+                    auto position = ptr.getRefData().getPosition(); position.pos[0] = 1;
+                    ptr.getRefData().setPosition(position);
+                }
+                if (outcome == 3 && calls == 2)
+                    prepared->references()[0].getRefData().getBaseNode()->setAttitude(
+                        osg::Quat(.5,osg::Vec3f(0,0,1)));
+            };
+            EXPECT_ANY_THROW(prepared->commit());
+            EXPECT_FALSE(prepared->isValid());
+            emptyPublication(); EXPECT_EQ(secondCell.count(),0u);
+        }
+        mRoot->mAfterInsert = {}; mRoot->mFailure = LooseWeaponRoot::Failure::None;
+    }
+
+    TEST_F(LooseWeaponAdmissionTest, FinalGroupGuardSeesBothPhysicalOwnersBeforeRollingBackWithoutSourcePublication)
+    {
+        const std::array values{source(1),source(2)};
+        const std::array<Admission,2> requests{{
+            {*mCell,values[0],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1},
+            {*mCell,values[1],*mObjects,*mPhysics,"weapon.osgt",osg::Quat(),MWRender::Mask_Object,mDefinition,1,mPoses,1,-1}}};
+        auto prepared = mWorld->prepareLooseWeaponAdmissions(requests);
+        struct Context
+        {
+            LooseWeaponAdmissionTest* mFixture;
+            MWWorld::WorldModel::PreparedLooseWeaponAdmission* mPrepared;
+            unsigned mGuards = 0, mPublications = 0;
+            static bool validate(void* opaque) noexcept
+            {
+                auto& context = *static_cast<Context*>(opaque);
+                if (++context.mGuards == 1) return true;
+                for (const auto& ptr : context.mPrepared->references())
+                    EXPECT_TRUE(context.mFixture->mPhysics->hasLooseObject(ptr));
+                EXPECT_EQ(context.mFixture->mCell->count(),0u);
+                EXPECT_EQ(context.mFixture->mWorld->getPtrRegistryView().begin(),
+                    context.mFixture->mWorld->getPtrRegistryView().end());
+                return false;
+            }
+            static void publish(void* opaque) noexcept { ++static_cast<Context*>(opaque)->mPublications; }
+        } context{this,prepared.get()};
+        MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{&context,Context::validate,Context::publish};
+        EXPECT_ANY_THROW(prepared->commit(hooks));
+        EXPECT_EQ(context.mGuards,2u); EXPECT_EQ(context.mPublications,0u);
+        emptyPublication();
+    }
+}

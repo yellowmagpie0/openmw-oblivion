@@ -759,15 +759,16 @@ namespace MWWorld
             friend class World;
             World* mOwner;
             std::weak_ptr<const char> mIdentity;
-            ESM::FormKey mKey;
+            std::vector<ESM::FormKey> mKeys;
             std::unique_ptr<WorldModel::PreparedPtrReplacement> mRegistry;
             bool mCommitted = false;
-            PreparedOblivionDynamicReferenceKey(World& owner, ESM::FormKey key,
+            PreparedOblivionDynamicReferenceKey(World& owner, std::vector<ESM::FormKey> keys,
                 std::unique_ptr<WorldModel::PreparedPtrReplacement> registry);
         public:
             PreparedOblivionDynamicReferenceKey(const PreparedOblivionDynamicReferenceKey&) = delete;
             PreparedOblivionDynamicReferenceKey& operator=(const PreparedOblivionDynamicReferenceKey&) = delete;
-            const ESM::FormKey& key() const noexcept { return mKey; }
+            const ESM::FormKey& key() const noexcept { return mKeys.front(); }
+            std::span<const ESM::FormKey> keys() const noexcept { return mKeys; }
             bool isValid() const noexcept;
             // Serial publication only. The compound reference transaction must
             // validate every participant first, then commit without callbacks.
@@ -777,6 +778,9 @@ namespace MWWorld
         // Keys belong to the fixed native-reference namespace. Clear, successful
         // restore, registry changes and owner destruction retire old handles.
         std::unique_ptr<PreparedOblivionDynamicReferenceKey> prepareOblivionDynamicReferenceKey();
+        // Reserve a contiguous group without advancing the saved serial. One
+        // successful commit advances by the entire group, including exhaustion.
+        std::unique_ptr<PreparedOblivionDynamicReferenceKey> prepareOblivionDynamicReferenceKeys(std::size_t count);
 
         // Retain current physical projections before scene ownership is released.
         // Validation failure leaves native authority and physical owners intact.

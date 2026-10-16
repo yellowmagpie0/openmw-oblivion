@@ -14789,3 +14789,23 @@ critical sections and synthetic TLS are boundaries. Stack, registers, FPCW and
 input lists remain unchanged. The [editable contract](M15-ORIGINAL-DROP-SCALE-PROBES.json)
 pins the fixture grid, stops and hashes. This establishes that bounded search,
 not the entire outer function, general stacking, pickup or original-game behavior.
+
+
+## S4 selected item-handling sound follow-up — 2026-10-15
+
+`S4/drop-item-sound-followup-oracle-02` executes 120 original x86 contexts under
+Unicorn: complete WEAP getter `005E96E0` (including `00469980`) and selected
+caller `005E99C0`. All 60 paired x87-word results agree; stack, callee-saved registers,
+FPCW and actor/item/controller bytes are preserved. The
+[editable contract](M15-ORIGINAL-DROP-FOLLOWUP-PROBES.json) pins executable/source/
+corpus hashes, literal sound IDs, request receivers/arguments and boundaries.
+
+Blade 0/1 and blunt 2/3 share their respective handling IDs; staff 4 and bow 5 select
+staff/bow IDs. A null OSGlobals sound-manager slot selects generic IDs. Null
+items return no ID. The actual caller requests Player `006ADE50` or NPC `0065A970` after
+executing the getter, or suppresses at the declared `00578FE0` gate returning `0x3EF`. Emission
+functions return null at the boundary, so real audio bodies/nonnull cleanup and
+live asset resolution remain unproven. Gate semantics are unassigned. Unknown
+subtypes 6/255 are diagnostics. The retained first attempt falsified its
+null-manager/no-ID assumption. No production sound behavior or full factory/
+normal-input break/drop acceptance is claimed by these instruction probes.

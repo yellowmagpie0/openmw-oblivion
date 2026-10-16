@@ -18,6 +18,7 @@
 #include "apps/openmw/mwmechanics/spellcalculation.hpp"
 #include "apps/openmw/mwmechanics/spellutil.hpp"
 #include <components/esm4/common.hpp>
+#include <components/esm4/dropplacement.hpp>
 #include "apps/openmw/mwworld/projectilemanager.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
 #include "apps/openmw/mwworld/sharedactorinitialization.hpp"
@@ -20980,4 +20981,177 @@ TEST(OblivionWorldTest, InventoryExtraScaleCaptureRejectsCorruptMetadataWithoutD
     EXPECT_THROW(fixture.mWorld.captureOblivionActorInventory(actors.actor),std::runtime_error);
     EXPECT_EQ(bow.getCellRef().getCount(),1);
     EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),bow);
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyGroupCancellationAndCommitAdvanceOneContiguousSavedRange)
+{
+    NativeWorldFixture fixture;
+    installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    {
+        auto cancelled = world.prepareOblivionDynamicReferenceKeys(2);
+        ASSERT_EQ(cancelled->keys().size(),2u);
+        EXPECT_EQ(cancelled->keys()[0],ESM::FormKey::dynamic("native-reference",1));
+        EXPECT_EQ(cancelled->keys()[1],ESM::FormKey::dynamic("native-reference",2));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(),before);
+    }
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKeys(0),std::invalid_argument);
+    auto group = world.prepareOblivionDynamicReferenceKeys(2);
+    auto competing = world.prepareOblivionDynamicReferenceKey();
+    ASSERT_TRUE(group->commit()); EXPECT_FALSE(group->commit()); EXPECT_FALSE(competing->commit());
+    const auto saved = world.captureOblivionRuntimeState();
+    EXPECT_EQ(saved.mNextDynamicSerial,3u);
+    auto stale = world.prepareOblivionDynamicReferenceKeys(2);
+    readNativeSnapshot(fixture,saved); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(stale->commit());
+    auto next = world.prepareOblivionDynamicReferenceKeys(2);
+    EXPECT_EQ(next->keys()[0],ESM::FormKey::dynamic("native-reference",3));
+    EXPECT_EQ(next->keys()[1],ESM::FormKey::dynamic("native-reference",4));
+    ASSERT_TRUE(next->commit()); EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial,5u);
+}
+
+TEST(OblivionWorldTest, NativeReferenceKeyGroupRejectsOverflowBeforeAllocationOrSerialMutation)
+{
+    NativeWorldFixture fixture;
+    installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld;
+    auto saved = world.captureOblivionRuntimeState();
+    const auto maximum = std::numeric_limits<std::uint64_t>::max();
+    saved.mNextDynamicSerial = maximum-2;
+    readNativeSnapshot(fixture,saved); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKeys(3),std::overflow_error);
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKeys(std::numeric_limits<std::size_t>::max()),std::overflow_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial,maximum-2);
+    auto final = world.prepareOblivionDynamicReferenceKeys(2);
+    EXPECT_EQ(final->keys()[0],ESM::FormKey::dynamic("native-reference",maximum-2));
+    EXPECT_EQ(final->keys()[1],ESM::FormKey::dynamic("native-reference",maximum-1));
+    ASSERT_TRUE(final->commit());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial,maximum);
+    EXPECT_THROW(world.prepareOblivionDynamicReferenceKey(),std::overflow_error);
+}
+
+TEST(OblivionWorldTest, CompoundTwoWeaponBreakPublicationConsumesOneContactOrPreservesBothInventories)
+{
+    // Actual two inventories/contact/serial/scene/physics, with owned model and
+    // body inputs. Native factory placement/ownership and normal-input dispatch
+    // remain distinct integrations; this test proves their compound boundary.
+    for (int outcome=0; outcome<3; ++outcome)
+    {
+        SCOPED_TRACE(outcome);
+        NativeWorldFixture fixture;
+        const auto resident = installNativeLooseItemCapture(fixture);
+        auto& world = fixture.mWorld;
+        const auto detachedAttacker = addNativeNpc(fixture,0x801);
+        const auto attacker = detachedAttacker.getCell()->moveTo(detachedAttacker,resident.getCell());
+        const auto detachedVictim = addNativeNpc(fixture,0x802);
+        const auto victim = detachedVictim.getCell()->moveTo(detachedVictim,resident.getCell());
+        MWClass::Weapon::registerSelf();
+        ESM::Weapon projection; projection.blank(); projection.mId = ESM::RefId(ESM::FormId{0x940,0});
+        projection.mData.mType = ESM::Weapon::LongBladeOneHand; projection.mData.mHealth = 100;
+        world.getStore().insertStatic(projection);
+        ESM4::RuntimeInventoryItem item; item.mBase = ESM::FormKey::content("headless.esm",0x940);
+        item.mCount = 1; item.mCondition = 50; item.mCharge = 7.25f;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon; item.mExtraScale = .13f;
+        installEquipmentInventory(fixture,attacker,{item});
+        item.mExtraScale = 1.f; installEquipmentInventory(fixture,victim,{item});
+        auto& attackingInventory = attacker.getClass().getInventoryStore(attacker);
+        auto& receivingInventory = victim.getClass().getInventoryStore(victim);
+        const auto first = *attackingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto second = *receivingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        const float health = service.getNonPlayerValue(victim,8), fatigue = service.getNonPlayerValue(attacker,10);
+        const auto action = world.beginOblivionPhysicalAction(attacker);
+        auto keys = world.prepareOblivionDynamicReferenceKeys(2);
+        auto firstRemoval = attackingInventory.prepareEquippedWeaponRemoval();
+        auto secondRemoval = receivingInventory.prepareEquippedWeaponRemoval();
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7,-3,0};
+        deltas.mConditionChanges.push_back(MWMechanics::captureOblivionPhysicalConditionChange(attacker,first,0));
+        deltas.mConditionChanges.push_back(MWMechanics::captureOblivionPhysicalConditionChange(victim,second,0));
+
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        ASSERT_TRUE(osgDB::writeNodeFile(*model,(fixture.mDirectory/"two-weapons.osgt").string()));
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory)); fixture.mVfs.buildIndex();
+        SceneUtil::UnrefQueue unref;
+        osg::ref_ptr<CompoundWeaponSceneRoot> root = new CompoundWeaponSceneRoot;
+        MWRender::Objects objects(&fixture.mResources,root,unref);
+        auto& physics = world.initializePhysics(new osg::Group);
+        auto contact = world.prepareOblivionPhysicalContact(action,attacker,victim,deltas); ASSERT_TRUE(contact);
+        auto makeDrop = [&](std::size_t index, const MWWorld::Ptr& source) {
+            auto placed = *resident.getCellRef().getNativeReference(); placed.mId = {}; placed.mFormKey = keys->keys()[index];
+            placed.mScale = ESM4::droppedReferenceScale(source.getCellRef().getNativeItemScale());
+            MWWorld::LiveCellRef<ESM4::Weapon> drop(placed,resident.get<ESM4::Weapon>()->mBase);
+            drop.mRef.setNativeItemCondition(0); drop.mRef.setEnchantmentCharge(7.25f);
+            return drop;
+        };
+        const std::array drops{makeDrop(0,first),makeDrop(1,second)};
+        NifBullet::ActorRagdollDefinition definition;
+        NifBullet::RagdollBodyDefinition body{}; body.mRecord = 12; body.mMass = 2;
+        body.mInertia = {1,0,0,0,1,0,0,0,1}; body.mShape = NifBullet::RagdollSphere{.5f}; definition.mBodies.push_back(body);
+        const std::array<btTransform,1> poses{btTransform::getIdentity()};
+        using Admission = MWWorld::WorldModel::LooseWeaponAdmission;
+        const std::array<Admission,2> admissions{{
+            {*resident.getCell(),drops[0],objects,physics,"two-weapons.osgt",osg::Quat(),MWRender::Mask_Object,definition,1,poses,1,-1},
+            {*resident.getCell(),drops[1],objects,physics,"two-weapons.osgt",osg::Quat(),MWRender::Mask_Object,definition,1,poses,1,-1}}};
+        auto group = world.getWorldModel().prepareLooseWeaponAdmissions(admissions);
+        struct Context
+        {
+            MWWorld::World::PreparedOblivionDynamicReferenceKey& mKeys;
+            MWWorld::World::PreparedOblivionPhysicalContact& mContact;
+            MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& mFirst;
+            MWWorld::InventoryStore::PreparedEquippedWeaponRemoval& mSecond;
+            unsigned mPublications = 0;
+            bool mCommitted = false;
+            static bool validate(void* value) noexcept {
+                auto& c = *static_cast<Context*>(value);
+                return c.mKeys.isValid() && c.mContact.isValid() && c.mFirst.isValid() && c.mSecond.isValid();
+            }
+            static void publish(void* value) noexcept {
+                auto& c = *static_cast<Context*>(value); ++c.mPublications;
+                c.mCommitted = c.mKeys.commit() && c.mContact.commit() && c.mFirst.commit() && c.mSecond.commit();
+            }
+        } context{*keys,*contact,*firstRemoval,*secondRemoval};
+        MWWorld::WorldModel::LooseWeaponPublicationHooks hooks{&context,Context::validate,Context::publish};
+        const auto count = resident.getCell()->count();
+        if (outcome==1) root->mAfterInsert = [&] { second.getCellRef().setNativeItemScale(.13f); };
+        if (outcome==2) root->mAfterInsert = [&] { world.toggleGodMode(); };
+        if (outcome==0)
+        {
+            ASSERT_FALSE(group->commit(hooks).isEmpty()); ASSERT_TRUE(context.mCommitted);
+            EXPECT_EQ(context.mPublications,1u); EXPECT_EQ(resident.getCell()->count(),count+2);
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial,3u);
+            EXPECT_EQ(service.getNonPlayerValue(victim,8),health-3);
+            EXPECT_EQ(service.getNonPlayerValue(attacker,10),fatigue-7);
+            EXPECT_TRUE(service.isActionConsumed(action));
+            EXPECT_EQ(first.getCellRef().getCount(),0); EXPECT_EQ(second.getCellRef().getCount(),0);
+            EXPECT_EQ(first.getCellRef().getNativeItemCondition(),std::optional<float>(0));
+            EXPECT_EQ(second.getCellRef().getNativeItemCondition(),std::optional<float>(0));
+            EXPECT_EQ(attackingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),attackingInventory.end());
+            EXPECT_EQ(receivingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),receivingInventory.end());
+            for (std::size_t i=0; i<2; ++i)
+            {
+                const auto ptr = group->references()[i]; EXPECT_TRUE(physics.hasLooseObject(ptr));
+                EXPECT_EQ(world.getWorldModel().getDynamicNativePtr(keys->keys()[i]),ptr);
+                EXPECT_EQ(ptr.getCellRef().getScale(),i==0 ? .13f : 1.f);
+            }
+            EXPECT_TRUE(group->commit(hooks).isEmpty()); EXPECT_EQ(context.mPublications,1u);
+        }
+        else
+        {
+            EXPECT_ANY_THROW(group->commit(hooks)); EXPECT_EQ(context.mPublications,0u);
+            EXPECT_EQ(resident.getCell()->count(),count); EXPECT_EQ(root->getNumChildren(),0u);
+            EXPECT_TRUE(physics.looseObjectOwners().empty());
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial,1u);
+            EXPECT_EQ(service.getNonPlayerValue(victim,8),health); EXPECT_EQ(service.getNonPlayerValue(attacker,10),fatigue);
+            EXPECT_TRUE(service.isActionPending(action,attacker.getCellRef().getFormKey()));
+            EXPECT_EQ(first.getCellRef().getCount(),1); EXPECT_EQ(second.getCellRef().getCount(),1);
+            EXPECT_EQ(first.getCellRef().getNativeItemCondition(),std::optional<float>(50));
+            EXPECT_EQ(second.getCellRef().getNativeItemCondition(),std::optional<float>(50));
+            EXPECT_EQ(*attackingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),first);
+            EXPECT_EQ(*receivingInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),second);
+            EXPECT_TRUE(first.getCellRef().hasNativeItemScale(.13f));
+            EXPECT_TRUE(second.getCellRef().hasNativeItemScale(outcome==1 ? .13f : 1.f));
+        }
+    }
 }

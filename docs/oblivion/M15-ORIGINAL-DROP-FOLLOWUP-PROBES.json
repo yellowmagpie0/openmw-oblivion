@@ -81,5 +81,87 @@
   },
   "evidence": "build/oblivion-compat/m15/S4/drop-followup-routing-05",
   "probe_source_sha256": "86a8fd2ad6b3e9df8b05597af3c8e066e5859b407fdf92787eca560eaccd6428",
-  "scope_limit": "Selected common NPC/Creature path with declared opaque boundaries; not full inventory/scene/equipment execution, Player drop, ownership semantics or original-game runtime acceptance."
+  "scope_limit": "Selected common NPC/Creature path with declared opaque boundaries; not full inventory/scene/equipment execution, Player drop, ownership semantics or original-game runtime acceptance.",
+  "selected_item_sound_followup": {
+    "passed": true,
+    "cases": 120,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "f97aa8ce7aaad8d0d85087c0e20de1a86aceed136ebb558550fac8954500a7c2",
+    "corpus_sha256": "fa4270d7ad41e3ce97766f05dd403c0c51fbf0b81f9869b3420bb33b204c1bff",
+    "execution_platform": "Unicorn x86-32",
+    "entries": {
+      "getter": "0x005E96E0",
+      "followup": "0x005E99C0"
+    },
+    "selected_weapon_sounds": [
+      {
+        "subtype": 0,
+        "up": "ITMWeaponBladeUp",
+        "down": "ITMWeaponBladeDown"
+      },
+      {
+        "subtype": 1,
+        "up": "ITMWeaponBladeUp",
+        "down": "ITMWeaponBladeDown"
+      },
+      {
+        "subtype": 2,
+        "up": "ITMWeaponBluntUp",
+        "down": "ITMWeaponBluntDown"
+      },
+      {
+        "subtype": 3,
+        "up": "ITMWeaponBluntUp",
+        "down": "ITMWeaponBluntDown"
+      },
+      {
+        "subtype": 4,
+        "up": "ITMWeaponStaffUp",
+        "down": "ITMWeaponStaffDown"
+      },
+      {
+        "subtype": 5,
+        "up": "ITMWeaponBowUp",
+        "down": "ITMWeaponBowDown"
+      }
+    ],
+    "getter_boundaries": [],
+    "caller_boundaries": [
+      "578FE0 return gate is a declared input (0 or0x3EF); its semantics are not assigned.",
+      "6ADE50/65A970 emission requests record string/receiver/arguments and return null. Their audio bodies and nonnull-handle cleanup do not execute."
+    ],
+    "retained_failure": "S4/drop-item-sound-followup-oracle-01 incorrectly expected null from a null manager slot; actual5E995F selects generic strings.",
+    "scope": "Complete original selected WEAP getter, including actual469980 formID==0xF predicate. Caller executes actual getter and routes Player/NPC requests, or suppresses at declared gate/null item. Callee-saved registers, stack, FPCW and actor/item/controller bytes preserved. Unsupported subtypes6/255 are diagnostics only. No production implementation, live asset lookup, audible acceptance or full factory acceptance.",
+    "evidence": "S4/drop-item-sound-followup-oracle-02",
+    "paired_control_word_groups": 60,
+    "control_words": [
+      639,
+      895
+    ],
+    "generic_manager_absent": {
+      "up": "ITMGenericUp",
+      "down": "ITMGenericDown"
+    },
+    "selected_caller_arguments": {
+      "player_function": "0x006ADE50",
+      "player_receiver": "OSGlobals.sound",
+      "player_tail_arguments": [
+        289,
+        0
+      ],
+      "npc_function": "0x0065A970",
+      "npc_receiver": "actor",
+      "npc_tail_arguments": [
+        0,
+        258,
+        1
+      ]
+    },
+    "getter_contexts": 68,
+    "caller_contexts": 52,
+    "diagnostic_subtypes": [
+      6,
+      255
+    ]
+  }
 }

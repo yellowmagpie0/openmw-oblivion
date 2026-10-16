@@ -93,7 +93,10 @@ namespace MWRender
         std::unique_ptr<PreparedModel> prepareModel(const MWWorld::Ptr& ptr, const std::string& model,
             const osg::Quat& rotation, unsigned nodeMask);
         bool validatePreparedModel(const PreparedModel& prepared) const;
-        bool commitModel(PreparedModel& prepared);
+        bool validatePublishedModel(const PreparedModel& prepared) const;
+        // A previously published sibling can supply the cell root when both
+        // models were prepared while that cell had no published scene node.
+        bool commitModel(PreparedModel& prepared, const PreparedModel* cellAdmission = nullptr);
         // Synchronous rollback before observers or another scene mutation.
         // Returns false if ownership no longer matches; never removes a
         // replacement model. The original preparation is consumed on rollback.

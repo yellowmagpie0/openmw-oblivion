@@ -54,6 +54,9 @@ namespace MWRender
         MWWorld::CellStore* mCell = nullptr;
         ESM::Position mPosition;
         float mScale = 1;
+        osg::Quat mRotation;
+        osg::Vec3f mAdjustedScale;
+        unsigned mNodeMask = 0;
         int mCount = 0;
         osg::ref_ptr<osg::Group> mCellNode;
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> mInsert;
@@ -84,6 +87,8 @@ namespace MWRender
         data->mCell = ptr.getCell();
         data->mPosition = ptr.getRefData().getPosition();
         data->mScale = ptr.getCellRef().getScale();
+        data->mRotation = rotation;
+        data->mNodeMask = nodeMask;
         data->mCount = ptr.getCellRef().getCount();
         for (unsigned axis = 0; axis < 3; ++axis)
             if (!std::isfinite(data->mPosition.pos[axis]) || !std::isfinite(data->mPosition.rot[axis]))
@@ -108,6 +113,7 @@ namespace MWRender
             if (!std::isfinite(scale[axis]) || scale[axis] <= 0)
                 throw std::invalid_argument("invalid adjusted prepared model scale");
         data->mInsert->setScale(scale);
+        data->mAdjustedScale = scale;
         data->mInsert->setNodeMask(nodeMask);
         data->mInsert->getOrCreateUserDataContainer()->addUserObject(new PtrHolder(ptr));
         // Require a real source template rather than the ordinary error marker.
@@ -159,8 +165,50 @@ namespace MWRender
                 && mRootNode->containsNode(data->mCellNode);
     }
 
-    bool Objects::commitModel(PreparedModel& prepared)
+    bool Objects::validatePublishedModel(const PreparedModel& prepared) const
     {
+        const auto* data = prepared.mData.get();
+        if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
+            || !data->mPublished || data->mConsumed)
+            return false;
+        const auto object = mObjects.find(data->mPtr.mRef);
+        const auto cell = mCellSceneNodes.find(data->mCell);
+        if (object == mObjects.end() || object->second != data->mAnimation
+            || data->mPtr.getRefData().getBaseNode() != data->mInsert
+            || cell == mCellSceneNodes.end() || cell->second != data->mCellNode
+            || !mRootNode->containsNode(data->mCellNode) || !data->mCellNode->containsNode(data->mInsert)
+            || data->mInsert->getPosition() != data->mPosition.asVec3()
+            || data->mInsert->getAttitude() != data->mRotation
+            || data->mInsert->getScale() != data->mAdjustedScale || data->mInsert->getNodeMask() != data->mNodeMask
+            || data->mPtr.getCellRef().getCount() != data->mCount
+            || std::bit_cast<std::uint32_t>(data->mPtr.getCellRef().getScale())
+                != std::bit_cast<std::uint32_t>(data->mScale))
+            return false;
+        const auto& position = data->mPtr.getRefData().getPosition();
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (std::bit_cast<std::uint32_t>(position.pos[axis]) != std::bit_cast<std::uint32_t>(data->mPosition.pos[axis])
+                || std::bit_cast<std::uint32_t>(position.rot[axis]) != std::bit_cast<std::uint32_t>(data->mPosition.rot[axis]))
+                return false;
+        return true;
+    }
+
+    bool Objects::commitModel(PreparedModel& prepared, const PreparedModel* cellAdmission)
+    {
+        auto* pending = prepared.mData.get();
+        if (cellAdmission && pending && pending->mOwner == this
+            && pending->mIdentity.lock() == mModelPreparationIdentity
+            && pending->mNewCell && !pending->mPublished && !pending->mConsumed)
+        {
+            if (!validatePublishedModel(*cellAdmission)
+                || cellAdmission->mData->mCell != pending->mCell)
+                return false;
+            // Only this transaction's already admitted sibling can replace the
+            // detached root. Retain the original placement/count snapshots.
+            pending->mCellNode->removeChild(pending->mInsert);
+            pending->mCellNode = cellAdmission->mData->mCellNode;
+            pending->mNewCell = false;
+            pending->mCellEntry = {};
+        }
         if (!validatePreparedModel(prepared)) return false;
         auto& data = *prepared.mData;
         osg::Group* parent = data.mNewCell ? mRootNode.get() : data.mCellNode.get();

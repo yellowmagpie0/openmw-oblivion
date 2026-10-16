@@ -1490,3 +1490,108 @@ publication, replacement equipment, pickup conversion/cleanup and actual
 normal-input break/drop/restart acceptance. Broader S4 power, creature, mastery,
 reaction, effect and input/controller/FPS requirements remain open. S4 remains
 incomplete.
+
+
+## Grouped native weapon-drop publication
+
+A single melee contact can break both equipped weapons. Preparing each dropped
+reference independently reserved the same World serial/local RefNum and separate
+registry revisions, so sequential commits could not publish both atomically.
+`prepareLooseWeaponAdmissions` now prepares one nonempty group of detached
+native WEAP references, with one private pointer registry and distinct local
+reference numbers. Original input references and public counters stay unchanged
+on cancellation. Duplicate stable keys and malformed members reject before
+publication. The existing single-reference API delegates to this path.
+
+`prepareOblivionDynamicReferenceKeys` reserves a contiguous key range without
+advancing the saved serial. One validated commit advances by the whole range.
+The existing singular key accessor/preparation remain compatible. Empty ranges,
+native-reference collisions and overflow reject; the last two usable keys advance to
+the existing exhausted sentinel without wrapping. Competing reservations,
+registry changes, clear, destruction and successful restore retire old handles.
+The existing schema 48 serial field is sufficient; no save-schema change occurs.
+
+All fallible scene admissions precede all physical admissions. Two models
+prepared for a previously unseen cell share the first admitted cell root; a
+subsequent token retains its placement/count snapshots while rebasing onto that
+specific sibling. Published models revalidate actual position, rotation,
+adjusted scale, node mask, parent/map ownership and reference snapshots. A later
+scene callback changing the first published model therefore rejects the group.
+Physical admission and the final source guards follow. One publication hook,
+registry swap and the prepared cell-list splices publish the entire group.
+Every failure rolls back its admitted models and bodies before source inventory,
+contact, serial, registry or cell publication. Reverse rollback removes children
+before the transaction's new cell root.
+
+Seven new engine cases cover shared-cell publication with distinct stable/local
+identities; cancellation, empty/duplicate/malformed groups; rejection or
+insert-then-throw on a second cell; changed first reference/scene transform;
+late rejection after both actual physical owners exist; key-range cancellation,
+competing commit, save/restore and overflow; and a compound contact with two
+actual NPC inventories. That compound test publishes both condition `0` writes,
+two equipped removals, one exact Health/Fatigue contact and one two-key serial
+advance, or preserves the pending contact, both inventories and public state.
+A late source ExtraScale change and changed World god mode reject before source
+publication. The external scale change is retained. Repeated commits do nothing.
+Owned OSGT and one-body fixtures isolate external asset loading; this is a
+transaction boundary test, not native factory construction or input-triggered
+wear/break dispatch.
+
+`S4/contact-drop-group-normal-01` passes all **1526 engine tests/122 suites**,
+unfiltered with exact inventory/XML agreement and zero failures/skips. Its
+before/after source is `ea822b168d072ac6a4b42bc604fed04796188c18` plus fingerprint
+`5ae0ace71ae4e0ded97b4bfa951ca78f9e20a88e8637e0584dc29fe7b9c3c315`.
+Component rules/codecs and Python sources are unchanged from the preceding
+2684-component/303-Python checkpoint; they were not rerun for this engine change.
+
+`S4/contact-drop-group-sanitized-02` also passes all **1526 engine tests/122
+suites**, unfiltered with exact inventory/XML agreement, zero failures/skips and
+no sanitizer diagnostic. Its before/after source matches the normal report above.
+ASan leak checking is disabled; ASan/UBSan halt on errors. All eight implementation
+file hashes match the frozen review manifest. No new normal-input runtime course
+is claimed: the new group still needs production factory/contact dispatch.
+
+`S4/contact-drop-group-allocation-01` traces the successful two-weapon hook
+through the entire group commit return, including actual contact/two removals,
+serial advance and registry/cell splices. One entry/return has zero allocations
+from main-thread malloc/calloc/realloc/aligned_alloc/posix_memalign. Exact normal
+test ELF SHA256:
+`860161af52657ab4522a7cf1104dafcad95e39282fd600eefc81f27b7eb93dcc`.
+The same detector catches one deliberate allocation in its positive control.
+Prepublication validation/resource admission, other threads/APIs and native
+factory/gameplay are excluded from this allocation claim.
+
+The retained sanitized-01 build was stopped before adding actual published-node
+transform validation and its late-mutation case. Implementation and test-object
+preflights remain diagnosis, not final source evidence. Review also corrected
+the new compound fixture to initialize its physics owner before preparing a
+contact, because the contact intentionally guards the World physics identity.
+All corrected normal tests retain their original transaction assertions.
+
+
+
+
+
+The next native follow-up is now bounded by
+`S4/drop-item-sound-followup-oracle-02`: **120 original x86 instruction contexts**
+under Unicorn, with actual selected WEAP getter `005E96E0` and caller `005E99C0`.
+Blade subtypes 0/1 choose `ITMWeaponBladeUp/Down`; blunt 2/3 choose
+`ITMWeaponBluntUp/Down`; staff 4 and bow 5 choose their corresponding IDs. A null
+OSGlobals sound-manager slot selects generic handling IDs. Null items return no
+ID. The caller executes that actual getter, then requests the Player or NPC
+emission function with its independently observed receiver/arguments, unless the
+declared `578FE0` gate returns `0x3EF`. The gate semantics, audio emission bodies,
+nonnull handle cleanup, live sound-record resolution and audible acceptance are
+not established. Subtypes 6/255 are diagnostics. Register/stack/FPCW/input-byte
+preservation and all 60 paired control-word results pass. The first attempt's
+incorrect null-manager/no-ID expectation is retained as a falsified assumption.
+The editable follow-up contract and native provenance retain exact hashes,
+boundaries, sound IDs and request tuples. No production sound rule changes yet.
+
+Native game formulas, drop placement/scale laws and replacement routing are
+unchanged. Native factory construction from the bound carried NIF, ownership and
+dropper/list transfer, retained Player/quest unequips, replacement equipment,
+production contact/wear dispatch, pickup cleanup and actual normal-input
+break/drop/restart acceptance still need integration. Broader S4 power,
+creature, mastery, reaction, effect and input/controller/FPS requirements remain
+open. S4 remains incomplete.

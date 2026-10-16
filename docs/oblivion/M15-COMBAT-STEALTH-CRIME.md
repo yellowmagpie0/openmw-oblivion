@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 grouped weapon-drop publication boundary — 2026-10-15
+
+One preparation can now publish two weapon references from one contact with
+unique identities, one serial-range advance and one registry swap. Scene/body
+failures or stale source guards roll back the whole group. Shared-cell models
+retain a single root, and published transforms are revalidated before source
+writes. Both normal and sanitizer builds pass all 1,526 engine tests; a traced
+two-inventory publication performs no heap allocation in its final write phase.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#grouped-native-weapon-drop-publication)
+records tests, provenance and scope. This closes the multi-reference transaction
+boundary. Native factory construction, replacement equipment, production break
+and pickup dispatch, and normal-input break/drop/restart acceptance remain open.
+S4 remains incomplete.
+
 ## S4 native inventory scale persistence — 2026-10-15
 
 Schema 48 now preserves optional inventory ExtraScale independently of world
