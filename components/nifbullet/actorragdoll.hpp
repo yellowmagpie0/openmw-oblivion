@@ -162,6 +162,9 @@ namespace NifBullet
         std::string mSourceHash;
         std::vector<RagdollBodyDefinition> mBodies;
         std::vector<RagdollJointDefinition> mJoints;
+        // Present only when loaded for a new placed reference. Its authored
+        // root transform is omitted from bind matrices and replaced in 3D.
+        std::optional<std::uint32_t> mReferenceRoot;
     };
 
     // Own a native property-scaled graph, including bodyT translation and
@@ -175,6 +178,9 @@ namespace NifBullet
     // Unsupported or malformed graphs are diagnosed as a whole. Shape trees
     // are bounded to 128 edges and 4096 expanded instances per body.
     ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file);
+    // GenerateNiNode replaces the single asset root's local pose with the
+    // reference placement. Preserve descendant locals and body/joint data.
+    ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file);
 }
 
 #endif

@@ -52,6 +52,7 @@ namespace MWRender
         {
             CarriedWeaponBody mBody;
             OblivionDroppedWeaponPose mAnchor;
+            std::shared_ptr<const NifBullet::ActorRagdollDefinition> mReferenceDefinition;
         };
         // The original NPC break path uses skeleton Weapon, not the model's
         // authored root. Caller resolves and guards the native actor placement.

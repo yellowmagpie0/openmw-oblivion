@@ -354,7 +354,7 @@ namespace NifBullet
         return std::nullopt;
     }
 
-    ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file)
+    static ActorRagdollDefinition loadRagdollDefinition(Nif::FileView file, bool referencePlacement)
     {
         require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
             && file.getBethVersion() <= 16, "unsupported NIF version");
@@ -370,6 +370,13 @@ namespace NifBullet
         const auto member = [&](const Nif::Record* record) {
             require(record && records.contains(record), "reference outside source file");
         };
+        if (referencePlacement)
+        {
+            require(file.numRoots() == 1, "reference placement requires one asset root");
+            const auto* root = dynamic_cast<const Nif::NiAVObject*>(file.getRoot(0));
+            member(root);
+            result.mReferenceRoot = root->mRecordIndex;
+        }
 
         // Traverse iteratively: corrupt cycles or extremely deep hierarchies must
         // not overflow the stack. A bone must have one unambiguous bind matrix.
@@ -388,7 +395,8 @@ namespace NifBullet
             const auto [node, parent] = pending.back();
             pending.pop_back();
             member(node);
-            const auto matrix = node->mTransform.toMatrix() * parent;
+            const auto matrix = result.mReferenceRoot == node->mRecordIndex
+                ? parent : node->mTransform.toMatrix() * parent;
             for (unsigned i = 0; i < 16; ++i)
                 require(std::isfinite(matrix.ptr()[i]), "nonfinite bind matrix");
             require(bind.emplace(node, matrix).second, "cyclic or ambiguous bone hierarchy");
@@ -558,5 +566,15 @@ namespace NifBullet
             result.mJoints.push_back(std::move(value));
         }
         return result;
+    }
+
+    ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file)
+    {
+        return loadRagdollDefinition(file, false);
+    }
+
+    ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file)
+    {
+        return loadRagdollDefinition(file, true);
     }
 }

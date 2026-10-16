@@ -241,6 +241,12 @@ osg::Group {
             EXPECT_EQ(transform->getName(), target.mName);
             EXPECT_EQ(transform->getMatrix().getTrans(), osg::Vec3d(target.mTransform.mTranslation));
             EXPECT_EQ(transform->mScale, 1.f);
+            // A physical child also needs a private mutable asset root: a new
+            // placed REFR replaces that root's authored transform.
+            FindGroupByRecordIndex findRoot(0);
+            loaded->accept(findRoot);
+            ASSERT_NE(dynamic_cast<NifOsg::MatrixTransform*>(findRoot.mFound), nullptr);
+            EXPECT_EQ(findRoot.mFound->getDataVariance(), osg::Object::DYNAMIC);
         }
     }
 

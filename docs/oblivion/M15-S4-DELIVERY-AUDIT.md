@@ -2344,3 +2344,89 @@ place. Earlier hierarchy probes01/02 are exploratory; review02's analysis
 control preserves the rejected assumption that the stored reference must always
 equal the final recomposed child position. Stronger probe03 finds six exceptions
 and verifies the exact last mask-selected callback target instead.
+
+
+## Native reference root replacement for factory drops
+
+The owned drop factory now loads a separate reference-placement definition from
+exactly the carried NIF bytes. It omits the authored single asset-root transform
+when computing loose body bind matrices. Body/joint data and descendant local
+transforms remain authored. The carried graph is unchanged. Renderer loading
+retains a mutable root for TES4 assets containing collision targets, including
+physical children, so optimization and cloning preserve a private per-instance
+root. ObjectAnimation replaces that root with identity while the outer node
+owns reference position, rotation and scale. It then creates its passive
+physical-node binding and local publication checkpoint.
+
+A new real-NIF factory course includes a quarter-turned physical child at(3,4,5)
+under the authored root at(1,2,3). With reference scale2 it verifies child world
+translation=reference+(6,8,10), preserved child rotation, matching Bullet body
+position and unchanged cached root. Direct-root admission verifies exact root
+identity and initial rendered target=reference placement. Physics round trips
+use the declared1e-4 world-unit tolerance. The preceding implementation fails
+the exact direct-root assertions with target(105,20,41) versus reference
+(103,16,35).
+
+Independent original instructions4E4244..4E426E execute the actual reference
+position copies and full4D7AF0 rotation builder with actual nonactor REFR
+virtual dispatch. All36 contexts cover three reference rotations, two positions,
+three different authored roots and both x87 precision words. The first12 local
+root floats depend only on the reference pose; child/reference storage is
+unchanged and stack balance holds. No function hooks are used. Scale stays
+unchanged in this particular prefix; the separately recorded4E43C8..4E43E9
+prefix later overwrites it with the reference scale. This is not a full
+GenerateNiNode/resource/physics-registration or normal-input gameplay course.
+
+World still needs per-node frame projection and masked reference publication;
+visible scale versus admitted physical scale, forced-transform continuation,
+loose save/recreation, production break/mastery, pickup/replacement/sound and
+all normal-input/restart/controller/FPS acceptance remain open. S4 is incomplete.
+
+The editable [reference-root manifest](M15-ORIGINAL-REFERENCE-ROOT-PROBES.json)
+contains the executable/hash identities, curated original root outputs,
+implementation hashes, exact inventories, allocation scope and retained attempts.
+Evidence root: `build/oblivion-compat/m15/S4`.
+
+- `loose-reference-root-oracle-01`:36 original root-prefix contexts, no hooks.
+  The original executable SHA256 is
+  `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+- `loose-reference-root-normal-04` and `loose-reference-root-sanitized-03`:
+  **1,557 engine tests/122 suites each**, unfiltered with exact inventory/XML
+  agreement, no failures/skips and no sanitizer diagnostics.
+- `loose-reference-root-normal-05` and `loose-reference-root-sanitized-04`:
+  **2,696 component tests/255 suites each**, with the same complete verification.
+  All four reports preserve identical before/after source fingerprint
+  `09e861582aab284fe43c8705b48d86ccab3e61c9dcf18e4f5592515727d177ae` atop
+  `9217ea18ca17d15cd925d26bdc0f62729d381e33`. The ten implementation/test-file
+  hashes and patch were frozen in `loose-reference-root-review-04` before these
+  documentation edits. ASan leak checking is disabled.
+- `loose-reference-root-allocation-01`: final normal engine-test ELF, one
+  two-drop publication-through-factory-return interval, zero observed main-thread
+  malloc/calloc/realloc/aligned_alloc/posix_memalign calls. Preparation, other
+  allocation APIs/threads and gameplay are excluded. The detector's prior
+  positive control is retained in `loose-scene-binding-allocation-01`.
+
+The same hash-identified original image also passes32 registration-handler
+contexts in `loose-registration-oracle-03`: actual RTTI initializerA12200,
+88A7D0 hierarchy visitor, collision lookup4A05E0, reference callback4DE010 and
+88A870 handler. The first-context bit adds0xC to the first discovered collision;
+subsequent collisions clear0x4 and retain existing0x8. A synthetic World getter
+returns null matching each body World, so no native insertion/activation occurs;
+BA7A8C=3 suppresses collision dispatch during node world composition and optional
+reference-special/debug gates are zero. This establishes the selected handler
+branches, not production caller context initialization or live registration.
+
+Retained baseline01 fails the new exact renderer root/target assertions on the
+preceding implementation. It also exposed an inappropriate exact physics
+round-trip assertion, corrected to the declared1e-4 tolerance. Normal01 was
+stopped and awaited before that test correction. Normal02 failed component test
+compilation because `Nif::Matrix3` is not aggregate-initializable; explicit
+fixture entries fixed it. Sanitized01 was stopped and awaited first. Normal03
+passes all2,696 components and1,556/1,557 engine cases; the new child test
+incorrectly converted an already-world-unit expected position again. The actual
+body and renderer both have(109,24,45). Sanitized02 passed all2,696 components,
+then was stopped and awaited before correcting that test-only expectation.
+Fresh final component reports also establish complete before/after fingerprints.
+Exploratory registration probes01/02 failed because their synthetic fixtures
+omitted native RTTI initialization; failure records remain alongside the scripts.
+Probe03 runs the actual initializer and passes all32 contexts.

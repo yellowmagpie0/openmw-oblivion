@@ -11654,7 +11654,7 @@ namespace
 {
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
-    std::string nativeCarriedWeaponNif(float radius)
+    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false)
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -11664,10 +11664,11 @@ namespace
         };
         std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
         data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
-            + bytes(std::uint32_t{4}) + bytes(std::uint32_t{0}) + std::string(3, '\0');
+            + bytes(std::uint32_t(childTarget ? 5 : 4)) + bytes(std::uint32_t{0}) + std::string(3, '\0');
         data += bytes(std::uint16_t{4});
         for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape"})
             data += string(type);
+        if (childTarget) data += bytes(std::uint16_t{0});
         for (std::uint16_t i = 0; i < 4; ++i) data += bytes(i);
         data += bytes(std::uint32_t{0}); // No groups.
         // NiNode / NiAVObject / NiObjectNET.
@@ -11675,11 +11676,23 @@ namespace
             + bytes(std::uint16_t{14});
         for (const float value : {1.f,2.f,3.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})
             data += bytes(value);
-        data += bytes(std::uint32_t{0}) + bytes(std::int32_t{1}) // Properties and collision.
-            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Children/effects.
-        data += bytes(std::int32_t{0}) + bytes(std::uint16_t{1}) + bytes(std::int32_t{2});
+        data += bytes(std::uint32_t{0}) + bytes(std::int32_t(childTarget ? -1 : 1)); // Properties/collision.
+        data += bytes(std::uint32_t(childTarget ? 1 : 0));
+        if (childTarget) data += bytes(std::int32_t{1});
+        data += bytes(std::uint32_t{0}); // Effects.
+        if (childTarget)
+        {
+            data += string("Physical child") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})
+                + bytes(std::uint16_t{14});
+            for (const float value : {3.f,4.f,5.f, 0.f,1.f,0.f,-1.f,0.f,0.f,0.f,0.f,1.f, 1.f})
+                data += bytes(value);
+            data += bytes(std::uint32_t{0}) + bytes(std::int32_t{2})
+                + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0});
+        }
+        data += bytes(std::int32_t(childTarget ? 1 : 0)) + bytes(std::uint16_t{1})
+            + bytes(std::int32_t(childTarget ? 3 : 2));
         // bhkRigidBody: shape, world filter/info, entity info, rigid info.
-        data += bytes(std::int32_t{3}) + std::string(4, '\0') + std::string(20, '\0')
+        data += bytes(std::int32_t(childTarget ? 4 : 3)) + std::string(4, '\0') + std::string(20, '\0')
             + std::string(4, '\0') + std::string(20, '\0');
         for (const float value : {0.f,0.f,0.f,0.f, 0.f,0.f,0.f,1.f, // Translation/XYZW rotation.
                  0.f,0.f,0.f,0.f, 0.f,0.f,0.f,0.f, // Velocities.
@@ -21282,7 +21295,7 @@ namespace
         std::unique_ptr<MWRender::Objects> mObjects;
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
-        NativeWeaponFactoryFixture()
+        explicit NativeWeaponFactoryFixture(bool childTarget = false)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
@@ -21306,7 +21319,7 @@ namespace
             if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes/factory-skeleton.osgt").string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
-                const auto bytes = nativeCarriedWeaponNif(.5f);
+                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget);
                 std::ofstream file(mDirectory / "meshes/factory-weapon.nif", std::ios::binary);
                 file.write(bytes.data(), bytes.size());
                 if (!file) throw std::runtime_error("cannot write owned factory weapon NIF");
@@ -21977,11 +21990,13 @@ namespace
     struct NativeWeaponTargetVisitor : osg::NodeVisitor
     {
         osg::ref_ptr<NifOsg::MatrixTransform> mTarget;
-        NativeWeaponTargetVisitor() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) { setNodeMaskOverride(~0u); }
+        unsigned mRecord;
+        explicit NativeWeaponTargetVisitor(unsigned record = 0)
+            : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mRecord(record) { setNodeMaskOverride(~0u); }
         void apply(osg::Node& node) override
         {
             unsigned record;
-            if (node.getUserValue("recordIndex", record) && record == 0)
+            if (node.getUserValue("recordIndex", record) && record == mRecord)
                 if (auto* target = dynamic_cast<NifOsg::MatrixTransform*>(&node)) mTarget = target;
             traverse(node);
         }
@@ -22014,6 +22029,15 @@ TEST(OblivionWorldTest, NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCa
     const auto before = reference.getRefData().getPosition();
     const auto parentPosition = reference.getRefData().getBaseNode()->getPosition();
     const auto initial = binding->captureWorldBones(placement); ASSERT_EQ(initial.size(), 1u);
+    // GenerateNiNode replaces the authored NIF root pose with the REFR pose.
+    // Here the outer placement carries it, so the private asset root is identity.
+    EXPECT_EQ(owned.mTarget->getMatrix(), osg::Matrixd::identity());
+    EXPECT_EQ(initial[0].mPose.getTrans(), before.asVec3());
+    EXPECT_EQ(cached.mTarget->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    const auto physicalRoot = fixture.mPhysics->captureLooseObjectRootPose(reference).getTrans();
+    // Bullet/world-unit conversion is approximate; renderer placement above is exact.
+    for (unsigned axis = 0; axis < 3; ++axis)
+        EXPECT_NEAR(physicalRoot[axis], before.pos[axis], 1e-4);
     const std::array<NifBullet::RagdollBoneWorldPose, 1> desired{{{initial[0].mNodeRecord,
         osg::Matrixf::translate(112, 23, 44)}}};
     binding->applyWorldBones(desired, placement);
@@ -22024,6 +22048,47 @@ TEST(OblivionWorldTest, NativeWeaponFactoryOwnsPhysicalNodeBindingSeparateFromCa
     EXPECT_EQ(cached.mTarget->getMatrix(), templateMatrix);
     EXPECT_TRUE(binding->isValid());
     EXPECT_FALSE(binding->matchesLocalPose(checkpoint));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose)
+{
+    NativeWeaponFactoryFixture fixture(true);
+    const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+    ASSERT_TRUE(carried);
+    ASSERT_TRUE(carried->mReferenceDefinition);
+    EXPECT_EQ(carried->mReferenceDefinition->mReferenceRoot, 0u);
+    EXPECT_FALSE(carried->mBody.mDefinition->mReferenceRoot);
+    EXPECT_EQ(carried->mBody.mDefinition->mBodies[0].mBoneBind.getTrans(), osg::Vec3f(4, 6, 8));
+    EXPECT_EQ(carried->mReferenceDefinition->mBodies[0].mBoneBind.getTrans(), osg::Vec3f(3, 4, 5));
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
+    ASSERT_NE(animation, nullptr);
+    NativeWeaponTargetVisitor root, child(1);
+    animation->getObjectRoot()->accept(root); animation->getObjectRoot()->accept(child);
+    ASSERT_TRUE(root.mTarget); ASSERT_TRUE(child.mTarget);
+    EXPECT_EQ(root.mTarget->getMatrix(), osg::Matrixd::identity());
+    EXPECT_EQ(child.mTarget->getMatrix().getTrans(), osg::Vec3d(3, 4, 5));
+    EXPECT_EQ(child.mTarget->getMatrix()(0, 1), -1);
+    auto placement = Nif::NiTransform::getIdentity();
+    placement.mTranslation = reference.getRefData().getPosition().asVec3();
+    placement.mScale = 2;
+    const auto projected = animation->getLoosePhysicalPose()->captureWorldBones(placement);
+    ASSERT_EQ(projected.size(), 1u);
+    EXPECT_EQ(projected[0].mPose.getTrans(), placement.mTranslation + osg::Vec3f(6, 8, 10));
+    const auto physical = fixture.mPhysics->captureLooseObject(reference);
+    ASSERT_EQ(physical.size(), 1u);
+    const auto origin = physical[0].mPose.getOrigin();
+    const auto expected = projected[0].mPose.getTrans();
+    EXPECT_NEAR(origin.x(), expected.x(), 1e-4);
+    EXPECT_NEAR(origin.y(), expected.y(), 1e-4);
+    EXPECT_NEAR(origin.z(), expected.z(), 1e-4);
+    const auto cached = fixture.mResources.getSceneManager()->getTemplate(
+        VFS::Path::NormalizedView("meshes/factory-weapon.nif"), true, true);
+    NativeWeaponTargetVisitor cachedRoot;
+    const_cast<osg::Node*>(cached.get())->accept(cachedRoot); ASSERT_TRUE(cachedRoot.mTarget);
+    EXPECT_NE(cachedRoot.mTarget, root.mTarget);
+    EXPECT_EQ(cachedRoot.mTarget->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication)

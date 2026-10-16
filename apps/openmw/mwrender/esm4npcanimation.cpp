@@ -260,7 +260,12 @@ namespace MWRender
         if (!scene) return std::nullopt;
         auto native = OblivionDroppedWeaponPose::capture(*scene, placement);
         if (!native) return std::nullopt;
-        CarriedWeaponDrop result{std::move(*body), std::move(*native)};
+        const auto file = mResourceSystem->getNifFileManager()->get(body->mPose.mModel);
+        if (file->mPath != body->mPose.mModel || file->mHash != body->mPose.mSourceHash)
+            return std::nullopt;
+        auto referenceDefinition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+            NifBullet::loadReferenceRagdollDefinition(*file));
+        CarriedWeaponDrop result{std::move(*body), std::move(*native), std::move(referenceDefinition)};
         if (!isCurrentCarriedWeaponDrop(result, placement)) return std::nullopt;
         return result;
     }
@@ -268,7 +273,9 @@ namespace MWRender
     bool ESM4NpcAnimation::isCurrentCarriedWeaponDrop(
         const CarriedWeaponDrop& drop, const Nif::NiTransform& placement) const noexcept
     {
-        if (!isCurrentCarriedWeaponBody(drop.mBody) || !mNodeMapCreated) return false;
+        if (!isCurrentCarriedWeaponBody(drop.mBody) || !mNodeMapCreated
+            || !drop.mReferenceDefinition || !drop.mReferenceDefinition->mReferenceRoot
+            || drop.mReferenceDefinition->mSourceHash != drop.mBody.mPose.mSourceHash) return false;
         // getNodeMap() can allocate/build through scene traversal. Preparation
         // populates the map; callback-free validation only borrows it.
         const auto anchor = mNodeMap.find("weapon");

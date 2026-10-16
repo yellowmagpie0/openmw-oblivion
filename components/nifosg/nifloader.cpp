@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <string_view>
+#include <unordered_set>
 
 #include <osg/Array>
 #include <osg/Geometry>
@@ -348,6 +349,7 @@ namespace NifOsg
         bool mHasHerbalismLabel = false;
         bool mHasStencilProperty = false;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
+        std::unordered_set<const Nif::NiAVObject*> mNativePhysicalRoots;
 
         struct EmbeddedSequence
         {
@@ -640,6 +642,28 @@ namespace NifOsg
             if (roots.empty())
                 throw Nif::Exception("Found no root nodes", nif.getFilename());
 
+            if (mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
+                for (const auto* root : roots)
+                {
+                    std::vector<const Nif::NiAVObject*> pending{root};
+                    std::unordered_set<const Nif::NiAVObject*> visited;
+                    while (!pending.empty())
+                    {
+                        const auto* node = pending.back();
+                        pending.pop_back();
+                        if (!visited.insert(node).second) continue;
+                        if (!node->mCollision.empty()
+                            && dynamic_cast<const Nif::bhkCollisionObject*>(node->mCollision.getPtr()))
+                        {
+                            mNativePhysicalRoots.insert(root);
+                            break;
+                        }
+                        if (const auto* branch = dynamic_cast<const Nif::NiNode*>(node))
+                            for (const auto& child : branch->mChildren)
+                                if (!child.empty()) pending.push_back(child.getPtr());
+                    }
+                }
+
             osg::ref_ptr<SceneUtil::TextKeyMapHolder> textkeys(new SceneUtil::TextKeyMapHolder);
 
             osg::ref_ptr<osg::Group> created(new osg::Group);
@@ -907,8 +931,10 @@ namespace NifOsg
             const bool nativePhysicalTarget = (mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB)
                 && !nifNode->mCollision.empty()
                 && dynamic_cast<const Nif::bhkCollisionObject*>(nifNode->mCollision.getPtr());
+            const bool nativePhysicalRoot = mNativePhysicalRoots.contains(nifNode);
 
-            osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode) || nativePhysicalTarget
+            osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode)
+                || nativePhysicalTarget || nativePhysicalRoot
                 ? osg::Object::DYNAMIC : osg::Object::STATIC;
 
             if (nifNode->mRecordType == Nif::RC_NiBillboardNode)
@@ -940,7 +966,7 @@ namespace NifOsg
                 // The Root node can be created as a Group if no transformation is required.
                 // This takes advantage of the fact root nodes can't have additional controllers
                 // loaded from an external .kf file (original engine just throws "can't find node" errors if you try).
-                if (!nativePhysicalTarget && nifNode->mParents.empty() && nifNode->mController.empty()
+                if (!nativePhysicalTarget && !nativePhysicalRoot && nifNode->mParents.empty() && nifNode->mController.empty()
                     && nifNode->mTransform.isIdentity()
                     && !mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(nifNode->mName)))
                     node = new osg::Group;

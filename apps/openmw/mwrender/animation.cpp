@@ -2831,6 +2831,36 @@ namespace MWRender
     {
         if (mLoosePhysicalPose || !mObjectRoot)
             throw std::logic_error("loose physical model requires an unbound object root");
+        if (definition.mReferenceRoot)
+        {
+            struct FindRoot : osg::NodeVisitor
+            {
+                unsigned mRecord;
+                unsigned mMatches = 0;
+                NifOsg::MatrixTransform* mTransform = nullptr;
+                explicit FindRoot(unsigned record) : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mRecord(record)
+                { setNodeMaskOverride(~0u); }
+                void apply(osg::Node& node) override
+                {
+                    unsigned record;
+                    if (node.getUserValue("recordIndex", record) && record == mRecord)
+                    {
+                        ++mMatches;
+                        mTransform = dynamic_cast<NifOsg::MatrixTransform*>(&node);
+                    }
+                    traverse(node);
+                }
+            } root(*definition.mReferenceRoot);
+            mObjectRoot->accept(root);
+            if (root.mMatches != 1 || !root.mTransform
+                || root.mTransform->getDataVariance() != osg::Object::DYNAMIC)
+                throw std::invalid_argument("loose reference requires a private mutable NIF root");
+            // The outer reference node owns the native placement. Replace the
+            // asset root's authored pose rather than applying it a second time.
+            root.mTransform->setScale(1.f);
+            root.mTransform->setRotation(Nif::NiTransform::getIdentity().mRotation);
+            root.mTransform->setTranslation({0, 0, 0});
+        }
         auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
         binding->captureWorldBones(objectWorld);
         mLoosePhysicalPose = std::move(binding);

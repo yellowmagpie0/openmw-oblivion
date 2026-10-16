@@ -6,6 +6,27 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native reference root placement — 2026-10-16
+
+The drop factory now replaces the authored NIF root pose with the new reference
+placement in both physics and the private rendered model. Carried and cached
+models retain their authored roots. Physical children preserve their local
+rotation and translation, including the reference scale applied to offsets.
+The prior direct-root model started at(105,20,41) for a reference at(103,16,35);
+it now starts at the reference position.
+
+Normal and ASan/UBSan checks pass **2,696 component tests and 1,557 engine tests**
+each. The real-NIF factory cases verify direct-root and rotated-child placement,
+Bullet/renderer agreement, cache isolation and existing admission rollback.
+The publication tail still performs zero observed allocations. Independent
+original instructions verify36 root-replacement contexts without function hooks.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-reference-root-replacement-for-factory-drops)
+and [editable provenance](M15-ORIGINAL-REFERENCE-ROOT-PROBES.json) record the
+boundaries and retained failures. Per-node World publication, callback masks,
+live scale/forced-transform continuation, loose save/recreation and the full
+normal-input gameplay matrix remain open. S4 is incomplete.
+
 ## S4 loose-weapon physical node bindings — 2026-10-16
 
 Owned factory drops now retain and bind their actual mutable TES4 collision

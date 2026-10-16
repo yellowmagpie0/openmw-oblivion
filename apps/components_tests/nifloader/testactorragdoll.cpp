@@ -136,6 +136,45 @@ namespace
         EXPECT_EQ(graph.mBodies[1].mBone, "Bip01 Spine");
         EXPECT_EQ(graph.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(14, 25, 36));
     }
+    TEST_F(ActorRagdollTest, ReferencePlacementOmitsOnlyTheAuthoredRootTransform)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        root.mTransform.mRotation.mValues[0][0] = 0;
+        root.mTransform.mRotation.mValues[0][1] = -1;
+        root.mTransform.mRotation.mValues[1][0] = 1;
+        root.mTransform.mRotation.mValues[1][1] = 0;
+        root.mTransform.mScale = 2;
+        const auto authored = NifBullet::loadActorRagdollDefinition(mFile);
+        const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+        EXPECT_FALSE(authored.mReferenceRoot);
+        ASSERT_EQ(placed.mReferenceRoot, 0u);
+        ASSERT_EQ(placed.mBodies.size(), authored.mBodies.size());
+        EXPECT_EQ(placed.mSourceHash, authored.mSourceHash);
+        EXPECT_EQ(placed.mBodies[0].mBoneBind.getTrans(), osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(placed.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(4, 5, 6));
+        EXPECT_NE(authored.mBodies[0].mBoneBind, placed.mBodies[0].mBoneBind);
+        EXPECT_FLOAT_EQ(placed.mBodies[0].mMass, authored.mBodies[0].mMass);
+        EXPECT_EQ(placed.mBodies[0].mInertia, authored.mBodies[0].mInertia);
+        EXPECT_EQ(placed.mBodies[0].mTranslation, authored.mBodies[0].mTranslation);
+        EXPECT_EQ(placed.mBodies[0].mRotation, authored.mBodies[0].mRotation);
+        EXPECT_EQ(std::get<NifBullet::RagdollHingeJoint>(placed.mJoints[0].mJoint).mA.mPivot,
+            std::get<NifBullet::RagdollHingeJoint>(authored.mJoints[0].mJoint).mA.mPivot);
+        EXPECT_EQ(root.mTransform.mTranslation, osg::Vec3f(10, 20, 30));
+        EXPECT_FLOAT_EQ(root.mTransform.mScale, 2);
+        EXPECT_EQ(NifBullet::loadActorRagdollDefinition(mFile).mBodies[0].mBoneBind,
+            authored.mBodies[0].mBoneBind);
+    }
+
+    TEST_F(ActorRagdollTest, ReferencePlacementRejectsMissingMultipleOrNonSceneRoots)
+    {
+        mFile.mRoots.push_back(mFile.mRoots.front());
+        EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
+        mFile.mRoots.clear();
+        EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
+        mFile.mRoots.push_back(mFile.mRecords.back().get());
+        EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
+    }
+
     TEST_F(ActorRagdollTest, RetainsRigidBodyTransformRecordIdentityForPoseAdmission)
     {
         // Locate by the already owned graph rather than depending on fixtures'

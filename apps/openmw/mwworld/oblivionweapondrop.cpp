@@ -321,7 +321,7 @@ namespace MWWorld
             }
             rotations.push_back(Misc::Convert::makeOsgQuat(placed.mPos));
             const osg::Matrixf root = osg::Matrixf::rotate(rotations.back()) * osg::Matrixf::translate(placed.mPos.asVec3());
-            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(*carried->mBody.mDefinition, placed.mScale);
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(*carried->mReferenceDefinition, placed.mScale);
             std::vector<NifBullet::RagdollBoneWorldPose> bones;
             for (const auto& body : scaled.mBodies)
             {
@@ -346,7 +346,7 @@ namespace MWWorld
         {
             const auto& e = data->mEntries[i];
             admissions.push_back({*e.mCell, references[i], objects, physics, std::string(e.mCarried.mBody.mPose.mModel.value()),
-                rotations[i], MWRender::Mask_Object, *e.mCarried.mBody.mDefinition,
+                rotations[i], MWRender::Mask_Object, *e.mCarried.mReferenceDefinition,
                 NifBullet::RagdollNativeLengthScale, poses[i], MWPhysics::CollisionType_World,
                 MWPhysics::CollisionType_AnyPhysical});
         }

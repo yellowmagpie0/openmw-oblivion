@@ -1,0 +1,387 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "native reference root replacement wired in actual owned drop factory; M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "original_root_prefix": {
+    "passed": true,
+    "contexts": 36,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "43a9636a9359dc9d4bf46bb2d061970039f29c3979c07c80913f6afa1302baa0",
+    "cases_sha256": "10243191730490412ea066b18f3a988d11d9d19c696b42256667c5c83472e134",
+    "scope": "Actual GenerateNiNode prefix4E4244..4E426E overwrites root local translation/rotation through full original4D7AF0 actual REFR nonactor vtable and axis/matrix callees. No hooks.36contexts:3reference rotations*2positions*3authored roots*2x87. Scale deliberately unchanged in this prefix; separately verified4E43C8..4E43E9 later sets reference scale. Authored child/reference storage unchanged, stack balanced. Not full GenerateNiNode/resource loading/physics registration/gameplay acceptance."
+  },
+  "reference_scale_provenance": "M15-ORIGINAL-DROP-SCALE-PROBES.json",
+  "reference_rotation_provenance": "M15-ORIGINAL-DROP-TRANSFORM-PROBES.json",
+  "original_registration_probe": {
+    "passed": true,
+    "contexts": 32,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "4750ce6177816cccaeb2eec29443957d74e5aead13232bba4a57118d60dc8e1b",
+    "cases_sha256": "3d0ed951c5d7b38583747e472c7b3ca933d5fb731ec3be4f1d0bb5352d030b34",
+    "scope": "Actual RTTI initializerA12200 then full88A7D0 hierarchy visitor through actual4A05E0 collision RTTI lookup,4DE010 reference callback and88A870 registration handler; actual body world getter and NiNode target world update. Synthetic World-wrapper getter returns null matching existing body world; no insertion/activation. BA7A8C=3 suppresses collision dispatch during node world update; B09868/B09870/B2E2D8 zero disable optional reference-special/debug branches.32contexts:four initialflags*two first-context values*one/two collisions*two x87. First-context body receives OR0xC, later bodies clear0x4 and preserve prior0x8; counter/first flag, full cdeclreturn/SP/callee-save and body/world byte invariants verified. Does not establish production caller context initialization, actual World registration or gameplay."
+  },
+  "curated_root_prefix_cases": [
+    {
+      "angles": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "authored_root_translation": [
+        1,
+        2,
+        3
+      ],
+      "authored_root_scale": 1,
+      "control_word": 639,
+      "root_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        2147483648,
+        0,
+        1065353216
+      ],
+      "child_unchanged": true,
+      "reference_unchanged": true
+    },
+    {
+      "angles": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "authored_root_translation": [
+        99,
+        -100,
+        23
+      ],
+      "authored_root_scale": 0.125,
+      "control_word": 639,
+      "root_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        2147483648,
+        0,
+        1040187392
+      ],
+      "child_unchanged": true,
+      "reference_unchanged": true
+    },
+    {
+      "angles": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "authored_root_translation": [
+        -7,
+        11,
+        -13
+      ],
+      "authored_root_scale": 4,
+      "control_word": 639,
+      "root_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        2147483648,
+        0,
+        1082130432
+      ],
+      "child_unchanged": true,
+      "reference_unchanged": true
+    },
+    {
+      "angles": [
+        0.3,
+        -0.7,
+        1.1
+      ],
+      "position": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "authored_root_translation": [
+        1,
+        2,
+        3
+      ],
+      "authored_root_scale": 1,
+      "control_word": 639,
+      "root_bits": [
+        1051828412,
+        1060011905,
+        1059384179,
+        3211792621,
+        1049034669,
+        1046967155,
+        3162595671,
+        3207510696,
+        1060834805,
+        0,
+        2147483648,
+        0,
+        1065353216
+      ],
+      "child_unchanged": true,
+      "reference_unchanged": true
+    },
+    {
+      "angles": [
+        -1.2,
+        0.2,
+        -2.0
+      ],
+      "position": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "authored_root_translation": [
+        1,
+        2,
+        3
+      ],
+      "authored_root_scale": 1,
+      "control_word": 639,
+      "root_bits": [
+        3201356270,
+        3211011033,
+        3192614905,
+        1053828873,
+        1016070284,
+        3211384970,
+        1062292088,
+        3202882098,
+        1052103735,
+        0,
+        2147483648,
+        0,
+        1065353216
+      ],
+      "child_unchanged": true,
+      "reference_unchanged": true
+    }
+  ],
+  "implementation": {
+    "digests": {
+      "apps/components_tests/nifloader/testactorragdoll.cpp": "2b1b8c501ca60809ffbfde004aaa455cedfb0bab3289023e394dabcc8ee553b8",
+      "apps/components_tests/nifosg/testnifloader.cpp": "45287dc766192c35fc791103eeff30fb2f7d449b7967dda29fa58bdf61d8f858",
+      "apps/openmw/mwrender/animation.cpp": "56004363848ead37957ab05ba5da224636bbf11aa0af1cbb3eba3082fc4715ae",
+      "apps/openmw/mwrender/esm4npcanimation.cpp": "0a57fdcc08c97088f4ad2c13cf24c3f79fb58dd6765640067b666c2463e1bb50",
+      "apps/openmw/mwrender/esm4npcanimation.hpp": "2c87d1fa4ba86e8e4ca3224c3d2b479fd00546be2ecb1d05da624a147cc1a2ad",
+      "apps/openmw/mwworld/oblivionweapondrop.cpp": "1ef2bc1bbe718bc331a4ff9f55df9d5e5d3d3599d2b163845392b3c51a75e65a",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "d418cf0bdf5800e51331a6f339a599235e101903457a7542074bfb6c94fb0538",
+      "components/nifbullet/actorragdoll.cpp": "cc346683d3e06119bcf9bb1ce17ceb2f8860bf5fb3a237f8c535d5df47f8abe6",
+      "components/nifbullet/actorragdoll.hpp": "71aebb316db28220744da4918223bccf6a3bdeeffce38cb927967dd240d5c481",
+      "components/nifosg/nifloader.cpp": "bff262ff52c7bce89923f32845ae391ee9e89fb47c9d6a3b987cb2ed45bfc066"
+    },
+    "patch_sha256": "13e44c19284d567fd53e73b8f57af8079fbd8892825aac997a0e2fd4f9be8f58",
+    "behavior": [
+      "loadReferenceRagdollDefinition requires one scene root, omits only its authored transform from loose bind matrices, and identifies its record.",
+      "CarriedWeaponDrop owns a separate reference definition from the same hashed NIF bytes; carried body definition remains authored.",
+      "TES4 roots with reachable collision targets remain mutable through optimization and per-instance cloning.",
+      "ObjectAnimation replaces the private loose asset root with identity before binding; outer placement owns reference translation/rotation/scale.",
+      "Factory builds Bullet poses and admits physics using the reference definition. Child transforms/body properties/joints remain authored."
+    ],
+    "domain": "Existing native single-body loose-owner factory domain; reference-placement loader requires a single NiAVObject root. No generalized multi-root, unsupported transform or physical-graph admission claim."
+  },
+  "checks": [
+    {
+      "evidence": "loose-reference-root-normal-04",
+      "mode": "engine",
+      "source": {
+        "head": "9217ea18ca17d15cd925d26bdc0f62729d381e33",
+        "source_fingerprint": "09e861582aab284fe43c8705b48d86ccab3e61c9dcf18e4f5592515727d177ae"
+      },
+      "result": {
+        "executed": 1557,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "59d3c6d5398dcd5a5a1475722e1d1e705e8122c82a887513a78bf806824d0612",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "c216bc09d3e6a57576895970b6b0036c9393f039919ad9d5cf9fedbcfa4e29db",
+        "inventory_sha256": "16612f14085bbad4439ca1e01771b5ff72be41592854eb16b7f6d82fbb744749",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    {
+      "evidence": "loose-reference-root-sanitized-03",
+      "mode": "engine",
+      "source": {
+        "head": "9217ea18ca17d15cd925d26bdc0f62729d381e33",
+        "source_fingerprint": "09e861582aab284fe43c8705b48d86ccab3e61c9dcf18e4f5592515727d177ae"
+      },
+      "result": {
+        "executed": 1557,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "6a6eaa41f19509a3e9a83eb16e59e359f6ab06eeb80a1e5228f449e2e08b62d0",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "5386df4602b6236e36f32b8d6d71ca457ebfab06847afe2c38e418d71a510e60",
+        "inventory_sha256": "16612f14085bbad4439ca1e01771b5ff72be41592854eb16b7f6d82fbb744749",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    {
+      "evidence": "loose-reference-root-normal-05",
+      "mode": "components",
+      "source": {
+        "head": "9217ea18ca17d15cd925d26bdc0f62729d381e33",
+        "source_fingerprint": "09e861582aab284fe43c8705b48d86ccab3e61c9dcf18e4f5592515727d177ae"
+      },
+      "result": {
+        "executed": 2696,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5bf191fd0701029c23cadb0cd439da00efb32d8cc7c295a8133be9133f500f99",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "3c33af37ca42cbbef84cdbec2af683e5e97968ca9e6cb21d1a3fd76d6bb479fa",
+        "inventory_sha256": "42cc04ee6f3a71eb3884970e4aea63916706780d2f458e34964603c9e81f28ce",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    {
+      "evidence": "loose-reference-root-sanitized-04",
+      "mode": "components",
+      "source": {
+        "head": "9217ea18ca17d15cd925d26bdc0f62729d381e33",
+        "source_fingerprint": "09e861582aab284fe43c8705b48d86ccab3e61c9dcf18e4f5592515727d177ae"
+      },
+      "result": {
+        "executed": 2696,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "eb0f6338aa656dc3176c99ee8e730ad9909cd8115e34e8434fb88773eeae42ad",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "76e2319609232decd8ab26ff068a48a7aba8466b45ada9b1f60add9a7856bc64",
+        "inventory_sha256": "53e29b448fca79099c4147d35b5455d8cd494b563b3056a71c9729617763a0aa",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  ],
+  "baseline": {
+    "source": {
+      "head": "9217ea18ca17d15cd925d26bdc0f62729d381e33",
+      "source_fingerprint": "95611ad1d627606d2e1045342db36a88a48124b7491cc297251df5119da79e0d"
+    },
+    "error": "engine.log: command exited 1",
+    "expected_failure": true
+  },
+  "publication_allocation_check": {
+    "passed": true,
+    "publication_entries": 1,
+    "returns": 1,
+    "allocations": [],
+    "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded.",
+    "config": {
+      "mode": "factory",
+      "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+      "binary_sha256": "59d3c6d5398dcd5a5a1475722e1d1e705e8122c82a887513a78bf806824d0612",
+      "symbols": {
+        "main": {
+          "name": "main",
+          "address": 7932640
+        },
+        "outer": {
+          "name": "MWWorld::PreparedEquippedWeaponDrops::commit(MWWorld::WorldModel::LooseWeaponPublicationHooks const&)",
+          "address": 30305072
+        },
+        "publish": {
+          "name": "MWWorld::PreparedEquippedWeaponDrops::Data::publish(void*)",
+          "address": 30323648
+        }
+      },
+      "expected_no_allocations": true,
+      "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded."
+    }
+  },
+  "retained_attempts": {
+    "loose-reference-root-baseline-01": "Pre-change engine with new direct-root assertions fails: localroot retains(1,2,3), renderedtarget(105,20,41) versus reference(103,16,35). Also exposed inappropriate exact Bullet unit-roundtrip equality; corrected to declared1e-4 tolerance.",
+    "loose-reference-root-normal-01": "Stopped owned build and awaited terminal before tolerance correction.",
+    "loose-reference-root-normal-02": "Component test compilation failed because Nif::Matrix3 is not aggregate-initializable; corrected fixture with explicit entries.",
+    "loose-reference-root-sanitized-01": "Stopped owned build and awaited terminal before the same test compilation correction.",
+    "loose-reference-root-normal-03": "All2696components passed,1556/1557engine passed. New child test incorrectly converted expected engine-world units again; corrected direct comparison.",
+    "loose-reference-root-sanitized-02": "All2696components passed; stopped owned engine build and awaited terminal before correcting engine test units.",
+    "loose-registration-oracle-01_and_02": "Failed synthetic registration fixture skipped collision lookup because native RTTI globals were uninitialized. Probe03 runs actual initializerA12200 and verifies complete return."
+  },
+  "remaining": [
+    "Integrate per-node World frame projection and callback-mask-selected reference publication.",
+    "Verify production registration caller context initialization; probe currently supplies the first-body context flag.",
+    "Implement visible scale versus admitted physical properties and current-local forced-transform continuation.",
+    "Implement loose retention/save/unload/fresh NIF recreation.",
+    "Complete production break/mastery, pickup/replacement/sound and the full normal-input/restart/controller/FPS S4 acceptance matrix."
+  ],
+  "acceptance_limits": "Original instruction prefixes and actual engine factory/resource/renderer/Bullet integration. No new ordinary-input gameplay or save/restart acceptance. ASan leak checking disabled."
+}
