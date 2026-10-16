@@ -1,0 +1,187 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "bounded original-instruction serialization evidence; engine loose-body integration remains open",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "functions": {
+    "layout": "004E0970",
+    "writer": "004E0A40",
+    "layout_callback": "004DAC00",
+    "writer_callback": "004DACF0",
+    "body_t_rtti_initializer": "00A12680",
+    "collision_rtti_initializer": "00A12200"
+  },
+  "boundary_stubs": {
+    "0088A7D0": "Supplies exactly one selected collision object to the actual callback; scene traversal itself is not executed.",
+    "0045B9A0": "Captures bytes passed to the original save sink; file/container writing is not executed."
+  },
+  "actual_dispatch": {
+    "reference_vtable": "00A46C44",
+    "collision_vtable": "00A55FCC",
+    "rigid_body_vtables": [
+      "00A5605C",
+      "00A980A4"
+    ],
+    "body_t_local_rotation_xyzw": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "body_t_local_translation": [
+      0,
+      0,
+      0
+    ]
+  },
+  "case_matrix": {
+    "primary_collision": [
+      false,
+      true
+    ],
+    "island_activity_byte": [
+      null,
+      0,
+      1,
+      2,
+      255
+    ],
+    "x87_control_word": [
+      "027F",
+      "037F"
+    ],
+    "body_type": [
+      "bhkRigidBody",
+      "bhkRigidBodyT"
+    ],
+    "payload_profiles": [
+      {
+        "position": [
+          1,
+          -2,
+          3,
+          99
+        ],
+        "rotation_xyzw": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "linear": [
+          2,
+          -3,
+          4,
+          99
+        ],
+        "angular": [
+          -0.5,
+          1.5,
+          -2.5,
+          99
+        ]
+      },
+      {
+        "position": [
+          "+0",
+          "-0",
+          "+0",
+          99
+        ],
+        "rotation_xyzw": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "linear": [
+          "+0",
+          "-0",
+          "+0",
+          99
+        ],
+        "angular": [
+          "-0",
+          "+0",
+          "-0",
+          99
+        ]
+      },
+      {
+        "position": [
+          1e-30,
+          -1e-30,
+          1e-40,
+          99
+        ],
+        "rotation_xyzw": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "linear": [
+          -1e-40,
+          1e-30,
+          -1e-30,
+          99
+        ],
+        "angular": [
+          1e-40,
+          -1e-40,
+          0,
+          99
+        ]
+      },
+      {
+        "position": [
+          65536,
+          -10000000000.0,
+          1e+20,
+          99
+        ],
+        "rotation_xyzw": [
+          0,
+          0,
+          1,
+          0
+        ],
+        "linear": [
+          -65536,
+          10000000000.0,
+          -1e+20,
+          99
+        ],
+        "angular": [
+          1e-10,
+          -10000000000.0,
+          1e+20,
+          99
+        ]
+      }
+    ]
+  },
+  "observations": {
+    "case_count": 160,
+    "payload_bit_matches": 160,
+    "one_body_size": "3 + (primary ? 0 : 28) + (active ? 24 : 0)",
+    "header": "uint8 flags, uint16 body count; flags bit1 is primary, bit0 is active in this one-body domain",
+    "nonprimary_transform": "three binary32 position lanes converted to scene units, then binary32 quaternion in w,x,y,z order",
+    "active_velocities": "three binary32 linear lanes converted to scene units, then three unscaled binary32 angular lanes; fourth lanes omitted",
+    "linear_position_multiplier": 6.999040126800537,
+    "activity": "Null island or zero activity byte is inactive; tested nonzero bytes are active.",
+    "primary_transform": "No body transform is emitted for the primary collision object.",
+    "invariants": "Full returns, expected stack cleanup, callee-saved registers and unchanged reference/motion inputs verified."
+  },
+  "retained_diagnosis": "oracle-02 omitted original NiRTTI startup initialization, so bhkRigidBodyT and concrete collision inheritance queries rejected synthetic objects. oracle-03 executes original initializers before the queries.",
+  "evidence_directory": "build/oblivion-compat/m15/S4/drop-loose-save-oracle-03",
+  "harness_sha256": "a8463278a5d833c0674e27fb9aab08fb8febcb9a09f089921ef9ad693466ac39",
+  "exclusions": [
+    "C++ serialization comparison",
+    "Nonidentity BodyT local corrections",
+    "Mixed or multiple-body layouts",
+    "NiAVObject scene traversal",
+    "Reference pose updates during physics frames",
+    "Original-game save/load or normal-input acceptance",
+    "Engine loose-body frame/save/recreation integration"
+  ]
+}

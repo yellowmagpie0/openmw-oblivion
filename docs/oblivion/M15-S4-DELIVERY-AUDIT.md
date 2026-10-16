@@ -1868,3 +1868,31 @@ body frame synchronization and physical save/recreation, production break/master
 dispatch, retained Player/quest unequips, NPC replacement/sound, pickup metadata
 cleanup and all broader S4 gameplay/controller/FPS gates remain open.
 **S4 is incomplete.**
+
+
+## Original one-body Havok movement save layout
+
+Checkpoint **2026-10-16** records a bounded original-instruction probe for the
+next loose-body persistence integration. The hash-pinned original `4E0970` layout
+function and `4E0A40` writer run through full returns with actual callbacks,
+REFR/collision/body vtables, NiRTTI, primary lookup, activity and spatial/velocity
+getters. Scene traversal supplies one collision object and the byte sink captures
+writes; those two boundaries remain stubs. Actual original RTTI startup
+initializers run before derived-type queries.
+
+All **160 cases** match independent literal layout/unit expectations bit for
+bit, across primary/nonprimary collision objects, null/zero/three nonzero island
+activity states, ordinary/identity-corrected BodyT objects, four payload profiles
+and both x87 words. The primary collision object's transform is omitted from
+this payload; nonprimary bodies emit position plus quaternion, and active bodies
+also emit linear/angular velocity. This does not establish where or when the
+reference's stored pose is updated. An initial derived-type probe lacked the
+original RTTI startup initialization and is retained as a failed setup attempt.
+
+The editable [probe manifest](M15-ORIGINAL-LOOSE-WEAPON-SAVE-PROBES.json) records
+functions, inputs, observed layout, exact scope and evidence paths. No new C++
+rule or save implementation is introduced or validated by this checkpoint.
+Nonidentity BodyT corrections, multiple-body/mixed layouts, actual scene
+traversal and original-game save/load remain outside this probe. Engine
+loose-body frame/render/logical synchronization and physical save/recreation
+remain open, along with the other S4 gates. **S4 is incomplete.**
