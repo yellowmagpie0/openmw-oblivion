@@ -90,6 +90,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/runtimestate.cpp
     esm4/dropplacement.cpp
     esm4/npcplacement.cpp
+    esm4/referenceplacement.cpp
     esm4/localluascripts.cpp
     esm4/playermechanics.cpp
     esm4/pathgriddata.cpp

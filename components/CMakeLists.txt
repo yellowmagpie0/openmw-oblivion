@@ -343,6 +343,7 @@ add_component_dir (esm4
     runtimestate
     dropplacement
     npcplacement
+    referenceplacement
     observation
     script
     typetraits

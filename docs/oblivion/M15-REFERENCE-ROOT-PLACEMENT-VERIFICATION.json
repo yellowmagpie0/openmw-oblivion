@@ -1,0 +1,346 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Native nonactor XYZ reference-root arithmetic implemented and independently compared; no production caller or full M15S4 acceptance",
+  "parent_commit": "997671d405fcf7360b810b8cfe08ed7dadfaefef",
+  "tested_source_fingerprint": "1e2c3e78c487790849bd4d02789c1ff59a5d96a65dbbc78bb3883f78ec0310d5",
+  "implementation_sha256": {
+    "components/esm4/referenceplacement.hpp": "3a777cae4c0655708181114b9cb4da2ba2df0f652bef9310ea7d718e66e3d737",
+    "components/esm4/referenceplacement.cpp": "fa7034c10c91dcd7a6a0ae79b97f3d300e401712225c49319032fb8316ca31a0",
+    "components/esm4/placementsincos.hpp": "323d8336ff1df8cf2ce085a111852df2e9fbe6224dc2cf93524f94c4db90b466",
+    "components/esm4/npcplacement.cpp": "16d82f94992cc00e072f738b96724f1f750c2993a3344854dac334e138bf4fb9",
+    "components/CMakeLists.txt": "d7c3c0017a027a75159a0bd0982caf749951ff39d9ea2caa5b9799a13f5b51e9",
+    "apps/components_tests/CMakeLists.txt": "a9960588d7cafdfa3cfd0c3985fa4c5f912e948bdd861e4f1b0c2ddcafa4ae50",
+    "apps/components_tests/esm4/referenceplacement.cpp": "54c7d093e1e7a36ea78517b931e1a49cbb141db87343799747b8c939a49c1b4d"
+  },
+  "behavior": [
+    "referencePlacementRoot consumes ordinary nonactor position, all three Euler angles and reference scale; constructs original axis matrices and all three successive products including the initial identity multiplication. Default Single models live007F; optional Double retains027F intermediates. Translation is copied exactly and reference scale becomes absolute after matrix construction.",
+    "Unknown precision, nonfinite consumed fields and each axis outside the native FSINCOS finite argument domain |angle|<2^63 reject without mutation. Zero/subnormal/negative scales are arithmetic inputs here; this does not widen live physical admission.",
+    "Existing NPC placement now uses the same internal placementSinCos implementation moved unchanged into placementsincos.hpp. It retains the66-bit x87 pi reduction and existing yaw-only/morphology behavior. Native comparison covers the refactor.",
+    "Two new tests pin10 literal native hardware vectors across both supported precision modes, large/subnormal/signed-zero inputs, exact translation/scale and default-live behavior; malformed fields and range boundaries reject. No ObjectAnimation/World call is changed."
+  ],
+  "checks": {
+    "normal": {
+      "path": "reference-root-placement-normal-01/verification.json",
+      "sha256": "658f20bc4562a8fcffa646c8e052a8883b5064ea1d8b24bc1c58b391564c060a",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.569
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 14.202
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2754,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e6b0b60a297f2b31062107ee83d0e4488cecc555ab83db850e23ca51d95bb74b",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "c32b50ffa4d8806d6b13bbc7ccee6329c4113d6701999f64bf32c404849b3734",
+            "inventory_sha256": "5e5d9c5327d138b187ca94d318f8034c5274c0c67e2d1fe54d9724c4913ed912",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 263
+          }
+        },
+        "source_before": {
+          "head": "997671d405fcf7360b810b8cfe08ed7dadfaefef",
+          "source_fingerprint": "1e2c3e78c487790849bd4d02789c1ff59a5d96a65dbbc78bb3883f78ec0310d5"
+        },
+        "source_after": {
+          "head": "997671d405fcf7360b810b8cfe08ed7dadfaefef",
+          "source_fingerprint": "1e2c3e78c487790849bd4d02789c1ff59a5d96a65dbbc78bb3883f78ec0310d5"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "reference-root-placement-sanitized-01/verification.json",
+      "sha256": "0a8f875225783c6429248dbbff06c6497650d776a50990c1737795826f987019",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 26.691
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 67.216
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2754,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "27345174789a907bc07501c7c064a48e4a1da8529fa05f6b54814505775652b9",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "17082daf990977d90a085006948adf189d382881da34ef4fbc25842a64fa8b70",
+            "inventory_sha256": "9d23aae87aef816622ce65e9f246d2c8ea3d3c5ea790090a734545c6edae4b28",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 263
+          }
+        },
+        "source_before": {
+          "head": "997671d405fcf7360b810b8cfe08ed7dadfaefef",
+          "source_fingerprint": "1e2c3e78c487790849bd4d02789c1ff59a5d96a65dbbc78bb3883f78ec0310d5"
+        },
+        "source_after": {
+          "head": "997671d405fcf7360b810b8cfe08ed7dadfaefef",
+          "source_fingerprint": "1e2c3e78c487790849bd4d02789c1ff59a5d96a65dbbc78bb3883f78ec0310d5"
+        }
+      }
+    }
+  },
+  "native": {
+    "path": "reference-root-placement-native-02/verification.json",
+    "sha256": "5ea2927b06d06c3a313c912a4e29b1bbfa26947d5058f2796f5c930b9ffdd896",
+    "report": {
+      "passed": true,
+      "cases": 4152,
+      "seed": 1504016,
+      "repeats_identical": 2,
+      "emulator_common_cases": 72,
+      "emulator_common_mismatches": [],
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "harness_sha256": "ffb84bb735a52e25b5edc3be0149a7358d377de92d64edb079028b1c03565ed9",
+      "source_sha256": "d12d66531250728a398e1b2b6805db767d590a5ac123c99d97cc617c350c96f2",
+      "driver_sha256": "b4fa1f98b4c6fbf006e1aea20eda76f95786342df1b2c06944a099b8d26e6b64",
+      "cases_sha256": "cb86ff0c4efdcf951ae9a3659111efcc50fc4615d63406885c76293ea8c2d57a",
+      "cpu_model": "Intel(R) Core(TM) i7-7820X CPU @ 3.60GHz",
+      "build_command": "cc -m32 -nostdlib -static -fno-pie -no-pie -fno-stack-protector -O2 probe.c -o probe",
+      "scope": "Actual complete4D7AF0 ordinary nonactor WEAP reference placement builder on Linux i386 hardware, plus actual4D7260/FABS/store4E43C8..4E43E9; actual native callees, callee-save/input checks inherited from pinned NPC harness. Root virtual50 declared boundary. 72 common emulated contexts,1024 random ordinary angle triplets and256 random float-bit triplets under007F/027F/037F. Plus240 signed-zero/subnormal/finite trig-range and scale edge contexts. Repeated hardware outputs are expectations only; no production comparison or whole GenerateNiNode/scene attach/controller/Havok/gameplay acceptance."
+    }
+  },
+  "comparisons": {
+    "normal": {
+      "path": "reference-root-placement-compare-02/normal-verification.json",
+      "sha256": "766716ff8d05c841bc2154c81603bdd6e21ea24ab77f31c5a03ae690f89cc77a",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "source_sha256": "cb86ff0c4efdcf951ae9a3659111efcc50fc4615d63406885c76293ea8c2d57a",
+        "probe_sha256": "7be68d904dabae0629ea7ca8b4d15c84c8272f0c157f8c43902314cc972bdbe9",
+        "comparator_sha256": "ceff37b8b3b427ee8dcef3c59692dde997e878a63840204f2978282212dc2073",
+        "binary_sha256": "123c36698c9de4f0818b8ee3c21a897d86febb5e4037402a9266bfa5e8a20a28",
+        "scope": "Original native i3864D7AF0 nonactor builder plus scale FABS/store expectedR9/scale versus actual production referencePlacementRoot.007F Single,027F Double;037F diagnosticDouble. Translation equals literal reference input. No renderer/registration/firstsync/controller/gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "reference-root-placement-compare-02/sanitized-verification.json",
+      "sha256": "79bb491c3b728ea97cb270e68ea3b5b6df0f33dcbd9d318b3c99ea16c80c6e09",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 1384,
+            "field_checks": 17992,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "source_sha256": "cb86ff0c4efdcf951ae9a3659111efcc50fc4615d63406885c76293ea8c2d57a",
+        "probe_sha256": "7be68d904dabae0629ea7ca8b4d15c84c8272f0c157f8c43902314cc972bdbe9",
+        "comparator_sha256": "ceff37b8b3b427ee8dcef3c59692dde997e878a63840204f2978282212dc2073",
+        "binary_sha256": "5e85896e663d3c89d784f483a56a9d1bde60be6f6c37dc1532922cbea86db4a3",
+        "scope": "Original native i3864D7AF0 nonactor builder plus scale FABS/store expectedR9/scale versus actual production referencePlacementRoot.007F Single,027F Double;037F diagnosticDouble. Translation equals literal reference input. No renderer/registration/firstsync/controller/gameplay acceptance."
+      }
+    }
+  },
+  "npc_regressions": {
+    "normal": {
+      "path": "reference-root-placement-npc-regression-01/normal-verification.json",
+      "sha256": "4af4ddd8b913cb0f17dfd1a9fc8b0305c9ec08eda71b8d9605aca0dabf2e2115",
+      "report": {
+        "passed": true,
+        "cases": 12348,
+        "finite_exact": 12316,
+        "nonfinite_rejected": 32,
+        "flavour": "normal",
+        "negative_controls": {
+          "wrong_bit": true,
+          "missing_row": true,
+          "duplicate_row": true,
+          "malformed_input": true
+        },
+        "source_sha256": {
+          "components/esm4/placementsincos.hpp": "323d8336ff1df8cf2ce085a111852df2e9fbe6224dc2cf93524f94c4db90b466",
+          "components/esm4/npcplacement.cpp": "16d82f94992cc00e072f738b96724f1f750c2993a3344854dac334e138bf4fb9",
+          "components/esm4/npcplacement.hpp": "86ea9a1a98ef7712a67c6fe6948d968172a6069837cad5bc2cbd0d132637b8a3",
+          "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare.cpp": "2b36e7adba43b599e6ec56dc5ef9a51e277dfcd2b67341dd284e95b91b39a3a6"
+        },
+        "cases_sha256": "8bed7dd25a74b8f4ba9562345cbb04934f76c7217b6e67826dd67fb931ce2e26",
+        "binary_sha256": "4689378ad1936d937b7857fa014d6a9f3af6ca1f3f97a7cc991ca1f77fff1a4f",
+        "build_command": [
+          "c++",
+          "-std=c++20",
+          "-I.",
+          "-O2",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare.cpp",
+          "components/esm4/npcplacement.cpp",
+          "components/nif/nativetransform.cpp",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare-normal"
+        ]
+      }
+    },
+    "sanitized": {
+      "path": "reference-root-placement-npc-regression-01/sanitized-verification.json",
+      "sha256": "3f383288928aa882ad3121aeddfb3d20b0c1e7abca706dfc7797309938b05786",
+      "report": {
+        "passed": true,
+        "cases": 12348,
+        "finite_exact": 12316,
+        "nonfinite_rejected": 32,
+        "flavour": "sanitized",
+        "negative_controls": {
+          "wrong_bit": true,
+          "missing_row": true,
+          "duplicate_row": true,
+          "malformed_input": true
+        },
+        "source_sha256": {
+          "components/esm4/placementsincos.hpp": "323d8336ff1df8cf2ce085a111852df2e9fbe6224dc2cf93524f94c4db90b466",
+          "components/esm4/npcplacement.cpp": "16d82f94992cc00e072f738b96724f1f750c2993a3344854dac334e138bf4fb9",
+          "components/esm4/npcplacement.hpp": "86ea9a1a98ef7712a67c6fe6948d968172a6069837cad5bc2cbd0d132637b8a3",
+          "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare.cpp": "2b36e7adba43b599e6ec56dc5ef9a51e277dfcd2b67341dd284e95b91b39a3a6"
+        },
+        "cases_sha256": "8bed7dd25a74b8f4ba9562345cbb04934f76c7217b6e67826dd67fb931ce2e26",
+        "binary_sha256": "c72d9c2328de7074e19c30da11f1a18e1e37023682c39ca796ef09fdcb731a6c",
+        "build_command": [
+          "c++",
+          "-std=c++20",
+          "-I.",
+          "-O1",
+          "-g",
+          "-fsanitize=address,undefined",
+          "-fno-omit-frame-pointer",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare.cpp",
+          "components/esm4/npcplacement.cpp",
+          "components/nif/nativetransform.cpp",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/reference-root-placement-npc-regression-01/compare-sanitized"
+        ]
+      }
+    }
+  },
+  "comparison_scope": "4152 native Linux i386 original4D7AF0 nonactor builder plus actual4D7260/FABS/store contexts repeat identically.1384 live007F Single +1384 original027F Double supported contexts:27680 exact original R9/scale fields per build, plus8304 literal input-translation bit assertions.1384 original037F contexts are diagnosticDouble, also zero differences. Native corpus includes72 common emulated vectors,1024 seeded normal angle triplets,256 raw float-bit triplets,240 signed-zero/subnormal/finite trig-range/scale edges. Matrix expected outputs are original hardware outputs; no production-generated expectation. No complete GenerateNiNode/renderer/registration/firstsync/controller/physics/gameplay acceptance.",
+  "npc_scope": "All12348 original NPC hardware contexts replayed in both normal and ASan/UBSan:12316 finite R9/scale results exact and32 unsupported nonfinite outputs reject. Wrong-bit/missing/duplicate-row/malformed controls reject. No NPC production call changes besides internal helper extraction.",
+  "sanitizer_scope": "Fresh unfiltered2754 components/263 suites per build with exact inventory/XML match and no failures/skips. ASan/UBSan halt on error; leak detection disabled. No fresh engine or runtime run for this component-only checkpoint.",
+  "remaining_gates": [
+    "Use the native global root in actual private renderer preparation before local checkpoint capture, with compensating drawing matrices and initial physical author capture. Current ObjectAnimation still uses rootI/T0/scale1 and defaultObjectLocal. Wiring the root alone would break placement/update ownership.",
+    "Implement pending first sync with mutable registered flags and native velocity reset/scene-to-body/clear40 order; retain native REFR-before-child publication and safe placement/cell/reference lifetime behavior. Establish manual traversal owner and controller clocks and suppress duplicate ordinary viewer updates.",
+    "All property/admission/node policies, forcedWorld/scriptcontinuation, loose physical retention/save/fresh recreation, production melee/break/mastery/drop/pickup/replacement/sound/power/creature/reaction/effect paths and full normal-input/FPS/fresh-process matrix remain. Full M15S4 is active and incomplete."
+  ]
+}

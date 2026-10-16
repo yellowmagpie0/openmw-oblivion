@@ -3585,3 +3585,49 @@ controller clock, and preserve safe native REFR-before-child/cell migration
 publication. The remaining admission/property/node policies, forced World/script
 continuation, loose save/fresh recreation, production melee/drop/effect wiring and
 normal-input/FPS/fresh-process matrix remain open. Full M15S4 is active and incomplete.
+
+
+## 2026-10-16 — native nonactor reference-root arithmetic checkpoint
+
+`ESM4::referencePlacementRoot` implements the ordinary nonactor original 4D7AF0
+X/Y/Z axis matrices and successive products, including the initial identity
+multiplication. It keeps translation and absolute reference scale separate.
+Single is the observed live default; Double supports the recorded 027F path.
+Unknown precision, nonfinite consumed fields and |angle| >= 2^63 reject.
+The existing NPC sine/cosine implementation moves unchanged into one internal
+shared header, retaining the original 66-bit pi reduction for large angles.
+Two tests pin ten original hardware vectors and validate consumed fields/range.
+
+Original native i386 hardware probe `reference-root-placement-native-02` executes
+4,152 contexts twice with identical outputs: 72 common emulated contexts, 1,024
+seeded normal XYZ triplets, 256 raw float-bit triplets and 240 signed-zero,
+subnormal, finite trig-range and scale edge contexts, under three control words.
+Actual complete 4D7AF0 and scale getter/FABS/store execute; root virtual50 remains
+a declared boundary. Both normal and sanitized production replays match all
+1,384 live 007F and 1,384 original 027F contexts: 27,680 exact original R9/scale
+fields plus 8,304 literal input-translation assertions per build. The 1,384
+extended 037F contexts also match Double diagnostically. This does not implement
+whole GenerateNiNode, registration, first sync or controller/physics scheduling.
+
+The shared-helper NPC regression independently replays all 12,348 original
+hardware contexts in both builds: 12,316 finite R9/scale results match exactly,
+32 unsupported nonfinite outputs reject, and wrong-bit/missing/duplicate-row/
+malformed controls reject. Fresh full normal and ASan/UBSan component checks
+pass all 2,754 tests from 263 suites, with exact inventories and no failures or
+skips. Leak detection is disabled. No fresh engine or runtime course is claimed.
+
+[Editable verification](M15-REFERENCE-ROOT-PLACEMENT-VERIFICATION.json) pins the
+source fingerprint, code, native and comparison hashes. Evidence is under
+`reference-root-placement-{preflight,normal,sanitized}-01`,
+`reference-root-placement-native-02`, `reference-root-placement-compare-02` and
+`reference-root-placement-npc-regression-01` in the ignored S4 evidence directory.
+The preceding 3,912-context native/compare01 evidence remains retained.
+
+There is no production caller of the new nonactor builder in this checkpoint.
+Next initialize the private native global root and compensating drawing matrices
+before prepared checkpoint capture, then integrate initial physical capture and
+pending velocity/flag synchronization with one traversal owner. ObjectAnimation
+still uses its legacy local root and World its root-only adapter. Native callback
+ordering, placement/cell lifetime handling, all property/admission/node policies,
+loose save/fresh recreation and the full production melee/drop/effect and
+normal-input/FPS/fresh-process S4 gates remain open. M15S4 is active and incomplete.
