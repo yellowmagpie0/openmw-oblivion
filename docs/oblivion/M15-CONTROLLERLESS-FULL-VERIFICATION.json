@@ -1,0 +1,170 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Explicit controllerless Full traversal verified; production generation owner and M15S4 incomplete",
+  "parent_commit": "77a055b015884eef59852b21bd8bf74bc44bb465",
+  "implementation_sha256": {
+    "components/sceneutil/nifscenetraversal.hpp": "b8762e23ff79beda499a287f2853a3689f99617b359058ab8eeb501e0cde9d51",
+    "components/sceneutil/nifscenetraversal.cpp": "e36aef2b62fab1fed58f9b2ad86f3e8f45810f8577859c7165c6c191fb4abda1",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "4d40f4ce6a207f65cd96f5b680a73375449a2c1f7072ea165310361efa7e24b8"
+  },
+  "native": {
+    "path": "build/oblivion-compat/m15/S4/controllerless-full-oracle-01/verification.json",
+    "sha256": "553ec97be26bffa2979193d4649d49be4bf646f740879df78d127455a59dc238",
+    "report": {
+      "passed": true,
+      "contexts": 192,
+      "nodes": 576,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "probe_sha256": "50e5076f6b426fd890d658a81d7b38afb2bb611e4feea298b54f161fdf50b516",
+      "cases_sha256": "a0d3cd6e5fcfc2eb298f2049b9da6bbf7d0c45651b6dafc7510720618ca526de",
+      "scope": "Actual ordinary NiNode70A0D0 Full(time0,false), real recursive virtual dispatch/world transform/bounds paths, sparse slots, unchanged locals/flags. Poison unmapped nonempty own/property lists prove no access; observation hooks only, no function replacement. NativeSingle FPCW007F. No collision/controller execution/real World/production scheduling/gameplay."
+    }
+  },
+  "comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/controllerless-full-compare-01/normal-verification.json",
+      "sha256": "ea70bd312665280cc1a08dbc4d8b2ea603e3674e2d17b0cb64840ef93f5207ba",
+      "report": {
+        "passed": true,
+        "contexts": 192,
+        "nodes": 576,
+        "exact_fields": 7488,
+        "failures": [],
+        "corpus_sha256": "a0d3cd6e5fcfc2eb298f2049b9da6bbf7d0c45651b6dafc7510720618ca526de",
+        "probe_sha256": "0f258d14b67f71637bdf2faaae57bbfbbf689137b487d1e241c4f88ce99e14e7",
+        "comparator_sha256": "0235986037120e95672c7b34a325e1d188b9d97498672498586137d6450380fc",
+        "binary_sha256": "9f9f182e885db574ccbbe8ac47829528448d27788d233782f999171e70eccd63",
+        "scope": "Actual controllerless manual Full traversal vs original ordinary NiNode Full(time0,false) world13, unchanged locals, dormant throwing own/property callbacks, complete projections, no selective-policy query. No production owner/scheduling/gameplay."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/controllerless-full-compare-01/sanitized-verification.json",
+      "sha256": "52e509c66f2bf714280b8ee0251b0f1e28f57cb51e74acdca3418faef2051283",
+      "report": {
+        "passed": true,
+        "contexts": 192,
+        "nodes": 576,
+        "exact_fields": 7488,
+        "failures": [],
+        "corpus_sha256": "a0d3cd6e5fcfc2eb298f2049b9da6bbf7d0c45651b6dafc7510720618ca526de",
+        "probe_sha256": "0f258d14b67f71637bdf2faaae57bbfbbf689137b487d1e241c4f88ce99e14e7",
+        "comparator_sha256": "0235986037120e95672c7b34a325e1d188b9d97498672498586137d6450380fc",
+        "binary_sha256": "351fdb9681c5b32091bdf198cd929c2f30d5caab8f41ff346e2f22b828a32919",
+        "scope": "Actual controllerless manual Full traversal vs original ordinary NiNode Full(time0,false) world13, unchanged locals, dormant throwing own/property callbacks, complete projections, no selective-policy query. No production owner/scheduling/gameplay."
+      }
+    }
+  },
+  "checks": {
+    "controllerless-full-preflight-01": {
+      "path": "build/oblivion-compat/m15/S4/controllerless-full-preflight-01/verification.json",
+      "sha256": "a5e89635cfb13a7ae9208481e3c57e5db2b262f6e807f156ef017ef73f74c1ae",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 39,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSelectiveUpdatePolicy.*",
+          "binary_sha256": "ca0e7642d99bc4a665c6b3bde8369e544ccc08f2d25664e8490fae13c497e820",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "2d2d5d32a6dd17ff7eb3034c517d864d4bf7c9454e23e5a4e2897edbfa98b5fc",
+          "inventory_sha256": "9ecec56c707b6a6a2c64b9236fb6ad5981326615c2d3939feaf51186812a7320",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      },
+      "source_after": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      }
+    },
+    "controllerless-full-normal-01": {
+      "path": "build/oblivion-compat/m15/S4/controllerless-full-normal-01/verification.json",
+      "sha256": "914baee156521a77bf77c6367a0b5e37426ad61503ea537ba28a5e1c6fbe2fd2",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2784,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ca0e7642d99bc4a665c6b3bde8369e544ccc08f2d25664e8490fae13c497e820",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "2057f8e5c644a6a73fb000889561df978790a886aeaa7a2eb4f921bc3af3ef15",
+          "inventory_sha256": "b8ce93902d0c4f1fa75632af82c940750825c08582dc05bffda972c0093a26f9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      },
+      "source_after": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      }
+    },
+    "controllerless-full-sanitized-01": {
+      "path": "build/oblivion-compat/m15/S4/controllerless-full-sanitized-01/verification.json",
+      "sha256": "f0d58bcd1e8ab5744e2a7df2762a440b794e3ef5515f35cfaf5975562fc43f55",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2784,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "01f5681be1d2c14328a0446e44721353461760566f8ee718eb979cdf8f1d7249",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "4985bcc99079fd52c95538cb2265a3c59bb4324fc4823ea9136000f160108818",
+          "inventory_sha256": "790177b492c4e3d76c64b5bf31ae531244e81e78d174fed0e51e525bf7c8627b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      },
+      "source_after": {
+        "head": "77a055b015884eef59852b21bd8bf74bc44bb465",
+        "source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6"
+      }
+    }
+  },
+  "tested_source_fingerprint": "c9fc24f63b481bea0779cda6c313021cf6050b372a3811609a0cc3c07d7f64b6",
+  "behavior": [
+    "updateWithoutControllers runs the complete ordinary Full projection/child traversal without own, property, scaffolding or drawable update callbacks. Collision providers, pending synchronization, publication and reference callbacks retain their normal ordering and failure guards. Selective flags are neither required nor queried.",
+    "This corresponds to ordinary NiNode70A0D0 Full(time,false). The early generation caller passes time0. Selected/Rigid have different native signatures and retain their existing controller behavior; no new disable argument is inferred for them.",
+    "Two regressions cover native literal pre-final-scale world13 values after locals change, dormant post-traverse own/property/drawable callbacks across rendering scaffolding, all-node projection, unchanged authored locals, normal controller resumption, failed pending synchronization and successful retry without physical-to-scene reads or controller side effects."
+  ],
+  "native_boundaries": [
+    "192 independent original-instruction contexts /576 ordinary nodes, two three-node topologies, sparse null child slots, different exact rotations, nontrivial translations/scales and arbitrary flags. NativeSingle FPCW007F. All own/property lists are nonempty unmapped poison pointers; original code never accesses them and never enters47C930. Observation hooks only, no replaced functions. Locals/flags and callee-saved registers/stack/control word checked.",
+    "Both actual C++ builds match all7488world-cache fields exactly, preserve locals, complete every projection and keep throwing own/property callbacks dormant. This comparison does not execute collisions; existing pending-synchronization regressions exercise the C++ physical boundary separately.",
+    "Full normal and ASan/UBSan component checks each pass2784tests/266suites, complete inventories, no failures/skips. Leak detection disabled. No new engine/full runtime course claimed; previous generation-metadata checkpoint separately passed engine1611 in both builds.",
+    "The API is not yet wired into a live generation/update owner. Generated wrapper/root mapping, actual initial physical capture and replacement behavior, live clock/physics scheduling and remaining M15S4 gameplay/restart gates remain open."
+  ]
+}

@@ -104,6 +104,12 @@ namespace SceneUtil
         // scaffolding inherits the containing native node's property policy.
         void update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks = {},
             Mode mode = Mode::Full);
+        // Native Full(time, false): compose/project every node and perform
+        // physical/reference callbacks without evaluating any own/property or
+        // drawing callbacks. Generation supplies time zero. Unlike Selected/
+        // Rigid, Full has an independent controller-evaluation argument.
+        void updateWithoutControllers(const osg::FrameStamp& stamp, unsigned traversalNumber,
+            const Callbacks& callbacks = {});
 
         // Prepare ordinary NiNode/NiAVObject/NiGeometry selective flags from
         // live instance policy inputs. Controller presence includes inactive
@@ -124,7 +130,7 @@ namespace SceneUtil
 
     private:
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
-            const Callbacks& callbacks, bool rootOnly, Mode mode);
+            const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

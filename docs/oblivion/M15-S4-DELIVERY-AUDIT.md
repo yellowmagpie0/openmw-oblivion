@@ -4065,3 +4065,27 @@ saves were restored, and owned processes exited. Production wrapper preparation,
 real-World replacement policy, controller-disabled initialization, clocks/physics,
 one traversal owner, lifetimes and remaining gameplay/restart gates remain open.
 M15S4 remains active and incomplete.
+
+## 2026-10-16 — support the controllerless early Full pass
+
+The explicit traversal now supports native Full(time,false) through
+`updateWithoutControllers`. It projects every ordinary node and retains physical,
+pending-synchronization and reference publication behavior while skipping own,
+property, scaffolding and drawable update callbacks. Selective flags are not
+queried. Selected/Rigid retain their distinct native signatures and behavior.
+The future generation owner supplies time0; this API does not install an owner.
+
+An independent original-instruction corpus covers192contexts/576ordinary nodes
+with sparse slots, different rotations/translations/scales and arbitrary flags.
+Nonempty own/property lists point to unmapped memory; none is accessed, and no
+47C930 call occurs. No functions are replaced. Both C++builds match all7,488world
+cache fields exactly. Two regressions cover original literal early world caches,
+callback suppression across drawing scaffolding, all-node projection, unchanged
+locals, ordinary callback resumption and failed/retried pending synchronization.
+Full normal and ASan/UBSan component runs each pass2,784tests/266suites, complete
+inventories, no failures/skips; leak detection disabled. No fresh engine/runtime
+course is claimed for this traversal API checkpoint.
+[Editable verification](M15-CONTROLLERLESS-FULL-VERIFICATION.json) pins evidence.
+Production wrapper preparation, physical initialization/replacement, clocks and
+physics scheduling, one owner and remaining M15S4 runtime/restart gates remain
+open. M15S4 remains active and incomplete.

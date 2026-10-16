@@ -95,6 +95,92 @@ namespace
             "child property", "child node", "child projection", "leaf projection"}));
     }
 
+    TEST_F(NifSceneTraversalTest, ControllerlessFullProjectsNativeGenerationCachesAndResumesCallbacks)
+    {
+        osg::ref_ptr<osg::Group> scaffold = new osg::Group;
+        mRoot->removeChild(mChild); mRoot->addChild(scaffold); scaffold->addChild(mChild);
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<osg::Geometry> drawable = new osg::Geometry;
+        mChild->addChild(geode); geode->addDrawable(drawable);
+        Binding binding(*mRoot);
+        unsigned own = 0, property = 0, drawing = 0;
+        for (auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+        {
+            node->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++own; }, true));
+            node->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++property; }));
+        }
+        for (auto* node : {scaffold.get(), static_cast<osg::Group*>(geode.get())})
+            node->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++property; }));
+        drawable->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](auto&) { ++property; }));
+        struct Update : osg::DrawableUpdateCallback
+        {
+            unsigned& mCalls;
+            explicit Update(unsigned& calls) : mCalls(calls) {}
+            void update(osg::NodeVisitor*, osg::Drawable*) override { ++mCalls; }
+        };
+        drawable->setUpdateCallback(new Update(drawing));
+
+        // Original reference-early-generation-trace-01 pre_scale world13,
+        // before final reference scale/registration. Change locals after the
+        // constructor so this checks an actual cache refresh, not initial caches.
+        mRoot->setTranslation({10, 20, 30});
+        auto rotation = Nif::NiTransform::getIdentity().mRotation;
+        rotation.mValues[0][0] = 0; rotation.mValues[0][1] = 1;
+        rotation.mValues[1][0] = -1; rotation.mValues[1][1] = 0;
+        mChild->setRotation(rotation); mChild->setTranslation({3, 4, 5});
+        std::vector<Node*> projections;
+        Binding::Callbacks callbacks;
+        // Full ignores selective flags, including a policy which admits no children.
+        callbacks.mNodeFlags = [](const Node&) -> std::uint16_t { ADD_FAILURE(); return 0; };
+        callbacks.mProjected = [&](Node& node, const auto&, auto) { projections.push_back(&node); };
+        binding.updateWithoutControllers(osg::FrameStamp{}, 0, callbacks);
+        EXPECT_EQ(own, 0u); EXPECT_EQ(property, 0u); EXPECT_EQ(drawing, 0u);
+        EXPECT_EQ(projections, (std::vector<Node*>{mRoot, mChild, mLeaf}));
+        const std::array<std::uint32_t, 13> expected{
+            0,1065353216,0,3212836864,0,0,0,0,1065353216,1095761920,1103101952,1108082688,1065353216};
+        const auto world = binding.cachedWorld(*mChild);
+        for (unsigned i = 0; i < 9; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(world.mRotation.mValues[i / 3][i % 3]), expected[i]);
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(world.mTranslation[i]), expected[9 + i]);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(world.mScale), expected[12]);
+        EXPECT_EQ(mChild->getWorldMatrices().front(), osg::Matrixd(world.toMatrix()));
+        EXPECT_EQ(mChild->getControllerTransform().mTranslation, osg::Vec3f(3, 4, 5));
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(own, 3u); EXPECT_EQ(property, 6u); EXPECT_EQ(drawing, 1u);
+    }
+
+    TEST_F(NifSceneTraversalTest, ControllerlessFirstSynchronizationRetriesWithoutControllerSideEffects)
+    {
+        Binding binding(*mRoot);
+        unsigned own = 0, force = 0, projected = 0, reads = 0, references = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++own; }));
+        mChild->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++own; }));
+        mRoot->setTranslation({20, 0, 0});
+        std::uint16_t flags = 0x49;
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional(flags) : std::nullopt;
+        };
+        callbacks.mPhysicalWorld = [&](const Node&) { ++reads; return Nif::NiTransform::getIdentity(); };
+        callbacks.mFirstSynchronization = [&](const Node&, const auto& world, auto) {
+            ++force; EXPECT_EQ(world.mTranslation, osg::Vec3f(20, 0, 0));
+            EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation, osg::Vec3f(15, 0, 0));
+            throw std::runtime_error("retry initial physical capture");
+        };
+        callbacks.mProjected = [&](Node&, const auto&, auto) { ++projected; };
+        callbacks.mReferenceUpdate = [&](Node&, const auto&, auto) { ++references; };
+        EXPECT_THROW(binding.updateWithoutControllers(osg::FrameStamp{}, 0, callbacks), std::runtime_error);
+        EXPECT_EQ(flags, 0x49); EXPECT_EQ(force, 1u); EXPECT_EQ(projected, 0u); EXPECT_EQ(references, 0u);
+        EXPECT_EQ(own, 0u); EXPECT_EQ(reads, 0u); EXPECT_TRUE(binding.isValid());
+        callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { ++force; flags &= ~0x40; };
+        binding.updateWithoutControllers(osg::FrameStamp{}, 0, callbacks);
+        EXPECT_EQ(flags, 9); EXPECT_EQ(force, 2u); EXPECT_EQ(projected, 3u); EXPECT_EQ(references, 1u);
+        EXPECT_EQ(own, 0u); EXPECT_EQ(reads, 0u);
+        EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation, osg::Vec3f(25, 0, 0));
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation, osg::Vec3f(20, 0, 0));
+    }
+
     TEST_F(NifSceneTraversalTest, PhysicalProjectionInvalidatesExistingPaletteInTheSameTraversal)
     {
         osg::ref_ptr<SceneUtil::Skeleton> skeleton = new SceneUtil::Skeleton;
