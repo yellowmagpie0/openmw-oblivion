@@ -33,6 +33,14 @@ namespace ESM4
     DroppedItemPlacement droppedItemPlacement(
         const std::array<float, 9>& rotation, const std::array<float, 3>& translation);
     DroppedItemPlacement droppedItemPlacement(const Nif::NiTransform& worldTransform);
+
+    // Live physics scene -> stored reference pose (4E2160 / 711300).
+    // This uses a different Euler order from fresh carried-node drop arguments.
+    // Inputs are the nine original NiMatrix3 elements and world translation;
+    // separate reference/model scale is excluded. A pole still supplies valid
+    // angles even when mUniqueRotation is false. Nonfinite inputs reject.
+    DroppedItemPlacement physicalDroppedItemPlacement(
+        const std::array<float, 9>& rotation, const std::array<float, 3>& translation);
 }
 
 #endif

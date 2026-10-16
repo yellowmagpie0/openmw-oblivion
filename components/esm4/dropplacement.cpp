@@ -96,4 +96,30 @@ namespace ESM4
         return droppedItemPlacement(rotation, {worldTransform.mTranslation.x(),
             worldTransform.mTranslation.y(), worldTransform.mTranslation.z()});
     }
+
+    DroppedItemPlacement physicalDroppedItemPlacement(
+        const std::array<float, 9>& rotation, const std::array<float, 3>& translation)
+    {
+        validateRotation(rotation);
+        for (float value : translation)
+            if (!std::isfinite(value)) throw std::invalid_argument("Nonfinite physical reference position");
+        DroppedItemPlacement result;
+        std::copy(translation.begin(), translation.end(), result.mPosition.pos);
+        auto& angles = result.mPosition.rot;
+        const float sine = rotation[2];
+        angles[1] = sine <= -1 ? halfPi : sine >= 1 ? -halfPi : -store(std::asin(double(sine)));
+        result.mUniqueRotation = angles[1] > -halfPi && angles[1] < halfPi;
+        if (result.mUniqueRotation)
+        {
+            angles[0] = -nativeAtan(-rotation[5], rotation[8]);
+            angles[2] = -nativeAtan(-rotation[1], rotation[0]);
+        }
+        else
+        {
+            const float angle = nativeAtan(rotation[3], rotation[4]);
+            angles[0] = angles[1] <= -halfPi ? store(double(angle) - 0.0) : store(0.0 - double(angle));
+            angles[2] = 0;
+        }
+        return result;
+    }
 }

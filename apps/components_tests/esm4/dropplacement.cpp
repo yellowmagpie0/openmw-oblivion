@@ -207,4 +207,72 @@ namespace
             EXPECT_THROW(ESM4::droppedReferenceScale(invalid), std::invalid_argument);
     }
 
+    TEST(ESM4DropPlacement, PhysicalReferencePoseUsesOriginalFrameExtractor)
+    {
+        struct Case
+        {
+            const char* mName;
+            std::array<unsigned,9> mMatrix;
+            std::array<unsigned,3> mAngles;
+            bool mUnique;
+        };
+        // Full original 4E2160 callback / 711300, both x87 words agree.
+        // Unlike fresh drop arguments, the frame path has a Y pole.
+        constexpr Case samples[]{
+            {"identity", {0x3f800000u,0x0u,0x0u,0x0u,0x3f800000u,0x0u,0x0u,0x0u,0x3f800000u}, {0x80000000u,0x80000000u,0x80000000u}, true},
+            {"x+90", {0x3f800000u,0x0u,0x0u,0x0u,0x0u,0xbf800000u,0x0u,0x3f800000u,0x0u}, {0xbfc90fdbu,0x80000000u,0x80000000u}, true},
+            {"x-90", {0x3f800000u,0x0u,0x0u,0x0u,0x0u,0x3f800000u,0x0u,0xbf800000u,0x0u}, {0x3fc90fdbu,0x80000000u,0x80000000u}, true},
+            {"y+90", {0x0u,0x0u,0x3f800000u,0x0u,0x3f800000u,0x0u,0xbf800000u,0x0u,0x0u}, {0x0u,0xbfc90fdbu,0x0u}, false},
+            {"y-90", {0x0u,0x0u,0xbf800000u,0x0u,0x3f800000u,0x0u,0x3f800000u,0x0u,0x0u}, {0x0u,0x3fc90fdbu,0x0u}, false},
+            {"z+90", {0x0u,0xbf800000u,0x0u,0x3f800000u,0x0u,0x0u,0x0u,0x0u,0x3f800000u}, {0x80000000u,0x80000000u,0xbfc90fdbu}, true},
+            {"z-90", {0x0u,0x3f800000u,0x0u,0xbf800000u,0x0u,0x0u,0x0u,0x0u,0x3f800000u}, {0x80000000u,0x80000000u,0x3fc90fdbu}, true},
+            {"x0.3", {0x3f800000u,0x0u,0x0u,0x0u,0x3f7490efu,0xbe974e6du,0x0u,0x3e974e6du,0x3f7490efu}, {0xbe999a56u,0x80000000u,0x80000000u}, true},
+            {"y0.3", {0x3f7490efu,0x0u,0x3e974e6du,0x0u,0x3f800000u,0x0u,0xbe974e6du,0x0u,0x3f7490efu}, {0x80000000u,0xbe99999au,0x80000000u}, true},
+            {"z-0.8", {0x3f325b5fu,0x3f37a4a6u,0x0u,0xbf37a4a6u,0x3f325b5fu,0x0u,0x0u,0x0u,0x3f800000u}, {0x80000000u,0x80000000u,0x3f4ccd6au}, true},
+            {"random-0", {0x3eb9fa41u,0xbf24cfd0u,0xbf2c69acu,0xbefc261fu,0xbf3f0d35u,0x3ee543a4u,0xbf4a7875u,0x3e2d1563u,0xbf169035u}, {0x401f6a40u,0x3f3d29a3u,0xbf874f80u}, true},
+            {"random-127", {0x3ecd60feu,0x3ef6f488u,0x3f475c00u,0x3e8e7250u,0xbf5fc72cu,0x3ecbd470u,0x3f5f6c74u,0x3d69570eu,0xbef83c3bu}, {0x401d0fedu,0xbf6485d1u,0x3f6085fau}, true},
+            {"frame-pole-0x3f7ffffe--1", {0x39ffffffu,0x0u,0xbf7ffffeu,0x0u,0x3f800000u,0x0u,0x3f7ffffeu,0x0u,0x39ffffffu}, {0x80000000u,0x3fc8ffdbu,0x80000000u}, true},
+            {"frame-pole-0x3f7ffffe-1", {0x39ffffffu,0x0u,0x3f7ffffeu,0x0u,0x3f800000u,0x0u,0xbf7ffffeu,0x0u,0x39ffffffu}, {0x80000000u,0xbfc8ffdbu,0x80000000u}, true},
+            {"frame-pole-0x3f7fffff--1", {0x39b504f3u,0x0u,0xbf7fffffu,0x0u,0x3f800000u,0x0u,0x3f7fffffu,0x0u,0x39b504f3u}, {0x80000000u,0x3fc9048au,0x80000000u}, true},
+            {"frame-pole-0x3f7fffff-1", {0x39b504f3u,0x0u,0x3f7fffffu,0x0u,0x3f800000u,0x0u,0xbf7fffffu,0x0u,0x39b504f3u}, {0x80000000u,0xbfc9048au,0x80000000u}, true},
+            {"frame-pole-0x3f800000--1", {0x0u,0x0u,0xbf800000u,0x0u,0x3f800000u,0x0u,0x3f800000u,0x0u,0x0u}, {0x0u,0x3fc90fdbu,0x0u}, false},
+            {"frame-pole-0x3f800000-1", {0x0u,0x0u,0x3f800000u,0x0u,0x3f800000u,0x0u,0xbf800000u,0x0u,0x0u}, {0x0u,0xbfc90fdbu,0x0u}, false},
+            {"frame-pole-0x3f800001--1", {0x0u,0x0u,0xbf800001u,0x0u,0x3f800000u,0x0u,0x3f800001u,0x0u,0x0u}, {0x0u,0x3fc90fdbu,0x0u}, false},
+            {"frame-pole-0x3f800001-1", {0x0u,0x0u,0x3f800001u,0x0u,0x3f800000u,0x0u,0xbf800001u,0x0u,0x0u}, {0x0u,0xbfc90fdbu,0x0u}, false},
+        };
+        for (const auto& sample : samples)
+        {
+            SCOPED_TRACE(sample.mName);
+            std::array<float,9> matrix;
+            for (unsigned i=0;i<9;++i) matrix[i]=std::bit_cast<float>(sample.mMatrix[i]);
+            const std::array<float,3> position{12.25f,-0.f,1001.125f};
+            const auto result=ESM4::physicalDroppedItemPlacement(matrix,position);
+            for (unsigned i=0;i<3;++i)
+            {
+                EXPECT_EQ(std::bit_cast<unsigned>(result.mPosition.rot[i]),sample.mAngles[i]);
+                EXPECT_EQ(std::bit_cast<unsigned>(result.mPosition.pos[i]),std::bit_cast<unsigned>(position[i]));
+            }
+            EXPECT_EQ(result.mUniqueRotation,sample.mUnique);
+        }
+    }
+
+    TEST(ESM4DropPlacement, PhysicalReferencePoseRejectsNonfiniteInputs)
+    {
+        constexpr std::array<float,9> identity{1,0,0,0,1,0,0,0,1};
+        for (float invalid : {std::numeric_limits<float>::infinity(),
+                -std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()})
+        {
+            for (unsigned i=0;i<9;++i)
+            {
+                auto matrix=identity; matrix[i]=invalid;
+                EXPECT_THROW(ESM4::physicalDroppedItemPlacement(matrix,{}),std::invalid_argument);
+            }
+            for (unsigned i=0;i<3;++i)
+            {
+                std::array<float,3> position{}; position[i]=invalid;
+                EXPECT_THROW(ESM4::physicalDroppedItemPlacement(identity,position),std::invalid_argument);
+            }
+        }
+    }
+
 }

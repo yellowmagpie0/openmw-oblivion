@@ -1896,3 +1896,55 @@ Nonidentity BodyT corrections, multiple-body/mixed layouts, actual scene
 traversal and original-game save/load remain outside this probe. Engine
 loose-body frame/render/logical synchronization and physical save/recreation
 remain open, along with the other S4 gates. **S4 is incomplete.**
+
+
+## Physical scene to reference pose arithmetic
+
+Checkpoint **2026-10-16** resolves the arithmetic dependency for synchronizing a
+loose object's scene root with its stored reference. The original `4E2160`
+callback performs actual `4DC270` scene-extra reference lookup. Update-mask bit0
+copies world translation; bit1 uses `711300` to store reference Euler. Each
+selected update records modification masks4 and8. `711300` differs from the
+fresh carried-node drop argument extractor `711440`: its pole lies in reference
+Y. The existing fresh-drop extractor must not be used as the frame inverse.
+
+`physicalDroppedItemPlacement` implements this separate immutable conversion,
+reusing the verified native atan polynomial and preserving signed-zero stores.
+It rejects nonfinite matrix/translation inputs. At a pole it supplies valid
+angles with a false uniqueness flag, matching the original callback, which
+stores those angles regardless of uniqueness. Twenty literal original matrices
+cover axes, combined/random rotation and both sides of the Y poles; a second
+test checks every input lane's nonfinite rejection.
+
+`S4/drop-reference-frame-oracle-02` executes **3456 contexts** through the full
+original callback return, with real REFR/TESObjectExtraData vtables and reference
+lookup, actual pi initialization, TLS guards and math functions. Only
+MarkAsModified storage is an event-recording stub. A null cell bypasses terrain
+repair, and a configured engine gate bypasses cell migration. Masks0/1/2/3,
+216 distinct matrices, two positions and both x87 words verify position copies,
+mark sequences, unchanged scene inputs, stack cleanup and preserved registers.
+The original-01 setup lacked a Windows TLS fixture and faulted in the real guard;
+it remains retained diagnosis. Original-02 supplies TLS data without stubbing
+the guard. Static dispatch inspection also identifies installation of `4E2160`
+at global `BA7A88`, but no actual callback dispatcher/timing acceptance is claimed.
+
+`S4/drop-reference-frame-compare-01` compares the production conversion with
+all **864 combined-update original contexts**, bit for bit for rotation,
+position and uniqueness, in both normal and ASan/UBSan standalone drivers.
+`S4/drop-reference-frame-components-01` and
+`S4/drop-reference-frame-sanitized-01` each pass all **2686 component tests/255
+suites**, unfiltered with exact inventory/XML agreement and zero failures/skips.
+No sanitizer diagnostic occurred; leak checking is disabled and ASan/UBSan halt
+on errors. Both preserve identical before/after source state atop
+`a849d2f56797756ca0fcfb5522c7f6cfff133427`, with source fingerprint
+`1d4265d22d907da28bdf0d5791248a810ad9f85a46d52fd9e8f2b35d6acfdddb`.
+`S4/drop-reference-frame-review-01` freezes the three implementation file hashes
+and complete patch before documentation updates. Engine/Python wiring is
+unchanged and those suites were not rerun for this pure arithmetic addition.
+The [editable probe contract](M15-ORIGINAL-PHYSICAL-REFERENCE-POSE-PROBES.json)
+records literal cases and exact boundaries.
+
+World still has no loose-body frame consumer. This helper does not implement
+body/renderer synchronization, logical cell migration, physical save/recreation,
+production break/mastery dispatch or normal-input acceptance. Those and all
+other broader S4 gates remain open. **S4 is incomplete.**

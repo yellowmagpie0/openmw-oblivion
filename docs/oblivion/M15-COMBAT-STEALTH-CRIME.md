@@ -6,6 +6,20 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 physical scene to reference pose arithmetic — 2026-10-16
+
+The native physical-frame callback uses a different Euler extractor from initial
+carried-node drop placement. A new immutable helper now matches its stored
+reference pose. All 864 full-pose comparisons match original instructions bit
+for bit in normal and ASan/UBSan builds, and both full component suites pass all
+**2,686 tests**. The original callback probe additionally verifies 3,456 update
+contexts with actual reference lookup and TLS guards.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#physical-scene-to-reference-pose-arithmetic)
+records boundaries and evidence. This closes the arithmetic dependency; the
+World frame call site, loose-body save/recreation and gameplay acceptance remain
+open. S4 is incomplete.
+
 ## S4 script state on fresh factory references — 2026-10-16
 
 Native script commands can now persist state on a newly published dynamic

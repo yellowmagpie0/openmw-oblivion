@@ -1,0 +1,476 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "status": "native frame-pose arithmetic verified; World frame/save integration still open",
+  "functions": {
+    "full_callback": "004E2160",
+    "matrix_to_euler": "00711300",
+    "scene_reference_lookup": "004DC270",
+    "pi_initializers": [
+      "00A09B90",
+      "00A09BB0"
+    ],
+    "actual_tls_guard": "0046B5C0"
+  },
+  "boundary_stubs": {
+    "0046ABF0": "MarkAsModified records mask arguments; change-record storage is not executed."
+  },
+  "fixture_conditions": [
+    "Real REFR/TESObjectExtraData vtables and scene-extra mapping",
+    "Reference cell null skips terrain/position repair",
+    "Engine config +34 nonzero skips cell migration",
+    "Synthetic Windows TLS structure supplies actual mutation guard storage"
+  ],
+  "cases": {
+    "original_callback": 3456,
+    "distinct_matrices": 216,
+    "update_masks": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "positions": [
+      [
+        "+0",
+        "-0",
+        "+0"
+      ],
+      [
+        12.25,
+        -9.5,
+        1001.125
+      ]
+    ],
+    "control_words": [
+      "027F",
+      "037F"
+    ],
+    "normal_cpp_comparisons": 864,
+    "sanitized_cpp_comparisons": 864,
+    "comparison": "All three rotation and position binary32 lanes and native uniqueness flag match bit for bit."
+  },
+  "observations": [
+    "Mask bit0 copies scene world translation directly to reference position; mask bit1 extracts reference Euler with711300.",
+    "Each selected update records modification masks4 then8.",
+    "The fresh-drop extractor711440 uses a different order;711300 has its singularity in reference Y.",
+    "Actual scene inputs remain unchanged; full cdecl return and callee-saved registers verified."
+  ],
+  "literal_cases": [
+    {
+      "name": "identity",
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "rotation_bits": [
+        2147483648,
+        2147483648,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "x+90",
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        0,
+        3212836864,
+        0,
+        1065353216,
+        0
+      ],
+      "rotation_bits": [
+        3217625051,
+        2147483648,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "x-90",
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0
+      ],
+      "rotation_bits": [
+        1070141403,
+        2147483648,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "y+90",
+      "matrix_bits": [
+        0,
+        0,
+        1065353216,
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        3217625051,
+        0
+      ],
+      "unique_rotation": false
+    },
+    {
+      "name": "y-90",
+      "matrix_bits": [
+        0,
+        0,
+        3212836864,
+        0,
+        1065353216,
+        0,
+        1065353216,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        1070141403,
+        0
+      ],
+      "unique_rotation": false
+    },
+    {
+      "name": "z+90",
+      "matrix_bits": [
+        0,
+        3212836864,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "rotation_bits": [
+        2147483648,
+        2147483648,
+        3217625051
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "z-90",
+      "matrix_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "rotation_bits": [
+        2147483648,
+        2147483648,
+        1070141403
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "x0.3",
+      "matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1064603887,
+        3197587053,
+        0,
+        1050103405,
+        1064603887
+      ],
+      "rotation_bits": [
+        3197737558,
+        2147483648,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "y0.3",
+      "matrix_bits": [
+        1064603887,
+        0,
+        1050103405,
+        0,
+        1065353216,
+        0,
+        3197587053,
+        0,
+        1064603887
+      ],
+      "rotation_bits": [
+        2147483648,
+        3197737370,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "z-0.8",
+      "matrix_bits": [
+        1060264799,
+        1060611238,
+        0,
+        3208094886,
+        1060264799,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "rotation_bits": [
+        2147483648,
+        2147483648,
+        1061997930
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "random-0",
+      "matrix_bits": [
+        1052375617,
+        3206860752,
+        3207358892,
+        3204195871,
+        3208580405,
+        1055212452,
+        3209328757,
+        1043141987,
+        3205926965
+      ],
+      "rotation_bits": [
+        1075800640,
+        1060972963,
+        3213315968
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "random-127",
+      "matrix_bits": [
+        1053647102,
+        1056371848,
+        1061641216,
+        1049522768,
+        3210725164,
+        1053545584,
+        1063218292,
+        1030313742,
+        3203939387
+      ],
+      "rotation_bits": [
+        1075646445,
+        3211036113,
+        1063290362
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "frame-pole-0x3f7ffffe--1",
+      "matrix_bits": [
+        973078527,
+        0,
+        3212836862,
+        0,
+        1065353216,
+        0,
+        1065353214,
+        0,
+        973078527
+      ],
+      "rotation_bits": [
+        2147483648,
+        1070137307,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "frame-pole-0x3f7ffffe-1",
+      "matrix_bits": [
+        973078527,
+        0,
+        1065353214,
+        0,
+        1065353216,
+        0,
+        3212836862,
+        0,
+        973078527
+      ],
+      "rotation_bits": [
+        2147483648,
+        3217620955,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "frame-pole-0x3f7fffff--1",
+      "matrix_bits": [
+        968164595,
+        0,
+        3212836863,
+        0,
+        1065353216,
+        0,
+        1065353215,
+        0,
+        968164595
+      ],
+      "rotation_bits": [
+        2147483648,
+        1070138506,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "frame-pole-0x3f7fffff-1",
+      "matrix_bits": [
+        968164595,
+        0,
+        1065353215,
+        0,
+        1065353216,
+        0,
+        3212836863,
+        0,
+        968164595
+      ],
+      "rotation_bits": [
+        2147483648,
+        3217622154,
+        2147483648
+      ],
+      "unique_rotation": true
+    },
+    {
+      "name": "frame-pole-0x3f800000--1",
+      "matrix_bits": [
+        0,
+        0,
+        3212836864,
+        0,
+        1065353216,
+        0,
+        1065353216,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        1070141403,
+        0
+      ],
+      "unique_rotation": false
+    },
+    {
+      "name": "frame-pole-0x3f800000-1",
+      "matrix_bits": [
+        0,
+        0,
+        1065353216,
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        3217625051,
+        0
+      ],
+      "unique_rotation": false
+    },
+    {
+      "name": "frame-pole-0x3f800001--1",
+      "matrix_bits": [
+        0,
+        0,
+        3212836865,
+        0,
+        1065353216,
+        0,
+        1065353217,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        1070141403,
+        0
+      ],
+      "unique_rotation": false
+    },
+    {
+      "name": "frame-pole-0x3f800001-1",
+      "matrix_bits": [
+        0,
+        0,
+        1065353217,
+        0,
+        1065353216,
+        0,
+        3212836865,
+        0,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        3217625051,
+        0
+      ],
+      "unique_rotation": false
+    }
+  ],
+  "evidence": {
+    "original": "S4/drop-reference-frame-oracle-02",
+    "cpp": "S4/drop-reference-frame-compare-01",
+    "components": "S4/drop-reference-frame-components-01",
+    "sanitize": "S4/drop-reference-frame-sanitized-01"
+  },
+  "retained_failure": "oracle-01 lacked synthetic Windows TLS state; actual46B5C0 faulted on FS:2C. oracle-02 supplies the thread fixture and executes that function unchanged.",
+  "exclusions": [
+    "Native callback dispatcher and timing",
+    "Terrain/position repair and cell migration",
+    "Physical body to scene-root synchronization",
+    "World call-site integration",
+    "Physical save/recreation",
+    "Normal-input or original-game acceptance"
+  ]
+}
