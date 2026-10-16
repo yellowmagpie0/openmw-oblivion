@@ -144,6 +144,7 @@ namespace MWPhysics
         // one-body model. Read-only; waits for the prior physical frame.
         // Requires the native length scale, independently of actor ragdolls.
         osg::Matrixf captureLooseObjectRootPose(const MWWorld::Ptr& ptr);
+        void updateLooseObjectRootPose(const MWWorld::Ptr& ptr, const osg::Matrixf& root);
         std::vector<NifBullet::RagdollNativePackedVelocityState> captureLooseObjectPackedVelocities(
             const MWWorld::Ptr& ptr);
         void restoreLooseObject(const MWWorld::Ptr& ptr,

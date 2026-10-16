@@ -36,5 +36,11 @@ namespace ESM4
     // Portable reciprocal-square-root estimate with the native Newton step.
     std::optional<PhysicalWorldSceneVelocities> preparePhysicalWorldSceneVelocities(
         const PhysicalWorldSceneInput& input);
+
+    // Original89EE00 before a forced scene pose update. Independently zero
+    // each complete vector only when an XYZ lane has abs(value) > .001f.
+    // Otherwise preserve all four lanes, including signed zeros and scratch W.
+    PhysicalWorldSceneVelocities preparePhysicalForcedSceneVelocities(
+        const PhysicalWorldSceneVelocities& input);
 }
 #endif

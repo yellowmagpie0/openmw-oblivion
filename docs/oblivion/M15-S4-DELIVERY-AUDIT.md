@@ -2014,3 +2014,84 @@ before claiming complete related command semantics. The stale-scale guard does
 not implement live rescaling. Physical retention/recreation, production break/
 mastery policy, replacement/sound, pickup metadata cleanup and the complete
 normal-input/restart/controller/FPS matrix remain required. **S4 is incomplete.**
+
+
+## Loose-weapon position and rotation input
+
+Checkpoint **2026-10-16** adds loose-owner branches to PhysicsSystem's actual
+`updatePosition` and `updateRotation` dispatch. Position changes preserve the
+current physical root rotation; rotation changes use the supplied quaternion
+and current reference translation. The scheduler waits for workers, checks the
+admitted native units/reference scale and rigid root, then publishes through
+the existing native scene/bodyT offset conversion. Scaled bind translation is
+applied once. Neither path replaces a body or changes its motion mode.
+
+Forced publication stages the whole requested batch before mutation, preserves
+forces, refreshes current/interpolation poses and broadphase bounds, and uses
+an independently verified native velocity rule. For each linear/angular vector
+separately, any XYZ absolute value strictly above binary32 `0x3a83126f`
+(`.001f`) resets all four lanes to positive zero. Otherwise all four lanes,
+including signed zeros and scratch W, survive unchanged. Small velocities are
+not unnecessarily converted back through native/world units. The prior
+keyframed publication path retains its velocity-preserving behavior.
+
+The editable [forced-scene probe manifest](M15-ORIGINAL-FORCED-SCENE-INPUT-PROBES.json)
+pins original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+`S4/loose-forced-scene-oracle-03` executes full collision update `897510`,
+flag0x40 through `89EE00`/`89EAE0`, actual bhkRigidBody/hkpSphereMotion setters,
+real scene conversion and flag clearing in **1,800 contexts**. The fixture uses
+real collision/body/sphere-motion vtables, an already active island and no
+native World. Only Windows critical-section entry/exit `43F2E0`/`43F300` are
+no-op boundaries. Thus original World broadphase/activation is not proved.
+Ten signed values, threshold equality/adjacent floats, each linear/angular XYZ
+lane, W99/-99 and x87 words027F/037F are covered. Complete return, stack,
+callee-saved registers and unchanged scene input are checked.
+`S4/loose-forced-scene-compare-01` compares all eight production C++ velocity
+lanes against every recorded original result: **1,800 normal and 1,800
+ASan/UBSan comparisons, zero bit mismatches**. Original attempt01 faulted at
+an uninitialized Windows critical section; its failure is retained. Attempt02
+introduced the explicit lock boundaries and passed128 initial contexts;
+attempt03 extends that evidence. Those setup attempts are not acceptance.
+
+Two component tests cover threshold/signed-zero/vector independence and
+nonfinite lane rejection without input mutation. Six engine cases (two tests
+at worker counts0/1/2) use real physics owners. They verify rejection before
+mutation, unchanged body identity/forces, preserved tiny angular velocity and
+scratch lanes, zeroed linear velocity, refreshed interpolation and actual ray
+hits at the new broadphase location with misses at the old location. Actual
+PhysicsSystem position/rotation dispatch is checked for ordinary/bodyT bodies,
+reference scale2 and independent local bind/scene offsets, using a declared
+`.0005f` matrix tolerance. Ownership and reference scale survive.
+
+`S4/loose-command-transform-normal-01` and
+`S4/loose-command-transform-sanitized-01` each pass all **2,688 component
+tests/255 suites and 1,553 engine tests/122 suites**, unfiltered with exact
+inventory/XML agreement and zero failures/skips. No sanitizer diagnostic
+occurred; ASan leak checking is disabled and ASan/UBSan halt on errors.
+Both preserve the same before/after source state atop
+`363972bb4087d788e39a92ed01191d658c195f10`, fingerprint
+`9aafa0fab1a6d89aba5f9b893fd673a66492d9003bf800a5917d5ddba7b47793`.
+`S4/loose-command-transform-review-01` freezes all nine implementation/test
+file hashes and complete patch before documentation updates, plus the two
+verified result inventories. The earlier filtered preflight passes all six
+engine cases; it is not counted as a full suite. Python is unchanged.
+
+`S4/loose-command-transform-bypass-01` returns actual PhysicsSystem position
+and rotation dispatch at entry twice each. Its one selected test fails with
+20 stale-pose assertions across ordinary/bodyT owners, using exactly the full
+normal run's test ELF SHA256
+`3c3bd75156dda6015c687fc2e2ab3182aa14411a42eda9930e6df88f6964db73`.
+This is a controlled function bypass, not a previous-source implementation
+build. It proves the test detects the missing dispatch.
+
+This supersedes the preceding checkpoint's missing `updatePosition` and
+`updateRotation` branches. It does **not** close the entire script command
+path: the native host's `SetAngle` still calls World with legacy inverse
+rotation order, while original `509110` calls native builder `4D7AF0` matching
+the separately verified direct order. Correct and test that command/scene
+wiring next. `updateScale` still lacks a loose branch; raw authored properties
+must survive preparation to avoid scaling already rounded properties. Physical
+save/retention/recreation remains actor-only. Production break/mastery policy,
+replacement/sound, pickup cleanup, actual normal-input gameplay and the full
+controller/FPS/restart matrix remain required. **S4 is incomplete.**

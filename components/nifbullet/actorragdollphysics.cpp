@@ -1566,10 +1566,24 @@ namespace NifBullet
     void ActorRagdollPhysics::synchronizeNativeKeyframedPoses(
         std::span<const RagdollNativeScenePoseRequest> poses)
     {
+        synchronizeNativeScenePoses(poses, false);
+    }
+
+    void ActorRagdollPhysics::synchronizeNativeForcedPoses(
+        std::span<const RagdollNativeScenePoseRequest> poses)
+    {
+        synchronizeNativeScenePoses(poses, true);
+    }
+
+    void ActorRagdollPhysics::synchronizeNativeScenePoses(
+        std::span<const RagdollNativeScenePoseRequest> poses, bool forced)
+    {
         struct Pending
         {
             Impl::Body* mOwned;
             btTransform mPose;
+            bool mResetLinear = false;
+            bool mResetAngular = false;
         };
         std::vector<Pending> pending;
         pending.reserve(poses.size());
@@ -1580,7 +1594,7 @@ namespace NifBullet
             const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
                 [&](const auto& body) { return body.mRecord == request.mRecord; });
             require(found != mImpl->mBodies.end(), "unknown native scene pose identity");
-            require(found->mMotion == RagdollNativeMotion::Keyframed,
+            require(forced || found->mMotion == RagdollNativeMotion::Keyframed,
                 "native scene pose publication requires keyframed motion");
             const auto native = ragdollNativeSceneBodyTargetPose(request.mWorldPose, found->mSceneOffset);
             auto pose = btTransform(btQuaternion(native.mRotation[0], native.mRotation[1],
@@ -1588,7 +1602,22 @@ namespace NifBullet
             pose.setOrigin(pose.getOrigin() * btScalar(mImpl->mLengthScale));
             pose *= found->mCenterFrame;
             validatePose(pose);
-            pending.push_back({&*found, pose});
+            Pending change{&*found, pose};
+            if (forced)
+            {
+                ESM4::PhysicalWorldSceneVelocities input;
+                for (unsigned axis = 0; axis < 3; ++axis)
+                {
+                    input.mLinear[axis] = float(found->mBody->getLinearVelocity()[axis] / mImpl->mLengthScale);
+                    input.mAngular[axis] = float(found->mBody->getAngularVelocity()[axis]);
+                }
+                input.mLinear[3] = found->mNativeLinearW;
+                input.mAngular[3] = found->mNativeAngularW;
+                const auto output = ESM4::preparePhysicalForcedSceneVelocities(input);
+                change.mResetLinear = output.mLinear != input.mLinear;
+                change.mResetAngular = output.mAngular != input.mAngular;
+            }
+            pending.push_back(change);
         }
         for (const auto& change : pending)
             mImpl->activateGroup(change.mOwned->mActivationGroup);
@@ -1600,6 +1629,16 @@ namespace NifBullet
             // keeps the old interpolation pose, so replace that explicitly.
             body.setCenterOfMassTransform(change.mPose);
             body.setInterpolationWorldTransform(change.mPose);
+            if (change.mResetLinear)
+            {
+                body.setLinearVelocity(btVector3(0, 0, 0));
+                change.mOwned->mNativeLinearW = 0.f;
+            }
+            if (change.mResetAngular)
+            {
+                body.setAngularVelocity(btVector3(0, 0, 0));
+                change.mOwned->mNativeAngularW = 0.f;
+            }
             if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
         }
     }

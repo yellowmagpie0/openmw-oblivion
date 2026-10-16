@@ -4867,3 +4867,46 @@ TEST(ESM4PhysicalCombat, BlockSoundLayersMatchOriginalSelector)
         EXPECT_EQ(ESM4::nativeMeleeBlockSounds(c.mAttacker, c.mDefender, c.mEnchanted), c.mSounds);
     }
 }
+
+TEST(ESM4PhysicalCombat, ForcedSceneVelocityResetUsesStrictOriginalThresholdAndPreservesScratchLanes)
+{
+    const float below=std::bit_cast<float>(0x3a83126eu);
+    const float equal=std::bit_cast<float>(0x3a83126fu);
+    const float above=std::bit_cast<float>(0x3a831270u);
+    for (float value : {0.f,-0.f,below,-below,equal,-equal,above,-above,2.f,-2.f})
+    for (unsigned axis=0;axis<3;++axis)
+    {
+        ESM4::PhysicalWorldSceneVelocities input{{-0.f,0.f,-0.f,99.f},{0.f,-0.f,0.f,-99.f}};
+        input.mLinear[axis]=value;
+        const auto result=ESM4::preparePhysicalForcedSceneVelocities(input);
+        for (unsigned i=0;i<4;++i)
+        {
+            const unsigned expected=std::abs(value)>equal ? 0u : std::bit_cast<unsigned>(input.mLinear[i]);
+            EXPECT_EQ(std::bit_cast<unsigned>(result.mLinear[i]),expected);
+            EXPECT_EQ(std::bit_cast<unsigned>(result.mAngular[i]),std::bit_cast<unsigned>(input.mAngular[i]));
+        }
+        std::swap(input.mLinear,input.mAngular);
+        const auto angular=ESM4::preparePhysicalForcedSceneVelocities(input);
+        EXPECT_EQ(angular.mLinear,result.mAngular);
+        for (unsigned i=0;i<4;++i)
+            EXPECT_EQ(std::bit_cast<unsigned>(angular.mAngular[i]),std::bit_cast<unsigned>(result.mLinear[i]));
+    }
+}
+
+TEST(ESM4PhysicalCombat, ForcedSceneVelocityResetRejectsNonfiniteLanesWithoutChangingInput)
+{
+    for (float invalid : {std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(),std::numeric_limits<float>::quiet_NaN()})
+    for (unsigned i=0;i<8;++i)
+    {
+        ESM4::PhysicalWorldSceneVelocities input{{1,2,3,4},{5,6,7,8}};
+        (i<4 ? input.mLinear[i] : input.mAngular[i-4])=invalid;
+        const auto before=input;
+        EXPECT_THROW(ESM4::preparePhysicalForcedSceneVelocities(input),std::invalid_argument);
+        for (unsigned axis=0;axis<4;++axis)
+        {
+            EXPECT_EQ(std::bit_cast<unsigned>(input.mLinear[axis]),std::bit_cast<unsigned>(before.mLinear[axis]));
+            EXPECT_EQ(std::bit_cast<unsigned>(input.mAngular[axis]),std::bit_cast<unsigned>(before.mAngular[axis]));
+        }
+    }
+}

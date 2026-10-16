@@ -1657,3 +1657,78 @@ namespace
         }
     }
 }
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, ForcedLoosePoseRefreshesBoundsAndRetainsForcesIdentityAndSmallVelocities)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher,&mBroadphase,&mSolver,&mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f/60.f,&world,nullptr);
+        auto prepared=scheduler.prepareLooseObject(mPtr,mGraph,NifBullet::RagdollNativeLengthScale,mPoses,1,-1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        auto packed=scheduler.captureLooseObjectPackedVelocities(mPtr);
+        packed[0].mVelocities={{2,0,0,99},{-0.f,.0005f,0,-99}};
+        const auto initial=scheduler.captureLooseObject(mPtr);
+        scheduler.restoreLooseObject(mPtr,initial,packed);
+        auto* body=btRigidBody::upcast(scheduler.looseObjectCollisionObject(mPtr)); ASSERT_NE(body,nullptr);
+        body->applyCentralForce(btVector3(3,4,5));
+        const auto original=scheduler.captureLooseObject(mPtr)[0];
+        const auto root=osg::Matrixf::translate(30,0,2);
+        auto invalid=root; invalid(0,0)=2;
+        EXPECT_THROW(scheduler.updateLooseObjectRootPose(mPtr,invalid),std::invalid_argument);
+        EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose,original.mPose);
+        EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities,packed[0].mVelocities);
+        scheduler.updateLooseObjectRootPose(mPtr,root);
+        EXPECT_EQ(scheduler.looseObjectCollisionObject(mPtr),body);
+        EXPECT_EQ(body->getTotalForce(),btVector3(3,4,5));
+        EXPECT_EQ(body->getInterpolationWorldTransform(),body->getWorldTransform());
+        EXPECT_EQ(body->getLinearVelocity(),btVector3(0,0,0));
+        const auto after=scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities;
+        EXPECT_EQ(after.mLinear,(std::array<float,4>{0,0,0,0}));
+        for (unsigned axis=0;axis<4;++axis)
+            EXPECT_EQ(std::bit_cast<unsigned>(after.mAngular[axis]),std::bit_cast<unsigned>(packed[0].mVelocities.mAngular[axis]));
+        btCollisionWorld::ClosestRayResultCallback hit(btVector3(20,0,2),btVector3(40,0,2));
+        world.rayTest(hit.m_rayFromWorld,hit.m_rayToWorld,hit);
+        EXPECT_TRUE(hit.hasHit()); EXPECT_EQ(hit.m_collisionObject,body);
+        btCollisionWorld::ClosestRayResultCallback old(btVector3(-10,0,2),btVector3(10,0,2));
+        world.rayTest(old.m_rayFromWorld,old.m_rayToWorld,old); EXPECT_FALSE(old.hasHit());
+        scheduler.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsPositionAndRotationDispatchMoveOrdinaryAndBodyTLooseOwners)
+    {
+        for (bool bodyT : {false,true})
+        {
+            SCOPED_TRACE(bodyT);
+            VFS::Manager vfs; Resource::ResourceSystem resources(&vfs,0.,nullptr);
+            MWPhysics::PhysicsSystem physics(&resources,new osg::Group);
+            auto graph=mGraph;
+            auto& body=graph.mBodies.front(); body.mNodeRecord=3;
+            body.mBoneBind=osg::Matrixf::rotate(osg::PI_2,osg::Vec3f(0,0,1))*osg::Matrixf::translate(3,4,5);
+            body.mUsesRigidBodyTransform=bodyT;
+            body.mTranslation={.25f,-.5f,.125f};body.mRotation=osg::Quat(osg::PI_2,osg::Vec3f(1,0,0));
+            mPtr.getCellRef().setScale(2.f);
+            auto scaled=NifBullet::ragdollDefinitionWithNativeScaledProperties(graph,2.f);
+            auto bind=body.mBoneBind;bind.setTrans(bind.getTrans()*2.f);
+            const auto root=osg::Matrixf::translate(100,40,80);
+            const std::array<NifBullet::RagdollBoneWorldPose,1> bones{{{body.mNodeRecord,bind*root}}};
+            const auto poses=NifBullet::ragdollBodyWorldPoses(scaled,bones);
+            auto prepared=physics.prepareLooseObject(mPtr,scaled,NifBullet::RagdollNativeLengthScale,poses,1,-1);
+            ASSERT_TRUE(physics.commitLooseObject(*prepared));
+            auto position=mPtr.getRefData().getPosition();position.pos[0]=50;position.pos[1]=70;position.pos[2]=90;
+            mPtr.getRefData().setPosition(position);
+            physics.updatePosition(mPtr);
+            auto expected=osg::Matrixf::translate(50,70,90);
+            auto actual=physics.captureLooseObjectRootPose(mPtr);
+            for (unsigned i=0;i<16;++i) EXPECT_NEAR(actual.ptr()[i],expected.ptr()[i],.0005f)<<i;
+            const osg::Quat rotation(osg::PI_2,osg::Vec3f(0,1,0));
+            physics.updateRotation(mPtr,rotation);
+            expected=osg::Matrixf::rotate(rotation)*osg::Matrixf::translate(50,70,90);
+            actual=physics.captureLooseObjectRootPose(mPtr);
+            for (unsigned i=0;i<16;++i) EXPECT_NEAR(actual.ptr()[i],expected.ptr()[i],.0005f)<<i;
+            EXPECT_EQ(physics.looseObjectOwners(),std::vector<MWWorld::Ptr>{mPtr});
+            EXPECT_EQ(mPtr.getCellRef().getScale(),2.f);
+            physics.removeLooseObject(mPtr);
+        }
+    }
+}

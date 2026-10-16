@@ -392,6 +392,10 @@ namespace NifBullet
         // preparation. Stage the whole batch before changing any body. Preserve
         // velocities/forces and refresh current/previous poses and AABBs.
         void synchronizeNativeKeyframedPoses(std::span<const RagdollNativeScenePoseRequest> poses);
+        // Forced scene input (e.g. SetPos/SetAngle), without changing modes.
+        // Apply89EE00's independent conditional velocity resets, preserve
+        // forces and refresh current/previous poses and broadphase bounds.
+        void synchronizeNativeForcedPoses(std::span<const RagdollNativeScenePoseRequest> poses);
         // Stage an entire sparse controller batch before publishing modes,
         // scene synchronization or velocities. Return renderer targets and
         // updated native collision flags; caller owns node writes and clock.
@@ -510,6 +514,7 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool forced);
         void validateRestore(std::span<const RagdollBodyState> states) const;
         void validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const;
         std::vector<RagdollNativeBlendControllerState> prepareNativeBlendControllerRestore(

@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 loose-weapon position and rotation input — 2026-10-16
+
+PhysicsSystem position and rotation updates now move existing loose weapon
+bodies, including bodyT scene offsets and scaled bind translations. Forced
+updates preserve body identity and forces, refresh interpolation and broadphase
+bounds, and apply the original per-vector velocity reset threshold.
+
+All 1,800 original-instruction velocity cases match production C++ bit for bit
+in normal and ASan/UBSan builds. Both full builds pass **2,688 component tests
+and 1,553 engine tests**; a controlled dispatch bypass produces the expected
+stale-pose failures. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#loose-weapon-position-and-rotation-input)
+records scope and evidence. Native `SetAngle` still selects the legacy rotation
+order, and live scaling, physical save/recreation, production break/mastery
+and the full normal-input acceptance matrix remain open. S4 is incomplete.
+
 ## S4 loose-weapon frame pose publication — 2026-10-16
 
 World now synchronizes loose native weapon root poses after physics movement.

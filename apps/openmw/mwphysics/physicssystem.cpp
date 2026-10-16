@@ -788,6 +788,9 @@ namespace MWPhysics
                 mTaskScheduler->updateSingleAabb(foundActor->second);
             }
         }
+        else if (mTaskScheduler->hasLooseObject(ptr))
+            mTaskScheduler->updateLooseObjectRootPose(ptr,
+                osg::Matrixf::rotate(rotate) * osg::Matrixf::translate(ptr.getRefData().getPosition().asVec3()));
     }
 
     void PhysicsSystem::updatePosition(const MWWorld::Ptr& ptr)
@@ -806,6 +809,12 @@ namespace MWPhysics
         {
             foundActor->second->updatePosition();
             mTaskScheduler->updateSingleAabb(foundActor->second, true);
+        }
+        else if (mTaskScheduler->hasLooseObject(ptr))
+        {
+            auto root = mTaskScheduler->captureLooseObjectRootPose(ptr);
+            root.setTrans(ptr.getRefData().getPosition().asVec3());
+            mTaskScheduler->updateLooseObjectRootPose(ptr, root);
         }
     }
 

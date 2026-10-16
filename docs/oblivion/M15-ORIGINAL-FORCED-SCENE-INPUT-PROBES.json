@@ -1,0 +1,217 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "status": "forced scene velocity rule and loose-body physics dispatch verified; full command and gameplay acceptance open",
+  "functions": {
+    "setpos_command": "00508FC0",
+    "setangle_command": "00509110",
+    "mark_forced_scene_update": "00897A20",
+    "full_collision_update": "00897510",
+    "conditional_velocity_reset": "0089EE00",
+    "forced_scene_pose": "0089EAE0",
+    "plain_body_pose_setter": "008A2FB0",
+    "native_pose_setter": "008A9E20",
+    "native_reference_rotation_builder": "004D7AF0"
+  },
+  "boundary_stubs": {
+    "0043F2E0": "Windows critical-section entry is a no-op; synchronization is not emulated.",
+    "0043F300": "Windows critical-section exit is a no-op; synchronization is not emulated."
+  },
+  "fixture_conditions": [
+    "Actual collision A55FCC, body A5605C and sphere motion A979A8 vtables.",
+    "Collision flags 0x41, update selector BA7A8C=0, sphere motion type2.",
+    "No native World attached; island already active. Native broadphase/activation is excluded.",
+    "Target node world translation10/20/30, identity rotation, scale1; native position conversion executes.",
+    "Ten signed velocity values including exact binary32 threshold and adjacent values, independently placed in each XYZ lane, with W99/-99.",
+    "Both x87 control words027F and037F; complete return, stack, callee-saved registers and unchanged node verified."
+  ],
+  "cases": {
+    "original_full_collision_update": 1800,
+    "normal_cpp_comparisons": 1800,
+    "sanitized_cpp_comparisons": 1800,
+    "comparison": "All eight velocity binary32 lanes match original outputs exactly."
+  },
+  "observations": [
+    "For each linear/angular vector independently: any XYZ abs strictly greater than binary32 0x3a83126f resets all four lanes to positive zero. Otherwise every lane, including W and signed zeros, survives unchanged.",
+    "Forced flag0x40 selects velocity reset and actual body pose setter; clears flag0x40 without changing body motion mode.",
+    "Native SetAngle uses4D7AF0, whose previously verified order matches direct Z*Y*X conversion. Current script host still selects legacy inverse order; that remains a required follow-up."
+  ],
+  "literal_cases": [
+    {
+      "name": "zero_signed_lanes",
+      "linear_bits": [
+        0,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "angular_bits": [
+        0,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "control_word": 639,
+      "final_linear_bits": [
+        0,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "final_angular_bits": [
+        0,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "position_bits": [
+        1068949977,
+        1077338585,
+        1082730851,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "flags": 1
+    },
+    {
+      "name": "threshold_equality",
+      "linear_bits": [
+        981668463,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "angular_bits": [
+        973279855,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "control_word": 639,
+      "final_linear_bits": [
+        981668463,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "final_angular_bits": [
+        973279855,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "position_bits": [
+        1068949977,
+        1077338585,
+        1082730851,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "flags": 1
+    },
+    {
+      "name": "linear_above_threshold",
+      "linear_bits": [
+        981668464,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "angular_bits": [
+        973279855,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "control_word": 639,
+      "final_linear_bits": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_angular_bits": [
+        973279855,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "position_bits": [
+        1068949977,
+        1077338585,
+        1082730851,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "flags": 1
+    },
+    {
+      "name": "angular_above_threshold",
+      "linear_bits": [
+        2147483648,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "angular_bits": [
+        981668464,
+        0,
+        2147483648,
+        3267756032
+      ],
+      "control_word": 639,
+      "final_linear_bits": [
+        2147483648,
+        2147483648,
+        0,
+        1120272384
+      ],
+      "final_angular_bits": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "position_bits": [
+        1068949977,
+        1077338585,
+        1082730851,
+        0
+      ],
+      "rotation_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "flags": 1
+    }
+  ],
+  "evidence": {
+    "oracle": "build/oblivion-compat/m15/S4/loose-forced-scene-oracle-03",
+    "comparison": "build/oblivion-compat/m15/S4/loose-forced-scene-compare-01",
+    "normal_full_suites": "build/oblivion-compat/m15/S4/loose-command-transform-normal-01",
+    "sanitized_full_suites": "build/oblivion-compat/m15/S4/loose-command-transform-sanitized-01",
+    "controlled_bypass": "build/oblivion-compat/m15/S4/loose-command-transform-bypass-01"
+  },
+  "excluded": [
+    "Native bodyT correction in this original probe; bodyT physics integration uses the separately verified scene-offset implementation.",
+    "Command argument parsing, full native SetAngle command dispatch, live SetScale and physical save/recreation.",
+    "Actual normal-input gameplay, exterior cell crossing and complete S4 acceptance."
+  ]
+}

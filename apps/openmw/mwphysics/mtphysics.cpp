@@ -652,6 +652,24 @@ namespace MWPhysics
         return found->second->mPhysics.captureNativePackedVelocities();
     }
 
+    void PhysicsTaskScheduler::updateLooseObjectRootPose(const MWWorld::Ptr& ptr, const osg::Matrixf& root)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        auto& object = *found->second;
+        if (object.mLengthScale != NifBullet::RagdollNativeLengthScale
+            || ptr.getCellRef().getScale() != object.mReferenceScale)
+            throw std::invalid_argument("loose scene input requires its admitted native scale and units");
+        (void)NifBullet::ragdollNativeSceneTargetPose(root);
+        const auto& body = object.mDefinition.mBodies.front();
+        auto bind = body.mBoneBind;
+        bind.setTrans(bind.getTrans() * object.mReferenceScale);
+        const std::array<NifBullet::RagdollNativeScenePoseRequest,1> request{{{body.mRecord,bind * root}}};
+        object.mPhysics.synchronizeNativeForcedPoses(request);
+    }
+
     void PhysicsTaskScheduler::restoreLooseObject(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollBodyState> states,
         std::span<const NifBullet::RagdollNativePackedVelocityState> velocities)

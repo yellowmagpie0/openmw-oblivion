@@ -47,6 +47,22 @@ namespace ESM4
         }
     }
 
+    PhysicalWorldSceneVelocities preparePhysicalForcedSceneVelocities(
+        const PhysicalWorldSceneVelocities& input)
+    {
+        finite(input.mLinear);
+        finite(input.mAngular);
+        auto result = input;
+        for (auto* vector : {&result.mLinear, &result.mAngular})
+            for (unsigned axis = 0; axis < 3; ++axis)
+                if (std::abs((*vector)[axis]) > .001f)
+                {
+                    vector->fill(0.f);
+                    break;
+                }
+        return result;
+    }
+
     std::optional<PhysicalWorldSceneVelocities> preparePhysicalWorldSceneVelocities(
         const PhysicalWorldSceneInput& input)
     {
