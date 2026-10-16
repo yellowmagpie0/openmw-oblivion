@@ -3935,3 +3935,60 @@ live flags, outer model/culling policies, clock lifecycle/physics order, one upd
 owner, real reference/cell lifetimes/migration, pending save/fresh recreation and
 remaining melee/drop/effect/input/runtime gates remain open. M15S4 remains active
 and incomplete.
+
+## 2026-10-16 — clone physical properties before reference collision relocation
+
+The production reference loader/scaler now retains the original selected child
+R/T, wrapper kind, body record and bodyT offset/quaternion as owned values.
+Property copies scale the original bodyT translation before recomputing root
+relocation with unchanged Ni child locals. Previously the combined relocated
+offset was scaled, incorrectly scaling the child translation too. Plain wrappers
+contribute an identity old offset. Repeated/independent copies preserve these
+inputs; rejected identities and nonfinite used fields leave the source unchanged.
+Reference relocation now explicitly uses nativeSingle arithmetic, including
+unnormalized matrix extraction and old-offset quaternion frames. Existing
+DefaultDouble callers retain their behavior.
+
+Tracing the actual WEAP factory resolves an earlier initialization ambiguity:
+primary vtableA45354/+114=4B2320 dispatches +EC=4B3750 before Generate copies REFR
+R/T. The factory footer4B3BEC..4B3C37 resets the root to I/T0/scale1 and clears
+hidden bit0. Clone properties receive the resolved reference scale; matching
+already-scaled cached templates instead use clone factor1. Ordinary node copying
+preserves all13 local words. The earlier generation-order04 authored-root-scale
+1.75 fixture remains a scoped low-level fixture, not actual factory initialization.
+Future early-cache capture must start with the normalized unit root. Existing
+ObjectAnimation root neutralization is consistent with that footer; native global
+R/T/cache ownership is still unwired.
+
+Two independent original-instruction corpora execute1,920contexts. They combine
+the actual factory footer, bodyT copy-member scale prefix/cached getter, reference
+R/T copy, empty-controller early pass, final scale, full registration and forced
+later update. The prefix's resulting cached translation is explicitly supplied
+to the output wrapper; full model/heap/shape/constraint cloning is excluded.
+Both C++builds match640supported single-precision contexts/4,480exact position and
+quaternion fields. The1,280extended-precision diagnostic contexts have512differing
+cases/1,136fields, consistent with explicitSingle production selection. The
+preserved DefaultDouble helper also matches its prior288contexts/2,016fields per
+build. WorldA95CF4 and WorldMA97614 both dispatch +94 to88C740. These are scoped
+ordinary-node/sphere fixtures with declared boundaries and no real native World
+insertion or physics/gameplay acceptance.
+
+Three component regressions cover literal native bits, parsed-file destruction,
+repeated copies and rejection without source writes. A new engine admission test
+supplies native literal body poses and checks recovery of the reference root.
+Two actual NIF factory/physics-step tests had assumed collision centers coincide
+with scaled child geometry. Their failed run is retained; corrected assertions
+check the native collision offset separately while preserving geometry, root,
+motion and velocity checks. The redundant sanitizer build was stopped and its
+helper reached terminal before edits. Final normal and ASan/UBSan runs each pass
+all2,778components/265suites and1,611engine/122suites, with complete inventories and
+no failures/skips; leak detection is disabled. Native setup/ABI failures, numerical
+red baselines and precision failures remain in their original directories.
+[Editable verification](M15-REFERENCE-CLONE-SCALING-VERIFICATION.json) pins source,
+corpora, hashes, corrected context counts, reports and limits.
+
+No normal-input runtime course is added here. Initial physical capture and plain
+replacement reset, live flags/model/culling policy, clock lifecycle/physics order,
+one traversal owner, real reference/cell migration, save/fresh recreation and
+remaining melee/drop/effect/input/runtime gates remain open. M15S4 remains active
+and incomplete.

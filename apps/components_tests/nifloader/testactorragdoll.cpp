@@ -1187,3 +1187,113 @@ TEST_F(ActorRagdollTest, CompoundWeaponLoaderRejectsMalformedBoxAndTransformReco
     transform.mTransform = osg::Matrixf::identity(); transform.mShape = Nif::bhkShapePtr(nullptr);
     EXPECT_THROW(NifBullet::loadActorRagdollDefinition(mFile), std::runtime_error);
 }
+
+namespace
+{
+    TEST_F(ActorRagdollTest, ReferencePropertyScalingPrecedesChildCollisionRelocation)
+    {
+        // Original copy-member scaling then88C740; authored Ni child locals
+        // remain unchanged. Values from reference-scaled-relocation-oracle02.
+        auto& child = static_cast<Nif::NiNode&>(*mFile.mRecords[1]);
+        child.mTransform.mTranslation = {3, 4, 5};
+        child.mTransform.mRotation.mValues[0][0] = child.mTransform.mRotation.mValues[1][1] = 0;
+        child.mTransform.mRotation.mValues[0][1] = 1;
+        child.mTransform.mRotation.mValues[1][0] = -1;
+        auto& collision = static_cast<Nif::bhkCollisionObject&>(*child.mCollision.getPtr());
+        auto& body = static_cast<Nif::bhkRigidBody&>(*collision.mBody.getPtr());
+        body.mInfo.mTranslation = {.25f, -.5f, .125f, 0};
+        const float q = std::bit_cast<float>(0x3f3504f3u);
+        body.mInfo.mRotation = osg::Quat(q, 0, 0, q);
+        for (const bool plain : {false, true})
+        {
+            SCOPED_TRACE(plain);
+            body.mRecordType = plain ? Nif::RC_bhkRigidBody : Nif::RC_bhkRigidBodyT;
+            const auto source = NifBullet::loadReferenceRagdollDefinition(mFile);
+            for (const float scale : {.63f, 2.f})
+            {
+                SCOPED_TRACE(scale);
+                const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, scale);
+                const std::array<unsigned, 3> expected = plain
+                    ? std::array<unsigned, 3>{1054569834u, 1058164295u, 1060561369u}
+                    : scale == .63f ? std::array<unsigned, 3>{1051927422u, 1053588484u, 3201562808u}
+                                   : std::array<unsigned, 3>{1043786456u, 3197254732u, 3180491326u};
+                const std::array<unsigned, 4> rotation = plain
+                    ? std::array<unsigned, 4>{0, 0, 3207922931u, 1060439283u}
+                    : std::array<unsigned, 4>{1056964607u, 1056964607u, 3204448255u, 1056964607u};
+                for (unsigned i = 0; i < 3; ++i)
+                    EXPECT_EQ(std::bit_cast<unsigned>(scaled.mBodies[0].mTranslation[i]), expected[i]);
+                for (unsigned i = 0; i < 4; ++i)
+                    EXPECT_EQ(std::bit_cast<unsigned>(float(scaled.mBodies[0].mRotation[i])), rotation[i]);
+                EXPECT_EQ(child.mTransform.mTranslation, osg::Vec3f(3, 4, 5));
+                EXPECT_EQ(scaled.mBodies[0].mNodeRecord, 0u);
+                EXPECT_EQ(scaled.mBodies[0].mBoneBind, osg::Matrixf::identity());
+            }
+        }
+    }
+}
+
+namespace
+{
+    TEST_F(ActorRagdollTest, ReferenceRelocationOwnsOriginalPoseInputsAcrossPropertyCopies)
+    {
+        auto& child = static_cast<Nif::NiNode&>(*mFile.mRecords[1]);
+        auto& collision = static_cast<Nif::bhkCollisionObject&>(*child.mCollision.getPtr());
+        auto& body = static_cast<Nif::bhkRigidBody&>(*collision.mBody.getPtr());
+        body.mRecordType = Nif::RC_bhkRigidBodyT;
+        body.mInfo.mTranslation = {.25f, -.5f, .125f, 0};
+        auto source = NifBullet::loadReferenceRagdollDefinition(mFile);
+        ASSERT_TRUE(source.mReferenceCollisionSource);
+        const auto original = *source.mReferenceCollisionSource;
+        EXPECT_EQ(original.mBodyRecord, body.mRecordIndex);
+        EXPECT_EQ(original.mNodeRecord, child.mRecordIndex);
+        EXPECT_EQ(original.mBone, child.mName);
+        EXPECT_TRUE(original.mUsesRigidBodyTransform);
+        EXPECT_EQ(original.mNodeLocal.getTrans(), osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(original.mBodyTranslation, osg::Vec3f(.25f, -.5f, .125f));
+        mFile.mRecords.clear(); // All pose/identity inputs are owned values.
+        const auto twice = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 2);
+        const auto thrice = NifBullet::ragdollDefinitionWithNativeScaledProperties(source, 3);
+        const auto six = NifBullet::ragdollDefinitionWithNativeScaledProperties(twice, 3);
+        EXPECT_EQ(twice.mReferenceCollisionSource->mBodyTranslation, osg::Vec3f(.5f, -1, .25f));
+        EXPECT_EQ(thrice.mReferenceCollisionSource->mBodyTranslation, osg::Vec3f(.75f, -1.5f, .375f));
+        EXPECT_EQ(six.mReferenceCollisionSource->mBodyTranslation, osg::Vec3f(1.5f, -3, .75f));
+        EXPECT_EQ(six.mReferenceCollisionSource->mNodeLocal, original.mNodeLocal);
+        EXPECT_EQ(six.mReferenceCollisionSource->mBodyRotation, original.mBodyRotation);
+        EXPECT_EQ(source.mReferenceCollisionSource->mBodyTranslation, original.mBodyTranslation);
+        EXPECT_EQ(source.mReferenceCollisionSource->mNodeLocal, original.mNodeLocal);
+        EXPECT_FLOAT_EQ(source.mBodies[0].mMass, 40);
+        EXPECT_FLOAT_EQ(twice.mBodies[0].mMass, 80);
+    }
+
+    TEST_F(ActorRagdollTest, ReferencePropertyScalingRejectsStaleRelocationInputsWithoutSourceWrites)
+    {
+        const auto source = NifBullet::loadReferenceRagdollDefinition(mFile);
+        ASSERT_TRUE(source.mReferenceCollisionSource);
+        for (unsigned corruption = 0; corruption < 5; ++corruption)
+        {
+            SCOPED_TRACE(corruption);
+            auto invalid = source;
+            auto& origin = *invalid.mReferenceCollisionSource;
+            if (corruption == 0) origin.mBodyRecord = ~0u;
+            if (corruption == 1) invalid.mReferenceRoot.reset();
+            if (corruption == 2) origin.mNodeLocal(3, 0) = std::numeric_limits<float>::quiet_NaN();
+            if (corruption == 3)
+            {
+                origin.mUsesRigidBodyTransform = true;
+                origin.mBodyRotation.x() = std::numeric_limits<double>::quiet_NaN();
+            }
+            if (corruption == 4) invalid.mBodies.push_back(invalid.mBodies[0]);
+            const auto position = invalid.mBodies[0].mTranslation;
+            const auto rotation = invalid.mBodies[0].mRotation;
+            const float mass = invalid.mBodies[0].mMass;
+            if (corruption == 2 || corruption == 3)
+                EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeScaledProperties(invalid, 2), std::invalid_argument);
+            else
+                EXPECT_THROW(NifBullet::ragdollDefinitionWithNativeScaledProperties(invalid, 2), std::runtime_error);
+            EXPECT_EQ(invalid.mBodies[0].mTranslation, position);
+            EXPECT_EQ(invalid.mBodies[0].mRotation, rotation);
+            EXPECT_FLOAT_EQ(invalid.mBodies[0].mMass, mass);
+        }
+        EXPECT_EQ(source.mReferenceCollisionSource->mNodeRecord, 1u);
+    }
+}

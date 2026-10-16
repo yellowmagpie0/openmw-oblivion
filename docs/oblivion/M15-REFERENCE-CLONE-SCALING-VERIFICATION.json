@@ -1,0 +1,451 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Original collision property scaling precedes reference relocation; full M15S4 remains incomplete",
+  "parent_commit": "06954ad784398e530294a15575516100fd5e395e",
+  "implementation_sha256": {
+    "components/nif/nativetransformmath.hpp": "dd5a7f5e3b980d3740564841161c39f0fd6056dec2dc333dc25f18ddff8a0961",
+    "components/nifbullet/actorragdoll.hpp": "e94880375b70d9ea04c9ebcd6dc0daa653652696c9e94226017bf7760238f246",
+    "components/nifbullet/actorragdoll.cpp": "6849e2d79c337bc1d3d8720e84765d0af76adc2769dd8ef50f489400d87375ba",
+    "components/nifbullet/actorragdollphysics.hpp": "4eea74f841c3d256cc1a224ca38bcf4aa21464f16898b46a3f66a97136655d24",
+    "components/nifbullet/actorragdollphysics.cpp": "840e60d544c3d83084b040e4db9043aff666f055d5440d4c7cb85425e6bbc5c9",
+    "apps/components_tests/nifloader/testactorragdoll.cpp": "2d908cb7f85dcec4957f8f40e80ca781cea198f81425a3eab9a8ac0b096bb358",
+    "apps/openmw_tests/mwworld/testoblivionlooseweapon.cpp": "f349d32bfb8cd619451179587d40dcd6952226b75538dca2e3c81ac896e48150",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "63fd37924cf25b334e00966311c22a1164a673dcdc7d864e3e697c593f3edfbc"
+  },
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_oracles": [
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-oracle-02/verification.json",
+      "sha256": "d9badeac6f85e42b9db1ed86e63c18e26a326f4b47faeedc2822591f3957192a",
+      "report": {
+        "passed": true,
+        "contexts": 768,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_sha256": "d82b3262c94c2953a19f8833d4d2ab8722377c6f7938d8d1510c7edf12349d5e",
+        "cases_sha256": "caf568c4036443e1feb34357daddf5b934d35222091dc083344d236f0fa0a2c6"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-oracle-03/verification.json",
+      "sha256": "ddd9a90b196a04c292abadfc5360d7b3ebd02e87ffd1f3f27fe7dfe1fee575d2",
+      "report": {
+        "passed": true,
+        "contexts": 1152,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_sha256": "27404737a4510f9591578a933bed8208616f046f81266550d2dda2afdc1959b9",
+        "cases_sha256": "66265212f82dd9fdbf5242f809c535a5f6e66cf98f76102945a7993fadea0814"
+      }
+    }
+  ],
+  "comparison": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-compare-04/normal-verification.json",
+      "sha256": "dce97c462f065dbb1e64524be97300a747c86aafe55d5f55d9410c3fa9a1df74",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 640,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 640,
+            "mismatching_cases": 256,
+            "mismatching_fields": 568
+          },
+          "895": {
+            "cases": 640,
+            "mismatching_cases": 256,
+            "mismatching_fields": 568
+          }
+        },
+        "source_sha256": {
+          "reference-scaled-relocation-oracle-02": "caf568c4036443e1feb34357daddf5b934d35222091dc083344d236f0fa0a2c6",
+          "reference-scaled-relocation-oracle-03": "66265212f82dd9fdbf5242f809c535a5f6e66cf98f76102945a7993fadea0814"
+        },
+        "probe_sha256": "78f34dce4ffb8f45756e2a4b79298a8e1c9433ae00d564b52327427c2cf76d33",
+        "comparator_sha256": "3b710c8513e0f05350032d8e059be4c12cf82a7d07a8e5909b98022e4e1f5faa",
+        "binary_sha256": "f725661b6f3d52f3a006768b2f49dcd5541c1694ad44eeedb3473a9a5869503f",
+        "scope": "Actual loadReferenceRagdollDefinition then ragdollDefinitionWithNativeScaledProperties. Compare7exact native local-bodyT offset/quaternion floats per original context. 007Flive supported;027F/037F diagnostics for fixedSingle relocation implementation. Actual original bodyT copy scale prefix output supplied to wrapper before original registration; no full native model/clone/shape allocation replay, World callbacks, controller clock, real physics stepping or gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-compare-04/sanitized-verification.json",
+      "sha256": "3701f47f5cf29d472960eea89f294214e23c3248103deb1bfde05bdbcc738e1e",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 640,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 640,
+            "mismatching_cases": 256,
+            "mismatching_fields": 568
+          },
+          "895": {
+            "cases": 640,
+            "mismatching_cases": 256,
+            "mismatching_fields": 568
+          }
+        },
+        "source_sha256": {
+          "reference-scaled-relocation-oracle-02": "caf568c4036443e1feb34357daddf5b934d35222091dc083344d236f0fa0a2c6",
+          "reference-scaled-relocation-oracle-03": "66265212f82dd9fdbf5242f809c535a5f6e66cf98f76102945a7993fadea0814"
+        },
+        "probe_sha256": "78f34dce4ffb8f45756e2a4b79298a8e1c9433ae00d564b52327427c2cf76d33",
+        "comparator_sha256": "3b710c8513e0f05350032d8e059be4c12cf82a7d07a8e5909b98022e4e1f5faa",
+        "binary_sha256": "f8b246a2b05eca05b83170592ab4da45b1882b1715cd9228320df4b26513ed13",
+        "scope": "Actual loadReferenceRagdollDefinition then ragdollDefinitionWithNativeScaledProperties. Compare7exact native local-bodyT offset/quaternion floats per original context. 007Flive supported;027F/037F diagnostics for fixedSingle relocation implementation. Actual original bodyT copy scale prefix output supplied to wrapper before original registration; no full native model/clone/shape allocation replay, World callbacks, controller clock, real physics stepping or gameplay acceptance."
+      }
+    }
+  },
+  "default_precision_regression": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/reference-relocation-default-precision-01/normal-verification.json",
+      "sha256": "b27a06a7efe1fd4c24f49f1bceacff2c5d3afc9a5073fc72bb56fa9150357bb3",
+      "report": {
+        "passed": true,
+        "cases": 288,
+        "float_lanes": 7,
+        "source_sha256": "b45c84e40d0d8da6d56cd3460fc7dc0ec867425ea9e28010f973cf4eed14bdbc",
+        "probe_sha256": "93e2f57d0db4379a74fa872e04c1041a4ef2b819576f66b4848108b6147da91c",
+        "comparator_sha256": "48eb5e8f724c7122e8dfa2984fa0e12e6c0b9f0bf07dd247d18dcace091c7572",
+        "binary_sha256": "cfc390b57583f917736420f9e3acf382a6bab02517b69d8dfd27a78387cd0c11",
+        "scope": "Production relocated-body offset adapter linked from actual components library against all288 relocated full original reference-prefix/registration contexts. XYZW quaternion and native XYZ offset compare bit for bit; native fourth translation padding excluded. No property-copy, actual native World insertion or normal-input gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/reference-relocation-default-precision-01/sanitized-verification.json",
+      "sha256": "9798d5582caba13bf8ad3e391b8ed142992b5209aee49fa3750a8f348328b909",
+      "report": {
+        "passed": true,
+        "cases": 288,
+        "float_lanes": 7,
+        "source_sha256": "b45c84e40d0d8da6d56cd3460fc7dc0ec867425ea9e28010f973cf4eed14bdbc",
+        "probe_sha256": "93e2f57d0db4379a74fa872e04c1041a4ef2b819576f66b4848108b6147da91c",
+        "comparator_sha256": "48eb5e8f724c7122e8dfa2984fa0e12e6c0b9f0bf07dd247d18dcace091c7572",
+        "binary_sha256": "26172771ad533ee8df4d33bfcd8420de3d51936883af4025e4d9c3095714c8d6",
+        "scope": "Production relocated-body offset adapter linked from actual components library against all288 relocated full original reference-prefix/registration contexts. XYZW quaternion and native XYZ offset compare bit for bit; native fourth translation padding excluded. No property-copy, actual native World insertion or normal-input gameplay acceptance."
+      }
+    }
+  },
+  "old_implementation_comparison": {
+    "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-compare-baseline-04/normal-verification.json",
+    "sha256": "61ea509e38b7216feac39c2c18cb8ff27754df294ac7aa77f4b1f806eb7814e1",
+    "report": {
+      "passed": false,
+      "counts": {
+        "127": {
+          "cases": 256,
+          "mismatching_cases": 256,
+          "mismatching_fields": 768
+        },
+        "639": {
+          "cases": 256,
+          "mismatching_cases": 256,
+          "mismatching_fields": 768
+        },
+        "895": {
+          "cases": 256,
+          "mismatching_cases": 256,
+          "mismatching_fields": 768
+        }
+      },
+      "source_sha256": "caf568c4036443e1feb34357daddf5b934d35222091dc083344d236f0fa0a2c6",
+      "probe_sha256": "23ccff134b840109d212ad8b050e7dd370dbe10e9b0d654179a3071a1292cc71",
+      "comparator_sha256": "ec806d3de8948b82fd93f0a522ec6828f30b3ddcbec32e2d9924bd4d8c686349",
+      "binary_sha256": "c866916e03886498acc90b5443267bafa1cd00da936f6ac05f2b17f82127c7dd"
+    }
+  },
+  "old_implementation_inputs": {
+    "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-compare-baseline-03/baseline-inputs.json",
+    "sha256": "2cd22f251123ff84550c86a05a1924930fb4b1215bb47629bec5effad6aa5f9a",
+    "report": {
+      "header_revision": "06954ad784",
+      "header_sha256": "56999f330e967ba70e67a3eb0d8e562fcb14368ea2f55aa6e65b01607aa36ddc",
+      "library_sha256": "360f802041244b4b766cd085c1aa44924680643270966d29f634cd6112c94b97",
+      "scope": "Pin old ActorRagdollDefinition declaration to match still-unrebuilt baseline library; derive all compiler flags/includes/defines from CMake. No source/library mutations during this baseline build."
+    }
+  },
+  "openmw_binary_sha256": {
+    "normal": "3c3894a1e5d107d71461497e7299351bac45a52cea3db8d397a3c5a88248460e",
+    "sanitized": "e3597073e750eac4bb61a832d6aca79f519d5134394e4a43b10328d2ff577980"
+  },
+  "native_static_audits": [
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-scale-audit-01/executable.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-scale-audit-01/weapon-vtables.json",
+      "sha256": "95e8b5ccffe462d4cb7d3dc918ec552050e52e597e53e082f0e286b3af36569e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-scale-audit-01/weapon-model.txt",
+      "sha256": "ff80979686ed994815053d3829b75d0781efd29ca473db22a19954b4cfd7060e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-scale-audit-01/weapon-model-rest.txt",
+      "sha256": "c1100081b3e0eee9603cdfb1eb2e508f3f920c1fcf4c186fc13c86e9c1b48130"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-generation-scale-audit-02/node-clone-vtable.json",
+      "sha256": "a47bcb25b870359c9288ff4ae965d543551d0bdb1b1385e2379bda2e3500533a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/reference-physics-order-audit-02/world-rtti-vtables.json",
+      "sha256": "d588d4bb40db423e301dd89b664a3cfeddcf6aec198709a6cf79f2146f64168b"
+    }
+  ],
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-normal-02/verification.json",
+      "sha256": "9390a88e7149df0c53bab346b65e3b6b926c3b4acb7407776928f8aaea519843",
+      "results": {
+        "components": {
+          "executed": 2778,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ff618156ffb9a0e325ca3d66cc040b0f38691388b804f2c540cbf625747fd1e7",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "96835af51ecbca2d2fef905065daf789e6fad2301a17a2bcdc490b8453416d27",
+          "inventory_sha256": "b868c088564449e6d31833fb9849fcb830ad261288cad371d243250e9615047a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          },
+          "suites": 265
+        },
+        "engine": {
+          "executed": 1611,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "72a09d047f8fef221a39e3ca80dd6feba13fdb51c456218e48cbf27091f2eb8d",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "badb4ce9e71f3971a9eb70170f256d2c45043cec04f6455b9ab257e6824900bf",
+          "inventory_sha256": "c792e153626283604b95ff614ebb3b4e2a9cc1844071366a577c9f07d02bcad2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          },
+          "suites": 122
+        }
+      },
+      "source_before": {
+        "head": "06954ad784398e530294a15575516100fd5e395e",
+        "source_fingerprint": "abbe57a5e69b706b28c55787824c7ec3153b2847f69dfa738bf9eccf0d57ffb9"
+      },
+      "source_after": {
+        "head": "06954ad784398e530294a15575516100fd5e395e",
+        "source_fingerprint": "abbe57a5e69b706b28c55787824c7ec3153b2847f69dfa738bf9eccf0d57ffb9"
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/reference-scaled-relocation-sanitized-02/verification.json",
+      "sha256": "9476bdc4727706525e3a6972760250fd92ec93e93656ea8741d7d67cb119ad6b",
+      "results": {
+        "components": {
+          "executed": 2778,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a712ad01bc785b3ea1571334a5e116029dac548d7a174a86861302c58830a431",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "015b491eeaed286bc2cf72d534a874406fa2cbfd2494f6180f76264b20ecceb7",
+          "inventory_sha256": "f85130b1542cdfa72d17afbf2fa8f5e5bf5c18422ec94c9b324450a165eda86a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          },
+          "suites": 265
+        },
+        "engine": {
+          "executed": 1611,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9434dc4d4d15ea80e4448e5877e2d254d37194dc2185d12d2cc339e5969fc8b7",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "a5334d97730d67a8f0a2dc067f6b8fb5a15c2f31c4d0624ee7d38b76f3585831",
+          "inventory_sha256": "c792e153626283604b95ff614ebb3b4e2a9cc1844071366a577c9f07d02bcad2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          },
+          "suites": 122
+        }
+      },
+      "source_before": {
+        "head": "06954ad784398e530294a15575516100fd5e395e",
+        "source_fingerprint": "abbe57a5e69b706b28c55787824c7ec3153b2847f69dfa738bf9eccf0d57ffb9"
+      },
+      "source_after": {
+        "head": "06954ad784398e530294a15575516100fd5e395e",
+        "source_fingerprint": "abbe57a5e69b706b28c55787824c7ec3153b2847f69dfa738bf9eccf0d57ffb9"
+      }
+    }
+  },
+  "tested_source_fingerprint": "abbe57a5e69b706b28c55787824c7ec3153b2847f69dfa738bf9eccf0d57ffb9",
+  "factory_trace": {
+    "weapon_primary_vtable": "0xA45354",
+    "model_virtual_114": "0x4B2320",
+    "model_virtual_EC": "0x4B3750",
+    "generation_model_call": "0x4E4104",
+    "reference_scale_read": "0x4B382B -> 0x4D7260",
+    "clone_process": "0x478B90; uniform scale at +0x10/+0x14/+0x18",
+    "ordinary_node_clone": "0x700610 -> virtual+18 0x70B980 -> 0x70AC60 -> 0x707E90 copies all13 local words; virtual+38 0x70BA00 processes children/properties",
+    "bodyT_copy_prefix": "0x8B8E70 with actual cached getter0x8A5980; stop at generic0x8A4E30",
+    "model_factory_footer": "0x4B3BEC..0x4B3C37 clears hidden bit0, resets root R=I/T=0/scale=1 and detaches parent before reference R/T copy",
+    "reference_rotation_translation_copy": "0x4E4244..0x4E426E",
+    "early_pass": "0x4E3490",
+    "final_reference_scale": "0x4E43C8..0x4E43EB",
+    "registration": "0x88C740",
+    "registration_vtables": {
+      "bhkWorld": "0xA95CF4/+0x94",
+      "bhkWorldM": "0xA97614/+0x94"
+    },
+    "cached_template_policy": "The model factory reuses a matching scaled cached template with clone factor1. Production definitions here originate from the raw NIF, so reference properties are scaled once from that source."
+  },
+  "behavior": [
+    "Retain owned selected child record/name, body record, child local R/T, original wrapper kind and original bodyT translation/quaternion before root relocation. Parsed NIF lifetime is independent.",
+    "Scale original bodyT translation before combining it with unchanged Ni child local R/T. A plain wrapper contributes identity old offset. Recompute relocation on a private definition copy; preserve the inputs for subsequent relative property copies. Source data never changes. Reject invalid/missing/duplicate relocation identities and nonfinite used inputs.",
+    "Reference loading and subsequent property copies use explicit nativeSingle arithmetic through position conversion, unnormalized matrix extraction, body-offset quaternion rotation and quaternion product. DefaultDouble callers remain compatible; square-root significand rounding uses the common NativeTransformMath.",
+    "Three component tests cover native literal bits, NIF destruction and repeated/independent copies, and rejected metadata without source writes. New engine admission test supplies independent literal native body poses for plain/bodyT at0.63/2 and verifies recovered reference roots. Existing actual NIF factory/physics-step tests now distinguish native collision offset from the scaled child geometry while retaining child-local and physical motion/velocity checks."
+  ],
+  "native_comparison_summary": {
+    "original_contexts": 1920,
+    "supported_control_word": "0x007F",
+    "supported_contexts_per_build": 640,
+    "exact_fields_per_build": 4480,
+    "supported_mismatches_per_build": 0,
+    "diagnostic_contexts_per_build": 1280,
+    "diagnostic_mismatching_cases_per_build": 512,
+    "diagnostic_mismatching_fields_per_build": 1136,
+    "default_double_regression_contexts_per_build": 288,
+    "default_double_regression_exact_fields_per_build": 2016
+  },
+  "curated_native_cases": [
+    {
+      "plain": false,
+      "scale": 0.63,
+      "control_word": 127,
+      "local_position_bits": [
+        1051927422,
+        1053588484,
+        3201562808
+      ],
+      "local_rotation_bits": [
+        1056964607,
+        1056964607,
+        3204448255,
+        1056964607
+      ],
+      "scaled_source_offset3": [
+        1042368430,
+        3198240686,
+        1033979822
+      ]
+    },
+    {
+      "plain": false,
+      "scale": 2.0,
+      "control_word": 127,
+      "local_position_bits": [
+        1043786456,
+        3197254732,
+        3180491326
+      ],
+      "local_rotation_bits": [
+        1056964607,
+        1056964607,
+        3204448255,
+        1056964607
+      ],
+      "scaled_source_offset3": [
+        1056964608,
+        3212836864,
+        1048576000
+      ]
+    },
+    {
+      "plain": true,
+      "scale": 0.63,
+      "control_word": 127,
+      "local_position_bits": [
+        1054569834,
+        1058164295,
+        1060561369
+      ],
+      "local_rotation_bits": [
+        0,
+        0,
+        3207922931,
+        1060439283
+      ],
+      "scaled_source_offset3": [
+        1048576000,
+        3204448256,
+        1040187392
+      ]
+    },
+    {
+      "plain": true,
+      "scale": 2.0,
+      "control_word": 127,
+      "local_position_bits": [
+        1054569834,
+        1058164295,
+        1060561369
+      ],
+      "local_rotation_bits": [
+        0,
+        0,
+        3207922931,
+        1060439283
+      ],
+      "scaled_source_offset3": [
+        1048576000,
+        3204448256,
+        1040187392
+      ]
+    }
+  ],
+  "retained_attempts": [
+    "reference-scaled-relocation-oracle-01: invalid postcondition assumed second-child plain replacement preserves motion. Full original conversion resets first/second plain wrappers to0/I. Corrected02/03 record actual behavior.",
+    "reference-scaled-relocation-baseline-01/02: test compile setup failures (base collision body access, then constness). Baseline03 builds and fails12 native translation assertions against old code.",
+    "reference-scaled-relocation-compare-baseline-01: omitted NDEBUG causes Nif RecordPtr ABI mismatch. Baseline02 provenance uncertain after header edit; no numeric claim. Baseline03 owns old06954ad784 header matching old archive but uninitialized raw record pointer state rejects fixture. Baseline04 initializes nodes and matches CMake flags; all256 supported cases fail768 position fields against old code. Header/archive hashes retained in baseline03/baseline-inputs.json.",
+    "reference-scaled-relocation-preflight-01 and compare-01: corrected order still uses defaultDouble relocation; five curated position assertions and two exception-type expectations fail, comparison differs in128 supported cases/320 fields. Final preflight02 passes55 selected tests. DefaultDouble helper remains separately supported; reference callers now explicitly selectSingle.",
+    "reference-scaled-relocation-normal-01: components pass2778; engine has two failures from old collision-center/scaled-geometry coincidence assertions. Updated against independent native offset bits while preserving geometry/motion checks. Sanitized01 components also pass2778; owned CMake PGID827975 terminated after these failures to avoid duplicate work. Both helpers terminal before fixes; final02 runs pass.",
+    "compare-02/03 are intermediate successful matrices; their minimal parsed fixture left motion type0. Final compare-04 explicitly uses native sphere-inertia motion2. Final corpus and parameter matching retained.",
+    "oracle03 raw verification.scope text mistakenly says2304 contexts. Its numeric contexts field, actual corpus length and final comparison all establish1152; raw artifacts/hashes are preserved."
+  ],
+  "limits": [
+    "Normal and ASan/UBSan full components/engine inventories pass; leak detection is disabled. Existing world-test warnings for unused context and ambiguous macro else remain unchanged. Built openmw/esmtool and headless engine integration do not establish normal-input gameplay acceptance.",
+    "The fresh oracle executes the actual factory normalization footer, bodyT scaling prefix/cached getter, reference initialization, empty-controller early pass, final scale, reference registration and forced later update. The output of the actual bodyT cached translation scaler is supplied explicitly to the fixture wrapper before registration. It does not execute full model virtual114/EC, native heap/shape/constraint cloning or template-cache construction. Static caller/ordinary-node clone traces establish the inspected producer path, with matching-cache reuse distinguished.",
+    "Synthetic ordinary NiNode/sphere fixtures use declared Windows/TLS/allocation/reference-count boundaries, optional branches disabled and a null underlying native World. No native World insertion, Havok/Bullet equivalence, real frame scheduling/clock/culling, input/FPS or fresh-process gameplay acceptance is claimed.",
+    "The earlier generation-order04 authored-root-scale1.75 fixture is a scoped low-level source fixture, not the actual WEAP model-factory root initialization. The inspected factory normalizes root scale1 before Generate copies reference R/T. Future production early-cache capture must seed that normalized root.",
+    "Legacy ObjectAnimation ObjectLocal/outer PAT and World root-only adapters remain. Still need native initial physical capture including plain replacement reset, one traversal owner, live flag/model/outer/culling policy, real clock/physics scheduling and reference/cell lifetime/migration, save/fresh recreation and all remaining M15S4 melee/drop/effect/input/runtime gates."
+  ]
+}

@@ -62,7 +62,8 @@ namespace NifBullet
     // bodyT with an identity old offset; existing bodyT offsets retain their
     // own quaternion frame. Returns the new native-length bodyT offset only.
     RagdollNativeTargetPose ragdollNativeRelocatedBodyOffset(
-        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source);
+        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
 
     struct RagdollBoneWorldPose
     {
@@ -99,7 +100,8 @@ namespace NifBullet
     // Original mixed blend target:539850 matrix layout then8B1B40 quaternion.
     // Keep its unrounded intermediates and raw quaternion for later Slerp;
     // unlike keyframed scene sync, this boundary does not normalize.
-    RagdollNativeTargetPose ragdollNativeBlendSceneTargetPose(const osg::Matrixf& worldPose);
+    RagdollNativeTargetPose ragdollNativeBlendSceneTargetPose(const osg::Matrixf& worldPose,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     btTransform ragdollNativePoseFromBoneWorld(const osg::Matrixf& worldPose);
     // Native motion origin/XYZW quaternion returned through bhk scene adapters.
     // Output uses world lengths; input quaternion must already be unit length.

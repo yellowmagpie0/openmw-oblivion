@@ -631,6 +631,64 @@ TEST_F(LooseWeaponAdmissionTest, ResolvedScaleKeepsSceneCollisionAndRigidRootInA
     }
 }
 
+TEST_F(LooseWeaponAdmissionTest, AdmissionScalesOriginalBodyOffsetBeforeReferenceRelocation)
+{
+    unsigned serial = 1;
+    for (const bool plain : {false, true})
+    for (const float scale : {.63f, 2.f})
+    {
+        SCOPED_TRACE(plain);
+        SCOPED_TRACE(scale);
+        auto value = source(serial++);
+        value.mRef.setScale(scale);
+        auto& body = mDefinition.mBodies.front();
+        body.mNodeRecord = 0;
+        body.mBoneBind = osg::Matrixf::identity();
+        const float q = std::bit_cast<float>(0x3f3504f3u);
+        body.mUsesRigidBodyTransform = !plain;
+        body.mTranslation = {.25f, -.5f, .125f};
+        body.mRotation = osg::Quat(q, 0, 0, q);
+        const osg::Matrixf child(0,-1,0,0, 1,0,0,0, 0,0,1,0, 3,4,5,1);
+        mDefinition.mReferenceRoot = 0;
+        mDefinition.mReferenceCollisionSource = NifBullet::ActorRagdollDefinition::ReferenceCollisionSource{
+            1, "child", body.mRecord, child, body.mUsesRigidBodyTransform, body.mTranslation, body.mRotation};
+        const auto relocated = NifBullet::ragdollNativeRelocatedBodyOffset(
+            child, body, Nif::NativeTransformPrecision::Single);
+        body.mUsesRigidBodyTransform = true;
+        body.mTranslation = relocated.mPosition;
+        body.mRotation = osg::Quat(relocated.mRotation[0], relocated.mRotation[1],
+            relocated.mRotation[2], relocated.mRotation[3]);
+        // Independent original clone+registration results, not the scaler under
+        // test. Admission must use the same offset when recovering the root.
+        const std::array<unsigned, 3> position = plain
+            ? std::array<unsigned, 3>{1054569834u, 1058164295u, 1060561369u}
+            : scale == .63f ? std::array<unsigned, 3>{1051927422u, 1053588484u, 3201562808u}
+                           : std::array<unsigned, 3>{1043786456u, 3197254732u, 3180491326u};
+        const std::array<unsigned, 4> rotation = plain
+            ? std::array<unsigned, 4>{0, 0, 3207922931u, 1060439283u}
+            : std::array<unsigned, 4>{1056964607u, 1056964607u, 3204448255u, 1056964607u};
+        const auto f = [](unsigned bits) { return std::bit_cast<float>(bits); };
+        const float length = NifBullet::RagdollNativeLengthScale;
+        const std::array<btTransform, 1> poses{{btTransform(
+            btQuaternion(f(rotation[0]), f(rotation[1]), f(rotation[2]), f(rotation[3])),
+            btVector3(double(f(position[0])) * length, double(f(position[1])) * length,
+                double(f(position[2])) * length + 2))}};
+        auto prepared = mWorld->prepareLooseWeaponAdmission(*mCell, value, *mObjects, *mPhysics,
+            "weapon.osgt", osg::Quat(), MWRender::Mask_Object, mDefinition, length, poses, 1, -1);
+        ASSERT_TRUE(prepared->isValid());
+        const auto ptr = prepared->commit();
+        ASSERT_FALSE(ptr.isEmpty());
+        const auto root = mPhysics->captureLooseObjectRootPose(ptr);
+        const auto expected = osg::Matrixf::translate(0, 0, 2);
+        for (unsigned i = 0; i < 16; ++i)
+            EXPECT_NEAR(root.ptr()[i], expected.ptr()[i], 1e-5f) << i;
+        EXPECT_EQ(mDefinition.mReferenceCollisionSource->mBodyTranslation, osg::Vec3f(.25f,-.5f,.125f));
+        EXPECT_EQ(ptr.getRefData().getBaseNode()->getScale(), osg::Vec3f(scale,scale,scale));
+        mPhysics->removeLooseObject(ptr);
+        mObjects->removeObject(ptr);
+    }
+}
+
 TEST_F(LooseWeaponAdmissionTest, UnresolvedOrNonfiniteReferenceScalesNeverPublish)
 {
     for (const float scale : {-2.f,0.f,.005f,.125f,10.01f,

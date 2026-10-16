@@ -508,8 +508,11 @@ namespace NifBullet
         return result;
     }
 
-    RagdollNativeTargetPose ragdollNativeBlendSceneTargetPose(const osg::Matrixf& worldPose)
+    RagdollNativeTargetPose ragdollNativeBlendSceneTargetPose(
+        const osg::Matrixf& worldPose, Nif::NativeTransformPrecision precision)
     {
+        const Nif::Detail::NativeTransformMath math(precision);
+        require(math.valid(), "invalid native blend arithmetic precision");
         for (unsigned i = 0; i < 16; ++i)
             require(std::isfinite(worldPose.ptr()[i]), "nonfinite bone world pose");
         for (unsigned row = 0; row < 3; ++row)
@@ -525,22 +528,22 @@ namespace NifBullet
             for (unsigned col = 0; col < 3; ++col)
                 matrix[row * 3 + col] = worldPose(col, row);
         RagdollNativeTargetPose result;
-        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans());
+        result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans(), precision);
         auto& q = result.mRotation;
         // Original539850 only transposes/pads NiMatrix3 into the Havok matrix.
         // Original8B1B40 retains trace, root and reciprocal on x87 through
-        // each output float store. Use the original CRT53-bit precision domain;
-        // no early binary32 trace/root stores and no quaternion normalization.
-        const double trace = double(matrix[4]) + matrix[0] + matrix[8];
+        // each output float store. Retain intermediates at the selected x87
+        // precision without extra stores or quaternion normalization.
+        const double trace = math.add(math.add(matrix[4], matrix[0]), matrix[8]);
         if (trace > 0.)
         {
-            const double root = std::sqrt(trace + 1.);
+            const double root = math.squareRoot(math.add(trace, 1.));
             require(std::isfinite(root) && root > 0., "invalid native blend rotation root");
-            const double factor = .5 / root;
-            q[0] = float((double(matrix[7]) - matrix[5]) * factor);
-            q[1] = float((double(matrix[2]) - matrix[6]) * factor);
-            q[2] = float((double(matrix[3]) - matrix[1]) * factor);
-            q[3] = float(root * .5);
+            const double factor = math.multiply(.5, math.reciprocal(root));
+            q[0] = float(math.multiply(math.add(matrix[7], -double(matrix[5])), factor));
+            q[1] = float(math.multiply(math.add(matrix[2], -double(matrix[6])), factor));
+            q[2] = float(math.multiply(math.add(matrix[3], -double(matrix[1])), factor));
+            q[3] = float(math.multiply(root, .5));
         }
         else
         {
@@ -549,15 +552,15 @@ namespace NifBullet
                 axis = 2;
             const unsigned next = (axis + 1) % 3;
             const unsigned last = (next + 1) % 3;
-            const double squared = double(matrix[axis * 3 + axis])
-                - (double(matrix[next * 3 + next]) + matrix[last * 3 + last]) + 1.;
-            const double root = std::sqrt(squared);
+            const double squared = math.add(math.add(matrix[axis * 3 + axis],
+                -math.add(matrix[next * 3 + next], matrix[last * 3 + last])), 1.);
+            const double root = math.squareRoot(squared);
             require(std::isfinite(root) && root > 0., "invalid native blend rotation root");
-            const double factor = .5 / root;
-            q[axis] = float(root * .5);
-            q[3] = float((double(matrix[last * 3 + next]) - matrix[next * 3 + last]) * factor);
-            q[next] = float((double(matrix[axis * 3 + next]) + matrix[next * 3 + axis]) * factor);
-            q[last] = float((double(matrix[axis * 3 + last]) + matrix[last * 3 + axis]) * factor);
+            const double factor = math.multiply(.5, math.reciprocal(root));
+            q[axis] = float(math.multiply(root, .5));
+            q[3] = float(math.multiply(math.add(matrix[last * 3 + next], -double(matrix[next * 3 + last])), factor));
+            q[next] = float(math.multiply(math.add(matrix[axis * 3 + next], matrix[next * 3 + axis]), factor));
+            q[last] = float(math.multiply(math.add(matrix[axis * 3 + last], matrix[last * 3 + axis]), factor));
         }
         return result;
     }
@@ -619,8 +622,10 @@ namespace NifBullet
         }
 
         std::array<float, 4> nativeRotationProduct(
-            const std::array<float, 4>& q, const std::array<float, 4>& local)
+            const std::array<float, 4>& q, const std::array<float, 4>& local,
+            Nif::NativeTransformPrecision precision)
         {
+            const Nif::Detail::NativeTransformMath math(precision);
             std::array<float, 4> result;
             std::array<float, 3> products;
             for (unsigned axis = 0; axis < 3; ++axis)
@@ -638,22 +643,23 @@ namespace NifBullet
             }
             const float xy = products[1] + products[0];
             const float xyz = products[2] + xy;
-            result[3] = float(double(q[3]) * local[3] - xyz);
+            result[3] = float(math.add(math.multiply(q[3], local[3]), -double(xyz)));
             validateNativeOffsetRotation(result);
             return result;
         }
     }
 
     RagdollNativeTargetPose ragdollNativeRelocatedBodyOffset(
-        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source)
+        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source,
+        Nif::NativeTransformPrecision precision)
     {
         // 5398E0 preserves the authored matrix; 8B1B40 extracts its quaternion
         // without the normalization used by ordinary scene synchronization.
-        const auto child = ragdollNativeBlendSceneTargetPose(childLocal);
+        const auto child = ragdollNativeBlendSceneTargetPose(childLocal, precision);
         const auto old = source.mUsesRigidBodyTransform
             ? bodyTLocalRotation(source) : std::array<float, 4>{0, 0, 0, 1};
         const auto rotated = nativeBodyTOffset(old,
-            source.mUsesRigidBodyTransform ? source.mTranslation : osg::Vec3f());
+            source.mUsesRigidBodyTransform ? source.mTranslation : osg::Vec3f(), false, precision);
         osg::Vec3f transformed;
         for (unsigned axis = 0; axis < 3; ++axis)
         {
@@ -665,7 +671,7 @@ namespace NifBullet
             const float zt = z + child.mPosition[axis];
             transformed[axis] = xy + zt;
         }
-        return {nativeBodyTOffset(old, transformed, true), nativeRotationProduct(old, child.mRotation)};
+        return {nativeBodyTOffset(old, transformed, true, precision), nativeRotationProduct(old, child.mRotation, precision)};
     }
 
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(

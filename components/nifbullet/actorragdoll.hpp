@@ -174,6 +174,14 @@ namespace NifBullet
         {
             std::uint32_t mNodeRecord;
             std::string mBone;
+            // Preserve the pre-relocation inputs. Native cloning scales bodyT
+            // properties before registration combines them with unchanged Ni
+            // child R/T. Scaling the combined offset would also scale that R/T.
+            std::uint32_t mBodyRecord;
+            osg::Matrixf mNodeLocal;
+            bool mUsesRigidBodyTransform;
+            osg::Vec3f mBodyTranslation;
+            osg::Quat mBodyRotation;
         };
         std::optional<ReferenceCollisionSource> mReferenceCollisionSource;
     };

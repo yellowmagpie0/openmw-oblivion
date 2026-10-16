@@ -5,6 +5,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <cmath>
 
 namespace Nif::Detail
 {
@@ -38,6 +39,7 @@ namespace Nif::Detail
         double add(double a, double b) const noexcept { return round(a + b); }
         double multiply(double a, double b) const noexcept { return round(a * b); }
         double reciprocal(double value) const noexcept { return round(1.0 / value); }
+        double squareRoot(double value) const noexcept { return round(std::sqrt(value)); }
         double dot(float a0, float b0, float a1, float b1, float a2, float b2) const noexcept
         {
             return add(add(multiply(a0, b0), multiply(a1, b1)), multiply(a2, b2));

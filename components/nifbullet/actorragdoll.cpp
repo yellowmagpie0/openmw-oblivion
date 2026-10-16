@@ -267,14 +267,39 @@ namespace NifBullet
             return result;
         };
         ActorRagdollDefinition result = source;
+        auto* relocation = result.mReferenceCollisionSource ? &*result.mReferenceCollisionSource : nullptr;
+        if (relocation)
+            require(result.mReferenceRoot && relocation->mNodeRecord != *result.mReferenceRoot,
+                "invalid reference relocation source");
+        unsigned relocated = 0;
         for (auto& body : result.mBodies)
         {
             body = ragdollBodyWithNativeScaledProperties(body, resolvedActorScale);
+            if (relocation && body.mRecord == relocation->mBodyRecord)
+            {
+                require(++relocated == 1 && body.mNodeRecord == *result.mReferenceRoot
+                        && body.mUsesRigidBodyTransform, "invalid relocated body identity");
+                // Reconstruct the clone's source wrapper offset, then execute
+                // registration again. Ni child locals are not clone-scaled.
+                if (relocation->mUsesRigidBodyTransform)
+                    relocation->mBodyTranslation = vector(relocation->mBodyTranslation);
+                body.mUsesRigidBodyTransform = relocation->mUsesRigidBodyTransform;
+                body.mTranslation = relocation->mBodyTranslation;
+                body.mRotation = relocation->mBodyRotation;
+                const auto offset = ragdollNativeRelocatedBodyOffset(
+                    relocation->mNodeLocal, body, Nif::NativeTransformPrecision::Single);
+                body.mUsesRigidBodyTransform = true;
+                body.mTranslation = offset.mPosition;
+                body.mRotation = osg::Quat(offset.mRotation[0], offset.mRotation[1],
+                    offset.mRotation[2], offset.mRotation[3]);
+                continue;
+            }
             // Ordinary bhkRigidBody uses its target bone. Original 8B8E70
             // scales the separate translation only for bhkRigidBodyT.
             if (body.mUsesRigidBodyTransform)
                 body.mTranslation = vector(body.mTranslation);
         }
+        require(!relocation || relocated == 1, "missing relocated body");
         for (auto& joint : result.mJoints)
         {
             require(joint.mBodyA < result.mBodies.size() && joint.mBodyB < result.mBodies.size()
@@ -594,9 +619,10 @@ namespace NifBullet
                     auto& value = result.mBodies[bodies.at(body)];
                     auto local = selected->mTransform.mRotation.toOsgMatrix();
                     local.setTrans(selected->mTransform.mTranslation);
-                    const auto offset = ragdollNativeRelocatedBodyOffset(local, value);
+                    const auto offset = ragdollNativeRelocatedBodyOffset(local, value, Nif::NativeTransformPrecision::Single);
                     result.mReferenceCollisionSource = ActorRagdollDefinition::ReferenceCollisionSource{
-                        selected->mRecordIndex, selected->mName};
+                        selected->mRecordIndex, selected->mName, value.mRecord, local,
+                        value.mUsesRigidBodyTransform, value.mTranslation, value.mRotation};
                     value.mUsesRigidBodyTransform = true;
                     value.mTranslation = offset.mPosition;
                     value.mRotation = osg::Quat(offset.mRotation[0], offset.mRotation[1],

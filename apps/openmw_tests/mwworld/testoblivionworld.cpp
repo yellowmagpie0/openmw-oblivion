@@ -22087,7 +22087,12 @@ TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysical
     const auto physical = fixture.mPhysics->captureLooseObject(reference);
     ASSERT_EQ(physical.size(), 1u);
     const auto origin = physical[0].mPose.getOrigin();
-    const auto expected = childWorlds[0].getTrans();
+    // Original clone leaves the child Ni translation unchanged when creating
+    // the relocated offset. The rendered child still inherits REFR scale2.
+    const auto f = [](unsigned bits) { return std::bit_cast<float>(bits); };
+    const osg::Vec3d nativeOffset(f(1054569834u), f(1058164295u), f(1060561369u));
+    const auto expected = osg::Vec3d(placement.mTranslation)
+        + nativeOffset * NifBullet::RagdollNativeLengthScale;
     EXPECT_NEAR(origin.x(), expected.x(), 1e-4);
     EXPECT_NEAR(origin.y(), expected.y(), 1e-4);
     EXPECT_NEAR(origin.z(), expected.z(), 1e-4);
@@ -22128,9 +22133,17 @@ TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedCollisionFollowsRootWhileChi
     EXPECT_EQ(child.mTarget->getMatrix(), local);
     const auto worlds = child.mTarget->getWorldMatrices(); ASSERT_EQ(worlds.size(), 1u);
     const auto origin = stepped[0].mPose.getOrigin();
-    EXPECT_NEAR(worlds[0].getTrans().x(), origin.x(), .001);
-    EXPECT_NEAR(worlds[0].getTrans().y(), origin.y(), .001);
-    EXPECT_NEAR(worlds[0].getTrans().z(), origin.z(), .001);
+    // Keep the independently observed collision offset separate from the
+    // geometry's scaled local translation as both follow the moved root.
+    const auto f = [](unsigned bits) { return std::bit_cast<float>(bits); };
+    const osg::Vec3d nativeOffset(f(1054569834u), f(1058164295u), f(1060561369u));
+    const auto collision = (nativeOffset * NifBullet::RagdollNativeLengthScale) * osg::Matrixd(expected);
+    const auto geometry = osg::Vec3d(6, 8, 10) * osg::Matrixd(expected);
+    for (unsigned axis = 0; axis < 3; ++axis)
+    {
+        EXPECT_NEAR(origin[axis], collision[axis], .001);
+        EXPECT_NEAR(worlds[0].getTrans()[axis], geometry[axis], .001);
+    }
     const auto after = physics.captureLooseObject(reference);
     EXPECT_EQ(after[0].mPose, stepped[0].mPose);
     EXPECT_EQ(after[0].mLinearVelocity, stepped[0].mLinearVelocity);
