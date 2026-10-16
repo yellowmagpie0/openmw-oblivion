@@ -3814,3 +3814,46 @@ manual traversal owner with native controller clocks/physics order and safe live
 REFR migration. Remaining property/admission/node, pending save/fresh recreation,
 melee/drop/effect and normal-input/FPS/fresh-process gates remain open. M15S4 is
 active and incomplete.
+
+## 2026-10-16 — live original dropped-reference clock and selective dispatch
+
+An isolated original-game session now identifies the ordinary dropped weapon's
+actual update context. Original executable SHA remains a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+The copied pristine save and INI/plugins were verified and restored exactly;
+normal Quit/Exit Game completed, the wrapper returned0, and task-started game,
+Steam, Xvfb and GDB processes are gone. Native game exit status is not separately
+captured. Declared console setup added/dropped stock WEAP090615; this does not
+count as normal-input item-drop or gameplay acceptance. Two Steam startup failures
+and interrupted/misfiltered debugger attempts remain retained.
+
+All256scene-wrapper samples use007F. Actor animation time, world-branch B33A30
+and projectile frame delta B33E9C are different clocks. Direct original REF-extra
+identity (getter4B24E0, RTTI B35ACC) associates the dropped model with WEAP090615
+and dynamicFF000800, independently of its display name. Two early full-node
+entries have time0/controllersFALSE and no collision on the root yet; their
+sampler was manually stopped, so no full initial-generation trace is claimed.
+
+The settled root sample has128events:94virtual+64/4A0D50 entries,12base70A190
+entries,11world-transform70C120 and11collision897510 entries. Capture stops
+partway through the last selected pass. All106outer/base time arguments exactly
+match B33A30; all128events have selector0 and collisionflags0xD. There are82outer
+returns before any base/transform/collision entry, followed by11complete observed
+sequences and one partial sequence. This establishes conditional dispatch; the
+specific visibility/model/state predicate was not independently isolated.
+
+Static instructions confirm the integration requirement: selected70A190 uses
+nodeflagbit3 for controller work, bit2 for world projection and child bits1/4 for
+virtual+64/+68 selection. Outer4A0D50 can skip that base pass. Clock442546 stores
+B33A30 after adding a float input;4425B7 passes it to a world branch, while443315
+resets it on another path.8984A0 is invoked before that clock addition; its exact
+physics role and full frame order remain unverified. An unconditional ordinary
+full-downward traversal on every frame would miss these policies.
+
+[Editable observations and probe manifest](M15-ORIGINAL-REFERENCE-UPDATE-CLOCK-OBSERVATIONS.json)
+pin hashes, arguments, source scripts, retained failures and cleanup under
+`original-reference-clock-01` and `reference-update-clock-audit-01`. Debugger
+pauses affect frame deltas; no interpolation, FPS, contact, Havok equivalence or
+fresh-process gameplay acceptance is claimed. No C++ change occurred at this
+evidence checkpoint. Next verify native selected-node/visibility policies and
+clock lifecycle/scheduling, then connect generation/capture and one production
+owner. Legacy adapters and all remaining M15S4 delivery gates remain open.

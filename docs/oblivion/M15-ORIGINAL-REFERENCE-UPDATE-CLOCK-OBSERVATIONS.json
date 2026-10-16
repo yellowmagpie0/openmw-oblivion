@@ -1,0 +1,193 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Observed original ordinary dropped-reference selective update clock; production owner and full M15S4 incomplete",
+  "parent_commit": "a395aeca08",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "probe_manifest": {
+    "prefix_source": "build/oblivion-compat/m15/S4/original-node-precision-01/compat",
+    "private_prefix": "build/oblivion-compat/m15/S4/original-reference-clock-01/compat",
+    "pristine_quicksave_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "setup": [
+      "Copy isolated prefix with cp -a --reflink=auto; back up and hash INI/plugins/quicksave. Verify original executable before address-based work.",
+      "Launch original through Proton Experimental on fresh1280x768 Xvfb. Start normal Linux Steam client on a separate fresh display if unavailable; wait for ready before retry.",
+      "Use normal Continue/Yes to load copied pristine quicksave. No F5. Focus current game window before input.",
+      "Read-only GDB observations with software breakpoints; pass SIGSEGV to Wine after retaining initial interrupted attempt. Native code file unchanged; debugger pauses affect frame deltas.",
+      "Declared console fixture setup: player.additem 00090615 1, then player.drop 00090615 1. Close console. Item is independently audited stock rusty iron shortsword. These are setup commands, not normal-input drop acceptance.",
+      "Identify direct REFR association through extra-data virtual+4 getter4B24E0 returning RTTI B35ACC; extra+0xC is reference pointer. Verify base type0x21, base ID090615 and dynamic REFR FF000800 in this session. Name heuristics alone are insufficient.",
+      "Sample settled dropped root virtual entries and projection/collision dispatch. Normal R view toggle and relative mouse movement adjust view; do not infer a specific visibility predicate from those actions.",
+      "Exit through normal pause/Quit/Exit Game, discard unsaved setup, restore exact INI/plugins and verify cloned/source pristine quicksave hashes. Shut down task-started Steam."
+    ],
+    "measurements": {
+      "wrapper": {
+        "address": "707370",
+        "contexts": 256,
+        "fields": [
+          "ECX node, parent/name/controller/collision ancestry",
+          "return address",
+          "stack+4 time bits,stack+8 controller bool",
+          "FPCW,thread,selectorBA7A8C",
+          "literal globals B33E9C,B33A30,B3BCF0"
+        ]
+      },
+      "root": {
+        "addresses": [
+          "70A0D0",
+          "4A0D50",
+          "70A190",
+          "70A280",
+          "70A840",
+          "70A900",
+          "70C120",
+          "70A360",
+          "709EC0",
+          "897510"
+        ],
+        "contexts": 128,
+        "fields": [
+          "exact target node via ECX or collision+8",
+          "entry return address,40raw stack words",
+          "globals,selector,nodeflags,collisionflags,monotonic timestamp"
+        ],
+        "stop": "128total events; final selected pass partially sampled"
+      }
+    }
+  },
+  "observations": {
+    "passed_observation_assertions": true,
+    "wrapper_contexts": 256,
+    "wrapper_fpcw_counts": {
+      "0x7f": 256
+    },
+    "root_event_counts": {
+      "0x4a0d50": 94,
+      "0x70a190": 12,
+      "0x70c120": 11,
+      "0x897510": 11
+    },
+    "exact_selected_clock_matches": 106,
+    "early_contexts": 2,
+    "root_selector_counts": {
+      "0": 128
+    },
+    "root_collision_flags": 13,
+    "executable_sha256_after": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "cleanup": {
+      "game_wrapper_exit_code": 0,
+      "restored": {
+        "ini": {
+          "after_game_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+          "restored_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46"
+        },
+        "plugins": {
+          "after_game_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+          "restored_sha256": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234"
+        }
+      },
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+      "source_prefix_pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    }
+  },
+  "findings": [
+    "All256wrapper observations use007F. Actor roots at caller471FBE consume actor animation time; world branch4425BC consumes B33A30, while MagicProjectileRoot40DEC6 consumes B33E9C frame delta. Different contexts must not share an assumed clock.",
+    "Dropped weapon root is independently associated with WEAP090615 and dynamicFF000800, virtual tableA3F944. Two captured early70A0D0 entries use time0/controllersFALSE (callers4E380E,707389), with no root collision yet. This sampler was manually stopped at2of32target contexts; it does not claim a complete initial-generation trace or first-force event.",
+    "Settled root event sample:94outer4A0D50 entries from70A217;12base70A190 entries from4A0E41;11transform70C120 entries and11collision897510 entries, both returning70A1C2 because of tail dispatch. Final sample stops at next base entry. All128events selector0/collisionflags0xD; nodeflags FFFF000E. Every one of106outer/base time inputs exactly matches B33A30.",
+    "First83outer events include82returns before base entry; later11complete base/transform/collision sequences occur. This establishes conditional selective dispatch, not the precise visibility/state predicate. Static4A0D50 includes multiple model/property/visibility conditions before70A190.",
+    "Static70A190 passes time to47C930 with nodeflagbit3, invokes world transform virtual+74 only for bit2, and chooses child virtual+64/+68 using child bits1/4. Unconditional full-downward callbacks for every node/frame do not represent this native selected path.",
+    "Static442531 invokes8984A0, then442536..442546 adds a float input to B33A30 and stores float.4425A8..4425B7 passes it with controllersTRUE to707370 on a world branch.443315 resets B33A30 tozero on another path. Actual8984A0 semantics, exact frame order, clock reset/load persistence and all selective-node policies still need verification before production wiring."
+  ],
+  "evidence": {
+    "inputs.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/inputs.json",
+      "sha256": "f0a84e54cf4b5652d75e4e5a27f62deb14fe061de13e73b50ab77a466d013373"
+    },
+    "verification.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/verification.json",
+      "sha256": "c6f148634cca72ac658a890183e75d23b5a9c1f891e86c8e0ebba8a097c0065d"
+    },
+    "cleanup.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/cleanup.json",
+      "sha256": "697a70bbd3925210999919239f5d07222a3261f1ce5b53a73b0f4db9b0dd436b"
+    },
+    "input-log.jsonl": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/input-log.jsonl",
+      "sha256": "694f4c949ae0a7e3511e7170c88722f80eedd52d5ef287b03e3df48311ef87b1"
+    },
+    "retained-attempts.txt": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/retained-attempts.txt",
+      "sha256": "bfe860c7f6a0a8a42f8c9e027834262b96fc796d3644aef840f60b9f9ee4924d"
+    },
+    "sample-time-02.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-time-02.py",
+      "sha256": "c47a1e2293a91cdce719d0966195526b66a9188df7146ddd5a05402bf07f5565"
+    },
+    "scene-time-samples-02.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/scene-time-samples-02.json",
+      "sha256": "e71cdd5ccfb562930ba21b54cbce596afa79229940dfd4eec3c8fca4cc313d57"
+    },
+    "sample-physical-time.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-physical-time.py",
+      "sha256": "5937b932b4c0acc931cc7191b9787d930301ccc066aefabc794e93f6647a4ab9"
+    },
+    "physical-node-time-samples.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/physical-node-time-samples.json",
+      "sha256": "25a48b64fb38c0bfd20fa0e06c233a562855ee58d876e218be8efc06d06dc2e3"
+    },
+    "sample-nonactor-time.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-nonactor-time.py",
+      "sha256": "dde5b1f061976ca564f688b643b46c6dc4b1d540afc0f02a85129c1f60e1ba0f"
+    },
+    "nonactor-physical-node-time-samples.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/nonactor-physical-node-time-samples.json",
+      "sha256": "e07f562700d9f51a4f05fd9c78318b31116e3325861f071f7038254d06646d09"
+    },
+    "sample-nonactor-reference-time.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-nonactor-reference-time.py",
+      "sha256": "e18a59cd42a2005ae032cd0714b35458af9ea4533dcc49033264641f6c968430"
+    },
+    "sample-nonactor-refextra-time.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-nonactor-refextra-time.py",
+      "sha256": "652fc07f183a3e007c8c9aef3c9afcf97530e71c7058ddaff0a5e00694b9e71b"
+    },
+    "sample-dropped-weapon-time.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-dropped-weapon-time.py",
+      "sha256": "0a454f495b9a4a4da4f722e70c054c7c8c5419f6a38b296c2c655092a30f315e"
+    },
+    "dropped-weapon-node-time-progress.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/dropped-weapon-node-time-progress.json",
+      "sha256": "d3f4ba5c7865e52b18f42fee153d9b9a932e059045b3ec369be256f2e86f818c"
+    },
+    "sample-root-updates.py": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/sample-root-updates.py",
+      "sha256": "37d113d51f5fcab8e14a2f0825f927cdf7ff61c458394f89c60b0cc7d7542a8a"
+    },
+    "root-update-progress.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/root-update-progress.json",
+      "sha256": "14b7e2498869e2d7d78605b605dd4ead1647ccb6d1b2f2c1e9d252962ffac459"
+    },
+    "weapon-root-virtuals.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/weapon-root-virtuals.json",
+      "sha256": "cef12843a7774b1235a99747fbe75f2d1a14f4a73765e1586403a6ae241089a7"
+    },
+    "reference-extra-getters.json": {
+      "path": "build/oblivion-compat/m15/S4/original-reference-clock-01/reference-extra-getters.json",
+      "sha256": "e2b8d8b56a40b86adc8db8fb0edee576632a2ec59e14beff9a69b55881a09538"
+    }
+  },
+  "instruction_audit": {
+    "path": "build/oblivion-compat/m15/S4/reference-update-clock-audit-01",
+    "scope": "Raw E8 call candidates require instruction-context validation. Text/disassembly retained only in ignored evidence. Executable SHA checked for each address experiment.",
+    "world_clock_float_store_candidates": [
+      "442546",
+      "443315"
+    ],
+    "selected_root_entry": "4A0D50",
+    "selected_node_entry": "70A190"
+  },
+  "retained_failures_and_limits": [
+    "Launch01 failed Steam initialization P:0000065432. Launch02 started before Steam ready and also failed;03 succeeded. Post-exit xdotool calls failed and were retained. Missing optional xset/xwininfo utilities caused setup/read attempts to fail; used existing tools afterward.",
+    "Initial wrapper GDB attempt stopped on Wine SIGSEGV before256records; retry passes signal to Wine and completes. Native Linux backtraces generally failed to unwind PE frames, so only raw immediate return/stack fields and inspected instructions support caller claims.",
+    "Physical128sample includes actors. First nonactor filter had only12ancestors and incorrectly admitted deep actor hands/weapons; retain as actor diagnostics. Name-only reference-root sampler and direct REF-extra nonactor sampler found no eligible events before manual stop; no pass claimed. Retained logs identify each interrupted attempt.",
+    "Root selective decisions were not perturbed independently; visibility causation is not established. Stock weapon has no root controller in observed early entries. No controller interpolation, contact/damage, Havok equivalence, FPS timings, normal-input drop or fresh-process gameplay acceptance. Game quit through UI and wrapper returned0; native game exit code is not independently captured. No task game/Steam/Xvfb/GDB processes remain.",
+    "No C++ implementation changed for this evidence checkpoint. Existing legacy production ObjectAnimation/World adapters remain. Need implement/select native node policies, per-world float clock lifecycle and actual scheduling, then generation/preparation/traversal ownership and remaining M15S4 gates."
+  ]
+}
