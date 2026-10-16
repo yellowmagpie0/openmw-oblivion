@@ -3538,3 +3538,50 @@ verified controller clocks, safe native REFR-before-child/cell migration callbac
 all property/admission/node policies, loose save/fresh recreation and the full
 production melee/drop/pickup/reaction/effect and normal-input/FPS/fresh-process
 S4 gates remain open. Full M15S4 is active and incomplete.
+
+
+## 2026-10-16 — forward scene/body live precision checkpoint
+
+`ragdollNativeSceneTargetPose` and `ragdollNativeSceneBodyTargetPose` now accept
+explicit arithmetic precision. Double remains the default. Single retains the
+observed live 007F rounding of original 7150F0 trace/branch and offdiagonal
+arithmetic, bodyT offset coefficients and final quaternion W. The existing SSE
+normalization and reductions remain. Unknown modes reject before conversion.
+Eight native golden vectors cover the trace and three axis branches, ordinary/
+bodyT and descendant scenes; a second test preserves rigid admission in both modes.
+
+A broader original probe runs 1,536 initialization/registration/first-update
+contexts. The retained default-only baseline differs in 192 of 512 live cases
+and 356 float fields. Both current normal/SAN replays match all 512 original 007F
+cases using Single and all 512 original 027F cases using Double: 7,168 exact
+output float fields per build. The 512 original 037F contexts also match Double
+diagnostically. Inputs are the recorded native node-world R/T and final body-local
+offset/quaternion; the replay does not implement initialization/registration or
+first-sync dispatch. Empty native controllers, synthetic heap/Windows/TLS/critical
+boundaries, null native World and disabled special/property-copy gates remain.
+Middle GenerateNiNode/virtual50, full attachment, controller clocks and gameplay
+acceptance are unproven.
+
+Fresh unfiltered normal and ASan/UBSan component runs each pass 2,752 tests from
+262 suites, with exact inventories and no failures/skips. Leak checks are disabled.
+No fresh engine or normal-input runtime course runs for this component change;
+parent 42e3f4f912 has full normal/SAN component and engine coverage at its own source.
+[Editable verification](M15-FORWARD-SCENE-PRECISION-VERIFICATION.json) pins sources,
+checks, the broader native corpus, retained baseline and comparisons under
+`scene-target-forward-precision-*`, `reference-root-first-sync-oracle-02` and
+`reference-first-sync-target-baseline-02` in the S4 evidence directory.
+
+A separate original velocity follow-up passes 24 sample contexts: pending sync
+resets substantial XYZ velocity and all four packed lanes, while zero/tiny XYZ
+preserves the fourth lane. It covers ordinary/bodyT, active/inactive authored
+flags, two angles and live 007F at scale 1. `reference-first-sync-velocity-oracle-03`
+corrects 01 metadata and adds explicit eight-lane assertions; 02 retains a probe
+construction failure. This does not establish threshold boundaries. No engine
+pending-sync state machine or runtime precision caller is added here.
+
+Next implement correct native global-root initialization/initial capture and
+first-sync velocity/flag ordering, establish one production traversal owner and
+controller clock, and preserve safe native REFR-before-child/cell migration
+publication. The remaining admission/property/node policies, forced World/script
+continuation, loose save/fresh recreation, production melee/drop/effect wiring and
+normal-input/FPS/fresh-process matrix remain open. Full M15S4 is active and incomplete.

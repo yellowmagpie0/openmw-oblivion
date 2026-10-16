@@ -432,8 +432,11 @@ namespace NifBullet
         return result;
     }
 
-    RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose)
+    RagdollNativeTargetPose ragdollNativeSceneTargetPose(
+        const osg::Matrixf& worldPose, Nif::NativeTransformPrecision precision)
     {
+        const Nif::Detail::NativeTransformMath math(precision);
+        require(math.valid(), "invalid native scene arithmetic precision");
         for (unsigned i = 0; i < 16; ++i)
             require(std::isfinite(worldPose.ptr()[i]), "nonfinite bone world pose");
         for (unsigned row = 0; row < 3; ++row)
@@ -452,16 +455,17 @@ namespace NifBullet
         result.mPosition = ragdollWorldToNativePosition(worldPose.getTrans());
         auto& q = result.mRotation;
         // Actual7150F0 stores the trace, square-root input/result and reciprocal
-        // factor as binary32; differences/products retain double intermediates.
-        const float trace = float(double(matrix[0]) + matrix[4] + matrix[8]);
+        // factor as binary32. Arithmetic between stores follows x87 precision;
+        // subsequent normalization remains the original SSE binary32 path.
+        const float trace = float(math.add(math.add(matrix[0], matrix[4]), matrix[8]));
         if (trace > 0.f)
         {
             const float root = float(std::sqrt(double(float(double(trace) + 1.0))));
             q[3] = float(double(root) * .5);
             const float factor = float(.5 / double(root));
-            q[0] = float((double(matrix[7]) - matrix[5]) * factor);
-            q[1] = float((double(matrix[2]) - matrix[6]) * factor);
-            q[2] = float((double(matrix[3]) - matrix[1]) * factor);
+            q[0] = float(math.multiply(math.add(matrix[7], -double(matrix[5])), factor));
+            q[1] = float(math.multiply(math.add(matrix[2], -double(matrix[6])), factor));
+            q[2] = float(math.multiply(math.add(matrix[3], -double(matrix[1])), factor));
         }
         else
         {
@@ -470,14 +474,14 @@ namespace NifBullet
                 axis = 2;
             const unsigned next = (axis + 1) % 3;
             const unsigned last = (next + 1) % 3;
-            const float squared = float(double(matrix[axis * 3 + axis])
-                - matrix[next * 3 + next] - matrix[last * 3 + last] + 1.0);
+            const float squared = float(math.add(math.add(math.add(matrix[axis * 3 + axis],
+                -double(matrix[next * 3 + next])), -double(matrix[last * 3 + last])), 1.0));
             const float root = float(std::sqrt(double(squared)));
             q[axis] = float(double(root) * .5);
             const float factor = float(.5 / double(root));
-            q[3] = float((double(matrix[last * 3 + next]) - matrix[next * 3 + last]) * factor);
-            q[next] = float((double(matrix[axis * 3 + next]) + matrix[next * 3 + axis]) * factor);
-            q[last] = float((double(matrix[axis * 3 + last]) + matrix[last * 3 + axis]) * factor);
+            q[3] = float(math.multiply(math.add(matrix[last * 3 + next], -double(matrix[next * 3 + last])), factor));
+            q[next] = float(math.multiply(math.add(matrix[axis * 3 + next], matrix[next * 3 + axis]), factor));
+            q[last] = float(math.multiply(math.add(matrix[axis * 3 + last], matrix[last * 3 + axis]), factor));
         }
         // Scene sync reorders WXYZ to XYZW, then executes4D6830 once.
         // Match its float reduction/Newton stores with portable reciprocal sqrt.
@@ -661,14 +665,14 @@ namespace NifBullet
     }
 
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
-        const osg::Matrixf& worldPose, const RagdollBodyDefinition& body)
+        const osg::Matrixf& worldPose, const RagdollBodyDefinition& body, Nif::NativeTransformPrecision precision)
     {
-        const auto parent = ragdollNativeSceneTargetPose(worldPose);
+        const auto parent = ragdollNativeSceneTargetPose(worldPose, precision);
         if (!body.mUsesRigidBodyTransform)
             return parent;
         const auto local = bodyTLocalRotation(body);
         const auto& q = parent.mRotation;
-        const auto offset = nativeBodyTOffset(q, body.mTranslation);
+        const auto offset = nativeBodyTOffset(q, body.mTranslation, false, precision);
         RagdollNativeTargetPose result;
         std::array<float, 3> products;
         for (unsigned axis = 0; axis < 3; ++axis)
@@ -690,7 +694,8 @@ namespace NifBullet
         }
         const float productXY = products[1] + products[0];
         const float productXYZ = products[2] + productXY;
-        result.mRotation[3] = float(double(q[3]) * local[3] - productXYZ);
+        const Nif::Detail::NativeTransformMath math(precision);
+        result.mRotation[3] = float(math.add(math.multiply(q[3], local[3]), -double(productXYZ)));
         require(std::isfinite(result.mRotation[3]), "nonfinite bodyT scene quaternion");
         return result;
     }

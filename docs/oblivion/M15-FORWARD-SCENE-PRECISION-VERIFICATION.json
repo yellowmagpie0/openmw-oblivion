@@ -1,0 +1,351 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Explicit live-precision forward scene/body conversion checked; pending initialization and production manual traversal remain incomplete",
+  "parent_commit": "42e3f4f912c62b49f02a6084fb117d705a61f3bd",
+  "tested_source_fingerprint": "da780ddcc7b3293ce85ddc96767429b029320f10dd1cfee96a0bbfb05469d8db",
+  "implementation_sha256": {
+    "components/nifbullet/actorragdollphysics.hpp": "f526edb16bbc26dabe387c8ceedaa1df95101716ff58dee9eac6e6cf5be7a941",
+    "components/nifbullet/actorragdollphysics.cpp": "f9db2fcfe96dab7daa6a2d492d6c92b1201f109cad23b1379c1395edf81cab8b",
+    "apps/components_tests/nifloader/testactorragdollphysics.cpp": "7e352d6061af565e632b75dba033620043a4ddbfa86815f6813c74253f5c49d5"
+  },
+  "behavior": [
+    "Both forward scene-target functions accept explicit NativeTransformPrecision, default Double retained. Single rounds each original7150F0 trace, branch-root input, offdiagonal difference/sum/product and bodyT x87 coefficient/W operation in the observed live007F domain. Existing quaternion SSE normalization/reductions and float stores remain. Unknown precision rejects before pose conversion.",
+    "Eight literal native golden vectors exercise7150F0 trace and all three dominant-axis branches, ordinary/bodyT and unselected descendant scenes. A separate test preserves rigid admission for both modes and rejects unknown enum values.",
+    "No existing runtime caller changes precision in this checkpoint. These pure conversions do not consume or clear pending flags, reset velocities, step physics or implement a first-sync state machine."
+  ],
+  "checks": {
+    "normal": {
+      "path": "scene-target-forward-precision-normal-01/verification.json",
+      "sha256": "b35974e022f834a48fd6db30496174516c81d75a6ba07136e96eb7da4bd735f2",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.618
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/scene-target-forward-precision-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.352
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2752,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "486430e7b7c4d7adb4c3d2395905b35ad2c4984102d105ce3f4b5a3badda08f4",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "f00b463d105433d204a2aff6f1903597c3bb39b974d40f2d7a7fc2d81a258fd3",
+            "inventory_sha256": "0a32dab58e55fe283ca1c52cacefa5783f6f38fb33d3d926ef20534841ae31cf",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 262
+          }
+        },
+        "source_before": {
+          "head": "42e3f4f912c62b49f02a6084fb117d705a61f3bd",
+          "source_fingerprint": "da780ddcc7b3293ce85ddc96767429b029320f10dd1cfee96a0bbfb05469d8db"
+        },
+        "source_after": {
+          "head": "42e3f4f912c62b49f02a6084fb117d705a61f3bd",
+          "source_fingerprint": "da780ddcc7b3293ce85ddc96767429b029320f10dd1cfee96a0bbfb05469d8db"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "scene-target-forward-precision-sanitized-01/verification.json",
+      "sha256": "6bb3d84b3bc480a5cfd88f1e622a53a730e60c0c349a973e00b836cf99338f9f",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 139.576
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/scene-target-forward-precision-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 67.364
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2752,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9b82d6ce9e158e28074fa9563a0f76eea15504deb01810a4f2f297dd32712af3",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "d9158abb77eaf446df5cf65e4623c808d59c49e5014301c5477eae366f8be53b",
+            "inventory_sha256": "c216d599d8b7e1b4e7aea9cb6e229f66631d87c3f89c909a39238b4b4b07b669",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 262
+          }
+        },
+        "source_before": {
+          "head": "42e3f4f912c62b49f02a6084fb117d705a61f3bd",
+          "source_fingerprint": "da780ddcc7b3293ce85ddc96767429b029320f10dd1cfee96a0bbfb05469d8db"
+        },
+        "source_after": {
+          "head": "42e3f4f912c62b49f02a6084fb117d705a61f3bd",
+          "source_fingerprint": "da780ddcc7b3293ce85ddc96767429b029320f10dd1cfee96a0bbfb05469d8db"
+        }
+      }
+    }
+  },
+  "native_first_sync": {
+    "path": "reference-root-first-sync-oracle-02/verification.json",
+    "sha256": "6e2a7c5deab2f26b4a3e60a399d2501a2c2ab1fbd847bf0e6312a3030de28573",
+    "report": {
+      "passed": true,
+      "contexts": 1536,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "e0a5e46f39c68999015ec8b6bf017f5e7a7b10cd58dac604cc2101a8af456b4e",
+      "cases_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+      "scope": "Actual GenerateNiNode R/T and scale initialization segments followed by original reference prefix/World registration and first707370 for root/direct-child/deep/null-first,plain/bodyT,authored0/1/8/9,eight angle triplets including quaternion trace/axis branches,two scales,three x87 controls. Original first-sync clears40 even inactive; original47C930 dispatch executes but controller lists empty. Actual root/child composition, physical synchronization and pending-clear execute. Supplied synthetic heap/Windows/TLS/critical services, nullnativeWorld, property-copy/special gates disabled. GenerateNiNode middle/virtual50 skipped; no whole GenerateNiNode,controller timing/interpolation,Havok stepping or gameplay acceptance."
+    }
+  },
+  "baseline": {
+    "path": "reference-first-sync-target-baseline-02/verification.json",
+    "sha256": "7e2a3e85c93876cc1132b092cefc640c8af8eca23643f2ba1088e57ec36cffbd",
+    "report": {
+      "status": "diagnostic baseline, not an acceptance check",
+      "counts": {
+        "127": {
+          "cases": 512,
+          "mismatching_cases": 192,
+          "mismatching_fields": 356
+        },
+        "639": {
+          "cases": 512,
+          "mismatching_cases": 0,
+          "mismatching_fields": 0
+        },
+        "895": {
+          "cases": 512,
+          "mismatching_cases": 0,
+          "mismatching_fields": 0
+        }
+      },
+      "scope": "Existing forward scene-to-body adapter versus recorded native first pending synchronization. Native world and final body-local offset are inputs. All controls are diagnostic until independently audited.",
+      "source_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+      "probe_sha256": "372a1f9b28ca7e38465b650582fc9f45160eb846459213ee45a159dd86b17541",
+      "comparator_sha256": "cc445b20e6689bbb6ad876791d90a7436299ead122d537d6661ee192f2e3e9a6",
+      "binary_sha256": "dc52993515101295557cd12b49028fc6bf4db714703e9b6090573233ee6788c0",
+      "retained_failure_count": 192,
+      "failure_sample": [
+        {
+          "row": 10,
+          "control_word": 127,
+          "topology": "root",
+          "plain": false,
+          "fields": [
+            {
+              "field": 1,
+              "actual": 1077660836,
+              "expected": 1077660837
+            },
+            {
+              "field": 2,
+              "actual": 1081966355,
+              "expected": 1081966354
+            },
+            {
+              "field": 3,
+              "actual": 1054347069,
+              "expected": 1054347070
+            },
+            {
+              "field": 6,
+              "actual": 3197705239,
+              "expected": 3197705240
+            }
+          ]
+        },
+        {
+          "row": 11,
+          "control_word": 127,
+          "topology": "root",
+          "plain": false,
+          "fields": [
+            {
+              "field": 1,
+              "actual": 1077660836,
+              "expected": 1077660837
+            },
+            {
+              "field": 2,
+              "actual": 1081966355,
+              "expected": 1081966354
+            },
+            {
+              "field": 3,
+              "actual": 1054347069,
+              "expected": 1054347070
+            },
+            {
+              "field": 6,
+              "actual": 3197705239,
+              "expected": 3197705240
+            }
+          ]
+        }
+      ],
+      "omitted_failures": "Full diagnostic failures stay in the hash-pinned ignored baseline report; sample only is embedded here."
+    }
+  },
+  "replays": {
+    "normal": {
+      "path": "scene-target-forward-precision-compare-01/normal-verification.json",
+      "sha256": "a32f094c42797b336a44cb87008a8f096114bf3fef08d0dc9084ab7171252a91",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "scope": "Existing forward scene-to-body adapter versus recorded native first pending synchronization. Native world and final body-local offset are inputs. Single API replays007F; default Double replays027F. Extended037F maps toDouble for diagnostics only; supplied angles,scale,registration and native force-sync are corpus context, not a C++ first-sync state machine or gameplay acceptance.",
+        "source_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+        "probe_sha256": "f8681038eabe7a5417cbaa02b2e03478faec6f78a844b05805f2c28c5f48cd4c",
+        "comparator_sha256": "bf706a3942a4ae4695c50c7e7202056964a7cbfb960e972bbd57ec57b24a61f5",
+        "binary_sha256": "453055333b648cb118c3b9c1e8cbcb48cc279b0e31b9116c4fcb0660e8c05247"
+      }
+    },
+    "sanitized": {
+      "path": "scene-target-forward-precision-compare-01/sanitized-verification.json",
+      "sha256": "a32f094c42797b336a44cb87008a8f096114bf3fef08d0dc9084ab7171252a91",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "scope": "Existing forward scene-to-body adapter versus recorded native first pending synchronization. Native world and final body-local offset are inputs. Single API replays007F; default Double replays027F. Extended037F maps toDouble for diagnostics only; supplied angles,scale,registration and native force-sync are corpus context, not a C++ first-sync state machine or gameplay acceptance.",
+        "source_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+        "probe_sha256": "f8681038eabe7a5417cbaa02b2e03478faec6f78a844b05805f2c28c5f48cd4c",
+        "comparator_sha256": "bf706a3942a4ae4695c50c7e7202056964a7cbfb960e972bbd57ec57b24a61f5",
+        "binary_sha256": "453055333b648cb118c3b9c1e8cbcb48cc279b0e31b9116c4fcb0660e8c05247"
+      }
+    }
+  },
+  "velocity_followup": {
+    "path": "reference-first-sync-velocity-oracle-03/verification.json",
+    "sha256": "891d9ece7e78ce860c7a1de26f043275affead844f91f57a8f9dfbd86088d14d",
+    "report": {
+      "passed": true,
+      "contexts": 24,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "c7cf77fecfce57f9c5de3dae4c6053874675532bc54a49e97da292bfe7e8105e",
+      "cases_sha256": "89bc898530a984bc0b536937fc833e0583c190af2b16b30780cc4ad55b073e42",
+      "scope": "Actual initialization segments, registration and first707370 with one root collision.24 contexts: plain/bodyT,authoredflags0/1,two angles,scale1,live007F,three velocity profiles. Original89EE00 clears nonzero XYZ and all four lanes tozero, while zero/tinyXYZ preserve packed W. Exact before/after assertions for all8 velocity lanes. Controller dispatch runs with empty lists. Synthetic heap/Windows/TLS/critical services,null native World,property-copy/special gates disabled; middle GenerateNiNode/virtual50 skipped. Not threshold-boundary proof,full attachment,controller timing,native stepping or gameplay acceptance."
+    }
+  },
+  "comparison_scope": "1536 original initialization/registration/first707370 contexts across four topologies,plain/bodyT,authoredflags0/1/8/9,eight angle triplets,two scales,three x87 controls. Replay consumes original current node world R/T and final registered bodyT offset/quaternion as inputs; it does not implement those stages.512 original007F contexts use Single;512 original027F contexts use default Double:1024 supported contexts and7168 exact output float fields per build, zero differences.512 original037F contexts map to Double diagnostically and also match. Previous live baseline192/512 cases differ in356 fields; retained unchanged.",
+  "sanitizer_scope": "Full unfiltered2752 component tests/262 suites per mode, no failures/skips, exact inventory/XML checks. ASan/UBSan halt on error; leak detection disabled. No fresh engine or normal-input runtime run for this component-only change. Parent42e3f4f912 has full normal/SAN2750 component and1595 engine coverage, not evidence for this changed source.",
+  "retained_attempts": [
+    "Velocity oracle01 captured correct24 cases but inherited an overly broad scope string;02 failed before probe generation due a report-line replacement delimiter. Its failure.txt remains.03 corrects scope and asserts all eight velocity lanes. Corpora01/03 match exactly."
+  ],
+  "remaining_gates": [
+    "Implement native global reference-root initialization and initial author capture together with actual first synchronization. Preserve velocity threshold/reset ordering: original89EE00 clears substantial XYZ including all packed lanes, while zero/tiny XYZ leaves W intact.24 original contexts establish these sample outcomes, not threshold boundaries or an implementation.",
+    "Establish mutable registered/pending flags, one manual traversal update owner and controller clocks. Preserve native REFR-before-child publication with safe placement/cell migration and lifetime guards. ObjectAnimation and World still use legacy local-root/root-only adapters.",
+    "All admission/property-copy/node policies, forced World/script continuation, loose physical retention/save/fresh recreation, production melee/break/mastery/drop/pickup/replacement/sound/power/creature/reaction/effect wiring and full first/third-person keyboard/mouse/gamepad FPS fresh-process acceptance remain. Full M15S4 is active and incomplete."
+  ]
+}

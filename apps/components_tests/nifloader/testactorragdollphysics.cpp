@@ -5384,3 +5384,83 @@ namespace
         EXPECT_THROW(NifBullet::ragdollNativeToWorldPosition({}, invalid), std::invalid_argument);
     }
 }
+
+namespace
+{
+    TEST(RagdollNativeSceneTarget, LivePrecisionMatchesOriginalFirstSyncAcrossQuaternionBranches)
+    {
+        struct Case
+        {
+            bool mBodyT;
+            std::array<std::uint32_t, 12> mScene;
+            std::array<std::uint32_t, 3> mOffset;
+            std::array<std::uint32_t, 4> mLocalRotation;
+            std::array<std::uint32_t, 7> mExpected;
+        };
+        // Original initialization/registration/first707370 corpus02, live007F.
+        // Expected values are native motion stores after force scene sync.
+        // Includes all7150F0 trace/axis branches, plain/bodyT and unselected children.
+        const std::array<Case, 8> cases{{
+            {false, {0x3f800000u, 0x0u, 0x0u, 0x0u, 0xbf800000u, 0xb3bbbd2eu, 0x0u, 0x33bbbd2eu, 0xbf800000u, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fb6e1d9u, 0x4036e1d9u, 0x40892963u, 0x3f800000u, 0x0u, 0x0u, 0x333bbd2eu}},
+            {false, {0xbf800000u, 0x0u, 0x33bbbd2eu, 0x0u, 0x3f800000u, 0x0u, 0xb3bbbd2eu, 0x0u, 0xbf800000u, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fb6e1d9u, 0x4036e1d9u, 0x40892963u, 0x0u, 0x3f800000u, 0x0u, 0x333bbd2eu}},
+            {false, {0xbf800000u, 0xb3bbbd2eu, 0x0u, 0x33bbbd2eu, 0xbf800000u, 0x0u, 0x0u, 0x0u, 0x3f800000u, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fb6e1d9u, 0x4036e1d9u, 0x40892963u, 0x0u, 0x0u, 0x3f800000u, 0x333bbd2eu}},
+            {false, {0x3df284c0u, 0xbdf9b4dau, 0xbf7c466fu, 0x3f6361d6u, 0x3ee9d20cu, 0x3d4dbca5u, 0x3ee34862u, 0xbf6198acu, 0x3e2645dau, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fb6e1d9u, 0x4036e1d9u, 0x40892963u, 0xbeb4e752u, 0xbf0acd14u, 0x3ec42ee7u, 0x3f28b892u}},
+            {true, {0xbeee13b1u, 0x3f4b899cu, 0x3ec761d7u, 0x3f6112c4u, 0x3eb9e473u, 0x3e9df98eu, 0x3dd4d7fcu, 0x3ef8c0b0u, 0xbf5e2b09u, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3f76b28bu, 0x403bcca5u, 0x407d7f12u, 0x3ed80f3eu, 0x3f406663u, 0xbed1a3b6u, 0xbe991c18u}},
+            {true, {0xbeee13b1u, 0xbf4b899cu, 0xbec761d7u, 0x3efdf71fu, 0x3e057fa2u, 0xbf5bc45au, 0x3f3bb9feu, 0xbf17a3c4u, 0x3eaae1bfu, 0x41200000u, 0x41a00000u, 0x41f00000u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fd4a7f6u, 0x4033c772u, 0x4099d733u, 0x3ee52281u, 0x3d73ee60u, 0x3f5a91b6u, 0x3e84bf0bu}},
+            {true, {0xbf1d8dc8u, 0x3f3b0df5u, 0x3e974e6du, 0xbf3636ceu, 0xbf2d20bcu, 0x3e4259e6u, 0x3ead547au, 0xbdbf8f0cu, 0x3f6fb0edu, 0x417a8391u, 0x41af8af5u, 0x4204d06fu},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3fe09c82u, 0x40546b38u, 0x409fc22bu, 0xbe22e5a8u, 0x3f277717u, 0x3f1dc43fu, 0xbed136d6u}},
+            {false, {0x3df9b4dau, 0x3df284c0u, 0xbf7c466fu, 0xbee9d20cu, 0x3f6361d6u, 0x3d4dbca5u, 0x3f6198acu, 0x3ee34862u, 0x3e2645dau, 0x40d9ff11u, 0x41b7e6f7u, 0x41e909c1u},
+                {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
+                {0x3f792c40u, 0x405233e8u, 0x40852ed2u, 0x3e08c0a1u, 0xbf221b35u, 0xbe47c524u, 0x3f3caa3cu}},
+        }};
+        for (std::size_t index = 0; index < cases.size(); ++index)
+        {
+            SCOPED_TRACE(index);
+            const auto& row = cases[index];
+            osg::Matrixf matrix = osg::Matrixf::identity();
+            for (unsigned i = 0; i < 9; ++i) matrix(i % 3, i / 3) = std::bit_cast<float>(row.mScene[i]);
+            for (unsigned i = 0; i < 3; ++i) matrix(3, i) = std::bit_cast<float>(row.mScene[9 + i]);
+            NifBullet::RagdollBodyDefinition body{};
+            body.mUsesRigidBodyTransform = row.mBodyT;
+            for (unsigned i = 0; i < 3; ++i) body.mTranslation[i] = std::bit_cast<float>(row.mOffset[i]);
+            for (unsigned i = 0; i < 4; ++i) body.mRotation[i] = std::bit_cast<float>(row.mLocalRotation[i]);
+            const auto target = NifBullet::ragdollNativeSceneBodyTargetPose(
+                matrix, body, Nif::NativeTransformPrecision::Single);
+            for (unsigned i = 0; i < 3; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mPosition[i]), row.mExpected[i]);
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mRotation[i]), row.mExpected[3 + i]);
+        }
+    }
+
+    TEST(RagdollNativeSceneTarget, PrecisionSelectionRejectsUnknownModesAndPreservesRigidAdmission)
+    {
+        NifBullet::RagdollBodyDefinition body{};
+        const auto unknown = static_cast<Nif::NativeTransformPrecision>(99);
+        const auto identity = osg::Matrixf::identity();
+        EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(identity, unknown), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(identity, body, unknown), std::invalid_argument);
+        for (const auto precision : {Nif::NativeTransformPrecision::Single, Nif::NativeTransformPrecision::Double})
+        {
+            const auto scaled = osg::Matrixf::scale(2, 2, 2);
+            EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(scaled, precision), std::invalid_argument);
+            EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(scaled, body, precision), std::invalid_argument);
+            const auto target = NifBullet::ragdollNativeSceneTargetPose(identity, precision);
+            EXPECT_EQ(target.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+            EXPECT_EQ(target.mPosition, osg::Vec3f());
+        }
+    }
+}

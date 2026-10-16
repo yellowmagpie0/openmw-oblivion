@@ -75,12 +75,16 @@ namespace NifBullet
     // lengths for ActorRagdollPhysics with RagdollNativeLengthScale.
     // Native scene rotation extraction and position conversion before the
     // Bullet transform representation. Matrix must already be rigid.
-    RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose);
+    // Single retains live007F intermediate quaternion extraction rounding;
+    // Double preserves the existing53-bit adapter contract.
+    RagdollNativeTargetPose ragdollNativeSceneTargetPose(const osg::Matrixf& worldPose,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     // Ordinary scene sync plus the native bhkRigidBodyT local offset, when
     // present. Local translation is already in native lengths and includes
     // any graph property scaling.
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(
-        const osg::Matrixf& worldPose, const RagdollBodyDefinition& body);
+        const osg::Matrixf& worldPose, const RagdollBodyDefinition& body,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     // Native8B8FB0/8B9150 reverse bodyT offset, in native length units.
     // Ordinary bodies retain their native origin/quaternion unchanged.
     // Matrix/world-length publication remains a separate operation.
