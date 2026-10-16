@@ -315,6 +315,81 @@ namespace
         EXPECT_THROW(NifBullet::loadReferenceRagdollDefinition(mFile), std::runtime_error);
     }
 
+    TEST_F(ActorRagdollTest, WeaponScabbardSelectionUsesExactNamesAndCommitsToFirstFadeBranch)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        auto& fade = node("fAdEnOdE Rot", {});
+        auto& scabbard = node("sCb", {});
+        auto& extended = node("Scb:0", {});
+        root.mChildren = {Nif::NiAVObjectPtr(nullptr), Nif::NiAVObjectPtr(&extended),
+            Nif::NiAVObjectPtr(&fade), Nif::NiAVObjectPtr(&scabbard)};
+        EXPECT_FALSE(NifBullet::findWeaponScabbard(mFile, 0)); // No sibling retry after descent.
+        auto& nested = node("SCB", {}); fade.mChildren = {Nif::NiAVObjectPtr(&nested)};
+        EXPECT_EQ(NifBullet::findWeaponScabbard(mFile, 0), nested.mRecordIndex);
+        fade.mName = "FadeNode"; // A trailing space is part of the nine-character prefix.
+        EXPECT_EQ(NifBullet::findWeaponScabbard(mFile, 0), scabbard.mRecordIndex);
+        scabbard.mName = std::string("sCb\0ignored", 11);
+        EXPECT_EQ(NifBullet::findWeaponScabbard(mFile, 0), scabbard.mRecordIndex);
+        auto& geometry = add<Nif::NiTriShape>(); Nif::Testing::init(geometry);
+        geometry.mName = "FadeNode Rot";
+        root.mChildren = {Nif::NiAVObjectPtr(&geometry), Nif::NiAVObjectPtr(&scabbard)};
+        EXPECT_FALSE(NifBullet::findWeaponScabbard(mFile, 0)); // Failed cast terminates too.
+        geometry.mName = "Scb";
+        EXPECT_EQ(NifBullet::findWeaponScabbard(mFile, 0), geometry.mRecordIndex);
+    }
+
+    TEST_F(ActorRagdollTest, WeaponScabbardSearchRejectsForeignMembersAndCyclesWithoutMutatingSource)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        const auto children = root.mChildren;
+        EXPECT_FALSE(NifBullet::findWeaponScabbard(mFile, std::nullopt));
+        EXPECT_THROW(NifBullet::findWeaponScabbard(mFile, 9999), std::runtime_error);
+        EXPECT_THROW(NifBullet::findWeaponScabbard(mFile, mFile.mRecords.back()->mRecordIndex), std::runtime_error);
+        auto& fade = node("FadeNode Anim", {});
+        root.mChildren = {Nif::NiAVObjectPtr(&fade)};
+        fade.mChildren = {Nif::NiAVObjectPtr(&fade)};
+        EXPECT_THROW(NifBullet::findWeaponScabbard(mFile, 0), std::runtime_error);
+        Nif::NiNode foreign{}; Nif::Testing::init(foreign); foreign.mName = "Scb";
+        foreign.mRecordIndex = fade.mRecordIndex;
+        root.mChildren = {Nif::NiAVObjectPtr(&foreign)};
+        EXPECT_THROW(NifBullet::findWeaponScabbard(mFile, 0), std::runtime_error);
+        root.mChildren = children;
+        EXPECT_FALSE(NifBullet::findWeaponScabbard(mFile, 0));
+        EXPECT_EQ(fade.mChildren.front().getPtr(), &fade);
+    }
+
+    TEST_F(ActorRagdollTest, WeaponScabbardRemovalLeavesALiteralHoleForCollisionSelection)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        const auto children = root.mChildren;
+        auto& scabbard = node("Scb", {});
+        root.mChildren.insert(root.mChildren.begin(), Nif::NiAVObjectPtr(&scabbard));
+        const auto ordinary = NifBullet::loadReferenceRagdollDefinition(mFile);
+        const auto weapon = NifBullet::loadWeaponReferenceRagdollDefinition(mFile);
+        EXPECT_FALSE(ordinary.mReferenceScabbard);
+        EXPECT_EQ(ordinary.mBodies.front().mNodeRecord, 0u); // First child empty, second physical.
+        EXPECT_EQ(weapon.mReferenceScabbard, scabbard.mRecordIndex);
+        EXPECT_FALSE(weapon.mReferenceCollisionSource); // Null first slot ends native selection.
+        EXPECT_EQ(weapon.mBodies[0].mNodeRecord, children[0]->mRecordIndex);
+        EXPECT_EQ(weapon.mBodies[1].mNodeRecord, children[1]->mRecordIndex);
+        EXPECT_EQ(root.mChildren.size(), 3u);
+        EXPECT_EQ(root.mChildren[0].getPtr(), &scabbard);
+        EXPECT_EQ(root.mChildren[1].getPtr(), children[0].getPtr());
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(weapon, 2);
+        EXPECT_EQ(scaled.mReferenceScabbard, weapon.mReferenceScabbard);
+    }
+
+    TEST_F(ActorRagdollTest, WeaponScabbardWithPhysicalBodiesRejectsWholeAdmissionWithoutSourceWrites)
+    {
+        auto& first = static_cast<Nif::NiNode&>(*mFile.mRecords[1]);
+        first.mName = "Scb";
+        const auto collision = first.mCollision;
+        EXPECT_THROW(NifBullet::loadWeaponReferenceRagdollDefinition(mFile), std::runtime_error);
+        EXPECT_EQ(first.mCollision.getPtr(), collision.getPtr());
+        EXPECT_EQ(first.mName, "Scb");
+        EXPECT_EQ(NifBullet::loadReferenceRagdollDefinition(mFile).mBodies.size(), 2u);
+    }
+
     TEST_F(ActorRagdollTest, RetainsRigidBodyTransformRecordIdentityForPoseAdmission)
     {
         // Locate by the already owned graph rather than depending on fixtures'

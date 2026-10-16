@@ -172,6 +172,9 @@ namespace NifBullet
         // synthetic reference root (record identity = source record count).
         // Otherwise the file-root identity represents the normalized wrapper.
         std::optional<std::uint32_t> mReferenceAssetRoot;
+        // Weapon generation detaches this source branch. Source child slots
+        // remain authored; registration treats its slot as null.
+        std::optional<std::uint32_t> mReferenceScabbard;
         // The original child remains visible after its collision is relocated.
         // Retain its identity for model admission without treating it as a body.
         struct ReferenceCollisionSource
@@ -206,6 +209,15 @@ namespace NifBullet
     // normalized wrapper. Registration selection uses that prepared hierarchy.
     // Other special model-root policies still require their own admission.
     ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file);
+    // Original480770: inspect immediate slots, remove the first complete Scb
+    // name, or descend into the first FadeNode-space prefix and never resume
+    // siblings. ASCII case-insensitive, C-string names, no generic DFS. The
+    // supplied root is the ordinary prepared model's file-root equivalent.
+    std::optional<std::uint32_t> findWeaponScabbard(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord);
+    // WEAP generation alone removes Scb before registration. A removed branch
+    // containing physical bodies is outside current single-body admission.
+    ActorRagdollDefinition loadWeaponReferenceRagdollDefinition(Nif::FileView file);
 }
 
 #endif

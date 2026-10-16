@@ -11656,7 +11656,7 @@ namespace
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
     std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1,
-        bool rotatedRoot = false)
+        bool rotatedRoot = false, bool scabbard = false)
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -11666,12 +11666,14 @@ namespace
         };
         std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
         data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
-            + bytes(std::uint32_t(childTarget ? 6 : 5)) + bytes(std::uint32_t{0}) + std::string(3, '\0');
+            + bytes(std::uint32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0)))
+            + bytes(std::uint32_t{0}) + std::string(3, '\0');
         data += bytes(std::uint16_t{5});
         for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape", "BSXFlags"})
             data += string(type);
         if (childTarget) data += bytes(std::uint16_t{0});
         for (std::uint16_t i = 0; i < 5; ++i) data += bytes(i);
+        if (scabbard) data += bytes(std::uint16_t{0}) + bytes(std::uint16_t{0});
         data += bytes(std::uint32_t{0}); // No groups.
         // NiNode / NiAVObject / NiObjectNET.
         data += string("Owned weapon") + bytes(std::uint32_t{1})
@@ -11683,7 +11685,8 @@ namespace
         for (const float value : rootTransform)
             data += bytes(value);
         data += bytes(std::uint32_t{0}) + bytes(std::int32_t(childTarget ? -1 : 1)); // Properties/collision.
-        data += bytes(std::uint32_t(childTarget ? 1 : 0));
+        data += bytes(std::uint32_t(unsigned(childTarget) + unsigned(scabbard)));
+        if (scabbard) data += bytes(std::int32_t(childTarget ? 6 : 5));
         if (childTarget) data += bytes(std::int32_t{1});
         data += bytes(std::uint32_t{0}); // Effects.
         if (childTarget)
@@ -11709,6 +11712,17 @@ namespace
             + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Constraints/body flags.
         data += bytes(std::uint32_t{0}) + bytes(radius); // Sphere material/radius.
         data += string("BSX") + bytes(std::uint32_t{2}); // Native Havok-enable metadata.
+        if (scabbard)
+            for (unsigned part = 0; part < 2; ++part)
+            {
+                data += string(part ? "Scb:0" : "Scb") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})
+                    + bytes(std::uint16_t{14});
+                for (const float value : {0.f,0.f,0.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})
+                    data += bytes(value);
+                data += bytes(std::uint32_t{0}) + bytes(std::int32_t{-1}) + bytes(std::uint32_t(part ? 0 : 1));
+                if (!part) data += bytes(std::int32_t(childTarget ? 7 : 6));
+                data += bytes(std::uint32_t{0});
+            }
         data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0}); // Root.
         return data;
     }
@@ -21303,7 +21317,7 @@ namespace
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
         explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1,
-            bool rotatedRoot = false)
+            bool rotatedRoot = false, bool scabbard = false)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
@@ -21327,7 +21341,7 @@ namespace
             if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes/factory-skeleton.osgt").string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
-                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags, rotatedRoot);
+                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags, rotatedRoot, scabbard);
                 std::ofstream file(mDirectory / "meshes/factory-weapon.nif", std::ios::binary);
                 file.write(bytes.data(), bytes.size());
                 if (!file) throw std::runtime_error("cannot write owned factory weapon NIF");
@@ -22107,6 +22121,54 @@ TEST(OblivionWorldTest, NativeWeaponFactoryRetainsRotatedFileRootBelowPrivateRef
     EXPECT_EQ(cachedSource.mTarget->getMatrix(), sourceLocal);
     EXPECT_TRUE(animation->getLoosePhysicalPose()->isValid());
     EXPECT_TRUE(link->isValidFor(reference, true));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryDetachesScabbardSubtreeFromFoldedAndRetainedModels)
+{
+    for (const bool retained : {false, true})
+    {
+        SCOPED_TRACE(retained);
+        NativeWeaponFactoryFixture fixture(false, 1, retained, true);
+        const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+        ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+        const auto& graph = *carried->mReferenceDefinition;
+        ASSERT_EQ(graph.mReferenceScabbard, 5u);
+        EXPECT_EQ(bool(graph.mReferenceAssetRoot), retained);
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
+        ASSERT_NE(animation, nullptr);
+        NativeWeaponTargetVisitor scabbard(5), leaf(6), source(0);
+        animation->getObjectRoot()->accept(scabbard); animation->getObjectRoot()->accept(leaf);
+        animation->getObjectRoot()->accept(source);
+        EXPECT_FALSE(scabbard.mTarget); EXPECT_FALSE(leaf.mTarget); ASSERT_TRUE(source.mTarget);
+        const auto sourceLocal = source.mTarget->getMatrix();
+        const auto cached = fixture.mResources.getSceneManager()->getTemplate(
+            VFS::Path::NormalizedView("meshes/factory-weapon.nif"), true, true);
+        NativeWeaponTargetVisitor cachedScabbard(5), cachedLeaf(6);
+        const_cast<osg::Node*>(cached.get())->accept(cachedScabbard);
+        const_cast<osg::Node*>(cached.get())->accept(cachedLeaf);
+        ASSERT_TRUE(cachedScabbard.mTarget); ASSERT_TRUE(cachedLeaf.mTarget);
+        EXPECT_EQ(cachedLeaf.mTarget->getParent(0), cachedScabbard.mTarget);
+        const auto link = fixture.mPhysics->captureLooseObjectSceneBinding(reference);
+        ASSERT_TRUE(link); EXPECT_TRUE(link->matches(graph));
+        auto wrong = graph; wrong.mReferenceScabbard.reset(); EXPECT_FALSE(link->matches(wrong));
+        auto velocities = fixture.mPhysics->captureLooseObjectPackedVelocities(reference);
+        velocities.front().mVelocities.mLinear = {2, 0, 0, 0};
+        fixture.mPhysics->restoreLooseObject(reference, fixture.mPhysics->captureLooseObject(reference), velocities);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native scabbard removal");
+        fixture.mPhysics->stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *stats);
+        const auto stepped = fixture.mPhysics->captureLooseObjectRootPose(reference);
+        MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, *fixture.mPhysics);
+        EXPECT_EQ(reference.getRefData().getPosition().asVec3(), stepped.getTrans());
+        EXPECT_TRUE(animation->getLoosePhysicalPose()->isValid());
+        EXPECT_TRUE(link->isValidFor(reference, true));
+        if (retained)
+        {
+            EXPECT_EQ(source.mTarget->getMatrix(), sourceLocal);
+        }
+        EXPECT_EQ(cachedLeaf.mTarget->getParent(0), cachedScabbard.mTarget);
+    }
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose)

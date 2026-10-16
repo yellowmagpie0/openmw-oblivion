@@ -264,7 +264,7 @@ namespace MWRender
         if (file->mPath != body->mPose.mModel || file->mHash != body->mPose.mSourceHash)
             return std::nullopt;
         auto referenceDefinition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
-            NifBullet::loadReferenceRagdollDefinition(*file));
+            NifBullet::loadWeaponReferenceRagdollDefinition(*file));
         CarriedWeaponDrop result{std::move(*body), std::move(*native), std::move(referenceDefinition)};
         if (!isCurrentCarriedWeaponDrop(result, placement)) return std::nullopt;
         return result;

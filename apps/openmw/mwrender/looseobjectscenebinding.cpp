@@ -17,6 +17,7 @@ namespace MWRender
         , mSourceHash(definition.mSourceHash)
         , mBodyRecord(0), mNodeRecord(0), mCollisionFlags(0), mReferenceRoot(definition.mReferenceRoot)
         , mReferenceAssetRoot(definition.mReferenceAssetRoot)
+        , mReferenceScabbard(definition.mReferenceScabbard)
     {
         if (definition.mBodies.size() != 1 || mSourceHash.empty() || mOwner.expired())
             throw std::invalid_argument("loose scene link requires an owned identified single-body model");
@@ -33,6 +34,7 @@ namespace MWRender
         return definition.mBodies.size() == 1 && definition.mSourceHash == mSourceHash
             && definition.mReferenceRoot == mReferenceRoot && definition.mBodies.front().mRecord == mBodyRecord
             && definition.mReferenceAssetRoot == mReferenceAssetRoot
+            && definition.mReferenceScabbard == mReferenceScabbard
             && definition.mBodies.front().mNodeRecord == mNodeRecord
             && definition.mBodies.front().mCollisionFlags == mCollisionFlags;
     }

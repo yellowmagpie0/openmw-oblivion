@@ -1,0 +1,594 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Native weapon scabbard selection and private scene detachment integrated; full M15S4 incomplete",
+  "parent_commit": "d570e4ddfa5e81c00dd3c393efbdb2ce1fef589b",
+  "implementation_sha256": {
+    "components/nifbullet/actorragdoll.hpp": "044603989ec3f01098cc538745c766477ed7f4c41f25954d79220da7bec4b190",
+    "components/nifbullet/actorragdoll.cpp": "0ab023bd83bc1824d862c5e4dacc95d96b9e6d24f489eee4f45a5c264e99aa85",
+    "apps/openmw/mwrender/animation.cpp": "5a6178b3429b57db98aab6be94362923d42b5156c0e144a75d98ddcab315ba7f",
+    "apps/openmw/mwrender/esm4npcanimation.cpp": "85530a147998d34a07d4c07900c36780c35a561622ddd5b9060b77660f5a8270",
+    "apps/openmw/mwrender/looseobjectscenebinding.hpp": "c1bc299b1e7b7bc3ca4f26ea47228eb32236c01a55f09499482cc1bdfacd4525",
+    "apps/openmw/mwrender/looseobjectscenebinding.cpp": "ac69425dc6869944648490c12031492827320db9b1e571a20c7429d6a3edeb8e",
+    "apps/components_tests/nifloader/testactorragdoll.cpp": "09d4fdc6032a4f9b413a7240142109cdd8acf84a29f79f7f42f7cb68d0d5d5ea",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8b7eda620f087304ec90ba791399a8b24286c0d5d0737d9904140b854ae7f036"
+  },
+  "native": {
+    "path": "build/oblivion-compat/m15/S4/reference-scabbard-oracle-05/verification.json",
+    "sha256": "809dca5dc4eba7bc0b208e242b3b6dc1d61806439660f2a6f627b3ec5f4d7784",
+    "report": {
+      "passed": true,
+      "contexts": 317,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "probe_sha256": "70ae616305d6e3057f0731c6b18b91dcf5635299bd0b138119ed6453dc88b092",
+      "cases_sha256": "55e912cff81bd7041d7254bfa5f451ca7687c8b322ed8522f0f8427447e839e2",
+      "scope": "Complete original weapon scabbard removal480770 including real +8C detach and reference-release path, actual ASCII case-insensitive full/prefix CRT functions and real NiNode/geometry casts. Complete true/false returns, post-removal parent/child-slot/reference-count capture. Null slots/names/root, exact vs extended Scb names, matching/short/nonmatching FadeNode prefixes, non-node prefix, first-descent sibling behavior and random acyclic trees. Only Windows InterlockedIncrement/Decrement imports supplied as checked pointer/count ABI boundaries; no game functions replaced. All nodes start with10 references, so no destructor/heap free is triggered. Wrapper preparation, renderer/physics/gameplay excluded. CRT global locale-count remains zero (ASCII path)."
+    }
+  },
+  "comparisons": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/reference-scabbard-compare-01/normal-verification.json",
+      "sha256": "9e2e4a90e5ef40eb060f8463fb14f11a58c4cdc689c67ad714fc164447ea8a8d",
+      "report": {
+        "passed": true,
+        "contexts": 317,
+        "failures": [],
+        "corpus_sha256": "55e912cff81bd7041d7254bfa5f451ca7687c8b322ed8522f0f8427447e839e2",
+        "probe_sha256": "5de05f8cda6ecdf0674882eb3527818eb6b887139a567a54c248bd2f0a4f4578",
+        "comparator_sha256": "21b11b40e549cd2f31b13fd356c346165b3cd9f91d49ae0179633892ef09fadf",
+        "binary_sha256": "3c7e6217efb448bc053cafef4d39bb58536a14f57597d71eb09f29c3cd106a8c",
+        "scope": "Actual production source selector against complete original480770 removal corpus selected-record outcomes. Source names/child slots remain unchanged; null native names represented by empty source strings, same search outcome. ASCII/case/embedded NUL, exact Scb vs prefixes, first FadeNode descent/non-node failures, sparse/orphan/acyclic trees. Original detach slot/refcount outputs are retained but not compared to this read-only selector. Renderer/factory lifecycle tested separately. No gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/reference-scabbard-compare-01/sanitized-verification.json",
+      "sha256": "f3b9f85e8490baf0b8a4d9d500fe61eb3c22df290c3e18c6bb88471422e8448d",
+      "report": {
+        "passed": true,
+        "contexts": 317,
+        "failures": [],
+        "corpus_sha256": "55e912cff81bd7041d7254bfa5f451ca7687c8b322ed8522f0f8427447e839e2",
+        "probe_sha256": "5de05f8cda6ecdf0674882eb3527818eb6b887139a567a54c248bd2f0a4f4578",
+        "comparator_sha256": "21b11b40e549cd2f31b13fd356c346165b3cd9f91d49ae0179633892ef09fadf",
+        "binary_sha256": "869f5759241192f673c3c36ee486017aaf018563ebe4d13cc909a4db5bef97a0",
+        "scope": "Actual production source selector against complete original480770 removal corpus selected-record outcomes. Source names/child slots remain unchanged; null native names represented by empty source strings, same search outcome. ASCII/case/embedded NUL, exact Scb vs prefixes, first FadeNode descent/non-node failures, sparse/orphan/acyclic trees. Original detach slot/refcount outputs are retained but not compared to this read-only selector. Renderer/factory lifecycle tested separately. No gameplay acceptance."
+      }
+    }
+  },
+  "stock_comparisons": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-stock-compare-01/normal-verification.json",
+      "sha256": "d8794343ec627773d4fc1421550002127faa494e0c1732b8f97b50e7ef1cbc88",
+      "report": {
+        "passed": true,
+        "asset_sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+        "capture_sha256": "7be1c2ccc7becd78a63f7638ccc3ba77a464194791f0b89ad7e8318bda688331",
+        "source_inspection_sha256": "4ecd038b6dd9c40ad78f707866d12de65142deb7d91497f5b19a2c7845a3be4b",
+        "probe_sha256": "9fdcd4e42d55dd644bc06eca6b681432c8a6a378dbc0d50f34febcb46dbdd797",
+        "comparator_sha256": "de3a188b9726aec13557bdc16082db009a0f324357334ecea0b1b380b61e033f",
+        "binary_sha256": "e45ad862490dae74be6fe14ea0855384d2ef409b398866d1fc2b682283d12df4",
+        "actual": {
+          "scabbard": 9,
+          "records": 20,
+          "root": 20,
+          "asset_root": 0,
+          "target": 20,
+          "bodyT": 1,
+          "local13": [
+            1065353216,
+            3025276992,
+            0,
+            877793344,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ],
+          "offset7": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            869404736,
+            1065353216
+          ]
+        },
+        "expected_local13": [
+          1065353216,
+          3025276992,
+          0,
+          877793344,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216
+        ],
+        "expected_offset7": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          869404736,
+          1065353216
+        ],
+        "scope": "Archived stock short sword through actual parser/weapon-reference-definition loader; selected Scb record9 independently pinned by archived-source inspection and original before/after tree observations vs independently captured original cached asset-root local13 and real-World registered bodyT local7. Wrapper identity maps outside source records. No claim of current winning asset resolution, native physical state reset/World scheduling, fork rendering/input/gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-stock-compare-01/sanitized-verification.json",
+      "sha256": "deedc5847598c7455468db96f5efc3b12fd2eefbf26103c7471219b6a070b432",
+      "report": {
+        "passed": true,
+        "asset_sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+        "capture_sha256": "7be1c2ccc7becd78a63f7638ccc3ba77a464194791f0b89ad7e8318bda688331",
+        "source_inspection_sha256": "4ecd038b6dd9c40ad78f707866d12de65142deb7d91497f5b19a2c7845a3be4b",
+        "probe_sha256": "9fdcd4e42d55dd644bc06eca6b681432c8a6a378dbc0d50f34febcb46dbdd797",
+        "comparator_sha256": "de3a188b9726aec13557bdc16082db009a0f324357334ecea0b1b380b61e033f",
+        "binary_sha256": "494c713b480d449d15035b3288fa4baa03b571cdc3c632a9da6a10f37bb990a9",
+        "actual": {
+          "scabbard": 9,
+          "records": 20,
+          "root": 20,
+          "asset_root": 0,
+          "target": 20,
+          "bodyT": 1,
+          "local13": [
+            1065353216,
+            3025276992,
+            0,
+            877793344,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ],
+          "offset7": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            869404736,
+            1065353216
+          ]
+        },
+        "expected_local13": [
+          1065353216,
+          3025276992,
+          0,
+          877793344,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216,
+          0,
+          0,
+          0,
+          1065353216
+        ],
+        "expected_offset7": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          869404736,
+          1065353216
+        ],
+        "scope": "Archived stock short sword through actual parser/weapon-reference-definition loader; selected Scb record9 independently pinned by archived-source inspection and original before/after tree observations vs independently captured original cached asset-root local13 and real-World registered bodyT local7. Wrapper identity maps outside source records. No claim of current winning asset resolution, native physical state reset/World scheduling, fork rendering/input/gameplay acceptance."
+      }
+    }
+  },
+  "archived_asset_sweeps": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-stock-sweep-01/normal-verification.json",
+      "sha256": "2f1a3407dfd4bdb2168e47e24cc641eafa250949062a74f9f22227693b970144",
+      "report": {
+        "passed": true,
+        "assets": 8,
+        "results": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/battleaxe.nif",
+            "passed": true,
+            "records": 20,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/claymore.nif",
+            "passed": true,
+            "records": 15,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/warhammer.nif",
+            "passed": true,
+            "records": 19,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/longsword.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/mace.nif",
+            "passed": true,
+            "records": 17,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 2,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/shortsword.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/dagger.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/waraxe.nif",
+            "passed": true,
+            "records": 20,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 1
+          }
+        ],
+        "source_catalog_sha256": "ff9fb49b070f68d8774c74ba1b8d44748fe2faed6ebd15ab217bffa3761156f6",
+        "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+        "asset_hashes": {
+          "assets/meshes/weapons/iron/battleaxe.nif": "84e2e0b5415ef10faf747625633091bd4bf175598e429b8dad0610b444f3967d",
+          "assets/meshes/weapons/iron/claymore.nif": "f08ac461a6781ffef06546a1efae527e11f219239df09d8208d1cb12892bbd7a",
+          "assets/meshes/weapons/iron/warhammer.nif": "ba339fcabd697cab6805701f57ad75808ccf8bb3e6829c265a0035605a90c08a",
+          "assets/meshes/weapons/iron/longsword.nif": "61fdd2629fb1cea8f02ccfe7a7194ff8985f1b9ddd822c669c2a8f05769675de",
+          "assets/meshes/weapons/iron/mace.nif": "5c40e935bbafe0ac3cf703dfd8e1090df9ab5af82ae7ca021ad94a3ad8083f53",
+          "assets/meshes/weapons/iron/shortsword.nif": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+          "assets/meshes/weapons/iron/dagger.nif": "e64f80dd8e33a07a6dc8ccdad6caf52d1ef9fcf0b2326c95e1ec745281935df6",
+          "assets/meshes/weapons/iron/waraxe.nif": "8dec9eff05858bce46b799d3dbe28aae13801efec8c0036b94d19285acb5da95"
+        },
+        "probe_sha256": "9d793ef64283741e42783fcd909ae3f43357b400285e1d139b0ca479df552ae6",
+        "comparator_sha256": "466390b4f5bece41e19d93e97b9a22a08e2f38efa1667b5c80a028872d630426",
+        "binary_sha256": "b36f50ae30b09b83a2e0c82c300ea412b3d90fefe09e58c9df3ce4c43460e3d6",
+        "scope": "Fresh hash-checked archived stock eight iron melee assets through current actual NIF parser, ordinary/weapon reference definitions and property scale2. Exactly one body/no joints; source scabbard removal identity retained through owned copies. Read-only archived content/admission sweep, not full installed winning record/asset resolution, native arithmetic oracle, scene/Bullet admission or normal-input gameplay."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-stock-sweep-01/sanitized-verification.json",
+      "sha256": "00662898b6c0fc3e7169791502109bf7b434bec006abda758b347f35d65ea018",
+      "report": {
+        "passed": true,
+        "assets": 8,
+        "results": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/battleaxe.nif",
+            "passed": true,
+            "records": 20,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/claymore.nif",
+            "passed": true,
+            "records": 15,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/warhammer.nif",
+            "passed": true,
+            "records": 19,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/longsword.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/mace.nif",
+            "passed": true,
+            "records": 17,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 2,
+            "bodyT": 0
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/shortsword.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/dagger.nif",
+            "passed": true,
+            "records": 20,
+            "root": 20,
+            "asset_root": 0,
+            "scabbard": 9,
+            "body_target": 20,
+            "shape": 4,
+            "bodyT": 1
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/stock-melee-drop-body-01/assets/meshes/weapons/iron/waraxe.nif",
+            "passed": true,
+            "records": 20,
+            "root": 0,
+            "asset_root": -1,
+            "scabbard": -1,
+            "body_target": 0,
+            "shape": 4,
+            "bodyT": 1
+          }
+        ],
+        "source_catalog_sha256": "ff9fb49b070f68d8774c74ba1b8d44748fe2faed6ebd15ab217bffa3761156f6",
+        "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+        "asset_hashes": {
+          "assets/meshes/weapons/iron/battleaxe.nif": "84e2e0b5415ef10faf747625633091bd4bf175598e429b8dad0610b444f3967d",
+          "assets/meshes/weapons/iron/claymore.nif": "f08ac461a6781ffef06546a1efae527e11f219239df09d8208d1cb12892bbd7a",
+          "assets/meshes/weapons/iron/warhammer.nif": "ba339fcabd697cab6805701f57ad75808ccf8bb3e6829c265a0035605a90c08a",
+          "assets/meshes/weapons/iron/longsword.nif": "61fdd2629fb1cea8f02ccfe7a7194ff8985f1b9ddd822c669c2a8f05769675de",
+          "assets/meshes/weapons/iron/mace.nif": "5c40e935bbafe0ac3cf703dfd8e1090df9ab5af82ae7ca021ad94a3ad8083f53",
+          "assets/meshes/weapons/iron/shortsword.nif": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+          "assets/meshes/weapons/iron/dagger.nif": "e64f80dd8e33a07a6dc8ccdad6caf52d1ef9fcf0b2326c95e1ec745281935df6",
+          "assets/meshes/weapons/iron/waraxe.nif": "8dec9eff05858bce46b799d3dbe28aae13801efec8c0036b94d19285acb5da95"
+        },
+        "probe_sha256": "9d793ef64283741e42783fcd909ae3f43357b400285e1d139b0ca479df552ae6",
+        "comparator_sha256": "466390b4f5bece41e19d93e97b9a22a08e2f38efa1667b5c80a028872d630426",
+        "binary_sha256": "6f6846f08052e5d589149dcf10bca0ef4f7fe4ab5f8356eee3a4e7e90e29f511",
+        "scope": "Fresh hash-checked archived stock eight iron melee assets through current actual NIF parser, ordinary/weapon reference definitions and property scale2. Exactly one body/no joints; source scabbard removal identity retained through owned copies. Read-only archived content/admission sweep, not full installed winning record/asset resolution, native arithmetic oracle, scene/Bullet admission or normal-input gameplay."
+      }
+    }
+  },
+  "initialization_followup": {
+    "native": {
+      "path": "build/oblivion-compat/m15/S4/plain-replacement-constructed-motion-01/verification.json",
+      "sha256": "186cbf140c4b489b388c3b91c16c939d187a5b951b6154d0e6fceebd3acc37a7",
+      "report": {
+        "passed": true,
+        "contexts": 1,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_sha256": "0061eb8f801227e6382ee174d195c28d41a48c2aef11cf653551a802a0ccefde",
+        "cases_sha256": "866fd0867c8c80c19dadba9115508c5f2a9937d5f2acb190b1bdcf175bc380bd",
+        "scope": "One plain first-child nativeSingle reference generation/registration context, inheriting early-generation-trace01 declared heap/Windows/TLS/critical/nullWorld boundaries. The previous hand-written partial sphere motion is replaced with actual original sphere motion constructor8A95F0/base89DC10/MotionState8E7B20 before early synchronization. No real World or full model clone. This experiment tests whether complete motion-state initialization changes the previously observed null-World reset; outcome recorded without assuming preservation."
+      }
+    },
+    "constructor_check": {
+      "path": "build/oblivion-compat/m15/S4/plain-replacement-constructed-motion-01/constructor-verification.json",
+      "sha256": "04d8641f8b1f6eda9c6f0f67404fffdb679db4153d98c00d1bbf88420798fd5c",
+      "report": {
+        "verified": true,
+        "constructor_position": [
+          0.25,
+          -0.5,
+          0.125
+        ],
+        "constructor_quaternion": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "registration_preserves_xyz": false,
+        "registration_preserves_quaternion": false,
+        "cases_sha256": "866fd0867c8c80c19dadba9115508c5f2a9937d5f2acb190b1bdcf175bc380bd",
+        "scope": "Original sphere constructor produced the supplied translation/identity orientation before the early generation pass. Complete motion initialization alone does not remove reset in this partial-entity/null-World fixture. Real-World entity/lifecycle differences remain unisolated."
+      }
+    }
+  },
+  "behavior": [
+    "The read-only source selector follows original480770: inspect literal immediate child slots, match complete Scb case-insensitively, or descend into the first FadeNode-space prefix and never resume siblings. A matching prefix on geometry terminates with absence. Names use ASCII C-string semantics, including embedded NUL; null native names map to empty source strings with the same outcome. Cycles/foreign members/invalid roots reject safely.",
+    "Explicit loadWeaponReferenceRagdollDefinition applies WEAP generation preparation; generic reference/actor loaders retain their existing behavior. Source records remain immutable. The selected source branch is absent from the prepared bind graph, and collision registration treats its literal source slot as null rather than compressing the array. mReferenceScabbard is an owned record identity preserved by property-scaled copies.",
+    "Production captureCarriedWeaponDrop uses the weapon-specific definition. Detached ObjectAnimation preparation removes the private Scb transform and its subtree before binding. Source templates and carried models keep their branches. Loose scene lease identity includes scabbard preparation. No ordinary viewer callback owns this removal.",
+    "Four component regressions cover exact names/case/NUL, first-descent and failed-cast behavior, malformed membership/cycles, unchanged source/owned copies, generic-vs-weapon behavior, literal-null-slot collision selection and whole-admission rejection of a removed physical branch. A new factory integration case covers folded and retained roots, private subtree absence, retained cached subtree, lease identity, actual physics stepping and REFR synchronization."
+  ],
+  "boundaries": [
+    "317 independent original full-function contexts execute480770 through true/false return, real CRT and NiNode/geometry cast/detach paths. Only Windows Interlocked imports supplied; nodes start with10references so no destructor/heap free occurs. Native removed-parent, child-slot and refcount outputs retained. Both C++ selectors match every selected record; their read-only API does not emulate those release counters. No original game functions replaced.",
+    "Both actual weapon-definition loaders parse the archived stock short sword, select source Scb9, and preserve the exact13asset-root local and7bodyT offset/quaternion fields previously captured independently in the original real World. Before/after native trees confirm Scb subtree disappearance. This is not a full winning installed asset/mod audit or fork rendering/gameplay course.",
+    "Both builds pass current parser/ordinary+weapon definition/property-scale2 sweeps for all8 hash-checked archived iron melee meshes;3 select scabbards, each graph has1body/no joints. This is read-only asset admission evidence, not native numerical/physics/normal-input acceptance.",
+    "A Scb subtree containing physical bodies remains outside current admission and rejects before publication, instead of silently leaving unmatched physical targets after removal. Special model-root policies and full generated BSFadeNode semantics remain open. OSG compacts surviving drawing children; native literal-slot collision decisions are made from immutable source slots before detachment.",
+    "Initial preflight01 components59 passed, but its engine build and sanitizer01 component build were deliberately terminated at owned CMake process groups to correct a newly introduced test macro brace warning. Helpers reached terminal before editing. Both attempts remain retained; final02 reports establish completion of this check.",
+    "One separate scoped null-World/partial-entity experiment replaces hand-written sphere motion with the actual original sphere/base/MotionState constructors. Supplied translation/identity quaternion verified; plain registration still resets in that fixture. Complete motion initialization alone does not explain the earlier mismatch with live real-World preservation. Do not implement a universal reset or blame World/motion type without isolation.",
+    "Native physical initialization/replacement, controllerless early-generation integration, live clock/physics scheduling and a single traversal owner remain open. Creature and directional power contacts, remaining mastery/effect/reaction/control paths and all unclosed S4 normal-input/view/controller/FPS/save-fresh-process gates remain required. These checks do not complete M15S4."
+  ],
+  "checks": {
+    "weapon-scabbard-normal-02": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-normal-02/verification.json",
+      "sha256": "56555461e8369b472d1a093314acd1e833f9bf2ad0d0830ffbe7e3e1736d5f5f",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2790,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "74e3a9808aca17c5efd347311b2b509f5687ebd533ac9cf90039380d798cadc2",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "3dfe7ced4d5b0740103121c637e3e5bea3f24f3856bd0e935b9b39eb29f5840b",
+          "inventory_sha256": "fb04bf04c44faf35bfe38bd7e650af7b3145608e381ce039237509f5a2d5e2d5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1613,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ddf09bb9c4a8c083821c821472048758226e638367e0f1bc955160d8af670d24",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "417677e0cd5f95244f00a75777f998a0bb661697b8732888e8d47b8c0f7095b1",
+          "inventory_sha256": "42f6d32792fe89f23d2b49208b14057dc16b7c534e544792ad7cbc4d871e1e2f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "d570e4ddfa5e81c00dd3c393efbdb2ce1fef589b",
+        "source_fingerprint": "dc4c3e87727b16967b1327b8880876bf5655e740ed323cbabc81539b4b3191c8"
+      },
+      "source_after": {
+        "head": "d570e4ddfa5e81c00dd3c393efbdb2ce1fef589b",
+        "source_fingerprint": "dc4c3e87727b16967b1327b8880876bf5655e740ed323cbabc81539b4b3191c8"
+      },
+      "suites": {
+        "components": 266,
+        "engine": 122
+      }
+    },
+    "weapon-scabbard-sanitized-02": {
+      "path": "build/oblivion-compat/m15/S4/weapon-scabbard-sanitized-02/verification.json",
+      "sha256": "574a495a6466230ad5a9518c1dd5c940d9d42fdc7c353b6fbb166a1604736240",
+      "passed": true,
+      "results": {
+        "components": {
+          "executed": 2790,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "919d58794b5aa3a5d81befe8aa17a60436d27e5306802503e77f5d6250d38bd5",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "cedbd446cac2cd0ca22596d8f03a748513228a5c93eb664d866c3744017ff54e",
+          "inventory_sha256": "1467f71b1b342526f4a96784fae12bfdbe6e7f2daeab9292326c98bbc8984323",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1613,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cf24435348f4ca6918fa9df4b15a72aff9754738026d43f53d43145267128efa",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "b359868231ab1d1c2d33f74235aa24f074bc166ab1a2accb2c7f63900c1481d9",
+          "inventory_sha256": "42f6d32792fe89f23d2b49208b14057dc16b7c534e544792ad7cbc4d871e1e2f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "d570e4ddfa5e81c00dd3c393efbdb2ce1fef589b",
+        "source_fingerprint": "dc4c3e87727b16967b1327b8880876bf5655e740ed323cbabc81539b4b3191c8"
+      },
+      "source_after": {
+        "head": "d570e4ddfa5e81c00dd3c393efbdb2ce1fef589b",
+        "source_fingerprint": "dc4c3e87727b16967b1327b8880876bf5655e740ed323cbabc81539b4b3191c8"
+      },
+      "suites": {
+        "components": 266,
+        "engine": 122
+      }
+    }
+  },
+  "tested_source_fingerprint": "dc4c3e87727b16967b1327b8880876bf5655e740ed323cbabc81539b4b3191c8",
+  "check_scope": "Both full normal and ASan/UBSan pass2790components/266suites and1613engine/122suites, exact inventories, no failures/skips. Leak detection disabled. Engine includes actual factory publication/physics-step cases, not normal-input/fresh-process acceptance."
+}

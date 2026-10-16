@@ -12,6 +12,7 @@
 #include <components/nif/node.hpp>
 #include <components/nif/controller.hpp>
 #include <components/nif/physics.hpp>
+#include <components/misc/strings/algorithm.hpp>
 
 namespace NifBullet
 {
@@ -382,7 +383,41 @@ namespace NifBullet
         return std::nullopt;
     }
 
-    static ActorRagdollDefinition loadRagdollDefinition(Nif::FileView file, bool referencePlacement)
+    std::optional<std::uint32_t> findWeaponScabbard(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord)
+    {
+        if (!rootRecord) return std::nullopt;
+        require(*rootRecord < file.numRecords(), "scabbard search root outside source file");
+        auto* root = dynamic_cast<const Nif::NiNode*>(file.getRecord(*rootRecord));
+        require(root && root->mRecordIndex == *rootRecord, "scabbard search requires an identified node root");
+        std::unordered_set<const Nif::NiNode*> visited;
+        while (root)
+        {
+            require(visited.insert(root).second, "cyclic scabbard search");
+            const Nif::NiNode* descend = nullptr;
+            for (const auto& slot : root->mChildren)
+            {
+                if (slot.empty()) continue;
+                const auto* child = slot.getPtr();
+                require(child->mRecordIndex < file.numRecords() && file.getRecord(child->mRecordIndex) == child,
+                    "scabbard search child outside source file");
+                const std::string_view name(child->mName.c_str());
+                if (Misc::StringUtils::ciEqual(name, "Scb")) return child->mRecordIndex;
+                if (Misc::StringUtils::ciStartsWith(name, "FadeNode "))
+                {
+                    // A non-node prefix terminates the search too; native does
+                    // not retry later siblings after its failed node cast.
+                    descend = dynamic_cast<const Nif::NiNode*>(child);
+                    break;
+                }
+            }
+            root = descend;
+        }
+        return std::nullopt;
+    }
+
+    static ActorRagdollDefinition loadRagdollDefinition(
+        Nif::FileView file, bool referencePlacement, bool weapon = false)
     {
         require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
             && file.getBethVersion() <= 16, "unsupported NIF version");
@@ -398,11 +433,18 @@ namespace NifBullet
         const auto member = [&](const Nif::Record* record) {
             require(record && records.contains(record), "reference outside source file");
         };
+        const Nif::NiAVObject* scabbard = nullptr;
         if (referencePlacement)
         {
             require(file.numRoots() == 1, "reference placement requires one asset root");
             const auto* root = dynamic_cast<const Nif::NiAVObject*>(file.getRoot(0));
             member(root);
+            if (weapon)
+            {
+                result.mReferenceScabbard = findWeaponScabbard(file, root->mRecordIndex);
+                if (result.mReferenceScabbard)
+                    scabbard = static_cast<const Nif::NiAVObject*>(file.getRecord(*result.mReferenceScabbard));
+            }
             result.mReferenceRoot = root->mRecordIndex;
             // Original BSFadeNode constructor4A133E..4A13CB tests controller
             // presence and rotation only. Translation/scale do not prevent an
@@ -458,7 +500,7 @@ namespace NifBullet
             }
             if (const auto* branch = dynamic_cast<const Nif::NiNode*>(node))
                 for (const auto& child : branch->mChildren)
-                    if (!child.empty())
+                    if (!child.empty() && child.getPtr() != scabbard)
                         pending.push_back({ child.getPtr(), matrix });
         }
         std::unordered_map<const Nif::bhkRigidBody*, std::size_t> bodies;
@@ -621,11 +663,12 @@ namespace NifBullet
             // second child. It does not search recursively for a physical node.
             if (!result.mReferenceAssetRoot && root->mCollision.empty())
                 if (const auto* branch = dynamic_cast<const Nif::NiNode*>(root);
-                    branch && !branch->mChildren.empty() && !branch->mChildren[0].empty())
+                    branch && !branch->mChildren.empty() && !branch->mChildren[0].empty()
+                    && branch->mChildren[0].getPtr() != scabbard)
                 {
                     selected = branch->mChildren[0].getPtr();
                     if (selected->mCollision.empty() && branch->mChildren.size() > 1
-                        && !branch->mChildren[1].empty())
+                        && !branch->mChildren[1].empty() && branch->mChildren[1].getPtr() != scabbard)
                         selected = branch->mChildren[1].getPtr();
                 }
             if ((result.mReferenceAssetRoot || selected != root) && !selected->mCollision.empty())
@@ -664,5 +707,10 @@ namespace NifBullet
     ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file)
     {
         return loadRagdollDefinition(file, true);
+    }
+
+    ActorRagdollDefinition loadWeaponReferenceRagdollDefinition(Nif::FileView file)
+    {
+        return loadRagdollDefinition(file, true, true);
     }
 }

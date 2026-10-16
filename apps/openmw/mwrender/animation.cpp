@@ -2881,6 +2881,22 @@ namespace MWRender
                 root.mTransform->setRotation(Nif::NiTransform::getIdentity().mRotation);
                 root.mTransform->setTranslation({0, 0, 0});
             }
+            if (definition.mReferenceScabbard)
+            {
+                FindRoot scabbard(*definition.mReferenceScabbard);
+                mObjectRoot->accept(scabbard);
+                if (scabbard.mMatches != 1 || !scabbard.mTransform
+                    || scabbard.mTransform->getDataVariance() != osg::Object::DYNAMIC
+                    || scabbard.mTransform->getNumParents() != 1
+                    || definition.mReferenceScabbard == definition.mReferenceRoot
+                    || definition.mReferenceScabbard == definition.mReferenceAssetRoot)
+                    throw std::invalid_argument("loose weapon requires a private scabbard branch");
+                // The definition already selected collision with this literal
+                // source slot absent. OSG stores the surviving children compactly.
+                osg::ref_ptr<NifOsg::MatrixTransform> lease = scabbard.mTransform;
+                if (!scabbard.mTransform->getParent(0)->removeChild(scabbard.mTransform))
+                    throw std::invalid_argument("cannot detach loose weapon scabbard");
+            }
         }
         auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
         binding->captureWorldBones(objectWorld);

@@ -48,6 +48,7 @@ namespace MWRender
         std::uint16_t mCollisionFlags;
         std::optional<std::uint32_t> mReferenceRoot;
         std::optional<std::uint32_t> mReferenceAssetRoot;
+        std::optional<std::uint32_t> mReferenceScabbard;
         bool mPublished = false;
         bool mRetired = false;
         friend class Objects;

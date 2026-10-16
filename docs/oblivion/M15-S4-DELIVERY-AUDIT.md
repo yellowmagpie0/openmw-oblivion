@@ -4130,3 +4130,51 @@ and is not a production comparison. The factory test is engine integration,
 not normal-input/fresh-process gameplay acceptance. Remaining M15S4 migration,
 save/recreation, melee/drop/effect/input/runtime gates remain open; M15S4 remains
 active and incomplete.
+
+## 2026-10-16 — detach native weapon scabbards before collision registration
+
+The production carried-weapon drop path now requests a weapon-specific reference
+definition. Its immutable source selector follows original480770: complete Scb
+names match case-insensitively; a first FadeNode-space prefix commits descent,
+including termination on a non-node cast, without retrying siblings. It uses
+C-string semantics and preserves literal null slots. Source records remain
+unchanged. The removed branch is absent from the prepared bind hierarchy and
+its source slot is null for collision selection, instead of compressing later
+children into an earlier native slot. Generic reference/actor loading is unchanged.
+
+Detached model preparation removes the private Scb subtree before binding;
+cached/carried models keep theirs. The loose scene lease includes this preparation
+identity. Four component cases cover exact/extended/case/NUL names, limited descent,
+malformed inputs/cycles, immutable sources/copies, generic-vs-weapon policy and
+literal-slot collision selection. A factory engine case covers folded and retained
+roots, subtree absence/cached preservation, lease checks, physics stepping and
+reference synchronization. A removed branch containing physical bodies rejects
+whole admission before publication; that content remains outside current support.
+
+Both C++selectors match all317original full-function cases. Original detach,
+parent/slot/refcount observations are retained, with only checked Windows
+Interlocked boundaries and no original game function replacements; the C++source
+selector itself is read-only. Both builds also match the archived stock sword's
+selected Scb9 and20previously captured original transform/offset fields. A fresh
+hash-checked sweep passes all8archived iron melee assets through actual parsing,
+ordinary/weapon definitions and scale2copies;3select scabbards. This is archived
+content evidence, not complete winning installed records/assets or gameplay.
+
+Final normal and ASan/UBSan runs each pass2,790components/266suites and1,613engine/
+122suites, exact inventories and no failures/skips; leak detection disabled.
+Initial preflight components59passed; its engine build and the first sanitizer
+build were deliberately stopped to fix a new assertion-macro brace warning.
+Both helpers reached terminal before edits, and interrupted attempts remain.
+[Editable verification](M15-WEAPON-SCABBARD-VERIFICATION.json) pins source,
+reports, hashes, counts and limitations.
+
+A separate one-context original experiment constructs the complete sphere motion
+state before early generation. The supplied position/quaternion are verified,
+but plain registration still resets in that partial-entity/null-World fixture.
+Motion-state initialization alone does not explain its difference from the live
+real-World preservation observation. No universal reset rule is implemented.
+Native initialization/replacement, clocks/physics and one update owner remain
+open alongside creature/power contacts, mastery/effects/reactions and the remaining
+S4 control/view/FPS/normal-input/save/fresh-process gates. M15S4 remains active
+and incomplete. The next priority is completing those live contact branches,
+without treating additional isolated rule coverage as delivery.
