@@ -22,6 +22,7 @@
 #include "../mwworld/ptr.hpp"
 
 #include "animation.hpp"
+#include "looseobjectscenebinding.hpp"
 #include "creatureanimation.hpp"
 #include "esm4npcanimation.hpp"
 #include "npcanimation.hpp"
@@ -40,6 +41,8 @@ namespace MWRender
 
     Objects::~Objects()
     {
+        for (auto& [reference, binding] : mLooseSceneBindings)
+            binding->retire();
         mObjects.clear();
 
         for (CellMap::iterator iter = mCellSceneNodes.begin(); iter != mCellSceneNodes.end(); ++iter)
@@ -69,12 +72,29 @@ namespace MWRender
         bool mConsumed = false;
         ObjectAnimation* mPhysicalBinding = nullptr;
         SceneUtil::ActorRagdollLocalPose mPhysicalLocal;
+        std::shared_ptr<LooseObjectSceneBinding> mSceneBinding;
+        LooseSceneMap::node_type mSceneEntry;
+        ~Data()
+        {
+            if (mSceneBinding && !mPublished)
+                mSceneBinding->retire();
+        }
     };
 
     Objects::PreparedModel::PreparedModel(std::unique_ptr<Data> data) : mData(std::move(data)) {}
     Objects::PreparedModel::~PreparedModel() = default;
     bool Objects::PreparedModel::hasLiveOwner() const noexcept
     { return mData && !mData->mIdentity.expired(); }
+    std::shared_ptr<const LooseObjectSceneBinding> Objects::PreparedModel::looseSceneBinding() const noexcept
+    { return mData ? mData->mSceneBinding : nullptr; }
+
+    void Objects::retireLooseSceneBinding(const MWWorld::LiveCellRefBase* reference) noexcept
+    {
+        const auto found = mLooseSceneBindings.find(reference);
+        if (found == mLooseSceneBindings.end()) return;
+        found->second->retire();
+        mLooseSceneBindings.erase(found);
+    }
 
     std::unique_ptr<Objects::PreparedModel> Objects::prepareModel(const MWWorld::Ptr& ptr,
         const std::string& model, const osg::Quat& rotation, unsigned nodeMask,
@@ -141,6 +161,11 @@ namespace MWRender
             animation->bindLoosePhysicalPose(*physicalDefinition, placement);
             data->mPhysicalLocal = animation->getLoosePhysicalPose()->captureLocalPose();
             data->mPhysicalBinding = animation;
+            data->mSceneBinding = std::shared_ptr<LooseObjectSceneBinding>(new LooseObjectSceneBinding(
+                *animation, *data->mInsert, *this, *physicalDefinition));
+            LooseSceneMap stagedBindings;
+            stagedBindings.emplace(ptr.mRef, data->mSceneBinding);
+            data->mSceneEntry = stagedBindings.extract(stagedBindings.begin());
         }
         PtrAnimationMap stagedObjects;
         stagedObjects.emplace(ptr.mRef, data->mAnimation);
@@ -173,7 +198,9 @@ namespace MWRender
             const auto* root = data->mAnimation->getObjectRoot();
             if (!root || root->getNumParents() != 1 || root->getParent(0) != data->mInsert
                 || !data->mInsert->containsNode(root)
-                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)) return false;
+                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)
+                || !data->mSceneBinding->isValidFor(ptr) || data->mSceneEntry.empty()
+                || mLooseSceneBindings.contains(ptr.mRef)) return false;
         }
         if (ptr.getCell() != data->mCell || ptr.getCellRef().getCount() != data->mCount
             || ptr.getRefData().getBaseNode() || mObjects.contains(ptr.mRef)
@@ -201,7 +228,8 @@ namespace MWRender
             const auto* root = data->mAnimation->getObjectRoot();
             if (!root || root->getNumParents() != 1 || root->getParent(0) != data->mInsert
                 || !data->mInsert->containsNode(root)
-                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)) return false;
+                || !data->mPhysicalBinding->getLoosePhysicalPose()->matchesLocalPose(data->mPhysicalLocal)
+                || !data->mSceneBinding->isValidFor(data->mPtr, true)) return false;
         }
         const auto object = mObjects.find(data->mPtr.mRef);
         const auto cell = mCellSceneNodes.find(data->mCell);
@@ -259,6 +287,11 @@ namespace MWRender
         if (data.mNewCell) mCellSceneNodes.insert(std::move(data.mCellEntry));
         mObjects.insert(std::move(data.mObjectEntry));
         data.mPtr.getRefData().setBaseNode(data.mInsert);
+        if (data.mSceneBinding)
+        {
+            mLooseSceneBindings.insert(std::move(data.mSceneEntry));
+            data.mSceneBinding->publish();
+        }
         data.mPublished = true;
         return true;
     }
@@ -276,6 +309,7 @@ namespace MWRender
             || cell == mCellSceneNodes.end() || cell->second != data->mCellNode
             || !data->mCellNode->containsNode(data->mInsert))
             return false;
+        retireLooseSceneBinding(data->mPtr.mRef);
         data->mCellNode->removeChild(data->mInsert);
         data->mPtr.getRefData().setBaseNode(nullptr);
         mObjects.erase(object);
@@ -449,6 +483,7 @@ namespace MWRender
             // The engine owns this exact ordinary Group. Detach the public
             // placement node while retaining its private animation subtree.
             data.mCellNode->osg::Group::removeChildren(index, 1);
+            owner.retireLooseSceneBinding(data.mPtr.mRef);
             owner.mObjects.erase(data.mPtr.mRef);
             owner.mUnrefQueue.push(osg::ref_ptr<osg::Referenced>(data.mAnimation));
             data.mPtr.getRefData().setBaseNode(nullptr);
@@ -490,6 +525,7 @@ namespace MWRender
 
     bool Objects::removeObject(const MWWorld::Ptr& ptr)
     {
+        retireLooseSceneBinding(ptr.mRef);
         if (!ptr.getRefData().getBaseNode())
             return true;
 
@@ -523,6 +559,7 @@ namespace MWRender
             MWWorld::Ptr ptr = iter->second->getPtr();
             if (ptr.getCell() == store)
             {
+                retireLooseSceneBinding(ptr.mRef);
                 if (ptr.getClass().isActor() && ptr.getRefData().getCustomData())
                 {
                     if (ptr.getClass().hasInventoryStore(ptr))

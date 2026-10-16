@@ -865,7 +865,8 @@ namespace MWPhysics
 
     std::unique_ptr<PreparedLooseObject> PhysicsSystem::prepareLooseObject(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
-        std::span<const btTransform> poses, int group, int mask)
+        std::span<const btTransform> poses, int group, int mask,
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
     {
         if (mObjects.contains(ptr.mRef) || mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
             throw std::invalid_argument("loose physics reference already has static or actor collision");
@@ -873,7 +874,8 @@ namespace MWPhysics
         data->mOwner = this;
         data->mIdentity = mLoosePreparationOwner;
         data->mPtr = ptr;
-        data->mPhysical = mTaskScheduler->prepareLooseObject(ptr, definition, lengthScale, poses, group, mask);
+        data->mPhysical = mTaskScheduler->prepareLooseObject(ptr, definition, lengthScale, poses, group, mask,
+            std::move(sceneBinding));
         return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(data)));
     }
 
@@ -893,6 +895,9 @@ namespace MWPhysics
     }
 
     bool PhysicsSystem::hasLooseObject(const MWWorld::Ptr& ptr) { return mTaskScheduler->hasLooseObject(ptr); }
+    std::shared_ptr<const MWRender::LooseObjectSceneBinding>
+    PhysicsSystem::captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr)
+    { return mTaskScheduler->captureLooseObjectSceneBinding(ptr); }
     std::vector<MWWorld::Ptr> PhysicsSystem::looseObjectOwners() { return mTaskScheduler->looseObjectOwners(); }
     std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureLooseObject(const MWWorld::Ptr& ptr)
     { return mTaskScheduler->captureLooseObject(ptr); }

@@ -134,10 +134,12 @@ namespace MWPhysics
         // Construction/cancellation do not register collision or consume state.
         std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
-            std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
         bool validatePreparedLooseObject(const PreparedLooseObject& object);
         bool commitLooseObject(PreparedLooseObject& object);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native

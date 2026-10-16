@@ -3294,3 +3294,102 @@ node/admission/property-copy modes, forced World/script continuation, other live
 precision callers, loose retention/save/recreation, production break/mastery/drop/
 pickup/sound/power/creature/reactions/effects and the full normal-input/FPS/fresh-
 process acceptance matrix remain open. Full M15S4 is active and incomplete.
+
+
+## Loose-model registration and physical owner link
+
+`MWRender::LooseObjectSceneBinding` links one prepared native single-body model
+with its exact ObjectAnimation, placement and renderer registration. It captures
+source hash, physical/target records, collision flags and reference-root identity;
+independently scaled physical properties need not equal their source values.
+Opaque handles cannot be copied. Weak observer pointers do not retain an animation
+or reference. Published handles can acquire a strong animation lease after
+checking the current model/link maps, live base placement and NIF pose identity.
+A distinct weak renderer-owner identity protects the borrowed Objects pointer.
+ActorRagdollLocalPose's retained checkpoint authority is not used as a lifetime
+token.
+
+Objects owns the live registration. Preparation allocates its detached map node;
+publication inserts that node and marks the link published. Cancellation,
+admission rollback, ordinary removal, prepared item removal, cell removal and
+Objects destruction retire it. Keeping a shared handle or animation alive through
+the cleanup queue does not revive the registration. Prepared handles cannot lease
+a live animation. Retirement remains observable even with old local checkpoints
+and placement nodes retained.
+
+WorldModel passes the prepared renderer link directly into PhysicsSystem and its
+scheduler proposal. Physics retains a weak handle plus an explicit indication
+that a link was supplied. Preparation validates source/target identity. Physical
+commit also requires the exact model to be published, before collision routing
+or body publication; rejection preserves the proposal for retry. A body originally
+prepared without a scene link returns null. A previously linked body rejects an
+expired/retired/replaced link instead of falling back to the unlinked mode.
+
+`World::synchronizeLooseWeaponPoses` now obtains each link from physics, validates
+the model before root capture/publication and retains its animation lease through
+the pass. It rechecks registration before each reference publication. This works
+with the actual separately owned Objects in headless factory fixtures, without
+assuming World.getAnimation can resolve them through RenderingManager. This is
+a model-ownership guard around the existing root-only/inverse-bind adapter. It
+does not implement the new manual per-node traversal, global root aliases or
+complete World/reference safety across external callbacks and cell migration.
+
+Five new real native-World/owned-NIF/Bullet factory tests verify:
+
+- The exact published private animation lease, successful transaction-plan
+  destruction, source/record/flag/root identity mismatch rejection and changed
+  physical-node identity rejection.
+- Ordinary removal, prepared removal, cell removal and renderer destruction with
+  a shared handle, animation lease and local checkpoint retained. Restoring the
+  old base placement cannot resurrect the registration. Dropping the last handle
+  exercises weak expiry too. Rejected World synchronization preserves reference
+  position, physical pose and linear/angular velocity.
+- Never-published model cancellation and published-model rollback invalidate a
+  detached physical proposal. The latter retains an animation lease. Wrong source
+  identity rejects while the prepared link is otherwise valid.
+- A new model on the same reference has a separate link and animation. The
+  original physical owner never follows it.
+- Physical commit rejects a still-prepared model without consuming its proposal
+  or publishing resources, then retries successfully after scene publication.
+  Subsequent model rollback retires that published physical link.
+
+The existing unlinked admission case also checks the null-link result explicitly.
+These are real resource/World integration fixtures, not a rendered normal-input
+break/drop action or fresh-process save/recreation course.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `loose-scene-owner-link-preflight-01`: production units compile; owned CMake
+  group intentionally stopped before the large test unit completed so lifecycle
+  tests and exact registration checks could be added. No passing test claim.
+- `loose-scene-owner-link-preflight-02`:49 selected factory/admission cases pass.
+  The compiler catches a new dangling-else warning in one test; braces are fixed
+  afterward and rollback/preservation checks expanded.
+- `loose-scene-owner-link-sanitized-01`: intentionally stopped for that correction.
+- `loose-scene-owner-link-normal-01`: all1579 then-current engine cases pass.
+  Review afterward finds physical commit must require published scene dependency,
+  beyond preparation validity. The guard and fifth successful-retry case are added;
+  this earlier passing inventory does not establish that gate.
+- `loose-scene-owner-link-sanitized-02`: owned build stopped for the dependency
+  guard/noncopyable handle change; helper terminal before edits. Not a pass.
+- `loose-scene-owner-link-normal-02` and `loose-scene-owner-link-sanitized-03`:
+  final unfiltered1580 engine tests/122 suites pass in each build with exact
+  inventory/XML agreement and no failures/skips. ASan/UBSan halt on error;
+  leak detection disabled. Existing unrelated test compiler warnings remain.
+
+The [editable verification](M15-LOOSE-SCENE-OWNER-LINK-VERIFICATION.json) pins code,
+reports and the tested source fingerprint. Component sources/tests are unchanged;
+reuse the preceding53d432d5da checkpoint's2746 component tests/262 suites in both
+builds, without representing them as a new component run. No new original-game
+process or normal-input runtime course is launched by this checkpoint.
+
+Next expose the actual physical target world before inverse bind and connect
+native global root initialization/initial capture with NifSceneTraversal. Complete
+original first-sync/controller clock/order evidence, one authoritative update pass
+and ordinary-viewer suppression. Reference publication must retain native order
+before children while safely rebasing placement across cell migration. Reconcile
+physics-retained root locals with renderer controller state. Other admission/node/
+property-copy modes, forced World/script continuation, loose physical save/fresh
+recreation, production break/mastery/quest-retained/group-NPC drops/pickup/
+replacement/sound/power/creature/reactions/effects and the full normal-input/FPS/
+fresh-process S4 acceptance matrix remain open. Full M15S4 is active and incomplete.

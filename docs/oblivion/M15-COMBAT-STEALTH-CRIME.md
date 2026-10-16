@@ -6,6 +6,32 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 loose-model identity and physical publication — 2026-10-16
+
+Native loose-item preparation now links the exact private renderer model to its
+physical proposal. Physics keeps a weak handle; publication requires the matching
+model to be published. Failed early physical commits preserve the preparation
+for a later retry. Retired or replaced models never become an unlinked fallback.
+
+Renderer cancellation, rollback, ordinary/prepared removal, cell removal and
+owner destruction retire the link. Held handles, animation leases and local-pose
+checkpoints cannot resurrect it. World root synchronization validates linked
+models directly through physics and retains animation leases through the pass,
+including headless fixtures whose World has no RenderingManager animation lookup.
+
+Five new real-factory cases cover phase order, retry, model identity, cancellation,
+rollback, retirement and replacement. Final normal and ASan/UBSan runs each pass
+**1,580 engine tests / 122 suites** with exact inventories and no failures/skips.
+Leak checking is disabled. Unchanged component coverage is reused from the
+preceding checkpoint; this is not a fresh component run.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#loose-model-registration-and-physical-owner-link)
+and [verification record](M15-LOOSE-SCENE-OWNER-LINK-VERIFICATION.json) record scope.
+The existing root-only/inverse-bind scene adapter remains. Native global root
+initialization, first-sync/controller order, per-node scheduling, safe reference
+callbacks/cell migration, save/recreation, production combat branches and complete
+normal-input acceptance remain open. S4 is active and incomplete.
+
 ## S4 manual ordinary-NIF scene traversal — 2026-10-16
 
 `NifSceneTraversal` now runs existing property/node callbacks before each native

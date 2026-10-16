@@ -40,6 +40,7 @@ namespace MWRender
 {
 
     class Animation;
+    class LooseObjectSceneBinding;
 
     class PtrHolder : public osg::Object
     {
@@ -63,16 +64,20 @@ namespace MWRender
 
     class Objects
     {
+        friend class LooseObjectSceneBinding;
         using PtrAnimationMap = std::map<const MWWorld::LiveCellRefBase*, osg::ref_ptr<Animation>>;
 
         typedef std::map<const MWWorld::CellStore*, osg::ref_ptr<osg::Group>> CellMap;
         CellMap mCellSceneNodes;
         PtrAnimationMap mObjects;
+        using LooseSceneMap = std::map<const MWWorld::LiveCellRefBase*, std::shared_ptr<LooseObjectSceneBinding>>;
+        LooseSceneMap mLooseSceneBindings;
         osg::ref_ptr<osg::Group> mRootNode;
         Resource::ResourceSystem* mResourceSystem;
         SceneUtil::UnrefQueue& mUnrefQueue;
 
         void insertBegin(const MWWorld::Ptr& ptr);
+        void retireLooseSceneBinding(const MWWorld::LiveCellRefBase* reference) noexcept;
         std::shared_ptr<const char> mModelPreparationIdentity = std::make_shared<const char>(0);
 
     public:
@@ -89,6 +94,7 @@ namespace MWRender
         public:
             ~PreparedModel();
             bool hasLiveOwner() const noexcept;
+            std::shared_ptr<const LooseObjectSceneBinding> looseSceneBinding() const noexcept;
             PreparedModel(const PreparedModel&) = delete;
             PreparedModel& operator=(const PreparedModel&) = delete;
         };

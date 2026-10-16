@@ -225,7 +225,8 @@ namespace MWWorld
             if (scale != 1.f)
                 scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(admission.mDefinition, scale);
             entry.mBody = entry.mPhysics->prepareLooseObject(ptr, scaled ? *scaled : admission.mDefinition,
-                admission.mLengthScale, admission.mPoses, admission.mCollisionGroup, admission.mCollisionMask);
+                admission.mLengthScale, admission.mPoses, admission.mCollisionGroup, admission.mCollisionMask,
+                entry.mModel->looseSceneBinding());
         }
         return std::unique_ptr<PreparedLooseWeaponAdmission>(new PreparedLooseWeaponAdmission(std::move(data)));
     }

@@ -1,3 +1,4 @@
+#include <apps/openmw/mwrender/looseobjectscenebinding.hpp>
 #include <components/sceneutil/actorragdollpose.hpp>
 #include <components/l10n/manager.hpp>
 #include "apps/openmw/mwinput/inputmanagerimp.hpp"
@@ -22396,4 +22397,193 @@ TEST(OblivionWorldTest, NativeWeaponFactoryPassiveBindingPreservesEmbeddedContro
     animation.getObjectRoot()->accept(visitor);
     EXPECT_EQ(controller->mVisits, 1u);
     EXPECT_TRUE(animation.getLoosePhysicalPose()->isValid());
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkLeasesTheExactPublishedAnimation)
+{
+    NativeWeaponFactoryFixture fixture;
+    const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+    ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->references().front();
+    EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+    ASSERT_FALSE(plan->commit().isEmpty());
+    const auto binding = fixture.mPhysics->captureLooseObjectSceneBinding(reference);
+    ASSERT_TRUE(binding);
+    EXPECT_TRUE(binding->matches(*carried->mReferenceDefinition));
+    EXPECT_TRUE(binding->isValidFor(reference, true));
+    const auto lease = binding->lockAnimation(reference);
+    ASSERT_TRUE(lease);
+    EXPECT_EQ(lease.get(), fixture.mObjects->getAnimation(reference));
+    EXPECT_EQ(lease->getPtr(), reference);
+    EXPECT_EQ(lease->getObjectRoot()->getParent(0), reference.getRefData().getBaseNode());
+    // Publication-plan destruction must not retire the live model's link.
+    plan.reset();
+    EXPECT_EQ(fixture.mPhysics->captureLooseObjectSceneBinding(reference), binding);
+    EXPECT_EQ(binding->lockAnimation(reference), lease);
+    auto wrong = *carried->mReferenceDefinition;
+    wrong.mSourceHash += " changed"; EXPECT_FALSE(binding->matches(wrong));
+    wrong = *carried->mReferenceDefinition; ++wrong.mBodies.front().mRecord; EXPECT_FALSE(binding->matches(wrong));
+    wrong = *carried->mReferenceDefinition; ++wrong.mBodies.front().mNodeRecord; EXPECT_FALSE(binding->matches(wrong));
+    wrong = *carried->mReferenceDefinition; wrong.mBodies.front().mCollisionFlags ^= 8; EXPECT_FALSE(binding->matches(wrong));
+    wrong = *carried->mReferenceDefinition; wrong.mReferenceRoot.reset(); EXPECT_FALSE(binding->matches(wrong));
+    NativeWeaponTargetVisitor target;
+    lease->getObjectRoot()->accept(target); ASSERT_TRUE(target.mTarget);
+    const auto originalName = target.mTarget->getName();
+    target.mTarget->setName("changed live physical node identity");
+    EXPECT_FALSE(binding->isValidFor(reference, true));
+    EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+    target.mTarget->setName(originalName);
+    EXPECT_TRUE(binding->isValidFor(reference, true));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationCheckpointAndHandle)
+{
+    for (unsigned removal = 0; removal < 4; ++removal)
+    {
+        SCOPED_TRACE(removal);
+        NativeWeaponFactoryFixture fixture;
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        auto binding = fixture.mPhysics->captureLooseObjectSceneBinding(reference); ASSERT_TRUE(binding);
+        const auto lease = binding->lockAnimation(reference); ASSERT_TRUE(lease);
+        const auto checkpoint = lease->getLoosePhysicalPose()->captureLocalPose();
+        osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = reference.getRefData().getBaseNode();
+        plan.reset();
+        if (removal == 0)
+        {
+            ASSERT_TRUE(fixture.mObjects->removeObject(reference));
+        }
+        if (removal == 1)
+        {
+            auto prepared = fixture.mObjects->prepareModelRemoval(reference);
+            ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+        }
+        if (removal == 2) fixture.mObjects->removeCell(reference.getCell());
+        if (removal == 3) fixture.mObjects.reset();
+        EXPECT_TRUE(lease.valid());
+        EXPECT_FALSE(binding->isValidFor(reference));
+        EXPECT_FALSE(binding->lockAnimation(reference));
+        EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+        // Restoring the old placement and retaining the local checkpoint cannot
+        // resurrect this model registration, even while all objects survive.
+        reference.getRefData().setBaseNode(placement);
+        EXPECT_FALSE(binding->isValidFor(reference));
+        EXPECT_FALSE(binding->lockAnimation(reference));
+        const auto before = reference.getRefData().getPosition();
+        const auto physical = fixture.mPhysics->captureLooseObject(reference);
+        EXPECT_THROW(MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, *fixture.mPhysics), std::invalid_argument);
+        EXPECT_EQ(reference.getRefData().getPosition(), before);
+        const auto after = fixture.mPhysics->captureLooseObject(reference);
+        ASSERT_EQ(after.size(), physical.size());
+        ASSERT_EQ(after.size(), 1u);
+        EXPECT_EQ(after.front().mPose, physical.front().mPose);
+        EXPECT_EQ(after.front().mLinearVelocity, physical.front().mLinearVelocity);
+        EXPECT_EQ(after.front().mAngularVelocity, physical.front().mAngularVelocity);
+        binding.reset();
+        EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+        EXPECT_TRUE(fixture.mPhysics->hasLooseObject(reference));
+        fixture.mPhysics->removeLooseObject(reference);
+        reference.getRefData().setBaseNode(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryCancelledPreparedSceneLinkInvalidatesDetachedPhysicalAdmission)
+{
+    for (const bool rollback : {false, true})
+    {
+        SCOPED_TRACE(rollback);
+        NativeWeaponFactoryFixture fixture;
+        const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+        ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        const auto reference = plan->references().front();
+        auto model = fixture.mObjects->prepareModel(reference, "meshes/factory-weapon.nif", osg::Quat(),
+            MWRender::Mask_Object, carried->mReferenceDefinition.get());
+        const auto binding = model->looseSceneBinding(); ASSERT_TRUE(binding);
+        EXPECT_TRUE(binding->isValidFor(reference));
+        EXPECT_FALSE(binding->isValidFor(reference, true));
+        EXPECT_FALSE(binding->lockAnimation(reference));
+        const std::array<btTransform, 1> poses{btTransform::getIdentity()};
+        auto physical = fixture.mPhysics->prepareLooseObject(reference, *carried->mReferenceDefinition,
+            NifBullet::RagdollNativeLengthScale, poses, 1, -1, binding);
+        EXPECT_TRUE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+        EXPECT_FALSE(fixture.mPhysics->commitLooseObject(*physical));
+        EXPECT_TRUE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+        EXPECT_FALSE(fixture.mPhysics->hasLooseObject(reference));
+        auto wrong = *carried->mReferenceDefinition; wrong.mSourceHash += " wrong";
+        EXPECT_THROW(fixture.mPhysics->prepareLooseObject(reference, wrong,
+            NifBullet::RagdollNativeLengthScale, poses, 1, -1, binding), std::invalid_argument);
+        osg::ref_ptr<MWRender::ObjectAnimation> lease;
+        if (rollback)
+        {
+            ASSERT_TRUE(fixture.mObjects->commitModel(*model));
+            lease = binding->lockAnimation(reference);
+            ASSERT_TRUE(lease);
+            EXPECT_TRUE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+            ASSERT_TRUE(fixture.mObjects->rollbackModelAdmission(*model));
+        }
+        model.reset();
+        EXPECT_FALSE(binding->isValidFor(reference));
+        EXPECT_FALSE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+        EXPECT_FALSE(fixture.mPhysics->commitLooseObject(*physical));
+        EXPECT_FALSE(fixture.mPhysics->hasLooseObject(reference));
+        EXPECT_EQ(reference.getRefData().getBaseNode(), nullptr);
+        EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+        EXPECT_TRUE(plan->isValid());
+    }
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactorySceneLinkNeverFollowsAReplacementModel)
+{
+    NativeWeaponFactoryFixture fixture;
+    const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+    ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    const auto oldBinding = fixture.mPhysics->captureLooseObjectSceneBinding(reference); ASSERT_TRUE(oldBinding);
+    const auto oldAnimation = oldBinding->lockAnimation(reference); ASSERT_TRUE(oldAnimation);
+    plan.reset();
+    ASSERT_TRUE(fixture.mObjects->removeObject(reference));
+    auto model = fixture.mObjects->prepareModel(reference, "meshes/factory-weapon.nif", osg::Quat(),
+        MWRender::Mask_Object, carried->mReferenceDefinition.get());
+    const auto replacement = model->looseSceneBinding(); ASSERT_TRUE(replacement);
+    ASSERT_TRUE(fixture.mObjects->commitModel(*model));
+    const auto newAnimation = replacement->lockAnimation(reference); ASSERT_TRUE(newAnimation);
+    EXPECT_NE(newAnimation, oldAnimation);
+    EXPECT_EQ(newAnimation.get(), fixture.mObjects->getAnimation(reference));
+    EXPECT_FALSE(oldBinding->isValidFor(reference));
+    EXPECT_FALSE(oldBinding->lockAnimation(reference));
+    EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryLinkedPhysicsWaitsForScenePublicationWithoutConsumingPreparation)
+{
+    NativeWeaponFactoryFixture fixture;
+    const auto carried = fixture.mAnimation->captureCarriedWeaponDrop(fixture.mItem, fixture.mWorld.getStore());
+    ASSERT_TRUE(carried); ASSERT_TRUE(carried->mReferenceDefinition);
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->references().front();
+    auto model = fixture.mObjects->prepareModel(reference, "meshes/factory-weapon.nif", osg::Quat(),
+        MWRender::Mask_Object, carried->mReferenceDefinition.get());
+    const auto binding = model->looseSceneBinding(); ASSERT_TRUE(binding);
+    const std::array<btTransform, 1> poses{btTransform::getIdentity()};
+    auto physical = fixture.mPhysics->prepareLooseObject(reference, *carried->mReferenceDefinition,
+        NifBullet::RagdollNativeLengthScale, poses, 1, -1, binding);
+    ASSERT_TRUE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+    EXPECT_FALSE(fixture.mPhysics->commitLooseObject(*physical));
+    EXPECT_TRUE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+    EXPECT_FALSE(fixture.mPhysics->hasLooseObject(reference));
+    EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+    ASSERT_TRUE(fixture.mObjects->commitModel(*model));
+    ASSERT_TRUE(fixture.mPhysics->commitLooseObject(*physical));
+    EXPECT_FALSE(fixture.mPhysics->validatePreparedLooseObject(*physical));
+    EXPECT_EQ(fixture.mPhysics->captureLooseObjectSceneBinding(reference), binding);
+    const auto lease = binding->lockAnimation(reference); ASSERT_TRUE(lease);
+    EXPECT_EQ(lease.get(), fixture.mObjects->getAnimation(reference));
+    ASSERT_TRUE(fixture.mObjects->rollbackModelAdmission(*model));
+    EXPECT_FALSE(binding->isValidFor(reference));
+    EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
+    fixture.mPhysics->removeLooseObject(reference);
+    EXPECT_TRUE(plan->isValid());
 }

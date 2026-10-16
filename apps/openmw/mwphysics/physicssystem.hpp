@@ -37,6 +37,7 @@ namespace osg
 namespace MWRender
 {
     class DebugDrawer;
+    class LooseObjectSceneBinding;
 }
 
 namespace Resource
@@ -281,10 +282,14 @@ namespace MWPhysics
         // selects the profile/model; ordinary static collision stays separate.
         std::unique_ptr<PreparedLooseObject> prepareLooseObject(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
-            std::span<const btTransform> poses, int collisionGroup, int collisionMask);
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
         bool validatePreparedLooseObject(const PreparedLooseObject& prepared);
         bool commitLooseObject(PreparedLooseObject& prepared);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
+        // Null for a deliberately renderer-free body. A linked retired or
+        // replaced model rejects; it must never become an unbound fallback.
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr);
         std::vector<MWWorld::Ptr> looseObjectOwners();
         std::vector<NifBullet::RagdollBodyState> captureLooseObject(const MWWorld::Ptr& ptr);
         // Reverse the retained authored body/bind transforms for a native

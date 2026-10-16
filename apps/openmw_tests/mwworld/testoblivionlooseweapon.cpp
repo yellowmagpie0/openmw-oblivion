@@ -162,6 +162,7 @@ namespace
         EXPECT_NE(ptr.getRefData().getBaseNode(), nullptr);
         ASSERT_TRUE(mPhysics->hasLooseObject(ptr));
         EXPECT_EQ(mPhysics->captureLooseObject(ptr).size(), 1u);
+        EXPECT_FALSE(mPhysics->captureLooseObjectSceneBinding(ptr));
         EXPECT_FALSE(prepared->isValid());
         EXPECT_TRUE(prepared->commit().isEmpty());
         prepared.reset();

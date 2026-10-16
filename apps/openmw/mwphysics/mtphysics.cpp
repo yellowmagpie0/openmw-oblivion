@@ -30,6 +30,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 
 #include "../mwrender/bulletdebugdraw.hpp"
+#include "../mwrender/looseobjectscenebinding.hpp"
 
 #include "../mwworld/class.hpp"
 
@@ -490,6 +491,15 @@ namespace MWPhysics
         const float mReferenceScale;
         NifBullet::ActorRagdollPhysics mPhysics;
         std::vector<osg::Vec3f> mLinearDeltas;
+        bool mHasSceneBinding = false;
+        std::weak_ptr<const MWRender::LooseObjectSceneBinding> mSceneBinding;
+
+        bool validSceneBinding(bool published) const
+        {
+            if (!mHasSceneBinding) return true;
+            const auto binding = mSceneBinding.lock();
+            return binding && binding->matches(mDefinition) && binding->isValidFor(getPtr(), published);
+        }
 
         osg::Matrixf sceneBind(float visibleScale) const
         {
@@ -564,7 +574,8 @@ namespace MWPhysics
 
     std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> PhysicsTaskScheduler::prepareLooseObject(
         const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
-        float lengthScale, std::span<const btTransform> poses, int group, int mask)
+        float lengthScale, std::span<const btTransform> poses, int group, int mask,
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
@@ -576,6 +587,13 @@ namespace MWPhysics
             || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef))
             throw std::invalid_argument("loose physics requires one live non-actor body in a native World");
         auto object = std::make_unique<LooseObject>(ptr, definition, *world, lengthScale, poses, group, mask);
+        if (sceneBinding)
+        {
+            object->mHasSceneBinding = true;
+            object->mSceneBinding = sceneBinding;
+            if (!object->validSceneBinding(false))
+                throw std::invalid_argument("loose physics scene binding does not match its prepared model");
+        }
         LooseObjectMap staged;
         staged.emplace(ptr.mRef, std::move(object));
         auto impl = std::make_unique<PreparedLooseObject::Impl>();
@@ -596,7 +614,8 @@ namespace MWPhysics
         if (!identity || identity != mLoosePreparationIdentity) return false;
         return !mLooseObjects.contains(impl->mNode.key()) && !mActorRagdolls.contains(impl->mNode.key())
             && impl->mNode.mapped()->getPtr().getCellRef().getCount() == impl->mExpectedCount
-            && impl->mNode.mapped()->getPtr().getCellRef().getScale() == impl->mExpectedScale;
+            && impl->mNode.mapped()->getPtr().getCellRef().getScale() == impl->mExpectedScale
+            && impl->mNode.mapped()->validSceneBinding(false);
     }
 
     bool PhysicsTaskScheduler::validatePreparedLooseObject(const PreparedLooseObject& object)
@@ -613,6 +632,9 @@ namespace MWPhysics
         if (!validatePreparedLooseObjectLocked(object)) return false;
         auto& node = object.mImpl->mNode;
         auto& owned = *node.mapped();
+        // Preparation may precede its scene dependency. Physical publication
+        // requires that exact model to have been published successfully.
+        if (!owned.validSceneBinding(true)) return false;
         auto* body = owned.mPhysics.collisionObjects()[0];
         // Complete routing allocation before the final fallible physics write.
         const auto [entry, inserted] = mCollisionObjects.insert(body);
@@ -639,6 +661,20 @@ namespace MWPhysics
         waitForWorkers();
         MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
         return mLooseObjects.contains(ptr.mRef);
+    }
+
+    std::shared_ptr<const MWRender::LooseObjectSceneBinding>
+    PhysicsTaskScheduler::captureLooseObjectSceneBinding(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end())
+            throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (!object.validSceneBinding(true))
+            throw std::invalid_argument("loose physics scene binding is retired or replaced");
+        return object.mSceneBinding.lock();
     }
 
     std::vector<MWWorld::Ptr> PhysicsTaskScheduler::looseObjectOwners()

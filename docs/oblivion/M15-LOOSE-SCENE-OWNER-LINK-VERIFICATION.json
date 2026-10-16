@@ -1,0 +1,287 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Native loose-item prepared renderer/physics identity link and live root-publication guard implemented; per-node traversal/global root/first-sync/scheduling and full M15S4 incomplete",
+  "parent_commit": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+  "source_fingerprint": "26afd4197666c5f49056e2abd2e1cf86434077e6f6b1c10c992b068ca39e4919",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "implementation_digests": {
+    "apps/openmw/CMakeLists.txt": "7147862b1f5bc50436297bf39d4daffa6891b9764a5f253bfd076c353bc186cb",
+    "apps/openmw/mwrender/looseobjectscenebinding.hpp": "db8b01401fdb4693d254b6ed78a556b5902642287a2641547a68ea04b6e0518c",
+    "apps/openmw/mwrender/looseobjectscenebinding.cpp": "7fe9ec597b305c0d5a3145c2cbcb5dff13bcecae3f8c5a5fa00296f3477e287a",
+    "apps/openmw/mwrender/objects.hpp": "988844bdf3064306e0659a7b1161ae7594ca58620604044d3f980d2f66e259ce",
+    "apps/openmw/mwrender/objects.cpp": "9a635a8f85562d8dec75cc2c999c30555c475d9ac2685b1070c2a70a8ccb9c70",
+    "apps/openmw/mwphysics/physicssystem.hpp": "99de03263ac59350d30d845e4e2d6f51e697ee760bfc1703ea8cbd018ec09aca",
+    "apps/openmw/mwphysics/physicssystem.cpp": "52bd874670fb0901efaf0f62a3dec9c25b818edbbb6a14f762b935b3a119fcde",
+    "apps/openmw/mwphysics/mtphysics.hpp": "d580948a4f24d387484e3fef452990ecc7fc11f53c44d12de71546d7aa53059c",
+    "apps/openmw/mwphysics/mtphysics.cpp": "45b8d091bf290aa47ada61a4eb9e965f81a3a5e9a977838ce9e4ec73efd00248",
+    "apps/openmw/mwworld/oblivionlooseweapon.cpp": "c84d12ae7f221f4a471885a905b48bc93cafee34825ff757081e0ef7806fb572",
+    "apps/openmw/mwworld/oblivionweapondrop.cpp": "0c4bf8a255a8b182551d46fd4b2699158e7a3dcb0ccf00557813f96cc76bf2bc",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "a6dfc80b506aae8eb5fe44c312f204bca77f2827860c08e5e6b79a20488d9440",
+    "apps/openmw_tests/mwworld/testoblivionlooseweapon.cpp": "fbc2ac1ead27ff94bb21b360a5a3da9aaa5b8bb120daf9db9e2e27fa3b6b4998"
+  },
+  "behavior": [
+    "Objects::prepareModel creates an opaque prepared LooseObjectSceneBinding for an identified single-body model. It records its actual private ObjectAnimation, placement, renderer owner, source hash, body/target record, registered flags and reference-root identity. Source identity permits independently scaled physical properties; it is not full shape/mass equality.",
+    "The link retains no renderer, animation or reference. Weak observer pointers can acquire a strong animation lease. Validation checks a distinct weak renderer owner, exact animation/placement and native pose identity, current renderer model and link registrations. A published link must match the current base placement; prepared links cannot lease a live animation.",
+    "Renderer map entry allocation happens during preparation. Publication inserts a prepared node and marks the link published. Cancellation, rollback, ordinary removal, prepared removal, cell removal and renderer destruction retire the registration. Retained shared handles, local checkpoints or animation leases cannot resurrect it.",
+    "WorldModel loose admission passes this exact prepared link to PhysicsSystem and PhysicsTaskScheduler. Physics retains a weak handle and a sticky linked flag, validates source/target identity during preparation, requires the exact model to be published before physical commit without consuming rejected preparation, and rejects retired/replaced/expired links. A deliberate renderer-free body still returns a null link; a formerly linked body never falls back to that mode.",
+    "World::synchronizeLooseWeaponPoses obtains the link directly from physics, without resolving World RenderingManager animation ownership. It validates each linked model before capturing/publishing root poses and retains its animation lease through the pass. The existing root-only/inverse-bind algorithm remains; this is an ownership guard, not per-node scene integration."
+  ],
+  "new_engine_tests": [
+    "OblivionWorldTest.NativeWeaponFactorySceneLinkLeasesTheExactPublishedAnimation",
+    "OblivionWorldTest.NativeWeaponFactorySceneLinkRetiresDespiteHeldAnimationCheckpointAndHandle",
+    "OblivionWorldTest.NativeWeaponFactoryCancelledPreparedSceneLinkInvalidatesDetachedPhysicalAdmission",
+    "OblivionWorldTest.NativeWeaponFactorySceneLinkNeverFollowsAReplacementModel",
+    "OblivionWorldTest.NativeWeaponFactoryLinkedPhysicsWaitsForScenePublicationWithoutConsumingPreparation"
+  ],
+  "test_scope": [
+    "Real owned-NIF native World factory, private MWRender::Objects and real Bullet loose body; exact live model lease persists after successful plan destruction and rejects changed source/record/flags/reference-root identities and renamed live physical node.",
+    "Four retirement contexts: ordinary removeObject, prepared model removal, removeCell, Objects destruction. Explicitly retain a shared link, animation lease and local checkpoint, restore old placement, and show no resurrection. After dropping the last link, weak expiry still rejects. World synchronization rejects while preserving reference position and physical pose/linear/angular velocities.",
+    "Detached physical admission invalidates after both never-published model cancellation and published-model rollback, with an animation lease retained in the latter. Wrong native source rejects while the link is otherwise valid. Physical admission never reaches the world, original transaction remains valid.",
+    "Linked physical commit rejects a still-prepared model without consuming the physics proposal or touching the world, then retries successfully after that model is published. Model rollback retires the now-published physical link.",
+    "A new valid model for the same reference has its own link/animation. The original physical owner rejects its retired link rather than following the replacement. Existing renderer-free admission test explicitly checks null link behavior."
+  ],
+  "focused_preflight": {
+    "path": "loose-scene-owner-link-preflight-02/verification.json",
+    "report_sha256": "8225a372a077bbd7fc7275ed177faaed41dce573933ab6eba37f8555b30084f0",
+    "schema_version": 1,
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+          "--target",
+          "openmw",
+          "openmw-tests",
+          "esmtool",
+          "-j",
+          "4"
+        ],
+        "log": "engine-build.log",
+        "returncode": 0,
+        "seconds": 403.157
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "engine-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.215
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_filter=OblivionWorldTest.NativeWeaponFactory*:LooseWeaponAdmissionTest.*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-owner-link-preflight-02/engine.xml"
+        ],
+        "log": "engine.log",
+        "returncode": 0,
+        "seconds": 7.738
+      }
+    ],
+    "results": {
+      "engine": {
+        "executed": 49,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "OblivionWorldTest.NativeWeaponFactory*:LooseWeaponAdmissionTest.*",
+        "binary_sha256": "637085b97648b29cb7999b2e5411995667fe3a50ad42be2f0e47b0349033f98d",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "da0db9c11c8e239acadeec4f5c9e156ee72eb2fdcbc608b7d61c440b0f415ecb",
+        "inventory_sha256": "b57b9ea2375754177b440761008a7b4dd4b95d3bcfe1bb4ffb519b0793fdf55b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_before": {
+      "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+      "source_fingerprint": "84a3a61314d9199d71f9afc8977f9b2850cf45015c78e06888a970cc3752215e"
+    },
+    "source_after": {
+      "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+      "source_fingerprint": "84a3a61314d9199d71f9afc8977f9b2850cf45015c78e06888a970cc3752215e"
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "loose-scene-owner-link-normal-02/verification.json",
+      "report_sha256": "f944d400166bc2f8fe9e2406e5bdce72140d22e1823570dc0b04f190c5d43831",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "4"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 293.415
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.265
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-owner-link-normal-02/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 21.772
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1580,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f811a40d8b5a0c92d4bafb9f7e0b47e9bb28fe90b936d1884c8235e647e75657",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "15d15573d9bcb31456ff1245bfc2a76bc87a2e1510410d0b3c4dc7a811139305",
+          "inventory_sha256": "0bc161373ccd74b69380f91cd5b16d3ddb1c148ca16d8d841703a1cdb2b524c1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+        "source_fingerprint": "26afd4197666c5f49056e2abd2e1cf86434077e6f6b1c10c992b068ca39e4919"
+      },
+      "source_after": {
+        "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+        "source_fingerprint": "26afd4197666c5f49056e2abd2e1cf86434077e6f6b1c10c992b068ca39e4919"
+      },
+      "engine_suites": 122
+    },
+    "sanitized": {
+      "path": "loose-scene-owner-link-sanitized-03/verification.json",
+      "report_sha256": "a09a4653a629af3d992e6d7add4f12a1659b92c13c137c0dc330d743bb142b70",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 444.477
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.566
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/loose-scene-owner-link-sanitized-03/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 136.845
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1580,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ca49b42fa660d7c25989e95e192d3e751d33b43a4a5b8275499bf49313d05b87",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "c20a26b8be5c972374b466b4defeef193c173882b2a447498fe118f36a22cc03",
+          "inventory_sha256": "0bc161373ccd74b69380f91cd5b16d3ddb1c148ca16d8d841703a1cdb2b524c1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+        "source_fingerprint": "26afd4197666c5f49056e2abd2e1cf86434077e6f6b1c10c992b068ca39e4919"
+      },
+      "source_after": {
+        "head": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+        "source_fingerprint": "26afd4197666c5f49056e2abd2e1cf86434077e6f6b1c10c992b068ca39e4919"
+      },
+      "engine_suites": 122
+    }
+  },
+  "reused_component_coverage": {
+    "commit": "53d432d5da708120fa752c92eb8df63f729d0ea7",
+    "verification": "docs/oblivion/M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json",
+    "cases": 2746,
+    "suites": 262,
+    "scope": "Component sources/tests unchanged in this engine-only checkpoint; previous normal/SAN coverage reused, not represented as a new component run."
+  },
+  "retained_attempts": [
+    "preflight01: production units compile; owned CMake process group deliberately terminated before completing the large test file to add full lifecycle tests/exact registration guard. Helper terminal before editing; not a passing test run.",
+    "preflight02: all49 selected factory/admission cases pass; compiler reports a new test dangling-else warning. Braces corrected and rollback/preservation contexts expanded after helper terminal.",
+    "sanitized01: owned CMake build deliberately stopped for that source correction; helper terminal before editing. Not a passing sanitizer run.",
+    "normal01: full1579 engine tests pass before review identifies that direct physical commit must require a published model. Added the dependency guard, prepublication rejection assertions and a fifth real-factory successful-retry test. Earlier passing coverage does not prove the new dependency gate.",
+    "sanitized02: owned CMake group deliberately stopped for the published-model dependency guard and opaque noncopyable registration handles. Helper terminal before editing; no passing sanitizer claim."
+  ],
+  "sanitizer_scope": "ASan/UBSan halt on error; leak detection disabled. Full engine suites pass; no rendered normal-input gameplay or fresh-process restart acceptance is claimed. Existing unrelated test compiler warnings remain.",
+  "remaining_gates": [
+    "NifSceneTraversal still has no production caller. Initialize native global reference root and initial physical capture together, complete original first-sync/controller clock/order proof, schedule per-node projection once and suppress duplicate ordinary update.",
+    "Native REFR callback must precede children. Integrate safe cell migration/placement rebasing and World/reference lifetime checks across external callbacks; current pre-pass linked-model guard alone does not establish those semantics. Reconcile retained root-local physics authority with renderer controller locals.",
+    "Expose native physical target world before inverse bind; support actual per-node registered flags and guarded definition/record identity. Complete forced World/script continuation, all admission/property-copy/node policies, other live precision contexts and loose physical retention/save/fresh recreation.",
+    "Production break/mastery/quest-retained/group-NPC drops/pickup/replacement/sound/power/creature/reactions/effects and full first/third-person keyboard/mouse/gamepad FPS windup/block/recovery fresh-process acceptance. Goal remains active and incomplete."
+  ]
+}

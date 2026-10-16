@@ -7,6 +7,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
+#include "../mwrender/looseobjectscenebinding.hpp"
 #include "../mwrender/vismask.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwphysics/collisiontype.hpp"
@@ -38,6 +39,8 @@ namespace MWWorld
             NifBullet::RagdollBonePoseWriteback mFrame;
             osg::Matrixf mRoot;
             ESM::Position mPosition;
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> mBinding;
+            osg::ref_ptr<MWRender::ObjectAnimation> mAnimation;
         };
         std::vector<Pose> poses;
         const auto owners = physics.looseObjectOwners();
@@ -50,6 +53,10 @@ namespace MWWorld
                 || !ptr.getCellRef().getNativeReference()
                 || world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()) != ptr)
                 throw std::logic_error("loose weapon pose has no live native world reference");
+            const auto binding = physics.captureLooseObjectSceneBinding(ptr);
+            auto animation = binding ? binding->lockAnimation(ptr) : osg::ref_ptr<MWRender::ObjectAnimation>{};
+            if (binding && !animation)
+                throw std::logic_error("loose weapon pose has no current published scene binding");
             const auto* node = ptr.getRefData().getBaseNode();
             const auto initial = node
                 ? osg::Matrixf::rotate(node->getAttitude()) * osg::Matrixf::translate(node->getPosition())
@@ -71,7 +78,7 @@ namespace MWWorld
                 if (frame.mWorldChangeMask & 1) position.pos[axis] = placement.mPosition.pos[axis];
                 if (frame.mWorldChangeMask & 2) position.rot[axis] = placement.mPosition.rot[axis];
             }
-            poses.push_back({ptr,frame,root,position});
+            poses.push_back({ptr,frame,root,position,binding,std::move(animation)});
         }
         // Advance retained locals only after every reference/frame is valid,
         // before cell migration can dispatch any external observers.
@@ -80,6 +87,8 @@ namespace MWWorld
         for (const auto& pose : poses)
         {
             auto ptr=pose.mPtr;
+            if (pose.mBinding && !pose.mBinding->isValidFor(ptr, true))
+                throw std::logic_error("loose weapon scene binding retired before pose publication");
             if (pose.mFrame.mWorldChangeMask)
                 ptr.getRefData().setPosition(pose.mPosition);
             const auto* cell=ptr.getCell()->getCell();
