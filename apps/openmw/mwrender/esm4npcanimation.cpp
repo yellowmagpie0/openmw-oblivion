@@ -277,6 +277,21 @@ namespace MWRender
             && drop.mAnchor.matchesCurrentScene(placement);
     }
 
+    std::optional<ESM4NpcAnimation::CarriedWeaponDrop> ESM4NpcAnimation::captureCarriedWeaponDrop(
+        const MWWorld::ConstPtr& item, const MWWorld::ESMStore& store) const
+    {
+        const auto placement = resolveOblivionNpcDropPlacement(mPtr, store);
+        return placement ? captureCarriedWeaponDrop(item, *placement) : std::nullopt;
+    }
+
+    bool ESM4NpcAnimation::isCurrentCarriedWeaponDrop(
+        const CarriedWeaponDrop& drop, const MWWorld::ESMStore& store) const noexcept
+    {
+        if (!isCurrentCarriedWeaponBody(drop.mBody)) return false;
+        const auto placement = resolveOblivionNpcDropPlacement(mPtr, store);
+        return placement && isCurrentCarriedWeaponDrop(drop, *placement);
+    }
+
     osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
         std::string_view model, std::string_view attachBone, std::string_view texture,
         bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts, std::string* sourceHash)

@@ -477,6 +477,10 @@ namespace MWClass
         if (!rendering)
             return;
         const ESM4NpcCustomData& data = getCustomData(ptr);
+        // TES4 GenerateNiNode stores the absolute reference scale separately
+        // from the signed race weight/height in its rotationScale matrix.
+        if (data.mTraits && data.mTraits->mIsTES4)
+            for (unsigned axis = 0; axis < 3; ++axis) scale[axis] = std::abs(scale[axis]);
         if (data.mRace == nullptr)
             return;
         const float height = data.mIsFemale ? data.mRace->mHeightFemale : data.mRace->mHeightMale;

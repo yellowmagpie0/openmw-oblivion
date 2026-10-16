@@ -1,5 +1,8 @@
 #include "obliviondropplacement.hpp"
 
+#include "../mwclass/esm4npc.hpp"
+#include "../mwworld/esmstore.hpp"
+#include <components/esm4/npcplacement.hpp>
 #include <components/nif/nativetransform.hpp>
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
@@ -12,6 +15,31 @@
 
 namespace MWRender
 {
+    std::optional<Nif::NiTransform> resolveOblivionNpcDropPlacement(
+        const MWWorld::ConstPtr& actor, const MWWorld::ESMStore& store) noexcept
+    {
+        if (actor.isEmpty() || actor.getType() != ESM::REC_NPC_4) return std::nullopt;
+        const auto* data = dynamic_cast<const MWClass::ESM4NpcCustomData*>(actor.getRefData().getCustomData());
+        if (!data) return std::nullopt;
+        const auto* placed = actor.getCellRef().getNativeActor();
+        const auto* reference = actor.getCellRef().getNativeReference();
+        if (!placed && !reference) return std::nullopt;
+        const auto* base = store.search<ESM4::Npc>(placed ? placed->mBaseKey : reference->mBaseKey);
+        if (!base || !base->mIsTES4 || base->mId != (placed ? placed->mBaseObj : reference->mBaseObj)
+            || actor.get<ESM4::Npc>()->mBase != base
+            || data->mTraits != base || data->mBaseData != base
+            || data->mIsFemale != bool(base->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female))
+            return std::nullopt;
+        const auto* race = store.get<ESM4::Race>().search(base->mRace);
+        if (race != data->mRace) return std::nullopt;
+        std::optional<ESM4::NpcPlacementMorphology> morphology;
+        if (race)
+            morphology = ESM4::NpcPlacementMorphology{
+                data->mIsFemale ? race->mWeightFemale : race->mWeightMale,
+                data->mIsFemale ? race->mHeightFemale : race->mHeightMale};
+        return ESM4::npcPlacementRoot(actor.getRefData().getPosition(), actor.getCellRef().getScale(), morphology);
+    }
+
     namespace
     {
         bool same(float a, float b) noexcept

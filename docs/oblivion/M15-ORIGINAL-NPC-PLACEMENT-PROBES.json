@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "purpose": "Original NPC scene-root matrix, race sex lanes and absolute separate scale for M15S4 carried-weapon drop capture",
+  "native": {
+    "passed": true,
+    "cases": 12348,
+    "seed": 1504005,
+    "random_float_bit_patterns": 4096,
+    "random_normal_angles": 1024,
+    "repeats_identical": 2,
+    "finite_results": 12316,
+    "nonfinite_results": 32,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "harness_sha256": "9d4dc9f0e9b910f66799ebb2e480a67af51b9449e14bb687a62081ff20e4dc16",
+    "source_sha256": "7b2e5048d498f39917d69c587af3be1ee95f6e798f0073245b56f608448d3f0c",
+    "cases_sha256": "8bed7dd25a74b8f4ba9562345cbb04934f76c7217b6e67826dd67fb931ce2e26",
+    "cpu_model": "Intel(R) Core(TM) i7-7820X CPU @ 3.60GHz",
+    "unselected_sex_lane": {
+      "weight": 0.625,
+      "height": 1.75
+    },
+    "scope": "Native Linux i386 execution of complete original4D7AF0 plus GenerateNiNode4E43C8..4E43E9 root-scale prefix, actual4D7260 getter and all arithmetic callees from hash-identified PE bytes. Actual FABS and node+60 store execute; node virtual+50 is a declared stop boundary returning to the harness. No emulator or production C++. Builder EAX/RET, wrapper stack and explicit callee-saved canaries plus reference/base/race input checks. Both x87 controls. Not full GenerateNiNode, original game or runtime acceptance.",
+    "evidence": "S4/drop-npc-placement-native-04",
+    "driver_sha256": "5647410e44a530b360924136f96dbafe574e331d039ae52c815c64864e599361",
+    "build_command": [
+      "gcc",
+      "-m32",
+      "-nostdlib",
+      "-static",
+      "-fno-pie",
+      "-no-pie",
+      "-fno-stack-protector",
+      "-fno-builtin",
+      "-O2",
+      "probe.c",
+      "-o",
+      "probe"
+    ]
+  },
+  "entries": {
+    "matrix_builder": "0x004D7AF0",
+    "reference_scale_getter": "0x004D7260",
+    "node_scale_prefix": "0x004E43C8..0x004E43E9",
+    "absolute_value": "0x004E43DA",
+    "node_scale_store": "0x004E43E6",
+    "declared_stop_boundary": "NiAVObject virtual +0x50; the harness resumes without executing scene update"
+  },
+  "expected": [
+    "NPC root ignores reference X/Y rotations and uses reference Z yaw.",
+    "Resolved sex selects race weight on X/Y and height on Z, retained in rotationScale. Missing race leaves yaw matrix without morphology.",
+    "Actual root separate scale is the absolute reference scale, independently of race height.",
+    "Reference/base/race inputs remain read-only; the scale prefix writes the private output node.",
+    "All 2016 ordinary emulated outputs match native hardware. Large-angle emulation is insufficient: retained hardware comparison found40 mismatches.",
+    "Production uses fixed uint128 remainder against the documented x87 Pi constant, then binary32 axis/matrix stores.",
+    "Standalone normal and ASan/UBSan comparisons match12316 finite outputs exactly and reject32 nonfinite outputs.",
+    "Native04 strengthens sex selection using different unselected lanes; its numerical corpus is byte-identical to native03 used by production comparison03."
+  ],
+  "pi_reference": {
+    "title": "Intel SDM Volume1, Approximation of Pi",
+    "url": "https://cdrdv2-public.intel.com/789574/253665-sdm-vol-1.pdf",
+    "constant_hex": "0x3243f6a8885a308d3 / 2^64",
+    "half_pi_divisor": "The same integer over2^65",
+    "scope": "Reference for the x87 reduction constant and finite trig range; original executable/hardware outputs supply expectations."
+  },
+  "comparisons": {
+    "normal": {
+      "passed": true,
+      "cases": 12348,
+      "finite_exact": 12316,
+      "nonfinite_rejected": 32,
+      "negative_controls": {
+        "wrong_bit": true,
+        "missing_row": true,
+        "duplicate_row": true,
+        "malformed_input": true
+      },
+      "cases_sha256": "8bed7dd25a74b8f4ba9562345cbb04934f76c7217b6e67826dd67fb931ce2e26",
+      "module_sha256": "f6dd92f005cf6f6f373040647efe3cc4d35bc35e4f2da469cd5fad3a2e8ee2ac",
+      "header_sha256": "86ea9a1a98ef7712a67c6fe6948d968172a6069837cad5bc2cbd0d132637b8a3",
+      "evidence": "S4/drop-npc-placement-comparison-03/normal-verification.json"
+    },
+    "sanitized": {
+      "passed": true,
+      "cases": 12348,
+      "finite_exact": 12316,
+      "nonfinite_rejected": 32,
+      "negative_controls": {
+        "wrong_bit": true,
+        "missing_row": true,
+        "duplicate_row": true,
+        "malformed_input": true
+      },
+      "cases_sha256": "8bed7dd25a74b8f4ba9562345cbb04934f76c7217b6e67826dd67fb931ce2e26",
+      "module_sha256": "f6dd92f005cf6f6f373040647efe3cc4d35bc35e4f2da469cd5fad3a2e8ee2ac",
+      "header_sha256": "86ea9a1a98ef7712a67c6fe6948d968172a6069837cad5bc2cbd0d132637b8a3",
+      "evidence": "S4/drop-npc-placement-comparison-03/sanitized-verification.json"
+    }
+  },
+  "factory_dependencies": {
+    "reference_constructor": {
+      "passed": true,
+      "cases": 32,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "scope": "Complete original 4D9A70 reference constructor, actual 46C460 base constructor, 422EE0 extras constructor, 4D6BF0 initializer and 46C2E0 cleanup dispatcher. No stubs. Fresh reference scale initializes to1 independent of old allocation bytes and selected world flags. Full return, EAX and callee-saved registers verified. Not source-extra scale override, full DataHandler/world registration, scene or runtime acceptance.",
+      "evidence": "S4/drop-reference-constructor-oracle-01",
+      "probe_sha256": "34da036f3d819f506f2a901b0c8ebf163a312bc6cf6b3d1ce0ebb2e6c82a14c6",
+      "cases_sha256": "d18f1e8e403cdb0ce7742e7efc52df3241f7b7c4528100be8d5b7ecf6f4e67fb"
+    },
+    "extra_transfer": {
+      "passed": true,
+      "cases": 1024,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "scope": "Actual complete 428B10 transfer and original typed copy/setter/constructor/add/lookup/remove/destructor paths for all 64 subsets of six item extras with four payload profiles, including typed default sentinels. Critical-section enter/leave and allocator/free are supplied boundaries. TLS storage is synthetic. Not full actor drop, reference creation, scene/body publication or runtime acceptance.",
+      "evidence": "S4/drop-extra-transfer-oracle-04",
+      "probe_sha256": "92a32fb8450fb412c25e8abb81f48b88ae2e34f2b4ebbabb3435f30dbc07179b",
+      "cases_sha256": "4cc1a3be4e0b666fece4fdd3f99dd193b097f84b6c2cd18eb160e949c72b89ca",
+      "observed_normalization": [
+        "Null owner/global omitted",
+        "Rank -1 omitted; other signed rank bits preserved",
+        "Scale 1 omitted; other scale float bits preserved",
+        "Health and charge bits preserved, including zero and -1 in source fixtures"
+      ]
+    },
+    "final_weapon_owner": {
+      "passed": true,
+      "cases": 96,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "scope": "Original selected post-transfer48FBC0 slice4902FC..4903D1, actual ref/cell/base/sex and effective-owner getters, typed ExtraOwnership construction/mutation and origin-null lookup. Actual original WEAP vtable and complete9832E6 CRT CLOT RTTI cast execute. Cell owner and actor claim, critical sections, allocation and change-mark virtual are declared boundaries. Selected newly created reference without original-reference extra; source removal, prelude, full drop/publication and runtime acceptance are not proved.",
+      "evidence": "S4/drop-weapon-final-owner-oracle-02",
+      "probe_sha256": "3cd2c4d75bb31b7fbe87964fc8ef2c50142f868847dde18e6892a3a8d543c0da",
+      "cases_sha256": "d31ac153829b577c34a4ea2b58bd2e0323388a9b319255d67ad9ba0f17bea19e",
+      "observed_rule": "In this selected new-WEAP path, absent/null explicit owner plus an owned cell and no actor CELL claim replaces owner with actor NPC base. Other cases preserve explicit owner; rank/global/condition/charge extras remain unchanged."
+    }
+  },
+  "not_established": [
+    "Complete original GenerateNiNode or any original-game session",
+    "Complete source ExtraScale setter/model dependencies",
+    "One owned source/contact/key/scene/body/relation drop publication",
+    "Replacement equipment, pickup cleanup and normal-input break/drop/restart acceptance",
+    "Generic renderer yaw integration for large noncanonical angles remains open; capture rejects rendered/native disagreement."
+  ],
+  "remaining_renderer_yaw_baseline": {
+    "cases": 1780,
+    "mismatches": 76,
+    "tolerance": 1e-06,
+    "passed": false,
+    "evidence": "S4/drop-npc-placement-review-01/remaining-renderer-yaw-baseline.json"
+  }
+}

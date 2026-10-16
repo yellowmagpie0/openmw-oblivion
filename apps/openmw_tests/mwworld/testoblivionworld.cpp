@@ -11685,6 +11685,78 @@ namespace
     }
 }
 
+TEST(OblivionWorldTest, NativeNpcDropPlacementUsesWinningRaceSexAndRejectsColdOrStaleCaches)
+{
+    for (const bool female : {false, true})
+    {
+        SCOPED_TRACE(female);
+        NativeWorldFixture fixture;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = fixture.mWorld.getStore();
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+        ESM4::Race race{}; race.mId = {0x860, 0};
+        const auto raceKey = ESM::FormKey::content("headless.esm", 0x860);
+        race.mWeightMale = .8f; race.mHeightMale = 1.2f;
+        race.mWeightFemale = 1.1f; race.mHeightFemale = .9f;
+        store.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        auto npc = *actor.get<ESM4::Npc>()->mBase;
+        npc.mRace = race.mId;
+        if (female) npc.mBaseConfig.tes4.flags |= ESM4::Npc::TES4_Female;
+        else npc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_Female;
+        store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+        (void)actor.getClass().getInventoryStore(actor);
+        auto position = actor.getRefData().getPosition();
+        position.pos[0] = 12.25f; position.pos[1] = -9.5f; position.pos[2] = 1001.125f;
+        position.rot[0] = .7f; position.rot[1] = -.9f; position.rot[2] = 0;
+        actor.getRefData().setPosition(position); actor.getCellRef().setScale(.75f);
+        auto result = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mTranslation, position.asVec3());
+        EXPECT_EQ(result->mScale, .75f);
+        actor.getCellRef().setScale(-.75f);
+        auto negativeScale = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        ASSERT_TRUE(negativeScale); EXPECT_EQ(negativeScale->mScale, .75f);
+        osg::Vec3f renderedScale(-.75f,-.75f,-.75f);
+        actor.getClass().adjustScale(actor, renderedScale, true);
+        EXPECT_EQ(renderedScale, osg::Vec3f(.75f * (female ? 1.1f : .8f),
+            .75f * (female ? 1.1f : .8f), .75f * (female ? .9f : 1.2f)));
+        actor.getCellRef().setScale(.75f);
+        EXPECT_EQ(result->mRotation.mValues[0][0], female ? 1.1f : .8f);
+        EXPECT_EQ(result->mRotation.mValues[1][1], female ? 1.1f : .8f);
+        EXPECT_EQ(result->mRotation.mValues[2][2], female ? .9f : 1.2f);
+        position.rot[2] = -1.1f; actor.getRefData().setPosition(position);
+        result = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mScale, .75f);
+        EXPECT_LT(result->mRotation.mValues[0][1], 0);
+        auto* placed = const_cast<ESM4::ActorCharacter*>(actor.getCellRef().getNativeActor());
+        ASSERT_NE(placed, nullptr);
+        const auto baseId = placed->mBaseObj; placed->mBaseObj = {0xdead, 0};
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); placed->mBaseObj = baseId;
+        MWWorld::ESMStore unrelated;
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, unrelated));
+        auto* data = dynamic_cast<MWClass::ESM4NpcCustomData*>(actor.getRefData().getCustomData());
+        ASSERT_NE(data, nullptr);
+        data->mIsFemale = !female;
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        data->mIsFemale = female;
+        const auto* traits = data->mTraits; data->mTraits = nullptr;
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mTraits = traits;
+        const auto* nativeBase = data->mBaseData; data->mBaseData = nullptr;
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mBaseData = nativeBase;
+        const auto* cachedRace = data->mRace; data->mRace = &race;
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mRace = cachedRace;
+        EXPECT_TRUE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        ASSERT_TRUE(store.getWritable<ESM4::Race>().eraseStatic(ESM::RefId(race.mId)));
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); // Do not borrow erased race.
+        actor.getRefData().setCustomData(nullptr);
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
+        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement({}, store));
+    }
+}
+
 TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejectsStaleBindings)
 {
     class TestableDropAnimation : public MWRender::ESM4NpcAnimation
@@ -11759,6 +11831,9 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
         ASSERT_FLOAT_EQ(item.getCellRef().getEnchantmentCharge(), 7.25f);
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
         placement->setPosition({100, 20, 30});
+        auto actorPosition = actor.getRefData().getPosition();
+        actorPosition.pos[0] = 100; actorPosition.pos[1] = 20; actorPosition.pos[2] = 30;
+        actor.getRefData().setPosition(actorPosition);
         actor.getRefData().setBaseNode(placement);
         std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponPose> retained;
         std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponBody> retainedBody;
@@ -11816,6 +11891,24 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
                 auto drop = animation.captureCarriedWeaponDrop(item, nativePlacement);
                 ASSERT_TRUE(drop);
                 EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
+                auto resolvedDrop = animation.captureCarriedWeaponDrop(item, store);
+                ASSERT_TRUE(resolvedDrop);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*resolvedDrop, store));
+                EXPECT_EQ(resolvedDrop->mAnchor.getDropPlacement().mPosition.asVec3(), osg::Vec3f(103,16,35));
+                actor.getCellRef().setScale(2); placement->setScale({2,2,2});
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*resolvedDrop, store));
+                auto scaledDrop = animation.captureCarriedWeaponDrop(item, store);
+                ASSERT_TRUE(scaledDrop);
+                EXPECT_EQ(scaledDrop->mAnchor.getNativeWorld().mScale, 2);
+                EXPECT_EQ(scaledDrop->mAnchor.getDropPlacement().mPosition.asVec3(), osg::Vec3f(106,12,40));
+                actor.getCellRef().setScale(-2);
+                osg::Vec3f renderedScale(-2,-2,-2);
+                actor.getClass().adjustScale(actor, renderedScale, true);
+                placement->setScale(renderedScale);
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*scaledDrop, store));
+                actor.getCellRef().setScale(1); placement->setScale({1,1,1});
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*resolvedDrop, store));
+                EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*scaledDrop, store));
                 animation.setNodeMapPrepared(false);
                 EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
                 EXPECT_FALSE(animation.isNodeMapPrepared());

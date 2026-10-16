@@ -7,8 +7,15 @@
 #include <optional>
 #include <vector>
 
+namespace MWWorld { class ConstPtr; class ESMStore; }
+
 namespace MWRender
 {
+    // Reads an already initialized TES4 NPC cache and its winning records.
+    // Never initializes custom data. Caller guards the World/reference lifetime.
+    std::optional<Nif::NiTransform> resolveOblivionNpcDropPlacement(
+        const MWWorld::ConstPtr& actor, const MWWorld::ESMStore& store) noexcept;
+
     // Captures an attachment anchor, independently of the carried model root.
     // The caller resolves the native actor placement, including its separate
     // scale; this class verifies its agreement with the rendered placement.

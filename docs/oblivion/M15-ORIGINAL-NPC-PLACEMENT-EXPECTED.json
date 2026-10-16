@@ -1,0 +1,529 @@
+{
+  "schema_version": 1,
+  "source": "Native execution of original4D7AF0 and GenerateNiNode scale prefix; full corpus hash and boundaries in M15-ORIGINAL-NPC-PLACEMENT-PROBES.json",
+  "layout": "Nine row-major rotationScale binary32 uint32 values; separate scale after original FABS/store. Morphology is [weight,height].",
+  "cases": [
+    {
+      "yaw": 0.0,
+      "reference_scale": 0.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 0,
+      "control_word": 639
+    },
+    {
+      "yaw": 0.30000001192092896,
+      "reference_scale": 0.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1064603887,
+        1050103405,
+        0,
+        3197587053,
+        1064603887,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 0,
+      "control_word": 895
+    },
+    {
+      "yaw": 3.1415927410125732,
+      "reference_scale": -2.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3212836864,
+        3015425326,
+        0,
+        867941678,
+        3212836864,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 639
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 0.25,
+      "morphology": [
+        1.0,
+        1.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1048576000,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.30000001192092896,
+      "reference_scale": 1.0,
+      "morphology": [
+        1.0,
+        1.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1064603887,
+        1050103405,
+        0,
+        3197587053,
+        1064603887,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1065353216,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 0.0,
+      "morphology": [
+        0.8,
+        1.2
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1061997773,
+        0,
+        0,
+        0,
+        1061997773,
+        0,
+        0,
+        0,
+        1067030938
+      ],
+      "expected_scale_bits": 0,
+      "control_word": 895
+    },
+    {
+      "yaw": 3.1415927410125732,
+      "reference_scale": -2.0,
+      "morphology": [
+        0.8,
+        1.2
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3209481421,
+        3012964594,
+        0,
+        865480946,
+        3209481421,
+        0,
+        0,
+        0,
+        1067030938
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 0.25,
+      "morphology": [
+        1.125,
+        0.875
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1066401792,
+        0,
+        0,
+        0,
+        1066401792,
+        0,
+        0,
+        0,
+        1063256064
+      ],
+      "expected_scale_bits": 1048576000,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 1.0,
+      "morphology": [
+        0.0,
+        0.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected_scale_bits": 1065353216,
+      "control_word": 895
+    },
+    {
+      "yaw": 3.1415927410125732,
+      "reference_scale": 0.25,
+      "morphology": [
+        0.0,
+        0.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected_scale_bits": 1048576000,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 2.0,
+      "morphology": [
+        -0.5,
+        2.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3204448256,
+        0,
+        0,
+        0,
+        3204448256,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 2.0,
+      "morphology": [
+        2.0,
+        -0.5
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1073741824,
+        0,
+        0,
+        0,
+        1073741824,
+        0,
+        0,
+        0,
+        3204448256
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 1.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1065353216,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 0.25,
+      "morphology": [
+        1.0,
+        1.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1048576000,
+      "control_word": 895
+    },
+    {
+      "yaw": 0.0,
+      "reference_scale": 2.0,
+      "morphology": [
+        1.125,
+        0.875
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1066401792,
+        0,
+        0,
+        0,
+        1066401792,
+        0,
+        0,
+        0,
+        1063256064
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 639
+    },
+    {
+      "yaw": 12.566370010375977,
+      "reference_scale": 7.0,
+      "morphology": [
+        -0.5,
+        2.0
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3204448256,
+        883040617,
+        0,
+        3030524265,
+        3204448256,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "expected_scale_bits": 1088421888,
+      "control_word": 895
+    },
+    {
+      "yaw": 999999986991104.0,
+      "reference_scale": 1.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1037550980,
+        1065259841,
+        0,
+        3212743489,
+        1037550980,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1065353216,
+      "control_word": 639
+    },
+    {
+      "yaw": 9.999999843067494e+17,
+      "reference_scale": 1.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1064959087,
+        3193743109,
+        0,
+        1046259461,
+        1064959087,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1065353216,
+      "control_word": 639
+    },
+    {
+      "yaw": -3279091029508096.0,
+      "reference_scale": 2.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3212815180,
+        1028664875,
+        0,
+        3176148523,
+        3212815180,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 1073741824,
+      "control_word": 639
+    },
+    {
+      "yaw": 759853802848256.0,
+      "reference_scale": -0.0,
+      "morphology": null,
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        3211722940,
+        1052210079,
+        0,
+        3199693727,
+        3211722940,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_scale_bits": 0,
+      "control_word": 639
+    },
+    {
+      "yaw": 6.452805442998452e-37,
+      "reference_scale": -0.0,
+      "morphology": [
+        2.0,
+        -0.5
+      ],
+      "position": [
+        12.25,
+        -9.5,
+        1001.125
+      ],
+      "expected_matrix_bits": [
+        1073741824,
+        64721885,
+        0,
+        2212205533,
+        1073741824,
+        0,
+        0,
+        0,
+        3204448256
+      ],
+      "expected_scale_bits": 0,
+      "control_word": 639
+    }
+  ]
+}

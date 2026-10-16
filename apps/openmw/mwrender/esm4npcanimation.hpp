@@ -59,6 +59,10 @@ namespace MWRender
             const MWWorld::ConstPtr& item, const Nif::NiTransform& placement) const;
         bool isCurrentCarriedWeaponDrop(
             const CarriedWeaponDrop& drop, const Nif::NiTransform& placement) const noexcept;
+        std::optional<CarriedWeaponDrop> captureCarriedWeaponDrop(
+            const MWWorld::ConstPtr& item, const MWWorld::ESMStore& store) const;
+        bool isCurrentCarriedWeaponDrop(
+            const CarriedWeaponDrop& drop, const MWWorld::ESMStore& store) const noexcept;
 
 
         osg::Vec3f runAnimation(float timepassed) override;

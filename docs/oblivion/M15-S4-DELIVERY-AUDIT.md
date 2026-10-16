@@ -1109,3 +1109,128 @@ Factory scale, actor placement/morphology admission, compound source/contact/key
 scene/body/relation publication, replacement equipment and pickup cleanup remain
 open. Actual normal-input break/drop and fresh-process restart acceptance have
 not been added by this checkpoint. S4 remains incomplete.
+
+
+## Resolved native NPC root placement
+
+`ESM4::npcPlacementRoot` now constructs the original NPC root rotationScale
+from yaw and resolved race weight/height, with absolute reference scale kept
+separate. Actor pitch/roll do not enter that matrix. Missing race, authored
+zero/negative morphology and negative-zero reference scale remain distinct.
+Nonfinite consumed inputs/results and the original x87 range boundary reject.
+`ESM4Npc::adjustScale` now applies the same absolute reference scale before
+signed TES4 race morphology, so negative reference scale agrees with the native
+root rather than reflecting the rendered NPC. Other record families retain their
+existing rendering policy.
+
+The store-resolved carried-drop overload reads initialized native NPC custom
+data and winning records without lazily constructing a cache. It rejects cold
+or wrong caches, stale traits/base/race/sex, mismatched placed base ID/key, wrong
+store and non-TES4 NPCs before borrowing stale record fields. It recomputes the
+root and uses the existing exact scene/body/anchor validation. The caller still
+owns World/reference/animation lifetime guards; this resolver is not a lifetime
+lease or a contact/drop publication. A new World case covers both race sex lanes,
+cache/stale-record failures, negative scale and actual class scale adjustment.
+The owned-NIF NPC case now exercises automatic root capture, native translation
+under scale2, sign-equivalent reference scale and restoration/stale binding.
+
+The [editable contract](M15-ORIGINAL-NPC-PLACEMENT-PROBES.json) and
+[21 original expectations](M15-ORIGINAL-NPC-PLACEMENT-EXPECTED.json) preserve
+independent evidence. `S4/drop-npc-placement-native-04` runs **12348 contexts**
+twice in a native Linux i386 harness using hash-identified original PE functions,
+not an emulator or production C++. Complete004D7AF0 and its actual base/sex/axis/
+matrix callees execute. The actual GenerateNiNode004E43C8..004E43E9 prefix reads
+004D7260, performs FABS and stores node+60; node virtual+50 is a declared stop
+boundary. Explicit callee-saved canaries, builder return/EAX/stack and reference/
+base/race input checks pass. The host CPU model, harness/source/corpus hashes
+and build command are retained. This is original instruction execution, not a
+full original-game session or whole GenerateNiNode acceptance.
+
+The corpus includes the preceding2016 structured contexts, 4096 seeded float-bit
+yaws and1024 seeded ordinary angles under both x87 words, plus stress/edge cases.
+Seed1504005 and deliberately different unselected sex lanes are declared.
+Separate current normal/ASan production comparisons match all **12316 finite
+outputs bit for bit** and reject **32 nonfinite outputs**. Wrong-bit, missing/
+duplicate-row and malformed-input controls reject in each profile. Native04 has
+byte-identical expectations to native03 used by the comparison.
+
+Hardware execution matters here: the emulated ordinary2016 cases agree, but40
+large-angle contexts differ from hardware. Direct host libm/long-double attempts
+also disagree for16 finite stress contexts. The implemented fixed uint128
+remainder uses the documented x87 Pi constant before bounded sine/cosine and
+native float stores. It avoids platform-specific assembly/long-double precision.
+[Intel's SDM, Approximation of Pi](https://cdrdv2-public.intel.com/789574/253665-sdm-vol-1.pdf)
+supports that reduction constant; original hardware execution supplies all golden
+outputs. Getter-only signed scale is also insufficient:3252 corpus rows differ
+from the actual FABS/store. Both failures remain recorded, not accepted passes.
+
+Final `S4/drop-npc-placement-full-normal-02` and `-full-sanitized-02` each pass
+**2641 component tests/255 suites** and **1511 engine tests/122 suites**,
+unfiltered with exact inventories and zero failures/skips. Both before/after
+source fingerprints are
+`29c2a652efc5cf84633aabfaff74ac8c401effcc02ea2a6796ea715b0b4afe3b`,
+atop `3b5c168cc30e0db38385471b6d6108f6b2b84cdf`. ASan leaks are disabled;
+UBSan halts on errors. No Python codec/schema implementation changed.
+Only documentation and original probe expectations follow these checks.
+
+`S4/drop-npc-placement-allocation-01` additionally runs six actual renderer/World
+cases under GDB. Native root arithmetic, winning-record resolver, native anchor
+validation and store-resolved NPC validation have13/33/42/5 hits respectively.
+There are74 balanced outer entries/returns and19 nested entries, with no observed
+main-thread malloc/calloc/realloc/aligned_alloc/posix_memalign calls. The integer
+reduction branch executes. Exact test ELF SHA256 is
+`2059abc101018883919c046db8e28b2b3efdf2422d471a798628c3bb83d5e5c9`.
+Preparation, other threads and other allocator APIs are outside that trace.
+
+Actual SDL-input regression courses pass in both final game images, each with
+held block, activation, one NPC attack, F5 save, then a distinct-process load and
+resave after release. Normal PIDs545835/545966 and sanitizer PIDs548259/548473
+are terminal. Their game SHA256 values are respectively
+`cc1349851989ac0aec9ecd782b4d770d4614fa3c24666d720ef2b9680b779921`
+and `0cd0b2e1c41caafeed9627b10d7fed5daab14f326fcc392ffe7f0189f8250e05`.
+All nine actor-value arrays match exact expected state except the declared Player
+health delta(-0.9841405749320984); weapon conditions are55.84976577758789 and
+55.70000076293945. Inventory, RNG, action counter, empty pending owners and
+released posture checks pass through schema46-to47 save/restart without replay.
+Two positional WPNBlockBlade voices pass the fixed0.75 stock-PCM threshold
+(normal correlation0.9981472655040019; sanitizer0.9983007993984149), with no
+second-epoch replay cluster. Held/restarted captures were directly reviewed.
+Evidence is `S4/drop-npc-placement-runtime-{normal,sanitized}-01`.
+A copied verifier initially attributed these runs to an older source report.
+The original reports remain retained; corrected verification binds the actual
+pinned executable hashes and launch provenance to the final build fingerprint,
+reruns every semantic assertion and confirms that only source attribution changed.
+This course verifies existing block/contact/save behavior, not break/drop gameplay.
+
+Further original factory dependencies are now bounded independently: the full
+new-reference constructor initializes scale1 in32 no-stub contexts; complete
+extra transfer runs1024 contexts across all64 subsets of owner/global/rank/
+condition/charge/scale extras and four payload profiles. It preserves float bits,
+but removes null owner/global, rank-1 and scale1 extras through native setters.
+Critical sections and allocation/free remain explicit transfer boundaries.
+The selected final WEAP ownership suffix passes96 cases with actual effective
+owner/getters, typed ownership mutation and original CRT CLOT RTTI. Cell-owner/
+actor-claim queries and change marking remain declared boundaries; the result
+replaces an absent explicit owner with actor-base ownership only for an owned
+cell with no actor CELL claim. It preserves other extras. These probes do not
+implement or accept the complete factory.
+
+The current generic renderer yaw quaternion still differs from original NPC
+hardware reduction for76 of1780 finite no-morphology baseline contexts, all at
+large noncanonical angles. Normal-input angles agree within the existing1e-6
+root admission tolerance; mismatched rendered roots reject capture. The retained
+`drop-npc-placement-review-01/remaining-renderer-yaw-baseline.json` is an open
+renderer integration dependency, not an accepted large-angle drop route.
+Source ExtraScale application also remains open: a first full SetScale probe
+cannot complete its game-dependent setup and supplies no numeric expectations.
+Do not infer all dropped-reference scales from the fresh constructor's1.
+
+Retained build attempts include an initial fixture write through a const
+position reference and deliberately stopped full-01 runs before the FABS fix.
+Their reports remain failed/stopped. The first transfer fixture used a wrong
+ExtraScale vtable; the actual typed setter identifies the corrected one.
+No failed or stopped attempt substitutes for the final checks.
+
+Compound source/contact/key/scene/body/relation publication, replacement equipment,
+pickup cleanup and actual normal-input break/drop/restart acceptance remain open.
+This checkpoint enables no new broken-item contact branch. S4 remains incomplete.

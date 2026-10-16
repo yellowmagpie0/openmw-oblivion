@@ -14698,3 +14698,24 @@ The [capture audit](M15-S4-DELIVERY-AUDIT.md#native-carried-weapon-drop-anchor-c
 records full normal/instrumented inventories and a bounded no-allocation trace.
 Full factory/contact publication and actual break/drop/restart acceptance remain
 open; none is established by these emulated instruction paths.
+
+
+## S4 native NPC root placement — 2026-10-15
+
+The [editable probe contract](M15-ORIGINAL-NPC-PLACEMENT-PROBES.json) pins the
+original executable and12348 hardware-executed contexts. Complete004D7AF0 selects
+race sex lanes and yaw-only morphology. GenerateNiNode004E43C8..004E43E9 applies
+FABS to the raw reference scale before storing node+60; node update is a declared
+stop boundary. The x87 Pi66 reduction matters at large yaw: host accurate libm
+and emulated FSINCOS do not supply the original hardware expectations there.
+Normal and sanitized production comparisons agree exactly on12316 finite results
+and reject32 nonfinite outputs, with malformed/missing/duplicate/wrong-bit controls.
+
+The [delivery audit](M15-S4-DELIVERY-AUDIT.md#resolved-native-npc-root-placement)
+records full test inventories, no-allocation tracing, runtime regressions and
+retained failures. Independent factory probes additionally bound1024 typed-extra
+copy/removal contexts and96 selected final-WEAP ownership contexts, with declared
+allocation/critical-section/cell-query/change-mark boundaries. These are partial
+original instruction paths, not full factory or original-game acceptance.
+Source ExtraScale numeric application, large-yaw renderer integration, compound
+publication and actual normal-input break/drop/restart remain open.

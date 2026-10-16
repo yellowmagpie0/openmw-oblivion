@@ -6,6 +6,22 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 resolved native NPC drop roots — 2026-10-15
+
+Carried-weapon capture can now resolve initialized TES4 NPC placement from
+winning records, native yaw, sex-specific race morphology and absolute reference
+scale. Cold or stale caches reject without lazy initialization. Original hardware
+execution covers12348 contexts; separate normal/sanitized comparisons match all
+12316 finite results exactly and reject32 nonfinite outputs. Both full builds
+pass2641 component and1511 engine tests. Allocation tracing and actual two-process
+block/contact/save/restart regression courses also pass.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#resolved-native-npc-root-placement)
+records frozen sources, original instruction boundaries and retained failures.
+Large noncanonical yaw still needs the generic renderer bridge; source ExtraScale,
+compound factory publication, replacement equipment, pickup and actual break/drop
+acceptance remain open. S4 remains incomplete.
+
 ## S4 native carried-weapon drop anchor capture — 2026-10-15
 
 NPC animation can now prepare the actual carried body and the independently
