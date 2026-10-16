@@ -458,3 +458,123 @@ namespace
         EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation, osg::Vec3f(100, 20, 30));
     }
 }
+
+namespace
+{
+    TEST(NifSceneFirstSynchronization, PendingDispatchPublishesAnimatedWorldBeforeForceAndChildren)
+    {
+        // Exact before/after flag pairs from original first-sync corpus02.
+        for (std::uint16_t initial : {0x40, 0x41, 0x48, 0x49, 0x4c, 0x4d})
+        {
+            SCOPED_TRACE(initial);
+            auto root = makeNode(10), child = makeNode(5);
+            root->addChild(child);
+            Binding binding(*root);
+            std::uint16_t flags = initial;
+            unsigned forced = 0, physicalReads = 0;
+            std::vector<std::string> events;
+            root->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback(
+                [&](osg::NodeVisitor&) { events.push_back("property"); }));
+            root->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+                events.push_back("own"); node.setTranslation({20, 0, 0});
+            }, true));
+            child->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { events.push_back("child"); }));
+            Binding::Callbacks callbacks;
+            callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+                return &node == root ? std::optional(flags) : std::nullopt;
+            };
+            callbacks.mPhysicalWorld = [&](const Node&) {
+                ++physicalReads;
+                auto world = Nif::NiTransform::getIdentity(); world.mTranslation = {100, 0, 0}; return world;
+            };
+            callbacks.mFirstSynchronization = [&](const Node& node, const auto& world, std::uint16_t before) {
+                events.push_back("force"); ++forced;
+                EXPECT_EQ(&node, root.get()); EXPECT_EQ(before, initial);
+                EXPECT_EQ(world.mTranslation, osg::Vec3f(20, 0, 0));
+                EXPECT_EQ(binding.cachedWorld(node).mTranslation, world.mTranslation);
+                EXPECT_EQ(node.getWorldMatrices().front().getTrans(), osg::Vec3d(20, 0, 0));
+                // Native child cache still belongs to its preceding update.
+                EXPECT_EQ(child->getWorldMatrices().front().getTrans(), osg::Vec3d(15, 0, 0));
+                flags &= ~0x40;
+            };
+            callbacks.mProjected = [&](Node& node, const auto& frame, auto settled) {
+                if (&node != root) return;
+                events.push_back("projected");
+                EXPECT_EQ(settled, std::optional<std::uint16_t>(initial & ~0x40));
+                if (forced == 1 && physicalReads == 0)
+                {
+                    EXPECT_EQ(frame.mWorldChangeMask, 0);
+                }
+            };
+            osg::FrameStamp stamp;
+            binding.update(stamp, 1, callbacks);
+            EXPECT_EQ(events, (std::vector<std::string>{"property", "own", "force", "projected", "child"}));
+            EXPECT_EQ(forced, 1u); EXPECT_EQ(physicalReads, 0u);
+            EXPECT_EQ(binding.cachedWorld(*child).mTranslation, osg::Vec3f(25, 0, 0));
+            binding.update(stamp, 2, callbacks);
+            EXPECT_EQ(forced, 1u); EXPECT_EQ(physicalReads, unsigned(initial & 1));
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, FailedFirstSynchronizationLeavesPendingAndDoesNotVisitChildren)
+    {
+        Binding binding(*mRoot);
+        std::uint16_t flags = 0x41;
+        unsigned children = 0, projected = 0, forced = 0;
+        mRoot->setUpdateCallback(new Callback([](Node& node, osg::NodeVisitor&) { node.setTranslation({20, 0, 0}); }));
+        mChild->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++children; }));
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional(flags) : std::nullopt;
+        };
+        callbacks.mProjected = [&](Node&, const auto&, auto) { ++projected; };
+        callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { ++forced; throw std::runtime_error("force"); };
+        EXPECT_THROW(binding.update(mStamp, 1, callbacks), std::runtime_error);
+        EXPECT_EQ(flags, 0x41); EXPECT_EQ(children, 0u); EXPECT_EQ(projected, 0u);
+        EXPECT_TRUE(binding.isValid());
+        EXPECT_EQ(binding.cachedWorld(*mRoot).mTranslation, osg::Vec3f(20, 0, 0));
+        EXPECT_EQ(mChild->getWorldMatrices().front().getTrans(), osg::Vec3d(15, 0, 0));
+        callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { ++forced; flags &= ~0x40; };
+        EXPECT_NO_THROW(binding.update(mStamp, 2, callbacks));
+        EXPECT_EQ(forced, 2u); EXPECT_EQ(children, 1u); EXPECT_EQ(flags, 1);
+    }
+
+    TEST(NifSceneFirstSynchronization, ReinspectsExactFlagClearBeforePublicationCallback)
+    {
+        for (const auto invalid : {std::optional<std::uint16_t>{}, std::optional<std::uint16_t>{0x41},
+                std::optional<std::uint16_t>{9}})
+        {
+            auto root = makeNode(10);
+            Binding binding(*root);
+            Binding::Callbacks callbacks;
+            std::optional<std::uint16_t> flags = 0x41;
+            unsigned projected = 0;
+            callbacks.mCollisionFlags = [&](const Node& node) { return &node == root ? flags : std::nullopt; };
+            callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { flags = invalid; };
+            callbacks.mProjected = [&](Node&, const auto&, auto) { ++projected; };
+            EXPECT_THROW(binding.update(osg::FrameStamp{}, 1, callbacks), std::invalid_argument);
+            EXPECT_EQ(projected, 0u);
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, PendingBit8DoesNotRewriteProceduralControllerRotationCache)
+    {
+        osg::Matrixd raw;
+        raw(0, 0) = raw(1, 1) = 0; raw(0, 1) = 1; raw(1, 0) = -1; raw(3, 0) = 20;
+        mRoot->setMatrix(raw); // Deliberately leaves the separate NIF cache as identity.
+        const auto before = mRoot->mRotationScale;
+        Binding binding(*mRoot);
+        std::uint16_t flags = 0x49;
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional(flags) : std::nullopt;
+        };
+        callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { flags &= ~0x40; };
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(flags, 9);
+        EXPECT_EQ(mRoot->getMatrix(), raw);
+        for (unsigned i = 0; i < 9; ++i)
+            EXPECT_EQ(std::bit_cast<unsigned>(mRoot->mRotationScale.mValues[i / 3][i % 3]),
+                std::bit_cast<unsigned>(before.mValues[i / 3][i % 3]));
+    }
+}

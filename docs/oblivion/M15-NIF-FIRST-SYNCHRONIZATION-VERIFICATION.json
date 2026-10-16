@@ -1,0 +1,292 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Manual NIF pending-first-sync callback phase implemented; scheduler physical state and production update ownership remain incomplete",
+  "parent_commit": "1d734ef7f910858347fead398cadcfdcf0d6c808",
+  "tested_source_fingerprint": "9b7fe3bfdb862139df511e7afdabb33ba9fa8be80eace8f2c695b04c63f20c25",
+  "implementation_sha256": {
+    "components/sceneutil/nifscenetraversal.hpp": "15e2df4b4b6b5d70466e516776fddf6e297c32ea06e16e0b674abfae0e5be725",
+    "components/sceneutil/nifscenetraversal.cpp": "7de60aa0d6acc34595149e4dc1f8b97d017879e017e5187daa1c14975d99b0ab",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "39f63b6381d547b1da34b19f68536768a92c41f415727b08c5f10bd26bdea269"
+  },
+  "behavior": [
+    "Pending0x40 requires an explicit mFirstSynchronization physical-owner callback, including inactive bit0. Own property/node controllers finish before fresh animated native world/drawing cache publication. Immediate child caches remain from their previous update through compensating draw matrices. The handler sees the current cache and executes before mProjected and children.",
+    "No ordinary physical-to-scene read or bit8 author write occurs on the pending pass. The physical owner must perform reset/scene-to-body and clear only0x40 atomically on success. Collision metadata is reinspected and must equal its exact prior flags with40 removed; missing/unchanged/extra-changed flags reject before mProjected/child traversal.",
+    "Missing handler still rejects pending flags before cache publication. Handler exceptions leave completed own controllers/current cache published and prevent child/projection callbacks; pending motion/flag atomicity belongs to the physical owner. Retrying can settle pending state. Existing hierarchy/reentrancy guards remain.",
+    "Four tests cover all six original flag pairs, controller/property/force/projection/child order, animated cache visibility and old child cache, inactive force and next settled reads, throw/retry, wrong flag transitions and raw procedural author-cache preservation under bit8."
+  ],
+  "checks": {
+    "normal": {
+      "path": "nif-scene-first-sync-normal-01/verification.json",
+      "sha256": "0e00efa98b624dfd6c9e72cee40ac37d2a9b4698d4e11106e27c420a519a0c0a",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 16.263
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-scene-first-sync-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 14.201
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2758,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "fbc266bb9b878394473546a1294c27f3c07c49b4ebf4dd28d88ce97c59eb052f",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "1501fd78f84f54cd5f11106f4609ef9e663c8a79d1a84621677c4b68d72d9fbe",
+            "inventory_sha256": "f1d7238073405e9bdf727eca1b290f114c385904d397c99344fd558f862006a7",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 264
+          }
+        },
+        "source_before": {
+          "head": "1d734ef7f910858347fead398cadcfdcf0d6c808",
+          "source_fingerprint": "9b7fe3bfdb862139df511e7afdabb33ba9fa8be80eace8f2c695b04c63f20c25"
+        },
+        "source_after": {
+          "head": "1d734ef7f910858347fead398cadcfdcf0d6c808",
+          "source_fingerprint": "9b7fe3bfdb862139df511e7afdabb33ba9fa8be80eace8f2c695b04c63f20c25"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "nif-scene-first-sync-sanitized-01/verification.json",
+      "sha256": "649cef28bb74a7f0e1e7b2cfdf1a54978ef21163ae102573ff040c9229fd4c9f",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 50.708
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-scene-first-sync-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 68.005
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2758,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1bb5cc2b327048910d89237645594bef7ec383e2d79a6bb7ab827cfa1cf372b5",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "2f1312221f2d0e373000dbabc10a558cd2f97a7d70b01fb71d86eade908a11f0",
+            "inventory_sha256": "42f7525fc6b4b55eee97102a87b31dc3ec0723108df91dc09ccd0255948a060f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 264
+          }
+        },
+        "source_before": {
+          "head": "1d734ef7f910858347fead398cadcfdcf0d6c808",
+          "source_fingerprint": "9b7fe3bfdb862139df511e7afdabb33ba9fa8be80eace8f2c695b04c63f20c25"
+        },
+        "source_after": {
+          "head": "1d734ef7f910858347fead398cadcfdcf0d6c808",
+          "source_fingerprint": "9b7fe3bfdb862139df511e7afdabb33ba9fa8be80eace8f2c695b04c63f20c25"
+        }
+      }
+    }
+  },
+  "native": {
+    "path": "reference-root-first-sync-oracle-02/verification.json",
+    "sha256": "6e2a7c5deab2f26b4a3e60a399d2501a2c2ab1fbd847bf0e6312a3030de28573",
+    "report": {
+      "passed": true,
+      "contexts": 1536,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "e0a5e46f39c68999015ec8b6bf017f5e7a7b10cd58dac604cc2101a8af456b4e",
+      "cases_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+      "scope": "Actual GenerateNiNode R/T and scale initialization segments followed by original reference prefix/World registration and first707370 for root/direct-child/deep/null-first,plain/bodyT,authored0/1/8/9,eight angle triplets including quaternion trace/axis branches,two scales,three x87 controls. Original first-sync clears40 even inactive; original47C930 dispatch executes but controller lists empty. Actual root/child composition, physical synchronization and pending-clear execute. Supplied synthetic heap/Windows/TLS/critical services, nullnativeWorld, property-copy/special gates disabled. GenerateNiNode middle/virtual50 skipped; no whole GenerateNiNode,controller timing/interpolation,Havok stepping or gameplay acceptance."
+    }
+  },
+  "first_sync_replays": {
+    "normal": {
+      "path": "nif-scene-first-sync-compare-01/normal-verification.json",
+      "sha256": "cdd357fa3c8acd4901ee2bea916653b3f2bbc74171942d704df8e12e4b4a4d65",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "source_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+        "probe_sha256": "5684e99f654a0fd189270cbe32bae8faaa196bc259536a0f7e5447cb2fc4ef2d",
+        "comparator_sha256": "ce7b96a0de6ce202d223d453ad1dba0890a59f5b693c7c5817c13b246ae3fb7f",
+        "binary_sha256": "494249b23eccb178952515c8e9400a2d5da2044f2b31c953ab3157f8f76d5614",
+        "scope": "Actual OSG manual first-pending dispatch/hierarchy and actual forward conversion versus original root/target world13, bodymotion7 and settledflags1. Supported007F Single/027F Double;037F diagnosticDouble. Additional force/read/mask/cache/local invariants. Callback emulates physical owner by clearing flags and computing a target; it does NOT admit/step/reset a Bullet body or implement the mutable physics flag state. Initroot and finalbodylocaloffset are native fixture inputs. No controller clocks, full GenerateNiNode or normal-input acceptance; empty Group substitutes null native child slot."
+      }
+    },
+    "sanitized": {
+      "path": "nif-scene-first-sync-compare-01/sanitized-verification.json",
+      "sha256": "bbeb5d6ab07561e976a84a8e53857db31480a882cf17185dcb1fe78c0c554668",
+      "report": {
+        "passed": true,
+        "counts": {
+          "127": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "639": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          },
+          "895": {
+            "cases": 512,
+            "mismatching_cases": 0,
+            "mismatching_fields": 0
+          }
+        },
+        "failures": [],
+        "source_sha256": "bbc437f25e4ffbf9079e4966268d42207f6956c670a5b5836ff88084fea3599b",
+        "probe_sha256": "5684e99f654a0fd189270cbe32bae8faaa196bc259536a0f7e5447cb2fc4ef2d",
+        "comparator_sha256": "ce7b96a0de6ce202d223d453ad1dba0890a59f5b693c7c5817c13b246ae3fb7f",
+        "binary_sha256": "c9a55c2ff43c77589b0e818f37bace517f5ecaf92cf1e11e11f743bae4eae88c",
+        "scope": "Actual OSG manual first-pending dispatch/hierarchy and actual forward conversion versus original root/target world13, bodymotion7 and settledflags1. Supported007F Single/027F Double;037F diagnosticDouble. Additional force/read/mask/cache/local invariants. Callback emulates physical owner by clearing flags and computing a target; it does NOT admit/step/reset a Bullet body or implement the mutable physics flag state. Initroot and finalbodylocaloffset are native fixture inputs. No controller clocks, full GenerateNiNode or normal-input acceptance; empty Group substitutes null native child slot."
+      }
+    }
+  },
+  "settled_replays": {
+    "normal": {
+      "path": "nif-scene-first-sync-settled-regression-01/normal-verification.json",
+      "sha256": "d1ebc81c22351f4b46377174b6dced6ccbfbcd015e067aa58013af0e23edc1a6",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "0ee63530290ee5347bf61ace0704e0c34172cf784b5f30ffb84af347bd0ca9f9",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    },
+    "sanitized": {
+      "path": "nif-scene-first-sync-settled-regression-01/sanitized-verification.json",
+      "sha256": "a7e2174b506c2affa2149e5cc8df0aa35437a3b19cd50629dacf4eccadcadda5",
+      "report": {
+        "passed": true,
+        "supported_frames": 512,
+        "supported_field_checks": 8128,
+        "diagnostic_extended_frames": 256,
+        "supported_mismatches": [],
+        "diagnostic_extended_mismatches": [],
+        "max_osg_matrix_absolute_error": 5.68434e-14,
+        "osg_tolerance": 1e-09,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "probe_sha256": "865f6331e7aa3a7d3f1012d4c7fec956b39db27fa72b8db4c9815c22554e864c",
+        "comparator_sha256": "623ef32c8d06bf4b841d2f0d1739f34e4a36e70ce28bdbc851f7ade58f80ab6c",
+        "binary_sha256": "a42e029b69cf091089167a46405e50d50d0795aeb5352c29e3daf12927b052f0",
+        "notes": "Actual OSG property/node callback traversal and independent native cached-world projection. Frame0 leaf old-world not compared: native fixture inserted it after pending sync with zero cache. Supplied controller translations and physical world fixture inputs are not controller math, clock, Havok, full-game scheduling or runtime acceptance. Empty Group substitutes literal null native child slot."
+      }
+    }
+  },
+  "first_sync_scope": "Actual OSG NifSceneTraversal plus actual explicit-precision forward conversion versus original root/target cached world13 each, bodymotion7 and settledflags1.512 original007F Single +512 original027F Double contexts per build:33792 exact original float fields and1024 exact collision flag values. Five separate engine contract invariants per context: no ordinary physical read, one force handler, no physical world-change mask, handler sees current native cache, author matrices unchanged.512 original037F contexts map to Double diagnostically and match. Four original topologies include root/direct-child relocation, deep child and null-first slot; empty OSG Group substitutes native null child. Initialized root13 and final registered body-local offset/quaternion are original fixture inputs. The force callback computes a target and updates fixture flags; it does not create/reset/step a Bullet body or implement scheduler mutable flags.",
+  "settled_scope": "Both normal/SAN retain512 supported frames/8128 original settled field checks with zero differences, drawing matrix maximum absolute error5.68434e-14 within1e-9. Supplied controller edits and physical desired worlds are fixtures; not native interpolation/clock/physics equivalence.",
+  "sanitizer_scope": "Fresh full2758 components/264 suites per build, exact inventory/XML match, no failures/skips. ASan/UBSan halt on error; leaks disabled. No fresh engine or normal-input runtime course for this component-only change.",
+  "retained_attempts": [
+    "nif-scene-first-sync-preflight-01 passes22 selected tests but retains one new ambiguous-else compiler warning from GTest inside an unbraced if. Final source adds braces before full checks; final touched-source builds have no such warning."
+  ],
+  "remaining_gates": [
+    "Implement the actual physical-owner operation: native reset threshold/packed velocity behavior, explicit Single scene-to-body conversion and mutable registered collision flags/clear40 under scheduler identity, ownership and worker locks. The traversal callback alone does not perform physical initialization.",
+    "Connect the global nonactor root builder, ReferenceWorld author capture and compensating drawing setup before prepared checkpoint capture. Establish one production manual traversal owner and correct controller clocks; suppress duplicate ordinary viewer callbacks.",
+    "Preserve native REFR-before-child publication with safe placement reanchoring/cell migration/World/reference lifetime guards. Current World root-only adapter and ObjectAnimation local-root binding remain. Complete admission/property-copy/node policies, forced World/script continuation, loose physical save/fresh recreation, production melee/drop/reaction/effects and full normal-input/FPS/fresh-process S4 matrix. Full M15S4 remains active and incomplete."
+  ]
+}

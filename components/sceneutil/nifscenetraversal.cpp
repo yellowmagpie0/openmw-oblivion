@@ -174,11 +174,12 @@ namespace SceneUtil
             const auto world = parent ? Nif::tryComposeNativeTransform(*parent, local, mPrecision)
                                       : std::optional<Nif::NiTransform>(local);
             require(world.has_value(), "invalid NIF scene composition");
-            const auto flags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
+            auto flags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
             require(valid(), "NIF collision provider changed the bound hierarchy");
-            require(!flags || !(*flags & 0x40), "NIF scene traversal requires settled collision flags");
+            const bool pending = flags && (*flags & 0x40);
+            require(!pending || bool(callbacks.mFirstSynchronization), "missing pending NIF first synchronization");
             NifBullet::RagdollBonePoseWriteback frame{local, *world, 0};
-            if (flags && (*flags & 1))
+            if (!pending && flags && (*flags & 1))
             {
                 require(bool(callbacks.mPhysicalWorld), "missing active NIF physical pose source");
                 const auto desired = callbacks.mPhysicalWorld(node);
@@ -195,7 +196,7 @@ namespace SceneUtil
             for (const auto child : entry.mChildren)
                 children.emplace_back(osg::Matrixd(mNodes[child].mWorld.toMatrix()) * inverseWorld);
             // Retain author/controller state unless actual active bit8 writes it.
-            if (flags && ((*flags & 9) == 9))
+            if (!pending && flags && ((*flags & 9) == 9))
             {
                 node.setRotation(frame.mLocal.mRotation);
                 node.setTranslation(frame.mLocal.mTranslation);
@@ -209,6 +210,18 @@ namespace SceneUtil
                 mNodes[entry.mChildren[i]].mPublished = children[i];
             }
             invalidateSkeletons(path);
+            if (pending)
+            {
+                // Original897510 first publishes the animated node world,
+                // invokes reset/scene-to-body and clears40. It returns without
+                // an ordinary physical-to-scene read, even for active bit0.
+                const auto expected = std::uint16_t(*flags & ~0x40u);
+                callbacks.mFirstSynchronization(node, frame.mWorld, *flags);
+                require(valid(), "NIF first synchronization changed the bound hierarchy");
+                flags = callbacks.mCollisionFlags(node);
+                require(valid(), "NIF settled collision provider changed the bound hierarchy");
+                require(flags && *flags == expected, "NIF first synchronization did not settle collision flags");
+            }
             if (callbacks.mProjected) callbacks.mProjected(node, frame, flags);
         }
     };

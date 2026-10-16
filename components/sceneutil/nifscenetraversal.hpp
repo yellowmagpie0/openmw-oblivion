@@ -17,12 +17,12 @@ namespace NifOsg { class MatrixTransform; }
 
 namespace SceneUtil
 {
-    // Explicit settled traversal of a private ordinary NIF reference hierarchy.
+    // Explicit traversal of a private ordinary NIF reference hierarchy.
     // The reference root's author local is already in native world space; its
     // OSG placement ancestors are rendering scaffolding, not native parents.
     // Retains native global caches separately from controller locals and OSG
     // relative drawing matrices. Requires invertible transforms and an unchanged
-    // hierarchy/placement during a pass. Admission, pending first synchronization,
+    // hierarchy/placement during a pass. Admission, physical first synchronization,
     // controller clocks, physics stepping and reference callbacks have owners.
     // Publishing a pass leaves its projection handles on the model. Retire or
     // explicitly reinitialize the model when changing update ownership. Exceptions
@@ -33,12 +33,20 @@ namespace SceneUtil
         struct Callbacks
         {
             std::function<std::optional<std::uint16_t>(const NifOsg::MatrixTransform&)> mCollisionFlags;
-            // Read only for an active collision. Input/output uses Ni world units.
+            // Read only for an active settled collision. Input/output uses Ni world units.
             std::function<Nif::NiTransform(const NifOsg::MatrixTransform&)> mPhysicalWorld;
             // Runs after projection and child-cache rebasing, before children.
             // A child change mask is not authorization to publish a REFR.
             std::function<void(NifOsg::MatrixTransform&, const NifBullet::RagdollBonePoseWriteback&,
                 std::optional<std::uint16_t>)> mProjected;
+            // Pending0x40 dispatch, even if bit0 is inactive. Runs after own
+            // controllers and animated-world cache publication, before mProjected
+            // and children. The physical owner must reset/synchronize motion and
+            // clear only0x40 atomically on success; mCollisionFlags is reinspected.
+            // No mPhysicalWorld read or bit8 author write occurs on this pass.
+            // Missing handler rejects; exceptions do not roll back published caches.
+            std::function<void(const NifOsg::MatrixTransform&, const Nif::NiTransform&, std::uint16_t)>
+                mFirstSynchronization;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,

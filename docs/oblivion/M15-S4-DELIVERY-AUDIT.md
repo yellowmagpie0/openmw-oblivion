@@ -3631,3 +3631,47 @@ still uses its legacy local root and World its root-only adapter. Native callbac
 ordering, placement/cell lifetime handling, all property/admission/node policies,
 loose save/fresh recreation and the full production melee/drop/effect and
 normal-input/FPS/fresh-process S4 gates remain open. M15S4 is active and incomplete.
+
+
+## 2026-10-16 — manual NIF pending-first-sync phase checkpoint
+
+`NifSceneTraversal::Callbacks::mFirstSynchronization` now handles pending 0x40
+explicitly, even with inactive bit0. Own property/node controllers finish first;
+the animated native world and drawing matrices publish before the handler, with
+immediate children still at their preceding caches. The physical owner must reset/
+synchronize motion and clear only 0x40 atomically on success. Metadata is reread
+and checked before mProjected and child callbacks. That first pass performs no
+ordinary physical-to-scene read or bit8 author write. Missing handlers still
+reject. Exceptions leave completed controllers/current cache published; they do
+not imply rollback of external physical work. Four tests cover the six original
+flag pairs, phase/cache ordering, active/inactive behavior, retry, bad metadata
+transitions and raw procedural-cache preservation under bit8.
+
+Actual OSG traversal plus forward-conversion replays match all 512 original 007F
+and 512 original 027F contexts per build: 33,792 exact original float fields and
+1,024 exact collision flags. Five separate engine invariants per context verify
+one force handler, no ordinary physical read, zero physical change mask, current
+cache visibility and unchanged author matrices. The 512 extended 037F contexts
+also match Double diagnostically. Native initialized root and registered body-local
+offset are fixture inputs. The callback computes a target and clears fixture flags;
+it does not create/reset/step a Bullet body or implement scheduler mutable flags.
+An empty OSG Group substitutes the literal native null slot. Native controllers
+are empty; clock/interpolation, full GenerateNiNode and runtime acceptance remain
+unproven. Both settled-traversal replays retain 512 supported frames/8,128 original
+field checks, with drawing error 5.68434e-14 within 1e-9.
+
+Fresh normal and ASan/UBSan full component runs pass all 2,758 tests/264 suites,
+with exact inventories and no failures/skips; leak checks are disabled. Preflight01
+passes 22 selected cases but retains an unbraced-GTest compiler warning, fixed by
+braces before full checks. No fresh engine or normal-input runtime course runs for
+this component-only checkpoint. [Editable verification](M15-NIF-FIRST-SYNCHRONIZATION-VERIFICATION.json)
+pins sources and evidence under `nif-scene-first-sync-{preflight,normal,sanitized}-01`,
+`nif-scene-first-sync-compare-01` and `nif-scene-first-sync-settled-regression-01`.
+
+Next implement the scheduler's actual first-sync velocity/reset/pose/flag operation,
+then connect native global root initialization and initial capture/draw setup with
+one production traversal owner and verified controller clocks. Correct native
+REFR-before-child/cell migration/lifetime handling remains required. Existing World
+root-only and ObjectAnimation local-root adapters remain unchanged. All remaining
+admission/property/node, loose save/fresh recreation, production melee/drop/effect
+and normal-input/FPS/fresh-process gates remain open. M15S4 is active and incomplete.
