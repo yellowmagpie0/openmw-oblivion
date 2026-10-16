@@ -27,6 +27,12 @@ namespace NifBullet
     RagdollBonePoseWriteback ragdollBonePoseWriteback(const Nif::NiTransform& previousLocal,
         const Nif::NiTransform& previousWorld, const Nif::NiTransform& desiredWorld,
         const Nif::NiTransform* parentWorld, std::uint16_t collisionFlags, bool forceWorldUpdate);
+
+    // One settled registered-root traversal. Registration enables local and
+    // reference publication, but never enables an authored inactive bit0.
+    // Inactive roots compose their existing local without reading desiredWorld.
+    RagdollBonePoseWriteback ragdollReferenceRootFrame(const Nif::NiTransform& previousLocal,
+        const Nif::NiTransform& desiredWorld, std::uint16_t authoredCollisionFlags);
 }
 
 #endif

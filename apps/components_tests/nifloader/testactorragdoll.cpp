@@ -110,6 +110,7 @@ namespace
             result.mInfo.mMaxLinearVelocity = 100;
             result.mInfo.mMaxAngularVelocity = 50;
             auto& collision = add<Nif::bhkCollisionObject>();
+            collision.mFlags = 1;
             collision.mBody = Nif::bhkWorldObjectPtr(&result);
             collision.mTarget = Nif::NiAVObjectPtr(&node);
             node.mCollision = Nif::NiCollisionObjectPtr(&collision);
@@ -136,6 +137,30 @@ namespace
         mFile.mRecords.clear();
         EXPECT_EQ(graph.mBodies[1].mBone, "Bip01 Spine");
         EXPECT_EQ(graph.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(14, 25, 36));
+    }
+
+    TEST_F(ActorRagdollTest, OwnsAuthoredCollisionFlagsIndependentlyOfHavokFiltersAndReferenceRelocation)
+    {
+        auto& node = static_cast<Nif::NiNode&>(*mFile.mRecords[1]);
+        auto& collision = static_cast<Nif::bhkCollisionObject&>(*node.mCollision.getPtr());
+        auto& body = static_cast<Nif::bhkRigidBody&>(*collision.mBody.getPtr());
+        body.mHavokFilter.mFlags = 0xab;
+        body.mInfo.mHavokFilter.mFlags = 0xcd;
+        for (std::uint16_t flags : {0, 1, 8, 0x123, 0xffff})
+        {
+            SCOPED_TRACE(flags);
+            collision.mFlags = flags;
+            const auto carried = NifBullet::loadActorRagdollDefinition(mFile);
+            const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+            EXPECT_EQ(carried.mBodies[0].mCollisionFlags, flags);
+            EXPECT_EQ(placed.mBodies[0].mCollisionFlags, flags);
+            EXPECT_EQ(placed.mBodies[0].mNodeRecord, 0u);
+            EXPECT_EQ(placed.mBodies[0].mWorldObjectFilter.mFlags, 0xabu);
+            EXPECT_EQ(placed.mBodies[0].mInfoFilter.mFlags, 0xcdu);
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(placed, 2.f);
+            EXPECT_EQ(scaled.mBodies[0].mCollisionFlags, flags);
+            EXPECT_EQ(collision.mFlags, flags);
+        }
     }
     TEST_F(ActorRagdollTest, ReferencePlacementReplacesRootAndRelocatesOnlySelectedCollision)
     {

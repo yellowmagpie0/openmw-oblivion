@@ -89,6 +89,18 @@ namespace NifBullet
         return *result;
     }
 
+    RagdollBonePoseWriteback ragdollReferenceRootFrame(const Nif::NiTransform& previousLocal,
+        const Nif::NiTransform& desiredWorld, std::uint16_t authoredCollisionFlags)
+    {
+        validate(previousLocal);
+        // Original897510 consumes pending0x40 separately at admission. Its
+        // ordinary dispatch tests bit0 before deriving a physical scene pose.
+        if (!(authoredCollisionFlags & 1))
+            return {previousLocal, previousLocal, 0};
+        return ragdollBonePoseWriteback(previousLocal, previousLocal, desiredWorld,
+            nullptr, authoredCollisionFlags | 0xc, false);
+    }
+
     RagdollBonePoseWriteback ragdollBonePoseWriteback(const Nif::NiTransform& previousLocal,
         const Nif::NiTransform& previousWorld, const Nif::NiTransform& desiredWorld,
         const Nif::NiTransform* parentWorld, std::uint16_t collisionFlags, bool forceWorldUpdate)

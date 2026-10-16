@@ -107,6 +107,9 @@ namespace NifBullet
         std::string mBone;
         osg::Matrixf mBoneBind;
         bool mUsesRigidBodyTransform = false;
+        // Authored collision-object flags, separate from both Havok filters.
+        // Bit0 controls ordinary physics-to-scene dispatch after registration.
+        std::uint16_t mCollisionFlags = 1;
         RagdollBodyFilter mWorldObjectFilter, mInfoFilter;
         // Authored bhkBlendCollisionObject data, not live blend progression.
         std::optional<RagdollBlendDefinition> mBlend;

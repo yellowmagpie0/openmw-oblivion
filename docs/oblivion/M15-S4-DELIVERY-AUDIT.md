@@ -2809,3 +2809,87 @@ changed during authoritative checks.
 [Editable provenance](M15-ORIGINAL-REGISTERED-ROOT-FRAME-PROBES.json) records
 hashes, boundaries, literal sequence values, current checks, retained failures
 and remaining gates. Full S4 remains active and incomplete.
+
+## Authored collision flags and inactive registered roots
+
+`RagdollBodyDefinition::mCollisionFlags` owns the authored uint16 collision-object
+flags. Loader, reference relocation and property-scaled graph copies preserve
+those flags independently of both Havok filter flags and authored blend data.
+The default active value remains available for explicit synthetic body definitions;
+NIF loads always copy the actual collision record value.
+
+The immutable `ragdollReferenceRootFrame` dispatcher follows original 897510:
+registration adds local/reference bits 0xC but does not enable authored bit 0. Once
+the initial pending 0x40 scene-to-body synchronization has completed, inactive
+roots skip physical pose derivation and callbacks. They retain supplied locals,
+compose root world from those locals, and preserve visible scale independently
+of physical admission. The inactive branch does not read or validate unused
+physical input. Active roots retain the previously verified threshold/mask
+semantics. The original 1,024-frame course includes 512 active and 512 inactive cases;
+the active subset exactly reproduces the preceding 512-frame corpus.
+
+The scheduler now checks owned authored flags before deriving a physical root
+pose. This changes scene dispatch, not dynamics or collision shape/mass policy.
+Real-NIF factory tests cover direct-root and selected-child relocation with
+flags 0: bodies take an actual falling step while six subsequent World updates
+retain the original stored/reference/visible root pose across scales 2/.63/1.38.
+Body poses and packed velocities survive publication unchanged. Parameterized
+0/1/2-worker tests also cover ordinary/bodyT sources, arbitrarily moved/rotated
+physical poses and explicit forced-root requests. An explicit forced request
+establishes the next local; subsequent ordinary frames remain inactive. This
+verifies that pose API, not full World/script source-pose or command semantics.
+
+Normal and sanitized production comparisons match every 26 local/world float
+lanes, change mask and six reference fields across all 1,024 original cases.
+Original active desired-transform scale is uninitialized/unused and canonicalized
+to 1 for the typed adapter. Inactive original dispatch has no derived desired
+input; comparison supplies an unused identity and a component test independently
+checks malformed unused input. Native World/cell, allocation/import/TLS/critical
+section and fixture-motion boundaries remain those documented in the preceding
+root-frame provenance. These are not actual native dynamics or gameplay courses.
+
+Evidence under `build/oblivion-compat/m15/S4/`:
+
+- `authored-root-flags-normal-01` and `authored-root-flags-sanitized-01`: freshly
+  rebuilt full 2,706 component tests / 257 suites and 1,572 engine tests / 122
+  suites each, unfiltered, exact inventory/XML, no failures/skips. ASan leak
+  checking is disabled; ASan/UBSan halt on errors. Existing unrelated compiler
+  warnings remain. No new failed authoritative attempt occurs in this chunk.
+- `authored-root-flags-compare-01`: 1,024 bit-exact dispatcher/reference cases
+  each in actual normal and sanitized component libraries.
+- `authored-root-flags-baseline-01`: preceding committed ELF runs the existing
+  falling-body factory/real physics-step/World course. Only the owned input NIF's
+  collision flags 1->0 are amended before VFS opens it. No post-load gameplay
+  fields are injected. The old root frame reports position mask 1 and changes
+  stored REFR, contradicting the independent inactive-node rule. The old engine
+  case itself passes with exact inventory/XML agreement; independent observation
+  establishes its wrong behavior rather than treating that pass as acceptance.
+- `authored-root-flags-runtime-01`: final-ELF read-only inspection sees authored
+  flags 0 and root record 0 for both plain and relocated-bodyT reference definitions.
+  All six actual World frame returns have mask 0, retained local/world positions
+  and unchanged REFR. Its one selected engine case passes with exact inventory/XML.
+  Pre-open hashing confirms the 524-byte direct-root NIF is byte-identical to the
+  baseline's amended input, SHA256
+  `54b85cb823326708fa9851ed03948b7b00e38e46ce0709d654892e1f1e9e26b2`.
+
+Both authoritative checks preserve source fingerprint
+`3e0fd6ed58cf21748e77c252ec83a1b9cf488dd3b49dd69c8d240455e23a7080`
+on parent `e6da0e09929120e2a74e7279c747c91f95c5ff4f`, before documentation.
+Normal engine ELF SHA256:
+`0e42f37df74839602448aa77497294a197ebb4eb3a201bc4ac7a0eef44cf1f3b`.
+Sanitized engine ELF SHA256:
+`9aa97e88b588d45e10540af5ccf43a83ea96e28b8d4253050d0877a61b5ed513`.
+The review directory freezes nine implementation/test hashes and the exact patch.
+[Editable provenance](M15-ORIGINAL-AUTHORED-ROOT-FLAGS-PROBES.json) links original
+corpus hashes, current comparisons, actual-ELF observations and full checks.
+Prior failed attempts remain in their original evidence directories/manifests.
+
+The authored non-root path still uses the old inverse-bind/unconditional-reference
+adapter. It needs separate node-local/cached-world projection, controller updates
+and proper callback dispatch, including inactive children. Root-controller and
+actual World/script scale/forced-transform continuation remain open, as do
+complete Havok-enable/special-reference/cell/property-copy admission and source
+fixed/keyframed/no-physics routes. Loose retention/save/recreation, production
+break/mastery, pickup/replacement/sound, power/creature/reaction/effects and the
+full normal-input/controller/FPS/windup/block/recovery restart S4 matrix remain
+required. Full S4 is active and incomplete.

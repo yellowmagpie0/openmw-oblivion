@@ -1853,3 +1853,50 @@ namespace
         scheduler.removeLooseObject(mPtr);
     }
 }
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, AuthoredInactiveRootSkipsPhysicalProjectionButAcceptsExplicitForcedTransforms)
+    {
+        for (bool bodyT : {false, true})
+        {
+            SCOPED_TRACE(bodyT);
+            NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+            auto graph = mGraph;
+            graph.mReferenceRoot = 0;
+            auto& definition = graph.mBodies[0]; definition.mNodeRecord = 0; definition.mCollisionFlags = 0;
+            definition.mUsesRigidBodyTransform = bodyT;
+            definition.mTranslation = {.25f, -.5f, .125f};
+            definition.mRotation = osg::Quat(osg::PI_2, osg::Vec3f(1, 0, 0));
+            auto prepared = scheduler.prepareLooseObject(mPtr, graph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+            ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+            const auto local = osg::Matrixf::translate(100, 200, 300);
+            auto state = scheduler.captureLooseObject(mPtr);
+            const auto velocities = scheduler.captureLooseObjectPackedVelocities(mPtr);
+            for (float delta : {.005f, .1f, 10.f})
+            {
+                state[0].mPose.getOrigin() += btVector3(delta, 0, 0);
+                state[0].mPose.setRotation(btQuaternion(btVector3(0, 0, 1), .2));
+                scheduler.restoreLooseObject(mPtr, state, velocities);
+                const auto frame = scheduler.captureLooseObjectRootFrame(mPtr, local);
+                EXPECT_EQ(frame.mWorldChangeMask, 0u);
+                EXPECT_EQ(frame.mLocal.mTranslation, local.getTrans());
+                EXPECT_EQ(frame.mWorld.mTranslation, local.getTrans());
+                for (unsigned row = 0; row < 3; ++row)
+                    for (unsigned column = 0; column < 3; ++column)
+                        EXPECT_EQ(frame.mWorld.mRotation.mValues[row][column], row == column ? 1.f : 0.f);
+                scheduler.commitLooseObjectRootFrame(mPtr, frame);
+                EXPECT_EQ(scheduler.captureLooseObject(mPtr)[0].mPose, state[0].mPose);
+                EXPECT_EQ(scheduler.captureLooseObjectPackedVelocities(mPtr)[0].mVelocities, velocities[0].mVelocities);
+            }
+            const auto forced = osg::Matrixf::rotate(.3f, osg::Vec3f(0, 1, 0))
+                * osg::Matrixf::translate(50, 60, 70);
+            scheduler.updateLooseObjectRootPose(mPtr, forced);
+            const auto afterForce = scheduler.captureLooseObjectRootFrame(mPtr, local);
+            EXPECT_EQ(afterForce.mWorldChangeMask, 0u);
+            EXPECT_EQ(afterForce.mWorld.mTranslation, forced.getTrans());
+            scheduler.removeLooseObject(mPtr);
+        }
+    }
+}

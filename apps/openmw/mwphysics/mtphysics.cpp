@@ -677,19 +677,24 @@ namespace MWPhysics
         if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
         const auto& object = *found->second;
         const float scale = ptr.getCellRef().getScale();
-        const auto desired = LooseObject::rootTransform(object.rootPose(scale), scale);
         if (object.mDefinition.mReferenceRoot != object.mDefinition.mBodies.front().mNodeRecord)
         {
             // Retain the existing authored-bind adapter until non-root cached
             // world projection is integrated. It has no native root profile.
+            const auto desired = LooseObject::rootTransform(object.rootPose(scale), scale);
             return {desired, desired, 3};
         }
+        (void)object.sceneBind(scale);
         auto local = object.mRootLocal ? *object.mRootLocal : LooseObject::rootTransform(initialRoot, scale);
         local.mScale = scale;
+        const auto flags = object.mDefinition.mBodies.front().mCollisionFlags;
+        if (!(flags & 1))
+            return NifBullet::ragdollReferenceRootFrame(local, local, flags);
+        const auto desired = LooseObject::rootTransform(object.rootPose(scale), scale);
         // Full707370 composes the root world from its previous local before
         // collision writeback. The world threshold does not prevent the next
         // local write, and callbacks select independent reference fields.
-        return NifBullet::ragdollBonePoseWriteback(local, local, desired, nullptr, 13, false);
+        return NifBullet::ragdollReferenceRootFrame(local, desired, flags);
     }
 
     void PhysicsTaskScheduler::commitLooseObjectRootFrame(const MWWorld::Ptr& ptr,

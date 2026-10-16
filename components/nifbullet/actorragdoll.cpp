@@ -434,6 +434,8 @@ namespace NifBullet
             value.mBone = node->mName;
             value.mBoneBind = bind.at(node);
             value.mUsesRigidBodyTransform = body->mRecordType == Nif::RC_bhkRigidBodyT;
+            value.mCollisionFlags
+                = static_cast<const Nif::bhkCollisionObject*>(node->mCollision.getPtr())->mFlags;
             if (const auto* blend = dynamic_cast<const Nif::bhkBlendCollisionObject*>(node->mCollision.getPtr()))
             {
                 require(std::isfinite(blend->mHeirGain) && std::isfinite(blend->mVelGain),

@@ -8,6 +8,44 @@
 
 namespace
 {
+    TEST(RagdollReferenceRootFrame, AuthoredInactiveBitSkipsPhysicalInputAndRetainsRootLocalAndScale)
+    {
+        auto local = Nif::NiTransform::getIdentity();
+        local.mTranslation = {10, 20, 30}; local.mScale = .63f;
+        auto unused = local;
+        unused.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        unused.mScale = -1;
+        for (std::uint16_t flags : {0, 8, 12, 0xfffe})
+        {
+            const auto frame = NifBullet::ragdollReferenceRootFrame(local, unused, flags);
+            EXPECT_EQ(frame.mWorldChangeMask, 0u);
+            EXPECT_EQ(frame.mLocal.mTranslation, local.mTranslation);
+            EXPECT_EQ(frame.mWorld.mTranslation, local.mTranslation);
+            EXPECT_EQ(frame.mLocal.mScale, local.mScale);
+            EXPECT_EQ(frame.mWorld.mScale, local.mScale);
+        }
+        EXPECT_THROW(NifBullet::ragdollReferenceRootFrame(local, unused, 1), std::invalid_argument);
+        local.mScale = 0;
+        EXPECT_THROW(NifBullet::ragdollReferenceRootFrame(local, unused, 0), std::invalid_argument);
+    }
+
+    TEST(RagdollReferenceRootFrame, RegistrationEnablesRootLocalAndReferenceBitsWithoutChangingAuthoredFlags)
+    {
+        auto local = Nif::NiTransform::getIdentity(); local.mScale = 2;
+        auto desired = local; desired.mTranslation = {.005f, 0, 0};
+        const auto small = NifBullet::ragdollReferenceRootFrame(local, desired, 1);
+        EXPECT_EQ(small.mWorldChangeMask, 0u);
+        EXPECT_EQ(small.mLocal.mTranslation, desired.mTranslation);
+        EXPECT_EQ(small.mWorld.mTranslation, local.mTranslation);
+        desired.mTranslation.x() = 1;
+        const auto large = NifBullet::ragdollReferenceRootFrame(local, desired, 1);
+        EXPECT_EQ(large.mWorldChangeMask, 1u);
+        EXPECT_EQ(large.mLocal.mTranslation, desired.mTranslation);
+        EXPECT_EQ(large.mWorld.mTranslation, desired.mTranslation);
+        EXPECT_EQ(large.mLocal.mScale, 2);
+        EXPECT_EQ(large.mWorld.mScale, 2);
+    }
+
     Nif::NiTransform pose(osg::Vec3f translation = {}, float scale = 1)
     {
         return { Nif::Matrix3(), translation, scale };

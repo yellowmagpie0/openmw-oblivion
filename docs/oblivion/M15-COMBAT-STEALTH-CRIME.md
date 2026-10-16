@@ -6,6 +6,27 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 authored collision flags and inactive roots — 2026-10-16
+
+Owned body definitions now preserve authored collision-object flags separately
+from Havok filters. The registered-root dispatcher checks bit0 before deriving a
+physical scene pose: inactive roots retain their local/world/reference pose even
+while their bodies move. Visible scale remains independent of admitted physics.
+Explicit forced-pose requests still establish a new retained local without
+turning ordinary inactive writeback on.
+
+All **2,706 component tests / 257 suites and 1,572 engine tests / 122 suites**
+pass in normal and ASan/UBSan builds. The new dispatcher matches all 1,024 original
+active/inactive frame cases bit for bit in both builds. A preceding-binary course
+reproduces incorrect inactive publication; final-ELF inspection verifies preserved
+flags0, six zero-mask World updates and byte-identical direct-root NIF input.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#authored-collision-flags-and-inactive-registered-roots)
+and [editable provenance](M15-ORIGINAL-AUTHORED-ROOT-FLAGS-PROBES.json) record
+scope. Unselected child projection, controller integration, actual World/script
+continuation, admission modes, loose save/recreation, production combat and the
+full normal-input acceptance matrix remain open. S4 is incomplete.
+
 ## S4 active loose-root traversal and reference masks — 2026-10-16
 
 Active registered root-targeted drops now retain native locals independently of

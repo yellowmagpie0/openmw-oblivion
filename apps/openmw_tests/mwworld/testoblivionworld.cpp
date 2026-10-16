@@ -11654,7 +11654,7 @@ namespace
 {
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
-    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false)
+    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1)
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -11690,7 +11690,7 @@ namespace
             data += bytes(std::uint32_t{0}) + bytes(std::int32_t{2})
                 + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0});
         }
-        data += bytes(std::int32_t(childTarget ? 1 : 0)) + bytes(std::uint16_t{1})
+        data += bytes(std::int32_t(childTarget ? 1 : 0)) + bytes(collisionFlags)
             + bytes(std::int32_t(childTarget ? 3 : 2));
         // bhkRigidBody: shape, world filter/info, entity info, rigid info.
         data += bytes(std::int32_t(childTarget ? 4 : 3)) + std::string(4, '\0') + std::string(20, '\0')
@@ -21297,7 +21297,7 @@ namespace
         std::unique_ptr<MWRender::Objects> mObjects;
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
-        explicit NativeWeaponFactoryFixture(bool childTarget = false)
+        explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
@@ -21321,7 +21321,7 @@ namespace
             if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes/factory-skeleton.osgt").string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
-                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget);
+                const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags);
                 std::ofstream file(mDirectory / "meshes/factory-weapon.nif", std::ios::binary);
                 file.write(bytes.data(), bytes.size());
                 if (!file) throw std::runtime_error("cannot write owned factory weapon NIF");
@@ -22174,6 +22174,43 @@ TEST(OblivionWorldTest, NativeWeaponFactorySmallRootMotionKeepsReferenceAndAdvan
         for (unsigned axis = 0; axis < 3; ++axis)
             EXPECT_EQ(reference.getRefData().getPosition().rot[axis], before.rot[axis]);
         EXPECT_EQ(node->getPosition(), large.getTrans());
+    }
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryAuthoredInactiveRootKeepsSceneWhileItsBodyFallsAndVisibleScaleChanges)
+{
+    for (bool childTarget : {false, true})
+    {
+        SCOPED_TRACE(childTarget);
+        NativeWeaponFactoryFixture fixture(childTarget, 0);
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        auto& physics = *fixture.mPhysics;
+        auto* node = reference.getRefData().getBaseNode(); ASSERT_NE(node, nullptr);
+        const auto before = reference.getRefData().getPosition();
+        const auto visiblePosition = node->getPosition(); const auto visibleRotation = node->getAttitude();
+        auto state = physics.captureLooseObject(reference);
+        auto velocities = physics.captureLooseObjectPackedVelocities(reference);
+        velocities[0].mVelocities.mLinear = {2, 0, 0, 0};
+        physics.restoreLooseObject(reference, state, velocities);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("inactive native weapon root");
+        physics.stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *stats);
+        const auto physicalRoot = physics.captureLooseObjectRootPose(reference);
+        ASSERT_GT((physicalRoot.getTrans() - before.asVec3()).length(), .01f);
+        const auto stepped = physics.captureLooseObject(reference);
+        const auto packed = physics.captureLooseObjectPackedVelocities(reference);
+        for (float scale : {2.f, .63f, 1.38f})
+        {
+            reference.getCellRef().setScale(scale); node->setScale({scale, scale, scale});
+            physics.updateScale(reference);
+            MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, physics);
+            EXPECT_EQ(reference.getRefData().getPosition(), before);
+            EXPECT_EQ(node->getPosition(), visiblePosition);
+            EXPECT_EQ(osg::Matrixf::rotate(node->getAttitude()), osg::Matrixf::rotate(visibleRotation));
+            EXPECT_EQ(node->getScale(), osg::Vec3f(scale, scale, scale));
+            EXPECT_EQ(physics.captureLooseObject(reference)[0].mPose, stepped[0].mPose);
+            EXPECT_EQ(physics.captureLooseObjectPackedVelocities(reference)[0].mVelocities, packed[0].mVelocities);
+        }
     }
 }
 
