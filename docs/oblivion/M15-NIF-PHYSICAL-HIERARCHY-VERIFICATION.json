@@ -1,0 +1,441 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Production loader retains native physical hierarchy and immutable policy inputs; traversal ownership/full M15S4 incomplete",
+  "parent_commit": "c6565fa8290a4c765977da7a1a88956979dab8de",
+  "tested_source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8",
+  "implementation_sha256": {
+    "components/nifosg/nifloader.cpp": "2c384332079661cc4b3d67f3ebd89b0a454fb09e23829ac5db0ce605cc97cc35",
+    "apps/components_tests/nifosg/testnifloader.cpp": "3730e085d6005b2de5abb497000d2527becb07d35b1aef0e7d021f245811e452"
+  },
+  "behavior": [
+    "For Oblivion NIF versions20.0.0.4/20.0.0.5, scan complete reachable NiAVObject hierarchy before deciding whether a root has bhk collision. Keep all AV nodes in each physical hierarchy, including helpers and nonphysical branches, as dynamic record transforms so optimizers preserve author locals and distinct native world-cache identities. Identity roots cannot collapse to a generic Group. Existing billboard/type-specific construction remains; no new traversal policy for unsupported types is implied.",
+    "Retain nativeNifRecordType and nativeNifFlags on these nodes as immutable source policy inputs. Flags retain full parsed uint32 storage and are not computed live NiAVObject update flags. OSG cloned userdata containers can share ValueObjects; callers must not mutate source metadata. The runtime owner must derive and own separate live flags.",
+    "Tests load both supported versions with root/helper/physical-target/unrelated sibling, optimize with production-style permissions, clone twice with actual SceneUtil::CopyOp and rebind actual NifSceneTraversal. Every record remains a distinct MatrixTransform with its original translation/scale/type/flags. Only the first clone receives drawing handles and changes its world cache from106.75to206.75; source and second clone remain at6.75 without handles. Nonphysical Oblivion identity roots retain static Group optimization and have no physics metadata. Existing Morrowind control also passes."
+  ],
+  "checks": {
+    "failed_compile": {
+      "path": "build/oblivion-compat/m15/S4/nif-physical-hierarchy-preflight-01/verification.json",
+      "sha256": "37c518c50fe7edfb75be4143388b83b60b01368de6385a09f852cd786c6692ae",
+      "report": {
+        "schema_version": 1,
+        "passed": false,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 2,
+            "seconds": 25.744
+          }
+        ],
+        "results": {},
+        "source_before": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "717e3c20bc77833e6892d68f23a1d0a3ec891d05f4bb973148f0e74f66fba74d"
+        },
+        "error": "components-build.log: command exited 2"
+      }
+    },
+    "failed_metadata_assumption": {
+      "path": "build/oblivion-compat/m15/S4/nif-physical-hierarchy-preflight-02/verification.json",
+      "sha256": "a00d6d8baef0fa5234fe40cc450f1757a97c0319f0c1c279fb694ec8d22007fa",
+      "report": {
+        "schema_version": 1,
+        "passed": false,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 21.981
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifOsgLoaderTest.*:NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-preflight-02/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 1,
+            "seconds": 0.065
+          }
+        ],
+        "results": {},
+        "source_before": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "317d93db73d0578cc3381065d861db65c3fb489c9f671bb645981c1810c842bc"
+        },
+        "error": "components.log: command exited 1"
+      }
+    },
+    "preflight": {
+      "path": "build/oblivion-compat/m15/S4/nif-physical-hierarchy-preflight-03/verification.json",
+      "sha256": "a42cd67a2405bda5a72c2220c13a2fba146789948a8ab14f7c109e371795561c",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 40.93
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifOsgLoaderTest.*:NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-preflight-03/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 42,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "NifOsgLoaderTest.*:NifSceneTraversalTest.*:NifSceneFirstSynchronization.*:NifSceneRegistrationCache.*",
+            "binary_sha256": "e66561090c9d067227073a9807463e09582e2f46edd62c683095de817be962a2",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "3378c9ffdac9cf39fa99031d21a3e52e4c8bc75c0048e113f8b9e6003cde8208",
+            "inventory_sha256": "1e9ed79632475d76cb89bb5072b048c1099a69311be0f6928d2581435d84bb31",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        },
+        "source_after": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        }
+      }
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/nif-physical-hierarchy-normal-01/verification.json",
+      "sha256": "829a65f24872e6621b9c03345da1b2d3f91ff632b140ed31af7ba9c6a63222cc",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.769
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.033
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 14.309
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "4"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 44.987
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.215
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 23.681
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2775,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e66561090c9d067227073a9807463e09582e2f46edd62c683095de817be962a2",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "55b759753de63ce84e4908939c4e7d22875e3a6e516b4a9d4b95ff78e83e4aa6",
+            "inventory_sha256": "2f41bdece6c369328c3fd51c60e66c9473e1ec288985e44d2f2a4f0f67d617af",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1610,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a2ccaecf85d112a8e2de98793a1b33e2aa8ccb44f70a0db3bb4e21c31a74c404",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "a519ea43a792f3f90bef665ed9c80aae9a508d7683ae75b94338803b8dca02f8",
+            "inventory_sha256": "60a8e37b8d756e7ed194e0bbc9869db8e34d31214f809b08232d4236f6a59bc5",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        },
+        "source_after": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/nif-physical-hierarchy-sanitized-01/verification.json",
+      "sha256": "5489b1c40426f0de02b40c33d30e5e01997f9059a729d8080d55ef0c71b7c7d2",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 89.306
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.265
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 69.623
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 72.418
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.617
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/nif-physical-hierarchy-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 136.295
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2775,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d3dbf43590cbf3e049efbe319ec6dd7647cf01e97ae4cecdfa56d0ada5354d9b",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "7b3b17cfb4de19f2d82be15d7365243b60445d6f46521e6aab8a91b4cef84c0f",
+            "inventory_sha256": "23e7dac68f9af0a6010f4c356d54df565a2db3c5f70a1a0496869171d6f03d4c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1610,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "39236cd7343fb48f1502d87c278f2f4e553879dbd46a6fe724633abbf27c470e",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "4f3d8cede2afbba26fd4a3c7f63ac758ca21d08987763d8544986b7aa90185e4",
+            "inventory_sha256": "60a8e37b8d756e7ed194e0bbc9869db8e34d31214f809b08232d4236f6a59bc5",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        },
+        "source_after": {
+          "head": "c6565fa8290a4c765977da7a1a88956979dab8de",
+          "source_fingerprint": "21c90acd6e5abb2d309d9b45ac875a729e1bcbe101a098610dbca0c251ed42f8"
+        }
+      }
+    }
+  },
+  "openmw_binary_sha256": {
+    "normal": "437dd2bd4cfd06a9366c76517c828fcab4eae6e4fbfe27efb98a5354a6c93c1a",
+    "sanitized": "02cf6bf7703662e4c9e8465c296208df3ca3cf02f22d6e5c273165d854126ffa"
+  },
+  "retained_failures": [
+    "Preflight01 compile failed: mixed unsigned/enum initializer list could not deduce one type. Helper terminal before changing test to explicit std::array<unsigned,2>.",
+    "Preflight02 failed16 assertions from an incorrect test expectation that DEEP_COPY_USERDATA clones every ValueObject. Actual OSG shares immutable source metadata objects. Removed mutation of read-only source metadata; live flags belong to instance owner. Retained source/metadata-value and private transform/cache checks. Helper terminal before correction. Final03 passes42tests/4suites."
+  ],
+  "limits": [
+    "Final normal and ASan/UBSan each pass2775component tests/265suites and1610engine tests/122suites, complete inventories, no failures/skips. Leak detection disabled. Fresh openmw/openmw-tests/esmtool builds are covered; executable hashes identify artifacts, not a runtime course.",
+    "Preserving dynamic record nodes applies to all physical Oblivion hierarchies, not only weapons. It deliberately prevents static flattening/removal of those nodes. Rendering optimization cost remains part of outstanding real-content/FPS acceptance; nonphysical/TES3 optimization retains its prior path.",
+    "Synthetic loader/optimizer/clone/traversal integration and full engine tests do not establish original-content gameplay or normal-input acceptance. No new original-executable mechanics rule is claimed by this asset-preservation change.",
+    "Legacy ObjectAnimation local-root and World root-only adapters remain. Still need native generation/capture ordering including replacement exception, live flag derivation, model-specific outer dispatch, clock lifecycle/physics order, one update owner, safe real World/REFR/cell handling, pending save/fresh recreation and remaining melee/drop/effect/input/runtime gates."
+  ]
+}

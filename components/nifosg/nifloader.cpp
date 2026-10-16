@@ -350,6 +350,7 @@ namespace NifOsg
         bool mHasStencilProperty = false;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
         std::unordered_set<const Nif::NiAVObject*> mNativePhysicalRoots;
+        std::unordered_set<const Nif::NiAVObject*> mNativePhysicalNodes;
 
         struct EmbeddedSequence
         {
@@ -647,6 +648,7 @@ namespace NifOsg
                 {
                     std::vector<const Nif::NiAVObject*> pending{root};
                     std::unordered_set<const Nif::NiAVObject*> visited;
+                    bool physical = false;
                     while (!pending.empty())
                     {
                         const auto* node = pending.back();
@@ -654,13 +656,15 @@ namespace NifOsg
                         if (!visited.insert(node).second) continue;
                         if (!node->mCollision.empty()
                             && dynamic_cast<const Nif::bhkCollisionObject*>(node->mCollision.getPtr()))
-                        {
-                            mNativePhysicalRoots.insert(root);
-                            break;
-                        }
+                            physical = true;
                         if (const auto* branch = dynamic_cast<const Nif::NiNode*>(node))
                             for (const auto& child : branch->mChildren)
                                 if (!child.empty()) pending.push_back(child.getPtr());
+                    }
+                    if (physical)
+                    {
+                        mNativePhysicalRoots.insert(root);
+                        mNativePhysicalNodes.insert(visited.begin(), visited.end());
                     }
                 }
 
@@ -932,9 +936,13 @@ namespace NifOsg
                 && !nifNode->mCollision.empty()
                 && dynamic_cast<const Nif::bhkCollisionObject*>(nifNode->mCollision.getPtr());
             const bool nativePhysicalRoot = mNativePhysicalRoots.contains(nifNode);
+            const bool nativePhysicalNode = mNativePhysicalNodes.contains(nifNode);
 
+            // Even static helpers in a physical hierarchy have independent
+            // native author/world caches. Flattening them changes controller
+            // context and removes the record identities needed by binding.
             osg::Object::DataVariance dataVariance = nifNode->mIsBone || isOblivionScabbard(*nifNode)
-                || nativePhysicalTarget || nativePhysicalRoot
+                || nativePhysicalTarget || nativePhysicalRoot || nativePhysicalNode
                 ? osg::Object::DYNAMIC : osg::Object::STATIC;
 
             if (nifNode->mRecordType == Nif::RC_NiBillboardNode)
@@ -966,7 +974,8 @@ namespace NifOsg
                 // The Root node can be created as a Group if no transformation is required.
                 // This takes advantage of the fact root nodes can't have additional controllers
                 // loaded from an external .kf file (original engine just throws "can't find node" errors if you try).
-                if (!nativePhysicalTarget && !nativePhysicalRoot && nifNode->mParents.empty() && nifNode->mController.empty()
+                if (!nativePhysicalTarget && !nativePhysicalRoot && !nativePhysicalNode
+                    && nifNode->mParents.empty() && nifNode->mController.empty()
                     && nifNode->mTransform.isIdentity()
                     && !mEmbeddedAnimationNodes.contains(Misc::StringUtils::lowerCase(nifNode->mName)))
                     node = new osg::Group;
@@ -1000,6 +1009,15 @@ namespace NifOsg
             // - establishing connections to the animated collision shapes, which are handled in a separate loader
             // - finding a random child NiNode in NiBspArrayController
             node->setUserValue("recordIndex", nifNode->mRecordIndex);
+            if (mNativePhysicalNodes.contains(nifNode))
+            {
+                // Keep source identity/policy inputs with each private clone.
+                // These are authored flags, not computed live update flags.
+                // Helpers must retain their author locals and independent world
+                // caches even when no controller or body is attached to them.
+                node->setUserValue("nativeNifRecordType", static_cast<unsigned>(nifNode->mRecordType));
+                node->setUserValue("nativeNifFlags", nifNode->mFlags);
+            }
 
             std::string extraData;
             bool recursiveCollision = false;

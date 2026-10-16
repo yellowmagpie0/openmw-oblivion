@@ -3900,3 +3900,38 @@ per-world clock lifecycle and schedule one traversal with real World reference
 lifetimes/migration and physics order. Legacy ObjectAnimation/World adapters and
 remaining property/admission/save/recreation/melee/drop/effect/input/runtime gates
 are unchanged. M15S4 remains active and incomplete.
+
+## 2026-10-16 — preserve physical NIF helper records through production loading
+
+The production loader now scans complete Oblivion20.0.0.4/20.0.0.5 hierarchies
+before admitting physical roots. Every AV record in a hierarchy with bhk collision
+retains its transform and dynamic optimization protection, including static
+helpers and nonphysical sibling branches. Flattening those records would remove
+identities and author locals needed for native controller/cache observations.
+Immutable source record-type and full parsed flags metadata accompany each node;
+the owner must derive separate live update flags. This does not add unsupported
+billboard/switch/other model policies or a production traversal caller.
+
+Two tests exercise both versions, production-style optimizer permissions, actual
+CopyOp clones and actual manual traversal. All four root/helper/physical/sibling
+records retain identities/locals/type/flags. One clone's cached physical target
+moves106.75to206.75 while source/second clone remain6.75 without projection
+handles. Nonphysical Oblivion and existing Morrowind controls retain static
+identity-root optimization. Preflight01's enum initializer compile failure and
+preflight02's incorrect assumption of private OSG userdata ValueObjects are
+retained. Authored metadata is read-only and may be shared; live flags are owned
+separately. Final preflight03 passes42tests.
+
+Fresh normal and ASan/UBSan builds each pass all2,775components/265suites and
+1,610engine/122suites with complete inventories and no failures/skips. Leak
+detection is disabled. [Editable verification](M15-NIF-PHYSICAL-HIERARCHY-VERIFICATION.json)
+pins source, fingerprint, binary hashes and `nif-physical-hierarchy-*` evidence.
+This is loader/optimizer/clone/traversal integration, not a new runtime course.
+
+The preservation applies to all physical Oblivion models and prevents static
+flattening/removal there; its rendering cost remains part of real-content/FPS
+acceptance. Legacy adapters are unchanged. Native generation/capture/replacement,
+live flags, outer model/culling policies, clock lifecycle/physics order, one update
+owner, real reference/cell lifetimes/migration, pending save/fresh recreation and
+remaining melee/drop/effect/input/runtime gates remain open. M15S4 remains active
+and incomplete.

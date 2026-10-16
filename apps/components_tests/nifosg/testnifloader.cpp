@@ -14,6 +14,9 @@
 #include <components/resource/imagemanager.hpp>
 #include <components/sceneutil/serialize.hpp>
 #include <components/sceneutil/optimizer.hpp>
+#include <components/sceneutil/clone.hpp>
+#include <components/sceneutil/nifscenetraversal.hpp>
+#include <osg/FrameStamp>
 #include <osg/Geometry>
 #include <osg/Geode>
 #include <osg/ShapeDrawable>
@@ -1126,5 +1129,96 @@ namespace
         expectTraversalMatrixNear(world, projection); expectTraversalMatrixNear(inverse, osg::Matrixd::inverse(projection));
         node->clearTraversalMatrix(); world.makeIdentity(); node->computeLocalToWorldMatrix(world, nullptr);
         expectTraversalMatrixNear(world, before);
+    }
+}
+
+namespace
+{
+    TEST_F(NifOsgLoaderTest, OblivionPhysicalHierarchyRetainsPrivateHelperCachesAndSourcePolicyInputs)
+    {
+        for (const auto version : std::array<unsigned, 2>{0x14000004u, Nif::NIFFile::VER_OB})
+        {
+            SCOPED_TRACE(version);
+            Nif::NiNode root{}, helper{}, physical{}, sibling{};
+            std::array<Nif::NiNode*, 4> records{&root, &helper, &physical, &sibling};
+            for (unsigned i = 0; i < records.size(); ++i)
+            {
+                init(*records[i]); records[i]->mRecordType = Nif::RC_NiNode;
+                records[i]->mRecordIndex = i; records[i]->mFlags = 0x1234000eu + i * 16;
+                records[i]->mName = "node" + std::to_string(i);
+            }
+            helper.mParents.push_back(&root); physical.mParents.push_back(&helper); sibling.mParents.push_back(&root);
+            root.mChildren = {Nif::NiAVObjectPtr(&helper), Nif::NiAVObjectPtr(&sibling)};
+            helper.mChildren = {Nif::NiAVObjectPtr(&physical)};
+            helper.mTransform.mTranslation.x() = 3; helper.mTransform.mScale = .75f;
+            physical.mTransform.mTranslation.x() = 5;
+            Nif::bhkCollisionObject collision{}; collision.mRecordType = Nif::RC_bhkCollisionObject;
+            collision.mTarget = Nif::NiAVObjectPtr(&physical); physical.mCollision = Nif::NiCollisionObjectPtr(&collision);
+            Nif::NIFFile file(testNif); file.mVersion = version; file.mRoots.push_back(&root);
+            auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+            struct Permissions : SceneUtil::Optimizer::IsOperationPermissibleForObjectCallback
+            {
+                bool isOperationPermissibleForObjectImplementation(const SceneUtil::Optimizer* optimizer,
+                    const osg::Node* node, unsigned option) const override
+                {
+                    return node->getDataVariance() != osg::Object::DYNAMIC
+                        && (option & optimizer->getPermissibleOptimizationsForObject(node)) != 0;
+                }
+            };
+            SceneUtil::Optimizer optimizer;
+            optimizer.setIsOperationPermissibleForObjectCallback(new Permissions);
+            optimizer.optimize(loaded, SceneUtil::Optimizer::FLATTEN_STATIC_TRANSFORMS
+                | SceneUtil::Optimizer::REMOVE_REDUNDANT_NODES);
+            SceneUtil::CopyOp copyA, copyB;
+            osg::ref_ptr<osg::Node> first = osg::clone(loaded.get(), copyA), second = osg::clone(loaded.get(), copyB);
+            copyA.remapControllerTargets(); copyB.remapControllerTargets();
+            const auto find = [](osg::Node& tree, unsigned record) {
+                FindGroupByRecordIndex visitor(record); tree.accept(visitor);
+                return dynamic_cast<NifOsg::MatrixTransform*>(visitor.mFound);
+            };
+            for (unsigned i = 0; i < records.size(); ++i)
+            {
+                auto* source = find(*loaded, i); auto* a = find(*first, i); auto* b = find(*second, i);
+                ASSERT_NE(source, nullptr); ASSERT_NE(a, nullptr); ASSERT_NE(b, nullptr);
+                EXPECT_NE(source, a); EXPECT_NE(source, b); EXPECT_NE(a, b);
+                EXPECT_EQ(source->getDataVariance(), osg::Object::DYNAMIC);
+                EXPECT_EQ(source->getControllerTransform().mTranslation, records[i]->mTransform.mTranslation);
+                EXPECT_EQ(source->mScale, records[i]->mTransform.mScale);
+                unsigned type = ~0u, flags = 0;
+                ASSERT_TRUE(a->getUserValue("nativeNifRecordType", type));
+                ASSERT_TRUE(a->getUserValue("nativeNifFlags", flags));
+                EXPECT_EQ(type, static_cast<unsigned>(Nif::RC_NiNode)); EXPECT_EQ(flags, records[i]->mFlags);
+                // Source metadata is read-only. OSG may share ValueObjects
+                // between copied containers; live flags belong to the owner.
+                ASSERT_TRUE(b->getUserValue("nativeNifFlags", flags)); EXPECT_EQ(flags, records[i]->mFlags);
+                ASSERT_TRUE(source->getUserValue("nativeNifFlags", flags)); EXPECT_EQ(flags, records[i]->mFlags);
+            }
+            auto* firstRoot = find(*first, 0); auto* firstTarget = find(*first, 2);
+            firstRoot->setTranslation({100, 0, 0});
+            SceneUtil::NifSceneTraversal traversal(*firstRoot);
+            EXPECT_FLOAT_EQ(traversal.cachedWorld(*firstTarget).mTranslation.x(), 106.75f);
+            firstRoot->setTranslation({200, 0, 0});
+            traversal.update(osg::FrameStamp{}, 1);
+            EXPECT_FLOAT_EQ(traversal.cachedWorld(*firstTarget).mTranslation.x(), 206.75f);
+            EXPECT_NEAR(firstTarget->getWorldMatrices().front().getTrans().x(), 206.75, 1e-10);
+            EXPECT_EQ(find(*loaded, 0)->getTraversalMatrix().getMatrix(), nullptr);
+            EXPECT_EQ(find(*second, 2)->getTraversalMatrix().getMatrix(), nullptr);
+            EXPECT_EQ(find(*loaded, 2)->getWorldMatrices().front().getTrans().x(), 6.75);
+            EXPECT_EQ(find(*second, 2)->getWorldMatrices().front().getTrans().x(), 6.75);
+        }
+    }
+
+    TEST_F(NifOsgLoaderTest, NonphysicalOblivionRootKeepsOptimizationWithoutNativePhysicsMetadata)
+    {
+        Nif::NiNode root{}; init(root); root.mRecordType = Nif::RC_NiNode; root.mRecordIndex = 0;
+        root.mFlags = 14;
+        Nif::NIFFile file(testNif); file.mVersion = Nif::NIFFile::VER_OB; file.mRoots.push_back(&root);
+        auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+        FindGroupByRecordIndex visitor(0); loaded->accept(visitor); ASSERT_NE(visitor.mFound, nullptr);
+        EXPECT_EQ(visitor.mFound->getDataVariance(), osg::Object::STATIC);
+        EXPECT_EQ(dynamic_cast<NifOsg::MatrixTransform*>(visitor.mFound), nullptr);
+        unsigned flags;
+        EXPECT_FALSE(visitor.mFound->getUserValue("nativeNifFlags", flags));
+        EXPECT_FALSE(visitor.mFound->getUserValue("nativeNifRecordType", flags));
     }
 }
