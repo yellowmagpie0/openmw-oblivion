@@ -216,11 +216,12 @@ namespace ESM4
             || characterState == 2;
     }
 
-    OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys)
+    template <std::size_t Size>
+    static MeleeKeys<Size> meleeKeyTimes(std::span<const MeleeTextKey> textKeys,
+        const std::array<std::string_view, Size>& names)
     {
         for (const auto& key : textKeys)
             finite(key.mTime);
-        constexpr std::array<std::string_view, 4> names{"start", "hit", "a:", "end"};
         const auto prefix = [](std::string_view text, std::string_view name) {
             if (text.size() < name.size())
                 return false;
@@ -233,7 +234,7 @@ namespace ESM4
             }
             return true;
         };
-        OrdinaryMeleeKeys result;
+        MeleeKeys<Size> result;
         for (const auto& key : textKeys)
         {
             auto remaining = key.mText.substr(0, key.mText.find('\0'));
@@ -270,6 +271,16 @@ namespace ESM4
             }
         }
         return result;
+    }
+
+    OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys)
+    {
+        return meleeKeyTimes(textKeys, std::array<std::string_view, 4>{"start", "hit", "a:", "end"});
+    }
+
+    PowerMeleeKeys powerMeleeKeyTimes(std::span<const MeleeTextKey> textKeys)
+    {
+        return meleeKeyTimes(textKeys, std::array<std::string_view, 3>{"start", "hit", "end"});
     }
 
     std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys)
@@ -342,24 +353,37 @@ namespace ESM4
         return selected == 0 ? defaultDuration : rounded(double(selected) / 30.0);
     }
 
-    OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
-        float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes)
+    template <class Phase, std::size_t Size>
+    static Phase advanceMeleePhase(Phase phase,
+        float sequenceOffset, float animationClock, const std::array<float, Size>& keyTimes)
     {
         const auto index = static_cast<unsigned>(phase);
-        if (index > 3)
-            throw std::invalid_argument("invalid native ordinary melee phase");
+        if (index >= Size)
+            throw std::invalid_argument("invalid native melee phase");
         finite(sequenceOffset);
         finite(animationClock);
         for (float time : keyTimes)
             nonnegative(time);
         if (!std::is_sorted(keyTimes.begin(), keyTimes.end()))
-            throw std::invalid_argument("unordered native ordinary melee keys");
-        if (phase == OrdinaryMeleePhase::End)
+            throw std::invalid_argument("unordered native melee keys");
+        if (index == Size - 1)
             return phase;
         // 4770ED stores offset+clock to binary32 before comparing the next key.
         const float groupTime = rounded(double(sequenceOffset) + animationClock);
         return groupTime > keyTimes[index + 1]
-            ? static_cast<OrdinaryMeleePhase>(index + 1) : phase;
+            ? static_cast<Phase>(index + 1) : phase;
+    }
+
+    OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
+        float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes)
+    {
+        return advanceMeleePhase(phase, sequenceOffset, animationClock, keyTimes);
+    }
+
+    PowerMeleePhase advancePowerMeleePhase(PowerMeleePhase phase,
+        float sequenceOffset, float animationClock, const std::array<float, 3>& keyTimes)
+    {
+        return advanceMeleePhase(phase, sequenceOffset, animationClock, keyTimes);
     }
 
     float advanceMeleeAnimationClock(float animationClock, float frameDuration)
@@ -434,26 +458,43 @@ namespace ESM4
         return result;
     }
 
-    OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
+    template <class Frame, std::size_t Size, class Advance>
+    static Frame advanceMeleeFrame(const Frame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, 4>& keyTimes, bool freezeClock)
+        const std::array<float, Size>& keyTimes, bool freezeClock, Advance advancePhase)
     {
         nonnegative(duration);
         nonnegative(speed);
         if (speed == 0 || frame.mTiming.mOffset.has_value() != frame.mTiming.mEaseStart.has_value()
             || frame.mTiming.mOffset.has_value() != frame.mTiming.mLastInput.has_value())
-            throw std::invalid_argument("unsupported ordinary sequence initialization or speed");
+            throw std::invalid_argument("unsupported melee sequence initialization or speed");
         // Validate all keys/phase even while easing/frozen/uninitialized.
-        (void)advanceOrdinaryMeleePhase(frame.mPhase, 0, 0, keyTimes);
+        (void)advancePhase(frame.mPhase, 0, 0, keyTimes);
         auto next = frame;
         next.mClock = advanceMeleeAnimationClock(frame.mClock, freezeClock ? 0.f : duration);
         if (!freezeClock && !frame.mTiming.mEasing && frame.mTiming.mOffset)
         {
             next.mTiming.mOffset = correctMeleeSequenceOffset(*frame.mTiming.mOffset, begin, speed, duration);
-            next.mPhase = advanceOrdinaryMeleePhase(frame.mPhase, *next.mTiming.mOffset, next.mClock, keyTimes);
+            next.mPhase = advancePhase(frame.mPhase, *next.mTiming.mOffset, next.mClock, keyTimes);
         }
         next.mTiming = updateMeleeSequenceTiming(next.mTiming, next.mClock, frequency, begin, end);
         return next;
+    }
+
+    OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
+        float duration, float speed, float frequency, float begin, float end,
+        const std::array<float, 4>& keyTimes, bool freezeClock)
+    {
+        return advanceMeleeFrame(frame, duration, speed, frequency, begin, end, keyTimes, freezeClock,
+            advanceOrdinaryMeleePhase);
+    }
+
+    PowerMeleeFrame advancePowerMeleeFrame(const PowerMeleeFrame& frame,
+        float duration, float speed, float frequency, float begin, float end,
+        const std::array<float, 3>& keyTimes, bool freezeClock)
+    {
+        return advanceMeleeFrame(frame, duration, speed, frequency, begin, end, keyTimes, freezeClock,
+            advancePowerMeleePhase);
     }
 
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)

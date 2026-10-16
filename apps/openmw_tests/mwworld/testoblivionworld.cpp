@@ -21024,7 +21024,7 @@ TEST(OblivionWorldTest, InventoryExtraScaleCaptureAndRestorePreservesBothActorIn
     ASSERT_TRUE(world.getOblivionAiService()->setRestrained(fixture.mNpc,false));
     fixture.mItem.getCellRef().setScale(2);
     const auto saved = world.captureOblivionRuntimeState();
-    ASSERT_EQ(saved.mVersion,48u);
+    ASSERT_EQ(saved.mVersion, ESM4::CurrentRuntimeStateVersion);
     for (const auto actor : {player,fixture.mNpc})
         for (const auto item : actor.getClass().getInventoryStore(actor))
             item.getCellRef().setNativeItemScale(std::nullopt);
@@ -22723,4 +22723,123 @@ TEST(OblivionWorldTest, NativeWeaponFactoryLinkedPhysicsWaitsForScenePublication
     EXPECT_THROW(fixture.mPhysics->captureLooseObjectSceneBinding(reference), std::invalid_argument);
     fixture.mPhysics->removeLooseObject(reference);
     EXPECT_TRUE(plan->isValid());
+}
+
+TEST(OblivionWorldTest, NativePowerPhasePersistsWithoutAnOrdinaryQueueAndConsumesOnlyOneAction)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = addNativeNpc(fixture, 0x801);
+    ASSERT_TRUE(world.activateOblivionActor(actor));
+    auto& service = *world.getOblivionCombatService();
+    const auto key = actor.getCellRef().getFormKey();
+    service.initializeConstructedActorProcess(key);
+    const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::StandingPower, "handtohandattackpower");
+    ASSERT_TRUE(service.bindMeleePlayback(id, key));
+    service.advanceAnimationClock(key, 0);
+    ASSERT_TRUE(service.setMeleeSequenceTiming(id, key, {}));
+    const std::array<float, 3> keys{0, .2f, 1};
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, 0, 1, 0, 1, keys));
+    EXPECT_FALSE(service.isMeleeContactPending(id, key));
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, .2f, 1, 0, 1, keys));
+    EXPECT_FALSE(service.isMeleeContactPending(id, key));
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, .01f, 1, 0, 1, keys));
+    ASSERT_TRUE(service.isMeleeContactPending(id, key));
+    EXPECT_FALSE(service.isOrdinaryMeleeContactPending(id, key));
+    EXPECT_FALSE(service.isMeleeContactPending(id + 1, key));
+    EXPECT_FALSE(service.advanceOrdinaryMeleeSequence(id, key, .1f, 1, 0, 1, {0, .2f, .6f, 1}));
+    const auto pending = captureNativeActorState(fixture, actor).serializeBinary();
+    service.restore(ESM4::RuntimeState::deserializeBinary(pending), world.getStore());
+    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), pending);
+    EXPECT_TRUE(service.isMeleeContactPending(id, key));
+    auto legacy = ESM4::RuntimeState::deserializeBinary(pending);
+    legacy.mVersion = 48;
+    legacy.mNativeMeleeStates.at(key).mStrike->mPowerPhase.reset();
+    legacy.mNativeMeleeStates.at(key).mStrike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Queue;
+    service.restore(ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()), world.getStore());
+    EXPECT_FALSE(service.isMeleeContactPending(id, key));
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, 0, 1, 0, 1, keys));
+    auto expectedMigration = ESM4::RuntimeState::deserializeBinary(pending);
+    auto& timing = *expectedMigration.mNativeMeleeStates.at(key).mStrike->mSequenceTiming;
+    // Active native manager updates copy the previous output to ease-start,
+    // including on zero-duration frames (6CA950/6C5FC0).
+    timing.mEaseStart = timing.mOutputTime;
+    const auto migrated = expectedMigration.serializeBinary();
+    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), migrated);
+    // Missing physical context is neither a contact nor an acquired miss.
+    EXPECT_FALSE(MWMechanics::commitOblivionMeleeContact(world, id, actor, {}, 64, 0, 0, false));
+    EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), migrated);
+    const auto fatigue = service.getNonPlayerValue(actor, 10);
+    // Exercise the existing transaction/restore anti-replay boundary separately
+    // from acquisition; this is not a geometry or normal-input acceptance test.
+    ASSERT_TRUE(world.commitOblivionPhysicalContact(id, actor, {}, {-35, 0, 0}));
+    EXPECT_EQ(service.getNonPlayerValue(actor, 10), fatigue - 35);
+    const auto consumed = captureNativeActorState(fixture, actor).serializeBinary();
+    service.restore(ESM4::RuntimeState::deserializeBinary(consumed), world.getStore());
+    EXPECT_FALSE(service.isMeleeContactPending(id, key));
+    EXPECT_FALSE(world.commitOblivionPhysicalContact(id, actor, {}, {-35, 0, 0}));
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, 1, 1, 0, 1, keys));
+    EXPECT_EQ(service.findMeleeState(key)->mStrike->mPowerPhase, ESM4::PowerMeleePhase::End);
+    EXPECT_EQ(service.findMeleeState(key)->mStrike->mOrdinaryPhase, ESM4::OrdinaryMeleePhase::Start);
+    ASSERT_TRUE(service.finishMeleeStrike(id, key));
+    EXPECT_EQ(service.getProcessAction(key), -1);
+}
+
+TEST(OblivionWorldTest, StandingPowerRecipesUseRawSkillAndMultiplyWeaponBeforeAttackBonus)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+    ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+    unsigned id = 0x950;
+    for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", 0.f},
+        {"fDamageWeaponMult", 1.f}, {"fDamageSkillBase", 1.f}, {"fDamageSkillMult", 0.f},
+        {"fDamageWeaponConditionBase", 1.f}, {"fDamageWeaponConditionMult", 0.f},
+        {"fDamageStrengthBase", 1.f}, {"fDamageStrengthMult", 0.f},
+        {"fHandHealthMin", 20.f}, {"fHandHealthMax", 20.f},
+        {"fHandFatigueDamageBase", 10.f}, {"fHandFatigueDamageMult", 0.f},
+        {"fDamagePowerAttackBonus", 2.5f}, {"fDamagePowerAttackStandBonus", 3.f},
+        {"fDamageToWeaponPercentage", 0.f}})
+    {
+        ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+        store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", id++));
+    }
+    const auto set = [&](std::uint8_t av, int value) {
+        return world.executeOblivionActorValueCommand(attacker, av, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, value);
+    };
+    ASSERT_TRUE(set(42, 7)); ASSERT_TRUE(set(7, 100));
+    const auto weaponKey = addEquipmentWeapon(fixture);
+    auto weapon = *store.search<ESM4::Weapon>(weaponKey); weapon.mData.damage = 8;
+    ESM4::RuntimeInventoryItem saved; saved.mBase = weaponKey; saved.mCount = 1;
+    saved.mCondition = 100; saved.mEquippedSlots = ESM4::InventorySlotWeapon;
+    installEquipmentInventory(fixture, attacker, {saved});
+    auto& inventory = attacker.getClass().getInventoryStore(attacker);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    const auto snapshot = [&] {
+        auto state = captureNativeActorState(fixture, attacker);
+        state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+        return state.serializeBinary();
+    };
+    for (unsigned type = 0; type < 4; ++type)
+        for (int skill : {24, 25})
+        {
+            SCOPED_TRACE(::testing::Message() << type << ',' << skill);
+            weapon.mData.type = type; store.getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+            ASSERT_TRUE(set(type < 2 ? 16 : 14, 100));
+            ASSERT_TRUE(set(type < 2 ? 14 : 16, skill)); ASSERT_TRUE(set(17, skill));
+            const auto before = snapshot();
+            const auto hand = MWMechanics::resolveOblivionUnarmedMeleeContact(world, attacker, victim, 0, false,
+                ESM4::MeleeStrikeKind::StandingPower);
+            ASSERT_TRUE(hand); EXPECT_EQ(hand->mHealth, skill == 24 ? 50 : 60);
+            EXPECT_EQ(hand->mFatigue, skill == 24 ? 25 : 30);
+            const auto armed = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                item, 0, false, ESM4::MeleeStrikeKind::StandingPower);
+            ASSERT_TRUE(armed); EXPECT_EQ(armed->mHealth, skill == 24 ? 27 : 31);
+            EXPECT_EQ(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, attacker, item), 15);
+            EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                item, 0, false, ESM4::MeleeStrikeKind::LeftPower));
+            EXPECT_EQ(snapshot(), before);
+        }
 }

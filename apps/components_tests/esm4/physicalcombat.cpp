@@ -4910,3 +4910,43 @@ TEST(ESM4PhysicalCombat, ForcedSceneVelocityResetRejectsNonfiniteLanesWithoutCha
         }
     }
 }
+
+TEST(ESM4PhysicalCombat, PowerKeysUseNativeThreeSlotOrderWithoutOrdinaryQueue)
+{
+    const std::array<ESM4::MeleeTextKey, 4> keys{{{0, "Start"}, {.25f, "Hit"}, {.5f, "a:R"}, {1, "End"}}};
+    EXPECT_EQ(ESM4::powerMeleeKeyTimes(keys), (ESM4::PowerMeleeKeys{{0, .25f, 1}, 3}));
+    const std::array<ESM4::MeleeTextKey, 1> multiline{{{.5f, "START\nHiT\nEnd"}}};
+    EXPECT_EQ(ESM4::powerMeleeKeyTimes(multiline), (ESM4::PowerMeleeKeys{{.5f, .5f, .5f}, 3}));
+    const std::array<ESM4::MeleeTextKey, 3> unordered{{{0, "Start"}, {.1f, "End"}, {.2f, "Hit"}}};
+    EXPECT_EQ(ESM4::powerMeleeKeyTimes(unordered), (ESM4::PowerMeleeKeys{{0, .2f, 0}, 2}));
+    using Phase = ESM4::PowerMeleePhase;
+    const std::array<float, 3> times{0, .2f, 1};
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::Start, 0, .2f, times), Phase::Start);
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::Start, 0,
+        std::nextafter(.2f, 1.f), times), Phase::Contact);
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::Start, 0, 100, times), Phase::Contact);
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::Contact, 0, 1, times), Phase::Contact);
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::Contact, 0, 100, times), Phase::End);
+    EXPECT_EQ(ESM4::advancePowerMeleePhase(Phase::End, 0, 100, times), Phase::End);
+}
+
+TEST(ESM4PhysicalCombat, PowerFrameKeepsNativeTimingAndRejectsInvalidPhaseEvenWhileFrozen)
+{
+    using Phase = ESM4::PowerMeleePhase;
+    const std::array<float, 3> keys{0, .2f, 1};
+    ESM4::PowerMeleeFrame frame{0, Phase::Start, {}};
+    frame = ESM4::advancePowerMeleeFrame(frame, 0, 1, 1, 0, 1, keys);
+    ASSERT_TRUE(frame.mTiming.mOffset);
+    frame = ESM4::advancePowerMeleeFrame(frame, .3f, 1, 1, 0, 1, keys);
+    EXPECT_EQ(frame.mPhase, Phase::Contact);
+    const auto contact = frame;
+    const auto frozen = ESM4::advancePowerMeleeFrame(frame, 5, 1, 1, 0, 1, keys, true);
+    EXPECT_EQ(frozen.mPhase, Phase::Contact); EXPECT_EQ(frozen.mClock, frame.mClock);
+    frame = ESM4::advancePowerMeleeFrame(frame, 1, 1, 1, 0, 1, keys);
+    EXPECT_EQ(frame.mPhase, Phase::End); EXPECT_EQ(frame.mTiming.mOutputTime, 1);
+    EXPECT_THROW(ESM4::advancePowerMeleeFrame(contact, .1f, 0, 1, 0, 1, keys), std::invalid_argument);
+    EXPECT_THROW(ESM4::advancePowerMeleeFrame(contact, .1f, 1, 0, 0, 1, keys), std::invalid_argument);
+    auto bad = contact; bad.mPhase = static_cast<Phase>(3); bad.mTiming.mEasing = true;
+    EXPECT_THROW(ESM4::advancePowerMeleeFrame(bad, .1f, 1, 1, 0, 1, keys, true), std::invalid_argument);
+    EXPECT_EQ(contact.mPhase, Phase::Contact); EXPECT_FLOAT_EQ(contact.mClock, .3f);
+}

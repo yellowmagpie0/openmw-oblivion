@@ -78,16 +78,19 @@ namespace ESM4
         float mTime;
         std::string_view mText;
     };
-    struct OrdinaryMeleeKeys
+    template <std::size_t Size> struct MeleeKeys
     {
-        std::array<float, 4> mTimes{};
+        std::array<float, Size> mTimes{};
         std::uint8_t mMatchedCount = 0;
-        friend bool operator==(const OrdinaryMeleeKeys&, const OrdinaryMeleeKeys&) = default;
+        friend bool operator==(const MeleeKeys&, const MeleeKeys&) = default;
     };
+    using OrdinaryMeleeKeys = MeleeKeys<4>;
+    using PowerMeleeKeys = MeleeKeys<3>;
     // Original51B688: consume Start/Hit/a:/End in authored order, rather
     // than collecting independently named keys or sorting a renderer map.
     // Missing/unwritten slots retain the original zero initialization.
     OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
+    PowerMeleeKeys powerMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
     // Original raw Blend: decimal parsing stores the low byte; last match wins.
     // Integer overflow and malformed leading CR without LF are unsupported.
     std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys);
@@ -95,10 +98,13 @@ namespace ESM4
         std::uint8_t frames, float defaultDuration);
 
     enum class OrdinaryMeleePhase : std::uint8_t { Start, Contact, Queue, End };
+    enum class PowerMeleePhase : std::uint8_t { Start, Contact, End };
     // Original ordinary subtype4 slots: Start, Hit, a:, End. Advance at most
     // one phase per native animation update, strictly after its next key.
     OrdinaryMeleePhase advanceOrdinaryMeleePhase(OrdinaryMeleePhase phase,
         float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
+    PowerMeleePhase advancePowerMeleePhase(PowerMeleePhase phase,
+        float sequenceOffset, float animationClock, const std::array<float, 3>& keyTimes);
     float advanceMeleeAnimationClock(float animationClock, float frameDuration);
     // The caller has resolved a newly activated sequence's sentinel offset.
     // Original6CA950 initializes it from the current native animation clock.
@@ -141,6 +147,17 @@ namespace ESM4
     OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
         float duration, float speed, float frequency, float begin, float end,
         const std::array<float, 4>& keyTimes, bool freezeClock = false);
+    struct PowerMeleeFrame
+    {
+        float mClock;
+        PowerMeleePhase mPhase;
+        MeleeSequenceTiming mTiming;
+        friend bool operator==(const PowerMeleeFrame&, const PowerMeleeFrame&) = default;
+    };
+    // Native subtype5 uses Start/Hit/End, without the ordinary a: queue slot.
+    PowerMeleeFrame advancePowerMeleeFrame(const PowerMeleeFrame& frame,
+        float duration, float speed, float frequency, float begin, float end,
+        const std::array<float, 3>& keyTimes, bool freezeClock = false);
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings

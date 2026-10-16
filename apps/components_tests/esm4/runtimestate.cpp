@@ -3656,3 +3656,39 @@ TEST(ESM4RuntimeState, InventoryExtraScale48ReadsIndependentlyConstructedWireAnd
     for (unsigned i=0;i<4;++i) corrupt[offset+1+i] = (infinity>>(i*8))&255;
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt),std::runtime_error);
 }
+
+TEST(ESM4RuntimeState, PowerMeleePhaseVersionFortyNineRoundTripsAndRejectsCorruptTags)
+{
+    auto old = meleeState(); old.mVersion = 48;
+    const auto actor = old.mReferences.front().mKey;
+    old.mNativeMeleeStates.at(actor).mStrike->mKind = ESM4::MeleeStrikeKind::StandingPower;
+    old.mNativeMeleeStates.at(actor).mStrike->mAnimationGroup = "handtohandattackpower";
+    const auto oldBytes = old.serializeBinary();
+    auto current = ESM4::RuntimeState::deserializeBinary(oldBytes);
+    EXPECT_FALSE(current.mNativeMeleeStates.at(actor).mStrike->mPowerPhase);
+    current.mVersion = 49;
+    for (unsigned phase = 0; phase <= 2; ++phase)
+    {
+        current.mNativeMeleeStates.at(actor).mStrike->mPowerPhase = static_cast<ESM4::PowerMeleePhase>(phase);
+        const auto bytes = current.serializeBinary();
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeMeleeStates, current.mNativeMeleeStates);
+        EXPECT_NE(current.canonicalJson().find("\"power_phase\":" + std::to_string(phase)), std::string::npos);
+    }
+    auto end = current.serializeBinary();
+    current.mNativeMeleeStates.at(actor).mStrike->mPowerPhase = ESM4::PowerMeleePhase::Start;
+    auto start = current.serializeBinary(); ASSERT_EQ(start.size(), end.size());
+    std::vector<std::size_t> differences;
+    for (std::size_t i = 0; i < start.size(); ++i) if (start[i] != end[i]) differences.push_back(i);
+    ASSERT_EQ(differences.size(), 1u);
+    auto corrupt = start; corrupt[differences[0]] = 3;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    corrupt = start; corrupt[differences[0] - 1] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    auto bad = current; bad.mVersion = 48;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = current; bad.mNativeMeleeStates.at(actor).mStrike->mKind = ESM4::MeleeStrikeKind::Left;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = current; bad.mNativeMeleeStates.at(actor).mStrike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Contact;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    EXPECT_EQ(old.serializeBinary(), oldBytes);
+}

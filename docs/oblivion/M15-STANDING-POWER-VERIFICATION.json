@@ -1,0 +1,367 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Standing-power timing/contact/save integration verified for the declared domains; full M15S4 incomplete",
+  "parent_commit": "d0d5b88e89fe3883fca6d425b8b04b3ff4e327a4",
+  "implementation_sha256": {
+    "apps/components_tests/esm4/physicalcombat.cpp": "bb7e42f864b010cabc5722090cc7e35bc787f62759ce841e9979dd33b6f18ea0",
+    "apps/components_tests/esm4/runtimestate.cpp": "3a3e06248c0e69f3bd37aa503ac2b45d379f4effb70eb44ff014cb68ee5c3aba",
+    "apps/openmw/mwmechanics/character.cpp": "197c3203941f9c54178c793f157f05bcf0eff2149a3d480ddb93bcafa9dba84f",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "2f0c24ec2c0644268bd9322373ad330a66b411e0fd4c1f209ba309f0576816d2",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "a650fd591470ba018cb48eb14869545a155c780828ab94c16061ef8d048f9eb3",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "18efe34c40ee9b519a15ae94609de9431dbc3773e23ddb5d6694d5e170ee12e0",
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": "5a1615f67c31beb9f9f9a5fb738976e5fb7e93a0f1b8c7ba45b9ca026dad6e76",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "6e81ee22033e0178d42be6cac927229baa11fdca0465c1de1f1b8e20664444a3",
+    "components/esm4/physicalcombat.cpp": "7ee150e9c09d8b688251d962464a6b6a0105e6b91f4ffb935078d3c4c1c4e0a6",
+    "components/esm4/physicalcombat.hpp": "2dec6c3755b9750afb595a78c71d728791344f4caa2983849c8e414a48a1a323",
+    "components/esm4/runtimestate.cpp": "ef45fcdab4f7cfa8b0d94e782d3d6110ab4e63a7bc692793c6d3a104f3011cd2",
+    "components/esm4/runtimestate.hpp": "6c425d476997307929d2a81cbd81dea6a8a3ec43b0fa302932b344e60c63a6be",
+    "scripts/tes4_runtime_state.py": "f78eabc21d0b59c05c5dc231180b8a672e696c2cbbd36ca43c23175c786affa3",
+    "scripts/tests/test_tes4_runtime_state.py": "3cebe28653467b1e131169a10951401963830d7d40045802e8c68a19d29c1634"
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-key-loop-oracle-01/report.json",
+      "sha256": "8d7685c09bb928a2adf455ce687806e7f96f878477d1a33f65f1967da2295053",
+      "passed": true,
+      "scope": "Original51B688 raw NiTextKeyExtraData loop through51BA50, before terminal group validation/fallback. Supplied preallocated power22 group and original sequence name table pointer. Full original lexical matching, key-slot progression, CR/LF traversal and finite time-storage boundaries including signed zero/subnormal/negative times. Only4A7A60 diagnostic logger is supplied. No actual KF binary loading, allocation, terminal validation or playback.",
+      "observations": 1134,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-frame-prefix-oracle-02/report.json",
+      "sha256": "8050835a11fae3b8e1ac8b3f2850d8eb86b15b98911d62a023700eb65e4682e7",
+      "passed": true,
+      "scope": "Original constructor initialization prefix473EDC\u2013473F42 and animation frame prefix476F95 with actual clock addition/group decoding/state/freeze/speed/power phase paths. At476FA6 set loop index3 to isolate power slot (other slots and full caller outside probe). Stop at477282 after power phase or4774BD early rejection. No called-function stubs. Supplied actor animation memory and metadata, no NiManager update or contact caller order acceptance.",
+      "observations": 1728,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-contact-phase-oracle-02/report.json",
+      "sha256": "fe8e1f1abfd3f0aa93882c83e6f979c40eb2b538dc89bebb7b8eefdc5fb48b78",
+      "passed": true,
+      "scope": "Composed original power phase prefix477248\u2192477282, then actual5FCC36 phase/subtype gate through power virtual contact and full5E4010 power cost to5FCDBA, or5FD7DE rejection. Full470750/470720/51AA00/51AE20 and native subtype table execute. Supplied sequence/key times, Player/not-blocking/no-magic context, contact/debit writers. Composition order is supplied, not proof of original full caller order. Earlier attack-process-state gate, completion/clock-offset handling and later3-state anti-replay writer are outside this prefix; repeated phase1 invocation can dispatch again here and must not be mistaken for full native replay semantics.",
+      "observations": 48,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-sequence-frame-oracle-01/report.json",
+      "sha256": "11102ca75fc4f7f1cf418d33a5e31e1fd47ca2783f4f7d8354f02055ded70ad2",
+      "passed": true,
+      "scope": "Original activation6C9BA0, then each frame original power prefix476F95\u2192477282/4774BD followed by full6CA950 manager update. Index3 supplied at476FA6, preallocated null-sync clamp sequences/groups, empty controlled attachments. No called-function stubs. Other slots/full actor contact caller/frame producer and mode5 early freeze outside this composed probe.",
+      "observations": 648,
+      "cases": null,
+      "updates": 9720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-power-weapon-course-oracle-01/report.json",
+      "sha256": "13393012f97f26d0a56419175077cf0e2b8b80f858fcfd86e99cf050cfc955b7",
+      "passed": true,
+      "scope": "Sequential ordinary and standing-power original546BA0/56A300 multiplier, full484F80 weapon damage query,547240 base-damage wear,5F3870/484850 current-condition and publication paths in both x87 modes. Supplied actor AVs/base Fatigue/damage/item condition and RTTI/reference/publication boundaries as pinned entry02/condition03; current second-hit condition comes only from original first-hit wear. Rusty-short-sword fixture inputs: damage5/max56/condition55.875, skill10/Luck50/Strength40/fullFatigue140, bonus0; installed power2.5/stand3 and wear.06. No contact, acquisition, armor/block/reactions/attack debit or full caller execution.",
+      "observations": null,
+      "cases": null,
+      "updates": null,
+      "profiles": 2,
+      "hits": 4
+    }
+  ],
+  "comparisons": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-key-comparison-01/verification.json",
+      "sha256": "c28f9fa1a9854a142a1d1a88cbf025bb6a73ee9e2d9f635ce05a0ea93710b916",
+      "passed": true,
+      "scope": "Exact matched count and all three time-slot bits against original raw lexical key loop in normal and ASan/UBSan C++ builds. Supplied preallocated group22; logger boundary; no terminal KF validation/allocation/playback claim.",
+      "observations": null,
+      "cases": 1134,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-sequence-frame-comparison-01/verification.json",
+      "sha256": "fd540e412424df904e7d493fbf7805c0db8203327cdf67f117c830fc8bd48c5c",
+      "passed": true,
+      "scope": "Every clock/phase/state and six float storage bits compared with independently executed original power frame prefix and full sequence manager activation/update; supplied index3/preallocated null-sync clamp/empty controllers; no full caller/contact/freeze/gameplay acceptance.",
+      "observations": null,
+      "cases": null,
+      "updates": 9720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-power-sequence-frame-comparison-01/normal-and-sanitized.json",
+      "sha256": "b4e3c6f0f0d1fd7c48bcd940e88be57b15d686fd6422c979bc83b399d846da73",
+      "passed": true,
+      "scope": null,
+      "observations": null,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-wire-compare-01/normal-verification.json",
+      "sha256": "5f352c2b8606fe9d9525d5bbf8db44687873154463e79e9928723296e9b8023b",
+      "passed": true,
+      "scope": "Python v49 encode -> C++ validate/decode/reencode and canonical JSON -> Python encode, exact whole-payload bytes. All seven kinds with nullable or three power phases as permitted, pending and committed actions. Software persistence inputs, no original save-format or gameplay claim.",
+      "observations": null,
+      "cases": 44,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-wire-compare-01/sanitized-verification.json",
+      "sha256": "30296ab32d46757923921dbd0f49c2d86c74e6eb0432d7300ebd069e96ef4f7a",
+      "passed": true,
+      "scope": "Python v49 encode -> C++ validate/decode/reencode and canonical JSON -> Python encode, exact whole-payload bytes. All seven kinds with nullable or three power phases as permitted, pending and committed actions. Software persistence inputs, no original save-format or gameplay claim.",
+      "observations": null,
+      "cases": 44,
+      "updates": null
+    }
+  ],
+  "checks": {
+    "normal_components": {
+      "path": "build/oblivion-compat/m15/S4/standing-power-main-01/verification.json",
+      "sha256": "bf085bb4e6929dfd2e470f40ddcbda7b8adfaadae1001716595768bf9de92abf",
+      "run_passed": false,
+      "selected_results": {
+        "components": {
+          "executed": 2793,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0804da4ee5bc57d1ec062bfefa7f9e70b232720f3c9b3c8697eabf68e2176bf6",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "b6c14780a71e42fcd5ed1580edce545509d4ef5554391aada419bba74660e6ff",
+          "inventory_sha256": "f3c5492b57c120a748436e4e7b772e10c544d19a3058dd7bdea59722ff0eca75",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_fingerprint": "d0b369ab5603c34b7500495f67d05da2c0d519ad369124a4c7e51279ea561ddd"
+    },
+    "sanitized_components": {
+      "path": "build/oblivion-compat/m15/S4/standing-power-sanitized-01/verification.json",
+      "sha256": "133ef8c6f76e531465d671f3486c26f0ff0f782d755a169b3e2083174f343659",
+      "run_passed": false,
+      "selected_results": {
+        "components": {
+          "executed": 2793,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1f0066a07a772fc027eeca720e6f28ca3800504a1f948a20b766dbf4c02c43af",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "fc3b531c7ed55477364b5fdbe59ff962ca3a3f78a33434cf5fba6579646497ca",
+          "inventory_sha256": "cbf9e0594e3d442b0da1a91fbe940ae7b8e22d19e3df1026e0cbe9f4c5420d91",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_fingerprint": "d0b369ab5603c34b7500495f67d05da2c0d519ad369124a4c7e51279ea561ddd"
+    },
+    "normal_engine_python": {
+      "path": "build/oblivion-compat/m15/S4/standing-power-main-02/verification.json",
+      "sha256": "df638d8fa15113a5a8b0381e622c75bc9b08c6b04931980c07d29644f28a5c9d",
+      "run_passed": true,
+      "selected_results": {
+        "engine": {
+          "executed": 1615,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0c20be96ce98308c481f6e9595903b123249d7466c94c5f0c2e06529b2cf9d0f",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "791c1b30efa84fa7e2c5017c4cc088c7dd48ecdfc8d9ec53a0a245689a06917f",
+          "inventory_sha256": "989882c1ded04e8d742d365a36b597a7145061e7c8414c2253d3fd1a960f5414",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 304,
+          "passed": true,
+          "log_sha256": "f5de4a2355aa7404b6dca45edbb142be332a4fbd578953ba6cfca080657fa282"
+        }
+      },
+      "source_fingerprint": "76b7f8494d562d1b74eafc06f220e4b2a863f55bded379c908f409f526041354"
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/m15/S4/standing-power-sanitized-02/verification.json",
+      "sha256": "208c47f9908513b87b241fa547a21e3a05810e5335bbda8534015393a2ce4d90",
+      "run_passed": true,
+      "selected_results": {
+        "engine": {
+          "executed": 1615,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "992e4d9a283a03e1aac257a8d9d471ac47a647ac76cf413e25557901fb1b7bc2",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "8967dc665edd2b853a1f6ff28a314bb38259b16ab5e5d12318c696439d57fa59",
+          "inventory_sha256": "989882c1ded04e8d742d365a36b597a7145061e7c8414c2253d3fd1a960f5414",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_fingerprint": "76b7f8494d562d1b74eafc06f220e4b2a863f55bded379c908f409f526041354"
+    }
+  },
+  "runtime": [
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/verification.json",
+      "sha256": "b47f1734c5f4f55c1deffde55f9355436f256b9adc69e5ab8b0e845273c59d03",
+      "passed": true,
+      "scope": "Real configured keyboard ordinary->standing-power input, C++ phase0/pending action2 save, distinct fresh engine process restores action2 and commits one physical hit/35 Fatigue debit, third fresh process has no hit or action replay. Independently decoded target Health Damage is exact -1.4199999570846558 at windup and -4.96999979019165 after resumed power. Every other prior AV channel unchanged except Player/victim Fatigue regeneration (bounded; exact post-frame Fatigue stores not claimed); process construction/action fields checked; all prior inventories and lifecycle/base/death/engagement/breath fields preserved. Real whole-save C++/Python payload byte identity. Staged NPC position/restraint, not campaign AI/gamepad/audio/original-live power parity.",
+      "observations": null,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-sanitized-02/verification.json",
+      "sha256": "15d8a25a8a897dc3e995e55f5c8a668e24eb640e6358038a417334683eeddeeb",
+      "passed": true,
+      "scope": "Real configured keyboard ordinary->standing-power input, C++ phase0/pending action2 save, distinct fresh engine process restores action2 and commits one physical hit/35 Fatigue debit, third fresh process has no hit or action replay. Independently decoded target Health Damage is exact -1.4199999570846558 at windup and -4.96999979019165 after resumed power. Every other prior AV channel unchanged except Player/victim Fatigue regeneration (bounded; exact post-frame Fatigue stores not claimed); process construction/action fields checked; all prior inventories and lifecycle/base/death/engagement/breath fields preserved. Real whole-save C++/Python payload byte identity. Staged NPC position/restraint, not campaign AI/gamepad/audio/original-live power parity.",
+      "observations": null,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-recovery-restart-03/verification.json",
+      "sha256": "6a2c71776abf8d0ff54ac256d7caae7ef47a26232458d397763f5a0138cc9bb2",
+      "passed": true,
+      "scope": "Actual ordinary->power input source, one resumed physical power hit, F5 persists consumed phase1/action3 at raw.8000001907348633, distinct fresh process restores active recovery and finishes without any hit/debit/new strike. Exact target Health Damage -4.96999979019165 and prior inventories/unrelated AV channels/life/base/death/engagement/breath preserved; Fatigue regeneration excluded from exact post-frame comparison. Whole C++/Python save-payload byte identity. Keyboard/first-person/staged restrained NPC; no audio or original live-game parity claim.",
+      "observations": null,
+      "cases": null,
+      "updates": null
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-weapon-input-01/verification.json",
+      "sha256": "b6a418d6fbf82f892dddefac36fea0f5f70eac57a0bc2df93b8d28f656f3125e",
+      "passed": true,
+      "scope": "Actual configured keyboard ordinary->standing-power equipped RustyShortSword, two physical hits/owned IDs, original-instruction sequential damage and wear predictions. Exact combined target Health Damage and weapon ExtraHealth after both hits and unchanged through a fresh process with no hit/new strike. Every other prior inventory/AV/life/base/breath/death/engagement preserved except Player Fatigue regeneration (bounded, not exact post-frame stores). Whole C++/Python payload bytes agree. Staged item/position/restraint; first-person keyboard, no audio/gamepad/original-live gameplay parity.",
+      "observations": null,
+      "cases": null,
+      "updates": null
+    }
+  ],
+  "source_manifests": {
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_windup.json": "1d0402b71b06955c3e0e3683143d7a67f224d333c73e9d415f706c91d8ed4064",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_windup_continuation.json": "f3e4ed5fc5528f6074839ca590bb90290934b2c5e76190901db3b4c911b3b848",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_completed_continuation.json": "f5eadffbe86e22841c7dff31858969fb424f47f1b5facf034d36e17643f0b50c",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_recovery.json": "5f5d8908f9d71abe5ede6579ec6b7d0998e7d837cd90ff20fe272d42174f3bc6",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_recovery_continuation.json": "0d04cdb54a848e6d8f451cd99588caf2157aa3b6db327ca420d09339ad350e3f",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon.json": "c6a1f9b64cefe5a624a32d5b5561d363291126e938f898be090fb85c16b47eaf",
+    "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon_continuation.json": "d2fce089354409146d775e87783cead1969589c9c01ae131acffa75747ad11bf"
+  },
+  "case_catalog": {
+    "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
+    "sha256": "0126c97661965a3fd6807afb526542a913a38678a2bc4ff0573d570f2d682065"
+  },
+  "retained_failures": {
+    "standing-power-main-01": "Components passed; engine exposed historical hardcoded schema48 and zero-duration timing-history test expectations, corrected in main02.",
+    "standing-power-sanitized-01": "All component tests passed; owned engine build intentionally stopped for those test corrections.",
+    "standing-power-input-hit-01": "Historical schema26 fixture had mismatching SAVE profile/T4ST tags; rebuilt from pristine schema21 source.",
+    "standing-power-input-hit-02/second": "Launch overlapped normal executable relink and was rejected; later accepted courses use stable final binary.",
+    "standing-power-windup-restart-01/second": "Copied idle manifest mistakenly forbade the expected restore log; corrected course02 reran all three epochs.",
+    "standing-power-windup-restart-sanitized-01": "Preload selected a compiler linker script instead of ELF libasan; retained and corrected in02.",
+    "standing-power-recovery-restart-01 and02": "Save after contact arrived after End; strict semantic preflights rejected these snapshots.03 queues F5 at phase1 before next-frame contact and proves consumed recovery.",
+    "standing-power-wire-compare-01/launch-failures.json": "Standalone comparator shared-library search setup corrected; no payload comparison executed in failed launches.",
+    "standing-power-windup-restart-02/verify-failed-01.py": "Overstrict post-frame victim Fatigue equality ignored ongoing regeneration; final proof explicitly bounds Fatigue and checks the exact contact debit separately."
+  },
+  "remaining": [
+    "Native5E07D0 spending cap/eligibility must reach attacker and block expenditure; full-resource courses here do not close depleted-Fatigue behavior.",
+    "Directional power selection/mastery procs and Creature routes remain gated.",
+    "Sneak/resistance/enchantment/broken-item and complete native reactions remain open.",
+    "Full interruption, weapon/view/input-device/FPS and block/armor/mastery runtime matrices remain open.",
+    "Audio is disabled in these courses; no perceptual audio acceptance.",
+    "Raw lexical/phase emulation has declared boundaries; no claim of original full caller order or original live gameplay parity.",
+    "Component runs predate engine-test-only expectation fixes; their successful selected results are recorded despite overall failed/stopped enclosing runs."
+  ],
+  "unintegrated_expenditure_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-attack-expenditure-caller-oracle-01/report.json",
+    "sha256": "832d102b07531df9c4819676f6e2e52542f2306aa4c8e1815086c3594363d310",
+    "passed": true,
+    "observations": 2112,
+    "scope": "Original5E4010 equipment/category/cost dispatch plus complete5E07D0 expenditure clamp and actual977C50/6250F0 eligibility getters. Power starts5FCDA6, executes actual5E3270 base-type getter to select NPC/Player true or Creature false power penalty, stops5FCDBA. Ordinary enters5E4010 with false supplied flag and stops at real return. Supplied process equipped-entry getter, current Fatigue float getter and final DamageFloat AV10 writer boundary. Creature+104 flag supplied; its live initialization/transitions, actor-value storage, contact/input/anti-replay are outside probe."
+  },
+  "loaded_libraries": [
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-sanitized-02/third/loaded-libraries.json",
+      "sha256": "64307789c580a99bacc88b474a88bdec1f7cf17e63fa0050bd26986c034cdfa1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-weapon-input-01/first/loaded-libraries.json",
+      "sha256": "1b7c59e22a41d9672b14584c2f7a7b3a99d0e4598b2fd4dd047556f80aeff788"
+    }
+  ],
+  "capture_reviews": [
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/first/windup-after-save.png",
+      "sha256": "e9c9bd0edb4c69b0a1c44cecdb409cb2d462767e99131694f049d6deb5b14bd6",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/second/power-resumed-after-save.png",
+      "sha256": "1a3961175381e43f410bd52116f0ec9d74cf6d04f2e9212934af1c8cdcd27acd",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/third/unarmed-victim-continuation.png",
+      "sha256": "5313252ad228330447739f8f2fb30fb8f7ae0bcc9bac05939e68c1e01485126a",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-sanitized-02/first/windup-after-save.png",
+      "sha256": "ad0a38a44b7d018d45b60dc4e8c0685e6caff6e819ebab6c66edd6de80d871a9",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-sanitized-02/second/power-resumed-after-save.png",
+      "sha256": "6918c03b7c2f7aa551c662604dbd35cce29a01515b5f1a011e1f7fec2f02d229",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-windup-restart-sanitized-02/third/unarmed-victim-continuation.png",
+      "sha256": "6446352760eb9911670789b88c0732c8445fe41e17d4137d0beedc1c77c75b4b",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-recovery-restart-03/first/recovery-after-save.png",
+      "sha256": "139338c7630e910db3e4602b494ed26694d4e16128e87c3916cbef0423e76f0d",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/standing-power-weapon-input-01/first/power-after-save.png",
+      "sha256": "27cf987b09d61c8eecb97af72ec13f4c8ee65f58ece58252d0ed696bf40ff85d",
+      "directly_inspected": true,
+      "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
+    }
+  ]
+}

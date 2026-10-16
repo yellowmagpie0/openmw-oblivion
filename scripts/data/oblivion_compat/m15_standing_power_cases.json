@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "purpose": "Editable source for isolated standing-power input and restart courses. Save fixtures are regenerated from a pristine native save, never used to inject damage/contact outcomes.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "cases": {
+    "windup": {
+      "input_recipe": {
+        "source": "build/oblivion-compat/m15/S3/melee-state-offscreen-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e",
+        "victim": "content:oblivion.esm:01fc43",
+        "reference_position": [
+          672,
+          60,
+          -109.68915557861328,
+          0,
+          0,
+          3.1415927410125732
+        ],
+        "native_ai_restrained": true,
+        "purpose": "Isolated acquired-victim course, staged position/AI only; damage supplied solely by normal attack input, not a native resource command."
+      },
+      "expectations": {
+        "first_saved_strike": {
+          "id": 2,
+          "kind": 2,
+          "power_phase": 0,
+          "ordinary_phase": 0,
+          "contact_committed": false
+        },
+        "first_saved_actions": {
+          "next": 3,
+          "pending": [
+            2
+          ]
+        },
+        "victim": "content:oblivion.esm:01fc43",
+        "first_victim_health_damage_bits": 3216360079,
+        "second_victim_health_damage_bits": 3231648317,
+        "second_power_contact_count": 1,
+        "second_power_health": 3.55,
+        "second_power_cost": 35,
+        "second_actions": {
+          "next": 3,
+          "pending": []
+        },
+        "fresh_process_required": true,
+        "scope": "Staged restrained NPC/position only, actual configured keyboard/stock animation/physical contact; no gamepad/audio/native-original-live parity."
+      },
+      "archived_evidence": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02",
+      "scope": "Configured keyboard, first-person, restrained Valen Dreth at the declared position. Normal production playback/contact/save. No audio/gamepad/campaign or original-live parity claim."
+    },
+    "recovery": {
+      "input_recipe": {
+        "source": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "2dd5d23036d3cf1d3fe0068669ccff3678ab49dcd4ee3524f3d6f2b3ecfbb606",
+        "purpose": "Unchanged actual normal-input power windup save, not an injected action or resource outcome."
+      },
+      "expectations": {
+        "first_saved_strike": {
+          "id": 2,
+          "kind": 2,
+          "power_phase": 1,
+          "ordinary_phase": 0,
+          "contact_committed": true
+        },
+        "physical_actions": {
+          "next": 3,
+          "pending": []
+        },
+        "victim_health_damage_bits": 3231648317,
+        "second_hits": 0,
+        "second_strike": null
+      },
+      "archived_evidence": "build/oblivion-compat/m15/S4/standing-power-recovery-restart-03",
+      "scope": "Configured keyboard, first-person, restrained Valen Dreth at the declared position. Normal production playback/contact/save. No audio/gamepad/campaign or original-live parity claim.",
+      "replay_source": {
+        "producer": "windup",
+        "phase": "first",
+        "required_power_phase": 0,
+        "required_contact_committed": false
+      }
+    },
+    "weapon": {
+      "input_recipe": {
+        "source": "build/oblivion-compat/m15/S3/melee-state-offscreen-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e",
+        "victim": "content:oblivion.esm:01fc43",
+        "reference_position": [
+          672,
+          60,
+          -109.68915557861328,
+          0,
+          0,
+          3.1415927410125732
+        ],
+        "native_ai_restrained": true,
+        "purpose": "Isolated actual ordinary then standing power input with RustyShortSword, original sequential damage/wear oracle; no resource outcome injection.",
+        "version": 2,
+        "weapon": {
+          "base": "content:oblivion.esm:090615",
+          "count": 1,
+          "condition": 55.875,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0
+        },
+        "oracle": "S4/native-weapon-runtime-oracle-01/report.json",
+        "expected_health_bits": 1062506496,
+        "expected_condition_bits": 1113476301,
+        "expected_wear_bits": 1050253721,
+        "expected_attack_fatigue": 7.800000190734863
+      },
+      "expectations": {
+        "oracle": "S4/native-standing-power-weapon-course-oracle-01/report.json",
+        "hits": [
+          {
+            "power": false,
+            "multiplier": 1.0,
+            "health_bits": 1062506496,
+            "wear_bits": 1050253721,
+            "condition_bits": 1113476301
+          },
+          {
+            "power": true,
+            "multiplier": 2.5,
+            "health_bits": 1074036428,
+            "wear_bits": 1050253721,
+            "condition_bits": 1113397658
+          }
+        ],
+        "fatigue_costs": [
+          7.800000190734863,
+          39
+        ],
+        "action_ledger": {
+          "next": 3,
+          "pending": []
+        },
+        "victim": "content:oblivion.esm:01fc43"
+      },
+      "archived_evidence": "build/oblivion-compat/m15/S4/standing-power-weapon-input-01",
+      "scope": "Configured keyboard, first-person, restrained Valen Dreth at the declared position. Normal production playback/contact/save. No audio/gamepad/campaign or original-live parity claim."
+    }
+  },
+  "instrumented_variant": {
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "preload": "Resolve an actual libasan ELF shared library, then set LD_PRELOAD in a private manifest copy; the compiler libasan.so path can be a linker script.",
+    "action_and_input_deadline_seconds": 600,
+    "scenario_deadline_seconds": 1200
+  }
+}

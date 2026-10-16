@@ -39,7 +39,8 @@ namespace ESM4
     // to agree at whole-save admission. Earlier v44 saves may have stale views.
     // v46 adds exact Player reference Fame/Infamy and optional accumulation.
     // v47 carries exact native dropped-item relation extras on references.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 48;
+    // v49 carries the distinct three-stage power attack phase.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 49;
 
     struct RuntimeContentIdentity
     {
@@ -481,6 +482,8 @@ namespace ESM4
         // inferring it from a renderer time or changing contact consumption.
         OrdinaryMeleePhase mOrdinaryPhase = OrdinaryMeleePhase::Start;
         std::optional<MeleeSequenceTiming> mSequenceTiming = std::nullopt;
+        // Absent on old saves until power playback adopts native timing.
+        std::optional<PowerMeleePhase> mPowerPhase = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };

@@ -817,6 +817,10 @@ namespace ESM4
             || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower)
             || static_cast<unsigned>(mOrdinaryPhase) > static_cast<unsigned>(OrdinaryMeleePhase::End))
             throw std::runtime_error("Invalid TES4 melee strike state");
+        if (mPowerPhase && (mKind < MeleeStrikeKind::StandingPower
+                || static_cast<unsigned>(*mPowerPhase) > static_cast<unsigned>(PowerMeleePhase::End)
+                || mOrdinaryPhase != OrdinaryMeleePhase::Start))
+            throw std::runtime_error("Invalid TES4 power melee phase");
         if (mSequenceTiming)
         {
             const auto& timing = *mSequenceTiming;
@@ -1137,6 +1141,8 @@ namespace ESM4
                 const auto& strike = *melee.mStrike;
                 if (mVersion < 22 && strike.mOrdinaryPhase != OrdinaryMeleePhase::Start)
                     throw std::runtime_error("TES4 ordinary melee phase requires runtime-state version 22");
+                if (mVersion < 49 && strike.mPowerPhase)
+                    throw std::runtime_error("TES4 power melee phase requires runtime-state version49");
                 if (strike.mSequenceTiming && (mVersion < 23 || !mNativeAnimationClocks.contains(actor)))
                     throw std::runtime_error("TES4 sequence timing requires version23 and an actor clock");
                 const auto owner = mPhysicalActionOwners.find(strike.mActionId);
@@ -1987,6 +1993,12 @@ namespace ESM4
                             writer.floating(timing.mOutputTime);
                         }
                     }
+                    if (mVersion >= 49)
+                    {
+                        writer.integer<std::uint8_t>(strike.mPowerPhase.has_value());
+                        if (strike.mPowerPhase)
+                            writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*strike.mPowerPhase));
+                    }
                 }
                 if (mVersion >= 28)
                 {
@@ -2821,6 +2833,8 @@ namespace ESM4
                         timing.mOutputTime = reader.float32();
                         strike.mSequenceTiming = timing;
                     }
+                    if (result.mVersion >= 49 && boolean())
+                        strike.mPowerPhase = static_cast<PowerMeleePhase>(reader.integer<std::uint8_t>());
                     melee.mStrike = std::move(strike);
                 }
                 if (result.mVersion >= 28 && boolean())
@@ -3739,6 +3753,12 @@ namespace ESM4
                         << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false");
                     if (mVersion >= 22)
                         stream << ",\"ordinary_phase\":" << static_cast<unsigned>(strike.mOrdinaryPhase);
+                    if (mVersion >= 49)
+                    {
+                        stream << ",\"power_phase\":";
+                        if (strike.mPowerPhase) stream << static_cast<unsigned>(*strike.mPowerPhase);
+                        else stream << "null";
+                    }
                     if (mVersion >= 23)
                     {
                         const auto floating = [&](float value) {

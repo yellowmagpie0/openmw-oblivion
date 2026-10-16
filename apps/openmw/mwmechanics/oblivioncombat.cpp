@@ -1346,6 +1346,8 @@ namespace MWMechanics
         if (mBowStates.contains(actor))
             throw std::invalid_argument("native melee strike cannot replace owned bow playback");
         ESM4::RuntimeMeleeStrike strike{1, kind, weaponBase, std::string(animationGroup), playbackSpeed, 0, false};
+        if (kind >= ESM4::MeleeStrikeKind::StandingPower)
+            strike.mPowerPhase = ESM4::PowerMeleePhase::Start;
         strike.validate();
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end() && found->second.mStrike)
@@ -1438,6 +1440,49 @@ namespace MWMechanics
             && state->mStrike->mKind <= ESM4::MeleeStrikeKind::Right
             && state->mStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::Contact
             && !state->mStrike->mContactCommitted && isActionPending(id, actor)
+            && life && life->mPhase == ESM4::ActorLifePhase::Alive;
+    }
+
+    bool OblivionCombatService::advancePowerMeleeSequence(std::uint64_t id,
+        const ESM::FormKey& actor, float duration, float frequency, float begin, float end,
+        const std::array<float, 3>& keyTimes, bool freezeClock)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mStrike
+            || found->second.mStrike->mActionId != id)
+            return false;
+        auto& strike = *found->second.mStrike;
+        if (strike.mKind < ESM4::MeleeStrikeKind::StandingPower || !strike.mSequenceTiming)
+            return false;
+        const auto clock = mAnimationClocks.find(actor);
+        if (clock == mAnimationClocks.end())
+            throw std::invalid_argument("power sequence frame requires its actor clock");
+        const auto next = ESM4::advancePowerMeleeFrame(
+            {clock->second, strike.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start), *strike.mSequenceTiming},
+            duration, strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+        auto candidate = strike;
+        candidate.mPowerPhase = next.mPhase;
+        // Earlier schemas had only the ordinary phase field. It never owned
+        // native power timing; discard it when adopting the three-stage path.
+        candidate.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+        candidate.mSequenceTiming = next.mTiming;
+        candidate.validate();
+        clock->second = next.mClock;
+        strike.mPowerPhase = next.mPhase;
+        strike.mOrdinaryPhase = candidate.mOrdinaryPhase;
+        strike.mSequenceTiming = next.mTiming;
+        return true;
+    }
+
+    bool OblivionCombatService::isMeleeContactPending(std::uint64_t id, const ESM::FormKey& actor) const
+    {
+        const auto* state = findMeleeState(actor);
+        if (!state || !state->mStrike || state->mStrike->mKind < ESM4::MeleeStrikeKind::StandingPower)
+            return isOrdinaryMeleeContactPending(id, actor);
+        const auto& strike = *state->mStrike;
+        const auto* life = findActorLife(actor);
+        return strike.mActionId == id && strike.mPowerPhase == ESM4::PowerMeleePhase::Contact
+            && !strike.mContactCommitted && isActionPending(id, actor)
             && life && life->mPhase == ESM4::ActorLifePhase::Alive;
     }
 

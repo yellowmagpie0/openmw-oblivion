@@ -73,11 +73,12 @@
 
 namespace
 {
-    struct NativeOrdinaryPlayback
+    struct NativeMeleePlayback
     {
         float mBegin, mEnd, mFrequency, mTimelineBegin, mTimelineEnd;
         std::array<float, 4> mKeys;
         std::uint8_t mBlendFrames;
+        std::array<float, 3> mPowerKeys{};
 
         float rendererTime(float output) const
         {
@@ -99,8 +100,8 @@ namespace
         return keys;
     }
 
-    std::optional<NativeOrdinaryPlayback> nativeOrdinaryPlayback(MWRender::Animation& animation,
-        std::string_view group)
+    std::optional<NativeMeleePlayback> nativeMeleePlayback(MWRender::Animation& animation,
+        std::string_view group, bool power)
     {
         const auto* metadata = animation.getControllerSequenceMetadata(group);
         if (!metadata || metadata->mCycleType != 2)
@@ -117,11 +118,19 @@ namespace
         try
         {
             const auto raw = nativeRawKeys(*metadata);
+            if (power)
+            {
+                const auto keys = ESM4::powerMeleeKeyTimes(raw);
+                if (keys.mMatchedCount != 3) return {};
+                (void)ESM4::advancePowerMeleePhase(ESM4::PowerMeleePhase::Start, 0, 0, keys.mTimes);
+                return NativeMeleePlayback{metadata->mStartTime, metadata->mStopTime, metadata->mFrequency,
+                    metadata->mTimelineStart, metadata->mTimelineStop, {}, ESM4::meleeBlendFrames(raw), keys.mTimes};
+            }
             const auto keys = ESM4::ordinaryMeleeKeyTimes(raw);
             if (keys.mMatchedCount != 4)
                 return {};
             (void)ESM4::advanceOrdinaryMeleePhase(ESM4::OrdinaryMeleePhase::Start, 0, 0, keys.mTimes);
-            return NativeOrdinaryPlayback{metadata->mStartTime, metadata->mStopTime, metadata->mFrequency,
+            return NativeMeleePlayback{metadata->mStartTime, metadata->mStopTime, metadata->mFrequency,
                 metadata->mTimelineStart, metadata->mTimelineStop, keys.mTimes, ESM4::meleeBlendFrames(raw)};
         }
         catch (const std::invalid_argument&)
@@ -1418,7 +1427,7 @@ namespace MWMechanics
             return;
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
-        if (!service->isOrdinaryMeleeContactPending(mOblivionRenderedStrike, actor))
+        if (!service->isMeleeContactPending(mOblivionRenderedStrike, actor))
             return;
         const auto strike = *service->findMeleeState(actor)->mStrike;
         float weaponWeight = 0;
@@ -1447,7 +1456,7 @@ namespace MWMechanics
         mPtr.getClass().adjustScale(mPtr, scale, true);
         const float reach = weapon ? ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings)
             : ESM4::unarmedMeleeReach(scale.z(), reachSettings);
-        const float cost = ESM4::attackFatigueCost(weaponWeight, false,
+        const float cost = ESM4::attackFatigueCost(weaponWeight, strike.mKind >= ESM4::MeleeStrikeKind::StandingPower,
             ESM4::buildAttackFatigueSettings(settings));
         const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
             ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
@@ -1462,7 +1471,7 @@ namespace MWMechanics
             if (selectedTarget.isEmpty())
                 return; // An unavailable owned target must never enumerate substitutes.
         }
-        const auto contact = commitOblivionOrdinaryMeleeContact(*world, strike.mActionId, mPtr, selectedTarget,
+        const auto contact = commitOblivionMeleeContact(*world, strike.mActionId, mPtr, selectedTarget,
             reach, weaponWeight, oblivionNormalizedDifficulty(Settings::game().mDifficulty), isSneaking());
         if (contact && contact->mVictim.isEmpty())
         {
@@ -1562,12 +1571,13 @@ namespace MWMechanics
             return;
         }
         const auto strike = *state->mStrike;
-        if (strike.mKind > ESM4::MeleeStrikeKind::Right || mPtr.getType() == ESM::REC_CREA4)
+        const bool power = strike.mKind >= ESM4::MeleeStrikeKind::StandingPower;
+        if (mPtr.getType() == ESM::REC_CREA4)
         {
             service->advanceAnimationClock(actor, duration);
             return;
         }
-        const auto metadata = nativeOrdinaryPlayback(*mAnimation, strike.mAnimationGroup);
+        const auto metadata = nativeMeleePlayback(*mAnimation, strike.mAnimationGroup, power);
         if (!metadata || mOblivionRenderedStrike != strike.mActionId)
         {
             Log(Debug::Verbose) << "M15 melee timing rejected: actor=" << actor.serialize()
@@ -1594,10 +1604,27 @@ namespace MWMechanics
             service->setMeleeSequenceTiming(strike.mActionId, actor, timing);
         }
         const auto& current = *service->findMeleeState(actor)->mStrike;
-        const auto next = ESM4::advanceOrdinaryMeleeFrame(
-            {service->animationClock(actor), current.mOrdinaryPhase, *current.mSequenceTiming},
-            duration, current.mPlaybackSpeed, metadata->mFrequency, metadata->mBegin,
-            metadata->mEnd, metadata->mKeys);
+        struct FrameTarget
+        {
+            float mClock;
+            unsigned mPhase;
+            ESM4::MeleeSequenceTiming mTiming;
+        };
+        const auto next = [&]() -> FrameTarget {
+            if (power)
+            {
+                const auto frame = ESM4::advancePowerMeleeFrame(
+                    {service->animationClock(actor), current.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start),
+                        *current.mSequenceTiming}, duration, current.mPlaybackSpeed, metadata->mFrequency,
+                    metadata->mBegin, metadata->mEnd, metadata->mPowerKeys);
+                return {frame.mClock, unsigned(frame.mPhase), frame.mTiming};
+            }
+            const auto frame = ESM4::advanceOrdinaryMeleeFrame(
+                {service->animationClock(actor), current.mOrdinaryPhase, *current.mSequenceTiming},
+                duration, current.mPlaybackSpeed, metadata->mFrequency, metadata->mBegin,
+                metadata->mEnd, metadata->mKeys);
+            return {frame.mClock, unsigned(frame.mPhase), frame.mTiming};
+        }();
         const float target = metadata->rendererTime(next.mTiming.mOutputTime);
         // Validate the renderer target before publishing the durable frame.
         // The shared bridge currently admits forward playback only.
@@ -1616,9 +1643,14 @@ namespace MWMechanics
             return;
         }
         const bool initialized = !current.mSequenceTiming->mOffset;
-        const auto priorPhase = current.mOrdinaryPhase;
-        service->advanceOrdinaryMeleeSequence(strike.mActionId, actor, duration, metadata->mFrequency,
-            metadata->mBegin, metadata->mEnd, metadata->mKeys);
+        const auto priorPhase = power ? unsigned(current.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start))
+            : unsigned(current.mOrdinaryPhase);
+        if (power)
+            service->advancePowerMeleeSequence(strike.mActionId, actor, duration, metadata->mFrequency,
+                metadata->mBegin, metadata->mEnd, metadata->mPowerKeys);
+        else
+            service->advanceOrdinaryMeleeSequence(strike.mActionId, actor, duration, metadata->mFrequency,
+                metadata->mBegin, metadata->mEnd, metadata->mKeys);
         service->updateMeleeAnimation(strike.mActionId, actor, target);
         if (initialized || priorPhase != next.mPhase)
             Log(Debug::Verbose) << "M15 melee frame: actor=" << actor.serialize()
@@ -1640,7 +1672,9 @@ namespace MWMechanics
         if (!state || !state->mStrike || state->mStrike->mActionId != mOblivionRenderedStrike
             || !mAnimation->getInfo(state->mStrike->mAnimationGroup, &complete)
             || (state->mStrike->mSequenceTiming
-                ? state->mStrike->mOrdinaryPhase != ESM4::OrdinaryMeleePhase::End : complete < 1))
+                ? (state->mStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                    ? state->mStrike->mPowerPhase != ESM4::PowerMeleePhase::End
+                    : state->mStrike->mOrdinaryPhase != ESM4::OrdinaryMeleePhase::End) : complete < 1))
             return;
         const auto strike = *state->mStrike;
         service->finishMeleeStrike(strike.mActionId, actor);
@@ -1938,11 +1972,12 @@ namespace MWMechanics
                 const float start = mAnimation->getTextKeyTimeInGroup(group, group + ": start");
                 const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
                 bool nativeKeysValid = true;
-                std::optional<NativeOrdinaryPlayback> nativePlayback;
+                std::optional<NativeMeleePlayback> nativePlayback;
                 float nativeEase = 0;
-                if (*selected <= ESM4::MeleeStrikeKind::Right && mPtr.getType() != ESM::REC_CREA4)
+                if (mPtr.getType() != ESM::REC_CREA4)
                 {
-                    nativePlayback = nativeOrdinaryPlayback(*mAnimation, group);
+                    nativePlayback = nativeMeleePlayback(*mAnimation, group,
+                        *selected >= ESM4::MeleeStrikeKind::StandingPower);
                     nativeKeysValid = nativePlayback.has_value();
                     if (nativePlayback)
                     {
@@ -1962,7 +1997,7 @@ namespace MWMechanics
                     }
                     if (!nativeKeysValid)
                         Log(Debug::Verbose) << "M15 melee start rejected: actor=" << actor.serialize()
-                                            << " reason=native-ordinary-keys group=" << group;
+                                            << " reason=native-melee-keys group=" << group;
                 }
                 if (start >= 0 && stop > start && nativeKeysValid)
                 {

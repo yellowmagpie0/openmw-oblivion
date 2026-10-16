@@ -14914,3 +14914,44 @@ excluded. No engine hierarchy traversal is claimed by the corpus topology names.
 Other controls are not replayed against the fixed liveSingle API. The unchanged
 world-to-native position conversion and nonzero input/unit boundaries remain
 separate from these zero-origin expectations.
+
+## Standing-power timing, contact scaling and persistence
+
+Pinned-original executable identity remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The subtype table routes ordinary4 to4770D4 (four phases) and power5 to477248
+(three phases, final index2). The power path strictly compares the float-stored
+sequence offset plus clock against the next raw key and advances at most once.
+The lexical loop51B688 uses Start/Hit/End for the supplied power group22;
+ordinary a: does not add a power stage. The1134-case raw-loop capture stops
+before terminal KF validation/allocation and supplies only the diagnostic logger.
+Normal and ASan/UBSan C++ comparisons match all three slots and matched counts.
+
+The composed9720-update oracle executes original6C9BA0 activation, power frame
+prefix476F95 through477282/4774BD, then full6CA950 manager update. Supplied
+slot3/preallocated null-sync clamp groups and empty attachments are explicit;
+other slots, slot-only freeze modes and complete actor caller order are excluded.
+All stored clock/phase/state and six timing float fields match production in
+both builds. Separate48-case contact-prefix execution confirms phase1 dispatch
+with arguments1/0/0 before5E4010, but does not prove the later anti-replay writer
+or the full caller ordering. These boundaries remain distinct from runtime.
+
+Original5FF46C multiplies the completed hand Health and Fatigue separately.
+Weapon484F80 stores the547070 subtotal before adding integer AttackBonus42 at
+48513E. The standing-power multiplier caller reads current raw integer combat
+skill through actor+284, separate from weapon float-query truncation, Luck and
+base-skill proc policy. Production now follows those boundaries; a nonzero
+AttackBonus discriminator and Luck/raw-skill threshold cases pass. Directional
+proc consequences and Creature contact paths remain excluded.
+
+The actual keyboard courses, owned three-stage schema49 state, exact C++/Python
+save payloads, consumed recovery and fresh-process anti-replay results are
+indexed in [M15-STANDING-POWER-VERIFICATION.json](M15-STANDING-POWER-VERIFICATION.json).
+The new original weapon oracle executes546BA0/56A300,484F80,547240 and
+5F3870/484850 sequentially, using the original first wear result as the second
+query's condition. Actor AV/base-damage/Fatigue and item/reference/publication
+boundaries remain supplied. Both x87 modes agree on rusty-shortsword ordinary
+Health0.830322265625, power Health2.0702390670776367 and condition55.275001525878906
+after both hits. Actual normal-input saved Health and condition match exactly.
+Audio, original live-game held-input parity, all direction/mastery effects and
+the complete S4 acceptance matrix remain open.

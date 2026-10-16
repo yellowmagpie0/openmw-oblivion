@@ -60,6 +60,10 @@ namespace MWMechanics
         MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
         float normalizedDifficulty, bool sneaking);
+    std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
+        MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
+        float normalizedDifficulty, bool sneaking);
 
     // Adapter for this fork's existing -100..100 GUI slider. Config values
     // outside that UI range saturate; this is not native INI deserialization.
@@ -99,6 +103,9 @@ namespace MWMechanics
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         float normalizedDifficulty, bool sneaking);
+    std::optional<OblivionUnarmedContactDamage> resolveOblivionUnarmedMeleeContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float normalizedDifficulty, bool sneaking, ESM4::MeleeStrikeKind kind);
 
     // Read-only pre-mitigation ordinary melee WEAP query on the actual equipped
     // instance. Native float AV conversions and integer AttackBonus are distinct.
@@ -120,6 +127,9 @@ namespace MWMechanics
     std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
         const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking);
+    std::optional<OblivionWeaponContactDamage> resolveOblivionWeaponMeleeContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking, ESM4::MeleeStrikeKind kind);
 
     float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& item);

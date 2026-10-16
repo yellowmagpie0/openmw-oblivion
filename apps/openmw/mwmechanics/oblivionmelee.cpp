@@ -276,7 +276,7 @@ namespace MWMechanics
         return true;
     }
 
-    std::optional<OblivionOrdinaryContactResult> commitOblivionOrdinaryMeleeContact(
+    std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
         MWBase::World& world, std::uint64_t actionId,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
         float reach, float weaponWeight, float normalizedDifficulty, bool sneaking)
@@ -288,14 +288,20 @@ namespace MWMechanics
             return std::nullopt; // Creature process/fatigue eligibility is a separate caller.
         const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : attacker.getCellRef().getFormKey();
-        if (!service->isOrdinaryMeleeContactPending(actionId, actor))
+        if (!service->isMeleeContactPending(actionId, actor))
             return std::nullopt;
+        const auto kind = service->findMeleeState(actor)->mStrike->mKind;
+        // Directional unlocked mastery consequences must join this transaction
+        // before those contacts are admitted. Standing power has no proc hook.
+        if (kind > ESM4::MeleeStrikeKind::StandingPower)
+            return std::nullopt;
+        const bool power = kind == ESM4::MeleeStrikeKind::StandingPower;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
-        const float cost = ESM4::attackFatigueCost(weaponWeight, false,
+        const float cost = ESM4::attackFatigueCost(weaponWeight, power,
             ESM4::buildAttackFatigueSettings(settings));
         const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, selectedTarget, reach);
         if (!contact)
@@ -313,8 +319,8 @@ namespace MWMechanics
                 return std::nullopt;
             if (state->mStrike->mWeaponBase.isNull())
             {
-                const auto damage = resolveOblivionOrdinaryUnarmedContact(world, attacker,
-                    *contact, normalizedDifficulty, sneaking);
+                const auto damage = resolveOblivionUnarmedMeleeContact(world, attacker,
+                    *contact, normalizedDifficulty, sneaking, kind);
                 if (!damage)
                     return std::nullopt;
                 result.mDamage = {damage->mHealth, damage->mFatigue};
@@ -349,8 +355,8 @@ namespace MWMechanics
                     return std::nullopt;
                 soundWeaponType = static_cast<std::int32_t>(weapon->mData.type);
                 auto condition = captureOblivionPhysicalConditionChange(attacker, item, 0);
-                const auto damage = resolveOblivionOrdinaryWeaponContact(world, attacker,
-                    *contact, item, normalizedDifficulty, sneaking);
+                const auto damage = resolveOblivionWeaponMeleeContact(world, attacker,
+                    *contact, item, normalizedDifficulty, sneaking, kind);
                 if (!damage)
                     return std::nullopt;
                 result.mDamage = {damage->mHealth, 0};
@@ -425,6 +431,22 @@ namespace MWMechanics
         if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact, deltas))
             return std::nullopt;
         return result;
+    }
+
+    std::optional<OblivionOrdinaryContactResult> commitOblivionOrdinaryMeleeContact(
+        MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
+        float normalizedDifficulty, bool sneaking)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || attacker.isEmpty()) return std::nullopt;
+        const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : attacker.getCellRef().getFormKey();
+        if (!service->isOrdinaryMeleeContactPending(actionId, actor)) return std::nullopt;
+        return commitOblivionMeleeContact(world, actionId, attacker, selectedTarget,
+            reach, weaponWeight, normalizedDifficulty, sneaking);
     }
 
     std::int16_t oblivionProcessAction(MWBase::World& world, const MWWorld::Ptr& actor)
@@ -530,6 +552,21 @@ namespace MWMechanics
 
     namespace
     {
+        float contactPowerMultiplier(MWBase::World& world, OblivionCombatService& service,
+            const MWWorld::Ptr& attacker, std::uint8_t skill, ESM4::MeleeStrikeKind kind,
+            std::span<const ESM4::GameSetting* const> settings)
+        {
+            if (kind < ESM4::MeleeStrikeKind::StandingPower) return 1.f;
+            if (kind > ESM4::MeleeStrikeKind::RightPower)
+                throw std::invalid_argument("invalid native power contact kind");
+            const auto current = attacker == world.getPlayerPtr() ? service.getPlayerIntegerValue(skill)
+                : service.getNonPlayerIntegerValue(attacker, skill);
+            const auto direction = static_cast<ESM4::PowerAttackDirection>(
+                static_cast<unsigned>(kind) - static_cast<unsigned>(ESM4::MeleeStrikeKind::StandingPower));
+            return ESM4::powerAttackMultiplier(current, direction, ESM4::buildPowerAttackSettings(settings),
+                ESM4::buildCombatMasterySettings(settings));
+        }
+
         struct PreparedArmorWear
         {
             std::vector<OblivionPhysicalConditionChange> mConditions;
@@ -664,9 +701,9 @@ namespace MWMechanics
 
     }
 
-    std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
+    std::optional<OblivionUnarmedContactDamage> resolveOblivionUnarmedMeleeContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
-        float normalizedDifficulty, bool sneaking)
+        float normalizedDifficulty, bool sneaking, ESM4::MeleeStrikeKind kind)
     {
         if (!std::isfinite(normalizedDifficulty) || normalizedDifficulty < -1 || normalizedDifficulty > 1)
             throw std::invalid_argument("native unarmed contact difficulty outside normalized slider domain");
@@ -689,12 +726,18 @@ namespace MWMechanics
         // Do not substitute a generic TES3 hit or silently omit their effects.
         if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
-        const auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
+        if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
+        auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const float multiplier = contactPowerMultiplier(world, *service, attacker, 17, kind, settings);
+        // Native5FF46C stores Health and Fatigue separately after the complete
+        // hand calculation, including knocked-state Fatigue suppression.
+        incoming.mHealth = static_cast<float>(double(incoming.mHealth) * multiplier);
+        incoming.mFatigue = static_cast<float>(double(incoming.mFatigue) * multiplier);
         const auto armor = ESM4::mitigateArmor(incoming.mHealth, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
         const auto block = prepareOrdinaryBlock(world, *service, attacker, victim, armor.mHealthDamage, -1, settings);
@@ -722,6 +765,14 @@ namespace MWMechanics
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
             incoming.mHealth, std::move(wear.mConditions), wear.mRandom,
             block->mAccepted, block->mWeaponBlockSound, block->mSounds};
+    }
+
+    std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        float normalizedDifficulty, bool sneaking)
+    {
+        return resolveOblivionUnarmedMeleeContact(world, attacker, victim, normalizedDifficulty,
+            sneaking, ESM4::MeleeStrikeKind::Left);
     }
 
     namespace
@@ -811,9 +862,12 @@ namespace MWMechanics
         }
     }
 
-    std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
+    static float weaponContactDamage(MWBase::World& world, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& item, ESM4::MeleeStrikeKind kind);
+
+    std::optional<OblivionWeaponContactDamage> resolveOblivionWeaponMeleeContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
-        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking)
+        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking, ESM4::MeleeStrikeKind kind)
     {
         if (!std::isfinite(normalizedDifficulty) || normalizedDifficulty < -1 || normalizedDifficulty > 1)
             throw std::invalid_argument("native weapon contact difficulty outside normalized slider domain");
@@ -833,7 +887,8 @@ namespace MWMechanics
             : service->getNonPlayerIntegerValue(victim, 65);
         if (resistance != 0)
             return std::nullopt;
-        const float incoming = oblivionOrdinaryWeaponContactDamage(world, attacker, item);
+        if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
+        const float incoming = weaponContactDamage(world, attacker, item, kind);
         if (incoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.
         std::vector<const ESM4::GameSetting*> settings;
@@ -877,8 +932,8 @@ namespace MWMechanics
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds};
     }
 
-    float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
-        const MWWorld::Ptr& attacker, const MWWorld::Ptr& item)
+    static float weaponContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& item, ESM4::MeleeStrikeKind kind)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
@@ -929,7 +984,8 @@ namespace MWMechanics
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const float damage = ESM4::weaponDamage({integer(weapon->mData.type < 2 ? 14 : 16), integer(7),
-            integer(0), weapon->mData.damage, ratio, ESM4::combatFatigueRatio(current(10), baseFatigue)},
+            integer(0), weapon->mData.damage, ratio, ESM4::combatFatigueRatio(current(10), baseFatigue),
+            contactPowerMultiplier(world, *service, attacker, weapon->mData.type < 2 ? 14 : 16, kind, settings)},
             ESM4::buildPhysicalCombatSettings(settings));
         const auto bonus = attacker == player ? service->getPlayerIntegerValue(42)
             : service->getNonPlayerIntegerValue(attacker, 42);
@@ -937,6 +993,20 @@ namespace MWMechanics
         if (!std::isfinite(total))
             throw std::invalid_argument("nonfinite native weapon damage");
         return total;
+    }
+
+    std::optional<OblivionWeaponContactDamage> resolveOblivionOrdinaryWeaponContact(
+        MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const MWWorld::Ptr& item, float normalizedDifficulty, bool sneaking)
+    {
+        return resolveOblivionWeaponMeleeContact(world, attacker, victim, item,
+            normalizedDifficulty, sneaking, ESM4::MeleeStrikeKind::Left);
+    }
+
+    float oblivionOrdinaryWeaponContactDamage(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& item)
+    {
+        return weaponContactDamage(world, attacker, item, ESM4::MeleeStrikeKind::Left);
     }
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)

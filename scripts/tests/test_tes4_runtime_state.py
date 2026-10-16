@@ -2047,6 +2047,60 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError):
             state_io._upgrade_actor_knockback(bad)
 
+    def test_power_v49_phase_wire_legacy_promotion_and_rejection(self):
+        old = self.melee_state()
+        state_io._upgrade_melee_phases(old)
+        state_io._upgrade_melee_timing(old)
+        state_io._upgrade_melee_ai(old)
+        state_io._upgrade_actor_draw(old)
+        old["schema_version"] = 48
+        strike = old["native_melee_states"][0]["strike"]
+        strike["kind"] = 2
+        old_payload = state_io.encode_payload(old)
+        promoted = copy.deepcopy(old)
+        state_io._upgrade_power_melee_phases(promoted)
+        promoted["schema_version"] = 49
+        entry = promoted["native_melee_states"][0]["strike"]
+        self.assertIsNone(entry["power_phase"])
+        self.assertEqual(promoted["physical_actions"], old["physical_actions"])
+        self.assertEqual(promoted["physical_action_owners"], old["physical_action_owners"])
+        null_payload = state_io.encode_payload(promoted)
+        self.assertEqual(len(null_payload), len(old_payload) + 1)
+        self.assertEqual(state_io.decode_payload(null_payload)["native_melee_states"], promoted["native_melee_states"])
+        wires = []
+        for phase in range(3):
+            entry["power_phase"] = phase
+            payload = state_io.encode_payload(promoted)
+            self.assertEqual(state_io.decode_payload(payload)["native_melee_states"], promoted["native_melee_states"])
+            wires.append(payload)
+        differences = [i for i, (a, b) in enumerate(zip(wires[0], wires[1])) if a != b]
+        self.assertEqual(len(differences), 1)
+        phase_offset = differences[0]
+        self.assertEqual(wires[0][phase_offset - 1:phase_offset + 1], b"\x01\x00")
+        expected = bytearray(old_payload)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 49)
+        expected[phase_offset - 1:phase_offset - 1] = b"\x00"
+        self.assertEqual(null_payload, expected)
+        for offset, value in ((phase_offset - 1, 2), (phase_offset, 3), (phase_offset, 255)):
+            bad = bytearray(wires[0]); bad[offset] = value
+            with self.subTest(offset=offset, value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(bytes(bad))
+        for value in (-1, 3, True, 1., "1"):
+            bad = copy.deepcopy(promoted); bad["native_melee_states"][0]["strike"]["power_phase"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        for changes in ({"kind": 0}, {"ordinary_phase": 1}):
+            bad = copy.deepcopy(promoted); bad["native_melee_states"][0]["strike"].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(bad)
+        bad = copy.deepcopy(promoted); bad["schema_version"] = 48
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_power_melee_phases(bad)
+        del promoted["native_melee_states"][0]["strike"]["power_phase"]
+        state_io._upgrade_power_melee_phases(promoted)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(promoted)
+        self.assertEqual(state_io.encode_payload(old), old_payload)
+
     def test_animation_v23_exact_wire_and_independent_clock_lifetime(self):
         state = self.melee_state()
         state_io._upgrade_melee_phases(state)
@@ -2079,6 +2133,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         migrated = state_io.decode_payload(old)
         state_io._upgrade_melee_timing(migrated)
         state_io._upgrade_melee_ai(migrated)
+        state_io._upgrade_power_melee_phases(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)

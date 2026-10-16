@@ -10,8 +10,8 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 | S4 item | Current source evidence | Remaining delivery work |
 | --- | --- | --- |
-| 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary Player/NPC contact reaches `commitOblivionOrdinaryMeleeContact`. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
-| 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary weapon/unarmed damage. `isOrdinaryMeleeContactPending` admits only Left/Right kinds. | Power selection can create animation/action ownership, but the ordinary contact predicate rejects power kinds. Directional/mastery selection is explicitly unfinished in the controller. Creature attacker and victim domains are rejected by ordinary adapters. Implement the native routes and verify geometry without a TES3 chance roll. |
+| 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
+| 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature attacker and victim domains are rejected by these adapters. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC hits and equipped-block sound selection are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
@@ -4178,3 +4178,49 @@ open alongside creature/power contacts, mastery/effects/reactions and the remain
 S4 control/view/FPS/normal-input/save/fresh-process gates. M15S4 remains active
 and incomplete. The next priority is completing those live contact branches,
 without treating additional isolated rule coverage as delivery.
+
+## Standing-power contact and restart checkpoint
+
+[The evidence index](M15-STANDING-POWER-VERIFICATION.json) records the exact
+implementation hashes, independently executed original instructions, normal and
+instrumented comparisons, test inventories and accepted runtime epochs. The
+three-stage power phase is separate from the four-stage ordinary queue phase.
+Schema49 persists it in C++ and Python; older saves keep an absent power phase
+until timing adopts the new path, preserving contact consumption and action IDs.
+
+Standing-power contacts now apply raw current integer skill mastery and native
+multiplication order. Hand Health/Fatigue scale after the hand calculation;
+weapon subtotal scales before integer AttackBonus. Native timing uses three raw
+Start/Hit/End keys, strict comparisons, one phase transition per update and the
+existing authored blend/sequence manager bridge. Directional effects remain gated.
+
+Both builds pass2793 component tests and1615 engine tests; Python passes304.
+Component results belong to the earlier enclosing failed/stopped runs: only
+engine test expectations changed afterward, and final engine checks pass.
+Normal and ASan/UBSan comparisons match1134 lexical cases,9720 power frame
+updates and44 cross-language wire states per build. Sanitizer leaks are disabled.
+Existing unrelated compiler warnings remain in the retained logs.
+
+Normal and instrumented three-process courses save an actual keyboard-started
+power before contact, restore the pending ID once, and reload completed state
+without another hit. Target Health Damage is exactly -1.4199999570846558 at
+windup and -4.96999979019165 after the resumed power. A separate normal course
+saves consumed phase1/action3 recovery and finishes after fresh load without a
+second contact. Rusty-shortsword input matches the original sequential damage
+and condition oracle: total Health Damage -2.9005613327026367 and final condition
+55.275001525878906, unchanged through a fresh process. Item/position/restraint
+staging is declared; damage and contact come from production input/playback.
+
+These courses use first-person configured keyboard input and disabled sound.
+They check exact contact debits, while ongoing regeneration makes saved Fatigue
+comparisons bounded. The source manifests and case inputs are under
+`scripts/data/oblivion_compat/*standing_power*`. They are editable test sources;
+generated saves, screenshots and original-game corpora stay ignored.
+
+The original expenditure caller audit additionally confirms a remaining defect:
+5E07D0 limits spending to positive current Fatigue. The current melee/block
+spending adapter still needs this cap and its eligibility policy; direct hostile
+Fatigue damage must retain its separate ability to become negative. The2112-case
+original caller corpus is retained in
+`S4/native-attack-expenditure-caller-oracle-01`, but no production cap fix is
+claimed here. This is the next bounded change. Full M15S4 remains incomplete.

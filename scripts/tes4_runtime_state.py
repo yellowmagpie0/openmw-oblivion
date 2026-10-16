@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 48
+CURRENT_VERSION = 49
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1386,6 +1386,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             strike_fields.add("ordinary_phase")
         if version >= 23:
             strike_fields.add("sequence_timing")
+        if version >= 49:
+            strike_fields.add("power_phase")
         if not isinstance(strike, dict) or set(strike) != strike_fields:
             raise RuntimeStateError("Invalid TES4 melee strike")
         if version >= 22 and (type(strike["ordinary_phase"]) is not int or not 0 <= strike["ordinary_phase"] <= 3):
@@ -1409,6 +1411,10 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or type(kind) is not int or not 0 <= kind <= 6 or type(committed) is not bool
                 or native_float(strike["animation_time"]) < 0 or native_float(strike["playback_speed"]) <= 0):
             raise RuntimeStateError("Invalid or duplicate TES4 melee strike state")
+        if version >= 49 and strike["power_phase"] is not None:
+            phase = strike["power_phase"]
+            if type(phase) is not int or not 0 <= phase <= 2 or kind < 2 or strike["ordinary_phase"] != 0:
+                raise RuntimeStateError("Invalid TES4 power melee phase")
         group = strike["animation_group"]
         if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
             raise RuntimeStateError("Invalid TES4 melee animation group")
@@ -1962,6 +1968,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         for key in ("ease_end", "weighted_time", "output_time"):
                             timing[key] = reader.unpack("<f")
                     entry["strike"]["sequence_timing"] = timing
+                if version >= 49:
+                    entry["strike"]["power_phase"] = reader.unpack("<B") if melee_boolean() else None
             if version >= 28:
                 entry["ai_intent"] = {"target": reader.string(), "style": reader.string()} if melee_boolean() else None
             result["native_melee_states"].append(entry)
@@ -2409,6 +2417,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                                 writer.pack("<f", value)
                         for key in ("ease_end", "weighted_time", "output_time"):
                             writer.pack("<f", timing[key])
+                if version >= 49:
+                    phase = strike["power_phase"]
+                    writer.pack("<B", int(phase is not None))
+                    if phase is not None:
+                        writer.pack("<B", phase)
             if version >= 28:
                 intent = entry["ai_intent"]
                 writer.pack("<B", int(intent is not None))
@@ -2665,11 +2678,21 @@ def _upgrade_melee_phases(state: dict[str, Any]) -> None:
                 entry["strike"]["ordinary_phase"] = 0
 
 
+def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 49:
+        for entry in state.get("native_melee_states", []):
+            if entry["strike"] is not None:
+                if entry["strike"].get("power_phase") is not None:
+                    raise RuntimeStateError("Legacy TES4 save cannot carry a power melee phase")
+                entry["strike"]["power_phase"] = None
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
     _upgrade_melee_phases(state)
+    _upgrade_power_melee_phases(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
@@ -2743,6 +2766,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
 
     result = copy.deepcopy(state)
     _upgrade_melee_phases(result)
+    _upgrade_power_melee_phases(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)
