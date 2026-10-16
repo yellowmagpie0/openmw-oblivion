@@ -14738,3 +14738,14 @@ extra lookup, SetScale, remove-true transfer and destination ExtraScale removal;
 allocation and critical sections are additional boundaries. These establish
 bounded numerical/transfer dependencies, with retained setup failures. They do
 not implement or accept the complete drop factory or break/drop gameplay.
+
+
+## S4 production dropped-reference scale arithmetic — 2026-10-15
+
+`ESM4::droppedReferenceScale` now matches all 14,440 independent native SetScale
+outputs exactly in normal/sanitized comparisons, including positive half-away
+rounding and 0.01..10 clamps. Missing extras select the independently established
+constructor scale 1; nonfinite explicit extras reject. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#native-dropped-reference-scale-rule) records
+2,642 full component tests per profile and negative controls. This proves the
+numeric dependency; scaled body/scene admission and factory gameplay remain open.

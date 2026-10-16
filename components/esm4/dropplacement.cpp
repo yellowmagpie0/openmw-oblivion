@@ -8,6 +8,21 @@
 
 namespace ESM4
 {
+    float droppedReferenceScale(std::optional<float> sourceExtraScale)
+    {
+        if (!sourceExtraScale) return 1.f;
+        const float scale = *sourceExtraScale;
+        if (!std::isfinite(scale))
+            throw std::invalid_argument("Nonfinite dropped-reference source scale");
+        if (scale <= .01f) return .01f;
+        if (scale >= 10.f) return 10.f;
+        // For this bounded binary32 input, multiplication by 100 and addition
+        // of 0.5 are exact in binary64. Original CRT decimal formatting rounds
+        // positive half cents up, unlike printf implementations using ties-even.
+        // Dividing the rounded integer reproduces the parsed binary32 value.
+        return std::max(.01f, static_cast<float>(std::floor(double(scale) * 100. + .5) / 100.));
+    }
+
     namespace
     {
         constexpr float halfPi = 1.57079637050628662109375f;

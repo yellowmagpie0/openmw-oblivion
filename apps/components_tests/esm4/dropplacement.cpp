@@ -155,4 +155,56 @@ namespace
         }
 
     }
+    TEST(ESM4DropPlacement, FreshReferenceScaleMatchesOriginalDecimalRoundingAndClamps)
+    {
+        // Literal native i386 outputs: complete original 004DB520 with original
+        // sprintf/atof; both x87 control words agree. See the editable
+        // M15-ORIGINAL-DROP-SCALE-PROBES.json contract and native-02 corpus.
+        const std::array<std::array<unsigned, 2>, 32> samples{{
+            {0x3e000000u, 0x3e051eb8u},
+            {0x3ec00000u, 0x3ec28f5cu},
+            {0x3f200000u, 0x3f2147aeu},
+            {0x3f600000u, 0x3f6147aeu},
+            {0x3b83126fu, 0x3c23d70au},
+            {0x3ba3d70au, 0x3c23d70au},
+            {0x3bc49ba6u, 0x3c23d70au},
+            {0x3c656042u, 0x3c23d70au},
+            {0x3c75c28fu, 0x3c23d70au},
+            {0x3c83126fu, 0x3ca3d70au},
+            {0x3e800000u, 0x3e800000u},
+            {0x3f000000u, 0x3f000000u},
+            {0x3f800000u, 0x3f800000u},
+            {0x40000000u, 0x40000000u},
+            {0x40e00000u, 0x40e00000u},
+            {0x41200000u, 0x41200000u},
+            {0x41400000u, 0x41200000u},
+            {0x00000000u, 0x3c23d70au},
+            {0x80000000u, 0x3c23d70au},
+            {0xc0000000u, 0x3c23d70au},
+            {0x00000001u, 0x3c23d70au},
+            {0x80000001u, 0x3c23d70au},
+            {0x7f7fffffu, 0x41200000u},
+            {0xff7fffffu, 0x3c23d70au},
+            {0x3e000001u, 0x3e051eb8u},
+            {0x3dffffffu, 0x3df5c28fu},
+            {0x3f1fffffu, 0x3f1eb852u},
+            {0x3f200001u, 0x3f2147aeu},
+            {0x3c23d709u, 0x3c23d70au},
+            {0x3c23d70bu, 0x3c23d70au},
+            {0x41200001u, 0x41200000u},
+            {0x411fffffu, 0x41200000u},
+        }};
+        EXPECT_EQ(ESM4::droppedReferenceScale(std::nullopt), 1.f);
+        for (const auto& sample : samples)
+        {
+            SCOPED_TRACE(sample[0]);
+            const auto result = ESM4::droppedReferenceScale(std::bit_cast<float>(sample[0]));
+            EXPECT_EQ(std::bit_cast<unsigned>(result), sample[1]);
+            EXPECT_EQ(ESM4::droppedReferenceScale(result), result);
+        }
+        for (const float invalid : {std::numeric_limits<float>::infinity(),
+                -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            EXPECT_THROW(ESM4::droppedReferenceScale(invalid), std::invalid_argument);
+    }
+
 }

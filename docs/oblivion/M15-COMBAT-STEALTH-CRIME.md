@@ -6,6 +6,16 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 fresh dropped-reference scale arithmetic — 2026-10-15
+
+The native scale rule now matches all 14,440 independently executed original
+contexts in normal and sanitized production comparisons. Both profiles pass all
+2,642 component tests. Missing scale, positive half-cent ties, negative inputs
+and nonfinite extras have explicit behavior. The
+[S4 audit](M15-S4-DELIVERY-AUDIT.md#native-dropped-reference-scale-rule) records
+exact sources and controls. Scaled scene/body admission and factory publication
+still need integration; S4 remains incomplete.
+
 ## S4 TES4 NPC renderer yaw integration — 2026-10-15
 
 NPC scene insertion and rotation updates now use the verified native yaw

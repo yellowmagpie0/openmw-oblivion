@@ -3,6 +3,7 @@
 
 #include <components/esm/position.hpp>
 #include <array>
+#include <optional>
 
 namespace Nif
 {
@@ -11,6 +12,12 @@ namespace Nif
 
 namespace ESM4
 {
+    // Fresh dropped-reference scale from the source item's ExtraScale. Absence
+    // selects the constructor's 1, independently of the actor/attachment scale.
+    // Original SetScale formats two decimal places, parses binary32, then
+    // clamps to [0.01, 10]. Nonfinite extras reject. No caller state changes.
+    float droppedReferenceScale(std::optional<float> sourceExtraScale);
+
     struct DroppedItemPlacement
     {
         ESM::Position mPosition;

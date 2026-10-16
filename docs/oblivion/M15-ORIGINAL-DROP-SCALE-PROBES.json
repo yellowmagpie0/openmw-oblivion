@@ -42,7 +42,7 @@
     "Original formats the binary32 scale promoted to double using %.2f, parses the resulting text and stores binary32 before clamping.",
     "Minimum is binary32 0.01; maximum is binary32 10. Exact 0.125 formats as 0.13; binary32 0.005 formats as 0.00 before minimum clamp.",
     "Reference scale is written and change flag0x10 requested once. Negative and signed-zero inputs clamp to the minimum.",
-    "A finite-input clamp/positive half-away-cent candidate matches all14440 native outputs in a separate development comparison; production implementation remains open."
+    "A finite-input clamp/positive half-away-cent candidate matches all14440 native outputs in a separate development comparison; production arithmetic is verified below; factory integration remains open."
   ],
   "curated_contexts": [
     {
@@ -289,7 +289,7 @@
   "not_established": [
     "Complete factory compound publication and production source-scale/extra-transfer implementation.",
     "Scene/physics update, existing rendered references, alternate base form families, nonfinite scale domain and full game acceptance.",
-    "Production C++ rule and actual drop runtime integration remain open."
+    "Production factory consumption and actual drop runtime integration remain open."
   ],
   "evidence": "S4/drop-source-scale-native-02",
   "retained_setup_failures": [
@@ -1133,5 +1133,16 @@
         }
       }
     ]
+  },
+  "production_arithmetic": {
+    "status": "implemented and verified",
+    "function": "ESM4::droppedReferenceScale",
+    "evidence": "S4/drop-reference-scale-comparison-01",
+    "native_contexts": 14440,
+    "component_checks": [
+      "S4/drop-reference-scale-normal-01",
+      "S4/drop-reference-scale-sanitized-01"
+    ],
+    "scope": "Arithmetic only; scene/body/factory/runtime integration remains open."
   }
 }
