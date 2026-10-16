@@ -31,6 +31,21 @@ namespace SceneUtil
     {
     public:
         enum class Mode { Full, Selected, Rigid };
+        struct SelectiveUpdatePolicy
+        {
+            enum class Kind { Node, AVObject, Geometry };
+            Kind mKind = Kind::Node;
+            std::uint16_t mFlags = 0;
+            bool mHasController = false;
+            bool mHasTransformController = false;
+            bool mHasPropertyController = false;
+            bool mHasSkin = false;
+        };
+        struct SelectiveUpdateResult
+        {
+            bool mNeedsUpdate;
+            bool mRigid;
+        };
         struct Callbacks
         {
             std::function<std::optional<std::uint16_t>(const NifOsg::MatrixTransform&)> mCollisionFlags;
@@ -56,7 +71,8 @@ namespace SceneUtil
             // Exceptions leave completed projection/writes in place.
             std::function<void(NifOsg::MatrixTransform&, const NifBullet::RagdollBonePoseWriteback&,
                 std::optional<std::uint16_t>)> mReferenceUpdate;
-            // Required for Selected/Rigid. Live computed NiAVObject flags,
+            // Overrides prepared flags; required for Selected/Rigid when no
+            // policy has been prepared. Live computed NiAVObject flags,
             // not the original file flags: child admission bit1, projection
             // bit2, property controllers bit3, rigid child dispatch bit4.
             // Own node controllers run whenever a selected node is entered.
@@ -88,6 +104,18 @@ namespace SceneUtil
         // scaffolding inherits the containing native node's property policy.
         void update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks = {},
             Mode mode = Mode::Full);
+
+        // Prepare ordinary NiNode/NiAVObject/NiGeometry selective flags from
+        // live instance policy inputs. Controller presence includes inactive
+        // controllers; transform classification is independent of activation.
+        // Preserve all input bits except computed bits1..4. The resolver must
+        // only inspect state. Commit all flags together after hierarchy/placement
+        // validation; no controllers, caches or physics are advanced. The owner
+        // chooses recomputation events and the inherited transform input.
+        SelectiveUpdateResult recomputeSelectiveUpdateFlags(
+            const std::function<SelectiveUpdatePolicy(const NifOsg::MatrixTransform&)>& policy,
+            bool inheritedTransform);
+        std::uint16_t selectiveUpdateFlags(const NifOsg::MatrixTransform& node) const;
 
         // Controller context query: the synthetic OSG ancestors of this root
         // must not be treated as native parents by a world-space controller.

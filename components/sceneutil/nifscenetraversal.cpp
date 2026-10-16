@@ -46,6 +46,7 @@ namespace SceneUtil
             std::vector<std::size_t> mChildren;
             Nif::NiTransform mWorld;
             NifOsg::MatrixTransform::TraversalMatrix mPublished;
+            std::optional<std::uint16_t> mSelectiveFlags;
         };
         struct Group
         {
@@ -98,7 +99,7 @@ namespace SceneUtil
                     require(world.has_value(), "invalid initial NIF scene composition");
                     const auto index = mNodes.size();
                     mIndices.emplace(&node, index);
-                    mNodes.push_back({&transform, parent, {}, *world, {}});
+                    mNodes.push_back({&transform, parent, {}, *world, {}, {}});
                     if (parent) mNodes[*parent].mChildren.push_back(index);
                     parent = index;
                 }
@@ -277,7 +278,8 @@ namespace SceneUtil
         }
         std::uint16_t nodeFlags(const NifOsg::MatrixTransform& node)
         {
-            const auto flags = mCallbacks.mNodeFlags(node);
+            const auto flags = mCallbacks.mNodeFlags ? mCallbacks.mNodeFlags(node)
+                : *mBinding.mNodes[mBinding.mIndices.at(&node)].mSelectiveFlags;
             require(mBinding.valid(), "NIF update policy changed the bound hierarchy");
             mBinding.requirePlacement(mPlacement);
             return flags;
@@ -383,6 +385,83 @@ namespace SceneUtil
         require(found != mImpl->mIndices.end(), "foreign NIF scene cache query");
         return mImpl->mNodes[found->second].mWorld;
     }
+    NifSceneTraversal::SelectiveUpdateResult NifSceneTraversal::recomputeSelectiveUpdateFlags(
+        const std::function<SelectiveUpdatePolicy(const NifOsg::MatrixTransform&)>& policy,
+        bool inheritedTransform)
+    {
+        require(mImpl->valid(), "expired or changed NIF scene hierarchy");
+        require(bool(policy), "missing NIF selective policy resolver");
+        require(!mImpl->mUpdating, "reentrant NIF scene policy preparation");
+        struct Reset
+        {
+            bool& mUpdating;
+            ~Reset() { mUpdating = false; }
+        } reset{mImpl->mUpdating};
+        mImpl->mUpdating = true;
+        const auto placement = mImpl->placement();
+        std::vector<osg::ref_ptr<NifOsg::MatrixTransform>> leases;
+        for (const auto& node : mImpl->mNodes)
+        {
+            osg::ref_ptr<NifOsg::MatrixTransform> lease;
+            require(node.mTransform.lock(lease), "expired NIF selective policy node");
+            leases.push_back(std::move(lease));
+        }
+        std::vector<SelectiveUpdatePolicy> policies;
+        for (std::size_t i = 0; i < leases.size(); ++i)
+        {
+            const auto value = policy(*leases[i]);
+            require(mImpl->valid(), "NIF policy resolver changed the hierarchy");
+            mImpl->requirePlacement(placement);
+            const auto kind = value.mKind;
+            require(kind == SelectiveUpdatePolicy::Kind::Node || kind == SelectiveUpdatePolicy::Kind::AVObject
+                    || kind == SelectiveUpdatePolicy::Kind::Geometry, "unknown NIF selective policy kind");
+            require(!value.mHasTransformController || value.mHasController,
+                "NIF transform controller requires controller presence");
+            require(kind == SelectiveUpdatePolicy::Kind::Node || mImpl->mNodes[i].mChildren.empty(),
+                "NIF leaf selective policy has native children");
+            require(!value.mHasSkin || kind == SelectiveUpdatePolicy::Kind::Geometry,
+                "NIF skin requires geometry selective policy");
+            policies.push_back(value);
+        }
+        std::vector<std::uint16_t> flags(policies.size());
+        const auto compute = [&](auto&& self, std::size_t index, bool inherited) -> SelectiveUpdateResult {
+            const auto& value = policies[index];
+            const bool transform = inherited || value.mHasTransformController;
+            bool needs = transform || value.mHasController || value.mHasPropertyController;
+            bool rigidChildren = true;
+            for (const auto child : mImpl->mNodes[index].mChildren)
+            {
+                const auto result = self(self, child, transform);
+                needs |= result.mNeedsUpdate;
+                rigidChildren &= result.mRigid;
+            }
+            // Node bit4 describes its descendants. Own transform controllers
+            // clear the rigidity returned to its parent after that flag store.
+            flags[index] = (value.mFlags & ~std::uint16_t(0x1e))
+                | (needs ? 2 : 0) | (transform ? 4 : 0)
+                | (value.mHasPropertyController ? 8 : 0) | (rigidChildren ? 16 : 0);
+            bool rigid = rigidChildren && !value.mHasTransformController;
+            if (value.mHasSkin)
+            {
+                flags[index] |= 6;
+                needs = true;
+                rigid = false;
+            }
+            return {needs, rigid};
+        };
+        const auto result = compute(compute, 0, inheritedTransform);
+        for (std::size_t i = 0; i < flags.size(); ++i) mImpl->mNodes[i].mSelectiveFlags = flags[i];
+        return result;
+    }
+    std::uint16_t NifSceneTraversal::selectiveUpdateFlags(const NifOsg::MatrixTransform& node) const
+    {
+        require(mImpl->valid(), "expired or changed NIF scene hierarchy");
+        const auto found = mImpl->mIndices.find(&node);
+        require(found != mImpl->mIndices.end(), "foreign NIF selective flag query");
+        const auto flags = mImpl->mNodes[found->second].mSelectiveFlags;
+        require(flags.has_value(), "unprepared NIF selective flags");
+        return *flags;
+    }
     bool NifSceneTraversal::isReferenceRoot(const osg::NodeVisitor* visitor, const osg::Node* node) noexcept
     {
         const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
@@ -407,7 +486,8 @@ namespace SceneUtil
     {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
         require(mode == Mode::Full || mode == Mode::Selected || mode == Mode::Rigid, "unknown NIF update mode");
-        require(mode == Mode::Full || bool(callbacks.mNodeFlags), "missing NIF selected update policy");
+        require(mode == Mode::Full || bool(callbacks.mNodeFlags) || mImpl->mNodes[0].mSelectiveFlags.has_value(),
+            "missing NIF selected update policy");
         require(!mImpl->mUpdating, "reentrant NIF scene traversal");
         struct Reset
         {

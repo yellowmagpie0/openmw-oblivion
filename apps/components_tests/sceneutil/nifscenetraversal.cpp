@@ -1004,4 +1004,130 @@ namespace
         EXPECT_FLOAT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 15);
         EXPECT_NEAR(mChild->getWorldMatrices().front().getTrans().x(), 15, 1e-10);
     }
+    TEST(NifSelectiveUpdatePolicy, NativeComputedFlagsDriveTraversalAndRemainPrivate)
+    {
+        using Policy = Binding::SelectiveUpdatePolicy;
+        std::array<osg::ref_ptr<Node>, 5> nodes;
+        for (auto& node : nodes) node = makeNode();
+        nodes[0]->addChild(nodes[1]); nodes[0]->addChild(nodes[2]);
+        nodes[1]->addChild(nodes[3]); nodes[1]->addChild(nodes[4]);
+        // Literal original selected-flags-oracle01 case288, including inactive
+        // transform controllers, a later transform controller and skinned leaves.
+        const std::array<Policy, 5> inputs{{
+            {Policy::Kind::Node, 53385, false, false, false, false},
+            {Policy::Kind::Node, 8899, true, true, true, false},
+            {Policy::Kind::Geometry, 22211, true, true, true, true},
+            {Policy::Kind::Geometry, 7951, true, true, false, false},
+            {Policy::Kind::Geometry, 40850, true, false, false, true},
+        }};
+        const std::array<unsigned, 5> expected{53379, 8911, 22239, 7959, 40854};
+        for (unsigned i = 0; i < nodes.size(); ++i) nodes[i]->setUserValue("nativeNifFlags", unsigned(inputs[i].mFlags));
+        unsigned own = 0, property = 0;
+        for (unsigned i = 0; i < nodes.size(); ++i)
+        {
+            if (inputs[i].mHasController)
+                nodes[i]->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++own; }));
+            if (inputs[i].mHasPropertyController)
+                nodes[i]->getOrCreateStateSet()->setUpdateCallback(new PropertyCallback([&](osg::NodeVisitor&) { ++property; }));
+        }
+        const auto index = [&](const Node& node) {
+            for (unsigned i = 0; i < nodes.size(); ++i) if (nodes[i].get() == &node) return i;
+            throw std::logic_error("foreign test node");
+        };
+        Binding binding(*nodes[0]);
+        EXPECT_THROW(binding.selectiveUpdateFlags(*nodes[0]), std::invalid_argument);
+        const auto before = nodes[0]->getTraversalMatrix();
+        const auto result = binding.recomputeSelectiveUpdateFlags([&](const Node& node) { return inputs[index(node)]; }, false);
+        EXPECT_TRUE(result.mNeedsUpdate); EXPECT_FALSE(result.mRigid);
+        EXPECT_EQ(own, 0u); EXPECT_EQ(property, 0u);
+        EXPECT_EQ(nodes[0]->getTraversalMatrix(), before);
+        for (unsigned i = 0; i < nodes.size(); ++i)
+        {
+            EXPECT_EQ(binding.selectiveUpdateFlags(*nodes[i]), expected[i]);
+            unsigned authored = 0; ASSERT_TRUE(nodes[i]->getUserValue("nativeNifFlags", authored));
+            EXPECT_EQ(authored, inputs[i].mFlags);
+        }
+        std::vector<unsigned> projected;
+        Binding::Callbacks callbacks;
+        callbacks.mProjected = [&](Node& node, const auto&, auto) { projected.push_back(index(node)); };
+        binding.update(osg::FrameStamp{}, 1, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(projected, (std::vector<unsigned>{1, 3, 4, 2}));
+        EXPECT_EQ(own, 4u); EXPECT_EQ(property, 2u);
+        auto foreign = makeNode();
+        EXPECT_THROW(binding.selectiveUpdateFlags(*foreign), std::invalid_argument);
+    }
+
+    TEST_F(NifSceneTraversalTest, PolicyPreparationIsAtomicAndRejectsMutationAndReentrancy)
+    {
+        using Policy = Binding::SelectiveUpdatePolicy;
+        osg::ref_ptr<osg::MatrixTransform> parent = new osg::MatrixTransform;
+        parent->addChild(mRoot);
+        Binding binding(*mRoot);
+        const auto plain = [](const Node&) { return Policy{}; };
+        binding.recomputeSelectiveUpdateFlags(plain, true);
+        const auto unchanged = [&] {
+            EXPECT_EQ(binding.selectiveUpdateFlags(*mRoot), 22);
+            EXPECT_EQ(binding.selectiveUpdateFlags(*mChild), 22);
+            EXPECT_EQ(binding.selectiveUpdateFlags(*mLeaf), 22);
+            EXPECT_FLOAT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 17);
+        };
+        for (unsigned invalid = 0; invalid < 5; ++invalid)
+        {
+            SCOPED_TRACE(invalid);
+            const auto resolve = [&](const Node& node) {
+                Policy value;
+                if (invalid == 0) value.mKind = static_cast<Policy::Kind>(99);
+                if (invalid == 1) value.mKind = Policy::Kind::Geometry;
+                if (invalid == 2) value.mHasSkin = true;
+                if (invalid == 3) value.mHasTransformController = true;
+                if (invalid == 4 && &node == mLeaf) throw std::invalid_argument("late policy failure");
+                return value;
+            };
+            EXPECT_THROW(binding.recomputeSelectiveUpdateFlags(resolve, false), std::invalid_argument);
+            unchanged();
+        }
+        EXPECT_THROW(binding.recomputeSelectiveUpdateFlags({}, false), std::invalid_argument);
+        EXPECT_THROW(binding.recomputeSelectiveUpdateFlags([&](const Node&) {
+            parent->setMatrix(osg::Matrixd::translate(1, 0, 0)); return Policy{};
+        }, false), std::invalid_argument);
+        parent->setMatrix(osg::Matrixd::identity()); unchanged();
+        EXPECT_THROW(binding.recomputeSelectiveUpdateFlags([&](const Node&) {
+            mRoot->removeChild(mChild); return Policy{};
+        }, false), std::invalid_argument);
+        mRoot->addChild(mChild); unchanged();
+        unsigned nested = 0;
+        binding.recomputeSelectiveUpdateFlags([&](const Node&) {
+            EXPECT_THROW(binding.recomputeSelectiveUpdateFlags(plain, false), std::invalid_argument);
+            EXPECT_THROW(binding.update(mStamp, 0), std::invalid_argument);
+            ++nested; return Policy{};
+        }, true);
+        EXPECT_EQ(nested, 3u); unchanged();
+    }
+
+    TEST_F(NifSceneTraversalTest, RecomputedFlagsAndExplicitOverridesSelectCurrentChildren)
+    {
+        using Policy = Binding::SelectiveUpdatePolicy;
+        Binding binding(*mRoot);
+        unsigned own = 0, projected = 0;
+        for (Node* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+            node->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++own; }));
+        // The supplied policy describes native lists; arbitrary OSG scaffolding
+        // callbacks do not implicitly become native transform controllers.
+        const auto policy = [](const Node&) { return Policy{}; };
+        auto result = binding.recomputeSelectiveUpdateFlags(policy, false);
+        EXPECT_FALSE(result.mNeedsUpdate); EXPECT_TRUE(result.mRigid);
+        Binding::Callbacks callbacks;
+        callbacks.mProjected = [&](Node&, const auto&, auto) { ++projected; };
+        binding.update(mStamp, 0, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 1u); EXPECT_EQ(projected, 0u);
+        result = binding.recomputeSelectiveUpdateFlags(policy, true);
+        EXPECT_TRUE(result.mNeedsUpdate); EXPECT_TRUE(result.mRigid);
+        binding.update(mStamp, 1, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 4u); EXPECT_EQ(projected, 3u);
+        callbacks.mNodeFlags = [](const Node&) { return 0; };
+        binding.update(mStamp, 2, callbacks, Binding::Mode::Selected);
+        EXPECT_EQ(own, 5u); EXPECT_EQ(projected, 3u);
+        EXPECT_EQ(binding.selectiveUpdateFlags(*mRoot), 22);
+    }
+
 }

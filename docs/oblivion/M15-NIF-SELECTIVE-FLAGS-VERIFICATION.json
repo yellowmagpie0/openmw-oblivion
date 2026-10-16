@@ -1,0 +1,404 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "Private ordinary selective update flags prepared and consumed by manual traversal; production resolver/scheduling/full M15S4 incomplete",
+  "parent_commit": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+  "implementation_sha256": {
+    "components/sceneutil/nifscenetraversal.hpp": "6836ec1f10fa0649e591a6724092c11c89cef7af71eea29ed342de606f50fe34",
+    "components/sceneutil/nifscenetraversal.cpp": "bc29490b8a77f51356caed5cf9fcddbcdd66ad9cc082385d37bda60064d7c7fc",
+    "apps/components_tests/sceneutil/nifscenetraversal.cpp": "aadbac82a5c71f2ffc220984806e46ed74fccb881f49a11cdb5ce72322e0172f"
+  },
+  "native": {
+    "path": "build/oblivion-compat/m15/S4/selected-flags-oracle-01/verification.json",
+    "sha256": "ea2bd6a722c9b499c0ea0b6cfeeeab7a3986653002455acbe6e1714d39419666",
+    "report": {
+      "passed": true,
+      "contexts": 800,
+      "nodes": 2848,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "f3c915130a6f7570a6d6b0afd0ed495a2f0d06f459405cd96cea29ba89eb20dd",
+      "cases_sha256": "6a9e392279f621637983b4967592770e4d704ec2e115f9ab15f23e4b575a4d54",
+      "scope": "Actual ordinaryNiNode70AA20 and NiGeometry722F00/base707D80, controller-list predicate707770 and property-list7077A0; real inactive NiTransformController v5c977C50 true / NiAlphaController69D990 false, later transform in linked list, sparse child slots, optional skin pointer. No hooked functions. Root inherited-transform input supplied explicitly; caller/recompute scheduling, model-special overrides, rendering/physics/gameplay excluded."
+    }
+  },
+  "static_audit": [
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/executable.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/policy-vtables.json",
+      "sha256": "66256c89c5dbc1947a812c0f523e67b069e5427f0e1a2df4998292cdd9bf9ac4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/root-virtual50.txt",
+      "sha256": "304c3a081621338bcd9df5e745b49ef4ac52bde7c84a856df84116bc11e3f945"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/base-policy.txt",
+      "sha256": "ce5326f14f4142962b34962edfaacb72bdd003f7b23e9d42b6ca83cc7b080d82"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/NiNode-virtual5c.txt",
+      "sha256": "7b892d15f6fc34dd18b375b13e73b07d53b19d37fb4447fcd8a006875780ad9f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/NiTriShape-virtual5c.txt",
+      "sha256": "187f578e511e62e128969a27f50e27820c5600d549294817a5ef09f27d546717"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/NiTransformController-virtual5c.txt",
+      "sha256": "d2015157e9b07f5b5550d0278b7a6e23edf82890c4b98c804001fe5a41f8914e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-audit-01/NiAlphaController-virtual5c.txt",
+      "sha256": "47dbd814624a9f1280b01685e38d3d8a85f9ca731fc504a15a60e1b321b779fb"
+    }
+  ],
+  "comparisons": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-compare-01/normal-verification.json",
+      "sha256": "1f6956a030a00bac3c531beb6c18938e7b491b2c5117c352f8d89ad164642c82",
+      "report": {
+        "passed": true,
+        "contexts": 800,
+        "nodes": 2848,
+        "exact_fields": 4448,
+        "failures": [],
+        "source_sha256": "6a9e392279f621637983b4967592770e4d704ec2e115f9ab15f23e4b575a4d54",
+        "probe_sha256": "1e992b4984da0a2fd985558247a88720bbbed5ab62bc72ceca91f6b1f7f4d2a2",
+        "comparator_sha256": "e3459dfd2f83b58874106b4f10f213304adf703f441c0be2f431287a379cbfd5",
+        "binary_sha256": "5c9ec16be3a0d69ab646cbe9d68120ce4dfe810f576a5db74df8decafefa911b",
+        "scope": "Actual NifSceneTraversal preparation over a private OSG hierarchy against original ordinaryNiNode/NiGeometry recursive flags and root output booleans. Native list predicates represented by explicit instance policy inputs. No production model-policy resolver/recompute event scheduling, model-special overrides, physics/frame ownership or gameplay acceptance."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-compare-01/sanitized-verification.json",
+      "sha256": "40d1a4bd771f5f88a78ba62733ab662c5e527d8a09259e6c6ecfb0bddc429ff5",
+      "report": {
+        "passed": true,
+        "contexts": 800,
+        "nodes": 2848,
+        "exact_fields": 4448,
+        "failures": [],
+        "source_sha256": "6a9e392279f621637983b4967592770e4d704ec2e115f9ab15f23e4b575a4d54",
+        "probe_sha256": "1e992b4984da0a2fd985558247a88720bbbed5ab62bc72ceca91f6b1f7f4d2a2",
+        "comparator_sha256": "e3459dfd2f83b58874106b4f10f213304adf703f441c0be2f431287a379cbfd5",
+        "binary_sha256": "b4274081ad4eec5cf6aafeb16e2e4e988e480b2aee997d90d5fa8e1cd2ef633e",
+        "scope": "Actual NifSceneTraversal preparation over a private OSG hierarchy against original ordinaryNiNode/NiGeometry recursive flags and root output booleans. Native list predicates represented by explicit instance policy inputs. No production model-policy resolver/recompute event scheduling, model-special overrides, physics/frame ownership or gameplay acceptance."
+      }
+    }
+  },
+  "checks": {
+    "preflight": {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-preflight-01/verification.json",
+      "sha256": "1984cd27abad5a5a7c1f415ad7e6e57477b168fb756f731ea5a006235f4b975e",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 35.024
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.116
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=NifSceneTraversalTest.*:NifSelectiveUpdatePolicy.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/selected-flags-preflight-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 35,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "NifSceneTraversalTest.*:NifSelectiveUpdatePolicy.*",
+            "binary_sha256": "565214545dc078996ede12a6819c6a0cfbde7e4c9e6495059a2cfd0f172855ec",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "2ec9e59f151aa441bf6f7d2a0c34f9df972550d975f915dcab1acdbe64ba1f3c",
+            "inventory_sha256": "b54030de9ecb7745d28222af7410584083bd6cd35f4bd8489823e965db3ba06b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 2
+          }
+        },
+        "source_before": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        },
+        "source_after": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        }
+      }
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-normal-01/verification.json",
+      "sha256": "c9ef487a2f033096faf2bc0836461b85e508bcc8b932fb7369c0e4fea382db6f",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 1.618
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/selected-flags-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 14.505
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2781,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "565214545dc078996ede12a6819c6a0cfbde7e4c9e6495059a2cfd0f172855ec",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "d9f5615cfd03c646c88ba96762771c90ebb4df669371f596b556b4c131efa3fc",
+            "inventory_sha256": "f65b8c18580f1c57c007cfe6b320c1439c5d2800e26c25957100557f29275187",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 266
+          }
+        },
+        "source_before": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        },
+        "source_after": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/selected-flags-sanitized-01/verification.json",
+      "sha256": "a52f5a11cd6afe49615e6df457fb2149f55c155e9542fbf1de0070fb2b19dd22",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 66.614
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/selected-flags-sanitized-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 67.877
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2781,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "56ca50a62ad90c3f3d8dc821b101defea2cb2ce771bb20ec2e70699a4480faa0",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "66ba653416f7b3dbae316f7996f7d8b695cf5f0f17ed86cb2f898e65501e43f3",
+            "inventory_sha256": "3fc500446f58edf94d082e579c2a537ef15f0d7475e2d8c2b0540afd06b6696d",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            },
+            "suites": 266
+          }
+        },
+        "source_before": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        },
+        "source_after": {
+          "head": "14fc8f8bd516ae8cb2a30698900be3716ded1ad4",
+          "source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b"
+        }
+      }
+    }
+  },
+  "tested_source_fingerprint": "a27089d30516479dca641278704939678d48ff6af9d38e929b99177ac6a9079b",
+  "behavior": [
+    "Explicit live instance policy identifies ordinary NiNode, base NiAVObject or NiGeometry, preserved flags, own controller presence, transform-controller classification, property-controller presence and skin. No authored flags or OSG callback type is silently treated as computed live state. Inactive controllers still contribute; a transform controller later in the linked list still propagates transform demand.",
+    "Recompute bits1..4 over the actual bound native hierarchy. Transform demand propagates downward, update demand propagates upward, property demand remains local. Node bit4 describes descendant rigidity before its own transform controller clears the rigidity returned to the parent. A skinned geometry forces update/projection and returns nonrigid while retaining the base leaf bit4 store. Other input bits are preserved.",
+    "Prepare all flags privately after resolver/type/input and hierarchy/placement checks, with model/ancestor leases and reentrancy guard. Failure preserves the previous prepared flags. Preparation advances no controller, native cache, drawing handle, physical motion or REFR. Foreign and unprepared flag queries reject.",
+    "Selected/Rigid traversal may consume prepared flags when no mNodeFlags callback is supplied. Explicit live callback overrides remain authoritative, including their existing post-controller reinspection. Full traversal remains unchanged; unprepared Selected/Rigid without an explicit callback still rejects. The production owner chooses resolver, inherited transform input and recomputation events.",
+    "Three regressions cover literal native five-node flags and actual callback/projection consumption without a callback flag provider; preserved authored metadata; unknown kind, invalid controller/skin/leaf inputs, late resolver throw, placement/hierarchy mutation, reentrancy and retry without partial flag writes; recomputation and explicit override precedence."
+  ],
+  "curated_native_cases": [
+    {
+      "inherited": false,
+      "nodes": [
+        {
+          "parent": -1,
+          "geometry": false,
+          "own": 0,
+          "property": 0,
+          "skin": false,
+          "flags": 53385
+        },
+        {
+          "parent": 0,
+          "geometry": false,
+          "own": 3,
+          "property": 3,
+          "skin": false,
+          "flags": 8899
+        },
+        {
+          "parent": 0,
+          "geometry": true,
+          "own": 2,
+          "property": 3,
+          "skin": true,
+          "flags": 22211
+        },
+        {
+          "parent": 1,
+          "geometry": true,
+          "own": 3,
+          "property": 2,
+          "skin": false,
+          "flags": 7951
+        },
+        {
+          "parent": 1,
+          "geometry": true,
+          "own": 1,
+          "property": 2,
+          "skin": true,
+          "flags": 40850
+        }
+      ],
+      "result_flags": [
+        53379,
+        8911,
+        22239,
+        7959,
+        40854
+      ],
+      "needs_update": 1,
+      "rigid": 0
+    },
+    {
+      "inherited": false,
+      "nodes": [
+        {
+          "parent": -1,
+          "geometry": false,
+          "own": 2,
+          "property": 0,
+          "skin": false,
+          "flags": 65535
+        }
+      ],
+      "result_flags": [
+        65527
+      ],
+      "needs_update": 1,
+      "rigid": 0
+    }
+  ],
+  "limits": [
+    "Original800contexts/2848nodes execute ordinaryNiNode70AA20 and NiGeometry722F00/base707D80, real controller-list/property-list queries and real transform/nontransform predicates. No game functions are hooked. Sparse null child/property entries and a later linked transform controller are included. Skin pointer presence is supplied explicitly; no skin update, bounds, controller execution, physics or gameplay is exercised.",
+    "The policy input resolver and inherited root transform input are explicit boundary inputs. The actual production preparation/recomputation call chain, controller classification/resolution for all supported model types and special virtual overrides remain unwired/unverified. This API does not automatically infer native lists from arbitrary OSG scaffolding callbacks or mutable shared source userdata.",
+    "Virtual+50 at70A9C0 rebuilds local bounds through descendants; it is not the selective-flag computation method. Selective flags use virtual+5C at70AA20 / geometry722F00. Final reference-scale virtual50 does not by itself establish a selective-flag recomputation event.",
+    "Final normal and ASan/UBSan components each pass2781tests/266suites, no failures/skips, full inventories. Leak detection disabled. No fresh engine build or normal-input/fresh-process runtime course is claimed for this component checkpoint.",
+    "Still require production live policy resolution/events, native generation/initial capture including replacement reset, model-specific outer/culling policy, clock lifecycle/physics scheduling, one update owner with real reference/cell lifetimes/migration, save/fresh recreation and remaining M15S4 melee/drop/effect/input/runtime acceptance."
+  ]
+}

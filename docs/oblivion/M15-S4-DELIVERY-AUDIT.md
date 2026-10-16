@@ -3992,3 +3992,37 @@ replacement reset, live flags/model/culling policy, clock lifecycle/physics orde
 one traversal owner, real reference/cell migration, save/fresh recreation and
 remaining melee/drop/effect/input/runtime gates remain open. M15S4 remains active
 and incomplete.
+
+## 2026-10-16 — prepare private ordinary selective update flags
+
+The manual traversal now prepares live selective flags from an explicit instance
+policy for ordinary NiNode/NiAVObject/NiGeometry. Transform demand propagates down;
+update demand propagates up; property-controller demand stays local. Controller
+presence includes inactive controllers. Node bit4 describes descendant rigidity
+before its own transform controller clears the rigidity returned to its parent.
+A skinned geometry forces update/projection and returns nonrigid while retaining
+the base leaf bit4 store. Other input flags remain intact. Prepared flags are
+private; source userdata and controller/cache/drawing/physical state do not change.
+Resolver/type failures, placement/hierarchy mutation and reentrancy preserve the
+previous flag snapshot. Selected/Rigid traversal consumes prepared flags when no
+explicit live flag callback is supplied; existing callbacks retain precedence.
+
+An independent no-hook original-instruction corpus executes800contexts over
+2,848nodes, including inactive/later linked transform controllers, property and
+null entries, sparse child slots, skin, inherited demand and arbitrary prior flags.
+Both C++builds match all4,448flag/return-value fields. Three new tests cover actual
+traversal consumption, source preservation, atomic rejection/retry, recomputation
+and override precedence. Preflight passes35selected cases. Full normal and
+ASan/UBSan runs each pass2,781components/266suites, complete inventories, no
+failures/skips; leak detection is disabled. No fresh engine check is claimed.
+[Editable verification](M15-NIF-SELECTIVE-FLAGS-VERIFICATION.json) pins source,
+corpora, hashes, reports and scoped native inputs under `selected-flags-*`.
+
+The final-scale virtual+50 call is a bounds rebuild, not this flag computation;
+selective flags use virtual+5C. The actual production resolver, inherited root
+input and recomputation event/caller chain remain to be connected and verified.
+No arbitrary OSG callback or authored flag is inferred to be a live native policy.
+Model-specific overrides/culling, initial physical capture/replacement, clock and
+physics scheduling, one production owner, real reference/cell migration, save/
+fresh recreation and the remaining M15S4 melee/drop/effect/input/runtime gates
+remain open. M15S4 remains active and incomplete.
