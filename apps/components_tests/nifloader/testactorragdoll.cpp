@@ -3,6 +3,7 @@
 #include <components/nif/physics.hpp>
 #include <components/nif/controller.hpp>
 #include <components/nifbullet/actorragdoll.hpp>
+#include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollcollisionfilter.hpp>
 
 #include <gtest/gtest.h>
@@ -136,7 +137,7 @@ namespace
         EXPECT_EQ(graph.mBodies[1].mBone, "Bip01 Spine");
         EXPECT_EQ(graph.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(14, 25, 36));
     }
-    TEST_F(ActorRagdollTest, ReferencePlacementOmitsOnlyTheAuthoredRootTransform)
+    TEST_F(ActorRagdollTest, ReferencePlacementReplacesRootAndRelocatesOnlySelectedCollision)
     {
         auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
         root.mTransform.mRotation.mValues[0][0] = 0;
@@ -150,12 +151,16 @@ namespace
         ASSERT_EQ(placed.mReferenceRoot, 0u);
         ASSERT_EQ(placed.mBodies.size(), authored.mBodies.size());
         EXPECT_EQ(placed.mSourceHash, authored.mSourceHash);
-        EXPECT_EQ(placed.mBodies[0].mBoneBind.getTrans(), osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(placed.mBodies[0].mNodeRecord, 0u);
+        EXPECT_EQ(placed.mBodies[0].mBone, root.mName);
+        EXPECT_TRUE(placed.mBodies[0].mUsesRigidBodyTransform);
+        EXPECT_EQ(placed.mBodies[0].mBoneBind, osg::Matrixf::identity());
         EXPECT_EQ(placed.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(4, 5, 6));
         EXPECT_NE(authored.mBodies[0].mBoneBind, placed.mBodies[0].mBoneBind);
         EXPECT_FLOAT_EQ(placed.mBodies[0].mMass, authored.mBodies[0].mMass);
         EXPECT_EQ(placed.mBodies[0].mInertia, authored.mBodies[0].mInertia);
-        EXPECT_EQ(placed.mBodies[0].mTranslation, authored.mBodies[0].mTranslation);
+        EXPECT_EQ(placed.mBodies[0].mTranslation,
+            NifBullet::ragdollWorldToNativePosition({1, 2, 3}));
         EXPECT_EQ(placed.mBodies[0].mRotation, authored.mBodies[0].mRotation);
         EXPECT_EQ(std::get<NifBullet::RagdollHingeJoint>(placed.mJoints[0].mJoint).mA.mPivot,
             std::get<NifBullet::RagdollHingeJoint>(authored.mJoints[0].mJoint).mA.mPivot);
@@ -163,6 +168,66 @@ namespace
         EXPECT_FLOAT_EQ(root.mTransform.mScale, 2);
         EXPECT_EQ(NifBullet::loadActorRagdollDefinition(mFile).mBodies[0].mBoneBind,
             authored.mBodies[0].mBoneBind);
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceRelocationUsesSecondLiteralChildInsteadOfDeepFirstBody)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        const auto first = root.mChildren[0], second = root.mChildren[1];
+        auto& helper = node("Nonphysical helper", {});
+        helper.mChildren = {first};
+        root.mChildren = {Nif::NiAVObjectPtr(&helper), second};
+        const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+        ASSERT_EQ(placed.mBodies.size(), 2u);
+        EXPECT_EQ(placed.mBodies[0].mNodeRecord, first->mRecordIndex);
+        EXPECT_EQ(placed.mBodies[1].mNodeRecord, root.mRecordIndex);
+        EXPECT_TRUE(placed.mBodies[1].mUsesRigidBodyTransform);
+        EXPECT_EQ(helper.mChildren[0].getPtr(), first.getPtr());
+        EXPECT_FALSE(second->mCollision.empty()); // Parsed source stays authored.
+        EXPECT_TRUE(root.mCollision.empty());
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceRelocationDoesNotSkipNullFirstSlotOrSearchDescendants)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        const auto children = root.mChildren;
+        auto& helper = node("Nonphysical helper", {});
+        helper.mChildren = children;
+        for (bool nullFirst : {true, false})
+        {
+            SCOPED_TRACE(nullFirst);
+            root.mChildren = {Nif::NiAVObjectPtr(&helper)};
+            if (nullFirst) root.mChildren.insert(root.mChildren.begin(), Nif::NiAVObjectPtr(nullptr));
+            const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+            EXPECT_EQ(placed.mBodies[0].mNodeRecord, children[0]->mRecordIndex);
+            EXPECT_EQ(placed.mBodies[1].mNodeRecord, children[1]->mRecordIndex);
+            EXPECT_FALSE(placed.mBodies[0].mUsesRigidBodyTransform);
+            EXPECT_FALSE(placed.mBodies[1].mUsesRigidBodyTransform);
+        }
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceRelocationPreservesFixedAndKeyframedChildTargets)
+    {
+        const auto authored = NifBullet::loadActorRagdollDefinition(mFile);
+        auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[authored.mBodies[0].mRecord]);
+        for (auto motion : {Nif::HkMotionType::Motion_Keyframed, Nif::HkMotionType::Motion_Fixed})
+        {
+            body.mInfo.mMotionType = motion;
+            const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+            EXPECT_EQ(placed.mBodies[0].mNodeRecord, authored.mBodies[0].mNodeRecord);
+            EXPECT_FALSE(placed.mBodies[0].mUsesRigidBodyTransform);
+            EXPECT_EQ(placed.mBodies[0].mTranslation, authored.mBodies[0].mTranslation);
+        }
+    }
+
+    TEST_F(ActorRagdollTest, ReferenceRelocationAllowsAnUnnamedModelRoot)
+    {
+        auto& root = static_cast<Nif::NiNode&>(*mFile.mRecords[0]);
+        root.mName.clear();
+        const auto placed = NifBullet::loadReferenceRagdollDefinition(mFile);
+        EXPECT_EQ(placed.mBodies[0].mNodeRecord, 0u);
+        EXPECT_TRUE(placed.mBodies[0].mBone.empty());
+        EXPECT_EQ(placed.mBodies[1].mBone, "Bip01 Spine");
     }
 
     TEST_F(ActorRagdollTest, ReferencePlacementRejectsMissingMultipleOrNonSceneRoots)

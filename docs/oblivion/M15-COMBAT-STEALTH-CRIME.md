@@ -6,6 +6,30 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native reference collision relocation — 2026-10-16
+
+The owned drop factory now relocates a selected dynamic child collision to the
+reference root, converts it to bodyT with the original offset arithmetic, and
+preserves the visible child transform. It retains source-child identity and
+local-state guards before publication. This corrects the earlier assumption
+that selected-child weapons necessarily keep child collision targets after
+registration; the prior hierarchy probes omitted that registration step.
+
+All **2,703 component tests and 1,559 engine tests** pass in normal and ASan/UBSan
+builds. Independent original registration covers 576 contexts, including 288
+relocations whose seven offset float lanes match bit for bit in both builds.
+The real-NIF factory course verifies falling/rotating body alignment and rollback
+for four source-child mutations. The preceding binary fails the independently
+required root/bodyT target. Selected publication and guard traces remain
+allocation-free within their declared main-thread allocator scope.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#native-child-collision-relocation-during-reference-registration)
+and [editable provenance](M15-ORIGINAL-REFERENCE-COLLISION-RELOCATION-PROBES.json)
+record evidence and limits. General Havok-enable/cell admission, remaining
+callback masks, visible scale ownership, forced-transform continuation, loose
+save/recreation, production mastery/breakage and the full gameplay acceptance
+matrix remain open. S4 is incomplete.
+
 ## S4 native reference root placement — 2026-10-16
 
 The drop factory now replaces the authored NIF root pose with the new reference

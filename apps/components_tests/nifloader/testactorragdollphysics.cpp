@@ -14,12 +14,69 @@
 #include <gtest/gtest.h>
 
 #include <limits>
+#include <cmath>
 #include <cstddef>
 #include <new>
 #include <bit>
 
 namespace
 {
+    TEST(RagdollReferenceRootOffset, MatchesOriginalRelocationWithDistinctOldQuaternionFrames)
+    {
+        const osg::Matrixf child(0,-1,0,0, 1,0,0,0, 0,0,1,0, 3,4,5,1);
+        struct Sample
+        {
+            bool mPlain;
+            std::array<unsigned, 4> mOld, mRotation;
+            std::array<unsigned, 3> mTranslation;
+        };
+        // Full original88C740, including plain-wrapper conversion and native
+        // matrix/old-offset-frame arithmetic. No expected C++ recomposition.
+        const std::array<Sample, 3> samples{{
+            {true, {0,0,0,0x3f800000}, {0,0,0xbf3504f3,0x3f3504f3},
+                {0x3edb756a,0x3f124e47,0x3f36e1d9}},
+            {false, {0,0,0,0x3f800000}, {0,0,0xbf3504f3,0x3f3504f3},
+                {0xbd922a58,0x3ea49c8e,0x3f56e1d9}},
+            {false, {0x3f3504f3,0,0,0x3f3504f3},
+                {0x3effffff,0x3effffff,0xbeffffff,0x3effffff},
+                {0x3e9b756b,0x3e5b8765,0xbea49c8f}},
+        }};
+        for (const auto& sample : samples)
+        {
+            NifBullet::RagdollBodyDefinition source{};
+            source.mUsesRigidBodyTransform = !sample.mPlain;
+            source.mTranslation = {.25f, -.5f, .125f};
+            for (unsigned i = 0; i < 4; ++i) source.mRotation[i] = std::bit_cast<float>(sample.mOld[i]);
+            const auto result = NifBullet::ragdollNativeRelocatedBodyOffset(child, source);
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<unsigned>(result.mRotation[i]), sample.mRotation[i]) << i;
+            for (unsigned i = 0; i < 3; ++i)
+                EXPECT_EQ(std::bit_cast<unsigned>(result.mPosition[i]), sample.mTranslation[i]) << i;
+            EXPECT_EQ(source.mTranslation, osg::Vec3f(.25f, -.5f, .125f));
+        }
+    }
+
+    TEST(RagdollReferenceRootOffset, RejectsInvalidUsedFieldsAndIgnoresPlainOffsetMetadata)
+    {
+        NifBullet::RagdollBodyDefinition source{};
+        source.mUsesRigidBodyTransform = true;
+        source.mRotation = osg::Quat(0, 0, 0, 0);
+        EXPECT_THROW(NifBullet::ragdollNativeRelocatedBodyOffset(osg::Matrixf::identity(), source),
+            std::invalid_argument);
+        source.mRotation = osg::Quat(0, 0, 0, 1);
+        source.mTranslation.x() = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(NifBullet::ragdollNativeRelocatedBodyOffset(osg::Matrixf::identity(), source),
+            std::invalid_argument);
+        source.mUsesRigidBodyTransform = false;
+        source.mRotation = osg::Quat(0, 0, 0, 0);
+        const auto result = NifBullet::ragdollNativeRelocatedBodyOffset(osg::Matrixf::identity(), source);
+        EXPECT_EQ(result.mPosition, osg::Vec3f());
+        EXPECT_EQ(result.mRotation, (std::array<float, 4>{0, 0, 0, 1}));
+        EXPECT_THROW(NifBullet::ragdollNativeRelocatedBodyOffset(osg::Matrixf::scale(2, 1, 1), source),
+            std::invalid_argument);
+        EXPECT_TRUE(std::isnan(source.mTranslation.x()));
+    }
+
     NifBullet::RagdollConeJoint coneLimits()
     {
         NifBullet::RagdollConeJoint result{};

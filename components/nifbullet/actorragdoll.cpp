@@ -1,4 +1,5 @@
 #include "actorragdoll.hpp"
+#include "actorragdollphysics.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -564,6 +565,45 @@ namespace NifBullet
             else
                 require(false, "unsupported joint");
             result.mJoints.push_back(std::move(value));
+        }
+        if (referencePlacement)
+        {
+            const auto* root = static_cast<const Nif::NiAVObject*>(file.getRoot(0));
+            const auto* selected = root;
+            // Original4E1FD0 selects the root, literal first child, or literal
+            // second child. It does not search recursively for a physical node.
+            if (root->mCollision.empty())
+                if (const auto* branch = dynamic_cast<const Nif::NiNode*>(root);
+                    branch && !branch->mChildren.empty() && !branch->mChildren[0].empty())
+                {
+                    selected = branch->mChildren[0].getPtr();
+                    if (selected->mCollision.empty() && branch->mChildren.size() > 1
+                        && !branch->mChildren[1].empty())
+                        selected = branch->mChildren[1].getPtr();
+                }
+            if (selected != root && !selected->mCollision.empty())
+            {
+                const auto* collision = static_cast<const Nif::bhkCollisionObject*>(selected->mCollision.getPtr());
+                const auto* body = static_cast<const Nif::bhkRigidBody*>(collision->mBody.getPtr());
+                // Original88C740 leaves fixed/keyframed wrappers on the child.
+                if (body->mInfo.mMotionType != Nif::HkMotionType::Motion_Keyframed
+                    && body->mInfo.mMotionType != Nif::HkMotionType::Motion_Fixed)
+                {
+                    auto& value = result.mBodies[bodies.at(body)];
+                    auto local = selected->mTransform.mRotation.toOsgMatrix();
+                    local.setTrans(selected->mTransform.mTranslation);
+                    const auto offset = ragdollNativeRelocatedBodyOffset(local, value);
+                    result.mReferenceCollisionSource = ActorRagdollDefinition::ReferenceCollisionSource{
+                        selected->mRecordIndex, selected->mName};
+                    value.mUsesRigidBodyTransform = true;
+                    value.mTranslation = offset.mPosition;
+                    value.mRotation = osg::Quat(offset.mRotation[0], offset.mRotation[1],
+                        offset.mRotation[2], offset.mRotation[3]);
+                    value.mNodeRecord = root->mRecordIndex;
+                    value.mBone = root->mName;
+                    value.mBoneBind = osg::Matrixf::identity();
+                }
+            }
         }
         return result;
     }

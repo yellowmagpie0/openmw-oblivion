@@ -112,6 +112,7 @@ namespace SceneUtil
         std::shared_ptr<const char> mLocalAuthority = std::make_shared<const char>(0);
         std::vector<Node> mNodes;
         std::vector<Body> mBodies;
+        std::optional<Body> mReferenceSource;
 
         Impl(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root)
             : mRoot(&root), mSourceHash(definition.mSourceHash)
@@ -164,10 +165,19 @@ namespace SceneUtil
                 require(bodyRecords.insert(body.mRecord).second && bodyNodes.insert(body.mNodeRecord).second,
                     "duplicate ragdoll renderer body identity");
                 const auto found = records.find(body.mNodeRecord);
-                require(found != records.end() && !body.mBone.empty()
+                require(found != records.end()
+                        && (!body.mBone.empty() || definition.mReferenceRoot == body.mNodeRecord)
                         && mNodes[found->second].mTransform->getName() == body.mBone,
                     "ragdoll renderer target identity mismatch");
                 mBodies.push_back({body.mNodeRecord, found->second, body.mBone});
+            }
+            if (const auto& source = definition.mReferenceCollisionSource)
+            {
+                const auto found = records.find(source->mNodeRecord);
+                require(found != records.end() && !source->mBone.empty()
+                        && mNodes[found->second].mTransform->getName() == source->mBone,
+                    "ragdoll renderer relocation source identity mismatch");
+                mReferenceSource = Body{source->mNodeRecord, found->second, source->mBone};
             }
             // Only physical targets and their ancestors participate. Other
             // authored helpers may use scale unsupported by rigid-body binding.
@@ -175,6 +185,15 @@ namespace SceneUtil
             for (const auto& body : mBodies)
             {
                 std::optional<std::size_t> index = body.mNode;
+                while (index && !needed[*index])
+                {
+                    needed[*index] = true;
+                    index = mNodes[*index].mParent;
+                }
+            }
+            if (mReferenceSource)
+            {
+                std::optional<std::size_t> index = mReferenceSource->mNode;
                 while (index && !needed[*index])
                 {
                     needed[*index] = true;
@@ -202,6 +221,7 @@ namespace SceneUtil
             }
             for (auto& body : mBodies)
                 body.mNode = remap[body.mNode];
+            if (mReferenceSource) mReferenceSource->mNode = remap[mReferenceSource->mNode];
             mNodes = std::move(selected);
         }
 
@@ -235,6 +255,8 @@ namespace SceneUtil
             }
             for (const auto& body : mBodies)
                 if (mNodes[body.mNode].mTransform->getName() != body.mBone) return false;
+            if (mReferenceSource
+                && mNodes[mReferenceSource->mNode].mTransform->getName() != mReferenceSource->mBone) return false;
             return true;
         }
 
@@ -259,6 +281,9 @@ namespace SceneUtil
             for (const auto& body : mBodies)
                 require(mNodes[body.mNode].mTransform->getName() == body.mBone,
                     "changed ragdoll renderer bone identity");
+            if (mReferenceSource)
+                require(mNodes[mReferenceSource->mNode].mTransform->getName() == mReferenceSource->mBone,
+                    "changed ragdoll renderer relocation source identity");
         }
 
         std::vector<Nif::NiTransform> locals() const

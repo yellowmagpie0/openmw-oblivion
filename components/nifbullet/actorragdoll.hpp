@@ -165,6 +165,14 @@ namespace NifBullet
         // Present only when loaded for a new placed reference. Its authored
         // root transform is omitted from bind matrices and replaced in 3D.
         std::optional<std::uint32_t> mReferenceRoot;
+        // The original child remains visible after its collision is relocated.
+        // Retain its identity for model admission without treating it as a body.
+        struct ReferenceCollisionSource
+        {
+            std::uint32_t mNodeRecord;
+            std::string mBone;
+        };
+        std::optional<ReferenceCollisionSource> mReferenceCollisionSource;
     };
 
     // Own a native property-scaled graph, including bodyT translation and
@@ -179,7 +187,9 @@ namespace NifBullet
     // are bounded to 128 edges and 4096 expanded instances per body.
     ActorRagdollDefinition loadActorRagdollDefinition(Nif::FileView file);
     // GenerateNiNode replaces the single asset root's local pose with the
-    // reference placement. Preserve descendant locals and body/joint data.
+    // reference placement. Registration relocates a selected dynamic child
+    // collision to that root with a bodyT offset; visible child locals and
+    // body properties/joint frames remain authored.
     ActorRagdollDefinition loadReferenceRagdollDefinition(Nif::FileView file);
 }
 

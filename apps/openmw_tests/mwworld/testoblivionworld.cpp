@@ -11664,15 +11664,16 @@ namespace
         };
         std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
         data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
-            + bytes(std::uint32_t(childTarget ? 5 : 4)) + bytes(std::uint32_t{0}) + std::string(3, '\0');
-        data += bytes(std::uint16_t{4});
-        for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape"})
+            + bytes(std::uint32_t(childTarget ? 6 : 5)) + bytes(std::uint32_t{0}) + std::string(3, '\0');
+        data += bytes(std::uint16_t{5});
+        for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape", "BSXFlags"})
             data += string(type);
         if (childTarget) data += bytes(std::uint16_t{0});
-        for (std::uint16_t i = 0; i < 4; ++i) data += bytes(i);
+        for (std::uint16_t i = 0; i < 5; ++i) data += bytes(i);
         data += bytes(std::uint32_t{0}); // No groups.
         // NiNode / NiAVObject / NiObjectNET.
-        data += string("Owned weapon") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})
+        data += string("Owned weapon") + bytes(std::uint32_t{1})
+            + bytes(std::int32_t(childTarget ? 5 : 4)) + bytes(std::int32_t{-1})
             + bytes(std::uint16_t{14});
         for (const float value : {1.f,2.f,3.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})
             data += bytes(value);
@@ -11702,6 +11703,7 @@ namespace
         data += bytes(std::uint8_t{1}) + std::string(3, '\0') + std::string(12, '\0')
             + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Constraints/body flags.
         data += bytes(std::uint32_t{0}) + bytes(radius); // Sphere material/radius.
+        data += string("BSX") + bytes(std::uint32_t{2}); // Native Havok-enable metadata.
         data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0}); // Root.
         return data;
     }
@@ -22059,7 +22061,9 @@ TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysical
     EXPECT_EQ(carried->mReferenceDefinition->mReferenceRoot, 0u);
     EXPECT_FALSE(carried->mBody.mDefinition->mReferenceRoot);
     EXPECT_EQ(carried->mBody.mDefinition->mBodies[0].mBoneBind.getTrans(), osg::Vec3f(4, 6, 8));
-    EXPECT_EQ(carried->mReferenceDefinition->mBodies[0].mBoneBind.getTrans(), osg::Vec3f(3, 4, 5));
+    EXPECT_EQ(carried->mReferenceDefinition->mBodies[0].mNodeRecord, 0u);
+    EXPECT_EQ(carried->mReferenceDefinition->mBodies[0].mBoneBind, osg::Matrixf::identity());
+    EXPECT_TRUE(carried->mReferenceDefinition->mBodies[0].mUsesRigidBodyTransform);
     auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
     const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
     auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
@@ -22075,11 +22079,14 @@ TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysical
     placement.mScale = 2;
     const auto projected = animation->getLoosePhysicalPose()->captureWorldBones(placement);
     ASSERT_EQ(projected.size(), 1u);
-    EXPECT_EQ(projected[0].mPose.getTrans(), placement.mTranslation + osg::Vec3f(6, 8, 10));
+    EXPECT_EQ(projected[0].mNodeRecord, 0u);
+    EXPECT_EQ(projected[0].mPose.getTrans(), placement.mTranslation);
+    const auto childWorlds = child.mTarget->getWorldMatrices(); ASSERT_EQ(childWorlds.size(), 1u);
+    EXPECT_EQ(childWorlds[0].getTrans(), osg::Vec3d(placement.mTranslation + osg::Vec3f(6, 8, 10)));
     const auto physical = fixture.mPhysics->captureLooseObject(reference);
     ASSERT_EQ(physical.size(), 1u);
     const auto origin = physical[0].mPose.getOrigin();
-    const auto expected = projected[0].mPose.getTrans();
+    const auto expected = childWorlds[0].getTrans();
     EXPECT_NEAR(origin.x(), expected.x(), 1e-4);
     EXPECT_NEAR(origin.y(), expected.y(), 1e-4);
     EXPECT_NEAR(origin.z(), expected.z(), 1e-4);
@@ -22089,6 +22096,74 @@ TEST(OblivionWorldTest, NativeWeaponFactoryReplacesRootWithoutDiscardingPhysical
     const_cast<osg::Node*>(cached.get())->accept(cachedRoot); ASSERT_TRUE(cachedRoot.mTarget);
     EXPECT_NE(cachedRoot.mTarget, root.mTarget);
     EXPECT_EQ(cachedRoot.mTarget->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedCollisionFollowsRootWhileChildGeometryKeepsItsPose)
+{
+    NativeWeaponFactoryFixture fixture(true);
+    auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    auto& physics = *fixture.mPhysics;
+    const auto state = physics.captureLooseObject(reference);
+    auto velocities = physics.captureLooseObjectPackedVelocities(reference);
+    velocities[0].mVelocities.mLinear = {2, 0, 0, 0};
+    velocities[0].mVelocities.mAngular = {0, 0, .3f, 0};
+    physics.restoreLooseObject(reference, state, velocities);
+    auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(reference));
+    ASSERT_NE(animation, nullptr);
+    NativeWeaponTargetVisitor child(1), root;
+    animation->getObjectRoot()->accept(child); animation->getObjectRoot()->accept(root);
+    ASSERT_TRUE(child.mTarget); ASSERT_TRUE(root.mTarget);
+    const auto local = child.mTarget->getMatrix();
+    osg::ref_ptr<osg::Stats> stats = new osg::Stats("relocated native weapon");
+    physics.stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *stats);
+    const auto expected = physics.captureLooseObjectRootPose(reference);
+    const auto stepped = physics.captureLooseObject(reference);
+    const auto packed = physics.captureLooseObjectPackedVelocities(reference);
+    MWWorld::synchronizeLooseWeaponPoses(fixture.mWorld, physics);
+    EXPECT_EQ(reference.getRefData().getPosition().asVec3(), expected.getTrans());
+    EXPECT_EQ(reference.getRefData().getBaseNode()->getPosition(), expected.getTrans());
+    EXPECT_EQ(root.mTarget->getMatrix(), osg::Matrixd::identity());
+    EXPECT_EQ(child.mTarget->getMatrix(), local);
+    const auto worlds = child.mTarget->getWorldMatrices(); ASSERT_EQ(worlds.size(), 1u);
+    const auto origin = stepped[0].mPose.getOrigin();
+    EXPECT_NEAR(worlds[0].getTrans().x(), origin.x(), .001);
+    EXPECT_NEAR(worlds[0].getTrans().y(), origin.y(), .001);
+    EXPECT_NEAR(worlds[0].getTrans().z(), origin.z(), .001);
+    const auto after = physics.captureLooseObject(reference);
+    EXPECT_EQ(after[0].mPose, stepped[0].mPose);
+    EXPECT_EQ(after[0].mLinearVelocity, stepped[0].mLinearVelocity);
+    EXPECT_EQ(after[0].mAngularVelocity, stepped[0].mAngularVelocity);
+    EXPECT_EQ(physics.captureLooseObjectPackedVelocities(reference)[0].mVelocities, packed[0].mVelocities);
+}
+
+TEST(OblivionWorldTest, NativeWeaponFactoryRelocatedSourceRemainsGuardedBeforePublication)
+{
+    for (unsigned mutation = 0; mutation < 4; ++mutation)
+    {
+        SCOPED_TRACE(mutation);
+        NativeWeaponFactoryFixture fixture(true);
+        const auto serial = fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial;
+        const auto revision = fixture.mWorld.getWorldModel().getPtrRegistryRevision();
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        bool changed = false;
+        fixture.mRoot->mAfterInsert = [&] {
+            NativeWeaponTargetVisitor source(1); fixture.mRoot->accept(source);
+            ASSERT_TRUE(source.mTarget); changed = true;
+            if (mutation == 0) source.mTarget->setTranslation({7, 8, 9});
+            if (mutation == 1) source.mTarget->mRotationScale.mValues[0][0] = -0.f;
+            if (mutation == 2) source.mTarget->setName("changed relocation source");
+            if (mutation == 3) source.mTarget->getParent(0)->removeChild(source.mTarget);
+        };
+        EXPECT_THROW(plan->commit(), std::logic_error);
+        EXPECT_TRUE(changed);
+        EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 1);
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 50.f);
+        EXPECT_EQ(fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial, serial);
+        EXPECT_EQ(fixture.mWorld.getWorldModel().getPtrRegistryRevision(), revision);
+        EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+        EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+    }
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryRejectsChangedPreparedPhysicalNodesBeforeWearOrPublication)

@@ -575,7 +575,8 @@ namespace NifBullet
             return local;
         }
 
-        osg::Vec3f nativeBodyTOffset(const std::array<float, 4>& q, const osg::Vec3f& translation)
+        osg::Vec3f nativeBodyTOffset(const std::array<float, 4>& q, const osg::Vec3f& translation,
+            bool conjugate = false)
         {
             // Original8B9400/8B9150 rotate native-length local offset with
             // SSE binary32 products/sums and three x87 coefficient stores.
@@ -586,7 +587,7 @@ namespace NifBullet
             const float dot = dotZ + dotXY;
             const float axisCoefficient = float(2.0 * dot);
             const float scalarCoefficient = float(2.0 * double(q[3]) * q[3] - 1.0);
-            const float crossCoefficient = float(2.0 * q[3]);
+            const float crossCoefficient = float((conjugate ? -2.0 : 2.0) * q[3]);
             osg::Vec3f result;
             for (unsigned axis = 0; axis < 3; ++axis)
             {
@@ -604,6 +605,55 @@ namespace NifBullet
             }
             return result;
         }
+
+        std::array<float, 4> nativeRotationProduct(
+            const std::array<float, 4>& q, const std::array<float, 4>& local)
+        {
+            std::array<float, 4> result;
+            std::array<float, 3> products;
+            for (unsigned axis = 0; axis < 3; ++axis)
+            {
+                const unsigned next = (axis + 1) % 3;
+                const unsigned last = (axis + 2) % 3;
+                const float first = local[last] * q[next];
+                const float second = local[next] * q[last];
+                const float cross = first - second;
+                const float parentTerm = q[3] * local[axis];
+                const float localTerm = local[3] * q[axis];
+                const float sum = parentTerm + cross;
+                result[axis] = localTerm + sum;
+                products[axis] = local[axis] * q[axis];
+            }
+            const float xy = products[1] + products[0];
+            const float xyz = products[2] + xy;
+            result[3] = float(double(q[3]) * local[3] - xyz);
+            validateNativeOffsetRotation(result);
+            return result;
+        }
+    }
+
+    RagdollNativeTargetPose ragdollNativeRelocatedBodyOffset(
+        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source)
+    {
+        // 5398E0 preserves the authored matrix; 8B1B40 extracts its quaternion
+        // without the normalization used by ordinary scene synchronization.
+        const auto child = ragdollNativeBlendSceneTargetPose(childLocal);
+        const auto old = source.mUsesRigidBodyTransform
+            ? bodyTLocalRotation(source) : std::array<float, 4>{0, 0, 0, 1};
+        const auto rotated = nativeBodyTOffset(old,
+            source.mUsesRigidBodyTransform ? source.mTranslation : osg::Vec3f());
+        osg::Vec3f transformed;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            // Original88FCC0 uses the exact matrix and paired SSE sums.
+            const float x = childLocal(0, axis) * rotated[0];
+            const float y = childLocal(1, axis) * rotated[1];
+            const float z = childLocal(2, axis) * rotated[2];
+            const float xy = x + y;
+            const float zt = z + child.mPosition[axis];
+            transformed[axis] = xy + zt;
+        }
+        return {nativeBodyTOffset(old, transformed, true), nativeRotationProduct(old, child.mRotation)};
     }
 
     RagdollNativeTargetPose ragdollNativeSceneBodyTargetPose(

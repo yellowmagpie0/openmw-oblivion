@@ -1,0 +1,516 @@
+{
+  "checkpoint_date": "2026-10-16",
+  "status": "selected dynamic child collision relocation wired in actual owned drop factory; M15S4 incomplete",
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "parent_commit": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+  "source_fingerprint": "a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119",
+  "implementation_digests": {
+    "apps/components_tests/nifloader/testactorragdoll.cpp": "6262d65c98a7a399c27edba0834514b5c373e3f22799ee16349d1b39169f706e",
+    "apps/components_tests/nifloader/testactorragdollphysics.cpp": "1a94e02ab9220da5d29a1ee1441dc341d23bf7c29152ff2729ad0297030817a4",
+    "apps/components_tests/sceneutil/actorragdollpose.cpp": "c82c9c712716ac4ae1f934074295711fd27282defe82af63321c1298cf0286fd",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "36a4c07fe1a30b5aa7ee4d4ec1da4bd7880be2778859956a482f729e7d561e4a",
+    "components/nifbullet/actorragdoll.cpp": "17124bd10a2a4d681ffaa3df9cf94cd5ca4d3406042cbd96cc12db83fe217046",
+    "components/nifbullet/actorragdoll.hpp": "2bf58ee21b755814740a091e133805a5dc74e067c9d1826fef5b151031a90b26",
+    "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+    "components/nifbullet/actorragdollphysics.hpp": "894e321f39a8a66f0894dd61ae8520951b5cff980ecae48ca31de38a80ac6092",
+    "components/sceneutil/actorragdollpose.cpp": "9422fb352a4b6a0d2c6534a9be65efd8ad7988fdf2f5731b4ccc8270014a48e1"
+  },
+  "implementation_patch_sha256": "4cf38997c1324b7b4bdec3c5a057eb04fb7cd4a007c82a33b856587966e8e67c",
+  "native_selection": {
+    "path": "reference-registration-selection-oracle-01/verification.json",
+    "report_sha256": "59ab7f7ed8d5865e11e8bcb80b0cef649ca67789c56b3b78407611e132c9782f",
+    "passed": true,
+    "contexts": 16,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "a06fa03f1865f22ade0352c736ba541428b5e972ecba3e17b50264a5eaf9448c",
+    "cases_sha256": "9c37b3f8aac614e7c6678b5b53225a05cb05ef0b09e192102ac3e1765a7d1854",
+    "scope": "Actual4E1FD0..4E20E6 nonactor reference attach prefix, actual REFR root getter, collision RTTI lookup, NiNode virtual node getter, child slot getters and exterior-cell getter. Actual NiNode/bhkCollision/NiBSLOD RTTI initializers. Only World virtual+94 records selected/root args and returns; native registration handler excluded here. Eight root/first/second/null/deep/no-child topologies, both x87. Selected node follows literal first then optional second slots; no arbitrary depth-first search. Stack offset and unchanged reference/node storage verified. NiBSLOD special root/actor/interior/full attachment/gameplay excluded."
+  },
+  "native_full_registration": {
+    "path": "reference-root-relocation-oracle-10/verification.json",
+    "report_sha256": "ab02e92945c1cbb140362cde472fa4671254ab1d4e5da941d346688d1797d9c2",
+    "passed": true,
+    "contexts": 576,
+    "relocated_contexts": 288,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "4d2b0e69cec416c873e879054bdf0f9d673ca1ccb15ae83d83dee2f78335a57f",
+    "cases_sha256": "b45c84e40d0d8da6d56cd3460fc7dc0ec867425ea9e28010f973cf4eed14bdbc",
+    "scope": "Actual nonactor REFR attach prefix4E1FD0..4E20E6 through actual bhkWorld vtableA95CF4/+94=88C740, full registration method, original88A7D0 visitor/4DE010/88A870 handler and actual NiNode collision reassignment435CE0. Root BSXFlags2 and actual RTTI initializers. Dynamic sphere motion2, plain/bodyT source wrappers,4child rotations*3positions*3oldquaternions*2oldtranslations*2x87*2targetlocations*2wrappertypes=576 contexts. Selected child collision moves to root; visible child/root locals and REFR storage unchanged. Plain wrappers become bodyT through actual8B96D0 and move the same Havok object; old offset metadata is discarded. Existing bodyT offsets use old-quaternion-frame translation and old*child quaternion. Root-wrapper cases retain their type/offset. Actual World getter452A60 returns null from World+8, matching body World; no native World insertion/activation. BA7A8C=3 suppresses collision scene dispatch while composing root world; B09868/B09870/B2E2D8/BA7908 zero disable optional reference-special/property-copy/debug paths. Boundaries:8896A0 fresh40byte wrapper allocation,8A7560 fresh Havok allocation,8A75D0 frees owned fixture buffers/null, Windows critical sections/threadid/atomic reference counts. Constructor/relocation math, target reassignment and dispatch are original instructions. Full88C740 return, callee-save/SP/FPCW and prefix stop checked; motion changes recorded, not assumed absent. No actor/fixed/keyframed/real native World, collision property-copy scale path, full REFR attachment or gameplay acceptance."
+  },
+  "production_offset_comparisons": {
+    "normal": {
+      "path": "reference-collision-retarget-compare-01/normal-verification.json",
+      "report_sha256": "e22a7bb0d2db439e9976959655a026e76c285df50d0cfe622dcbc7656f51e20e",
+      "passed": true,
+      "cases": 288,
+      "float_lanes": 7,
+      "mismatches": [],
+      "binary_sha256": "efdedb320866dddeaf4788b84a0a208317a59cc15233db12eed86d9864b2d6d0",
+      "production_sources": {
+        "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+        "components/nifbullet/actorragdollphysics.hpp": "894e321f39a8a66f0894dd61ae8520951b5cff980ecae48ca31de38a80ac6092",
+        "components/nifbullet/actorragdoll.hpp": "2bf58ee21b755814740a091e133805a5dc74e067c9d1826fef5b151031a90b26"
+      },
+      "scope": "Production relocated-body offset adapter linked from actual components library against all288 relocated full original reference-prefix/registration contexts. XYZW quaternion and native XYZ offset compare bit for bit; native fourth translation padding excluded. No property-copy, actual native World insertion or normal-input gameplay acceptance."
+    },
+    "sanitized": {
+      "path": "reference-collision-retarget-compare-01/sanitized-verification.json",
+      "report_sha256": "400b67a1336237eaa6dd49e3ac1a882a04c80842609a634387887c85cd888a2b",
+      "passed": true,
+      "cases": 288,
+      "float_lanes": 7,
+      "mismatches": [],
+      "binary_sha256": "6f195d8862487b192c0259c8cafb03b8f4494311227cb6aa659420fd7313612e",
+      "production_sources": {
+        "components/nifbullet/actorragdollphysics.cpp": "6e31980ddd639da4a0d96b0ecc5f7899693867fb1bac8323c1f4ab312461dea8",
+        "components/nifbullet/actorragdollphysics.hpp": "894e321f39a8a66f0894dd61ae8520951b5cff980ecae48ca31de38a80ac6092",
+        "components/nifbullet/actorragdoll.hpp": "2bf58ee21b755814740a091e133805a5dc74e067c9d1826fef5b151031a90b26"
+      },
+      "scope": "Production relocated-body offset adapter linked from actual components library against all288 relocated full original reference-prefix/registration contexts. XYZW quaternion and native XYZ offset compare bit for bit; native fourth translation padding excluded. No property-copy, actual native World insertion or normal-input gameplay acceptance."
+    }
+  },
+  "behavior": [
+    "Retain root collision; otherwise select literal first and optional second child. A null first slot does not trigger a recursive or later-slot search.",
+    "Selected dynamic child collision moves to the reference root; plain wrapper becomes bodyT, existing bodyT retains old offset semantics. Child visible local transform and root reference placement stay unchanged.",
+    "Rotate old translation by old quaternion, transform through exact authored child matrix with paired binary32 sums, rotate by conjugate old quaternion; new quaternion is old*child using original matrix extraction precision. Plain source old offset is identity.",
+    "Retain original source child record/name/path/local checkpoint as validation metadata, independent of physical target identity. Ordinary unnamed actor targets still reject; explicit reference root can bind by exact hash/record identity.",
+    "Fixed/keyframed selected children retain targets in definition selection; this is not newly implemented live mode support."
+  ],
+  "regression_checks": {
+    "reference-collision-retarget-normal-01": {
+      "passed": true,
+      "source_before": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119"
+      },
+      "source_after": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119"
+      },
+      "results": {
+        "components": {
+          "executed": 2703,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6cf82971cbc84ae61a62b41c1437fdfec2022cd0380f4383ed181dead327fe8b",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "0cb5051da1b536a9a9336366ae85e335e671315d747bc4dbddbb1617ec8e2c67",
+          "inventory_sha256": "bf87aedee0784a52fcfe2c89957b9c308183cbf08b4f1fc7a7349acbffa7c390",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1559,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "988e37e8e3e78db55a871387e2b5f37900f28567333649455985ce83021c2afc",
+          "inventory_sha256": "4b442af850705433dad00c964e22fd4778952d552400a47e3ac34d7fd0294894",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "reference-collision-retarget-sanitized-01": {
+      "passed": true,
+      "source_before": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a4ae309ad08c708418f7a64c0c99cbda4c15867341b24d8cb9bbb4a85fc93f4b"
+      },
+      "source_after": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a4ae309ad08c708418f7a64c0c99cbda4c15867341b24d8cb9bbb4a85fc93f4b"
+      },
+      "results": {
+        "components": {
+          "executed": 2703,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c8cd38ac803ec39d042ff9b2150015c0726e6b8a630df67348641c58959b1eca",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "73e462a3522b9f60dcef8c2c9b69a0e0105676b42e09584948e0b4a293c43e3b",
+          "inventory_sha256": "44a9dc6a4aafdc7de71f7762b8607ce4ffa5ff36525cce46df6535ef9d946d71",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "reference-collision-retarget-sanitized-02": {
+      "passed": true,
+      "source_before": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119"
+      },
+      "source_after": {
+        "head": "035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5",
+        "source_fingerprint": "a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119"
+      },
+      "results": {
+        "engine": {
+          "executed": 1559,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c33dc1ae02a37437e98b938a6c21417eb3fdda9a8d115b2c2e2e092264e16f59",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "2d9fb77ea6b68ea15639719c8c52663e4c4935a01ebb2150f24fee6e6616ebac",
+          "inventory_sha256": "4b442af850705433dad00c964e22fd4778952d552400a47e3ac34d7fd0294894",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitized_component_reuse": {
+    "component_code_and_tests_unchanged": true,
+    "changed_since_sanitized_components": [
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp"
+    ],
+    "reuse": "reference-collision-retarget-sanitized-01/verification.json"
+  },
+  "sanitizer_scope": "ASan/UBSan; leak checking disabled, halt on errors; all selected inventories are unfiltered.",
+  "preceding_elf": {
+    "path": "reference-collision-retarget-baseline-03/verification.json",
+    "report_sha256": "0dc17432db92fa2dbd4a81dbc8be6a51658f349ace3adc298cbb33576fb631cd",
+    "binary_sha256": "59d3c6d5398dcd5a5a1475722e1d1e705e8122c82a887513a78bf806824d0612",
+    "observed": [
+      {
+        "node_record": 1,
+        "bodyT": false
+      },
+      {
+        "node_record": 1,
+        "bodyT": false
+      }
+    ],
+    "exit_code": 0,
+    "expected_node_record": 0,
+    "expected_bodyT": true,
+    "scope": "Read-only GDB observation of prior committed reference-definition loader return for actual child-target NIF factory fixture. Native registration oracle independently requires root target/bodyT conversion; prior binary does not apply it.",
+    "input_rewrites": [
+      {
+        "file": "/tmp/openmw/tests/1792148712582303233/OblivionWorldTest.NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose/meshes/factory-weapon.nif",
+        "old_sha256": "b5f6438609eb688197dd5d409d0df5eae5c85548974a38c98ad85628ce776f37",
+        "new_sha256": "3fe0b66590bbb2fc00e823d75fd07aa3d6519816f35cf0aab3741276ada97b69",
+        "old_bytes": 597,
+        "new_bytes": 626,
+        "root_BSXFlags": 2,
+        "phase": "Before VFS::FileSystemArchiveFile::open begins; fixture input edited before cache/parse, no gameplay writes"
+      }
+    ],
+    "matches_native_registration": false,
+    "baseline_failure_verified": true
+  },
+  "final_elf": {
+    "path": "reference-collision-retarget-runtime-02/verification.json",
+    "report_sha256": "bffa05edd9bd455869b40e3bb336d997d11a19f61c44c3910ba8705071e2ede7",
+    "binary_sha256": "91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6",
+    "observed": [
+      {
+        "node_record": 0,
+        "bodyT": true,
+        "offset_rotation_bits": [
+          0,
+          0,
+          3207922931,
+          1060439283
+        ],
+        "offset_translation_bits": [
+          1054569834,
+          1058164295,
+          1060561369
+        ],
+        "source_node_record": 1
+      },
+      {
+        "node_record": 0,
+        "bodyT": true,
+        "offset_rotation_bits": [
+          0,
+          0,
+          3207922931,
+          1060439283
+        ],
+        "offset_translation_bits": [
+          1054569834,
+          1058164295,
+          1060561369
+        ],
+        "source_node_record": 1
+      }
+    ],
+    "exit_code": 0,
+    "expected_node_record": 0,
+    "expected_bodyT": true,
+    "scope": "Read-only final-ELF reinspection of actual Havok-enabled child-target NIF factory reference definitions. Requires native root/bodyT target, source record1 and exact independently probed seven offset lanes. No input edits, gameplay writes or normal-input gameplay acceptance.",
+    "input_reads": [
+      {
+        "file": "/tmp/openmw/tests/1792149637258336572/OblivionWorldTest.NativeWeaponFactoryReplacesRootWithoutDiscardingPhysicalChildPose/meshes/factory-weapon.nif",
+        "sha256": "3fe0b66590bbb2fc00e823d75fd07aa3d6519816f35cf0aab3741276ada97b69",
+        "bytes": 626,
+        "phase": "Read only before VFS open; no input edits"
+      }
+    ],
+    "matches_native_registration": true,
+    "registration_verified": true
+  },
+  "allocation_traces": {
+    "factory": {
+      "path": "reference-collision-retarget-allocation-01/factory-verification.json",
+      "report_sha256": "458fa59224afbcd18527867f38e227787be1ae6d3620a22d2c139f3c7f3eb9e9",
+      "active": false,
+      "thread": 1,
+      "outer_entries": 2,
+      "publication_entries": 1,
+      "returns": 1,
+      "allocations": [],
+      "exit_code": 0,
+      "config": {
+        "mode": "factory",
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "binary_sha256": "91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6",
+        "symbols": {
+          "main": {
+            "name": "main",
+            "address": 7934816
+          },
+          "outer": {
+            "name": "MWWorld::PreparedEquippedWeaponDrops::commit(MWWorld::WorldModel::LooseWeaponPublicationHooks const&)",
+            "address": 30326256
+          },
+          "publish": {
+            "name": "MWWorld::PreparedEquippedWeaponDrops::Data::publish(void*)",
+            "address": 30344448
+          }
+        },
+        "expected_no_allocations": true,
+        "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded."
+      },
+      "load_bias": 0,
+      "boundaries": [
+        {
+          "return_address": 15797741,
+          "return_sp": 140737488333824,
+          "publication_sp": 140737488333624
+        }
+      ],
+      "no_allocations": true,
+      "passed": true,
+      "scope": "Main-thread selected heap allocators from two-drop publication hook through factory commit return, including Lua membership/events, source wear/debits, relations, serial, deferred notifications and registry/cell splices; validation/resource preparation, other threads/APIs and gameplay excluded."
+    },
+    "guard": {
+      "path": "reference-collision-retarget-allocation-01/guard-verification.json",
+      "report_sha256": "88e63aa102d8c45490adce671b2a71e54f7ce08af298a1395ff7eaadde93eb37",
+      "config": {
+        "binary": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "binary_sha256": "91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6",
+        "main": 7934816,
+        "guard": 40537616,
+        "expect_allocations": false,
+        "require_both_results": true,
+        "scope": "Main thread selected five heap allocators during matchesLocalPose entry through return. Four source-child mutation engine factory test; preparation and other allocation APIs/threads excluded."
+      },
+      "entries": 24,
+      "returns": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0
+      ],
+      "allocations": [],
+      "exit_code": 0,
+      "passed": true
+    },
+    "detector_positive_control": "loose-scene-binding-allocation-01/control-verification.json"
+  },
+  "integration_scope": "Actual owned NIF factory/renderer/Bullet/World engine fixture. Full regression inventories, native instruction probes and final-ELF diagnostics do not establish normal-input gameplay or fresh-process acceptance.",
+  "corrected_inference": "Earlier hierarchy SetScale probes omitted registration. They do not establish that newly admitted selected-child drops retain child collision targets. Actual registration retargets selected dynamic children to root.",
+  "retained_failures": [
+    "reference-collision-retarget-preflight-01: test used unresolved default NIF pointer instead of explicit null; corrected preflight02 passes.",
+    "reference-root-relocation-oracle-01/03/04/05/06: missing Windows/allocator/free boundaries and invalid unchanged-motion invariant; later probes record actual motion changes.",
+    "reference-collision-retarget-compare-01 predecessor directories reference-root-relocation-compare-01/02/03 retain include/range-loop/RPATH setup failures; expanded ordinary scene/body helper comparison fails150 of288.",
+    "reference-collision-retarget-baseline-01: GDB attribute collision; baseline02 lacked BSXFlags2; baseline03 matches native Havok-enabled inputs.",
+    "reference-collision-retarget-runtime-01 lacked pre-cleanup input hash; runtime02 adds read-only pre-open hashing and confirms baseline input identity."
+  ],
+  "remaining_gates": [
+    "General Havok-enable/special-reference/cell admission and native collision property-copy scaling paths.",
+    "Unselected/deep target behavior, callback masks, native cached world/reference update semantics and forced-transform continuation.",
+    "Separate visible scale from admitted physical shape/mass/pose state.",
+    "Loose physical retention/save/recreation in fresh processes.",
+    "Production break/mastery, retained/quest unequip, NPC drawn/grouped drops, replacement/sound/pickup cleanup.",
+    "Power/creature/reaction/effect integration and full first/third person, controller, FPS and normal-input/restart S4 matrix."
+  ],
+  "curated_relocated_cases": [
+    {
+      "plain_source": false,
+      "control_word": 639,
+      "original_bodyT_translation": [
+        0.25,
+        -0.5,
+        0.125
+      ],
+      "original_bodyT_rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "child_local_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        1077936128,
+        1082130432,
+        1084227584,
+        1065353216
+      ],
+      "bodyT_rotation_bits": [
+        0,
+        0,
+        3207922931,
+        1060439283
+      ],
+      "bodyT_translation_XYZ_bits": [
+        3180472920,
+        1050975374,
+        1062658521
+      ]
+    },
+    {
+      "plain_source": false,
+      "control_word": 639,
+      "original_bodyT_translation": [
+        0.25,
+        -0.5,
+        0.125
+      ],
+      "original_bodyT_rotation": [
+        0.7071067690849304,
+        0.0,
+        0.0,
+        0.7071067690849304
+      ],
+      "child_local_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        1077936128,
+        1082130432,
+        1084227584,
+        1065353216
+      ],
+      "bodyT_rotation_bits": [
+        1056964607,
+        1056964607,
+        3204448255,
+        1056964607
+      ],
+      "bodyT_translation_XYZ_bits": [
+        1050375531,
+        1046185829,
+        3198459023
+      ]
+    },
+    {
+      "plain_source": true,
+      "control_word": 639,
+      "original_bodyT_translation": [
+        0.25,
+        -0.5,
+        0.125
+      ],
+      "original_bodyT_rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "child_local_bits": [
+        0,
+        1065353216,
+        0,
+        3212836864,
+        0,
+        0,
+        0,
+        0,
+        1065353216,
+        1077936128,
+        1082130432,
+        1084227584,
+        1065353216
+      ],
+      "bodyT_rotation_bits": [
+        0,
+        0,
+        3207922931,
+        1060439283
+      ],
+      "bodyT_translation_XYZ_bits": [
+        1054569834,
+        1058164295,
+        1060561369
+      ]
+    }
+  ]
+}

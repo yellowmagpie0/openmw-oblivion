@@ -54,6 +54,13 @@ namespace NifBullet
     osg::Vec3f ragdollWorldToNativePosition(const osg::Vec3f& position);
     osg::Vec3f ragdollNativeToWorldPosition(const osg::Vec3f& position);
 
+    // Original88C740 relocation of a selected child collision to the REFR
+    // root. The visible child local pose stays authored. Plain wrappers become
+    // bodyT with an identity old offset; existing bodyT offsets retain their
+    // own quaternion frame. Returns the new native-length bodyT offset only.
+    RagdollNativeTargetPose ragdollNativeRelocatedBodyOffset(
+        const osg::Matrixf& childLocal, const RagdollBodyDefinition& source);
+
     struct RagdollBoneWorldPose
     {
         std::uint32_t mNodeRecord;

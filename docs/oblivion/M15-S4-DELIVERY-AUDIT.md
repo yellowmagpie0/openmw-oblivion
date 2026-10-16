@@ -2430,3 +2430,119 @@ Fresh final component reports also establish complete before/after fingerprints.
 Exploratory registration probes01/02 failed because their synthetic fixtures
 omitted native RTTI initialization; failure records remain alongside the scripts.
 Probe03 runs the actual initializer and passes all32 contexts.
+
+## Native child collision relocation during reference registration
+
+The live drop definition now follows the original nonactor reference attach
+selection: retain a root collision; otherwise inspect literal first and then
+optional second child slots. It does not search recursively or skip a null
+first slot. A selected dynamic child collision becomes a root-targeted bodyT
+wrapper. Root-local reference placement and visible child local transforms
+remain unchanged. Fixed/keyframed selected children retain their original target;
+this is definition selection, not new live fixed/keyframed mode support.
+
+The new immutable offset adapter follows the original old-quaternion frame,
+authored-matrix point products, x87 matrix-to-quaternion extraction and old*child
+quaternion product. Plain wrappers use the identity old offset, discarding unused
+plain offset metadata; bodyT wrappers preserve the native old offset frame.
+The previous ordinary scene/body helper is not equivalent: it fails 150 of the
+288 relocated comparisons. The new adapter matches every XYZW/XYZ output bit.
+
+The reference definition retains the source child record/name as validation
+metadata. Renderer bindings keep its parent path and local checkpoint without
+treating it as the physical body. This prevents a changed source translation,
+cached signed zero, name or attachment from passing model admission after the
+physical target moves to the root. An unnamed reference root can bind through
+its exact record/hash identity; ordinary unnamed actor targets still reject.
+The carried definition and parsed/cache geometry remain authored.
+
+Actual factory integration verifies the root-target/bodyT definition, preserved
+quarter-turned child geometry, matching initial Bullet/body placement, and a
+stepped falling/rotating body followed by existing World root publication without
+physics feedback. Source-child admission faults roll back before source wear,
+debits, serial, registry or physics publication. The real NIF fixture now includes
+BSXFlags2, matching the Havok-enabled original registration course.
+
+This corrects the earlier inference that a newly admitted selected-child weapon
+necessarily retains a child collision target. The earlier hierarchy SetScale
+probes explicitly omitted registration; their synthetic child/flag cases remain
+valid, but do not establish post-registration target identity. The original
+registration moves the selected dynamic child collision to the reference root.
+Unselected/deep targets and other native admission branches still need their
+own complete runtime semantics.
+
+The complete original probe executes 4E1FD0..4E20E6 through real bhkWorld vtable
+A95CF4/+94=88C740, the entire registration method, hierarchy visitor,
+reference/generic registration handlers and actual collision reassignment.
+It covers 576 contexts: root/child*plain/bodyT*two x87*four child rotations*three
+positions*three old quaternions*two old translations. 288 contexts relocate.
+Root BSXFlags2 and actual RTTI initializers are supplied. The World getter returns
+its actual null native World, matching body World; there is no insertion or
+activation. BA7A8C=3 suppresses collision scene dispatch during world composition;
+optional reference-special/property-copy/debug gates are zero. Fresh wrapper /
+Havok allocations and owned/null frees, Windows atomic reference counts,
+critical sections and thread ID are declared boundaries. Constructors, math,
+target reassignment and dispatch execute original instructions. The full method
+return, callee saves, stack, FPCW and prefix stop are verified. Visible locals and
+REFR storage remain unchanged; native motion changes are recorded, not assumed
+absent. This is not a real native World, property-copy scale, full attachment,
+actor/fixed/keyframed or normal-input gameplay acceptance course.
+
+World still publishes poses unconditionally and the scheduler still ties visible
+scale to admitted physical scale. Havok-enable/special reference/cell admission,
+unselected/deep target behavior, forced-transform continuation, loose physical
+retention/save/recreation, production break/mastery, pickup/replacement/sound
+and the full normal-input/restart/controller/FPS S4 matrix remain required.
+S4 is incomplete.
+
+
+Evidence is under `build/oblivion-compat/m15/S4/`:
+
+- `reference-registration-selection-oracle-01`: 16 literal selection contexts.
+- `reference-root-relocation-oracle-10`: full combined reference prefix and
+  registration, 576 contexts / 288 relocations, with declared boundaries above.
+- `reference-collision-retarget-compare-01`: actual normal and sanitized
+  component libraries, 288 seven-lane bit-exact comparisons each.
+- `reference-collision-retarget-normal-01`: all 2,703 component tests / 256
+  suites and 1,559 engine tests / 122 suites, exact inventory/XML agreement.
+- `reference-collision-retarget-sanitized-01`: all 2,703 component tests.
+  `reference-collision-retarget-sanitized-02`: all 1,559 engine tests. No
+  failures/skips; ASan leak checks disabled, UBSan halts. Component coverage is
+  reused after an engine-fixture-only BSXFlags change; review03 records that all
+  component production/test file hashes are unchanged.
+- `reference-collision-retarget-baseline-03`: prior committed ELF observes
+  child record1/plain, contradicting the independent root0/bodyT result. Its
+  owned input is amended with BSXFlags2 before VFS opens it; no post-load
+  gameplay property writes. `reference-collision-retarget-runtime-02` inspects
+  the final ELF and hashes its unchanged input before opening: byte-identical
+  626-byte Havok-enabled fixture, root0/bodyT, source record1, exact seven offset
+  lanes, two actual loader returns. This is engine integration, not normal-input
+  gameplay acceptance.
+- `reference-collision-retarget-allocation-01`: factory publication and exact
+  local guard traces; scope and counts are in the editable manifest. The
+  unchanged allocator detector's prior positive control remains in
+  `loose-scene-binding-allocation-01/control-verification.json`.
+
+Normal and final sanitized engine checks freeze source fingerprint
+`a1e1260314b99c572e7470172000df4bd3d4f8fd591866869aa01c3647f89119`
+on parent `035e50cd02f7b304b9fb8b8b0d66a5ace66d00f5`. Sanitized component
+fingerprint is `a4ae309ad08c708418f7a64c0c99cbda4c15867341b24d8cb9bbb4a85fc93f4b`;
+only the engine fixture changed afterward. Final normal engine ELF SHA256 is
+`91bae2142db7306ad77f4c455511cdff5e4ca2c0ae2f21a032214d85647bc0a6`.
+Final sanitized engine ELF SHA256 is
+`c33dc1ae02a37437e98b938a6c21417eb3fdda9a8d115b2c2e2e092264e16f59`.
+Documentation follows those frozen checks; implementation hashes are retained.
+
+Failed attempts are retained. Preflight01 incorrectly used a default unresolved
+NIF pointer as a null slot; preflight02 uses an explicit null and passes. Earlier
+original-registration attempts expose missing Windows/allocator/free boundaries
+and an invalid unchanged-motion assertion; successful probes record the actual
+motion changes. Baseline01 hit a GDB attribute collision, baseline02 lacked
+BSXFlags2, and baseline03 corrects that fixture. Earlier comparison attempts
+retain include/range-loop/RPATH errors and the ordinary helper's 150 mismatches.
+Runtime01 did not preserve input bytes before fixture cleanup; runtime02 adds
+read-only pre-open hashing. No failed attempt is reclassified as acceptance.
+
+[Editable provenance](M15-ORIGINAL-REFERENCE-COLLISION-RELOCATION-PROBES.json)
+records hashes, scope, literal examples and remaining gates. Full S4 remains
+active and incomplete.

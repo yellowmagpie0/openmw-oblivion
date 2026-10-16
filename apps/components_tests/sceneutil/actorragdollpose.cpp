@@ -586,6 +586,27 @@ namespace
         EXPECT_FLOAT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime, 1.f);
         EXPECT_EQ(cache.mCycle, 2u);
     }
+    TEST_F(ActorRagdollPoseTest, RelocatedReferenceRootCanUseAnEmptyNameWithExactRecordIdentity)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> root
+            = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        root->setUserValue(Misc::OsgUserValues::sFileHash, mGraph.mSourceHash);
+        root->setUserValue("recordIndex", 0u);
+        auto body = mGraph.mBodies.front();
+        body.mNodeRecord = 0;
+        body.mBone.clear();
+        mGraph.mBodies = {body};
+        mGraph.mReferenceRoot = 0;
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *root);
+        EXPECT_TRUE(binding.isValid());
+        EXPECT_EQ(binding.captureWorldBones(mObjectWorld)[0].mPose.getTrans(), osg::Vec3f(100, 0, 0));
+        root->setName("different root");
+        EXPECT_FALSE(binding.isValid());
+        root->setName("");
+        mGraph.mReferenceRoot.reset();
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *root)), std::invalid_argument);
+    }
+
     TEST_F(ActorRagdollPoseTest, PreparedLocalGuardRejectsForeignOrChangedStateWithoutWritingScene)
     {
         SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
