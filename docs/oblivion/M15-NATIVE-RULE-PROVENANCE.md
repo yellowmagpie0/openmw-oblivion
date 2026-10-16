@@ -14719,3 +14719,22 @@ allocation/critical-section/cell-query/change-mark boundaries. These are partial
 original instruction paths, not full factory or original-game acceptance.
 Source ExtraScale numeric application, large-yaw renderer integration, compound
 publication and actual normal-input break/drop/restart remain open.
+
+
+## S4 renderer yaw and fresh dropped-reference scale — 2026-10-15
+
+The production Scene NPC yaw bridge now uses the original float sine/cosine,
+with a quaternion approximation inside the1e-6 root-admission tolerance.
+Independent literal matrix tests and actual carried-NIF capture cover previously
+rejected large yaws. The [S4 audit](M15-S4-DELIVERY-AUDIT.md#tes4-npc-renderer-yaw-bridge)
+records normal/sanitized full-engine and two-process runtime regression evidence.
+
+The [editable scale probe contract](M15-ORIGINAL-DROP-SCALE-PROBES.json) pins
+14,440 native i386 executions of complete004DB520 with actual original sprintf/
+atof and CRT float initialization. Declared Windows TLS/error fixtures, buffer
+and change marking are boundaries. Results repeat identically and agree across
+both x87 words. A separate 24-context original 4902C7..4902FC probe composes source
+extra lookup, SetScale, remove-true transfer and destination ExtraScale removal;
+allocation and critical sections are additional boundaries. These establish
+bounded numerical/transfer dependencies, with retained setup failures. They do
+not implement or accept the complete drop factory or break/drop gameplay.

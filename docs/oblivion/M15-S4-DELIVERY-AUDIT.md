@@ -1234,3 +1234,79 @@ No failed or stopped attempt substitutes for the final checks.
 Compound source/contact/key/scene/body/relation publication, replacement equipment,
 pickup cleanup and actual normal-input break/drop/restart acceptance remain open.
 This checkpoint enables no new broken-item contact branch. S4 remains incomplete.
+
+
+## TES4 NPC renderer yaw bridge
+
+Scene insertion and both direct/inverse actor rotation updates now share
+`MWWorld::makeActorNodeRotation`. For TES4 NPCs it uses the independently verified
+native float yaw matrix, then converts its sine/cosine to a normalized OSG
+quaternion. Other actor profiles retain their existing quaternion convention.
+The OSG representation approximates the original float matrix within the existing
+1e-6 root-admission tolerance; it does not replace the exact matrix retained for
+native drop arithmetic. Native out-of-range/nonfinite yaw still cannot be
+admitted by drop capture. No lazy NPC custom-data construction is needed for
+scene rotation.
+
+A new World case compares five literal original hardware matrices, including
+four large-angle cases, and checks profile isolation and cold-cache behavior.
+The actual owned-NIF carried-weapon test additionally exercises three large yaws:
+the old quaternion rejects capture, the production Scene helper permits capture
+and revalidation, and restoring yaw restores the earlier binding. This closes
+the previously recorded large-angle renderer dependency for this NPC path.
+
+`S4/drop-npc-yaw-normal-01` and `-sanitized-01` each pass all **1512 engine
+tests/122 suites**, unfiltered, with exact inventories and zero failures/skips.
+Before/after source state is `e96f19230e8aaae87aa9fbc7b053997793e541c8` plus fingerprint
+`5e1b7528a1a147e0a91b5d90e6e8da1e40adbfb7de987bb7bc0321796810a34c`. The three implementation-file digests remain
+unchanged after verification. ASan leaks are disabled; UBSan halts on errors.
+Component rules and Python codecs are unchanged; their earlier checks are not
+represented as rerun evidence for this renderer-only checkpoint.
+
+Actual SDL-input block/contact/save/restart regressions pass in both final game images.
+
+The normal course uses distinct terminal PIDs 552178/552384, game SHA256 `bb0871fb536fc88fcd5a96b03607e909726af3bf37c7d7c93bec9f610d80654c`, and stock-audio correlation 0.9987121739676377.
+
+The sanitized course uses distinct terminal PIDs 554772/555040, game SHA256 `ebc23a3fbc8423295a1b4c2c1762447834a1164122bc3f8794668fcd49c4fdef`, and stock-audio correlation 0.9954370796202132.
+
+Each course preserves the exact nine actor arrays, declared Health delta
+-0.9841405749320984, weapon conditions 55.84976577758789/55.70000076293945,
+inventory, RNG and action ledger through held-block save and released-input
+fresh-process continuation without replay. Two positional block voices and the
+stock-PCM cluster checks pass; no replay cluster appears after restart. Held and
+restarted captures were directly reviewed. Evidence is
+`S4/drop-npc-yaw-runtime-{normal,sanitized}-01`. These are ordinary block/contact
+regressions, not new break/drop gameplay or large-yaw normal-input acceptance.
+
+The [source-scale probe contract](M15-ORIGINAL-DROP-SCALE-PROBES.json) also bounds
+the next factory dependency independently. `S4/drop-source-scale-native-02`
+executes complete original 004DB520 with actual original sprintf/atof and CRT float
+initializer 00982837 on native i386 hardware: 14,440 contexts repeat identically.
+Seed 1504006 supplies 2,048 arbitrary finite float-bit patterns and 2,048 normal scale
+values under both x87 words, plus 6,000 contexts adjacent to decimal half-cent
+boundaries. The preceding 248 emulated contexts agree exactly. Boundary fixtures
+supply Windows error/TLS/FLS services, the temporary buffer and change marking;
+no formatter or parser is stubbed. Registers/stack/FPCW and reference/base
+preservation checks pass. The original rounds text to two decimal places, parses
+to binary32, then clamps to 0.01..10; 0.125 becomes 0.13, while binary32 0.005 formats
+as 0.00 and clamps to 0.01. No production scale law is added in this checkpoint.
+
+`S4/drop-source-scale-transfer-oracle-03` separately executes actual original
+004902C7..004902FC in 24 contexts: null/empty source, condition-only source and
+condition+scale source values. The original getters, complete SetScale, remove-true
+extra transfer and destination ExtraScale removal execute together. Source extras
+clear; condition remains; destination ExtraScale is absent. ESI/EDI/EBP and stack/
+FPCW remain intact; EBX is the declared destination-list output when copied.
+Allocation/free and critical sections are additional boundaries. These are
+original instruction probes, not a complete factory or game session.
+
+Earlier SetScale failures came from unresolved PE imports and uninitialized CRT
+float-dispatch state. They remain retained. The corrected harness resolves the
+declared OS boundaries, seeds a synthetic CRT thread with original default locale
+pointers and executes the original float initializer. Development diagnostics
+are not final acceptance reports.
+
+Compound contact/source/key/scene/body/relation publication, replacement
+equipment, pickup cleanup and actual normal-input break/drop/restart acceptance
+remain open, along with the broader S4 melee/mastery/reaction/input matrix.
+S4 remains incomplete.

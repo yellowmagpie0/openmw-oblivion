@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <limits>
 
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
@@ -15,6 +16,7 @@
 #include <components/esm/esmterrain.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm3/loadcell.hpp>
+#include <components/esm4/npcplacement.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 #include <components/misc/convert.hpp>
 #include <components/misc/resourcehelpers.hpp>
@@ -52,14 +54,28 @@
 #include "player.hpp"
 #include "worldimp.hpp"
 
+namespace MWWorld
+{
+    osg::Quat makeActorNodeRotation(const ConstPtr& actor)
+    {
+        const float yaw = actor.getRefData().getPosition().rot[2];
+        if (actor.getType() == ESM::REC_NPC_4 && actor.get<ESM4::Npc>()->mBase->mIsTES4)
+        {
+            ESM::Position position{};
+            position.rot[2] = yaw;
+            if (const auto native = ESM4::npcPlacementRoot(position, 1, std::nullopt))
+            {
+                const auto& matrix = native->mRotation.mValues;
+                return osg::Quat(std::atan2(double(matrix[0][1]), double(matrix[0][0])), osg::Vec3(0, 0, -1));
+            }
+        }
+        return osg::Quat(yaw, osg::Vec3(0, 0, -1));
+    }
+}
+
 namespace
 {
     using MWWorld::RotationOrder;
-
-    osg::Quat makeActorOsgQuat(const ESM::Position& position)
-    {
-        return osg::Quat(position.rot[2], osg::Vec3(0, 0, -1));
-    }
 
     osg::Quat makeInversedOrderObjectOsgQuat(const ESM::Position& position)
     {
@@ -74,13 +90,13 @@ namespace
     osg::Quat makeInverseNodeRotation(const MWWorld::Ptr& ptr)
     {
         const auto& pos = ptr.getRefData().getPosition();
-        return ptr.getClass().isActor() ? makeActorOsgQuat(pos) : makeInversedOrderObjectOsgQuat(pos);
+        return ptr.getClass().isActor() ? MWWorld::makeActorNodeRotation(ptr) : makeInversedOrderObjectOsgQuat(pos);
     }
 
     osg::Quat makeDirectNodeRotation(const MWWorld::Ptr& ptr)
     {
         const auto& pos = ptr.getRefData().getPosition();
-        return ptr.getClass().isActor() ? makeActorOsgQuat(pos) : Misc::Convert::makeOsgQuat(pos);
+        return ptr.getClass().isActor() ? MWWorld::makeActorNodeRotation(ptr) : Misc::Convert::makeOsgQuat(pos);
     }
 
     // Detour's pathgrid adapter still consumes ESM3's cell wrapper. The

@@ -1,0 +1,1137 @@
+{
+  "schema_version": 1,
+  "purpose": "Bound the fresh WEAP-backed reference SetScale dependency of M15S4 drop factory",
+  "native": {
+    "passed": true,
+    "cases": 14440,
+    "repeats_identical": 2,
+    "matches_emulated_contexts": 248,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "harness_sha256": "14f80d14472165927e869458fa82fea55a77e0aaa6b80e0fb017bf1f86749eae",
+    "source_sha256": "a329b3c39f14b310077662aebd6bfbab6b4348935709ac2552d56403acb07a00",
+    "corpus_sha256": "8519be936b3badf095ea27fb6ccfa52e7ab7a879f526550ab1c15a294e301bc8",
+    "scope": "Complete original4DB520, sprintf98208B, atof985FB2 and original callees execute on native i386 hardware. Original CRT float initializer982837 executes. Explicit Windows GetLastError/SetLastError/TlsGetValue/FlsGetValue fixture boundaries and synthetic thread with original default locale pointers; buffer provider7616D0 and change-mark virtual are additional boundaries. Actual WEAP-backed new REFR has no3D. Callee-saved canaries, stack return, FPCW, reference-except-scale and base preservation checks pass. Not full drop factory, source-extra lookup/removal, scene/physics or game acceptance.",
+    "cpu_model": "Intel(R) Core(TM) i7-7820X CPU @ 3.60GHz",
+    "build_command": [
+      "gcc",
+      "-m32",
+      "-nostdlib",
+      "-static",
+      "-fno-pie",
+      "-no-pie",
+      "-fno-stack-protector",
+      "-fno-builtin",
+      "-O2",
+      "probe.c",
+      "-o",
+      "probe"
+    ],
+    "seed": 1504006,
+    "random_float_bit_patterns": 2048,
+    "random_normal_scales": 2048,
+    "adjacent_decimal_half_cent_cases": 6000,
+    "driver_sha256": "a25539d99f5695d1f215853ee8d47b5d4debe73e541f253ca12df315d52e090f"
+  },
+  "entries": {
+    "set_scale": "0x004DB520",
+    "crt_float_initializer": "0x00982837",
+    "sprintf": "0x0098208B",
+    "atof": "0x00985FB2"
+  },
+  "expected": [
+    "Original formats the binary32 scale promoted to double using %.2f, parses the resulting text and stores binary32 before clamping.",
+    "Minimum is binary32 0.01; maximum is binary32 10. Exact 0.125 formats as 0.13; binary32 0.005 formats as 0.00 before minimum clamp.",
+    "Reference scale is written and change flag0x10 requested once. Negative and signed-zero inputs clamp to the minimum.",
+    "A finite-input clamp/positive half-away-cent candidate matches all14440 native outputs in a separate development comparison; production implementation remains open."
+  ],
+  "curated_contexts": [
+    {
+      "input_bits": 1040187392,
+      "control_word": 639,
+      "text": "0.13",
+      "scale_bits": 1040522936
+    },
+    {
+      "input_bits": 1040187392,
+      "control_word": 895,
+      "text": "0.13",
+      "scale_bits": 1040522936
+    },
+    {
+      "input_bits": 1052770304,
+      "control_word": 639,
+      "text": "0.38",
+      "scale_bits": 1052938076
+    },
+    {
+      "input_bits": 1052770304,
+      "control_word": 895,
+      "text": "0.38",
+      "scale_bits": 1052938076
+    },
+    {
+      "input_bits": 1059061760,
+      "control_word": 639,
+      "text": "0.63",
+      "scale_bits": 1059145646
+    },
+    {
+      "input_bits": 1059061760,
+      "control_word": 895,
+      "text": "0.63",
+      "scale_bits": 1059145646
+    },
+    {
+      "input_bits": 1063256064,
+      "control_word": 639,
+      "text": "0.88",
+      "scale_bits": 1063339950
+    },
+    {
+      "input_bits": 1063256064,
+      "control_word": 895,
+      "text": "0.88",
+      "scale_bits": 1063339950
+    },
+    {
+      "input_bits": 998445679,
+      "control_word": 639,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 998445679,
+      "control_word": 895,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1000593162,
+      "control_word": 639,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1000593162,
+      "control_word": 895,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1002740646,
+      "control_word": 639,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1002740646,
+      "control_word": 895,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1013276738,
+      "control_word": 639,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1013276738,
+      "control_word": 895,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1014350479,
+      "control_word": 639,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1014350479,
+      "control_word": 895,
+      "text": "0.01",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 1015222895,
+      "control_word": 639,
+      "text": "0.02",
+      "scale_bits": 1017370378
+    },
+    {
+      "input_bits": 1015222895,
+      "control_word": 895,
+      "text": "0.02",
+      "scale_bits": 1017370378
+    },
+    {
+      "input_bits": 1048576000,
+      "control_word": 639,
+      "text": "0.25",
+      "scale_bits": 1048576000
+    },
+    {
+      "input_bits": 1048576000,
+      "control_word": 895,
+      "text": "0.25",
+      "scale_bits": 1048576000
+    },
+    {
+      "input_bits": 1056964608,
+      "control_word": 639,
+      "text": "0.50",
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1056964608,
+      "control_word": 895,
+      "text": "0.50",
+      "scale_bits": 1056964608
+    },
+    {
+      "input_bits": 1065353216,
+      "control_word": 639,
+      "text": "1.00",
+      "scale_bits": 1065353216
+    },
+    {
+      "input_bits": 1065353216,
+      "control_word": 895,
+      "text": "1.00",
+      "scale_bits": 1065353216
+    },
+    {
+      "input_bits": 1073741824,
+      "control_word": 639,
+      "text": "2.00",
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1073741824,
+      "control_word": 895,
+      "text": "2.00",
+      "scale_bits": 1073741824
+    },
+    {
+      "input_bits": 1088421888,
+      "control_word": 639,
+      "text": "7.00",
+      "scale_bits": 1088421888
+    },
+    {
+      "input_bits": 1088421888,
+      "control_word": 895,
+      "text": "7.00",
+      "scale_bits": 1088421888
+    },
+    {
+      "input_bits": 1092616192,
+      "control_word": 639,
+      "text": "10.00",
+      "scale_bits": 1092616192
+    },
+    {
+      "input_bits": 1092616192,
+      "control_word": 895,
+      "text": "10.00",
+      "scale_bits": 1092616192
+    },
+    {
+      "input_bits": 1094713344,
+      "control_word": 639,
+      "text": "12.00",
+      "scale_bits": 1092616192
+    },
+    {
+      "input_bits": 1094713344,
+      "control_word": 895,
+      "text": "12.00",
+      "scale_bits": 1092616192
+    },
+    {
+      "input_bits": 0,
+      "control_word": 639,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 0,
+      "control_word": 895,
+      "text": "0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 2147483648,
+      "control_word": 639,
+      "text": "-0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 2147483648,
+      "control_word": 895,
+      "text": "-0.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 3221225472,
+      "control_word": 639,
+      "text": "-2.00",
+      "scale_bits": 1008981770
+    },
+    {
+      "input_bits": 3221225472,
+      "control_word": 895,
+      "text": "-2.00",
+      "scale_bits": 1008981770
+    }
+  ],
+  "not_established": [
+    "Complete factory compound publication and production source-scale/extra-transfer implementation.",
+    "Scene/physics update, existing rendered references, alternate base form families, nonfinite scale domain and full game acceptance.",
+    "Production C++ rule and actual drop runtime integration remain open."
+  ],
+  "evidence": "S4/drop-source-scale-native-02",
+  "retained_setup_failures": [
+    "S4/drop-source-scale-oracle-01",
+    "S4/drop-source-scale-diagnostic-02..09"
+  ],
+  "setup_correction": "Original PE imports were unresolved and CRT float dispatch uninitialized. Resolve declared Windows boundaries, initialize the synthetic CRT thread from original default locale pointers and execute original982837; do not replace formatting or parsing.",
+  "source_transfer_prefix": {
+    "passed": true,
+    "cases": 24,
+    "source_sha256": "60081731576ccda25254852a8cc88dabfe350682f9e3dcb165d719dd066e3fa9",
+    "corpus_sha256": "acccdf41befb766ee24847ba7d87eb8efe91544a50a5da9c76ce7df1c323da5a",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual original4902C7..4902FC source-extra dispatch, getter, SetScale, transfer(remove=true) and destination ExtraScale removal. Allocation/free and critical sections are additional supplied boundaries. Not the complete factory. Complete original4DB520 for a new WEAP-backed REFR with no3D, actual original sprintf98208B and atof985FB2 and original base/get-scale/model getters. Original CRT float initializer982837 executes before each context. Windows imports are resolved to declared GetLastError/SetLastError, TLS and FLS fixtures; original CRT locale pointers initialize the synthetic thread. Buffer provider7616D0 and change-mark virtual are additional declared boundaries. Preserved ESI/EDI/EBP, declared destination-list EBX, unchanged stack/FPCW, reference-outside-scale-and-extra-header and base checks pass. Source extras clear; destination Health survives and ExtraScale is absent. No live scene/physics updates or runtime acceptance.",
+    "evidence": "S4/drop-source-scale-transfer-oracle-03",
+    "curated_contexts": [
+      {
+        "mode": 0,
+        "source_extras": [],
+        "destination_extras": [],
+        "scale_calls": [],
+        "frees": 0,
+        "input_bits": 1040187392,
+        "control_word": 639,
+        "text": "",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [],
+        "windows_boundary_calls": {}
+      },
+      {
+        "mode": 0,
+        "source_extras": [],
+        "destination_extras": [],
+        "scale_calls": [],
+        "frees": 0,
+        "input_bits": 1040187392,
+        "control_word": 895,
+        "text": "",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [],
+        "windows_boundary_calls": {}
+      },
+      {
+        "mode": 1,
+        "source_extras": [],
+        "destination_extras": [],
+        "scale_calls": [],
+        "frees": 0,
+        "input_bits": 1065353216,
+        "control_word": 639,
+        "text": "",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [],
+        "windows_boundary_calls": {}
+      },
+      {
+        "mode": 1,
+        "source_extras": [],
+        "destination_extras": [],
+        "scale_calls": [],
+        "frees": 0,
+        "input_bits": 1065353216,
+        "control_word": 895,
+        "text": "",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [],
+        "windows_boundary_calls": {}
+      },
+      {
+        "mode": 2,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1065353216
+        ],
+        "frees": 1,
+        "input_bits": 3204448256,
+        "control_word": 639,
+        "text": "1.00",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 2,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1065353216
+        ],
+        "frees": 1,
+        "input_bits": 3204448256,
+        "control_word": 895,
+        "text": "1.00",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 3,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1094713344
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1094713344
+        ],
+        "frees": 3,
+        "input_bits": 1094713344,
+        "control_word": 639,
+        "text": "12.00",
+        "scale_bits": 1092616192,
+        "scale": 10.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 3,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1094713344
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1094713344
+        ],
+        "frees": 3,
+        "input_bits": 1094713344,
+        "control_word": 895,
+        "text": "12.00",
+        "scale_bits": 1092616192,
+        "scale": 10.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 4,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1059061760
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1059061760
+        ],
+        "frees": 3,
+        "input_bits": 1059061760,
+        "control_word": 639,
+        "text": "0.63",
+        "scale_bits": 1059145646,
+        "scale": 0.6299999952316284,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 4,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1059061760
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1059061760
+        ],
+        "frees": 3,
+        "input_bits": 1059061760,
+        "control_word": 895,
+        "text": "0.63",
+        "scale_bits": 1059145646,
+        "scale": 0.6299999952316284,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 5,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1000593162
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1000593162
+        ],
+        "frees": 3,
+        "input_bits": 1000593162,
+        "control_word": 639,
+        "text": "0.00",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 5,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1000593162
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1000593162
+        ],
+        "frees": 3,
+        "input_bits": 1000593162,
+        "control_word": 895,
+        "text": "0.00",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 6,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1073741824
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1073741824
+        ],
+        "frees": 3,
+        "input_bits": 1073741824,
+        "control_word": 639,
+        "text": "2.00",
+        "scale_bits": 1073741824,
+        "scale": 2.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 6,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1073741824
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1073741824
+        ],
+        "frees": 3,
+        "input_bits": 1073741824,
+        "control_word": 895,
+        "text": "2.00",
+        "scale_bits": 1073741824,
+        "scale": 2.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 7,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1088421888
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1088421888
+        ],
+        "frees": 3,
+        "input_bits": 1088421888,
+        "control_word": 639,
+        "text": "7.00",
+        "scale_bits": 1088421888,
+        "scale": 7.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 7,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1088421888
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1088421888
+        ],
+        "frees": 3,
+        "input_bits": 1088421888,
+        "control_word": 895,
+        "text": "7.00",
+        "scale_bits": 1088421888,
+        "scale": 7.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 8,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1040187392
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1040187392
+        ],
+        "frees": 3,
+        "input_bits": 1040187392,
+        "control_word": 639,
+        "text": "0.13",
+        "scale_bits": 1040522936,
+        "scale": 0.12999999523162842,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 8,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1040187392
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1040187392
+        ],
+        "frees": 3,
+        "input_bits": 1040187392,
+        "control_word": 895,
+        "text": "0.13",
+        "scale_bits": 1040522936,
+        "scale": 0.12999999523162842,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 9,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1065353216
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1065353216
+        ],
+        "frees": 2,
+        "input_bits": 1065353216,
+        "control_word": 639,
+        "text": "1.00",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 9,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            1065353216
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          1065353216
+        ],
+        "frees": 2,
+        "input_bits": 1065353216,
+        "control_word": 895,
+        "text": "1.00",
+        "scale_bits": 1065353216,
+        "scale": 1.0,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 10,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            3204448256
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          3204448256
+        ],
+        "frees": 3,
+        "input_bits": 3204448256,
+        "control_word": 639,
+        "text": "-0.50",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 10,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            3204448256
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          3204448256
+        ],
+        "frees": 3,
+        "input_bits": 3204448256,
+        "control_word": 895,
+        "text": "-0.50",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 11,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            0
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          0
+        ],
+        "frees": 3,
+        "input_bits": 0,
+        "control_word": 639,
+        "text": "0.00",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      },
+      {
+        "mode": 11,
+        "source_extras": [
+          [
+            43,
+            10704968,
+            1113358336
+          ],
+          [
+            55,
+            10705040,
+            0
+          ]
+        ],
+        "destination_extras": [
+          [
+            43,
+            1113358336
+          ]
+        ],
+        "scale_calls": [
+          0
+        ],
+        "frees": 3,
+        "input_bits": 0,
+        "control_word": 895,
+        "text": "0.00",
+        "scale_bits": 1008981770,
+        "scale": 0.009999999776482582,
+        "change_requests": [
+          16
+        ],
+        "windows_boundary_calls": {
+          "GetLastError": 2,
+          "TlsGetValue": 6,
+          "FlsGetValue": 3,
+          "SetLastError": 2
+        }
+      }
+    ]
+  }
+}

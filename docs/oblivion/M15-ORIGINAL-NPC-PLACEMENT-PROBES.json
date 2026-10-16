@@ -136,8 +136,7 @@
     "Complete original GenerateNiNode or any original-game session",
     "Complete source ExtraScale setter/model dependencies",
     "One owned source/contact/key/scene/body/relation drop publication",
-    "Replacement equipment, pickup cleanup and normal-input break/drop/restart acceptance",
-    "Generic renderer yaw integration for large noncanonical angles remains open; capture rejects rendered/native disagreement."
+    "Replacement equipment, pickup cleanup and normal-input break/drop/restart acceptance"
   ],
   "remaining_renderer_yaw_baseline": {
     "cases": 1780,
@@ -145,5 +144,13 @@
     "tolerance": 1e-06,
     "passed": false,
     "evidence": "S4/drop-npc-placement-review-01/remaining-renderer-yaw-baseline.json"
+  },
+  "renderer_integration": {
+    "status": "implemented and tested within renderer tolerance",
+    "evidence": [
+      "S4/drop-npc-yaw-normal-01",
+      "S4/drop-npc-yaw-sanitized-01"
+    ],
+    "scope": "TES4 NPC insertion and direct/inverse rotation updates use native yaw; five literal matrices and actual carried-NIF capture/revalidation cover large-angle disagreement. Quaternion approximation is not bit-exact native matrix storage."
   }
 }

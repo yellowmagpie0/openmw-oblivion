@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_SCENE_H
 
 #include <osg/Vec2i>
+#include <osg/Quat>
 #include <osg/Vec4i>
 #include <osg/ref_ptr>
 
@@ -72,6 +73,10 @@ namespace MWWorld
         direct,
         inverse
     };
+
+    // Actor root rotation shared by scene insertion and updates. TES4 NPCs
+    // retain the original x87 yaw reduction before conversion to an OSG pose.
+    osg::Quat makeActorNodeRotation(const ConstPtr& actor);
 
     class Scene
     {

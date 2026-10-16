@@ -6,6 +6,21 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 TES4 NPC renderer yaw integration — 2026-10-15
+
+NPC scene insertion and rotation updates now use the verified native yaw
+reduction. Large authored angles agree with the native drop root within the
+renderer tolerance; live carried-weapon capture and revalidation pass where the
+old quaternion rejected. Other actor profiles retain their existing convention.
+Both normal and sanitizer builds pass all 1,512 engine tests, followed by actual
+two-process input/contact/save/restart regressions with exact state/audio checks.
+
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#tes4-npc-renderer-yaw-bridge) records
+source fingerprints and runtime hashes. Independent original probes now also
+bound 14,440 reference-scale contexts and 24 source-extra transfer contexts.
+Production scale handling, compound drop publication, replacement equipment,
+pickup and actual break/drop acceptance remain open. S4 remains incomplete.
+
 ## S4 resolved native NPC drop roots — 2026-10-15
 
 Carried-weapon capture can now resolve initialized TES4 NPC placement from

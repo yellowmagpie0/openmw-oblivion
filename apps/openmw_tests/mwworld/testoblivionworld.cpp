@@ -124,6 +124,7 @@
 #include "apps/openmw/mwlua/types/types.hpp"
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include "apps/openmw/mwworld/worldimp.hpp"
+#include "apps/openmw/mwworld/scene.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
 #include "apps/openmw/mwworld/timestamp.hpp"
@@ -11685,6 +11686,39 @@ namespace
     }
 }
 
+TEST(OblivionWorldTest, NativeNpcSceneYawMatchesOriginalHardwareAndPreservesOtherProfiles)
+{
+    NativeWorldFixture fixture;
+    const auto actor = addNativeNpc(fixture, 0x900);
+    // Literal original hardware outputs from M15-ORIGINAL-NPC-PLACEMENT-EXPECTED.
+    struct Sample { float yaw; unsigned cosine, sine; };
+    const std::array<Sample, 5> samples{{
+        {.3f, 0x3f7490efu, 0x3e974e6du},
+        {0x1.c6bf52p+49f, 0x3dd7c584u, 0x3f7e9341u},
+        {0x1.bc16d6p+59f, 0x3f79fc6fu, 0xbe5ca705u},
+        {-0x1.74ca1cp+51f, 0xbf7fab4cu, 0x3d502e2bu},
+        {0x1.598aa0p+49f, 0xbf6f00bcu, 0x3eb7739fu},
+    }};
+    auto position = actor.getRefData().getPosition();
+    position.rot[0] = .7f; position.rot[1] = -.9f;
+    for (const auto& sample : samples)
+    {
+        SCOPED_TRACE(sample.yaw);
+        position.rot[2] = sample.yaw;
+        actor.getRefData().setPosition(position);
+        const auto matrix = osg::Matrixd::rotate(MWWorld::makeActorNodeRotation(actor));
+        const double cosine = std::bit_cast<float>(sample.cosine), sine = std::bit_cast<float>(sample.sine);
+        EXPECT_NEAR(matrix(0,0), cosine, 1e-6); EXPECT_NEAR(matrix(1,1), cosine, 1e-6);
+        EXPECT_NEAR(matrix(0,1), -sine, 1e-6); EXPECT_NEAR(matrix(1,0), sine, 1e-6);
+        EXPECT_EQ(matrix(2,2), 1);
+    }
+    EXPECT_EQ(actor.getRefData().getCustomData(), nullptr); // No lazy actor cache required.
+    auto base = *actor.get<ESM4::Npc>()->mBase;
+    base.mIsTES4 = false;
+    fixture.mWorld.getStore().getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+    EXPECT_EQ(MWWorld::makeActorNodeRotation(actor), osg::Quat(position.rot[2], osg::Vec3(0,0,-1)));
+}
+
 TEST(OblivionWorldTest, NativeNpcDropPlacementUsesWinningRaceSexAndRejectsColdOrStaleCaches)
 {
     for (const bool female : {false, true})
@@ -11909,6 +11943,20 @@ TEST(OblivionWorldTest, NativeCarriedWeaponPoseUsesTheLiveRenderedItemAndRejects
                 actor.getCellRef().setScale(1); placement->setScale({1,1,1});
                 EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*resolvedDrop, store));
                 EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*scaledDrop, store));
+                for (const float yaw : {0x1.c6bf52p+49f, 0x1.bc16d6p+59f, -0x1.74ca1cp+51f})
+                {
+                    actorPosition.rot[2] = yaw;
+                    actor.getRefData().setPosition(actorPosition);
+                    placement->setAttitude(osg::Quat(yaw, osg::Vec3(0,0,-1)));
+                    EXPECT_FALSE(animation.captureCarriedWeaponDrop(item, store));
+                    placement->setAttitude(MWWorld::makeActorNodeRotation(actor));
+                    auto nativeYawDrop = animation.captureCarriedWeaponDrop(item, store);
+                    ASSERT_TRUE(nativeYawDrop);
+                    EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*nativeYawDrop, store));
+                }
+                actorPosition.rot[2] = 0; actor.getRefData().setPosition(actorPosition);
+                placement->setAttitude(MWWorld::makeActorNodeRotation(actor));
+                EXPECT_TRUE(animation.isCurrentCarriedWeaponDrop(*resolvedDrop, store));
                 animation.setNodeMapPrepared(false);
                 EXPECT_FALSE(animation.isCurrentCarriedWeaponDrop(*drop, nativePlacement));
                 EXPECT_FALSE(animation.isNodeMapPrepared());
