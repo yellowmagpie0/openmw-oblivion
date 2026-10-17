@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent first-person whole-root rotation and eye-pivot evidence; portable addresses require the exact image hash",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x660130",
+  "return": "caller return sentinel after full function",
+  "root_rotation_offset": "Player+0x5D0 -> NiNode+0x30",
+  "readers": {
+    "pitch": "0x4A9720 reads Actor+0x20",
+    "heading": "0x65DA60/0x65ABB0 reads yaw+0x28 and secondary yaw+0x61C, one wrap",
+    "groups": "Actual ActorAnimData slot1+0x3E and slot3+0x42, low byte",
+    "process_action": "Actual signed High-process+0x1F4 via native virtual dispatch",
+    "mount": "Actor+0xD4 is zero in admitted probes"
+  },
+  "settings": {
+    "fFirstPersonHandFollowMult": {
+      "default": 0.75,
+      "storage": "0xB36BC0",
+      "constructor": "0x9E7F5F"
+    },
+    "fFirstPersonScaleSeconds": {
+      "default": 2.0,
+      "storage": "0xB36BC8",
+      "constructor": "0x9E7F8F"
+    }
+  },
+  "cache": "0xB14FB4 initially1",
+  "elapsed": "0xB33E9C",
+  "rule": "Target1 when process action !=3 and (group3 in17..26 or group1 in34..39), otherwise hand-follow setting. Smooth toward target with duration.1 for target1, configured duration otherwise; clamp overshoot. Full yaw/pitch root plus original horizontal-projection/acos correction using1-follow.",
+  "arithmetic": "Observed live x87 control word007F: 24-bit significand arithmetic, wider exponent, explicit native float stores, original x87 sine/cosine reduction. All original matrix/vector/trig/acos calls execute; no called-function stubs.",
+  "root_pivot": "Original667D60..667DAC caches authored Camera01 worldZ at Player+5D4, sets loaded skeleton local translation to(0,0,-height). Separate Player1stPerson root is actor position+(0,0,height). Scale1.25 leaves cached height and positive offset118 unchanged. Camera XY is not subtracted.",
+  "original_matrix_cases": 45360,
+  "cpp_comparison_cases": 15120,
+  "live_replays": [
+    "attack-windup-retry01: action2, group3=277",
+    "attack-recovery: action3, group3=277",
+    "scale125: action-1, group3=255, first scale1.25"
+  ],
+  "boundaries": [
+    "Typed actor/process/animation/root allocations supply inputs; caller admission and mount path are outside matrix oracle.",
+    "Rotation routine does not write translation; pivot comes from separate original factory inspection and live hierarchy.",
+    "Arithmetic comparisons do not establish rendered visibility or gameplay acceptance."
+  ],
+  "verification_index": "docs/oblivion/M15-FIRST-PERSON-ROOT-VERIFICATION.json"
+}

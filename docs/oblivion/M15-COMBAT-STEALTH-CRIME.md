@@ -6,6 +6,35 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 first-person root rotation foundation — 2026-10-16
+
+A pure native first-person root rule now reproduces the original full660130
+rotation and follow cache. All 15,120 PC007F observations match the production
+C++ bitwise for the cache and nine matrix fields; 48 frozen original samples
+are component regressions. Original PC027F/037F runs bring the independent
+matrix inventory to 45,360, but are sensitivity evidence only. Recovery action3
+suppresses the temporary full-follow override even with an attack group active.
+
+Three real original-game before/after observations (windup, recovery and
+scale1.25) replay bitwise through the complete original routine. The independent
+factory and live hierarchy establish an authored118-unit vertical eye pivot:
+the loaded skeleton translates by -118, the separate first-person root sits at
+actor origin+118, and scale1.25 leaves that offset unscaled. World transforms
+captured at the rotation breakpoint can lag; no propagated-world equality is
+claimed. Original game exited cleanly, pristine save/config hashes were restored
+and executable identity stayed unchanged. The later wineserver cleanup returned1
+after exit; no owned game/Steam/Wine/display process remained.
+
+Normal components pass 2,801 cases; ASan/UBSan ESM4 selection passes745 cases,
+with exact inventories, no failures/skips, and leaks disabled. Evidence:
+S4/firstperson-root-math-checks-01. The tested source fingerprint, exact hashes,
+retained failed interpretation/replay and scope are in
+[M15-FIRST-PERSON-ROOT-VERIFICATION.json](M15-FIRST-PERSON-ROOT-VERIFICATION.json).
+
+This helper is not yet integrated into the renderer. First-person torso
+occlusion, the actual whole-model pivot, runtime visual acceptance and full S4
+remain open. No first-person visual gate is closed by these arithmetic checks.
+
 ## S4 stock blade contact with Creature and worn-item restart — 2026-10-16
 
 The admitted spell-free Creature victim route now has actual stock weapon

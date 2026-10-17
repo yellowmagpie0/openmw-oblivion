@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "Pure first-person root rotation verified; renderer pivot integration and full M15S4 remain open",
+  "parent_commit": "791622eaf670e738c5dbd24f141ed6ab81bdba34",
+  "tested_source_fingerprint": "1d8a5acc39d55475ffd1189128dc6e7afa3d7d355eca48f0f35a988a10a84514",
+  "source_sha256": {
+    "components/esm4/firstpersonview.cpp": "a1604937db28e4759a2abedae198e24aa4c34d23207776f34acf763ad55f42cb",
+    "components/esm4/firstpersonview.hpp": "f05b8f4221737092f319b9fef24e059dadd69e4a00126798b3320e7b0a272e71",
+    "components/nif/nativetransformmath.hpp": "c7bd9d862b0a84bedc8538dba72b4aeef2c36537961160770c843047a4326536",
+    "apps/components_tests/esm4/firstpersonview.cpp": "3e7c86ce712cba15e1d87e865457e8d61472d538828fb12fca396e96fe0a1548",
+    "apps/components_tests/esm4/firstpersonview_expected.inc": "13eb8aba19e95faabcd41a827470dde594369c1bc083541e46a86054eb042aa4"
+  },
+  "checks": {
+    "path": "build/oblivion-compat/m15/S4/firstperson-root-math-checks-01/verification.json",
+    "sha256": "c63ee093d23af98b75e7284d8f7323e4af5610a4eb97f37c49b7be0200609ead",
+    "results": {
+      "components": {
+        "executed": 2801,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "9b49cd9d4e698ea5330e20e7b3adfa03720486fdb74fe3601840ee90b88eb8b2",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "1228112f3e835c5c7e2282073704ab69f0eb90e0b52fd34af3541d5de1b043ef",
+        "inventory_sha256": "c5ea63725e916692c9351a5c613a007142cd15a641a45ccada10b88f81e9a121",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 745,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "85d0a55fdbe9493819db446ac0abd7b95d8ee64b2aac18a725cddba90398c9bf",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "837a0910f860a4ca473e5fcca7f0a5ac2acef28a6cf821c7500c06404c676fae",
+        "inventory_sha256": "d2c56943b6e6bcb86827a34b06b96cee88f1ceae32304b7cf5adeb191ca951d3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "leak_checks": false
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "evidence": {
+    "original_rotation": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-native-oracle-04/report.json",
+      "sha256": "b96d30322ba89f0df1d649d9be0ba2b91f185a29452da72ca8bbaf8366e73c89"
+    },
+    "cpp_comparison": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-cpp-compare-01/comparison.json",
+      "sha256": "ca6439487f492852d2753eb6495129f85bf9010869652e9a37c39a601d5d35a9"
+    },
+    "live_replay": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-original-live-01/replay-verification.json",
+      "sha256": "ffd802dceb44c41c665d6a5c9ca029b950b32ee472ece09a8ff1272213734a3f"
+    },
+    "live_cleanup": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-original-live-01/cleanup.json",
+      "sha256": "e90f0252f43635574b4c48b2227b8de05780455fd5a850947b4b1cfaec459302"
+    }
+  },
+  "native_observations": 45360,
+  "observed_live_precision_cpp_comparisons": 15120,
+  "cpp_bitwise_mismatches": 0,
+  "frozen_golden_samples": 48,
+  "live_input_replays": 3,
+  "limits": [
+    "Pure helper is not yet called by renderer. No runtime visual gate closed.",
+    "PC007F is the actual observed live context; PC027F/037F are sensitivity observations, not C++ parity coverage.",
+    "Mount branch, arbitrary modded GMST values, extreme angles and all race morphology are not verified.",
+    "Live world matrices can lag the local-rotation breakpoint; only local rotation/cache are replayed bitwise.",
+    "Earlier original observations without a mount field are excluded from the three full-input replays.",
+    "Retained failed action3 interpretation and missing-field replay are harness/interpretation failures, not passes."
+  ],
+  "python_checks": {
+    "path": "build/oblivion-compat/m15/S4/firstperson-root-math-python-01/verification.json",
+    "sha256": "89a7a86c7a0db90e4c0c991ce410bec30c12efea4b81dcb6781d1a07ce2e6e98",
+    "tested_source_fingerprint": "3c5ad39e3e910bc7bbf46f4328f6cb76fad3326801327bc82382a3e44e2055b9",
+    "results": {
+      "python": {
+        "executed": 313,
+        "passed": true,
+        "log_sha256": "3d780606d67128644727981883e29e97e46952c11e3b2578ef9a03591f4f79f0"
+      }
+    }
+  }
+}
