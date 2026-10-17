@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "purpose": "Editable acceptance inputs for body admission and fatigue recovery; implementation checkpoint, not completed live fork course",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_setup": {
+    "player": {
+      "strength": 40,
+      "luck": 50,
+      "hand_to_hand": 10,
+      "fatigue_form_offset": 0,
+      "expected_current_fatigue": 140
+    },
+    "fatigue_regeneration": {
+      "base": 0.05,
+      "multiplier": 0
+    },
+    "victim": {
+      "base_form_id": "0001e5f5",
+      "spawn_distance": 80,
+      "fatigue_modav_integer": -159,
+      "expected_precontact_fatigue": 1,
+      "expected_base_fatigue": 160,
+      "health": 20
+    },
+    "input": "Normal unarmed mouse contact; read-only debugger observes actual callers. No forced reaction/process/body/animation writes.",
+    "expected_raw_state_order": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "expected_getup": {
+      "idle": "00091fb8",
+      "slot": 5,
+      "model": "Creatures/Dog/IdleAnims/SpecialIdle_GetUpLift.kf",
+      "conditions": [
+        "IsLeftUp == 1",
+        "GetKnockedState > 0"
+      ]
+    }
+  },
+  "is_left_up": {
+    "nonactor_or_null_evaluator": 0,
+    "missing_actor_spine": 1,
+    "present_spine": "WorldRotation R22 strictly greater than zero. Positive infinity true; signed zero, negatives and NaNs false.",
+    "lookup": "Horse Creature type4 uses Bip02 Spine; other actors use Bip01 Spine with Bip02 fallback.",
+    "process_state_gate": false,
+    "oracle_profiles": 9072,
+    "oracle_corpus_sha256": "ab1c5380a04f2bf243bc87039e77656329f6d52860e1e45f63139b0b85c760e3",
+    "remaining_binding": "Actual renderer world pose, canonical actor root and native scene-name lookup semantics."
+  },
+  "fork_integration_checks": {
+    "physics_worker_counts": [
+      0,
+      1,
+      2
+    ],
+    "capsule_policies": [
+      "Suspend",
+      "Retain"
+    ],
+    "assertions": [
+      "Strict World admission binds actual rendered immutable NIF, live actor/base/lifecycle authority and saved physical snapshot.",
+      "Failed saved asset restore releases new bodies, restores capsule and renderer, and preserves previous cache.",
+      "Detached graph preparation has no collision-query or capsule effects.",
+      "Commit publishes once, preserves actor routing and staged native KEY6, and supports explicit Suspend/Retain capsule policies.",
+      "Foreign owners, competing/consumed candidates, changed reference scale, replaced capsule and destroyed PhysicsSystem reject. Competing candidates stay invalid after committed bodies are removed.",
+      "Integration case exercises 0/1/2 physics workers and leaves actor values/lifecycle unchanged."
+    ]
+  },
+  "pending_live_acceptance": [
+    "Compound contact/resource/RNG/body publication with rollback.",
+    "Actual per-actor animation clock, body controller and GetUp clip selection.",
+    "Visible normal-input fatigue knockout and full recovery.",
+    "Save/quit/fresh-process load during recovery matches uninterrupted continuation.",
+    "Required Player/NPC/Creature, view/input/FPS and remaining S4 matrices."
+  ],
+  "limits": [
+    "Original debug instrumentation changes timing; no uninstrumented FPS acceptance.",
+    "Only recovered original standing capture reviewed; no lying-phase capture.",
+    "No ordinary HIT-body setup observed in this course.",
+    "Native process+15C virtual9C is not established as a movement capsule control.",
+    "IsLeftUp instruction evidence does not establish a fork renderer adapter."
+  ]
+}

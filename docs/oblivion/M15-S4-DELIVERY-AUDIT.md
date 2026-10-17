@@ -4711,3 +4711,42 @@ admission, physical recovery, directional/mastery/effect integration and the
 remaining input/view/FPS/restart matrix remain open. **Full S4 is incomplete.**
 See [the verification index](M15-NATIVE-REACTION-QUERY-VERIFICATION.json) and
 [editable probe protocol](../../scripts/data/oblivion_compat/m15_native_reaction_sources_and_queries_probe.json).
+
+## Rendered body admission — implementation checkpoint
+
+Strict World admission now joins the actual rendered NIF, actor/base/lifecycle
+authority and saved physical cache. Failed asset restoration rolls back the new
+renderer/body/capsule ownership and preserves the previous cache. Physics also
+provides detached body preparation: private graphs stay out of collision queries,
+can stage native motion modes, and publish once with explicit capsule policy.
+Stale, foreign, consumed and competing candidates reject; removing a committed
+body cannot revive an older candidate. The integration case exercises zero, one
+and two physics workers, real ray queries, retained/suspended capsules, saved
+asset restoration, rollback and unchanged actor values/lifecycle.
+
+All 1621 engine cases /122 suites pass normally and under ASan/UBSan, with exact
+inventory agreement and zero failures/skips. Leak detection is disabled. Tested
+source fingerprint: `9c862ee9597b602f0df18ab35c87e0628f89060fd6300a5c0fbe95892d65ba30`.
+Only evidence/protocol files and a release-API comment clarification follow.
+Components and Python implementations are unchanged and were not rerun.
+
+An isolated original-game normal mouse punch independently records raw reaction
+states 0 -> 4 -> 3 -> 5 -> 6 -> 0 across 95 sampled frames. The actual Dog GetUp
+IDLE00091FB8 uses slot5 and conditions IsLeftUp ==1 / GetKnockedState >0. A
+separate read-only snapshot matches the body-controller input time to ActorAnimData
++94, the per-actor animation clock already persisted by this fork. Original
+inputs/autosave were restored and pristine save/executable hashes stayed unchanged.
+Debugger timing is not an FPS gate; only the recovered standing capture was reviewed.
+
+9072 original-instruction IsLeftUp profiles establish the scoped Spine lookup and
+strict world R22 >0 predicate, with no process/knocked-state gate. Missing Spine
+returns1; Horse type4 selects Bip02, other actors prefer Bip01 with Bip02 fallback.
+The first wrong-sign interpretation is retained as a failed attempt. This query
+still needs its actual renderer-backed World/M7/CTDA adapter.
+
+These APIs have no automatic contact/frame/GetUp caller yet. Explicit physical
+discard is not established native recovery policy. Neither test suites nor the
+original observation establish fork live knockout/recovery or recovery restart
+equivalence. Full S4 remains incomplete. See the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json) and
+[editable probe protocol](../../scripts/data/oblivion_compat/m15_physical_admission_and_recovery_probe.json).

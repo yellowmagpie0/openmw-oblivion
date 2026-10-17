@@ -932,24 +932,88 @@ namespace MWPhysics
         mTaskScheduler->removeLooseObject(ptr);
     }
 
+    struct PreparedActorRagdoll::Data
+    {
+        PhysicsSystem* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        std::weak_ptr<Actor> mActor;
+        MWWorld::Ptr mPtr;
+        ActorRagdollCapsulePolicy mCapsulePolicy = ActorRagdollCapsulePolicy::Suspend;
+        std::unique_ptr<PhysicsTaskScheduler::PreparedActorRagdoll> mPhysical;
+    };
+    PreparedActorRagdoll::PreparedActorRagdoll(std::unique_ptr<Data> data) : mData(std::move(data)) {}
+    PreparedActorRagdoll::~PreparedActorRagdoll() = default;
+
+    NifBullet::ActorRagdollPhysics& PreparedActorRagdoll::physics()
+    {
+        if (!mData || mData->mIdentity.expired() || !mData->mOwner->validatePreparedActorRagdoll(*this))
+            throw std::invalid_argument("consumed, stale or expired prepared physical actor");
+        return mData->mPhysical->physics();
+    }
+
+    std::unique_ptr<PreparedActorRagdoll> PhysicsSystem::prepareActorRagdoll(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter, ActorRagdollCapsulePolicy capsulePolicy)
+    {
+        const auto found = mActors.find(ptr.mRef);
+        if (ptr.isEmpty() || found == mActors.end() || found->second->isCollisionSuspended())
+            throw std::invalid_argument("physical pose requires an admitted movement actor");
+        if (capsulePolicy != ActorRagdollCapsulePolicy::Suspend && capsulePolicy != ActorRagdollCapsulePolicy::Retain)
+            throw std::invalid_argument("unknown physical actor capsule policy");
+        auto data = std::make_unique<PreparedActorRagdoll::Data>();
+        data->mOwner = this;
+        data->mIdentity = mActorPreparationOwner;
+        data->mActor = found->second;
+        data->mPtr = ptr;
+        data->mCapsulePolicy = capsulePolicy;
+        data->mPhysical = mTaskScheduler->prepareActorRagdoll(
+            ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter);
+        return std::unique_ptr<PreparedActorRagdoll>(new PreparedActorRagdoll(std::move(data)));
+    }
+
+    bool PhysicsSystem::validatePreparedActorRagdoll(const PreparedActorRagdoll& prepared)
+    {
+        const auto* data = prepared.mData.get();
+        if (!data || data->mOwner != this || data->mIdentity.expired()
+            || data->mIdentity.lock() != mActorPreparationOwner || !data->mPhysical)
+            return false;
+        const auto actor = data->mActor.lock();
+        const auto found = mActors.find(data->mPtr.mRef);
+        const auto current = actor ? actor->getPtr() : MWWorld::Ptr{};
+        return actor && found != mActors.end() && found->second == actor
+            && current == data->mPtr && current.isInCell() == data->mPtr.isInCell()
+            && (!current.isInCell() || current.getCell() == data->mPtr.getCell())
+            && !actor->isCollisionSuspended()
+            && mTaskScheduler->validatePreparedActorRagdoll(*data->mPhysical);
+    }
+
+    bool PhysicsSystem::commitActorRagdoll(PreparedActorRagdoll& prepared)
+    {
+        if (!validatePreparedActorRagdoll(prepared)) return false;
+        auto& data = *prepared.mData;
+        if (!mTaskScheduler->commitActorRagdoll(*data.mPhysical)) return false;
+        try
+        {
+            if (data.mCapsulePolicy == ActorRagdollCapsulePolicy::Suspend)
+                data.mActor.lock()->suspendCollision(true);
+        }
+        catch (...)
+        {
+            mTaskScheduler->removeActorRagdoll(data.mPtr);
+            throw;
+        }
+        return true;
+    }
+
     void PhysicsSystem::addActorRagdoll(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
         const NifBullet::RagdollInternalCollisionFilter* internalFilter)
     {
-        const auto found = mActors.find(ptr.mRef);
-        if (ptr.isEmpty() || found == mActors.end() || found->second->isCollisionSuspended())
-            throw std::invalid_argument("physical pose requires an admitted movement actor");
-        mTaskScheduler->addActorRagdoll(ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter);
-        try
-        {
-            found->second->suspendCollision(true);
-        }
-        catch (...)
-        {
-            mTaskScheduler->removeActorRagdoll(ptr);
-            throw;
-        }
+        auto prepared = prepareActorRagdoll(ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter);
+        if (!commitActorRagdoll(*prepared))
+            throw std::invalid_argument("physical actor changed before admission");
     }
 
     void PhysicsSystem::removeActorRagdoll(const MWWorld::Ptr& ptr)

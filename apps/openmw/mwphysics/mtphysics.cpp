@@ -441,11 +441,13 @@ namespace MWPhysics
     public:
         ActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask,
-            const NifBullet::RagdollInternalCollisionFilter* internalFilter)
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter,
+            NifBullet::ActorRagdollPhysics::Publication publication = NifBullet::ActorRagdollPhysics::Publication::Immediate)
             : PtrHolder(ptr, {})
             , mLifetime(std::make_shared<const NativeRagdollRestoreLifetime>())
             , mDefinition(definition)
-            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this), internalFilter)
+            , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this), internalFilter,
+                publication)
             , mLinearDeltas(mDefinition.mBodies.size())
         {
             for (auto* object : mPhysics.collisionObjects())
@@ -1263,6 +1265,118 @@ namespace MWPhysics
         return *found->second;
     }
 
+    struct PhysicsTaskScheduler::PreparedActorRagdoll::Impl
+    {
+        PhysicsTaskScheduler* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        std::shared_ptr<const char> mSlotIdentity;
+        ActorRagdollMap::node_type mNode;
+        int mExpectedCount = 0;
+        float mExpectedScale = 1;
+    };
+
+    PhysicsTaskScheduler::PreparedActorRagdoll::PreparedActorRagdoll(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    PhysicsTaskScheduler::PreparedActorRagdoll::~PreparedActorRagdoll() = default;
+
+    NifBullet::ActorRagdollPhysics& PhysicsTaskScheduler::PreparedActorRagdoll::physics()
+    {
+        if (!mImpl || mImpl->mIdentity.expired() || !mImpl->mOwner->validatePreparedActorRagdoll(*this))
+            throw std::invalid_argument("consumed or expired detached actor graph");
+        return mImpl->mNode.mapped()->mPhysics;
+    }
+
+    std::unique_ptr<PhysicsTaskScheduler::PreparedActorRagdoll> PhysicsTaskScheduler::prepareActorRagdoll(
+        const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
+            throw std::invalid_argument("invalid or duplicate detached actor owner/world");
+        ActorRagdollMap staged;
+        staged.emplace(ptr.mRef, std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
+            poses, collisionGroup, collisionMask, internalFilter, NifBullet::ActorRagdollPhysics::Publication::Deferred));
+        auto impl = std::make_unique<PreparedActorRagdoll::Impl>();
+        if (!mActorPreparationIdentity) mActorPreparationIdentity = std::make_shared<const char>();
+        impl->mOwner = this;
+        impl->mIdentity = mActorPreparationIdentity;
+        auto& slot = mActorPreparationSlots[ptr.mRef];
+        impl->mSlotIdentity = slot.lock();
+        if (!impl->mSlotIdentity)
+        {
+            impl->mSlotIdentity = std::make_shared<const char>();
+            slot = impl->mSlotIdentity;
+        }
+        impl->mExpectedCount = ptr.getCellRef().getCount();
+        impl->mExpectedScale = ptr.getCellRef().getScale();
+        impl->mNode = staged.extract(staged.begin());
+        return std::unique_ptr<PreparedActorRagdoll>(new PreparedActorRagdoll(std::move(impl)));
+    }
+
+    bool PhysicsTaskScheduler::validatePreparedActorRagdollLocked(const PreparedActorRagdoll& prepared) const
+    {
+        const auto* data = prepared.mImpl.get();
+        if (!data || data->mOwner != this || data->mIdentity.expired()
+            || data->mIdentity.lock() != mActorPreparationIdentity
+            || data->mNode.empty() || data->mNode.mapped()->mPhysics.isPublished())
+            return false;
+        const auto ptr = data->mNode.mapped()->getPtr();
+        const auto slot = mActorPreparationSlots.find(data->mNode.key());
+        return slot != mActorPreparationSlots.end() && slot->second.lock() == data->mSlotIdentity
+            && !mActorRagdolls.contains(data->mNode.key()) && !mLooseObjects.contains(data->mNode.key())
+            && ptr.getCellRef().getCount() == data->mExpectedCount
+            && ptr.getCellRef().getScale() == data->mExpectedScale;
+    }
+
+    bool PhysicsTaskScheduler::validatePreparedActorRagdoll(const PreparedActorRagdoll& prepared)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return validatePreparedActorRagdollLocked(prepared);
+    }
+
+    bool PhysicsTaskScheduler::commitActorRagdoll(PreparedActorRagdoll& prepared)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        if (!validatePreparedActorRagdollLocked(prepared)) return false;
+        auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        if (!world) return false;
+        auto& node = prepared.mImpl->mNode;
+        auto& owned = *node.mapped();
+        std::vector<btCollisionObject*> inserted;
+        const auto objects = owned.mPhysics.collisionObjects();
+        inserted.reserve(objects.size());
+        try
+        {
+            // Routing allocations precede the fallible World registration.
+            for (auto* object : objects)
+            {
+                if (!mCollisionObjects.insert(object).second)
+                {
+                    for (auto* added : inserted) mCollisionObjects.erase(added);
+                    return false;
+                }
+                inserted.push_back(object);
+            }
+            if (!owned.mPhysics.publish(*world))
+                throw std::invalid_argument("detached actor graph publication rejected");
+        }
+        catch (...)
+        {
+            for (auto* object : inserted) mCollisionObjects.erase(object);
+            throw;
+        }
+        const auto key = node.key();
+        mActorRagdolls.insert(std::move(node)); // Existing node; no allocation after publication.
+        // Competing preparations cannot revive when this new owner is removed.
+        mActorPreparationSlots.erase(key);
+        return true;
+    }
+
     void PhysicsTaskScheduler::addActorRagdoll(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
@@ -1532,7 +1646,7 @@ namespace MWPhysics
             auto [destination, inserted] = mActorRagdolls.try_emplace(updated.mRef);
             if (!inserted)
                 throw std::invalid_argument("duplicate updated ragdoll owner");
-            // Insertion may rehash; retrieve the old iterator afterward.
+            // The prepared destination owns no bodies until this transfer.
             found = mActorRagdolls.find(old.mRef);
             destination->second = std::move(found->second);
             mActorRagdolls.erase(found);
@@ -1547,6 +1661,8 @@ namespace MWPhysics
             for (auto* object : ragdoll->mPhysics.collisionObjects())
                 mCollisionObjects.erase(object);
         mActorRagdolls.clear();
+        mActorPreparationIdentity.reset();
+        mActorPreparationSlots.clear();
     }
 
     std::vector<NifBullet::RagdollBodyState> PhysicsTaskScheduler::captureActorRagdoll(const MWWorld::Ptr& ptr)

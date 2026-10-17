@@ -1670,6 +1670,66 @@ namespace MWWorld
         }
     }
 
+    void World::beginOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor,
+        const Nif::NiTransform& placement, std::span<const std::uint32_t> resolvedPackedFilters,
+        int collisionGroup, int collisionMask, const NifBullet::RagdollInternalCollisionFilter* internalFilter)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics || !mOblivionCombat || actor.isEmpty() || animation.getPtr() != actor)
+            throw std::invalid_argument("native physical admission requires its live actor and renderer");
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        const auto* life = mOblivionCombat->findActorLife(key);
+        const auto base = player && values ? values->mBase : nativeActorBase(actor);
+        if (!values || !life || base.isNull() || values->mBase != base || life->mBase != base)
+            throw std::invalid_argument("native physical admission requires matching actor/base/lifecycle authority");
+        auto model = actor.getClass().getCorrectedModel(actor);
+        if (player && actor.getType() == ESM::REC_NPC_ && !actor.get<ESM::NPC>()->mBase->mModel.empty())
+            model = Misc::ResourceHelpers::correctActorModelPath(
+                Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                mResourceSystem->getVFS());
+        const auto source = animation.captureNativePhysicalSource(model);
+        if (!source || !animation.isCurrentNativePhysicalSource(*source))
+            throw std::invalid_argument("native physical admission requires the actual rendered actor NIF");
+        const auto previous = mOblivionCombat->actorRagdoll(key);
+        beginNativeActorPhysicalPose(*mPhysics, animation, actor, *source->definition(), placement,
+            resolvedPackedFilters, configuration.mPostLink, collisionGroup, collisionMask, internalFilter);
+        try
+        {
+            if (previous)
+                mPhysics->restoreActorRagdollSnapshot(actor, *previous, base, model.value());
+            auto current = mPhysics->captureActorRagdollSnapshot(actor, base, model.value());
+            if (!animation.isCurrentNativePhysicalSource(*source)
+                || !mOblivionCombat->syncActorRagdoll(key, previous, current))
+                throw std::runtime_error("native physical admission lost its renderer or authority binding");
+        }
+        catch (...)
+        {
+            // Failed asset restoration/cache allocation must leave neither an
+            // untracked body owner nor a suspended movement capsule behind.
+            endNativeActorPhysicalPose(*mPhysics, animation, actor);
+            throw;
+        }
+    }
+
+    void World::endOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics || !mOblivionCombat
+            || actor.isEmpty() || animation.getPtr() != actor)
+            throw std::invalid_argument("native physical release requires its live actor and renderer");
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                               : actor.getCellRef().getFormKey();
+        const auto previous = mOblivionCombat->actorRagdoll(key);
+        if (!previous && !animation.hasPhysicalPose() && !mPhysics->hasActorRagdoll(actor))
+            return;
+        if (!previous || !animation.hasPhysicalPose() || !mPhysics->hasActorRagdoll(actor))
+            throw std::invalid_argument("native physical release has incomplete ownership");
+        endNativeActorPhysicalPose(*mPhysics, animation, actor);
+        if (!mOblivionCombat->syncActorRagdoll(key, previous, std::nullopt))
+            throw std::runtime_error("native physical authority changed during release");
+    }
+
     void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
     {
         if (!mPhysics)

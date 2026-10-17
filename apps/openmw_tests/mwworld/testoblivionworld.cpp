@@ -23285,3 +23285,182 @@ TEST(OblivionWorldTest, NativeGetKnockedStateUsesTheCommandTranslationAcrossScri
     }
     EXPECT_FALSE(world.getOblivionScriptKnockedState(ESM::FormKey::content("headless.esm", 0xabcdef)));
 }
+
+TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSavedAuthority)
+{
+    class SourceAnimation : public MWRender::Animation
+    {
+    public:
+        SourceAnimation(const MWWorld::Ptr& actor, osg::Group* parent, Resource::ResourceSystem* resources,
+            const std::string& model)
+            : Animation(actor, parent, resources)
+        { setObjectRoot(model, true, false, false); }
+    };
+    struct RestoreThreads
+    {
+        int mPrevious = Settings::physics().mAsyncNumThreads;
+        ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+    } restoreThreads;
+    for (int threads : {0, 1, 2})
+    {
+        SCOPED_TRACE(threads);
+        Settings::physics().mAsyncNumThreads.set(threads);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        const auto other = addNativeNpc(fixture, 0x901);
+        const std::string model = "meshes/m15-physical-admission.nif";
+        auto npc = *actor.get<ESM4::Npc>()->mBase;
+        npc.mModel = "m15-physical-admission.nif";
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        std::filesystem::create_directories(fixture.mDirectory / "meshes");
+        {
+            std::ofstream file(fixture.mDirectory / model, std::ios::binary);
+            const auto bytes = nativeCarriedWeaponNif(.5f);
+            file.write(bytes.data(), bytes.size());
+            ASSERT_TRUE(file);
+        }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+        fixture.mVfs.buildIndex();
+        fixture.mResources.getSceneManager()->setShaderPath(
+            std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+        osg::ref_ptr<osg::Group> parent = new osg::Group;
+        SourceAnimation animation(actor, parent, &fixture.mResources, model);
+        SourceAnimation foreign(other, parent, &fixture.mResources, model);
+        auto& physics = world.initializePhysics(new osg::Group);
+        physics.addActor(actor, VFS::Path::toNormalized(model));
+        const auto key = actor.getCellRef().getFormKey();
+        auto& combat = *world.getOblivionCombatService();
+        const auto values = *combat.findActorValues(key);
+        const auto life = *combat.findActorLife(key);
+        const auto placement = Nif::NiTransform::getIdentity();
+        const std::array<std::uint32_t, 1> filters{0x1108};
+        const auto begin = [&](MWRender::Animation& renderer, std::span<const std::uint32_t> packed) {
+            world.beginOblivionActorPhysicalPose(renderer, actor, placement, packed,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, nullptr);
+        };
+        const auto absent = [&] {
+            EXPECT_FALSE(animation.hasPhysicalPose());
+            EXPECT_FALSE(physics.hasActorRagdoll(actor));
+            EXPECT_FALSE(physics.getActor(actor)->isCollisionSuspended());
+            EXPECT_NE(physics.getActor(actor)->getCollisionObject()->getBroadphaseHandle(), nullptr);
+        };
+        EXPECT_THROW(begin(foreign, filters), std::invalid_argument);
+        EXPECT_THROW(begin(animation, {}), std::invalid_argument);
+        absent();
+        EXPECT_FALSE(combat.actorRagdoll(key));
+        begin(animation, filters);
+        EXPECT_TRUE(animation.hasPhysicalPose());
+        EXPECT_TRUE(physics.hasActorRagdoll(actor));
+        EXPECT_TRUE(physics.getActor(actor)->isCollisionSuspended());
+        auto cached = combat.actorRagdoll(key);
+        ASSERT_TRUE(cached);
+        EXPECT_EQ(*cached, physics.captureActorRagdollSnapshot(actor, npc.mFormKey, model));
+        EXPECT_THROW(begin(animation, filters), std::invalid_argument);
+        EXPECT_EQ(combat.actorRagdoll(key), cached);
+        world.endOblivionActorPhysicalPose(animation, actor);
+        world.endOblivionActorPhysicalPose(animation, actor);
+        absent();
+        EXPECT_FALSE(combat.actorRagdoll(key));
+        // A retained pose is restored against this exact newly admitted asset.
+        cached->mBodies[0].mPosition = {100, 200, 300};
+        ASSERT_TRUE(combat.syncActorRagdoll(key, std::nullopt, cached));
+        begin(animation, filters);
+        EXPECT_EQ(combat.actorRagdoll(key), cached);
+        EXPECT_EQ(physics.captureActorRagdollSnapshot(actor, npc.mFormKey, model), *cached);
+        world.endOblivionActorPhysicalPose(animation, actor);
+        absent();
+        auto wrong = cached;
+        wrong->mAssetHash[0] = wrong->mAssetHash[0] == 'a' ? 'b' : 'a';
+        ASSERT_TRUE(combat.syncActorRagdoll(key, std::nullopt, wrong));
+        EXPECT_THROW(begin(animation, filters), std::invalid_argument);
+        absent();
+        EXPECT_EQ(combat.actorRagdoll(key), wrong);
+        ASSERT_TRUE(combat.syncActorRagdoll(key, wrong, std::nullopt));
+        // Detached preparation cannot add ray targets or take the capsule.
+        const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
+        ASSERT_TRUE(source);
+        const auto& graph = *source->definition();
+        const std::array<btTransform, 1> remotePose{
+            btTransform(btQuaternion::getIdentity(), btVector3(1000, 1000, 1000))};
+        const auto prepare = [&](MWPhysics::ActorRagdollCapsulePolicy policy) {
+            return physics.prepareActorRagdoll(actor, graph, NifBullet::RagdollNativeLengthScale,
+                remotePose, MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, nullptr, policy);
+        };
+        const auto remoteRay = [&] {
+            return physics.castRay({1000, 1000, 1100}, {1000, 1000, 900}, {}, {},
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
+        };
+        EXPECT_FALSE(remoteRay().mHit);
+        {
+            const auto discarded = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);
+            EXPECT_TRUE(physics.validatePreparedActorRagdoll(*discarded));
+            EXPECT_FALSE(discarded->physics().isPublished());
+            EXPECT_FALSE(remoteRay().mHit);
+            absent();
+        }
+        EXPECT_FALSE(remoteRay().mHit);
+        auto retainedCapsule = prepare(MWPhysics::ActorRagdollCapsulePolicy::Retain);
+        auto competing = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);
+        MWPhysics::PhysicsSystem foreignPhysics(&fixture.mResources, new osg::Group);
+        EXPECT_FALSE(foreignPhysics.validatePreparedActorRagdoll(*retainedCapsule));
+        EXPECT_FALSE(foreignPhysics.commitActorRagdoll(*retainedCapsule));
+        const std::array<NifBullet::RagdollNativeMotionRequest, 1> keyframed{{
+            {graph.mBodies[0].mRecord, NifBullet::RagdollNativeMotion::Keyframed}}};
+        retainedCapsule->physics().setNativeMotionModes(keyframed);
+        EXPECT_FALSE(remoteRay().mHit);
+        ASSERT_TRUE(physics.commitActorRagdoll(*retainedCapsule));
+        EXPECT_FALSE(physics.validatePreparedActorRagdoll(*retainedCapsule));
+        EXPECT_FALSE(physics.commitActorRagdoll(*retainedCapsule));
+        EXPECT_THROW(retainedCapsule->physics(), std::invalid_argument);
+        EXPECT_FALSE(physics.validatePreparedActorRagdoll(*competing));
+        EXPECT_FALSE(physics.commitActorRagdoll(*competing));
+        EXPECT_TRUE(physics.hasActorRagdoll(actor));
+        EXPECT_FALSE(physics.getActor(actor)->isCollisionSuspended());
+        EXPECT_NE(physics.getActor(actor)->getCollisionObject()->getBroadphaseHandle(), nullptr);
+        EXPECT_TRUE(remoteRay().mHit);
+        EXPECT_EQ(remoteRay().mHitObject, actor);
+        EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(actor), (std::vector(keyframed.begin(), keyframed.end())));
+        physics.removeActorRagdoll(actor);
+        absent();
+        EXPECT_FALSE(remoteRay().mHit);
+        EXPECT_FALSE(physics.validatePreparedActorRagdoll(*competing));
+        EXPECT_FALSE(physics.commitActorRagdoll(*competing));
+        EXPECT_THROW(competing->physics(), std::invalid_argument);
+        auto changedScale = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);
+        actor.getCellRef().setScale(2);
+        EXPECT_FALSE(physics.validatePreparedActorRagdoll(*changedScale));
+        EXPECT_FALSE(physics.commitActorRagdoll(*changedScale));
+        EXPECT_THROW(changedScale->physics(), std::invalid_argument);
+        actor.getCellRef().setScale(1);
+        changedScale.reset();
+        auto replacedCapsule = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);
+        physics.remove(actor);
+        physics.addActor(actor, VFS::Path::toNormalized(model));
+        EXPECT_FALSE(physics.validatePreparedActorRagdoll(*replacedCapsule));
+        EXPECT_FALSE(physics.commitActorRagdoll(*replacedCapsule));
+        EXPECT_THROW(replacedCapsule->physics(), std::invalid_argument);
+        absent();
+        EXPECT_FALSE(remoteRay().mHit);
+        std::unique_ptr<MWPhysics::PreparedActorRagdoll> expired;
+        {
+            auto temporary = std::make_unique<MWPhysics::PhysicsSystem>(&fixture.mResources, new osg::Group);
+            temporary->addActor(actor, VFS::Path::toNormalized(model));
+            expired = temporary->prepareActorRagdoll(actor, graph, NifBullet::RagdollNativeLengthScale,
+                remotePose, MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
+        }
+        EXPECT_THROW(expired->physics(), std::invalid_argument);
+        expired.reset(); // Deferred geometry safely outlives its World.
+        auto suspendedCapsule = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);
+        ASSERT_TRUE(physics.commitActorRagdoll(*suspendedCapsule));
+        EXPECT_TRUE(physics.getActor(actor)->isCollisionSuspended());
+        EXPECT_TRUE(remoteRay().mHit);
+        physics.removeActorRagdoll(actor);
+        absent();
+        EXPECT_FALSE(remoteRay().mHit);
+        EXPECT_FALSE(combat.actorRagdoll(key));
+        EXPECT_EQ(*combat.findActorValues(key), values);
+        EXPECT_EQ(*combat.findActorLife(key), life);
+    }
+}

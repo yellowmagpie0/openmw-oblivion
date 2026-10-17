@@ -31,6 +31,7 @@ namespace ESM4
 
 namespace NifBullet
 {
+    class ActorRagdollPhysics;
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
@@ -168,6 +169,24 @@ namespace MWPhysics
 
 
         // Main-thread ownership operations wait for the previous worker frame.
+        class PreparedActorRagdoll
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedActorRagdoll(std::unique_ptr<Impl> impl);
+            friend class PhysicsTaskScheduler;
+        public:
+            ~PreparedActorRagdoll();
+            // Borrowed detached graph for controller/motion preparation.
+            // Publication belongs exclusively to commitActorRagdoll.
+            NifBullet::ActorRagdollPhysics& physics();
+        };
+        std::unique_ptr<PreparedActorRagdoll> prepareActorRagdoll(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
+        bool validatePreparedActorRagdoll(const PreparedActorRagdoll& prepared);
+        bool commitActorRagdoll(PreparedActorRagdoll& prepared);
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask,
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
@@ -283,6 +302,7 @@ namespace MWPhysics
         class LooseObject;
         void clearLooseObjects();
         bool validatePreparedLooseObjectLocked(const PreparedLooseObject& object) const;
+        bool validatePreparedActorRagdollLocked(const PreparedActorRagdoll& object) const;
         void clearActorRagdolls();
         ActorRagdoll& actorRagdoll(const MWWorld::Ptr& ptr);
 
@@ -312,7 +332,10 @@ namespace MWPhysics
         std::unordered_set<const btCollisionObject*> mCollisionObjects;
         class NativeSceneBinding;
         std::unique_ptr<NativeSceneBinding> mNativeSceneBinding;
-        std::unordered_map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>> mActorRagdolls;
+        using ActorRagdollMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>>;
+        ActorRagdollMap mActorRagdolls;
+        std::shared_ptr<const char> mActorPreparationIdentity;
+        std::map<const MWWorld::LiveCellRefBase*, std::weak_ptr<const char>> mActorPreparationSlots;
         using LooseObjectMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<LooseObject>>;
         LooseObjectMap mLooseObjects;
         std::shared_ptr<const char> mLoosePreparationIdentity;

@@ -390,12 +390,20 @@ namespace MWWorld
         const ESM4::PhysicalBlendProfilesConfiguration& getOblivionPhysicalBlendConfiguration() const;
         void loadOblivionPhysicalBlendConfiguration(
             std::uint32_t version, const ESM4::PhysicalBlendProfilesValues& processedValues);
-        // Explicit resolved admission/reaction inputs; selection and native
-        // morphology remain the lifecycle caller's responsibility.
+        // Explicit low-level graph adapter; the caller owns saved-state binding.
         void beginOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor,
             const NifBullet::ActorRagdollDefinition& authored, const Nif::NiTransform& placement,
             std::span<const std::uint32_t> resolvedPackedFilters, int collisionGroup, int collisionMask,
             const NifBullet::RagdollInternalCollisionFilter* internalFilter);
+        // Bind the actual rendered NIF, physical owner and saved authority.
+        // Selection, native morphology and collision policy belong to the caller.
+        void beginOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor,
+            const Nif::NiTransform& placement,
+            std::span<const std::uint32_t> resolvedPackedFilters, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter);
+        // Explicit discard releases saved ownership too; this does not select
+        // native recovery policy. Scene unloading retains its physical snapshot.
+        void endOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor);
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareOblivionActorKnockdownControllers(
             const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests);
         std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareOblivionActorHitBlendControllers(

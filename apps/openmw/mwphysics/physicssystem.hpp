@@ -59,6 +59,7 @@ class btTransform;
 
 namespace NifBullet
 {
+    class ActorRagdollPhysics;
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
@@ -138,6 +139,23 @@ namespace MWPhysics
         bool hasLiveOwner() const noexcept;
         PreparedLooseObject(const PreparedLooseObject&) = delete;
         PreparedLooseObject& operator=(const PreparedLooseObject&) = delete;
+    };
+
+    enum class ActorRagdollCapsulePolicy { Suspend, Retain };
+
+    class PreparedActorRagdoll
+    {
+        struct Data;
+        std::unique_ptr<Data> mData;
+        explicit PreparedActorRagdoll(std::unique_ptr<Data> data);
+        friend class PhysicsSystem;
+    public:
+        ~PreparedActorRagdoll();
+        PreparedActorRagdoll(const PreparedActorRagdoll&) = delete;
+        PreparedActorRagdoll& operator=(const PreparedActorRagdoll&) = delete;
+        // Borrowed detached graph. Stage controller/motion changes here;
+        // commitActorRagdoll owns World publication and capsule handoff.
+        NifBullet::ActorRagdollPhysics& physics();
     };
 
     struct NativeRagdollSnapshotGroup;
@@ -340,6 +358,13 @@ namespace MWPhysics
             std::span<const NifBullet::RagdollNativePackedVelocityState> velocities);
         void removeLooseObject(const MWWorld::Ptr& ptr);
 
+        std::unique_ptr<PreparedActorRagdoll> prepareActorRagdoll(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr,
+            ActorRagdollCapsulePolicy capsulePolicy = ActorRagdollCapsulePolicy::Suspend);
+        bool validatePreparedActorRagdoll(const PreparedActorRagdoll& prepared);
+        bool commitActorRagdoll(PreparedActorRagdoll& prepared);
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
             float lengthScale, std::span<const btTransform> poses, int collisionGroup, int collisionMask,
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
@@ -609,6 +634,7 @@ namespace MWPhysics
         // A new PhysicsSystem at the same address must not accept old tokens.
         std::shared_ptr<const char> mProjectilePreparationOwner = std::make_shared<const char>(0);
         std::shared_ptr<const char> mLoosePreparationOwner = std::make_shared<const char>(0);
+        std::shared_ptr<const char> mActorPreparationOwner = std::make_shared<const char>(0);
 
         using HeightFieldMap = std::map<std::pair<int, int>, std::unique_ptr<HeightField>>;
         HeightFieldMap mHeightFields;

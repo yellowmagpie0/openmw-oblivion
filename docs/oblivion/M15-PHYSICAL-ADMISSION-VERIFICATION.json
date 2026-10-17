@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "status": "Body admission and original recovery evidence checkpoint; full M15S4 remains incomplete",
+  "source_parent_commit": "b9585fbd0a604391cbf6a7d611f01fd65e340448",
+  "tested_dirty_source_fingerprint": "9c862ee9597b602f0df18ab35c87e0628f89060fd6300a5c0fbe95892d65ba30",
+  "source_sha256": {
+    "apps/openmw/mwphysics/mtphysics.cpp": "66a1365d68a2f5586bb1cbdad2a7ed9c2cb5450c5017a33acb3d5ffa70485961",
+    "apps/openmw/mwphysics/mtphysics.hpp": "0fa84831fb10f29f55235915110219757d7b609a756878f8dcd3488a0c1beae4",
+    "apps/openmw/mwphysics/physicssystem.cpp": "aff3ee5f5cc6388363f102dc6a37ae2e686e4a9e70ef540b398d53f74c08a5bc",
+    "apps/openmw/mwphysics/physicssystem.hpp": "870165c1a3f12977f36725abc51feafff4c06ddc4293bb03acc271b2feb07751",
+    "apps/openmw/mwworld/worldimp.cpp": "0900646249d9d56a08ed20b416d7ed75103d0b9d07228b14b264d88bdbab86da",
+    "apps/openmw/mwworld/worldimp.hpp": "7f3fb722f7e1d9cbbe3c5ee258952b27ed7145b9001d1edf478d2b36113ac394",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "69cbeb84302b7fff7a5c9fa029bf42df89117167b1bc513191caa0129d17afec"
+  },
+  "post_test_changes": "Evidence documentation, editable protocol and clarification of the release API comment only.",
+  "checks": {
+    "normal": {
+      "report": "build/oblivion-compat/m15/S4/native-physical-admission-engine-normal-01/verification.json",
+      "report_sha256": "50a57f6febb0676ed2dfe095e8aead3a56a165d7340afb88d10870ec0b6fcd7a",
+      "source": {
+        "head": "b9585fbd0a604391cbf6a7d611f01fd65e340448",
+        "source_fingerprint": "9c862ee9597b602f0df18ab35c87e0628f89060fd6300a5c0fbe95892d65ba30"
+      },
+      "result": {
+        "executed": 1621,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2cf5577c6cef44dcf6809d04ce593f2e8d75df16c71fa4cc89f1b26f092d290a",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "1d06d2c3774a4d9d26b8aebd3d3c3e4cdd782ced3a28e638600f8ec7b8cd1cf2",
+        "inventory_sha256": "e859cc0bba9a256b4291806e38fee93658e79d024cb35454ad1a5556bd4f5b26",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 122
+    },
+    "sanitized": {
+      "report": "build/oblivion-compat/m15/S4/native-physical-admission-engine-sanitized-01/verification.json",
+      "report_sha256": "8e353eb302c4a451c5719aca3a94330938ae75c731d92a03be45f0cd06931820",
+      "source": {
+        "head": "b9585fbd0a604391cbf6a7d611f01fd65e340448",
+        "source_fingerprint": "9c862ee9597b602f0df18ab35c87e0628f89060fd6300a5c0fbe95892d65ba30"
+      },
+      "result": {
+        "executed": 1621,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e104704de303bbf7f12a4c8a1ec3b9582f8bf6daa88883fa736006f469a1b2f5",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "8a0d3945f31dcb7c5351b114290e5ba40d9a217a4d9394fdb029d02dba1bf96d",
+        "inventory_sha256": "e859cc0bba9a256b4291806e38fee93658e79d024cb35454ad1a5556bd4f5b26",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 122
+    }
+  },
+  "sanitizer_scope": "ASan/UBSan; leak detection disabled; UBSan halts with stack trace.",
+  "structural_and_semantic_checks": [
+    "Strict World admission binds actual rendered immutable NIF, live actor/base/lifecycle authority and saved physical snapshot.",
+    "Failed saved asset restore releases new bodies, restores capsule and renderer, and preserves previous cache.",
+    "Detached graph preparation has no collision-query or capsule effects.",
+    "Commit publishes once, preserves actor routing and staged native KEY6, and supports explicit Suspend/Retain capsule policies.",
+    "Foreign owners, competing/consumed candidates, changed reference scale, replaced capsule and destroyed PhysicsSystem reject. Competing candidates stay invalid after committed bodies are removed.",
+    "Integration case exercises 0/1/2 physics workers and leaves actor values/lifecycle unchanged."
+  ],
+  "native_observations": {
+    "physical-recovery-original-live-01": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-01/report.json",
+      "sha256": "8cadc65ecb9027864dd1d613f843f893fa12ef7d38bdf5e536e6b292d6a97f75",
+      "report": {
+        "passed": true,
+        "scope": "One original normal-input fatigue-knockout/recovery observation and separate read-only controller-clock snapshot. Not fork reaction acceptance or native/fork physics-trajectory parity.",
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "source_pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+        "raw_observation": {
+          "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-01/observed-01-sample.json",
+          "sha256": "e54f84101c93cf01989b7c5f6da37205401efa9038ebe693e54c26df6a86ccd4"
+        },
+        "frames": 95,
+        "selected_controller_frames": 94,
+        "raw_states": [
+          0,
+          4,
+          3,
+          5,
+          6,
+          0
+        ],
+        "script_queries": [
+          {
+            "raw": 0,
+            "result": 0.0
+          },
+          {
+            "raw": 3,
+            "result": 1.0
+          }
+        ],
+        "getup": {
+          "form_id": "0x00091fb8",
+          "slot": 5,
+          "record_report_sha256": "aff02f0b0431037b4910e1e1076445819fb0a0b08a6bc399d85478eef635d242",
+          "model": "Creatures/Dog/IdleAnims/SpecialIdle_GetUpLift.kf"
+        },
+        "clock": {
+          "snapshot_sha256": "d165c6d58ea936570f48d0dd86286fc08ad1d20532dec10fad3f3b78632ecc16",
+          "input_time": 150.7699432373047,
+          "matching_actor_animation_offset": "0x94",
+          "actor_manager_is_distinct": true
+        },
+        "cleanup_sha256": "f3af1042a2177897d78a07dd431b7a271f0ef6ae289f6e865a16bdfeae063ece",
+        "steam_reported_child_exit": 0,
+        "steam_supervising_exec_exit": 143,
+        "retained_failures": [
+          "fractional-modav-setup-failure.json: -159.9 rejected; corrected integer -159 gives1.",
+          "Initial report assembly expected supervising exit143 in steam-exit.json, but that file reports the launcher child exit0. Both layers are now recorded separately; original game exit0 and cleanup are independently checked."
+        ],
+        "limits": [
+          "A debugger lowers observed FPS; sampled frame durations are recorded. No uninstrumented duration/FPS acceptance.",
+          "Only recovered standing capture reviewed; no lying-phase capture.",
+          "Native selector521450 event label GetUp-selected includes ordinary raw0/null lookup; later raw3 selection plus actual475300 slot5 establishes GetUp.",
+          "No8AB040 HIT setup observed; four hit globals all0. Do not assume unconditional HIT-body setup.",
+          "Dog process+15C cache0 after recovery; no evidence its virtual9C controls capsule.",
+          "IsLeftUp285 used by selected idle still needs a verified World/renderer adapter."
+        ]
+      }
+    },
+    "isleftup-native-oracle-02": {
+      "path": "build/oblivion-compat/m15/S4/isleftup-native-oracle-02/report.json",
+      "sha256": "e0ed7daddb714b50e6cdd004a27b6f413a2c910923970b80a06506008802d438",
+      "report": {
+        "passed": true,
+        "profiles": 9072,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "ab1c5380a04f2bf243bc87039e77656329f6d52860e1e45f63139b0b85c760e3",
+        "actual_paths": [
+          "full4F89E0 evaluator and504930 command wrapper",
+          "actual977C50 actor class predicate",
+          "full4D96F0 scopedBip01/Bip02Spine lookup ordering/Horse handling",
+          "full8975C0 direct WorldRotation+84 comparison"
+        ],
+        "boundaries": [
+          "Actor base-form virtual returns supplied typed base; nonactor class predicate suppliesfalse;6F94A0 scene-name lookup supplies declared node presence with name/root arguments asserted. Console printing disabled."
+        ],
+        "rule": "Valid actor missingSpine=>1; presentSpine worldR22>0=>1 (positiveInfinity included; bothsignedzeros/negative/NaNfalse); nonactor/nullevaluator=>0. No process/knocked-state dependency; invalid processpointer proves it is notread. Horse type4 alwaysBip02, other actorsBip01 withBip02fallback.",
+        "null_command": "Null command wrapper preserves prior result sentinel123.5; high-level result initialization outside probe.",
+        "scope": "Native IsLeftUp query/lookup/IEEE comparison only; renderer world-pose binding, GetUp selection and physical recovery remain production integration work."
+      }
+    }
+  },
+  "runtime_acceptance": "No new fork normal-input physical reaction course. Original observation is independent evidence only. Automatic contact admission, per-frame body driving, GetUp selection, live recovery and recovery restart equivalence remain open.",
+  "not_rerun": "Components and Python implementations unchanged; prior checks remain historical evidence.",
+  "retained_attempts": [
+    "native-physical-admission-syntax-01: test syntax initially failed after removal of an existing overload; restored overload before passing checks.",
+    "native-physical-admission-selection-normal-01: 3 selected cases passed before detached preparation extensions.",
+    "prepared-actor-admission-syntax-01: 3 translation units passed syntax before final slot/cell guards.",
+    "isleftup-native-oracle-01: wrong sign interpretation falsified by negative infinity; corrected02 accepted."
+  ]
+}
