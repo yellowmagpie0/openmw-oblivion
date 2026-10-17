@@ -4573,3 +4573,36 @@ First-person torso occlusion and Creature geometry artifacts remain; this
 ordinary unenchanted blade course does not close power/mastery/effects,
 recovery/knockdown or the full input/view/FPS/interrupt/restart matrices.
 **S4 remains incomplete.**
+
+## Live weapon precision and stock blunt checkpoint
+
+An actual original ordinary Mace query established x87 control word 007F; the
+previous wider-intermediate weapon helper was one ULP wrong for its captured
+inputs. The corrected helper matches 4103 full original arithmetic executions,
+39 frozen arithmetic rows and 576 original entry profiles on both Player/NPC
+bindings. An actual normal-input fork return has the same arguments and bits
+as the original live query. Full engine inventories pass 1618 cases / 122 suites
+normally and under ASan/UBSan; full components pass 2804 cases / 268 suites,
+sanitized ESM4 components 748/56, and Python 313 tests. The first engine attempt's
+one stale rusty-weapon assertion and the cancelled sanitizer build are retained;
+corrected engine02 runs pass without weakened tolerances. Leak checks are off.
+
+Stock unenchanted Iron Mace now has an authored distinct-skill course:
+Blunt 20 versus retained Blade 10, three contacts across two real fresh-process
+loads, normally and under ASan/UBSan. Exact Player Fatigue is 140  -> 131.5  -> 123
+ -> 114.5; Creature Health 20  -> 17.625  -> 15.327033042907715  -> 13.105790138244629;
+condition 140  -> 139.39999389648438  -> 138.79998779296875  -> 138.19998168945312.
+The canonical skill override and equipped worn item persist. Native arrays,
+unrelated bases/life/inventories and current combat RNG are checked, with one
+owned action per process and no replay. Real Fur/BluntFlesh sound requests are
+acknowledged and captured PCM is nonzero. This is bounded contact acceptance.
+
+Current pipeline RNG preservation does **not** establish native reaction RNG
+parity: damage-knockdown/stagger and mastery consumption/consequences still
+need the original caller gates, atomic publication and real recovery. The
+weapon-only precision change does not close those branches, other physical
+math, directional powers, effects, interruption/input/FPS or named restart
+matrices. Existing Dog face holes and lighting differences remain outside the
+accepted first-person hand/weapon visibility checks. Full S4 stays incomplete.
+See [the precision verification index](M15-WEAPON-LIVE-PRECISION-VERIFICATION.json)
+for provenance, exact test selections, editable scenarios and runtime limits.

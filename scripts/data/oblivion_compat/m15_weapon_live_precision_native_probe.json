@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "purpose": "Native weapon arithmetic precision established by actual normal-input original Mace call and full original replay.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "live_sample": {
+    "path": "build/oblivion-compat/m15/S4/weapon-damage-fpu-original-live-01/retry03-sample.json",
+    "sha256": "6d37d9a8bf5cb01c7c10c4639cf05d94126e34f8da235d4a415185409639b304",
+    "caller_return": "005FF515",
+    "controlword": 127
+  },
+  "arithmetic_oracle": {
+    "path": "build/oblivion-compat/m15/S4/weapon-single-arithmetic-oracle-03/report.json",
+    "sha256": "6745565c7d66b5e07db9ff8e494a46b37f78e2543c954ba06051369062d416f8",
+    "cases": 4103,
+    "scope": "Full547070 and its547B90/547F00 callees; supplied arguments and GMST storage, no arithmetic stubs. Emulation is separate from gameplay acceptance."
+  },
+  "special_cases": [
+    {
+      "args": [
+        -2147483264,
+        -1,
+        40,
+        1.0,
+        10,
+        1.0,
+        1.0,
+        0
+      ],
+      "settings": [
+        2147483328,
+        1.401298464324817e-45,
+        1,
+        0.5,
+        0.5,
+        0.2,
+        1.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "bits": 1064514355
+    },
+    {
+      "args": [
+        -2147483264,
+        -1,
+        40,
+        1.0,
+        10,
+        1.0,
+        1.0,
+        0
+      ],
+      "settings": [
+        2147483456,
+        1.401298464324817e-45,
+        1,
+        0.5,
+        0.5,
+        0.2,
+        1.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "bits": 1090597683
+    },
+    {
+      "args": [
+        -2147483264,
+        1,
+        40,
+        1.0,
+        10,
+        1.0,
+        1.0,
+        0
+      ],
+      "settings": [
+        2147483328,
+        1.401298464324817e-45,
+        1,
+        0.5,
+        0.5,
+        0.2,
+        1.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "bits": 1090597683
+    },
+    {
+      "args": [
+        -2147483264,
+        1,
+        40,
+        1.0,
+        10,
+        1.0,
+        1.0,
+        0
+      ],
+      "settings": [
+        2147483456,
+        1.401298464324817e-45,
+        1,
+        0.5,
+        0.5,
+        0.2,
+        1.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "bits": 1090597683
+    },
+    {
+      "args": [
+        20,
+        50,
+        40,
+        0.8785714507102966,
+        10,
+        0.9914284944534302,
+        1.0,
+        0
+      ],
+      "settings": [
+        -20,
+        0.4,
+        1,
+        0.5,
+        0.5,
+        0.2,
+        1.5,
+        0.5,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "bits": 1074669785
+    },
+    {
+      "args": [
+        0,
+        50,
+        40,
+        1.0,
+        1,
+        1.0,
+        1.0,
+        1
+      ],
+      "settings": [
+        -20,
+        0.4,
+        1,
+        0.5,
+        1.401298464324817e-45,
+        3.4028234663852886e+38,
+        0.0,
+        1.401298464324817e-45,
+        0.0,
+        3.4028234663852886e+38,
+        0.0
+      ],
+      "bits": 713031678
+    },
+    {
+      "args": [
+        0,
+        50,
+        40,
+        1.0,
+        1,
+        1.0,
+        1.0,
+        1
+      ],
+      "settings": [
+        -20,
+        0.4,
+        1,
+        0.5,
+        3.4028234663852886e+38,
+        1.401298464324817e-45,
+        0.0,
+        3.4028234663852886e+38,
+        0.0,
+        1.401298464324817e-45,
+        0.0
+      ],
+      "bits": 713031678
+    }
+  ],
+  "boundaries": "Captured live getters and supplied item record are replayed through full484F80; 547070 args are observed separately. Random arithmetic corpus supplies direct547070 arguments. GUI console setup changes initial stats/inventory/target; attack itself is normal mouse input. No forced calls or state writes by debugger. Broader combat arithmetic remains unaudited at007F.",
+  "argument_order": [
+    "skill_i32",
+    "luck_i32",
+    "strength_i32",
+    "fatigue_ratio_f32",
+    "base_damage_u32",
+    "condition_ratio_f32",
+    "attack_multiplier_f32",
+    "ignore_fatigue_bool"
+  ],
+  "settings_order": [
+    "iActorLuckSkillBase",
+    "fActorLuckSkillMult",
+    "fFatigueBase",
+    "fFatigueMult",
+    "fDamageWeaponMult",
+    "fDamageSkillBase",
+    "fDamageSkillMult",
+    "fDamageWeaponConditionBase",
+    "fDamageWeaponConditionMult",
+    "fDamageStrengthBase",
+    "fDamageStrengthMult"
+  ]
+}

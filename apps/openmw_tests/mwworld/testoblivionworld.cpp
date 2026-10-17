@@ -7237,13 +7237,13 @@ namespace
         ASSERT_TRUE(amplified); EXPECT_EQ(amplified->mHealth, 17.955f);
         EXPECT_EQ(amplified->mConditionAfterWear, 994.f);
         // The runtime rusty shortsword profile is independently frozen in
-        // S4/native-weapon-runtime-oracle-01 (both original x87 words).
+        // S4/native-weapon-runtime-single-oracle-01 (live controlword007F).
         source.getCellRef().setNativeItemCondition(55.875f);
         native.mData.health = 56; native.mData.damage = 5;
         store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
         const auto rusty = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 0, false);
         ASSERT_TRUE(rusty);
-        EXPECT_EQ(std::bit_cast<std::uint32_t>(rusty->mHealth), 1062506496u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(rusty->mHealth), 1062506497u);
         ASSERT_TRUE(rusty->mConditionAfterWear);
         EXPECT_EQ(std::bit_cast<std::uint32_t>(*rusty->mConditionAfterWear), 1113476301u);
         const auto noEnchantment = native.mEnchantment;

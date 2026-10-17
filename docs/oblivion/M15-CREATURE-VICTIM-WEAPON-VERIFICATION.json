@@ -318,5 +318,13 @@
   ],
   "late_metadata_only": [
     "Verification index, milestone, delivery audit and provenance"
-  ]
+  ],
+  "precision_revision": {
+    "superseded": "Historical raw damage was matched against027F/037F. Actual ordinary original gameplay uses007F and differs by one ULP for these two blade queries. Historical captures and resource endpoints do not establish007F raw-damage parity.",
+    "corrected_index": "M15-WEAPON-LIVE-PRECISION-VERIFICATION.json",
+    "corrected_blade_damage": [
+      1.1637500524520874,
+      1.1289069652557373
+    ]
+  }
 }

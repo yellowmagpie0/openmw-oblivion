@@ -1,14 +1,83 @@
 #include "physicalcombat.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <utility>
+
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace ESM4
 {
     namespace
     {
+        // Live 5FF510 -> 484F80 uses x87 control word 007F: arithmetic rounds
+        // to 24 significant bits while retaining the extended exponent range.
+        // Exact binary operands avoid double rounding, including FIADD of a
+        // large integer and a subnormal float near an integer halfway point.
+        struct BinaryOperand
+        {
+            boost::multiprecision::cpp_int mSignificand;
+            int mExponent;
+        };
+
+        BinaryOperand binaryOperand(double value)
+        {
+            const auto bits = std::bit_cast<std::uint64_t>(value);
+            const auto exponent = (bits >> 52) & 0x7ff;
+            const auto significand = (bits & 0xfffffffffffffull) | (exponent ? 0x10000000000000ull : 0);
+            boost::multiprecision::cpp_int integer = significand;
+            if (bits >> 63)
+                integer = -integer;
+            return {std::move(integer), exponent ? static_cast<int>(exponent) - 1075 : -1074};
+        }
+
+        double roundSingle(BinaryOperand value, double zero)
+        {
+            using boost::multiprecision::cpp_int;
+            if (value.mSignificand == 0)
+                return std::copysign(0.0, zero);
+            const bool negative = value.mSignificand < 0;
+            cpp_int magnitude = negative ? -value.mSignificand : value.mSignificand;
+            const int discarded = static_cast<int>(boost::multiprecision::msb(magnitude)) + 1 - 24;
+            if (discarded > 0)
+            {
+                cpp_int retained = magnitude >> discarded;
+                const cpp_int remainder = magnitude - (retained << discarded);
+                // The highest discarded bit marks halfway; lower set bits
+                // make it greater than halfway. Exact ties choose even.
+                if (bit_test(remainder, discarded - 1)
+                    && (boost::multiprecision::lsb(remainder) < static_cast<unsigned>(discarded - 1)
+                        || bit_test(retained, 0)))
+                    ++retained;
+                magnitude = std::move(retained);
+                value.mExponent += discarded;
+            }
+            const double result = std::ldexp(magnitude.convert_to<double>(), value.mExponent);
+            return negative ? -result : result;
+        }
+
+        double addSingle(double left, double right)
+        {
+            auto a = binaryOperand(left), b = binaryOperand(right);
+            if (a.mSignificand == 0)
+                return roundSingle(std::move(b), left + right);
+            if (b.mSignificand == 0)
+                return roundSingle(std::move(a), left + right);
+            const int exponent = std::min(a.mExponent, b.mExponent);
+            a.mSignificand <<= a.mExponent - exponent;
+            b.mSignificand <<= b.mExponent - exponent;
+            return roundSingle({a.mSignificand + b.mSignificand, exponent}, left + right);
+        }
+
+        double multiplySingle(double left, double right)
+        {
+            const auto a = binaryOperand(left), b = binaryOperand(right);
+            return roundSingle({a.mSignificand * b.mSignificand, a.mExponent + b.mExponent}, left * right);
+        }
+
         void finite(float value)
         {
             if (!std::isfinite(value))
@@ -1417,20 +1486,24 @@ namespace ESM4
         nonnegative(input.mAttackMultiplier);
         if (input.mAttribute < 0)
             throw std::invalid_argument("negative governing combat attribute");
-        // Original x87 routines explicitly store each of these terms as float.
-        // Use wider intermediates and those same rounding boundaries; do not
-        // round each individual multiplication to float or truncate to integer.
+        // Original 547070 and its 547B90/547F00 callees, observed at PC24.
+        // Keep instruction rounding distinct from the explicit float stores.
         constexpr double percent = static_cast<double>(0.01f);
-        const float base = rounded(double(input.mBaseDamage) * settings.mWeaponMultiplier);
-        const float condition = rounded(settings.mConditionBase
-            + double(input.mConditionRatio) * settings.mConditionMultiplier);
-        const float skill = rounded(settings.mSkillBase
-            + skillValue(input.mSkill, input.mLuck, settings) * percent * settings.mSkillMultiplier);
-        const float attribute = rounded(settings.mAttributeBase
-            + std::min(input.mAttribute, 100) * percent * settings.mAttributeMultiplier);
-        const float fatigue = input.mIgnoreFatigue ? 1.f : fatigueValue(input.mFatigueRatio, settings);
-        const float subtotal = rounded(double(condition) * base * skill * attribute * fatigue);
-        return rounded(double(subtotal) * input.mAttackMultiplier);
+        const float luckTerm = rounded(multiplySingle(input.mLuck, settings.mLuckSkillMultiplier));
+        const float adjustment = rounded(addSingle(luckTerm, settings.mLuckSkillBase));
+        const float effectiveSkill = rounded(std::clamp(addSingle(input.mSkill, adjustment), 0.0, 100.0));
+        const float base = rounded(multiplySingle(input.mBaseDamage, settings.mWeaponMultiplier));
+        const float condition = rounded(addSingle(
+            multiplySingle(settings.mConditionMultiplier, input.mConditionRatio), settings.mConditionBase));
+        const float skill = rounded(addSingle(multiplySingle(multiplySingle(effectiveSkill, percent),
+            settings.mSkillMultiplier), settings.mSkillBase));
+        const float attribute = rounded(addSingle(multiplySingle(multiplySingle(percent,
+            std::min(input.mAttribute, 100)), settings.mAttributeMultiplier), settings.mAttributeBase));
+        const float fatigue = input.mIgnoreFatigue ? 1.f : rounded(addSingle(settings.mFatigueBase,
+            -multiplySingle(addSingle(1.0, -double(input.mFatigueRatio)), settings.mFatigueMultiplier)));
+        const float subtotal = rounded(multiplySingle(multiplySingle(multiplySingle(
+            multiplySingle(condition, base), skill), attribute), fatigue));
+        return rounded(multiplySingle(subtotal, input.mAttackMultiplier));
     }
     void validateHandToHandSettings(const HandToHandSettings& settings)
     {

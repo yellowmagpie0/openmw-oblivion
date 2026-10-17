@@ -15264,3 +15264,50 @@ item and unmodified unrelated native state. Whole original-game reaction/physics
 and full S4 acceptance do not follow from the arithmetic probe. Identity, source
 bytes and boundaries: [verification index](M15-CREATURE-VICTIM-WEAPON-VERIFICATION.json)
 and editable m15_creature_victim_weapon_native_probe.json.
+
+### Weapon arithmetic precision from an actual original contact
+
+The original ordinary Player Mace caller `005FF510 -> 00484F80 -> 005FF515`
+was observed with x87 control word **007F**, including its actual AV/condition
+getters and returned value. This is a completed third-contact query, not an
+assumed first hit: Blunt 20, Luck 50, Strength 40, Fatigue 123/base 140 and condition
+138.79998779296875/max 140. Full original replay supplies condition ratio
+0.9914284944534302 and Fatigue ratio 0.8785714507102966 to 547070. Its return is
+2.221243143081665, bits 1074669785. The previous wider-intermediate helper and
+027F/037F replay instead return bits 1074669784. The red GTest retains that defect.
+
+`weaponDamage` now rounds each original 547070/547B90/547F00 arithmetic
+instruction to 24 significant bits, retaining the wider exponent between the
+original explicit float stores. Exact binary integer operands avoid double
+rounding of integer luck products/additions. The original percent constant at
+A3B150 is double(float32(.01)), not mathematical double .01. The Fatigue term
+keeps the native subtraction order. Other physical helpers are unchanged and
+still need their own live-precision audit. The World AttackBonus addition is
+outside this helper; a separate original audit retains a large-integer/tiny-
+damage rounding corner for the next correction.
+
+Full original 547070 executes 4103 deterministic profiles without arithmetic
+stubs. All production results match bitwise. Thirty-nine frozen rows retain
+random settings, integer/denormal halfway cases, the actual live inputs and
+products that temporarily exceed float's exponent range. An additional 576
+original 484F80 profiles at 007F are checked on both Player and NPC World bindings.
+The rusty-weapon original query independently returns bits 1062506497; its old
+027F expected bit 1062506496 was corrected after the first full engine run found
+that remaining stale assertion. No test tolerance was weakened.
+
+A read-only debugger also observed an actual normal-input fork contact through
+CharacterController dispatch, owned melee commit and weaponContactDamage. Both
+its 547070-equivalent arguments and actual returned bits match the original live
+capture exactly. The observed third course and unobserved third course retain
+identical native value arrays, bases/life, inventories, combat RNG and contact
+ownership. Debugger pauses do not establish performance or force-trajectory
+parity. The isolated original session restored its config/autosave and preserved
+both pristine save hashes; its cleanup receipt is retained.
+
+The historical shortsword raw values immediately above are superseded for this
+live 007F context: its first two query results are 1.1637500524520874 and
+1.1289069652557373. Previous wider-controlword observations remain sensitivity
+evidence. The exact stored Health display may erase a raw-damage ULP, so a
+matching HUD value alone is insufficient. Source recipes, test receipts, actual
+process epochs, bounded runtime courses and remaining limits are recorded in
+[the weapon precision index](M15-WEAPON-LIVE-PRECISION-VERIFICATION.json).

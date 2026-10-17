@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "purpose": "Stock unenchanted Iron Mace three ordinary contacts on spell-free Creature; distinguish Blunt20 from Blade10, preserve skill/item across two fresh loads, and reach captured original live third-contact inputs. No outcome commands.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_probe": {
+    "path": "build/oblivion-compat/m15/S4/creature-victim-blunt-single-three-hit-oracle-01/report.json",
+    "sha256": "3b68e0fd0bc21ca3431af864606863e172497af4d5fa66b1dd373bee708b9443",
+    "profiles": 1,
+    "hits": 3,
+    "scope": "Three sequential ordinary multiplier1 full484F80 weapon damage query,547240 base-damage wear,5F3870/484850 current-condition and publication paths in actual live x87 PC007F mode. Supplied actor AVs/base Fatigue/damage/item condition and RTTI/reference/publication boundaries as pinned entry02/condition03; current second-hit condition comes only from original first-hit wear. Iron Mace000D82 inputs: type2, damage10/max140/condition140, Blunt20 versus Blade10/Luck50/Strength40, source Fatigue140 then131.5 then123/base140, bonus0; installed ordinary multiplier1 and wear.06. Second current condition comes from first original wear. Fatigue inputs supplied from independently established attack-cost rule7+.1*15; this probe does not execute spending. No contact, acquisition, armor/block/reactions/attack debit or full caller execution.",
+    "goldens": [
+      {
+        "health": 2.375,
+        "health_bits": 1075314688,
+        "wear": 0.5999999642372131,
+        "condition": 139.39999389648438
+      },
+      {
+        "health": 2.297966718673706,
+        "health_bits": 1074991587,
+        "wear": 0.5999999642372131,
+        "condition": 138.79998779296875
+      },
+      {
+        "health": 2.221243143081665,
+        "health_bits": 1074669785,
+        "wear": 0.5999999642372131,
+        "condition": 138.19998168945312
+      }
+    ],
+    "accepted_controlword": 127,
+    "other_controlwords": "Sensitivity evidence only; differ from actual live007F."
+  },
+  "weapon_source": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "weapons": [
+      {
+        "editor_id": "WeapIronMace",
+        "id": "000d82",
+        "data_hex": "020000006666663f0000803f00000000110000008c000000000070410a00",
+        "type": 2,
+        "speed": 0.8999999761581421,
+        "reach": 1.0,
+        "flags": 0,
+        "value": 17,
+        "health": 140,
+        "weight": 15.0,
+        "damage": 10,
+        "enchantment": [],
+        "record_payload_sha256": "6018881b1c16848b0ba6caef1355f515fe52d38c2db55b105ba4d09ad7fea27d"
+      }
+    ]
+  },
+  "expected": {
+    "Player_Fatigue": [
+      140.0,
+      131.5,
+      123.0,
+      114.5
+    ],
+    "Creature_Health": [
+      20.0,
+      17.625,
+      15.327033042907715,
+      13.105790138244629
+    ],
+    "Creature_Fatigue": [
+      153.0,
+      153.0,
+      153.0,
+      153.0
+    ],
+    "weapon_condition": [
+      140.0,
+      139.39999389648438,
+      138.79998779296875,
+      138.19998168945312
+    ],
+    "player_blade": 10,
+    "player_blunt": [
+      10,
+      20,
+      20,
+      20
+    ],
+    "weapon": "content:oblivion.esm:000d82",
+    "source": "Independent original full484F80/547240/5F3870 outputs; original4BB060 AV trace explicitly chooses16 with Blade10/Blunt20. Fatigue spending8.5 derives from verified attack cost7+.1*15; spending not executed by this oracle."
+  },
+  "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+  "setup": "Only initial AddItem, EquipItem and native SetAV Blunt20. Normal keyboard readies and attacks; second and third processes neither sets skill nor adds/equips/readies again. Read-only GetAV markers and exact binary saves inspect authority.",
+  "boundaries": "Actual native damage/type->AV16 selection, wear and condition writer execute. AV/base-fatigue, item damage/condition/maximum and publication boundaries are declared in pinned original entry02/condition03; contact/debit/reactions not executed in this arithmetic probe. Runtime acceptance remains separate.",
+  "live_precision_evidence": "weapon-damage-fpu-original-live-01/retry03-sample.json and weapon-damage-live-replay-02/report.json; actual ordinary5FF515 call uses007F."
+}

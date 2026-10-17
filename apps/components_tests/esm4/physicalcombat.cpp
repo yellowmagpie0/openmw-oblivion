@@ -541,6 +541,37 @@ TEST(ESM4PhysicalCombat, FatigueUsesNativeSettingsWithoutRatioClamping)
     EXPECT_FLOAT_EQ(ESM4::combatFatigueMultiplier(1.f, compiled), 1.25f);
 }
 
+TEST(ESM4PhysicalCombat, WeaponDamageMatchesObservedLiveSinglePrecision)
+{
+    // Actual ordinary Mace call5FF510 ->484F80 ->5FF515, image a8f313845c1545e9... .
+    // Live getters: Blunt20, Luck50, Strength40, current/base Fatigue123/140,
+    // current/max condition138.79998779296875/140; all observed FPCW007F.
+    // Full native replay supplies these two float arguments to547070.
+    const ESM4::WeaponDamageInput input{20, 50, 40, 10,
+        0.9914284944534302f, 0.8785714507102966f};
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::weaponDamage(input, installed)), 1074669785u);
+}
+
+TEST(ESM4PhysicalCombat, WeaponDamageMatchesOriginalSinglePrecisionArithmetic)
+{
+    // Independent full547070 executions, including integer/denormal halfway
+    // cases that lose their perturbation with double or long double arithmetic.
+    struct Row
+    {
+        ESM4::WeaponDamageInput input;
+        ESM4::PhysicalCombatSettings settings;
+        std::uint32_t bits;
+    };
+    const Row rows[] = {
+#include "weapondamage_expected.inc"
+    };
+    for (std::size_t i = 0; i < std::size(rows); ++i)
+    {
+        SCOPED_TRACE(i);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::weaponDamage(rows[i].input, rows[i].settings)), rows[i].bits);
+    }
+}
+
 TEST(ESM4PhysicalCombat, WeaponTermsPreserveRepairedConditionAndAttributeCap)
 {
     ESM4::WeaponDamageInput input{50, 50, 50, 100, .5f, .5f};
