@@ -15232,3 +15232,17 @@ Evidence and limitations: [Creature victim verification index](M15-CREATURE-VICT
 and editable m15_creature_victim_contact_native_probe.json. These accept bounded
 spell-free incoming resources/timed force; active Creature block, effects,
 full recovery/knockdown/HUD and complete S4 matrices remain open.
+
+### Native enemy Health bar lifetime input
+
+The hash-bound original initializer 9E9E30..9E9E49 loads float 2.5 from A45128,
+pushes the actual fEnemyHealthBarTimer editor ID, selects storage B37120 and
+calls 41BAE0. A constructor-argument capture boundary returns ret8; actual
+constructor registration and original HUD rendering do not execute. Both x87
+precision words agree; installed master SHA256 a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70
+contains no override. The native HUD adapter honors a loaded float override and
+otherwise uses 2.5; TES3 settings retain their separate profile behavior. This
+is input provenance and minimal shared-layout live feedback, without a claim
+of original UI appearance, alpha or countdown parity. Initial missing-TES3-GMST
+failure and corrected real captures are retained in
+[the HUD verification index](M15-MELEE-ENEMY-HUD-VERIFICATION.json).

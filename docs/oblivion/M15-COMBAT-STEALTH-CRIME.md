@@ -6,6 +6,39 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 live melee target Health feedback — 2026-10-16
+
+Successful Player native contacts now select their committed victim in the HUD.
+The native profile uses fEnemyHealthBarTimer instead of the shared TES3
+fNPCHealthBarTime/Fade dependencies. An independent original initializer
+9E9E30..9E9E49 captures its name, storage B37120 and default 2.5 at the declared
+constructor boundary 41BAE0, in both x87 modes; the installed master has no
+override. The shared HUD displays full opacity for that lifetime. Original
+layout, alpha curve and countdown parity are not claimed.
+
+Actual normal and ASan/UBSan keyboard courses capture no enemy bar before a
+hit, 56 yellow pixels after action 2 and 52 after action 3, then no bar after
+simulation barrier 10. The 61-pixel client maps expected 92%/85% native target
+Health to those fills. Dog Health 20->18.579999923706055->17.170499801635742,
+Fatigue 153->151.28999328613281->149.58525085449219 and Player Fatigue 140->133->126
+match independent damage inputs. Each contact owns one delta; native actor
+values, bases/life, RNG and inventories otherwise remain unchanged, and the
+complete F5 payload re-encodes byte-exactly.
+
+Both builds pass 29 selected engine cases with exact inventories and no skips
+or failures. Selection: `*Melee*:*Blocking*:*PhysicalContact*:*CreatureVictim*`.
+Python passes 313 tests. Source fingerprint: `7f34794891533fa68e443e8e8684d830b26c20b8b3d9d1e0771fcc496e5b609d`.
+Full 1,618-test engine coverage belongs to the preceding Creature-victim chunk;
+the HUD change reruns the relevant selection. ASan leak checks are disabled.
+The initial normal attempt caught the missing TES3 setting after the hit had
+committed; it is retained as failed. The concurrent initial sanitizer attempt
+was also stopped and is not accepted. Corrected 02 runs have no frame error.
+
+See [the verification index](M15-MELEE-ENEMY-HUD-VERIFICATION.json), executed
+manifests and native initializer protocol. First-person torso occlusion and
+Creature geometry artifacts remain visible. Mastery, recovery/knockdown and
+the full input/view/FPS/interrupt/restart gates remain open. **S4 is incomplete.**
+
 ## S4 Creature victims through owned physical contact — 2026-10-16
 
 Spell-free Creature victims now join ordinary unarmed and unenchanted weapon

@@ -9,7 +9,9 @@
 
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm3/loadmgef.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include <components/misc/resourcehelpers.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/settings/values.hpp>
 
@@ -576,6 +578,11 @@ namespace MWGui
         // Therefore any value < 1 should show as an empty health bar. We do the same in statswindow :)
         mEnemyHealth->setProgressPosition(static_cast<size_t>(stats.getHealth().getRatio() * 100));
 
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            mEnemyHealth->setAlpha(1.f);
+            return;
+        }
         static const float fNPCHealthBarFade = MWBase::Environment::get()
                                                    .getESMStore()
                                                    ->get<ESM::GameSetting>()
@@ -588,11 +595,24 @@ namespace MWGui
     void HUD::setEnemy(const MWWorld::Ptr& enemy)
     {
         mEnemyActor = enemy.getCellRef().getRefNum();
-        mEnemyHealthTimer = MWBase::Environment::get()
-                                .getESMStore()
-                                ->get<ESM::GameSetting>()
-                                .find("fNPCHealthBarTime")
-                                ->mValue.getFloat();
+        const auto& environment = MWBase::Environment::get();
+        if (environment.getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            // Original9E9E3F initializes fEnemyHealthBarTimer/B37120 to2.5.
+            // The shared HUD layout uses this native lifetime, with no TES3
+            // fNPCHealthBarTime/Fade dependency in the Oblivion profile.
+            mEnemyHealthTimer = 2.5f;
+            for (const auto& setting : environment.getESMStore()->get<ESM4::GameSetting>())
+                if (Misc::StringUtils::ciEqual(setting.mEditorId, "fEnemyHealthBarTimer"))
+                {
+                    if (const auto* value = std::get_if<float>(&setting.mData))
+                        mEnemyHealthTimer = *value;
+                    break;
+                }
+        }
+        else
+            mEnemyHealthTimer = environment.getESMStore()->get<ESM::GameSetting>()
+                                   .find("fNPCHealthBarTime")->mValue.getFloat();
         if (!mEnemyHealth->getVisible())
             mWeaponSpellBox->setPosition(mWeaponSpellBox->getPosition() - MyGUI::IntPoint(0, 20));
         mEnemyHealth->setVisible(true);

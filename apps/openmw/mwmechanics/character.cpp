@@ -1482,6 +1482,11 @@ namespace MWMechanics
         }
         const auto contact = commitOblivionMeleeContact(*world, strike.mActionId, mPtr, selectedTarget,
             reach, weaponWeight, oblivionNormalizedDifficulty(Settings::game().mDifficulty), isSneaking());
+        if (contact && !contact->mVictim.isEmpty() && mPtr == world->getPlayerPtr())
+        {
+            if (auto* window = MWBase::Environment::get().getWindowManagerOrNull())
+                window->setEnemy(contact->mVictim);
+        }
         if (contact && contact->mVictim.isEmpty())
         {
             // Stock TES4 melee KFs have no sound key. Emit after the contact

@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x9e9e30",
+  "stop": "0x9e9e49",
+  "constructor_boundary": "0x41bae0 captures name/float/storage and returns ret8; actual constructor/registration not executed",
+  "rows": [
+    {
+      "storage": "0xb37120",
+      "name": "fEnemyHealthBarTimer",
+      "value": 2.5
+    },
+    {
+      "storage": "0xb37120",
+      "name": "fEnemyHealthBarTimer",
+      "value": 2.5
+    }
+  ],
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "installed_master_overrides": [],
+  "scope": "Actual initializer argument construction proves native default2.5; master inventory separately audits installed override. Does not establish original HUD alpha/layout or countdown implementation.",
+  "purpose": "Native enemy Health HUD lifetime input for shared minimal live feedback; no original pixel/alpha equivalence claim",
+  "evidence": "build/oblivion-compat/m15/S4/native-enemy-health-hud-01/initializer.json",
+  "runtime_expectations": {
+    "before_hit": "Enemy Health bar absent",
+    "after_action2": "Yellow enemy Health bar reflects floor(18.579999923706055/20*100)=92 percent",
+    "after_action3": "Yellow enemy Health bar reflects floor(17.170499801635742/20*100)=85 percent",
+    "after_simulation_barrier10": "Bar expired using native2.5-second lifetime; resources unchanged after action3"
+  }
+}

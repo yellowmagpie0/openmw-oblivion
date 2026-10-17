@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "status": "Minimal live enemy Health HUD verified; full M15S4 incomplete",
+  "parent_commit": "09303d3efb15474815f058a5ab1014977e67dfe4",
+  "tested_source_fingerprint": "7f34794891533fa68e443e8e8684d830b26c20b8b3d9d1e0771fcc496e5b609d",
+  "source_sha256": {
+    "apps/openmw/mwmechanics/character.cpp": "406e0161af9ea582b88ebaf35816cc64fa565b2cf75aaf922eeeb158bb239b17",
+    "apps/openmw/mwgui/hud.cpp": "ae849f968d0eadd00bf969482f3b84536005159751a4270332708e2a025b97c2",
+    "scripts/data/oblivion_compat/m15_enemy_health_hud_native_probe.json": "993321652f4c69a53d1aa7db3ca9e3bfdfe68a73f29402a3db0d82436f697514",
+    "scripts/data/oblivion_compat/oblivion_m15_melee_enemy_hud.json": "46efa9eb064dbb2a362d8a6f29d0c960ce3e029f7d36a985e6aa220e9c8e2bee",
+    "scripts/data/oblivion_compat/oblivion_m15_melee_enemy_hud_sanitized.json": "86f72a867183846d5c34daed1964706067f21b1129b0f70d3ffc21bf6cda12eb"
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-main-02/verification.json",
+      "sha256": "cde115b384602ebc022ff83803f7ee0a4e54ad1bf86179453dab5b6c1398ccd5",
+      "fingerprint": "7f34794891533fa68e443e8e8684d830b26c20b8b3d9d1e0771fcc496e5b609d",
+      "results": {
+        "engine": {
+          "executed": 29,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Melee*:*Blocking*:*PhysicalContact*:*CreatureVictim*",
+          "binary_sha256": "1181ce960ced992a915f6e82a7700ac360a7f064464f3dd083d8080283e7c0a8",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "dd36a2320f67d92b7960767f6e7ec9a977ea09f55d5be8ce3f48f95264f9e167",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 313,
+          "passed": true,
+          "log_sha256": "34106c8c9f89943be06effb26da17a6ba9e2ae869007338ae40ed00b58cccf34"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-sanitized-02/verification.json",
+      "sha256": "c41031b834d257a71f87a7153aa53f661703165c12d02d767b352b863e43042b",
+      "fingerprint": "7f34794891533fa68e443e8e8684d830b26c20b8b3d9d1e0771fcc496e5b609d",
+      "results": {
+        "engine": {
+          "executed": 29,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*Melee*:*Blocking*:*PhysicalContact*:*CreatureVictim*",
+          "binary_sha256": "b1625236a706bb4434d802ed12c39f050e10f9c37ca6f35c7c112861daf3fcb3",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "605ecd865640334814e779c6bc0cb7aed6ee51e454a5e248db7f4c73e59ca9ec",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/verification.json",
+      "sha256": "fccca6476070c1286fce6e222b9664b8d879958e1f71978217626a48091e4d47",
+      "report": {
+        "passed": true,
+        "build": "normal",
+        "process_epoch": {
+          "pid": 961566,
+          "start_ticks": 35877895,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "24cb029680eb4b33dd55ce6384ccbd14c6edfbd730cfe1a8073b2912acae4825",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          }
+        },
+        "save": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+        "save_sha256": "091203f7c9b4e588d830e20dcd6c41b068cf7f6ef0de235ac414ebdeddd182ae",
+        "payload_sha256": "1991b2cf1e10ffce3730967b8adf124ead87df63f5dc6bab286eb2ee582f948e",
+        "captures": [
+          {
+            "phase": "before-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/before-hit.png",
+            "sha256": "1ba392212d94db096537ef13763ba381a36ba099f48c90175a2d2b0a53449889",
+            "yellow_pixels_y657_x14_through74": 0
+          },
+          {
+            "phase": "after-first-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/after-first-hit.png",
+            "sha256": "7d956fa2105b9f388ae9a1992c23cace5061b9a9c51874c6faf995c179363bd0",
+            "yellow_pixels_y657_x14_through74": 56
+          },
+          {
+            "phase": "after-second-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/after-second-hit.png",
+            "sha256": "ede5cd7683fcc16b8dc46cc388a007371d0158b93008591cdb394eec9dcb72fb",
+            "yellow_pixels_y657_x14_through74": 52
+          },
+          {
+            "phase": "after-hud-expiry",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-normal-02/first/after-hud-expiry.png",
+            "sha256": "f7204573457095fffa54f04e991f2c6687caa65b01a5ff071798baf40005830e",
+            "yellow_pixels_y657_x14_through74": 0
+          }
+        ],
+        "scope": "Normal keyboard input, exactly two owned Creature hits, expected native resources and F5. Shared HUD bar absent before contact, expected92/85 percent mapped to56/52 yellow pixels of61-pixel client, then absent after simulation barrier10 exceeds native2.5-second lifetime. Actual original initializer and installed-master audit support timer input; original UI layout/alpha/countdown parity not established. Known first-person body/Creature geometry limitations retained. ASan leak checks disabled."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/verification.json",
+      "sha256": "60383b076d05a249dc64e10b60daae2cdec422507cf998ba2376aeddbcb71880",
+      "report": {
+        "passed": true,
+        "build": "sanitized",
+        "process_epoch": {
+          "pid": 962059,
+          "start_ticks": 35881626,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "13ef6bc3b73d54c576db379fad7ea96b0f45ee8f027ab2e6f782a052d1d79ad8",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+            "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+            "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+          }
+        },
+        "save": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+        "save_sha256": "011e87a4f2aee9ae84f766bc6e787c8427050898d6d6efdb79501abfd7fd5de0",
+        "payload_sha256": "a476f8af095f8e59a0aed5326ce32144c201d491e856e6825aad1afde8f2f3e2",
+        "captures": [
+          {
+            "phase": "before-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/before-hit.png",
+            "sha256": "86ea4e7313d921d32c5a6dbb25fd2490be53a994f86341164600353607b5651f",
+            "yellow_pixels_y657_x14_through74": 0
+          },
+          {
+            "phase": "after-first-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/after-first-hit.png",
+            "sha256": "55e6c94a9443ff49392d4ba392df3c24ee468af26358e8f2fe540b4a12dcdec6",
+            "yellow_pixels_y657_x14_through74": 56
+          },
+          {
+            "phase": "after-second-hit",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/after-second-hit.png",
+            "sha256": "808c442a9804cf10bc3549507f61ec3ee9e6cf3eba6bdf95176fdd6813e704dd",
+            "yellow_pixels_y657_x14_through74": 52
+          },
+          {
+            "phase": "after-hud-expiry",
+            "path": "build/oblivion-compat/m15/S4/melee-enemy-hud-runtime-sanitized-02/first/after-hud-expiry.png",
+            "sha256": "2414e326492262216e5c87c9a613632e85f2bed8235a956df8bed284d5fc91f0",
+            "yellow_pixels_y657_x14_through74": 0
+          }
+        ],
+        "scope": "Normal keyboard input, exactly two owned Creature hits, expected native resources and F5. Shared HUD bar absent before contact, expected92/85 percent mapped to56/52 yellow pixels of61-pixel client, then absent after simulation barrier10 exceeds native2.5-second lifetime. Actual original initializer and installed-master audit support timer input; original UI layout/alpha/countdown parity not established. Known first-person body/Creature geometry limitations retained. ASan leak checks disabled."
+      }
+    }
+  },
+  "original_initializer": {
+    "passed": true,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "0x9e9e30",
+    "stop": "0x9e9e49",
+    "constructor_boundary": "0x41bae0 captures name/float/storage and returns ret8; actual constructor/registration not executed",
+    "rows": [
+      {
+        "storage": "0xb37120",
+        "name": "fEnemyHealthBarTimer",
+        "value": 2.5
+      },
+      {
+        "storage": "0xb37120",
+        "name": "fEnemyHealthBarTimer",
+        "value": 2.5
+      }
+    ],
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "installed_master_overrides": [],
+    "scope": "Actual initializer argument construction proves native default2.5; master inventory separately audits installed override. Does not establish original HUD alpha/layout or countdown implementation."
+  },
+  "retained_failures": [
+    {
+      "path": "melee-enemy-hud-runtime-normal-01/first/failed-hud-integration.json",
+      "reason": "Initial shared HUD request threw after native contact because TES3 fNPCHealthBarTime absent. Deliberately terminated; failed launcher retained."
+    },
+    {
+      "path": "melee-enemy-hud-runtime-sanitized-01/first/failed-hud-integration.json",
+      "reason": "Concurrent initial sanitizer attempt stopped with same known integration defect before acceptance. No passing HUD claim."
+    }
+  ],
+  "limits": [
+    "Shared HUD layout and full opacity for native lifetime; original UI appearance/fade/countdown parity not asserted",
+    "Known first-person torso occlusion and Creature geometry artifacts remain",
+    "No full interruption/mastery/reaction/input/view/FPS/restart matrix from this bounded HUD course",
+    "29 selected engine cases per build; full1618/122 suites belong to parent09303d3efb",
+    "ASan leak checks disabled"
+  ],
+  "late_metadata_only": [
+    "Verification index, milestone, delivery audit and native-rule provenance"
+  ]
+}
