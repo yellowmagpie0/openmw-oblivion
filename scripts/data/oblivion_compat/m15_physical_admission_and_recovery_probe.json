@@ -84,7 +84,9 @@
       "Foreign owners, competing/consumed candidates, changed reference scale, replaced capsule and destroyed PhysicsSystem reject. Competing candidates stay invalid after committed bodies are removed.",
       "Integration case exercises 0/1/2 physics workers and leaves actor values/lifecycle unchanged.",
       "Renderer preparation leaves all callback chains and child slots unchanged; stale local pose, callbacks, topology, actor/cell binding, foreign owner and expired renderer reject before handoff.",
-      "Invalid body inertia fails before renderer detachment or a controller rebuild; valid admission also avoids rebuilding the already selected controllers."
+      "Invalid body inertia fails before renderer detachment or a controller rebuild; valid admission also avoids rebuilding the already selected controllers.",
+      "Compound native frame stages generated controller forces before blend-body drives and advances selected controllers/shared clocks once.",
+      "Rejected scene publication preserves body poses/velocities/packed lanes/activation, controller lists, target state and shared clock; scheduler rejects stale actor handles and preserves complete snapshots with 0/1/2 physics workers."
     ]
   },
   "pending_live_acceptance": [

@@ -5503,3 +5503,112 @@ namespace
         EXPECT_EQ(input, osg::Vec3f(1, 2, 3));
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, PhysicalFrameStagesForceBeforeDriveAndAdvancesControllersOnce)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, .5f, .5f}}};
+        for (const std::uint32_t selector : {0u, 2u})
+        {
+            SCOPED_TRACE(selector);
+            NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+            auto states = actor.captureNativeBlendStates();
+            states[0].mRequestedMotion = 1;
+            actor.restoreNativeBlendStates(states);
+            ESM4::PhysicalVelocityControllerState velocity;
+            velocity.mTiming = {0xd, 1, 0, 0, .25f};
+            velocity.mForceVector = {2, -3, 4, 0};
+            const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> controllers{{{8, 8, velocity, true}}};
+            actor.restoreNativeVelocityControllers(controllers);
+            const std::array<std::uint32_t, 1> nodes{8};
+            const auto order = actor.captureNativeControllerOrder(nodes);
+            const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{8, osg::Matrixf::identity()}}};
+            ESM4::PhysicalBlendTimeCache cache;
+            unsigned calls = 0;
+            const auto before = actor.capture()[0];
+            const auto publish = [&](std::span<const NifBullet::RagdollNativeBlendPublication> values) {
+                ++calls;
+                EXPECT_EQ(values.size(), 1u);
+                EXPECT_EQ(actor.capture()[0].mLinearVelocity, before.mLinearVelocity);
+                EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mClock.mPreviousTime,
+                    -std::numeric_limits<float>::max());
+            };
+            ASSERT_EQ(actor.updateNativePhysicalFrame(bones, order, 0.f, cache,
+                1.f / 120, selector, 0.f, publish).size(), 1u);
+            EXPECT_EQ(calls, 1u);
+            // Existing original-force fixture produces3.2 world X. A zero-X
+            // drive with velocity gain.5 retains half; PhysicsToScene retains all.
+            EXPECT_FLOAT_EQ(float(actor.capture()[0].mLinearVelocity.x()), selector == 0 ? 1.6f : 3.2f);
+            EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState.mFrameDelta, .016f);
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mClock.mPreviousTime, 0.f);
+            EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 1u);
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PhysicalFrameSceneRejectionPreservesForcesClocksAndSleepingBody)
+    {
+        auto& body = mGraph.mBodies.front();
+        body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, .25f, {{.25f, .5f, .5f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 2.f, mPoses, 1, -1);
+        ESM4::PhysicalVelocityControllerState velocity;
+        velocity.mTiming = {0xd, 1, 0, 0, .25f}; velocity.mForceVector = {2, -3, 4, 0};
+        const std::array<NifBullet::RagdollNativeVelocityControllerState, 1> controllers{{{8, 8, velocity, true}}};
+        actor.restoreNativeVelocityControllers(controllers);
+        auto* rigid = btRigidBody::upcast(actor.collisionObjects()[0]);
+        rigid->setActivationState(ISLAND_SLEEPING);
+        const auto before = actor.capture();
+        const auto packed = actor.captureNativePackedVelocities();
+        const auto blends = actor.captureNativeBlendControllers();
+        const auto gains = actor.captureNativeBlendStates();
+        ESM4::PhysicalBlendTimeCache cache;
+        const auto initialCache = cache;
+        const std::array<std::uint32_t, 1> nodes{8};
+        const auto order = actor.captureNativeControllerOrder(nodes);
+        const std::array<NifBullet::RagdollBoneWorldPose, 1> bones{{{8, osg::Matrixf::identity()}}};
+        const auto reject = [](auto) { throw std::runtime_error("renderer rejected physical frame"); };
+        const auto unchanged = [&] {
+            const auto currentPacked = actor.captureNativePackedVelocities();
+            ASSERT_EQ(currentPacked.size(), packed.size());
+            EXPECT_EQ(currentPacked[0].mRecord, packed[0].mRecord);
+            EXPECT_EQ(currentPacked[0].mVelocities, packed[0].mVelocities);
+            const auto currentBlends = actor.captureNativeBlendControllers();
+            ASSERT_EQ(currentBlends.size(), blends.size());
+            EXPECT_EQ(currentBlends[0].mRecord, blends[0].mRecord);
+            EXPECT_EQ(currentBlends[0].mTargetNode, blends[0].mTargetNode);
+            EXPECT_EQ(currentBlends[0].mAttachedNode, blends[0].mAttachedNode);
+            EXPECT_EQ(currentBlends[0].mState, blends[0].mState);
+            const auto currentVelocities = actor.captureNativeVelocityControllers();
+            ASSERT_EQ(currentVelocities.size(), controllers.size());
+            EXPECT_EQ(currentVelocities[0].mAttachedNode, controllers[0].mAttachedNode);
+            EXPECT_EQ(currentVelocities[0].mTargetNode, controllers[0].mTargetNode);
+            EXPECT_EQ(currentVelocities[0].mPrecedesBlend, controllers[0].mPrecedesBlend);
+            EXPECT_EQ(currentVelocities[0].mState, controllers[0].mState);
+            const auto currentGains = actor.captureNativeBlendStates();
+            ASSERT_EQ(currentGains.size(), gains.size());
+            EXPECT_EQ(currentGains[0].mBodyRecord, gains[0].mBodyRecord);
+            EXPECT_EQ(currentGains[0].mCollisionFlags, gains[0].mCollisionFlags);
+            EXPECT_EQ(currentGains[0].mRequestedMotion, gains[0].mRequestedMotion);
+            EXPECT_FLOAT_EQ(currentGains[0].mGains.mHierarchy, gains[0].mGains.mHierarchy);
+            EXPECT_FLOAT_EQ(currentGains[0].mGains.mVelocity, gains[0].mGains.mVelocity);
+            EXPECT_EQ(cache, initialCache);
+            EXPECT_FALSE(rigid->isActive());
+        };
+        EXPECT_THROW(actor.updateNativePhysicalFrame(bones, order, 0.f, cache, 1.f / 120, 0, 0.f, reject),
+            std::runtime_error);
+        EXPECT_EQ(actor.capture()[0].mPose, before[0].mPose);
+        EXPECT_EQ(actor.capture()[0].mLinearVelocity, before[0].mLinearVelocity);
+        unchanged();
+        auto bad = bones; bad[0].mPose = osg::Matrixf::scale(2, 2, 2);
+        EXPECT_THROW(actor.updateNativePhysicalFrame(bad, order, 0.f, cache, 1.f / 120, 0, 0.f),
+            std::invalid_argument);
+        unchanged();
+    }
+}

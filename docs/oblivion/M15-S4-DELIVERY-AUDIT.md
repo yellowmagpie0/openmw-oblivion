@@ -4836,3 +4836,18 @@ capsule suspension policy. The raw3 capture is not clearly prone and does not
 close a visual gate. Exact inputs, hashes, cleanup and limits are in the
 [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json). No additional fork
 normal-input reaction gate is closed; M15S4 remains incomplete.
+
+
+The compound native physical-frame API now stages blend and generated velocity
+controllers together, uses generated force candidates before body drives, and
+publishes controller clocks once. Scene rejection preserves body state,
+activation, controllers, target metadata and the shared clock. Scheduler tests
+exercise stale handles and rejected scenes with zero, one and two workers.
+The tested source passes all 2811 component cases/269 suites and 1625 engine
+cases/122 suites normally; all 1625 engine cases and 145 focused ragdoll cases
+also pass under ASan/UBSan with leak detection disabled. Counts, source and
+artifact hashes, selections and the retained test-compilation failure are in
+the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This is a frame API checkpoint. Automatic reaction admission/driving, native
+reference/root motion and proxy policy, prepared frame timing, GetUp playback
+and recovery save/restart still require integration and actual runtime proof.

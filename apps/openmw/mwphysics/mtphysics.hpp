@@ -271,6 +271,11 @@ namespace MWPhysics
             std::span<const std::uint32_t> controllerOrder, float inputTime,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
             const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene = {});
+        std::vector<NifBullet::RagdollNativeBlendPublication> updateActorRagdollPhysicalFrame(
+            const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBoneWorldPose> bones,
+            std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime,
+            float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+            const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene = {});
         // Serialized with movement workers; controller supplies resolved inverse time.
         void driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
             std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds);

@@ -880,6 +880,15 @@ namespace
             EXPECT_THROW(physics.advanceActorRagdollPhysicalControllers(ptr, badPhysicalOrder, 3.f), std::invalid_argument);
             EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState.mClock.mPreviousTime,
                 -std::numeric_limits<float>::max());
+            const auto beforePhysicalFrame = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            const auto beforePhysicalCache = physics.captureNativeBlendTimeCache();
+            EXPECT_THROW(physics.updateActorRagdollPhysicalFrame(previous, frameBones, expectedOrder,
+                3.f, 1.f / 120, 0), std::invalid_argument);
+            EXPECT_THROW(physics.updateActorRagdollPhysicalFrame(ptr, frameBones, expectedOrder,
+                3.f, 1.f / 120, 0, [](auto) { throw std::runtime_error("scene rejected physical frame"); }),
+                std::runtime_error);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforePhysicalFrame);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), beforePhysicalCache);
             physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.f);
             EXPECT_FLOAT_EQ(float(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x()),
                 float(beforeControllerForce.mLinearVelocity.x()) + 1.6f);

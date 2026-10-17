@@ -455,6 +455,16 @@ namespace NifBullet
         // recursive scene traversal; those remain separate caller boundaries.
         void advanceNativePhysicalControllers(std::span<const RagdollNativeControllerReference> controllerOrder,
             float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache);
+        // One selected-controller phase followed by blend-body publication.
+        // Includes generated velocity forces and controller removal. Stage all
+        // results before the scene hook; a rejected scene leaves bodies,
+        // controllers, activation and the shared clock cache unchanged.
+        std::vector<RagdollNativeBlendPublication> updateNativePhysicalFrame(
+            std::span<const RagdollBoneWorldPose> bones,
+            std::span<const RagdollNativeControllerReference> controllerOrder,
+            float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
         // Original normal8AB440 selected blend-controller/velocity setup.
         // Caller resolves per-body Down duration and stored requested-motion
         // synchronization first. A new velocity uses the resolved pass-out duration
@@ -535,6 +545,14 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        struct NativeControllerFrame;
+        struct NativeForce;
+        NativeControllerFrame prepareNativeControllerFrame(
+            std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
+            const ESM4::PhysicalBlendTimeCache& sharedTimeCache) const;
+        std::vector<NativeForce> prepareNativeForces(
+            std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies) const;
+        void publishNativeForces(std::span<const NativeForce> forces);
         void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool forced,
             Nif::NativeTransformPrecision precision);
         void validateRestore(std::span<const RagdollBodyState> states) const;
@@ -551,7 +569,8 @@ namespace NifBullet
         std::vector<RagdollNativeBlendPublication> updateNativeBlendsImpl(
             std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
-            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene);
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene,
+            std::span<const NativeForce> forces = {});
         std::vector<RagdollNativeBlendPublication> updateNativeBlendControllersImpl(
             std::span<const RagdollNativeBlendControllerTarget> targets,
             std::span<const RagdollBoneWorldPose> completeBones, float inputTime,

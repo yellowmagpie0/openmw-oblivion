@@ -1887,6 +1887,19 @@ namespace MWPhysics
             NifBullet::RagdollNativeDefaultGravityZ, publishScene);
     }
 
+    std::vector<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollPhysicalFrame(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBoneWorldPose> bones,
+        std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+        const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.updateNativePhysicalFrame(bones, controllerOrder, inputTime,
+            *mNativeBlendTimeCache, preparedFrameSeconds, rawUpdateSelector,
+            NifBullet::RagdollNativeDefaultGravityZ, publishScene);
+    }
+
     void PhysicsTaskScheduler::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

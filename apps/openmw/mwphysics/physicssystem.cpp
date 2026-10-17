@@ -1223,6 +1223,16 @@ namespace MWPhysics
             preparedFrameSeconds, rawUpdateSelector, publishScene);
     }
 
+    std::vector<NifBullet::RagdollNativeBlendPublication> PhysicsSystem::updateActorRagdollPhysicalFrame(
+        const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollBoneWorldPose> bones,
+        std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+        const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
+    {
+        return mTaskScheduler->updateActorRagdollPhysicalFrame(ptr, bones, controllerOrder, inputTime,
+            preparedFrameSeconds, rawUpdateSelector, publishScene);
+    }
+
     void PhysicsSystem::driveActorRagdollPoseVelocities(const MWWorld::Ptr& ptr,
         std::span<const NifBullet::RagdollNativeVelocityDrive> drives, float inverseFrameSeconds)
     {

@@ -1420,5 +1420,179 @@
       "path": "build/oblivion-compat/m15/S4/native-recovery-proxy-static-01/world-rtti.json",
       "sha256": "922beab6ca2457a16fde2ec0ca64142a9fbf6159219ca95907868753a189a330"
     }
+  },
+  "compound_physical_frame_followup": {
+    "status": "Compound controller/force/blend-body frame checkpoint; full M15S4 remains incomplete",
+    "source_parent_commit": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+    "tested_source": {
+      "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+      "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+    },
+    "source_sha256": {
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "f61adae0286d7bebc5f7a2e48f9c55e180dadc9a6e22f1b9178dfcaeb21d4b40",
+      "apps/openmw/mwphysics/mtphysics.cpp": "50105fa424084748a974aa53130742090c0437875de70b0b7b2c594bf30824f5",
+      "apps/openmw/mwphysics/mtphysics.hpp": "bee57937a3b250dea7eff51e040a87dbcb3dd549a02c767aa90376861bfadac5",
+      "apps/openmw/mwphysics/physicssystem.cpp": "977606b23d23e294fb98e9c6969c69b10ba897cf00d3828bf14c8829c5ac9dd3",
+      "apps/openmw/mwphysics/physicssystem.hpp": "ce43591d09064f8de57b4a0e4b7065a562f71826505e702ca7e2f28e550d7270",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "e04acb096cb9593946091be6026243603540cd6ae66c550a4031925bfc355e50",
+      "components/nifbullet/actorragdollphysics.cpp": "7935ad6dab841f20afbfe6b5b46e14d1574926bbfd62a73b1381bc64a2353387",
+      "components/nifbullet/actorragdollphysics.hpp": "7f8212f4e6f045b4f2b35c1e20e39c94e3c74f0af17ab6adc1829b8abdb373f7"
+    },
+    "checks": {
+      "physical-frame-full-normal-02:components": {
+        "report": "build/oblivion-compat/m15/S4/physical-frame-full-normal-02/verification.json",
+        "report_sha256": "57c4419276eb2303e807390c61ee88b033f6f7a4b0e1eda9e656d223f6fed30c",
+        "source": {
+          "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+          "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+        },
+        "result": {
+          "executed": 2811,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4af0fe0748bf6a89851fd84cc49e546167247d20be0cf0c74f885a597a275905",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e3925b82aa78bed599c6697982f6b59e4c80dbf4e2f3c8205555470929c4f206",
+          "inventory_sha256": "0d19eee69d6de38d1075b920e5a03badf296153aded9fed0db5322e9f4b36798",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "physical-frame-full-normal-02:engine": {
+        "report": "build/oblivion-compat/m15/S4/physical-frame-full-normal-02/verification.json",
+        "report_sha256": "57c4419276eb2303e807390c61ee88b033f6f7a4b0e1eda9e656d223f6fed30c",
+        "source": {
+          "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+          "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+        },
+        "result": {
+          "executed": 1625,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d373ac9af3250aa8357da06cbb4d00007c7f39843f1a2d7948fb7531cd9c4ace",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1f82fbd277ab7d166faa1982b3cc2174a1a20f34796c49eb1e63590eaf899253",
+          "inventory_sha256": "61251f65dcf3c82e2c4904c902d5cd6ea43445590b5a405aec1b4e3627002665",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "physical-frame-engine-sanitized-02:engine": {
+        "report": "build/oblivion-compat/m15/S4/physical-frame-engine-sanitized-02/verification.json",
+        "report_sha256": "19f20253961de5a143e2041a88cd4ca46da5b798f5af57e135a23b74f4c5fd24",
+        "source": {
+          "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+          "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+        },
+        "result": {
+          "executed": 1625,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "11930d190927ecf331ff1ec224bf7f7ba3a9e2e890ec0892e7dea84b9243c631",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "eb6229693048ec556dca13bc7258318bcf80f39707a2b361375af35600e699fe",
+          "inventory_sha256": "61251f65dcf3c82e2c4904c902d5cd6ea43445590b5a405aec1b4e3627002665",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "physical-frame-components-normal-01:components": {
+        "report": "build/oblivion-compat/m15/S4/physical-frame-components-normal-01/verification.json",
+        "report_sha256": "d5e40edd2eae3d8b85c34ad27109e58c375acc3c792e31c95d34fc8826943128",
+        "source": {
+          "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+          "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+        },
+        "result": {
+          "executed": 145,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollPhysicsTest.*",
+          "binary_sha256": "4af0fe0748bf6a89851fd84cc49e546167247d20be0cf0c74f885a597a275905",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ee908ddf6a8e37bd94390fae9261910727e80a0f0085f14bcb87d20d92c83513",
+          "inventory_sha256": "c2a2007e7dab1443d59d6292cbdaf379a21aeb3497e36cbbac597d2e1f85cd5d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "physical-frame-components-sanitized-01:sanitize": {
+        "report": "build/oblivion-compat/m15/S4/physical-frame-components-sanitized-01/verification.json",
+        "report_sha256": "bf8e43229c25d62a2b343ae0ffd558c98e87eb0fbe9a3deb0b906c0630d3213c",
+        "source": {
+          "head": "c5c2392d943cb4ffea51ec4ba0db5e6a18169b8f",
+          "source_fingerprint": "55c589655237df2c79840e96fc9bc91f51f7875672cfcdcdac301895f238f686"
+        },
+        "result": {
+          "executed": 145,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollPhysicsTest.*",
+          "binary_sha256": "952c83a58d762abd2721180eb54271889805ea0ea8a0672456b518372fc781e0",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "57a31c0ed3e3784baa87f4e9b168369d9b574a2384e4f28b9ed232422d1b2eb9",
+          "inventory_sha256": "73dbbf08f2406d5a84d8f30961a4eda233d968260f9494dd62d7465d1c22d76e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "leak_coverage": false
+    },
+    "behavior": [
+      "Stage selected blend and generated velocity controllers once with the shared native time cache.",
+      "Compute generated forces before blend-body drives; drive candidates consume forced velocity without modifying live bodies.",
+      "Validate complete unique body-node input before publication; scene rejection preserves poses, velocities, packed lanes, sleeping/activation state, both controller lists, target metadata and shared cache.",
+      "Scheduler waits for physics workers and holds collision-world ownership across compound publication; engine tests cover stale actor handles and rejected scenes for zero, one and two workers."
+    ],
+    "scope_limits": [
+      "This API is not yet called by the automatic contact/reaction frame loop.",
+      "Nonblend recursive scene projection remains a separate boundary.",
+      "Prepared physical frame time, native actor-reference/root motion, collision proxy policy, GetUp selection/playback and recovery save/restart remain open.",
+      "No new fork normal-input KO/GetUp or end-to-end acceptance is claimed."
+    ],
+    "retained_failures": [
+      {
+        "path": "S4/physical-frame-syntax-01",
+        "reason": "New test compared wrapper DTOs without operator==; changed tests to compare state and identity fields."
+      }
+    ],
+    "verification_scope": "Normal full components and engine; sanitizer full engine and focused145 ActorRagdollPhysicsTest cases. Sanitizer focused components are not the full component inventory."
   }
 }

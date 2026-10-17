@@ -1726,10 +1726,18 @@ namespace NifBullet
         return updateNativeBlendsImpl(updates, preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, {});
     }
 
+    struct ActorRagdollPhysics::NativeForce
+    {
+        Impl::Body* mOwned;
+        btVector3 mLinear;
+        float mLinearW;
+    };
+
     std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendsImpl(
         std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
         std::uint32_t rawUpdateSelector, float nativeGravityZ,
-        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene,
+        std::span<const NativeForce> forces)
     {
         require(std::isfinite(nativeGravityZ), "invalid native blend gravity");
         ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
@@ -1814,7 +1822,9 @@ namespace NifBullet
                 change.mPose = centerPose;
             }
             const auto scenePhysical = ragdollNativeSceneTargetFromBodyPose(physical, found->mSceneOffset);
-            auto linear = body.getLinearVelocity();
+            const auto forced = std::find_if(forces.rbegin(), forces.rend(),
+                [&](const auto& force) { return force.mOwned == &*found; });
+            auto linear = forced == forces.rend() ? body.getLinearVelocity() : forced->mLinear;
             auto angular = body.getAngularVelocity();
             if (requestChanged && previousRequest != 6)
             {
@@ -1883,6 +1893,10 @@ namespace NifBullet
         // the callback succeeds; controller metadata is already staged too.
         if (publishScene)
             publishScene(result);
+        // Controller forces precede collision dispatch in the original frame.
+        // Their candidates were also used by velocity drives above, without
+        // changing a live body before the scene hook accepted this frame.
+        publishNativeForces(forces);
         // All admission, allocation and native computations precede publication.
         for (const auto& change : pending)
         {
@@ -2161,9 +2175,18 @@ namespace NifBullet
         return result;
     }
 
-    void ActorRagdollPhysics::advanceNativePhysicalControllers(
+    struct ActorRagdollPhysics::NativeControllerFrame
+    {
+        decltype(Impl::mBlendControllers) mBlends;
+        decltype(Impl::mVelocityControllers) mVelocities;
+        decltype(Impl::mBlendTargets) mTargets;
+        ESM4::PhysicalBlendTimeCache mCache;
+        std::vector<RagdollNativeForceRequest> mForces;
+    };
+
+    ActorRagdollPhysics::NativeControllerFrame ActorRagdollPhysics::prepareNativeControllerFrame(
         std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
-        ESM4::PhysicalBlendTimeCache& sharedTimeCache)
+        const ESM4::PhysicalBlendTimeCache& sharedTimeCache) const
     {
         require(controllerOrder.size() == mImpl->mBlendControllers.size() + mImpl->mVelocityControllers.size(),
             "native physical controller order must be complete");
@@ -2184,11 +2207,13 @@ namespace NifBullet
                             [&](const auto& value) { return value.mAttachedNode == reference.mIdentity; }),
                     "unknown native physical velocity controller");
         }
-        auto blends = mImpl->mBlendControllers;
-        auto velocities = mImpl->mVelocityControllers;
-        auto targets = mImpl->mBlendTargets;
-        auto cache = sharedTimeCache;
-        std::vector<RagdollNativeForceRequest> forces;
+        NativeControllerFrame frame{mImpl->mBlendControllers, mImpl->mVelocityControllers,
+            mImpl->mBlendTargets, sharedTimeCache, {}};
+        auto& blends = frame.mBlends;
+        auto& velocities = frame.mVelocities;
+        auto& targets = frame.mTargets;
+        auto& cache = frame.mCache;
+        auto& forces = frame.mForces;
         forces.reserve(velocities.size());
         for (const auto& reference : controllerOrder)
         {
@@ -2237,13 +2262,19 @@ namespace NifBullet
                         (*update.mForce)[3]});
             }
         }
-        // Force preparation validates every used body/result before publishing
-        // velocities or waking groups. Logical candidates are already allocated.
-        applyNativeForcesImpl(forces, true);
-        mImpl->mBlendControllers.swap(blends);
-        mImpl->mVelocityControllers.swap(velocities);
-        mImpl->mBlendTargets.swap(targets);
-        sharedTimeCache = cache;
+        return frame;
+    }
+
+    void ActorRagdollPhysics::advanceNativePhysicalControllers(
+        std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
+        ESM4::PhysicalBlendTimeCache& sharedTimeCache)
+    {
+        auto frame = prepareNativeControllerFrame(controllerOrder, inputTime, sharedTimeCache);
+        applyNativeForcesImpl(frame.mForces, true);
+        mImpl->mBlendControllers.swap(frame.mBlends);
+        mImpl->mVelocityControllers.swap(frame.mVelocities);
+        mImpl->mBlendTargets.swap(frame.mTargets);
+        sharedTimeCache = frame.mCache;
     }
 
     std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownControllerSetup(
@@ -2521,21 +2552,55 @@ namespace NifBullet
             preparedFrameSeconds, rawUpdateSelector, nativeGravityZ, publishScene);
     }
 
+    std::vector<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativePhysicalFrame(
+        std::span<const RagdollBoneWorldPose> bones,
+        std::span<const RagdollNativeControllerReference> controllerOrder,
+        float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
+    {
+        require(bones.size() == mImpl->mBodies.size(), "incomplete native physical frame bones");
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& bone : bones)
+        {
+            require(nodes.insert(bone.mNodeRecord).second, "duplicate native physical frame bone");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == bone.mNodeRecord; }) == 1,
+                "unknown or ambiguous native physical frame bone");
+        }
+        auto frame = prepareNativeControllerFrame(controllerOrder, inputTime, sharedTimeCache);
+        const auto forces = prepareNativeForces(frame.mForces, true);
+        std::vector<RagdollNativeBlendUpdate> updates;
+        updates.reserve(frame.mTargets.size());
+        for (const auto& bone : bones)
+        {
+            const auto target = std::find_if(frame.mTargets.begin(), frame.mTargets.end(),
+                [&](const auto& value) { return value.mNode == bone.mNodeRecord; });
+            if (target != frame.mTargets.end())
+                updates.push_back({target->mState.mBodyRecord, bone.mPose,
+                    target->mState.mGains.mHierarchy, target->mState.mGains.mVelocity,
+                    target->mState.mCollisionFlags});
+        }
+        auto publications = updateNativeBlendsImpl(updates, preparedFrameSeconds,
+            rawUpdateSelector, nativeGravityZ, publishScene, forces);
+        // The body bridge already published every target's final gains, flags
+        // and requested motion. Publish the staged controller lists/cache once;
+        // invoking the blend-controller bridge here would tick them twice.
+        mImpl->mBlendControllers.swap(frame.mBlends);
+        mImpl->mVelocityControllers.swap(frame.mVelocities);
+        sharedTimeCache = frame.mCache;
+        return publications;
+    }
+
     void ActorRagdollPhysics::applyNativeForces(std::span<const RagdollNativeForceRequest> requests)
     {
         applyNativeForcesImpl(requests, false);
     }
 
-    void ActorRagdollPhysics::applyNativeForcesImpl(
-        std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies)
+    std::vector<ActorRagdollPhysics::NativeForce> ActorRagdollPhysics::prepareNativeForces(
+        std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies) const
     {
-        struct Pending
-        {
-            Impl::Body* mOwned;
-            btVector3 mLinear;
-            float mLinearW;
-        };
-        std::vector<Pending> pending;
+        std::vector<NativeForce> pending;
         pending.reserve(requests.size());
         std::unordered_set<std::uint32_t> records;
         for (const auto& request : requests)
@@ -2568,6 +2633,11 @@ namespace NifBullet
             }
             pending.push_back({&*owned, linear, linearW});
         }
+        return pending;
+    }
+
+    void ActorRagdollPhysics::publishNativeForces(std::span<const NativeForce> pending)
+    {
         for (const auto& next : pending)
         {
             mImpl->activateGroup(next.mOwned->mActivationGroup);
@@ -2577,6 +2647,13 @@ namespace NifBullet
                 next.mOwned->mNativeLinearW = next.mLinearW;
             }
         }
+    }
+
+    void ActorRagdollPhysics::applyNativeForcesImpl(
+        std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies)
+    {
+        const auto pending = prepareNativeForces(requests, allowRepeatedBodies);
+        publishNativeForces(pending);
     }
 
     void ActorRagdollPhysics::applyImpulse(std::size_t body, const btVector3& impulse, const btVector3& worldPoint)
