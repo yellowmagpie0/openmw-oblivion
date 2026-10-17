@@ -1594,5 +1594,139 @@
       }
     ],
     "verification_scope": "Normal full components and engine; sanitizer full engine and focused145 ActorRagdollPhysicsTest cases. Sanitizer focused components are not the full component inventory."
+  },
+  "original_proxy_registration_followup": {
+    "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-03/report.json",
+    "report_sha256": "a6b0802622ddadd0825968c292ae7b3459f4b0f9182e157f46aa241a45d7e152",
+    "result": {
+      "passed": true,
+      "scope": "Independent original normal-input memory/transition observation, not fork recovery acceptance.",
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+      "raw_sample": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/physical-recovery-original-live-03/observed-03-sample.json",
+        "sha256": "c6ff71ea491614618a553ce408f0ca62d891ee3bebb736d5c0a94eab7e305a06"
+      },
+      "frames": 94,
+      "controller_frames": 93,
+      "states": [
+        0,
+        4,
+        3,
+        5,
+        6,
+        0
+      ],
+      "state_frame_counts": {
+        "0": 2,
+        "4": 3,
+        "3": 76,
+        "5": 1,
+        "6": 12
+      },
+      "fixture": {
+        "initial_player_strength": 40,
+        "initial_player_luck": 50,
+        "initial_handtohand": 10,
+        "initial_player_fatigue": 140,
+        "target_base": "0001E5F5",
+        "target_ref": "FF000800",
+        "initial_target_fatigue": 1,
+        "initial_target_base_fatigue": 160,
+        "initial_target_health": 20,
+        "integer_modav_fatigue": -159,
+        "fatigue_return_base": 0.05,
+        "fatigue_return_mult": 0,
+        "ai_processing": false,
+        "initial_camera_z": 0,
+        "initial_camera_x": 43,
+        "contact_camera_z": 45,
+        "contact_camera_x": 20,
+        "actual_input": "One normal mouse1 press after closing the console in successful fresh course observed-03. Prior unsuccessful courses retained separately.",
+        "first_sample_fatigue": -0.6455078125
+      },
+      "native_position_writers": {
+        "watch_address": "ActorRef+2C",
+        "distinct_pc_state_entries": [
+          {
+            "after_store_pc": "0x4d8a3b",
+            "actual_stack_return": "0x65b5aa",
+            "raw_state": 4
+          },
+          {
+            "after_store_pc": "0x4d8a3b",
+            "actual_stack_return": "0x65b5aa",
+            "raw_state": 3
+          },
+          {
+            "after_store_pc": "0x4d8a3b",
+            "actual_stack_return": "0x65b5aa",
+            "raw_state": 6
+          },
+          {
+            "after_store_pc": "0x4d8a3b",
+            "actual_stack_return": "0x65b5aa",
+            "raw_state": 0
+          }
+        ],
+        "static_verified_path": [
+          "Actor/proxy updater65AF30 calls4D8A30 at65B5A5, return65B5AA.",
+          "4D8A38 storesActorRef.X at+2C; hardware watchpoint reportsnextPC4D8A3B. Subsequent stores+30/+34 setY/Z.",
+          "5EFD28 calls65AF30; first unwound parent5EFD2D agrees. Further debugger unwinding was unreliable, so it is not used as evidence."
+        ],
+        "raw3_position_span": [
+          29.27081298828125,
+          10.577418327331543,
+          2.58746337890625
+        ]
+      },
+      "native_proxy_observation": {
+        "watch_interval": "Matched normal-hand-contact callback through final raw0 reaction sample, covering Down and GetUp. No claim about earlier hit work before this callback.",
+        "identity": "process+118 bhkCharacterController; underlying+8 ahkCharacterProxy; native slot30 object vtableA9AFFC",
+        "world_link": {
+          "offset": "native slot30 object+8",
+          "type": "ahkWorld",
+          "non_null_same_pointer_all_frames": true,
+          "observed_hardware_write_events": 0
+        },
+        "packed_filter": {
+          "offset": "native slot30 object+30",
+          "value": "01720014",
+          "observed_hardware_write_events": 0
+        },
+        "broadphase_handle28": "000001CD in every sampled native object prefix",
+        "limits": "Stable verified world link/filter plus broadphase handle are stronger evidence than wrapper pointer retention alone; they do not independently prove every collision response, overlap, movement or broadphase operation. No native movement/collision suspension rule is inferred from listener bit8."
+      },
+      "root_gain_native_returns": [
+        1.0,
+        1.0,
+        0.3359994888305664,
+        0.0
+      ],
+      "gain_boundary": "Observe actual88FA30 return inx87st0; no forced call or guessed object field. Allfour callswere raw4.",
+      "selected_getup": "00091FB7 SpecialIdle_GetUpRight, actualstart-idle slot5; same master identity as independently decoded prior winning record.",
+      "cleanup": {
+        "game_epoch_dead": true,
+        "game_exit": {
+          "code": 0
+        },
+        "restored": {
+          "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+          "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+          "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+        },
+        "pristine_source_and_clone_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+      },
+      "steam_exit": {
+        "code": 0
+      },
+      "retained_failures": [
+        "Initial stale window ID8388609 focus returnedBadMatch; no dependent click ran. Re-queried actual33554435.",
+        "observed-01 and observed-02 matched no contact; normal attacks missed, owned GDB interrupted/detached, no completion sample.",
+        "Intermediate reload/setup batches started before load completion and/or toggledAI intoOn. Abandoned before successful course; successful freshcourse waited3seconds and retainedOff."
+      ],
+      "visual_limits": "Both raw3 and recovered images viewed. Dog is partly occluded by player fists/frame; neither image establishes a clear prone/fullstanding visual acceptance gate. No pixel/trajectory/FPS parity."
+    }
   }
 }

@@ -15498,3 +15498,23 @@ checks are retained in the
 [M15 physical admission index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 This is independent original behavior evidence; fork contact/body-frame/GetUp
 acceptance remains open.
+
+
+The next original fatigue-recovery course uses three passive hardware write
+watchpoints: actor reference X, native proxy world link, and packed collision
+filter. Across 94 reaction frames, native `4D8A38` writes reference X and the
+watchpoint stops at `4D8A3B`. The actual stack return `65B5AA` matches the call
+at `65B5A5` in actor/proxy updater `65AF30`; deeper debugger unwinding is
+unreliable and is excluded. That updater is called at `5EFD28`.
+
+The native slot30 object retains a non-null `ahkWorld` at +8, filter `01720014`
+at +30, and sampled broadphase handle `000001CD` at +28 throughout raw
+0/4/3/5/6/0. Hardware watchpoints observe zero world-link/filter writes from
+the matched contact callback through final raw 0. This establishes more than
+wrapper pointer retention, while leaving full collision and movement policy
+open. The actual `88FA30` root-gain return is observed passively as
+1, 1, 0.3359994888305664 and 0 during raw 4. No guessed blend-object offset or
+forced native call supplies these values. Hashes, fixture changes, retained
+missed-contact/setup attempts, occluded visual limits and exact cleanup appear
+in the [physical admission verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+These observations do not close fork normal-input recovery acceptance.

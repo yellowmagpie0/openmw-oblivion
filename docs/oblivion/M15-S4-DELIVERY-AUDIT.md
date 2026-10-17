@@ -4851,3 +4851,17 @@ the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 This is a frame API checkpoint. Automatic reaction admission/driving, native
 reference/root motion and proxy policy, prepared frame timing, GetUp playback
 and recovery save/restart still require integration and actual runtime proof.
+
+
+A further original normal-input course adds 94 reaction samples and 93 selected
+controller samples through raw 0/4/3/5/6/0. Hardware watchpoints identify the
+reference position setter and observe no writes to the proxy object's world
+link or packed filter during the declared contact-to-recovery interval. The
+same non-null `ahkWorld`, filter `01720014` and sampled broadphase handle
+`000001CD` remain throughout. These observations narrow the native integration
+requirements; they do not establish all collision responses or movement policy.
+The actual root-gain getter returns 1, 1, 0.3359994888305664 and 0 during raw 4.
+Failed contact/setup attempts, exact fixture/camera inputs and clean restoration
+are retained in the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+Neither partially occluded capture closes a visual gate. This is independent
+original evidence; fork reaction and recovery acceptance remain open.

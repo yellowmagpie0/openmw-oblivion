@@ -249,5 +249,71 @@
       "Raw3 capture is not unambiguously prone and is not accepted as visual parity.",
       "No fork reaction or native/fork trajectory/FPS acceptance."
     ]
+  },
+  "original_proxy_write_followup": {
+    "purpose": "Passive hardware watchpoints through a fresh original normal-input course; distinguish actual reference writers and proxy registration fields from retained wrapper pointers.",
+    "reference": {
+      "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-03/report.json",
+      "report_sha256": "a6b0802622ddadd0825968c292ae7b3459f4b0f9182e157f46aa241a45d7e152",
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "fixture": {
+      "initial_player_strength": 40,
+      "initial_player_luck": 50,
+      "initial_handtohand": 10,
+      "initial_player_fatigue": 140,
+      "target_base": "0001E5F5",
+      "target_ref": "FF000800",
+      "initial_target_fatigue": 1,
+      "initial_target_base_fatigue": 160,
+      "initial_target_health": 20,
+      "integer_modav_fatigue": -159,
+      "fatigue_return_base": 0.05,
+      "fatigue_return_mult": 0,
+      "ai_processing": false,
+      "initial_camera_z": 0,
+      "initial_camera_x": 43,
+      "contact_camera_z": 45,
+      "contact_camera_x": 20,
+      "actual_input": "One normal mouse1 press after closing the console in successful fresh course observed-03. Prior unsuccessful courses retained separately.",
+      "first_sample_fatigue": -0.6455078125
+    },
+    "observer": {
+      "arm_at": "Matched stock Dog FF000800 normal-hand-contact callback at original5FF3CA, before native Down/GetUp phases.",
+      "hardware_write_watchpoints": [
+        "*(unsigned int*)(ActorRef+2C)",
+        "*(unsigned int*)(native proxy slot30 object+8)",
+        "*(unsigned int*)(native proxy slot30 object+30)"
+      ],
+      "identity_guards": [
+        "process+118 runtime RTTI bhkCharacterController",
+        "underlying+8 runtime RTTI ahkCharacterProxy",
+        "native proxy slot30 object vtable A9AFFC",
+        "world-link target runtime RTTI ahkWorld"
+      ],
+      "capture": "Each reaction-frame Fatigue boundary records reference/root fields, native proxy prefix, world link, filter, animation clock and raw state. Watchpoints catch inter-frame world-link/filter writes. Record PC and raw stack return address; do not trust deeper debugger unwinding.",
+      "position_writer_observation": "Watchpoint reports4D8A3B after4D8A38 stores X. Actual stack return65B5AA matches call4D8A30 at65B5A5 in65AF30.",
+      "root_gain": "Passively break88FA30 only for reaction root and observe returned x87st0; no forced calls, no guessed blend-object field.",
+      "finish": "Final raw0 after states4/3/5/6; disable all breakpoints and detach normally."
+    },
+    "assertions": [
+      "Successful course has94 reaction samples/93 selected-controller frames through0/4/3/5/6/0.",
+      "Native world link remains the same non-null ahkWorld, filter01720014 and sampled broadphase handle000001CD remain unchanged. Zero hardware writes to world link/filter within declared interval.",
+      "Reference X uses the same verified position setter in raw4/3/6/0.",
+      "Observed root gains at raw4 native getter returns are1,1,0.3359994888305664,0.",
+      "Game/owned Steam exit0, configuration and autosave restored exactly, source and cloned pristine saves unchanged."
+    ],
+    "retained_failures": [
+      "Initial stale window ID8388609 focus returnedBadMatch; no dependent click ran. Re-queried actual33554435.",
+      "observed-01 and observed-02 matched no contact; normal attacks missed, owned GDB interrupted/detached, no completion sample.",
+      "Intermediate reload/setup batches started before load completion and/or toggledAI intoOn. Abandoned before successful course; successful freshcourse waited3seconds and retainedOff."
+    ],
+    "nonclaims": [
+      "No universal collision-response/movement or suspend/resume rule follows from these fields alone.",
+      "No trustworthy prone/fullstanding visual gate: Dog partly occluded in captures.",
+      "No fork KO/GetUp, restart, trajectory, pixel or FPS acceptance."
+    ]
   }
 }
