@@ -6,6 +6,29 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 Creature victim palette and force-dispatch proof — 2026-10-16
+
+A shared pure hit-sound selector now models Creature victims from their Actor
+byte 104: exactly 2 selects Bone, other bytes Fur. NPC Flesh and all existing
+material/weapon precedence remain unchanged. The full original dispatcher
+prefix passes 5,120 cases and production C++ matches every ordered lookup.
+Retained failed readings explain the shield flag's changed stack offset while
+a lookup argument is pushed; the corrected interpretation confirms existing
+NPC behavior. TESCreature base type is not this byte.
+
+Normal components pass 2,799 cases and sanitizer ESM4* selection passes 743, with
+exact inventories, no failures/skips and leak checks disabled. Fingerprint:
+`f568b530d97b275ca4e6e650d915b2dcafe9c4ad2f1f9e838b6ab90b987f7b43`. A separate 768-case original
+force-caller experiment confirms identical NPC/Creature argument composition
+through their distinct AV dispatch wrappers. Declared primitive reads and Havok
+availability/application capture are boundaries; complete reaction execution
+and physics application are not accepted by that probe.
+
+The [verification index](M15-CREATURE-TARGET-SOUND-VERIFICATION.json) and editable
+protocols retain identities, boundaries and failed attempts. No Creature victim
+contact adapter is enabled in this checkpoint; live material/audio, reaction,
+physics and restart acceptance remain open. **S4 remains incomplete.**
+
 ## S4 Creature natural melee through production contact — 2026-10-16
 
 Spell-free, unarmed Creature attackers now use the explicit stationary CSTY

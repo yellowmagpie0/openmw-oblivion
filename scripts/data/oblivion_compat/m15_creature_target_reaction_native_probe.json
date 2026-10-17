@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "purpose": "Creature victim force-argument dispatch and shared callback identity audit; not whole-hit or physics application acceptance",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x5fff99",
+  "stop": "0x6000b4",
+  "actual_vtables": {
+    "NPC": {
+      "0x174": "0x5f10e0",
+      "0x190": "0x977c50",
+      "0x274": "0x68f970",
+      "0x278": "0x977c50",
+      "0x284": "0x5f1970",
+      "0x288": "0x5f1a60",
+      "0x398": "0x5ee760",
+      "0x3b8": "0x6034b0"
+    },
+    "Creature": {
+      "0x174": "0x5f10e0",
+      "0x190": "0x977c50",
+      "0x274": "0x6250e0",
+      "0x278": "0x6250f0",
+      "0x284": "0x6253c0",
+      "0x288": "0x625410",
+      "0x398": "0x5ee760",
+      "0x3b8": "0x6034b0"
+    },
+    "Player": {
+      "0x174": "0x5f10e0",
+      "0x190": "0x977c50",
+      "0x274": "0x68f970",
+      "0x278": "0x977c50",
+      "0x284": "0x65e030",
+      "0x288": "0x65e110",
+      "0x398": "0x5ee760",
+      "0x3b8": "0x65d6f0"
+    }
+  },
+  "matrix": {
+    "creature": [
+      false,
+      true
+    ],
+    "speed": [
+      0,
+      13
+    ],
+    "agility": 50,
+    "luck": 40,
+    "fatigue_ratio": [
+      0,
+      0.25,
+      1,
+      2
+    ],
+    "incoming_prearmor_health": [
+      0,
+      1.42,
+      8
+    ],
+    "CPU_branch": [
+      0,
+      1
+    ],
+    "x87": [
+      "0x27f",
+      "0x37f"
+    ],
+    "controller_available": [
+      false,
+      true
+    ],
+    "victim_minus_attacker_delta": [
+      [
+        0,
+        40,
+        0
+      ],
+      [
+        1,
+        2,
+        3
+      ]
+    ]
+  },
+  "settings": "Compiled physical-rule defaults with installed winning overrides from docs/oblivion/M15-PHYSICAL-RULE-INPUTS.json; FatigueBase1, Mult.5.",
+  "boundaries": [
+    "Shared parent integer AV getter supplies declared Speed4/Agility3/Luck7; actual Creature6253C0 wrapper executes",
+    "FatigueRatio5F4880 supplied",
+    "Havok controller65A2C0 supplies declared availability",
+    "8907A0 captures actual vector/time arguments and returns ret8; no Havok application executes"
+  ],
+  "observations": 768,
+  "expected": "Same declared primitive inputs produce bit-identical NPC/Creature force and application arguments. Speed0 skips composition; positive Speed requests controller and applies only when present.",
+  "scope": "Actual shared caller force path, NPC5F1970 and Creature6253C0->5F1970 virtual dispatch, original547690 force arithmetic, original position getters, subtraction/normalization/cap and duration. Shared parent integer getter supplies declared Speed/Agility/Luck, FatigueRatio5F4880 supplied, Havok controller65A2C0 and application8907A0 are availability/argument-capture boundaries. Incoming callback+398 and whole-hit/reaction animation/physics remain outside probe.",
+  "evidence": "build/oblivion-compat/m15/S4/native-creature-target-reaction-01/force-report.json",
+  "direct_Dog_example": {
+    "creature": true,
+    "speed": 13,
+    "agility": 50,
+    "luck": 40,
+    "ratio": 1,
+    "damage": 1.42,
+    "cpu": 0,
+    "x87": 639,
+    "controller": true,
+    "delta": [
+      0,
+      40,
+      0
+    ],
+    "queries": [
+      4,
+      7,
+      3
+    ],
+    "force": 37.91999816894531,
+    "applications": [
+      {
+        "vector": [
+          0.0,
+          37.91999816894531,
+          0.0
+        ],
+        "duration": 1.0
+      }
+    ]
+  },
+  "late_metadata_only": true
+}

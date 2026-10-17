@@ -4431,3 +4431,28 @@ Creature victims/materials, armed sources, spell/contact effects, custom Weapon9
 sound selection, nonpositive contact consequences, Rat power-only fallback,
 directional/mastery effects and the full interruption/view/input/FPS/restart
 matrix remain open. **S4 is incomplete.**
+
+
+## Creature victim palette and force dispatch — rule foundation
+
+The generalized pure hit palette now accepts the victim's raw Creature Actor
+byte 104, selecting Bone only for2 and Fur otherwise. It preserves NPC Flesh,
+armor/shield precedence, body suppression, ordered layers and weapon variants.
+This byte must not be replaced by the TESCreature base creatureType. The prior
+original loaded Skeleton observation is Actor 1/base 2; it selects Fur here.
+
+Full original dispatcher-prefix execution passes 5,120 cases; a standalone driver
+compiling production physicalcombat.cpp matches every ordered request. Two
+failed stack-flag interpretations are retained; the corrected probe confirms
+the existing NPC behavior. Normal components pass 2,799; ASan/UBSan ESM4* selection
+passes 743 with leak checks off. Exact inventories and tested fingerprint
+`f568b530d97b275ca4e6e650d915b2dcafe9c4ad2f1f9e838b6ab90b987f7b43` are recorded in
+[M15-CREATURE-TARGET-SOUND-VERIFICATION.json](M15-CREATURE-TARGET-SOUND-VERIFICATION.json).
+
+A 768-case original caller experiment also proves matching NPC/Creature force
+arguments through their actual distinct AV wrappers, with declared AV/Fatigue
+and Havok availability/application boundaries. It audits shared incoming/Health
+callback identities; it does not execute a complete Creature reaction or apply
+Havok forces. Incoming Creature adapters still reject their victim domain.
+No new engine, visible/audio, saved impulse or normal-input acceptance is claimed.
+These remain required before the Creature-victim S4 route is delivered.

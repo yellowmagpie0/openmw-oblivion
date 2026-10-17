@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "status": "Creature victim sound rule foundation verified; incoming Creature contacts and full M15S4 remain incomplete",
+  "source_parent_commit": "dfba2caca72119d3c38caeeba0f4749cdc81e7d5",
+  "tested_source_fingerprint": "f568b530d97b275ca4e6e650d915b2dcafe9c4ad2f1f9e838b6ab90b987f7b43",
+  "source_sha256": {
+    "components/esm4/physicalcombat.cpp": "b279f33124a26c3a99766a4416678f9fa6bcb7ec1b1e47514bf8b0d11bbd87ad",
+    "components/esm4/physicalcombat.hpp": "3568d7289da40566d25f040e8c595d11ebd30f4210a0f198a9bf969d2f251a0b",
+    "apps/components_tests/esm4/physicalcombat.cpp": "c364afa5680f274ac1d9ed802ddbfea38f3e8c823e9d90fa8324b556b6228719",
+    "scripts/data/oblivion_compat/m15_creature_target_sound_native_probe.json": "4ae18469c7375564e4661b240b64aedc0ba27d7c3cedee420919e5886725094e"
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-target-sound-main-01/verification.json",
+      "report_sha256": "789e510afd1e5b642a07bfddac39beed65f3604e5595cd3660d87df026f1ca37",
+      "result": {
+        "executed": 2799,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "40a8f834f4b4668a60dd1a79e1be12aeca8bcf527b71da0f6095cac63bb1089b",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "64439c73d224213474ad192d5b614ba1b5d422d3ea9a09d4adc2885d7ecbcc33",
+        "inventory_sha256": "019ce2980c5549c4450a88d928551a8d7d910888ad9cae8d7523ceb44cc69a4e",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-target-sound-sanitized-01/verification.json",
+      "report_sha256": "985ed73b81a725e791b8a93b49db84b125bdc2ecd06a3e3a23055aacc2672971",
+      "result": {
+        "executed": 743,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "8b2728ec609b7193c513a44107f4180879157b684dcbc63ef19123e03187d79f",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "6afaaf4eec0c73756072c498a69b482c4ee08b66ec80130ddfd61e09ec42d39f",
+        "inventory_sha256": "6ecf51509668e12828316e388e672d56e521090966571b3b4a9cc322d4bd60aa",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "leak_checks": false
+    }
+  },
+  "original_sound": {
+    "report": "build/oblivion-compat/m15/S4/native-creature-target-sound-oracle-03/report.json",
+    "sha256": "60488a0cce7195acd7e4c124b076e05cb675013f7ef57a4b906358fe3c0cb74f",
+    "observations": 5120,
+    "scope": "Actual dispatcher prefix, source/victim Character/Creature vtables and actual base/position/Creature predicate getters. Source process equipped-weapon and position-flags getters supplied as0; SOUN editor-ID lookup records names and returns absent forms. Audio allocation/playback and all post-D28 effects are outside probe. Body Bone compares victim Actor byte104==2, not TESCreature base type. Full prefix initializes material flag at post-prefix byte13 to0. Shield lookup writes that same byte at offset17 while its string argument is pushed; after cleanup it suppresses Flesh weapon variants. Armor takes precedence over shield."
+  },
+  "production_comparison": {
+    "passed": true,
+    "observations": 5120,
+    "original_report_sha256": "60488a0cce7195acd7e4c124b076e05cb675013f7ef57a4b906358fe3c0cb74f",
+    "production_source_sha256": {
+      "components/esm4/physicalcombat.cpp": "b279f33124a26c3a99766a4416678f9fa6bcb7ec1b1e47514bf8b0d11bbd87ad",
+      "components/esm4/physicalcombat.hpp": "3568d7289da40566d25f040e8c595d11ebd30f4210a0f198a9bf969d2f251a0b"
+    },
+    "comparison_binary_sha256": "ce045cebc6dba79377089eddb129e2f971a50dc588292086684b44a5b6ae5675",
+    "scope": "Standalone driver compiles the actual production physicalcombat.cpp and compares ordered nonempty palette layers with all5120 independently executed full-prefix original rows. No gameplay, sound playback or Creature victim contact is asserted."
+  },
+  "force_dispatch": {
+    "report": "build/oblivion-compat/m15/S4/native-creature-target-reaction-01/force-report.json",
+    "sha256": "26562f97bc2031e8c18a1655211c76d4bebd1dad1a3fb2bce7c10bb55f8801f6",
+    "observations": 768,
+    "scope": "Actual shared caller force path, NPC5F1970 and Creature6253C0->5F1970 virtual dispatch, original547690 force arithmetic, original position getters, subtraction/normalization/cap and duration. Shared parent integer getter supplies declared Speed/Agility/Luck, FatigueRatio5F4880 supplied, Havok controller65A2C0 and application8907A0 are availability/argument-capture boundaries. Incoming callback+398 and whole-hit/reaction animation/physics remain outside probe.",
+    "vtables": {
+      "NPC": {
+        "0x174": "0x5f10e0",
+        "0x190": "0x977c50",
+        "0x274": "0x68f970",
+        "0x278": "0x977c50",
+        "0x284": "0x5f1970",
+        "0x288": "0x5f1a60",
+        "0x398": "0x5ee760",
+        "0x3b8": "0x6034b0"
+      },
+      "Creature": {
+        "0x174": "0x5f10e0",
+        "0x190": "0x977c50",
+        "0x274": "0x6250e0",
+        "0x278": "0x6250f0",
+        "0x284": "0x6253c0",
+        "0x288": "0x625410",
+        "0x398": "0x5ee760",
+        "0x3b8": "0x6034b0"
+      },
+      "Player": {
+        "0x174": "0x5f10e0",
+        "0x190": "0x977c50",
+        "0x274": "0x68f970",
+        "0x278": "0x977c50",
+        "0x284": "0x65e030",
+        "0x288": "0x65e110",
+        "0x398": "0x5ee760",
+        "0x3b8": "0x65d6f0"
+      }
+    },
+    "example": {
+      "creature": true,
+      "speed": 13,
+      "agility": 50,
+      "luck": 40,
+      "ratio": 1,
+      "damage": 1.42,
+      "cpu": 0,
+      "x87": 639,
+      "controller": true,
+      "delta": [
+        0,
+        40,
+        0
+      ],
+      "queries": [
+        4,
+        7,
+        3
+      ],
+      "force": 37.91999816894531,
+      "applications": [
+        {
+          "vector": [
+            0.0,
+            37.91999816894531,
+            0.0
+          ],
+          "duration": 1.0
+        }
+      ]
+    },
+    "Cpp_comparison_or_application_implemented_in_this_chunk": false
+  },
+  "retained_interpretation_failures": [
+    "native-creature-target-sound-oracle-01/failed-interpretation.json",
+    "native-creature-target-sound-oracle-02/failed-interpretation.json"
+  ],
+  "late_metadata_only": [
+    "reaction probe protocol",
+    "verification/provenance/audit/milestone"
+  ],
+  "limits": [
+    "NPC behavior preserved; legacy NPC palette wrapper delegates to the generalized pure selector",
+    "Creature Actor byte104 canonical0/1 loaded-model states select Fur; Bone raw2 must not be inferred from TESCreature base type2",
+    "No new Creature victim route, reaction/physics integration, actual SOUN playback or runtime acceptance",
+    "Existing engine/Python checks belong to previous implementation checkpoint; only relevant component modes rerun here",
+    "Full S4 controlling gates remain open"
+  ],
+  "late_metadata_sha256": {
+    "scripts/data/oblivion_compat/m15_creature_target_reaction_native_probe.json": "8719996b154c1aef2e00548dda5908caf2a4b41a0ec64a7ef7b70a11d1c68e75"
+  }
+}

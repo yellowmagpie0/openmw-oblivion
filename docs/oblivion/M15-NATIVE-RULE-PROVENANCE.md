@@ -15154,3 +15154,51 @@ This resolves KF overlap independently of the two differing installed Dog NIFs.
 The integration/verification index and S4 audit state the runtime boundaries;
 no original whole-hit gameplay, visible Dog, or full S4 claim follows from this
 instruction experiment.
+
+
+### Creature victim body sounds and shared force dispatch
+
+Pinned original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes the full 6AF880..6AFD28 prefix/selector for 5,120 NPC-source contacts.
+Actual Character/Creature vtables,4D9B40 base getter,5F10E0 position getter and
+5E3270 Creature predicate run. Source process equipped-weapon and position-flag
+getters supply0; SOUN447490 records names and returns absent forms with ret4.
+Allocation/playback and all post-D28 effects remain outside the experiment.
+
+Creature body sound tests the **victim Actor byte 104**: exactly 2 selects
+PHYDamageBone, every other byte selects PHYDamageFur. NPC selects Flesh.
+Suppression omits the body layer. Bone disables the ordinary Blade/Blunt Flesh
+variant; Fur retains it. The enchanted selector bypasses that test. Armor takes
+precedence over shield. Full prefix initialization and stack cleanup prove that
+the shield write atESP+17 while its SOUN argument is pushed aliases the flag at
+ESP+13 after ret4. Early probes01/02 incorrectly treated these as distinct;
+corrected03 preserves the existing NPC palette and retains both failed readings.
+
+This is not the TESCreature base byte 104/creatureType. Previous original live
+Dog and Skeleton observations both have Actor byte 104=1 after model setup,
+although Skeleton base byte 104=2. Canonical loaded-model0/1 therefore takes Fur
+in this selector. No Bone runtime consequence is inferred from base type.
+The new pure nativeMeleeHitSounds adapter matches all 5,120 independent original
+rows; nativeNpcMeleeHitSounds delegates with an absent Creature byte and keeps
+its existing results. The protocol and verification index record exact hashes.
+
+A separate 768-case5FFF99..6000B4 experiment executes original547690 arithmetic,
+Creature6253C0->shared5F1970 AV dispatch, position subtraction/normalization,
+cap and duration. Shared primitive AV/Fatigue reads, Havok availability and
+application argument capture are declared boundaries. Identical NPC/Creature
+inputs produce identical force/vector/time arguments; Speed0 skips composition.
+Declared Agility50,Luck40,ratio1,damage1.42,delta[0,40,0] produces force
+37.91999816894531 and duration1. This proves bounded
+argument composition, not actual Creature recoil, Havok application or whole-hit
+gates. Vtable audits independently show common+3985EE760 and+3B86034B0 for
+NPC/Creature, without executing their complete callbacks in this probe.
+
+Evidence: S4/native-creature-target-sound-oracle-03 and
+S4/native-creature-target-reaction-01. Editable protocols are
+m15_creature_target_sound_native_probe.json and
+m15_creature_target_reaction_native_probe.json. Full normal component checks
+pass 2,799 cases; sanitizers pass 743 ESM4* cases, with leak checking disabled.
+Tested fingerprint:`f568b530d97b275ca4e6e650d915b2dcafe9c4ad2f1f9e838b6ab90b987f7b43`.
+No engine Creature-victim contact gate is removed by this rule checkpoint;
+full S4 remains incomplete.

@@ -46,6 +46,13 @@ namespace ESM4
     // are empty. Creature sources/targets require their separate native paths.
     std::array<std::string_view, 3> nativeNpcMeleeHitSounds(const NpcMeleeHitSoundInput& input);
 
+    // Same dispatcher with an optional Creature victim. This is the victim
+    // Actor byte104, not the TESCreature base's creatureType: exactly2 selects
+    // Bone; other byte values select Fur. Empty selects the NPC Flesh branch.
+    // Creature source custom Weapon9 selection remains a separate caller.
+    std::array<std::string_view, 3> nativeMeleeHitSounds(
+        const NpcMeleeHitSoundInput& input, std::optional<std::uint8_t> creatureActorByte);
+
     // Original6AFFF0 weapon/unarmed block palette in attacker, defender order.
     // The enchantment selector affects only the attacker layer.
     std::array<std::string_view, 2> nativeMeleeBlockSounds(std::int32_t attackerWeaponType,

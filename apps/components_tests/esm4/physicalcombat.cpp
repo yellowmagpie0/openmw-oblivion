@@ -3039,6 +3039,34 @@ TEST(ESM4PhysicalCombat, NativeNpcHitSoundLayersFollowOriginalLookupOrder)
         (Sounds{"PHYArmorHitHeavy", "PHYDamageFlesh", "WPNHitHand"}));
 }
 
+TEST(ESM4PhysicalCombat, CreatureHitSoundBodyReadsActorByteRatherThanBaseKind)
+{
+    using Sounds = std::array<std::string_view, 3>;
+    // Original6AF880..6AFD28, including the actual dispatcher prefix. The
+    // shield flag's offset changes while its lookup argument is on the stack.
+    for (const std::uint8_t state : {0, 1, 3, 255})
+    {
+        SCOPED_TRACE(state);
+        EXPECT_EQ(ESM4::nativeMeleeHitSounds({}, state), (Sounds{"", "PHYDamageFur", "WPNHitHand"}));
+        EXPECT_EQ(ESM4::nativeMeleeHitSounds({0}, state), (Sounds{"", "PHYDamageFur", "WPNHitBladeFlesh"}));
+        EXPECT_EQ(ESM4::nativeMeleeHitSounds({3, -1, 0}, state),
+            (Sounds{"WPNBlockShieldLight", "PHYDamageFur", "WPNHitBlunt"}));
+        EXPECT_EQ(ESM4::nativeMeleeHitSounds({1, 0, 1}, state),
+            (Sounds{"PHYArmorHitLight", "PHYDamageFur", "WPNHitBladeFlesh"}));
+    }
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({}, 2), (Sounds{"", "PHYDamageBone", "WPNHitHand"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({0}, 2), (Sounds{"", "PHYDamageBone", "WPNHitBlade"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({2}, 2), (Sounds{"", "PHYDamageBone", "WPNHitBlunt"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({5}, 2), (Sounds{"", "PHYDamageBone", "WPNHitArrow"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({1, 1, 0}, 2),
+        (Sounds{"PHYArmorHitHeavy", "PHYDamageBone", "WPNHitBlade"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({0, -1, -1, false, true}, 2),
+        (Sounds{"", "PHYDamageBone", "WPNHitBladeFleshEnchanted"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({0, -1, -1, true, false}, 1), (Sounds{"", "", "WPNHitBlade"}));
+    EXPECT_EQ(ESM4::nativeMeleeHitSounds({0}, std::nullopt),
+        (Sounds{"", "PHYDamageFlesh", "WPNHitBladeFlesh"}));
+}
+
 TEST(ESM4PhysicalCombat, KnockdownEntryWaitsForNonpositiveHierarchyGain)
 {
     EXPECT_TRUE(ESM4::knockdownBlendEntryReady(false, std::nullopt));

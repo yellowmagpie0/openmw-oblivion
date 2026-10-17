@@ -156,6 +156,12 @@ namespace ESM4
 
     std::array<std::string_view, 3> nativeNpcMeleeHitSounds(const NpcMeleeHitSoundInput& input)
     {
+        return nativeMeleeHitSounds(input, std::nullopt);
+    }
+
+    std::array<std::string_view, 3> nativeMeleeHitSounds(
+        const NpcMeleeHitSoundInput& input, std::optional<std::uint8_t> creatureActorByte)
+    {
         std::array<std::string_view, 3> result{};
         bool shield = false;
         if (input.mArmorClass >= 0)
@@ -165,9 +171,10 @@ namespace ESM4
             result[0] = input.mShieldClass == 0 ? "WPNBlockShieldLight" : "WPNBlockShieldHeavy";
             shield = true;
         }
+        const bool bone = creatureActorByte && *creatureActorByte == 2;
         if (!input.mSuppressBodySound)
-            result[1] = "PHYDamageFlesh";
-        const bool flesh = !input.mSuppressBodySound && !shield;
+            result[1] = bone ? "PHYDamageBone" : creatureActorByte ? "PHYDamageFur" : "PHYDamageFlesh";
+        const bool flesh = !input.mSuppressBodySound && !bone && !shield;
         switch (input.mWeaponType)
         {
             case 0:

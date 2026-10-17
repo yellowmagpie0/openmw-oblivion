@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent full-prefix native NPC-source hit palette with NPC/Creature victims; rule foundation only, not Creature victim gameplay acceptance",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x6af880",
+  "stop": "0x6afd28",
+  "source_vtable": "0xa6fc9c",
+  "victim_vtables": {
+    "NPC": "0xa6fc9c",
+    "Creature": "0xa710f4"
+  },
+  "actual_getters": {
+    "base_virtual_0x170": "0x4d9b40",
+    "position_virtual_0x174": "0x5f10e0",
+    "is_creature": "0x5e3270"
+  },
+  "boundaries": {
+    "source_process_virtual_0xec": "Return absent equipped weapon, assert Boolean argument1 and ret4",
+    "source_process_virtual_0x2c0": "Return position flags0; actual position getter uses actor position fallback",
+    "0x447490": "Record exact SOUN editor-ID requests and return absent forms with ret4"
+  },
+  "outside_probe": [
+    "Audio allocation/playback",
+    "Post0x6afd28 effects",
+    "Creature source custom Weapon9 selection",
+    "Actual incoming Creature contact/reactions"
+  ],
+  "matrix": {
+    "creature_victim": [
+      false,
+      true
+    ],
+    "victim_actor_byte_104": [
+      0,
+      1,
+      2,
+      3,
+      255
+    ],
+    "weapon": [
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      9
+    ],
+    "armor": [
+      -1,
+      0,
+      1,
+      3
+    ],
+    "shield": [
+      -1,
+      0,
+      1,
+      3
+    ],
+    "suppress_body": [
+      false,
+      true
+    ],
+    "enchanted_selector": [
+      false,
+      true
+    ]
+  },
+  "observations": 5120,
+  "body_layer": "NPC Flesh; Creature Actor byte104 exactly2 Bone, otherwise Fur; suppressed when selected",
+  "material_precedence": "Armor nonnegative wins:0 Light, positive Heavy. Otherwise shield0/1 selects Light/Heavy. Other shield classes do not select a material layer.",
+  "weapon_flesh_variant": "Unsuppressed body and not Bone and no accepted shield material. Enchanted selector bypasses this test.",
+  "stack_proof": "Full prefix initializes the material flag at selector ESP+13. Shield writes ESP+17 while the SOUN name argument is pushed; after lookup ret4 it is the same ESP+13 byte. Do not treat these as separate fields.",
+  "live_state_limit": "Prior original-game loaded Dog and Skeleton each have actor byte104=1, despite Skeleton base byte104=2. Base creatureType must not be substituted. The typed pure helper accepts the whole raw byte domain; fork resident model eligibility currently projects canonical0/1.",
+  "evidence": "build/oblivion-compat/m15/S4/native-creature-target-sound-oracle-03/report.json",
+  "production_comparison": "build/oblivion-compat/m15/S4/native-creature-target-sound-oracle-03/comparison.json",
+  "retained_failed_interpretations": [
+    "01 asserted selector flag remains0, overlooking shield write with pushed argument",
+    "02 consequently predicted Flesh weapon variant after shield lookup; full-prefix execution falsified it. Corrected03 preserves existing NPC palette behavior."
+  ]
+}
