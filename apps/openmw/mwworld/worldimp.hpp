@@ -407,6 +407,7 @@ namespace MWWorld
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
+        std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         bool setOblivionPlayerCrimeLevel(int amount) override;
         bool requestOblivionReputation(const Ptr& actor, int amount) override;
         std::optional<std::int32_t> getOblivionPlayerInfamy() const;

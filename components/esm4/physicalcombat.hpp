@@ -710,6 +710,9 @@ namespace ESM4
     // Common native predicate queries process action +2D0 and compares exactly6.
     // A missing process or another signed action code is not blocking.
     bool nativeBlockingPosture(std::optional<std::int16_t> processAction);
+    // GetKnockedState command/CTDA4F76B0 translates only raw3/4 to1.
+    // This is distinct from the signed process byte used by contact rules.
+    bool nativeScriptKnockedState(std::int8_t processState) noexcept;
 
     enum class BlockEquipment { Shield, Weapon, Unarmed };
     struct BlockContactInput

@@ -1529,6 +1529,11 @@ namespace ESM4
         return processAction == 6;
     }
 
+    bool nativeScriptKnockedState(std::int8_t processState) noexcept
+    {
+        return processState == 3 || processState == 4;
+    }
+
     BlockContactDisposition blockContactDisposition(const BlockContactInput& input)
     {
         switch (input.mEquipment)

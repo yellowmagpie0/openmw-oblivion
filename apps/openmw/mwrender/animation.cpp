@@ -29,6 +29,7 @@
 
 #include <components/resource/animblendrulesmanager.hpp>
 #include <components/resource/keyframemanager.hpp>
+#include <components/resource/niffilemanager.hpp>
 #include <components/resource/scenemanager.hpp>
 
 #include <components/esm3/loadcont.hpp>
@@ -1876,6 +1877,42 @@ namespace MWRender
         }
 
         return movement;
+    }
+
+    std::optional<Animation::NativePhysicalSource> Animation::captureNativePhysicalSource(
+        VFS::Path::NormalizedView model) const
+    {
+        if (!mObjectRoot || !mResourceSystem || !model.value().ends_with(".nif"))
+            return std::nullopt;
+        const auto file = mResourceSystem->getNifFileManager()->get(model);
+        if (file->mPath != model)
+            return std::nullopt;
+        auto definition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+            NifBullet::loadActorRagdollDefinition(*file));
+        if (definition->mBodies.empty())
+            return std::nullopt;
+        // This read-only binding validates the asset hash, all body records,
+        // bone names and hierarchy against the visible model. Equipment and
+        // separately loaded face/body parts retain their own asset identities.
+        auto binding = std::make_shared<const SceneUtil::ActorRagdollPoseBinding>(*definition, *mObjectRoot);
+        NativePhysicalSource result;
+        result.mModel = VFS::Path::Normalized(model);
+        result.mDefinition = std::move(definition);
+        result.mBinding = std::move(binding);
+        result.mRoot = mObjectRoot;
+        result.mActor = mPtr;
+        result.mOwner = mNativePhysicalSourceIdentity;
+        result.mReactionRootRecord = mNativeReactionRootRecord;
+        return result;
+    }
+
+    bool Animation::isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept
+    {
+        const auto owner = source.mOwner.lock();
+        return owner && owner == mNativePhysicalSourceIdentity && source.mRoot == mObjectRoot
+            && source.mActor == mPtr
+            && source.mDefinition && source.mBinding && source.mBinding->isValid()
+            && source.mReactionRootRecord == mNativeReactionRootRecord;
     }
 
     template <class Placement>

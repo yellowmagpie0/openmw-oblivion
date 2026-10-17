@@ -241,6 +241,7 @@ namespace MWRender
         std::optional<std::uint32_t> mNativeReactionRootRecord;
         bool mNativeReactionPaletteInitialized = false;
         bool mNativeReactionFirstSequenceLoaded = false;
+        const std::shared_ptr<const char> mNativePhysicalSourceIdentity = std::make_shared<const char>();
         ActiveControllersVector mPhysicalResidentControllers;
 
         // The node expected to accumulate movement during movement animations.
@@ -529,6 +530,28 @@ namespace MWRender
         float getVelocity(std::string_view groupname) const;
 
         virtual osg::Vec3f runAnimation(float duration);
+
+        class NativePhysicalSource
+        {
+            friend class Animation;
+            VFS::Path::Normalized mModel;
+            std::shared_ptr<const NifBullet::ActorRagdollDefinition> mDefinition;
+            std::shared_ptr<const SceneUtil::ActorRagdollPoseBinding> mBinding;
+            osg::ref_ptr<osg::Group> mRoot;
+            MWWorld::Ptr mActor;
+            std::weak_ptr<const char> mOwner;
+            std::optional<std::uint32_t> mReactionRootRecord;
+        public:
+            const VFS::Path::Normalized& model() const { return mModel; }
+            const std::shared_ptr<const NifBullet::ActorRagdollDefinition>& definition() const { return mDefinition; }
+            const std::shared_ptr<const SceneUtil::ActorRagdollPoseBinding>& binding() const { return mBinding; }
+            std::optional<std::uint32_t> reactionRootRecord() const { return mReactionRootRecord; }
+        };
+        // Resolve geometry against the currently rendered NIF hierarchy before
+        // preparing a contact's physical reaction. No controller/body writes.
+        // The sequence-selected reaction root stays distinct from file root0.
+        std::optional<NativePhysicalSource> captureNativePhysicalSource(VFS::Path::NormalizedView model) const;
+        bool isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept;
 
         // Borrowed renderer projection; physical bodies and lifecycle state
         // remain with the physics scheduler and native actor authority.

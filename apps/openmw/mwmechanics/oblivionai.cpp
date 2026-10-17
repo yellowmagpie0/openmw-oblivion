@@ -1290,6 +1290,11 @@ namespace MWMechanics
                 return value(function == "GetDetectionLevel" ? result.mLevel
                                                                : result.mDetected ? 1.0 : 0.0);
             }
+            if (function == "GetKnockedState")
+            {
+                try { return value(mWorld.getOblivionScriptKnockedState(subjectKey).value_or(0.0)); }
+                catch (const std::invalid_argument&) { return ESM4::ConditionValue::unsupported(); }
+            }
             if (function == "GetDead" || function == "GetAttacked" || function == "GetIsAlerted")
             {
                 if (const MWWorld::Ptr loaded = loadedPtrFor(subjectKey); !loaded.isEmpty())
@@ -1751,6 +1756,11 @@ namespace MWMechanics
                 return value(sameCell() ? 1.0 : 0.0);
             if (function == "GetDisabled")
                 return value(subjectPtr.getRefData().isEnabled() ? 0.0 : 1.0);
+            if (function == "GetKnockedState")
+            {
+                try { return value(mWorld.getOblivionScriptKnockedState(actorKey(subjectPtr)).value_or(0.0)); }
+                catch (const std::invalid_argument&) { return ESM4::ConditionValue::unsupported(); }
+            }
             if (function == "GetDead")
                 return value(nativeStats().isDead() ? 1.0 : 0.0);
             if (function == "GetIsCreature")

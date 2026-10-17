@@ -6403,6 +6403,12 @@ namespace
             return complete.serializeBinary();
         };
         const auto before = snapshot();
+        EXPECT_THROW(world.getOblivionScriptKnockedState(victim.getCellRef().getFormKey()), std::invalid_argument);
+        ESM4::PackageCondition unknownKnocked;
+        unknownKnocked.mFunction = 107;
+        unknownKnocked.mOperator = ESM4::ConditionOperator::Equal;
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+            victim, attacker, std::span(&unknownKnocked, 1)), ESM4::ConditionResult::Unsupported);
         EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, victim), std::invalid_argument);
         EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, {}, victim), std::invalid_argument);
         EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, attacker, {}), std::invalid_argument);
@@ -23136,4 +23142,146 @@ TEST(OblivionWorldTest, StandingPowerRecipesUseRawSkillAndMultiplyWeaponBeforeAt
                 item, 0, false, ESM4::MeleeStrikeKind::LeftPower));
             EXPECT_EQ(snapshot(), before);
         }
+}
+
+TEST(OblivionWorldTest, NativePhysicalSourceBindsOwnedNifToTheActualRendererAndSequenceRoot)
+{
+    class SourceAnimation : public MWRender::Animation
+    {
+    public:
+        SourceAnimation(const MWWorld::Ptr& actor, osg::Group* parent, Resource::ResourceSystem* resources,
+            const std::string& model)
+            : Animation(actor, parent, resources)
+        { setObjectRoot(model, true, false, false); }
+        void reload(const std::string& model) { setObjectRoot(model, true, false, false); }
+        void bindReactionRoot(std::string name)
+        {
+            SceneUtil::ControllerSequenceMetadata sequence;
+            sequence.mAccumRootName = std::move(name);
+            bindNativeReactionRoot(std::span(&sequence, 1));
+        }
+    };
+    NativeWorldFixture fixture;
+    const auto actor = addNativeNpc(fixture, 0x900);
+    const std::string model = "meshes/m15-physical-source.nif";
+    const auto path = VFS::Path::toNormalized(model);
+    std::filesystem::create_directories(fixture.mDirectory / "meshes");
+    const auto write = [&](float radius) {
+        std::ofstream file(fixture.mDirectory / model, std::ios::binary);
+        const auto bytes = nativeCarriedWeaponNif(radius);
+        file.write(bytes.data(), bytes.size());
+        if (!file) throw std::runtime_error("failed to write owned physical-source NIF");
+    };
+    write(.5f);
+    fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+    fixture.mVfs.buildIndex();
+    auto* scene = fixture.mResources.getSceneManager();
+    scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+    osg::ref_ptr<osg::Group> parent = new osg::Group;
+    std::optional<MWRender::Animation::NativePhysicalSource> retained;
+    {
+        SourceAnimation animation(actor, parent, &fixture.mResources, model);
+        auto initial = animation.captureNativePhysicalSource(path);
+        ASSERT_TRUE(initial);
+        ASSERT_TRUE(initial->definition());
+        ASSERT_EQ(initial->definition()->mBodies.size(), 1u);
+        EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(initial->definition()->mBodies[0].mShape).mRadius, .5f);
+        EXPECT_FALSE(initial->reactionRootRecord());
+        EXPECT_TRUE(animation.isCurrentNativePhysicalSource(*initial));
+        EXPECT_FALSE(animation.hasPhysicalPose());
+        const auto pose = initial->binding()->captureWorldBones(Nif::NiTransform::getIdentity());
+        ASSERT_EQ(pose.size(), 1u);
+        EXPECT_EQ(pose[0].mPose.getTrans(), osg::Vec3f(1, 2, 3));
+        animation.bindReactionRoot("Owned weapon");
+        EXPECT_FALSE(animation.isCurrentNativePhysicalSource(*initial));
+        auto selected = animation.captureNativePhysicalSource(path);
+        ASSERT_TRUE(selected);
+        EXPECT_EQ(selected->reactionRootRecord(), 0u);
+        EXPECT_TRUE(animation.isCurrentNativePhysicalSource(*selected));
+        const auto rebound = addNativeNpc(fixture, 0x901);
+        animation.updatePtr(rebound);
+        EXPECT_FALSE(animation.isCurrentNativePhysicalSource(*selected));
+        animation.updatePtr(actor);
+        EXPECT_TRUE(animation.isCurrentNativePhysicalSource(*selected));
+        SourceAnimation other(actor, parent, &fixture.mResources, model);
+        EXPECT_FALSE(other.isCurrentNativePhysicalSource(*selected));
+        // Reopening a changed parser asset cannot bind its new geometry to the
+        // old visible model. The retained old source remains valid for that model.
+        write(2.f);
+        fixture.mResources.getNifFileManager()->clearCache();
+        EXPECT_TRUE(animation.isCurrentNativePhysicalSource(*selected));
+        EXPECT_THROW(animation.captureNativePhysicalSource(path), std::invalid_argument);
+        scene->clearCache();
+        animation.reload(model);
+        EXPECT_FALSE(animation.isCurrentNativePhysicalSource(*selected));
+        auto replacement = animation.captureNativePhysicalSource(path);
+        ASSERT_TRUE(replacement);
+        EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(replacement->definition()->mBodies[0].mShape).mRadius, 2.f);
+        EXPECT_NE(replacement->definition()->mSourceHash, selected->definition()->mSourceHash);
+        EXPECT_FALSE(replacement->reactionRootRecord());
+        EXPECT_FALSE(animation.hasPhysicalPose());
+        retained = std::move(replacement);
+    }
+    fixture.mResources.getNifFileManager()->clearCache();
+    ASSERT_TRUE(retained);
+    EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(retained->definition()->mBodies[0].mShape).mRadius, 2.f);
+    SourceAnimation other(actor, parent, &fixture.mResources, model);
+    EXPECT_FALSE(other.isCurrentNativePhysicalSource(*retained));
+}
+
+TEST(OblivionWorldTest, NativeGetKnockedStateUsesTheCommandTranslationAcrossScriptsAndConditions)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    MWClass::Npc::registerSelf();
+    world.setupPlayer();
+    ESM4::Npc nativePlayer{};
+    nativePlayer.mId = {7, 1};
+    nativePlayer.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    nativePlayer.mIsTES4 = true;
+    nativePlayer.mData.health = 100;
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(nativePlayer, nativePlayer.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    const auto player = world.getPlayerPtr();
+    const auto npc = addNativeNpc(fixture, 0x801);
+    const auto creature = addEquipmentCreature(fixture);
+    const auto low = addNativeNpc(fixture, 0x802);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.activateOblivionActor(creature));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(low, ESM4::ActorValueProcess::Low));
+    auto& combat = *world.getOblivionCombatService();
+    auto* scripts = world.getOblivionScriptManager();
+    auto* ai = world.getOblivionAiService();
+    ASSERT_NE(scripts, nullptr);
+    ASSERT_NE(ai, nullptr);
+    // Original evaluator4F76B0's stored outputs for all signed process bytes.
+    // Its raw3/4 mapping differs from hand-contact suppression for any nonzero byte.
+    for (const auto& actor : {npc, creature, low, player})
+    {
+        const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        for (int raw = -128; raw <= 127; ++raw)
+        {
+            SCOPED_TRACE(::testing::Message() << key.serialize() << "," << raw);
+            combat.setProcessKnockedState(key, static_cast<std::int8_t>(raw));
+            const auto before = *combat.findActorValues(key);
+            const double expected = actor != low && (raw == 3 || raw == 4) ? 1.0 : 0.0;
+            ASSERT_EQ(world.getOblivionScriptKnockedState(key), expected);
+            ObScript::RuntimeContext context;
+            context.mSelf = key;
+            const auto reference = ObScript::Value{ObScript::ReferenceValue{key, {}}};
+            EXPECT_EQ(ObScript::asNumber(scripts->call("GetKnockedState", reference, {}, context, {})), expected);
+            ESM4::PackageCondition condition;
+            condition.mFunction = 107;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mComparisonValue = static_cast<float>(expected);
+            if (actor == player) condition.mRunOnTarget = true;
+            const auto speaker = actor == player ? npc : actor;
+            const auto target = actor == player ? player : MWWorld::Ptr{};
+            EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::True);
+            condition.mComparisonValue = static_cast<float>(1.0 - expected);
+            EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::False);
+            EXPECT_EQ(*combat.findActorValues(key), before);
+        }
+    }
+    EXPECT_FALSE(world.getOblivionScriptKnockedState(ESM::FormKey::content("headless.esm", 0xabcdef)));
 }

@@ -15383,3 +15383,49 @@ Dog face geometry holes and lighting differences remain. Native reaction/mastery
 RNG and consequences, remaining physical math, directional/effect/interruption/
 input/view/FPS and named restart gates stay open. **Full S4 is incomplete.**
 See [the verification index](M15-UNARMED-LIVE-PRECISION-VERIFICATION.json).
+
+## Native reaction query and rendered-source checkpoint — 2026-10-17
+
+The canonical World authority now exposes GetKnockedState to actual M7 commands
+and CTDA 107 conditions. The full original command/evaluator corpus covers 30720
+profiles: only MiddleHigh/High raw states 3/4 return 1; every other signed byte,
+Low/MiddleLow or missing process returns 0. This translation differs from the raw
+state used to suppress hand Fatigue damage. The null original evaluator stores 0;
+the null command wrapper preserves its prior result, whose higher-level
+initialization is outside that instruction probe. World tests cover all signed
+bytes for actual Player/NPC/Creature/Low bindings, both condition comparisons,
+unchanged actor arrays and rejection of unknown legacy Active state.
+
+A read-only renderer source capture binds immutable NIF body geometry to the
+visible scene's asset hash, records, bones and hierarchy. Owner lifetime, actor
+rebinding, model reload, parser/scene cache changes and sequence-selected reaction
+root changes are checked. This prepares geometry; no production contact currently
+uses it to admit bodies or recover from knockdown.
+
+Full checks pass 2806 component cases, 750 sanitized ESM4 cases,
+1620 engine cases normally and under ASan/UBSan, and 313 Python tests,
+with exact C++ inventory agreement and no failures/skips. Leak checking is off.
+Tested source fingerprint: `8bdd8a2a8eaa4f06c6ad44aed809b3bbfa4bac2b0ce6f407ebd76acf867e0307`.
+
+Normal and sanitized engines each perform two ordinary unarmed contacts across
+F5/quit/fresh-process load. Standing Player/Creature queries return 0 before and
+after each contact; positive states are established by instructions and World
+tests, not this course. Exact Player Fatigue 140 -> 133 -> 126, Dog Health 20
+-> 18.579999923706055 -> 17.170499801635742 and Fatigue 153 -> 151.28999328613281
+-> 149.58525085449219 persist. Both saves follow simulation time 6 and have no
+active strike or timed knockback. Source/output identities, complete native
+arrays, inventories, one action per process, no replay, sound acknowledgements
+and nonzero captured PCM are checked. All four captures were reviewed; fists
+render without torso occlusion, while Dog face holes/lighting differences remain.
+
+The independent 2560-profile post-damage caller audit also establishes outer
+Expert-rank/positive-Speed gates, actual animation groups, the shared mastery
+draw and paralysis clearing the knockdown flag before spell lookup. The earlier
+600218 prefix forces its flag at post-contact integer Fatigue <= 0 when incoming Fatigue is
+positive; the old corpus's negative-only prose was wrong at zero. Frame reaction
+initialization remains a separate float Fatigue < 0 rule. These audits do
+not implement consequences. Native reaction/mastery RNG parity, automatic body
+admission, physical recovery, directional/mastery/effect integration and the
+remaining input/view/FPS/restart matrix remain open. **Full S4 is incomplete.**
+See [the verification index](M15-NATIVE-REACTION-QUERY-VERIFICATION.json) and
+[editable probe protocol](../../scripts/data/oblivion_compat/m15_native_reaction_sources_and_queries_probe.json).

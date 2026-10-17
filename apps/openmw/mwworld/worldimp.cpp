@@ -2226,6 +2226,14 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    std::optional<double> World::getOblivionScriptKnockedState(const ESM::FormKey& actor) const
+    {
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        if (!mOblivionCombat || !mOblivionCombat->findActorValues(key))
+            return std::nullopt;
+        return ESM4::nativeScriptKnockedState(mOblivionCombat->getProcessKnockedState(key)) ? 1.0 : 0.0;
+    }
+
     bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate)
     {
         if (!mOblivionCombat || actor.isEmpty())

@@ -188,6 +188,7 @@ SUPPORTED_CONDITION_FUNCTIONS = {
     79,   # GetQuestVariable
     84,   # GetDeadCount
     91,   # GetIsAlerted
+    107,  # GetKnockedState: native process translation owned by M15
     132,  # GetPCInFaction
     136,  # GetIsReference
     159,  # GetSitting
@@ -253,6 +254,7 @@ CONDITION_NAMES = {
     79: "GetQuestVariable",
     84: "GetDeadCount",
     91: "GetIsAlerted",
+    107: "GetKnockedState",
     132: "GetPCInFaction",
     136: "GetIsReference",
     159: "GetSitting",

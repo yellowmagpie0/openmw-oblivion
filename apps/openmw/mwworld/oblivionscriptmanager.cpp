@@ -1908,6 +1908,8 @@ namespace MWWorld
             const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(objectKey());
             return ObScript::ReferenceValue{ metadata && metadata->mParent ? *metadata->mParent : ESM::FormKey{}, {} };
         }
+        if (name == "getknockedstate")
+            return std::int64_t(mWorld.getOblivionScriptKnockedState(objectKey()).value_or(0.0));
         if (name == "getdead")
         {
             if (const auto* combat = mWorld.getOblivionCombatService())
