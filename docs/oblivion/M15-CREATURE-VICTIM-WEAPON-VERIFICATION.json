@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "status": "Bounded stock unenchanted blade against Creature with fresh-process wear/resource continuity verified; full S4 incomplete",
+  "source_parent_commit": "1361cef542cbe186775f2c82bea91560500e4324",
+  "tested_python_source_fingerprint": "ca8ad827804690c7098b988860c17756690cf7983a79e14fbee6e77d607e221a",
+  "source_sha256": {
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_weapon.json": "5529c6b4d5d0c846601506f63b3d141e3e04f4359bf574e53ae83db148f295cc",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_weapon_sanitized.json": "415eee6b14bed4b3ec727cdf3eef0d99d41f039b702489f2be99bf33a60fcd25",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_weapon_continuation.json": "d001247507f4d815a0708abb88eed48341a51317d746624ee9df55a36129d95a",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_weapon_sanitized_continuation.json": "78d1df02c7d4fb124ab0c7912184720d48cd1bd5e1cf29ebcd25e9a2466ab466",
+    "scripts/data/oblivion_compat/m15_creature_victim_weapon_native_probe.json": "55c0a92ff3839662f81e113320a77f1fdc04df81145c4432aa73c4a9b98ea783"
+  },
+  "unchanged_Cpp_sha256": {
+    "apps/openmw/mwmechanics/character.cpp": "406e0161af9ea582b88ebaf35816cc64fa565b2cf75aaf922eeeb158bb239b17",
+    "apps/openmw/mwgui/hud.cpp": "ae849f968d0eadd00bf969482f3b84536005159751a4270332708e2a025b97c2",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "0bc83451283eb98cb7f7af0ecbb6c8770ee23d98669fc95922ee64fcc557a9ee",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "25211278cccf8f82553e901e584b2bc9d9bf992d532534a0b4bd39aa630897a3",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "1d399aaa708d93e8979ab2eddaa78a8e37c4fbcd7b2789a7b96ccfb76815cf4d"
+  },
+  "python": {
+    "path": "build/oblivion-compat/m15/S4/creature-victim-weapon-python-02/verification.json",
+    "sha256": "a0d08030740ef7568e4fb00e8ee8a2f3bf2f4e48f208c9d53b45210d0677d422",
+    "result": {
+      "executed": 313,
+      "passed": true,
+      "log_sha256": "8eba53fd842aafdbb9c9629b2596eef54516038831d86a4184ad317bc528462e"
+    }
+  },
+  "reused_Cpp_evidence": {
+    "full_engine": "M15-CREATURE-VICTIM-CONTACT-VERIFICATION.json:1618 tests/122 suites normal and sanitizer",
+    "HUD_regression": "M15-MELEE-ENEMY-HUD-VERIFICATION.json:29 selected tests normal and sanitizer",
+    "scope": "No C++ changes or rebuild for this scenario-only checkpoint. Exact same normal/sanitized game binary hashes as accepted HUD courses."
+  },
+  "original_probe": {
+    "path": "build/oblivion-compat/m15/S4/creature-victim-weapon-oracle-01/report.json",
+    "sha256": "d5820dbc12099dab84b3bcc29140f444b72993142f29f5e16788aa20a57af727",
+    "report": {
+      "passed": true,
+      "profiles": 2,
+      "hits": 4,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "rows": [
+        {
+          "x87": 639,
+          "hits": [
+            {
+              "power": false,
+              "multiplier": 1.0,
+              "health_bits": 1066726850,
+              "wear_bits": 1054280253,
+              "condition_bits": 1120086262
+            },
+            {
+              "power": false,
+              "multiplier": 1.0,
+              "health_bits": 1066434565,
+              "wear_bits": 1054280253,
+              "condition_bits": 1120031212
+            }
+          ]
+        },
+        {
+          "x87": 895,
+          "hits": [
+            {
+              "power": false,
+              "multiplier": 1.0,
+              "health_bits": 1066726850,
+              "wear_bits": 1054280253,
+              "condition_bits": 1120086262
+            },
+            {
+              "power": false,
+              "multiplier": 1.0,
+              "health_bits": 1066434565,
+              "wear_bits": 1054280253,
+              "condition_bits": 1120031212
+            }
+          ]
+        }
+      ],
+      "scope": "Two sequential ordinary multiplier1 full484F80 weapon damage query,547240 base-damage wear,5F3870/484850 current-condition and publication paths in both x87 modes. Supplied actor AVs/base Fatigue/damage/item condition and RTTI/reference/publication boundaries as pinned entry02/condition03; current second-hit condition comes only from original first-hit wear. Iron Shortsword000C0D inputs: damage7/max98/condition98, skill10/Luck50/Strength40, source Fatigue140 then132.1999969482422/base140, bonus0; installed ordinary multiplier1 and wear.06. Second current condition comes from first original wear. Fatigue inputs supplied from independently established attack-cost rule7+.1*8; this probe does not execute spending. No contact, acquisition, armor/block/reactions/attack debit or full caller execution."
+    }
+  },
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/verification.json",
+      "sha256": "b6fb5eb019274d3d4395179a3ab3ad97d7c69e068795f2f39836889d7f405814",
+      "report": {
+        "passed": true,
+        "build": "normal",
+        "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "9bfc24da44c844486ee1f435c581390e3c27633f3c920414194aa6a8b89e711c",
+            "payload_sha256": "a90bc059281d4fe8599fe53af050352594b517354578775b1f31dc58e1186b2e",
+            "process_epoch": {
+              "pid": 962844,
+              "start_ticks": 35930597,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "24cb029680eb4b33dd55ce6384ccbd14c6edfbd730cfe1a8073b2912acae4825",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "damage": 1.1637499332427979,
+            "condition": 97.58000183105469,
+            "saved_player_melee": {
+              "actor": "dynamic:player:0000000000000001",
+              "input": {
+                "held_seconds": 0.0,
+                "input_held": false,
+                "prefer_left": false,
+                "queued": 0
+              },
+              "strike": null,
+              "ai_intent": null
+            },
+            "saved_knockback": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "acceleration": [
+                  0.0,
+                  5.347275257110596,
+                  -0.024742042645812035
+                ],
+                "remaining": 0.8000001907348633
+              }
+            ],
+            "audio": {
+              "sha256": "7c93567f3b246b12f8f0e01c6781f9336b1abc6c746e3eb496624e5929b89e75",
+              "frames": 2271360,
+              "peak": 19380,
+              "rms": 523.1498535107773
+            }
+          },
+          {
+            "phase": "second",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "c28f1a51218324e692cc755de1bf77e61201983c07e257f933f581f0acc6b45d",
+            "payload_sha256": "7934297948d8785995eb20a75f5a19939ea2f2fcd9c889554c067eb87fcd1f0f",
+            "process_epoch": {
+              "pid": 962982,
+              "start_ticks": 35937719,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "24cb029680eb4b33dd55ce6384ccbd14c6edfbd730cfe1a8073b2912acae4825",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "damage": 1.1289068460464478,
+            "condition": 97.16000366210938,
+            "saved_player_melee": {
+              "actor": "dynamic:player:0000000000000001",
+              "input": {
+                "held_seconds": 0.0,
+                "input_held": false,
+                "prefer_left": true,
+                "queued": 0
+              },
+              "strike": null,
+              "ai_intent": null
+            },
+            "saved_knockback": [],
+            "audio": {
+              "sha256": "4b99e9b0cf0c49c16195908c4a7e555d12d00cd997a08929d369959fded1c9e1",
+              "frames": 2352960,
+              "peak": 18570,
+              "rms": 438.2425794349604
+            }
+          }
+        ],
+        "scope": "Real keyboard stock unenchanted blade contact, F5 and fresh-process next contact with spell-free Creature. Exactly one native action per process, independent original damage/wear, exact Health/Fatigue modifier continuity and weapon condition98->97.58000183105469->97.16000366210938. Initial AddItem/EquipItem only; continuation preserves owned equipped item and readied state. Whole payload byte-exact re-encode; unrelated native values, bases/life, inventories and RNG preserved. Fur/BladeFlesh sound acknowledgements plus nonzero PCM; no isolated waveform/hardware-hearing claim. Not complete native pose/reaction, mastery or S4 input/view/FPS/restart acceptance. Leak checks disabled."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/verification.json",
+      "sha256": "1f78f2261fb271b36503989d8cb79b704351fccf8c09b59e90108ec886ac8fb3",
+      "report": {
+        "passed": true,
+        "build": "sanitized",
+        "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "7c4b2dbc2e2efcd38c4be486be71caad61ab0977af645f11b58c03ea196df2df",
+            "payload_sha256": "fb9ef91b508368c867c2246182b308d29f71f17ad79e3c24cb43893466572225",
+            "process_epoch": {
+              "pid": 962930,
+              "start_ticks": 35934621,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "13ef6bc3b73d54c576db379fad7ea96b0f45ee8f027ab2e6f782a052d1d79ad8",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "damage": 1.1637499332427979,
+            "condition": 97.58000183105469,
+            "saved_player_melee": {
+              "actor": "dynamic:player:0000000000000001",
+              "input": {
+                "held_seconds": 0.0,
+                "input_held": false,
+                "prefer_left": false,
+                "queued": 0
+              },
+              "strike": null,
+              "ai_intent": null
+            },
+            "saved_knockback": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "acceleration": [
+                  0.0,
+                  5.347275257110596,
+                  -0.024742042645812035
+                ],
+                "remaining": 0.7973437309265137
+              }
+            ],
+            "audio": {
+              "sha256": "e00c1a6ae8c49757caa5f0a985072dcc94cd7255290fbcc77852aeb6b6004689",
+              "frames": 13222080,
+              "peak": 19061,
+              "rms": 182.98565448617163
+            }
+          },
+          {
+            "phase": "second",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "ae91d34cb050cb9ff9c05ac4b158d8a86cc2e761de8b5c7c6af21412c1fb6274",
+            "payload_sha256": "27e0175b627af36f899403b9038959fb1207843fa6396e769f0d7b82106c2df3",
+            "process_epoch": {
+              "pid": 963563,
+              "start_ticks": 35964585,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-weapon-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "13ef6bc3b73d54c576db379fad7ea96b0f45ee8f027ab2e6f782a052d1d79ad8",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "damage": 1.1289068460464478,
+            "condition": 97.16000366210938,
+            "saved_player_melee": {
+              "actor": "dynamic:player:0000000000000001",
+              "input": {
+                "held_seconds": 0.0,
+                "input_held": false,
+                "prefer_left": true,
+                "queued": 0
+              },
+              "strike": null,
+              "ai_intent": null
+            },
+            "saved_knockback": [],
+            "audio": {
+              "sha256": "0cf286dae0500b5bfe357036572429e1b914db1c6a03cbe661e528adcd99bd2c",
+              "frames": 13738560,
+              "peak": 19747,
+              "rms": 192.04951730636301
+            }
+          }
+        ],
+        "scope": "Real keyboard stock unenchanted blade contact, F5 and fresh-process next contact with spell-free Creature. Exactly one native action per process, independent original damage/wear, exact Health/Fatigue modifier continuity and weapon condition98->97.58000183105469->97.16000366210938. Initial AddItem/EquipItem only; continuation preserves owned equipped item and readied state. Whole payload byte-exact re-encode; unrelated native values, bases/life, inventories and RNG preserved. Fur/BladeFlesh sound acknowledgements plus nonzero PCM; no isolated waveform/hardware-hearing claim. Not complete native pose/reaction, mastery or S4 input/view/FPS/restart acceptance. Leak checks disabled."
+      }
+    }
+  },
+  "limits": [
+    "Ordinary Player keyboard stock Iron Shortsword; spell-free unblocked Creature",
+    "No new mastery, power, effects, recovery/knockdown, full pose parity or input/view/FPS/restart matrix acceptance",
+    "Original probe boundaries remain explicit; actual gameplay assertions come from separate engine courses",
+    "Known first-person torso occlusion and Creature geometry artifacts remain",
+    "Nonzero PCM plus exact sound acknowledgements; no isolated waveform or hardware listening claim",
+    "ASan leak checks disabled"
+  ],
+  "late_metadata_only": [
+    "Verification index, milestone, delivery audit and provenance"
+  ]
+}

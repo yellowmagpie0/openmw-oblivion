@@ -15246,3 +15246,21 @@ is input provenance and minimal shared-layout live feedback, without a claim
 of original UI appearance, alpha or countdown parity. Initial missing-TES3-GMST
 failure and corrected real captures are retained in
 [the HUD verification index](M15-MELEE-ENEMY-HUD-VERIFICATION.json).
+
+### Stock blade Creature-victim course inputs
+
+Iron Shortsword content:oblivion.esm:000c0d has source damage 7, condition 98,
+weight 8, speed float32(1.2), reach float32(.8), no enchantment. The new four-hit
+original corpus runs full 484F80, 547240 and 5F3870/484850 for sequential condition
+98->97.58000183105469->97.16000366210938 in both x87 modes. Actor AV/base Fatigue,
+base damage, item condition, RTTI and reference/publication boundaries remain
+supplied as in the pinned entry02/condition03 protocols. Second source Fatigue
+132.1999969482422 is supplied from the independently established 7+.1*8 attack
+cost; this probe does not execute spending. Exact Health outputs are
+1.1637499332427979 then 1.1289068460464478. Actual normal/instrumented normal-input
+courses independently verify spending, resources, wear, acquisition and next-hit
+ownership across a real F5 save/new-process load, including the same equipped
+item and unmodified unrelated native state. Whole original-game reaction/physics
+and full S4 acceptance do not follow from the arithmetic probe. Identity, source
+bytes and boundaries: [verification index](M15-CREATURE-VICTIM-WEAPON-VERIFICATION.json)
+and editable m15_creature_victim_weapon_native_probe.json.

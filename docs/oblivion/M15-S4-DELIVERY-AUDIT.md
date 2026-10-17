@@ -14,7 +14,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
-| 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
+| 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, remaining unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
@@ -4536,3 +4536,40 @@ See [the verification index](M15-MELEE-ENEMY-HUD-VERIFICATION.json), executed
 manifests and native initializer protocol. First-person torso occlusion and
 Creature geometry artifacts remain visible. Mastery, recovery/knockdown and
 the full input/view/FPS/interrupt/restart gates remain open. **S4 is incomplete.**
+
+## Stock blade contact with Creature and worn-item restart
+
+The admitted spell-free Creature victim route now has actual stock weapon
+coverage. The isolated setup adds and equips Iron Shortsword 000C0D through
+native commands, then keyboard input readies and attacks. F5 saves the output;
+a new process resumes with the same readied, equipped, worn item and attacks
+once more. No direct damage or outcome commands are used.
+
+An independent original probe runs full 484F80 damage query, 547240 wear and
+5F3870/484850 condition publication for both x87 modes, four hit observations.
+Source AV/Fatigue, weapon component/condition and RTTI/reference/publication
+boundaries remain supplied; whole hit, spending and reactions are outside that
+probe. Stock source damage 7/max condition 98/weight 8 and installed wear .06 give
+Health damage 1.1637499332427979 then 1.1289068460464478, with condition
+98->97.58000183105469->97.16000366210938. The second input condition comes from
+the first original wear result; source Fatigue 140/132.1999969482422 is declared.
+
+Normal and actual ASan/UBSan engine courses match both hits exactly. Player
+Fatigue 140->132.1999969482422->124.39999389648438, Dog Health
+20->18.83625030517578->17.70734405517578; Dog Fatigue 153 and Player Health 72
+remain unchanged. Each process commits exactly the next action 2/3, alternates
+the native onehand left/right KF and plays Fur/BladeFlesh layers once. Full
+payloads re-encode byte-exactly; unrelated native values, bases/life, inventories
+and RNG remain unchanged. The single new weapon stays equipped; only its exact
+native condition changes after restart. PCM is nonzero, without a claim of
+isolated waveform or hardware hearing equivalence.
+
+Final manifests pass 313 Python tests, fingerprint `ca8ad827804690c7098b988860c17756690cf7983a79e14fbee6e77d607e221a`.
+C++ is unchanged from 1361cef542; actual game hashes equal the accepted HUD
+courses. The preceding full 1,618-test suites and 29-case HUD selections are
+reused, not described as new runs. ASan leak checks are disabled. See
+[the verification index](M15-CREATURE-VICTIM-WEAPON-VERIFICATION.json).
+First-person torso occlusion and Creature geometry artifacts remain; this
+ordinary unenchanted blade course does not close power/mastery/effects,
+recovery/knockdown or the full input/view/FPS/interrupt/restart matrices.
+**S4 remains incomplete.**

@@ -6,6 +6,43 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 stock blade contact with Creature and worn-item restart — 2026-10-16
+
+The admitted spell-free Creature victim route now has actual stock weapon
+coverage. The isolated setup adds and equips Iron Shortsword 000C0D through
+native commands, then keyboard input readies and attacks. F5 saves the output;
+a new process resumes with the same readied, equipped, worn item and attacks
+once more. No direct damage or outcome commands are used.
+
+An independent original probe runs full 484F80 damage query, 547240 wear and
+5F3870/484850 condition publication for both x87 modes, four hit observations.
+Source AV/Fatigue, weapon component/condition and RTTI/reference/publication
+boundaries remain supplied; whole hit, spending and reactions are outside that
+probe. Stock source damage 7/max condition 98/weight 8 and installed wear .06 give
+Health damage 1.1637499332427979 then 1.1289068460464478, with condition
+98->97.58000183105469->97.16000366210938. The second input condition comes from
+the first original wear result; source Fatigue 140/132.1999969482422 is declared.
+
+Normal and actual ASan/UBSan engine courses match both hits exactly. Player
+Fatigue 140->132.1999969482422->124.39999389648438, Dog Health
+20->18.83625030517578->17.70734405517578; Dog Fatigue 153 and Player Health 72
+remain unchanged. Each process commits exactly the next action 2/3, alternates
+the native onehand left/right KF and plays Fur/BladeFlesh layers once. Full
+payloads re-encode byte-exactly; unrelated native values, bases/life, inventories
+and RNG remain unchanged. The single new weapon stays equipped; only its exact
+native condition changes after restart. PCM is nonzero, without a claim of
+isolated waveform or hardware hearing equivalence.
+
+Final manifests pass 313 Python tests, fingerprint `ca8ad827804690c7098b988860c17756690cf7983a79e14fbee6e77d607e221a`.
+C++ is unchanged from 1361cef542; actual game hashes equal the accepted HUD
+courses. The preceding full 1,618-test suites and 29-case HUD selections are
+reused, not described as new runs. ASan leak checks are disabled. See
+[the verification index](M15-CREATURE-VICTIM-WEAPON-VERIFICATION.json).
+First-person torso occlusion and Creature geometry artifacts remain; this
+ordinary unenchanted blade course does not close power/mastery/effects,
+recovery/knockdown or the full input/view/FPS/interrupt/restart matrices.
+**S4 remains incomplete.**
+
 ## S4 live melee target Health feedback — 2026-10-16
 
 Successful Player native contacts now select their committed victim in the HUD.

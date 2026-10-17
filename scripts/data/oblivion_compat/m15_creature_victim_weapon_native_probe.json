@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "purpose": "Unenchanted stock Iron Shortsword contact with spell-free Creature; native damage/wear inputs and actual save/fresh-process course",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_probe": {
+    "path": "build/oblivion-compat/m15/S4/creature-victim-weapon-oracle-01/report.json",
+    "sha256": "d5820dbc12099dab84b3bcc29140f444b72993142f29f5e16788aa20a57af727",
+    "profiles": 2,
+    "hits": 4,
+    "scope": "Two sequential ordinary multiplier1 full484F80 weapon damage query,547240 base-damage wear,5F3870/484850 current-condition and publication paths in both x87 modes. Supplied actor AVs/base Fatigue/damage/item condition and RTTI/reference/publication boundaries as pinned entry02/condition03; current second-hit condition comes only from original first-hit wear. Iron Shortsword000C0D inputs: damage7/max98/condition98, skill10/Luck50/Strength40, source Fatigue140 then132.1999969482422/base140, bonus0; installed ordinary multiplier1 and wear.06. Second current condition comes from first original wear. Fatigue inputs supplied from independently established attack-cost rule7+.1*8; this probe does not execute spending. No contact, acquisition, armor/block/reactions/attack debit or full caller execution.",
+    "goldens": [
+      {
+        "power": false,
+        "multiplier": 1.0,
+        "health_float32": 1.1637499332427979,
+        "wear_float32": 0.41999998688697815,
+        "condition_float32": 97.58000183105469
+      },
+      {
+        "power": false,
+        "multiplier": 1.0,
+        "health_float32": 1.1289068460464478,
+        "wear_float32": 0.41999998688697815,
+        "condition_float32": 97.16000366210938
+      }
+    ]
+  },
+  "weapon_source": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "form": "content:oblivion.esm:000c0d",
+    "editor_id": "WeapIronShortsword",
+    "damage": 7,
+    "maximum_condition": 98,
+    "weight": 8,
+    "speed_float32": 1.2000000476837158,
+    "reach_float32": 0.800000011920929,
+    "enchantment": null,
+    "DATA_hex": "000000009a99993fcdcc4c3f000000000a00000062000000000000410700"
+  },
+  "seed": {
+    "source_save": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+    "scope": "Unmodified actual engine save from accepted camera-first Creature course: live Dog Health20/Fatigue153, Player Health72/Fatigue140, completed Creature action1, stopped combat, saved pitch1.171875. Incoming-contact inputs use this camera/placement seed without payload editing.",
+    "creature_native_values": {
+      "3": [
+        50.0,
+        null,
+        null,
+        null
+      ],
+      "4": [
+        13.0,
+        null,
+        null,
+        null
+      ],
+      "7": [
+        40.0,
+        null,
+        null,
+        null
+      ],
+      "8": [
+        20.0,
+        null,
+        null,
+        null
+      ],
+      "10": [
+        160.0,
+        0.0,
+        0.0,
+        -7.0
+      ]
+    },
+    "correction": "Initial descriptive metadata assumed fresh160 Fatigue. The immutable prior-course save includes its already committed7-point attack debit: base160, Damage-7, current153. No saved payload was edited."
+  },
+  "runtime_inputs": "AddItem/EquipItem select stock weapon before input. Keyboard f readies it, u attacks, F5 saves. New process loads actual output and u attacks again without adding/equipping/readiness commands. No direct damage/outcome commands.",
+  "expected": {
+    "Player_Fatigue": [
+      140,
+      132.1999969482422,
+      124.39999389648438
+    ],
+    "Creature_Health": [
+      20.0,
+      18.83625030517578,
+      17.70734405517578
+    ],
+    "Creature_Fatigue": [
+      153,
+      153,
+      153
+    ],
+    "weapon_condition": [
+      98,
+      97.58000183105469,
+      97.16000366210938
+    ]
+  },
+  "expected_sounds": [
+    "PHYDamageFur",
+    "WPNHitBladeFlesh"
+  ],
+  "attack_cost": {
+    "rule": "f32(7 + 8 * f32(.1))",
+    "cost_float32": 7.800000190734863,
+    "scope": "Existing independently established native attack cost rule; source Fatigue inputs are supplied in this new weapon arithmetic probe, not executed spending."
+  },
+  "limits": [
+    "Ordinary Player keyboard stock unenchanted blade contacts only",
+    "No directional/mastery, active block, effects, native first-person pose parity or complete S4 matrix",
+    "Original probe does not execute acquisition, mitigation, damage application, reaction, spending or whole hit",
+    "Complete payload re-encoding and actual modifier/condition continuity checked separately",
+    "C++ unchanged from1361cef542; new executable/rebuild claim is not made for scenario-only coverage"
+  ]
+}
