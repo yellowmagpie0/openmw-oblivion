@@ -4865,3 +4865,19 @@ Failed contact/setup attempts, exact fixture/camera inputs and clean restoration
 are retained in the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 Neither partially occluded capture closes a visual gate. This is independent
 original evidence; fork reaction and recovery acceptance remain open.
+
+
+Native body admission now explicitly selects object-local renderer Single
+precision. The binding reads current native controller transforms, composes
+placement outside the authored root, and projects physical root writes back
+relative to that placement. Prepared admission and animated target sampling
+retain frozen original `707370` rotation/position bits. The new mode also
+ignores traversal-only projections and preserves local checkpoints. Legacy
+object-local and global reference-root contracts remain distinct.
+All 2813 component cases/269 suites and 1626 engine cases/122 suites pass
+normally. All 1626 engine cases and 34 focused pose-binding cases also pass
+under ASan/UBSan with leak detection disabled. Hashes and selections are in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This covers renderer composition/writeback. The scene-to-body admission adapter
+still uses its default Double conversion. Automatic contact/reaction-frame,
+GetUp playback, recovery restart and full normal-input acceptance remain open.

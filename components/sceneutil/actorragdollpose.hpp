@@ -50,12 +50,13 @@ namespace SceneUtil
     class ActorRagdollPoseBinding
     {
     public:
-        enum class RootSpace { ObjectLocal, ReferenceWorld };
+        enum class RootSpace { ObjectLocal, NativeObjectLocal, ReferenceWorld };
         // ReferenceWorld requires one declared native reference root. Its
         // author local already contains global R/T/scale; placement R/T is not
         // applied again. Placement scale still validates physical bone scales.
-        // Native reference composition uses observed Single precision; existing
-        // ObjectLocal behavior and precision remain unchanged.
+        // NativeObjectLocal applies placement to the authored root, with native
+        // controller transforms and Single composition/writeback. ReferenceWorld
+        // also uses Single precision. ObjectLocal retains its legacy arithmetic.
         ActorRagdollPoseBinding(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root,
             RootSpace rootSpace = RootSpace::ObjectLocal);
         ~ActorRagdollPoseBinding();

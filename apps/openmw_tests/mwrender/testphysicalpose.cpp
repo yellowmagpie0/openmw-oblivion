@@ -9,6 +9,8 @@
 #include <gtest/gtest.h>
 #include <osgUtil/UpdateVisitor>
 #include <array>
+#include <bit>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
@@ -216,6 +218,37 @@ namespace
         EXPECT_THROW(expired->initialBones(), std::invalid_argument);
     }
 
+
+    TEST_F(PhysicalPoseAnimationTest, NativePreparationAndAnimatedSamplingRetainOriginalCompositionBits)
+    {
+        const std::array<std::uint32_t, 9> rotation{0x3f3b0df5u,0x3f1d8dc8u,0x3e974e6du,
+            0xbf2d20bcu,0x3f3636ceu,0x3e4259e6u,0xbdbf8f0cu,0xbead547au,0x3f6fb0edu};
+        const std::array<std::uint32_t, 3> position{0x41b21a51u,0x41bc4696u,0x42105fb0u};
+        auto placement = Nif::NiTransform::getIdentity();
+        for (unsigned i = 0; i < 9; ++i)
+            placement.mRotation.mValues[i / 3][i % 3] = std::bit_cast<float>(rotation[i]);
+        placement.mTranslation = {10,20,30}; placement.mScale = 2;
+        mBone->setTranslation({3,4,5});
+        mAnimation->mWriter->mTranslation = {3,4,5};
+        mAnimation->mWriter->mWriteRotation = false;
+        auto prepared = mAnimation->prepareNativePhysicalPose(mGraph, placement,
+            MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        const auto assertNative = [&](const auto& poses) {
+            ASSERT_EQ(poses.size(), 1u);
+            for (unsigned i = 0; i < 9; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(poses[0].mPose(i % 3,i / 3)), rotation[i]);
+            for (unsigned i = 0; i < 3; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(poses[0].mPose(3,i)), position[i]);
+        };
+        assertNative(prepared->initialBones());
+        ASSERT_TRUE(mAnimation->commitPhysicalPose(*prepared));
+        const auto before = mBone->getMatrix();
+        assertNative(mAnimation->samplePhysicalAnimationTarget(placement, mVisitor));
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        EXPECT_EQ(mBone->getMatrix(), before);
+        assertNative(mAnimation->capturePhysicalPose(placement));
+        mAnimation->endPhysicalPose();
+    }
 
     TEST_F(PhysicalPoseAnimationTest, NativePlacementCarriesSeparateUniformScaleThroughOwnership)
     {

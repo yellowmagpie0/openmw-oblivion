@@ -24,7 +24,7 @@ namespace MWWorld
         const auto linked = NifBullet::ragdollDefinitionWithNativeLinkedBlendState(
             authored, resolvedPackedFilters, resolvedGains);
         const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(linked, placement.mScale);
-        auto renderer = animation.preparePhysicalPose(
+        auto renderer = animation.prepareNativePhysicalPose(
             scaled, placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
         const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, renderer->initialBones());
         auto bodies = physics.prepareActorRagdoll(actor, scaled, NifBullet::RagdollNativeLengthScale,

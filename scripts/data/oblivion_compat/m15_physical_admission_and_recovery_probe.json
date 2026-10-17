@@ -86,7 +86,9 @@
       "Renderer preparation leaves all callback chains and child slots unchanged; stale local pose, callbacks, topology, actor/cell binding, foreign owner and expired renderer reject before handoff.",
       "Invalid body inertia fails before renderer detachment or a controller rebuild; valid admission also avoids rebuilding the already selected controllers.",
       "Compound native frame stages generated controller forces before blend-body drives and advances selected controllers/shared clocks once.",
-      "Rejected scene publication preserves body poses/velocities/packed lanes/activation, controller lists, target state and shared clock; scheduler rejects stale actor handles and preserves complete snapshots with 0/1/2 physics workers."
+      "Rejected scene publication preserves body poses/velocities/packed lanes/activation, controller lists, target state and shared clock; scheduler rejects stale actor handles and preserves complete snapshots with 0/1/2 physics workers.",
+      "Native renderer admission and animated target sampling use explicit NativeObjectLocal Single composition/writeback, matching frozen original707370 bits while applying placement outside the authored root.",
+      "Native object-local root writeback remains relative to placement; ReferenceWorld and legacy defaults preserve their established root semantics."
     ]
   },
   "pending_live_acceptance": [

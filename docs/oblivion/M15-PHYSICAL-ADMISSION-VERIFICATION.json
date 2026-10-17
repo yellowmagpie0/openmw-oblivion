@@ -1728,5 +1728,175 @@
       ],
       "visual_limits": "Both raw3 and recovered images viewed. Dog is partly occluded by player fists/frame; neither image establishes a clear prone/fullstanding visual acceptance gate. No pixel/trajectory/FPS parity."
     }
+  },
+  "native_object_local_precision_followup": {
+    "status": "Native object-local renderer precision checkpoint; full M15S4 remains incomplete",
+    "source_parent_commit": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+    "tested_source": {
+      "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+      "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+    },
+    "source_sha256": {
+      "apps/components_tests/sceneutil/actorragdollpose.cpp": "fe3d1b2d8cf0d28efa076a27ae06e7a6b90905ecc4aaf5cbf025eee65bdac5c3",
+      "apps/openmw/mwrender/animation.cpp": "a0f7a2c84d616370b7eefc2396e7e814bd2695e9bf4db527a20b4019bb9b414b",
+      "apps/openmw/mwrender/animation.hpp": "fc51ded314604e1d95a5df4160226a819bf084448cfac3c224b7283085a6886b",
+      "apps/openmw/mwworld/oblivionphysicalpose.cpp": "120fa65d9acc839fe905ceb0f920059b0c50503906c3829192891d637a1a1c2e",
+      "apps/openmw_tests/mwrender/testphysicalpose.cpp": "b393343c4eb60d76519ed706f74f854a2b54d38a712a6e7e368753992e9d104b",
+      "components/sceneutil/actorragdollpose.cpp": "bb0c858c1ddbf4fc9274a58a079c1bb7d1a8541acd8e1bf058ba5a70226fa317",
+      "components/sceneutil/actorragdollpose.hpp": "d0bcf4c7f86a8f1e1f594784616d64ee629972cc22fede2a1256cc1c41d8fd02"
+    },
+    "checks": {
+      "native-object-local-components-normal-01:components": {
+        "report": "build/oblivion-compat/m15/S4/native-object-local-components-normal-01/verification.json",
+        "report_sha256": "28b9e88b2f4948307220258c43e46f489086ccf69e51b31bef19a7b3bb8ceaa5",
+        "source": {
+          "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+          "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+        },
+        "result": {
+          "executed": 34,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollPoseTest.*",
+          "binary_sha256": "408639cc18d8386d232a9fd91bdd72933ccaf66c779f26526d3f081a0f131af4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3eaea8207d15b5f09f40e0979d1d591c033e80e8f419e22487b7cdc18bab7c07",
+          "inventory_sha256": "f423d7b3f9f38e46395636a5900e27f673cb68240644c4c085ba917290529867",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "native-object-local-components-sanitized-01:sanitize": {
+        "report": "build/oblivion-compat/m15/S4/native-object-local-components-sanitized-01/verification.json",
+        "report_sha256": "7011a1ca5a9dd6496b6b7de43bc08bde69b4df2ea622516dd8063d00e11641e6",
+        "source": {
+          "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+          "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+        },
+        "result": {
+          "executed": 34,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ActorRagdollPoseTest.*",
+          "binary_sha256": "a99c5b164a19bc47dcd7e0f7e9604a4b2af589ef1b0b89358c799806de0dbfaf",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "17f11748de44eee302da855876ee5a149c223a89ac3f4e9048b19e20e5585f94",
+          "inventory_sha256": "e34deec3e5f1a917832f8788cbc9a56ec9722e11966851ebf900030773b4c66b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "native-object-local-full-normal-02:components": {
+        "report": "build/oblivion-compat/m15/S4/native-object-local-full-normal-02/verification.json",
+        "report_sha256": "2b0d75e69dd81d029d4695ef02d02f5208c143b2e6a7a5fc6c18842af5d30155",
+        "source": {
+          "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+          "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+        },
+        "result": {
+          "executed": 2813,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "408639cc18d8386d232a9fd91bdd72933ccaf66c779f26526d3f081a0f131af4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1b8def30e6f05cf886d49e3ddd312713856ec1ad733c70ef5695df9ed4beabcd",
+          "inventory_sha256": "4df1f11bc07c232f2ebb7ff7a3c099598b8c0eb22c1e3e92a7c8a79b87833715",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "native-object-local-full-normal-02:engine": {
+        "report": "build/oblivion-compat/m15/S4/native-object-local-full-normal-02/verification.json",
+        "report_sha256": "2b0d75e69dd81d029d4695ef02d02f5208c143b2e6a7a5fc6c18842af5d30155",
+        "source": {
+          "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+          "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+        },
+        "result": {
+          "executed": 1626,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "52043e103f855d275ecfb1173e820b1cf3eef4f2da7dcde2771356e1be33656e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "07b9836ba79320b2425ad82449b18bb8c8599a3919ea6fab8dff7004d0c23304",
+          "inventory_sha256": "225138d5cda83bf18efc4770e22863395c0d4b8c94539b522511e4f3ce16a6b9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "native-object-local-engine-sanitized-02:engine": {
+        "report": "build/oblivion-compat/m15/S4/native-object-local-engine-sanitized-02/verification.json",
+        "report_sha256": "cb5159467b0345c726a59ed32884ce7e5a5118617acd2d106b8b3368edd8d28d",
+        "source": {
+          "head": "fd3940befbd7df2f5e34283d5573f3f3ae03da31",
+          "source_fingerprint": "872db22ceb08096e74dc4a82a781f67077662ebe7db49e9af4e87636970a6b97"
+        },
+        "result": {
+          "executed": 1626,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "2e03a76a33c9adda23a1c7d15e74fe7256e0af7cdd0782c5ca569779a1174289",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "b1134a45d589ed0daf2fc6b4091563efa80cfe0893b5dcd56ecbe197675e472e",
+          "inventory_sha256": "225138d5cda83bf18efc4770e22863395c0d4b8c94539b522511e4f3ce16a6b9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "leak_coverage": false
+    },
+    "behavior": [
+      "Explicit NativeObjectLocal binding reads current native controller transforms and uses Single hierarchy composition and local writeback.",
+      "Placement is applied outside the authored root; unlike ReferenceWorld the authored root remains relative to placement and requires no declared global reference root.",
+      "Animation.prepareNativePhysicalPose stages this binding without callback changes. beginNativeActorPhysicalPose selects it for native body admission; animated target sampling retains its precision.",
+      "Legacy ObjectLocal/default preparation paths retain their existing arithmetic and ReferenceWorld retains global-root semantics."
+    ],
+    "independent_expected_values": "Frozen binary32 rotation/position rows from previously executed original707370 reference-root-world-capture-oracle-01; no new native oracle case count is claimed.",
+    "tests": [
+      "Exact original rotation/position bits with nonidentity rotation and separate scale2, renderer-only traversal projection ignored, no live transform writes during capture.",
+      "Root writeback projects against placement and preserves authored scales, child-first physical input and exact checkpoint restoration.",
+      "Prepared renderer admission and later animated target sampling retain original composition bits without disturbing current physical locals."
+    ],
+    "limits": [
+      "This change covers renderer hierarchy composition/writeback. Native scene-to-body admission ragdollBodyWorldPoses still uses its defaultDouble conversion.",
+      "No automatic contact/reaction-frame/GetUp/recovery-restart integration or new normal-input fork acceptance is claimed."
+    ]
   }
 }

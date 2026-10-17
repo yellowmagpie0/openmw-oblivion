@@ -164,7 +164,8 @@ namespace SceneUtil
         Impl(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root, RootSpace rootSpace)
             : mRoot(&root), mSourceHash(definition.mSourceHash), mRootSpace(rootSpace)
         {
-            require(rootSpace == RootSpace::ObjectLocal || rootSpace == RootSpace::ReferenceWorld,
+            require(rootSpace == RootSpace::ObjectLocal || rootSpace == RootSpace::NativeObjectLocal
+                    || rootSpace == RootSpace::ReferenceWorld,
                 "unknown ragdoll renderer root space");
             require(!definition.mBodies.empty() && !mSourceHash.empty(), "empty ragdoll renderer definition");
             std::string rootHash;
@@ -513,9 +514,10 @@ namespace SceneUtil
             {
                 // This adapter is explicitly for a dynamic physical snapshot.
                 // Local writes are required to drive OSG's derived world/skinning matrices.
-                const bool native = mImpl->mRootSpace == RootSpace::ReferenceWorld;
+                const bool native = mImpl->mRootSpace != RootSpace::ObjectLocal;
                 const auto projected = NifBullet::ragdollBonePoseWriteback(local[i], previousWorld[i],
-                    target->second, native && !mImpl->mNodes[i].mParent ? nullptr : &parent, 9, true,
+                    target->second, mImpl->mRootSpace == RootSpace::ReferenceWorld
+                            && !mImpl->mNodes[i].mParent ? nullptr : &parent, 9, true,
                     native ? Nif::NativeTransformPrecision::Single : Nif::NativeTransformPrecision::Double);
                 local[i] = projected.mLocal;
                 candidateWorld.push_back(projected.mWorld);

@@ -1980,7 +1980,7 @@ namespace MWRender
     template <class Placement>
     std::unique_ptr<Animation::PreparedPhysicalPose> Animation::preparePhysicalPoseImpl(
         const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
-        PhysicalPoseAnimation animation)
+        PhysicalPoseAnimation animation, bool nativeObjectLocal)
     {
         if (mPhysicalPose)
             throw std::logic_error("physical renderer pose already bound");
@@ -1997,7 +1997,9 @@ namespace MWRender
         data->mActor = mPtr;
         data->mGeneration = mPhysicalPoseGeneration;
         data->mMode = animation;
-        data->mBinding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
+        data->mBinding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot,
+            nativeObjectLocal ? SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal
+                              : SceneUtil::ActorRagdollPoseBinding::RootSpace::ObjectLocal);
         data->mBones = data->mBinding->captureWorldBones(objectWorld);
         data->mLocal = std::make_unique<SceneUtil::ActorRagdollLocalPose>(data->mBinding->captureLocalPose());
         data->mExternal = mActiveControllers;
@@ -2087,14 +2089,21 @@ namespace MWRender
         const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
         PhysicalPoseAnimation animation)
     {
-        return preparePhysicalPoseImpl(definition, objectWorld, animation);
+        return preparePhysicalPoseImpl(definition, objectWorld, animation, false);
     }
 
     std::unique_ptr<Animation::PreparedPhysicalPose> Animation::preparePhysicalPose(
         const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
         PhysicalPoseAnimation animation)
     {
-        return preparePhysicalPoseImpl(definition, objectWorld, animation);
+        return preparePhysicalPoseImpl(definition, objectWorld, animation, false);
+    }
+
+    std::unique_ptr<Animation::PreparedPhysicalPose> Animation::prepareNativePhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+        PhysicalPoseAnimation animation)
+    {
+        return preparePhysicalPoseImpl(definition, objectWorld, animation, true);
     }
 
     template <class Placement>

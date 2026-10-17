@@ -228,7 +228,7 @@ namespace MWRender
         template <class Placement>
         std::unique_ptr<PreparedPhysicalPose> preparePhysicalPoseImpl(
             const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
-            PhysicalPoseAnimation animation);
+            PhysicalPoseAnimation animation, bool nativeObjectLocal);
         template <class Placement>
         std::vector<NifBullet::RagdollBoneWorldPose> samplePhysicalAnimationTargetImpl(
             const Placement& objectWorld, osg::NodeVisitor& frameVisitor);
@@ -574,6 +574,11 @@ namespace MWRender
             const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
             PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
         std::unique_ptr<PreparedPhysicalPose> preparePhysicalPose(
+            const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+            PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
+        // Native body admission keeps controller transform bits and uses Single
+        // hierarchy composition/writeback with placement outside the authored root.
+        std::unique_ptr<PreparedPhysicalPose> prepareNativePhysicalPose(
             const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
             PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
         bool commitPhysicalPose(PreparedPhysicalPose& prepared) noexcept;

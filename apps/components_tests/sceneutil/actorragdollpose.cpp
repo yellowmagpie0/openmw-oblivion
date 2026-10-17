@@ -684,6 +684,50 @@ namespace
 {
     using RootSpace = SceneUtil::ActorRagdollPoseBinding::RootSpace;
 
+    TEST_F(ActorRagdollPoseTest, NativeObjectLocalUsesOriginalSingleCompositionWithPlacementOutsideRoot)
+    {
+        // Same independently executed 707370 fixture as ReferenceWorld below;
+        // here the global transform comes from placement, not an authored root.
+        const std::array<std::uint32_t, 9> rotation{0x3f3b0df5u,0x3f1d8dc8u,0x3e974e6du,
+            0xbf2d20bcu,0x3f3636ceu,0x3e4259e6u,0xbdbf8f0cu,0xbead547au,0x3f6fb0edu};
+        const std::array<std::uint32_t, 3> position{0x41b21a51u,0x41bc4696u,0x42105fb0u};
+        auto placement = Nif::NiTransform::getIdentity();
+        for (unsigned i = 0; i < 9; ++i)
+            placement.mRotation.mValues[i / 3][i % 3] = std::bit_cast<float>(rotation[i]);
+        placement.mTranslation = {10,20,30}; placement.mScale = 2;
+        mPelvis->setTranslation({0,0,0}); mConnector->setTranslation({3,4,5}); mHand->setTranslation({0,0,0});
+        mPelvis->setTraversalMatrix(osg::Matrixd::translate(999,999,999));
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot, RootSpace::NativeObjectLocal);
+        const auto before = binding.captureLocalPose();
+        const auto result = binding.captureWorldBones(placement);
+        ASSERT_EQ(result.size(), 2u);
+        for (unsigned i = 0; i < 9; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[0].mPose(i % 3,i / 3)), rotation[i]);
+        for (unsigned i = 0; i < 3; ++i)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result[0].mPose(3,i)), position[i]);
+        EXPECT_EQ(result[1].mPose.getTrans(), placement.mTranslation);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        EXPECT_FALSE(mGraph.mReferenceRoot); // Object-local does not require a global reference root.
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativeObjectLocalWritebackKeepsRootRelativeToPlacement)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mTranslation = {100,20,30}; placement.mScale = 2;
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot, RootSpace::NativeObjectLocal);
+        const auto before = binding.captureLocalPose();
+        const std::array<NifBullet::RagdollBoneWorldPose, 2> poses{{
+            {28,osg::Matrixf::translate(145,26,30)}, {8,osg::Matrixf::translate(140,20,30)}}};
+        binding.applyWorldBones(poses, placement);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(20,0,0));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(2.5,1,0));
+        EXPECT_FLOAT_EQ(mPelvis->mScale, 1); EXPECT_FLOAT_EQ(mHand->mScale, 1);
+        const auto result = binding.captureWorldBones(placement);
+        EXPECT_EQ(result[0].mPose, poses[0].mPose); EXPECT_EQ(result[1].mPose, poses[1].mPose);
+        binding.restoreLocalPose(before);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+    }
+
     TEST_F(ActorRagdollPoseTest, ReferenceWorldRootCapturesOriginalGlobalHierarchyWithoutDoublePlacement)
     {
         // reference-root-world-capture-oracle-01: actual root initialization
