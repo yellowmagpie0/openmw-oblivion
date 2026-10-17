@@ -107,6 +107,12 @@ namespace MWRender
         void setRenderBin();
 
         osg::ref_ptr<RotateController> mFirstPersonNeckController;
+        osg::ref_ptr<osg::MatrixTransform> mOblivionFirstPersonRoot;
+        float mOblivionFirstPersonHeight = 0.f;
+        float mOblivionFirstPersonFollow = 1.f;
+
+        void removeOblivionFirstPersonRoot();
+        void updateOblivionFirstPersonRoot(float elapsed);
 
         static bool isFemalePart(const ESM::BodyPart* bodypart);
         static NpcType getNpcType(const MWWorld::Ptr& ptr);
@@ -130,6 +136,7 @@ namespace MWRender
             Resource::ResourceSystem* resourceSystem, bool disableSounds = false, ViewMode viewMode = VM_Normal,
             float firstPersonFieldOfView = 55.f);
         virtual ~NpcAnimation();
+        void removeFromScene() override;
 
         void enableHeadAnimation(bool enable) override;
 

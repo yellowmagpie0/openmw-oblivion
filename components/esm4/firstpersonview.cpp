@@ -45,7 +45,8 @@ namespace ESM4
         if (!store(math.add(input.mYaw, input.mSecondaryYaw), yaw))
             return std::nullopt;
         // Actual Player65DA60/65ABB0 heading read and one wrap, not fmod.
-        constexpr double circle = 6.283185307179586;
+        // A3D5B0 is the float-rounded circle stored in a double slot.
+        constexpr double circle = 6.2831854820251465;
         if (yaw < 0)
         {
             if (!store(math.add(yaw, circle), yaw))

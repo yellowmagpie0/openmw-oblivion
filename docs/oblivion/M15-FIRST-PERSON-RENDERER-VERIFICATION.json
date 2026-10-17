@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "status": "Default high-pitch first-person torso occlusion corrected; full M15S4 incomplete",
+  "parent_commit": "0788b18aa74156742e771bc05da25224e1e3ef2c",
+  "tested_source_fingerprint": "26dc142a696bc36705cb97808d61411601274ccb09c613822d05746387f8d3f8",
+  "source_sha256": {
+    "apps/openmw/mwrender/npcanimation.cpp": "c41869fba6db144c743f4e4ad9bd4ea113d2937560de114c4325d80f232d1830",
+    "apps/openmw/mwrender/npcanimation.hpp": "0e47a3dca9727114824a435ae4e2f1a249b60be2c994641c6e52d760f9e6732a",
+    "components/esm4/firstpersonview.cpp": "1aa9a32d3eda61fd7ad274ae16fd666b4c2cd626db6a80060a539688017e4230",
+    "components/esm4/firstpersonview.hpp": "f05b8f4221737092f319b9fef24e059dadd69e4a00126798b3320e7b0a272e71",
+    "apps/components_tests/esm4/firstpersonview.cpp": "9c14448d9f835286881bb85facb7238c6154f65b7abb913297b7200585e6eae6",
+    "apps/components_tests/esm4/firstpersonview_expected.inc": "13eb8aba19e95faabcd41a827470dde594369c1bc083541e46a86054eb042aa4",
+    "apps/components_tests/esm4/firstpersonview_settings_expected.inc": "7aca0cb0507fc921809b7e42d4a672ffcf75c27ad9fd0984706a175b911a90b4",
+    "scripts/data/oblivion_compat/m15_first_person_root_native_probe.json": "d9ae9858248b00b846b683eb0d79fd853ac1a109bee64882422b898cca15aa39",
+    "scripts/data/oblivion_compat/oblivion_m15_firstperson_root.json": "9c2f920b904dba495ae830b21ec2c2237ba7ff73ac4833f03c77ad03a779f870",
+    "scripts/data/oblivion_compat/oblivion_m15_firstperson_root_continuation.json": "915a8bd6f827117301cfdff9760619c89d29da21dfb165cd4dde128c4b48136f",
+    "scripts/data/oblivion_compat/oblivion_m15_firstperson_root_continuation_sanitized.json": "6e22db00cc2377ff75252f89c4a1ed3f30eb51b3301adaaab8b3d4d17965de41",
+    "scripts/data/oblivion_compat/oblivion_m15_firstperson_root_sanitized.json": "e6cb91d4ede3af1d3a4d908973a9b60e7e615eb2ff3d1fd5cac0c621e53b8209"
+  },
+  "checks": {
+    "components": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-heading-checks-01/verification.json",
+      "sha256": "cfcc7791af2df44862a98bb6c0b991817ce23a8f055a466327fe731bfaab9cf4",
+      "fingerprint": "26dc142a696bc36705cb97808d61411601274ccb09c613822d05746387f8d3f8",
+      "results": {
+        "components": {
+          "executed": 2802,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "38492848ee232dadb1d04f2ef7df36c32b97d644cbe26953e7fa53072292ad9a",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "50a374d16d584e736ca7870d6dcd3958a7bd00377d72eb55073b33bf5b70cd8a",
+          "inventory_sha256": "55cf7db384f708d9999ca752003afc034b9c8dfbe5c74360178f253782932bdf",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 746,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "1625af3e2bbdc406da305fc7ad0f97cf04099411dc85d0f51cd13d2d46b3f78b",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "b0406820d556bbd8465462d6695dd04f1b0d8a7fb4359d48710f33b6bc00971e",
+          "inventory_sha256": "6de1e051d563d302ae1075dbc3715fd29986ad91ed9b85473ef741ff64de16b6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "normal_engine": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-renderer-main-02/verification.json",
+      "sha256": "d003073037c14ed914a10ec20206209958cc226a844c6376d20ecfcde2f5fc5b",
+      "fingerprint": "26dc142a696bc36705cb97808d61411601274ccb09c613822d05746387f8d3f8",
+      "results": {
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c29813f8daf828229d4c22ec133f3ca3c10b2ad959eedede668172d71fa51795",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "2e2b49d04aec80f6db31c1e5b87e44bbef66120629021c84503f46817bc02069",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_engine_python": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-renderer-sanitized-02/verification.json",
+      "sha256": "5bd0458476ee4cb085a6f54ee55765dac9f79239d4d54a8800c68a110cb82f5a",
+      "fingerprint": "26dc142a696bc36705cb97808d61411601274ccb09c613822d05746387f8d3f8",
+      "results": {
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "923809b76dc6c885d36e64f2fc749e3be2faef0850e2fbc042568c7d95217a8a",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "2477c0d26d4ff2c45353c05551b9b7594375505707cb7c6e9bb8bfd2cc58c5f3",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 313,
+          "passed": true,
+          "log_sha256": "74c1693c7bb00fefa215fe2ee9d4c80e543088bd2ec2f704fa5847df221e456d"
+        }
+      }
+    }
+  },
+  "leak_checks": false,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "independent_evidence": {
+    "rotation": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-native-oracle-04/report.json",
+      "sha256": "b96d30322ba89f0df1d649d9be0ba2b91f185a29452da72ca8bbaf8366e73c89",
+      "observations": 45360
+    },
+    "settings_heading": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-settings-heading-oracle-02/report.json",
+      "sha256": "2f27fcb01b750506e69dbafb94a3861665d5f6c9d16983a5b7c2d1a3f1e4277d",
+      "observations": 864
+    },
+    "default_cpp": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-settings-heading-oracle-02/default-comparison.json",
+      "sha256": "b36f79676129061ca1c3707616784b0993311643ff509e1ecdd4bae2cfd99a01",
+      "observations": 15120
+    },
+    "original_live_replay": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-original-live-01/replay-verification.json",
+      "sha256": "ffd802dceb44c41c665d6a5c9ca029b950b32ee472ece09a8ff1272213734a3f",
+      "observations": 3
+    }
+  },
+  "bitwise_cpp_rotation_follow_matches": 15984,
+  "frozen_original_samples": 84,
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/verification.json",
+      "sha256": "2d9b4afe638e59115ee1b258202655dadb47057961418d8e07f57b40c5e85854",
+      "binary_sha256": "3c38cbbcdd1550f509cc968fed76d07afa7acf9327276fc18cdc8e6b86da8ea9",
+      "phases": [
+        {
+          "phase": "first",
+          "save": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "save_sha256": "d8f65bff2cbb12ce8b24c59880b665030ff6a501ef7740f185d7f9037f6ccd08",
+          "payload_sha256": "24baa505415a52c4340e2be1d838cde000dda9e18763c092ef505612d0865534",
+          "process_epoch": {
+            "pid": 1006459,
+            "start_ticks": 36429056,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "3c38cbbcdd1550f509cc968fed76d07afa7acf9327276fc18cdc8e6b86da8ea9",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            }
+          },
+          "damage": 1.1637499332427979,
+          "condition": 97.58000183105469,
+          "saved_player_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": false,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null
+          },
+          "saved_knockback": [
+            {
+              "actor": "content:m15creaturemelee.esp:000802",
+              "acceleration": [
+                0.0,
+                5.347275257110596,
+                -0.024742042645812035
+              ],
+              "remaining": 0.8000001907348633
+            }
+          ],
+          "eye_pivot_heights": [
+            "118",
+            "118"
+          ],
+          "captures": {
+            "first-person-before-switch.png": "65f28041ca393431d43691b98cf07e139cecf659fa58adf5d8723ae937ecee53",
+            "third-person.png": "480ddf3d75b39fe5350f0c5b3a22e8089edd4f0ddb7b2fda6d0326128074a5df",
+            "first-person-after-switch.png": "11ddd879942478b38b46613d20f052f2920c4081f3503e7902889d525e29327d",
+            "player-hit-creature.png": "dd66896939d545a01aecf27da8286349abccd950fd2438f75e44b437f69234fc"
+          },
+          "audio": {
+            "sha256": "ef652ef760ee7aacd1d4b1bb259167f07a824f50c434c56dbae691de54aa4f24",
+            "frames": 2908800,
+            "peak": 16279,
+            "rms": 425.9217199171474
+          }
+        },
+        {
+          "phase": "second",
+          "save": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "save_sha256": "709fcd46bb210aa619c7af3c3acab15b5ac410abda8d18fa7ea5acae266b129a",
+          "payload_sha256": "221e4def0b2895c07889832378473e143258dfb0ce8ba3e35eac2c070c51facc",
+          "process_epoch": {
+            "pid": 1006922,
+            "start_ticks": 36437985,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-normal-04/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "3c38cbbcdd1550f509cc968fed76d07afa7acf9327276fc18cdc8e6b86da8ea9",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            }
+          },
+          "damage": 1.1289068460464478,
+          "condition": 97.16000366210938,
+          "saved_player_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": true,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null
+          },
+          "saved_knockback": [
+            {
+              "actor": "content:m15creaturemelee.esp:000802",
+              "acceleration": [
+                0.0,
+                5.346680641174316,
+                0.08347019553184509
+              ],
+              "remaining": 0.8000001907348633
+            }
+          ],
+          "eye_pivot_heights": [
+            "118",
+            "118"
+          ],
+          "captures": {
+            "first-person-before-switch.png": "0f3d25af1c458069ce4c4a53930c82c50978c21b825e4c5d25387076813d7e93",
+            "third-person.png": "cf4bd7a16ee517a3b73eb6a33f4d7c8dc29319345217627585c5359776815bce",
+            "first-person-after-switch.png": "89dd40d369fb208f0b9de406014c98ef64c63a0a758c9704546fddca03dcb3a3",
+            "player-hit-creature-after-restart.png": "d3dcc3cd2dd5b6bf7732b3f6c8de0c410e2f0bbe52c754af011cbe6c540b2e27"
+          },
+          "audio": {
+            "sha256": "5aee1b37eb1dbd65d78a3dc16d5f0bca7c5ca1836631edf3379cf4c5c47aa04e",
+            "frames": 2635200,
+            "peak": 18574,
+            "rms": 414.2246090105308
+          }
+        }
+      ],
+      "captures": {
+        "first/first-person-before-switch.png": "65f28041ca393431d43691b98cf07e139cecf659fa58adf5d8723ae937ecee53",
+        "first/third-person.png": "480ddf3d75b39fe5350f0c5b3a22e8089edd4f0ddb7b2fda6d0326128074a5df",
+        "first/first-person-after-switch.png": "11ddd879942478b38b46613d20f052f2920c4081f3503e7902889d525e29327d",
+        "first/player-hit-creature.png": "dd66896939d545a01aecf27da8286349abccd950fd2438f75e44b437f69234fc",
+        "second/first-person-before-switch.png": "0f3d25af1c458069ce4c4a53930c82c50978c21b825e4c5d25387076813d7e93",
+        "second/third-person.png": "cf4bd7a16ee517a3b73eb6a33f4d7c8dc29319345217627585c5359776815bce",
+        "second/first-person-after-switch.png": "89dd40d369fb208f0b9de406014c98ef64c63a0a758c9704546fddca03dcb3a3",
+        "second/player-hit-creature-after-restart.png": "d3dcc3cd2dd5b6bf7732b3f6c8de0c410e2f0bbe52c754af011cbe6c540b2e27"
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/verification.json",
+      "sha256": "3cab832e9dd60aedda4ce32a6dcba1e096ef7f3d1bb08f9866372d44df03fb71",
+      "binary_sha256": "f88fc49ab1150e592c2842ed12e6d9128b7dae48b8cf25ad18434361d7fb030b",
+      "phases": [
+        {
+          "phase": "first",
+          "save": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "save_sha256": "8d51f57827d7250adf32d68016b774d95bcb5169d12f39995fe8b81622e6074b",
+          "payload_sha256": "ef42daa827615f765341049c525bc321f347f5c9a58eeee0a8c17877f9fbdbb7",
+          "process_epoch": {
+            "pid": 1006946,
+            "start_ticks": 36438272,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "f88fc49ab1150e592c2842ed12e6d9128b7dae48b8cf25ad18434361d7fb030b",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+              "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+              "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+            }
+          },
+          "damage": 1.1637499332427979,
+          "condition": 97.58000183105469,
+          "saved_player_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": false,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null
+          },
+          "saved_knockback": [
+            {
+              "actor": "content:m15creaturemelee.esp:000802",
+              "acceleration": [
+                0.0,
+                5.347275257110596,
+                -0.024742042645812035
+              ],
+              "remaining": 0.8074647188186646
+            }
+          ],
+          "eye_pivot_heights": [
+            "118",
+            "118"
+          ],
+          "captures": {
+            "first-person-before-switch.png": "cc2ad6ee2d32b7a07119db01e7646371f460fa1daf89cbb3749334463c773dcb",
+            "third-person.png": "713e9133937c6a383bda2ba8bddc273a0438b6bbaba0aa9e209cebbd11d146a8",
+            "first-person-after-switch.png": "440acba75f02e24f5de0b066e1369ccd5b36954fd5b0adf6fbcb250cb7d4d300",
+            "player-hit-creature.png": "ab08b70c25fd057cf3499d81f82bc05ffe2e1a94375a1afa666bf3473442f594"
+          },
+          "audio": {
+            "sha256": "6a63f9b3d1e6bcd99071cb1bf71d28a658020702db9d93ddab1a7f0ee2257d9b",
+            "frames": 15168000,
+            "peak": 18816,
+            "rms": 166.28936060411462
+          }
+        },
+        {
+          "phase": "second",
+          "save": "build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "save_sha256": "ba18c7533a53aee43b555b3ad5cd0494a135873a5e84edcba27cbf4d217d9f96",
+          "payload_sha256": "5d9ece4729ee800a6c20ad3cca63385bb4c0366010fbbb75b233bc4feba2afdf",
+          "process_epoch": {
+            "pid": 1009553,
+            "start_ticks": 36473071,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/firstperson-root-renderer-runtime-sanitized-04/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "f88fc49ab1150e592c2842ed12e6d9128b7dae48b8cf25ad18434361d7fb030b",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+              "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+              "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+            }
+          },
+          "damage": 1.1289068460464478,
+          "condition": 97.16000366210938,
+          "saved_player_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": true,
+              "queued": 0
+            },
+            "strike": {
+              "id": 3,
+              "kind": 1,
+              "weapon_base": "content:oblivion.esm:000c0d",
+              "animation_group": "onehandattackright",
+              "playback_speed": 1.2000000476837158,
+              "animation_time": 0.6800041198730469,
+              "contact_committed": true,
+              "ordinary_phase": 2,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -19.31999969482422,
+                "ease_start": 0.44000244140625,
+                "last_input": 0.6800041198730469,
+                "ease_end": 19.500001907348633,
+                "weighted_time": 0.6800041198730469,
+                "output_time": 0.6800041198730469
+              },
+              "power_phase": null
+            },
+            "ai_intent": null
+          },
+          "saved_knockback": [
+            {
+              "actor": "content:m15creaturemelee.esp:000802",
+              "acceleration": [
+                0.0,
+                5.346663951873779,
+                0.08457629382610321
+              ],
+              "remaining": 1.0
+            }
+          ],
+          "eye_pivot_heights": [
+            "118",
+            "118"
+          ],
+          "captures": {
+            "first-person-before-switch.png": "b9bfdbe0d38071e089535bafb40baa36447e47732a29b809c6dd1fe06f93b788",
+            "third-person.png": "30cd77097d28243ba7fc76644a3bd566e92c653a14e3a59f0ade3558b8c507ae",
+            "first-person-after-switch.png": "f6078740e994517e05d7925abc78127bd0a48e5ac6f931791ba546ae679038b6",
+            "player-hit-creature-after-restart.png": "22e3ba90ee66e76be782421bc42fd1737f305606df72c2302492b8b74b651226"
+          },
+          "audio": {
+            "sha256": "3b9a02d76314e6539bbdd27ac05a7a5349f02fb3bbe049b8a5af12423647a77c",
+            "frames": 14028480,
+            "peak": 19292,
+            "rms": 200.07778861416324
+          }
+        }
+      ],
+      "captures": {
+        "first/first-person-before-switch.png": "cc2ad6ee2d32b7a07119db01e7646371f460fa1daf89cbb3749334463c773dcb",
+        "first/third-person.png": "713e9133937c6a383bda2ba8bddc273a0438b6bbaba0aa9e209cebbd11d146a8",
+        "first/first-person-after-switch.png": "440acba75f02e24f5de0b066e1369ccd5b36954fd5b0adf6fbcb250cb7d4d300",
+        "first/player-hit-creature.png": "ab08b70c25fd057cf3499d81f82bc05ffe2e1a94375a1afa666bf3473442f594",
+        "second/first-person-before-switch.png": "b9bfdbe0d38071e089535bafb40baa36447e47732a29b809c6dd1fe06f93b788",
+        "second/third-person.png": "30cd77097d28243ba7fc76644a3bd566e92c653a14e3a59f0ade3558b8c507ae",
+        "second/first-person-after-switch.png": "f6078740e994517e05d7925abc78127bd0a48e5ac6f931791ba546ae679038b6",
+        "second/player-hit-creature-after-restart.png": "22e3ba90ee66e76be782421bc42fd1737f305606df72c2302492b8b74b651226"
+      }
+    }
+  },
+  "supplementary_unarmed": {
+    "path": "build/oblivion-compat/m15/S4/firstperson-root-unarmed-runtime-normal-01/verification.json",
+    "sha256": "e48b44256198f67445ed44fa2483512570f39005a03f839668075bf3122607cd",
+    "build": "normal",
+    "binary_sha256": "3c38cbbcdd1550f509cc968fed76d07afa7acf9327276fc18cdc8e6b86da8ea9",
+    "captures": {
+      "build/oblivion-compat/m15/S4/firstperson-root-unarmed-runtime-normal-01/first/player-hit-creature.png": "b9d74dace505256f27a662bc4d47c743b5aec6100408bc843a6e9365b785c7dc",
+      "build/oblivion-compat/m15/S4/firstperson-root-unarmed-runtime-normal-01/second/player-hit-creature-after-restart.png": "804d33c328bcc9a7254073f840439a7c4e9c1e7eac2ed93ed826a72cdce61057"
+    }
+  },
+  "inputs": {
+    "Oblivion.esm_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+    "fixture_sha256": {
+      "M15CreatureMelee.esp": "4617d34442c1a18dcf43cd9ebc50446d532dae98d81697e54cea5e3fefc37282",
+      "fatigue-no-regen.esp": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea"
+    },
+    "prior_contact_verification": "docs/oblivion/M15-CREATURE-VICTIM-WEAPON-VERIFICATION.json"
+  },
+  "renderer": "Authored Camera01 Z cached before animation. Relative wrapper applies -height, native model scale/rotation, actor origin plus unscaled height, then inverse actor-parent world transform. Direct-child invariant restored before scene removal, model rebuild and destruction. Native action and authoritative active KF filename groups select follow; native winning typed GMST records override .75/2 defaults. Native profile bypasses TES3 neck-only controller.",
+  "visual_scope": "Reviewed captures establish visible hand/sword and unobstructed lower view for the admitted Imperial male at pitch1.171875, including R third/first-person round trip and fresh-process next contact. No original pixel/lighting/complete pose parity claim; Creature face deformation and brightness changes remain separate visual defects.",
+  "retained_failures": [
+    "S4/firstperson-root-native-oracle-02: incorrect action3 interpretation",
+    "S4/firstperson-root-settings-heading-oracle-01:432/864 arithmetic mismatches using mathematical double2pi; A3D5B0 actually contains float-rounded 2pi promoted to double",
+    "S4/firstperson-root-original-live-01/verify-replay-missing-field-failed.py: older snapshots lacked mount predicate; exclude them from full-input replay",
+    "S4/firstperson-root-renderer-runtime-normal-01/first: Tab opened inventory; correct profile perspective binding is R",
+    "S4/firstperson-root-renderer-runtime-normal-03/second: at5 Health observer ran before strike after added perspective changes. Corrected continuation checkpoints after actual committed-hit event; binary state is authoritative."
+  ],
+  "limits": [
+    "Default Imperial male reference scale1 runtime coverage; all race morphology, singular parent scales and mounts remain unverified.",
+    "The tested 15 FPS cap is configuration, not measured FPS acceptance.",
+    "This course saves between strikes; windup/held-block/recovery continuation and complete input/view/FPS matrices remain open.",
+    "Keyboard stock blade course in both builds plus normal unarmed first-person replay; incoming-attack and gamepad visual gates remain open.",
+    "Resource/audio feedback and byte-exact save re-encode do not establish native hit-reaction pose or isolated waveform/hardware-hearing parity.",
+    "Mastery, effect semantics, directional coverage and interruption matrices remain open."
+  ],
+  "navigation": {
+    "OSG_transform_cull_reference": "https://github.com/openscenegraph/OpenSceneGraph/blob/OpenSceneGraph-3.6/src/osgUtil/CullVisitor.cpp#L1071",
+    "original_pointer_navigation": "https://github.com/llde/xOBSE/blob/master/obse/obse/GameObjects.h",
+    "authority": "Actual hash-identified original instructions/live snapshots, independent golden outputs and executed fork tests; navigation headers are not native rule proof."
+  }
+}

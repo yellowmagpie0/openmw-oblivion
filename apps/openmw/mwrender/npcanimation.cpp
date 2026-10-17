@@ -24,11 +24,14 @@
 #include <components/esm4/loadhair.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrace.hpp>
+#include <components/esm4/loadgmst.hpp>
+#include <components/esm4/firstpersonview.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/depth.hpp>
 #include <components/sceneutil/keyframe.hpp>
+#include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/lightcommon.hpp>
 #include <components/sceneutil/visitor.hpp>
 #include <components/settings/values.hpp>
@@ -42,6 +45,7 @@
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/npcstats.hpp"
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwmechanics/weapontype.hpp"
 
 #include "../mwbase/environment.hpp"
@@ -273,6 +277,13 @@ namespace MWRender
     NpcAnimation::~NpcAnimation()
     {
         mAmmunition.reset();
+        removeOblivionFirstPersonRoot();
+    }
+
+    void NpcAnimation::removeFromScene()
+    {
+        removeOblivionFirstPersonRoot();
+        Animation::removeFromScene();
     }
 
     NpcAnimation::NpcAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
@@ -536,7 +547,30 @@ namespace MWRender
             smodel = Misc::ResourceHelpers::correctActorModelPath(model, mResourceSystem->getVFS());
         }
 
+        removeOblivionFirstPersonRoot();
         setObjectRoot(smodel, true, true, false);
+
+        if (is1stPerson && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (const osg::Node* camera = getNode("Camera01"))
+            {
+                const auto paths = camera->getParentalNodePaths(mObjectRoot.get());
+                if (!paths.empty())
+                {
+                    // Original667D60 caches authored camera Z before animation,
+                    // then offsets the loaded skeleton by -height. Only Z is
+                    // the pivot: Camera01's authored Y offset is preserved.
+                    mOblivionFirstPersonHeight = osg::computeLocalToWorld(paths.front()).getTrans().z();
+                    mOblivionFirstPersonRoot = new osg::MatrixTransform;
+                    mOblivionFirstPersonRoot->setName("Oblivion first-person eye pivot");
+                    mInsert->removeChild(mObjectRoot);
+                    mOblivionFirstPersonRoot->addChild(mObjectRoot);
+                    mInsert->addChild(mOblivionFirstPersonRoot);
+                    updateOblivionFirstPersonRoot(0.f);
+                    Log(Debug::Verbose) << "M15 first-person eye pivot: height=" << mOblivionFirstPersonHeight;
+                }
+            }
+        }
 
         updateParts();
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
@@ -922,6 +956,83 @@ namespace MWRender
         return std::make_unique<PartHolder>(std::move(attached));
     }
 
+    void NpcAnimation::removeOblivionFirstPersonRoot()
+    {
+        if (!mOblivionFirstPersonRoot)
+            return;
+        // Restore Animation's direct-child invariant before setObjectRoot or
+        // base destruction removes the model. No wrapper survives a rebuild.
+        mOblivionFirstPersonRoot->removeChild(mObjectRoot);
+        mInsert->addChild(mObjectRoot);
+        mInsert->removeChild(mOblivionFirstPersonRoot);
+        mOblivionFirstPersonRoot = nullptr;
+    }
+
+    void NpcAnimation::updateOblivionFirstPersonRoot(float elapsed)
+    {
+        if (!mOblivionFirstPersonRoot)
+            return;
+        auto& world = *MWBase::Environment::get().getWorld();
+        ESM4::FirstPersonViewSettings settings;
+        for (const auto& setting : MWBase::Environment::get().getESMStore()->get<ESM4::GameSetting>())
+        {
+            float* target = nullptr;
+            if (Misc::StringUtils::ciEqual(setting.mEditorId, "fFirstPersonHandFollowMult"))
+                target = &settings.mHandFollowMultiplier;
+            else if (Misc::StringUtils::ciEqual(setting.mEditorId, "fFirstPersonScaleSeconds"))
+                target = &settings.mScaleSeconds;
+            if (target)
+                if (const auto* value = std::get_if<float>(&setting.mData))
+                    *target = *value;
+        }
+        const auto groupId = [](std::string_view group) -> std::uint16_t {
+            // Native B102E0, stride36, group IDs17..26 and34..39.
+            // Runtime groups are authoritative KF filename stems with a weapon
+            // prefix, not authored sequence labels such as IdleK.
+            constexpr std::array<std::pair<std::string_view, std::uint16_t>, 17> suffixes{{
+                {"unequip", 18}, {"equip", 17}, {"attackbow", 19}, {"bowattack", 19},
+                {"attackleft", 20}, {"attackright", 21}, {"attackpower", 22},
+                {"attackforwardpower", 23}, {"attackbackpower", 24},
+                {"attackleftpower", 25}, {"attackrightpower", 26},
+                {"castself", 34}, {"casttouch", 35}, {"casttarget", 36},
+                {"castselfalt", 37}, {"casttouchalt", 38}, {"casttargetalt", 39}
+            }};
+            for (const auto& [suffix, id] : suffixes)
+                if (group.ends_with(suffix))
+                    return id;
+            return 0xffff;
+        };
+        const auto& position = mPtr.getRefData().getPosition();
+        ESM4::FirstPersonRootInput input;
+        input.mPreviousFollow = mOblivionFirstPersonFollow;
+        input.mElapsed = elapsed;
+        input.mPitch = position.rot[0];
+        input.mYaw = position.rot[2];
+        input.mGroup1 = groupId(getActiveAnimationGroup(BoneGroup_Torso));
+        input.mGroup3 = groupId(getActiveAnimationGroup(BoneGroup_RightArm));
+        if (mPtr == world.getPlayerPtr())
+            input.mProcessAction = MWMechanics::oblivionProcessAction(world, mPtr);
+        const auto result = ESM4::updateFirstPersonRootRotation(input, settings);
+        if (!result)
+            return;
+        const auto paths = mInsert->getParentalNodePaths();
+        osg::Matrix inverseParent;
+        if (paths.empty() || !inverseParent.invert(osg::computeLocalToWorld(paths.front())))
+            return;
+        mOblivionFirstPersonFollow = result->mFollow;
+        osg::Vec3f scale(std::abs(mPtr.getCellRef().getScale()),
+            std::abs(mPtr.getCellRef().getScale()), std::abs(mPtr.getCellRef().getScale()));
+        mPtr.getClass().adjustScale(mPtr, scale, true);
+        osg::Vec3d origin(position.pos[0], position.pos[1], position.pos[2] + mOblivionFirstPersonHeight);
+        // Keep a relative transform so OSG retains the view matrix and actor
+        // state inheritance. Cancel the existing actor placement before giving
+        // this model its separate native world placement and unscaled eye offset.
+        mOblivionFirstPersonRoot->setMatrix(
+            osg::Matrix::translate(0., 0., -double(mOblivionFirstPersonHeight))
+            * osg::Matrix::scale(scale) * osg::Matrix(result->mRotation.toMatrix())
+            * osg::Matrix::translate(origin) * inverseParent);
+    }
+
     osg::Vec3f NpcAnimation::runAnimation(float timepassed)
     {
         osg::Vec3f ret = Animation::runAnimation(timepassed);
@@ -934,6 +1045,8 @@ namespace MWRender
         }
 
         mHeadAnimationTime->update(timepassed);
+
+        updateOblivionFirstPersonRoot(timepassed);
 
         if (mFirstPersonNeckController)
         {
@@ -1162,7 +1275,8 @@ namespace MWRender
         mFirstPersonNeckController = nullptr;
         WeaponAnimation::deleteControllers();
 
-        if (mViewMode == VM_FirstPerson)
+        if (mViewMode == VM_FirstPerson
+            && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
         {
             // If there is no active animation, then the bip01 neck node will not be updated each frame, and the
             // RotateController will accumulate rotations.

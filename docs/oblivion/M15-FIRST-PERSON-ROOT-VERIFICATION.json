@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "Pure first-person root rotation verified; renderer pivot integration and full M15S4 remain open",
+  "status": "Historical pure-rule baseline; heading wrap correction and renderer integration verified in M15-FIRST-PERSON-RENDERER-VERIFICATION.json",
   "parent_commit": "791622eaf670e738c5dbd24f141ed6ab81bdba34",
   "tested_source_fingerprint": "1d8a5acc39d55475ffd1189128dc6e7afa3d7d355eca48f0f35a988a10a84514",
   "source_sha256": {
@@ -96,5 +96,6 @@
         "log_sha256": "3d780606d67128644727981883e29e97e46952c11e3b2578ef9a03591f4f79f0"
       }
     }
-  }
+  },
+  "followup": "docs/oblivion/M15-FIRST-PERSON-RENDERER-VERIFICATION.json"
 }

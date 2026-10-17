@@ -41,5 +41,11 @@
     "Rotation routine does not write translation; pivot comes from separate original factory inspection and live hierarchy.",
     "Arithmetic comparisons do not establish rendered visibility or gameplay acceptance."
   ],
-  "verification_index": "docs/oblivion/M15-FIRST-PERSON-ROOT-VERIFICATION.json"
+  "verification_index": "docs/oblivion/M15-FIRST-PERSON-ROOT-VERIFICATION.json",
+  "heading_wrap": {
+    "storage": "0xA3D5B0",
+    "type": "double containing the float-rounded circle",
+    "value": 6.2831854820251465,
+    "retained_failure": "S4/firstperson-root-settings-heading-oracle-01:432 of864 mismatches with mathematical double2pi; corrected candidate864/864 exact"
+  }
 }

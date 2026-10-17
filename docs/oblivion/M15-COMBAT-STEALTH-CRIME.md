@@ -6,6 +6,63 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 native first-person eye pivot and torso visibility — 2026-10-17
+
+The native player renderer now rotates the complete first-person model around
+its authored Camera01 height. A relative wrapper cancels the actor placement
+and applies the separate native first-person placement: negative eye height offset,
+model scale, native root rotation, actor origin+height. The positive eye offset
+stays unscaled. The native profile uses actual process action and active KF
+filename groups for follow, with winning native GMST overrides. View changes,
+model rebuilds and scene removal restore the normal direct-child relationship.
+
+The default Imperial male high-pitch stock-sword course now shows a clear lower
+view and visible hand/sword before and after an actual R perspective round trip.
+Normal and sanitizer builds each perform one blade contact, F5, exit, fresh load,
+a second perspective round trip and next contact with the retained worn item.
+Exact save inspection confirms Health 20 -> 18.83625030517578 -> 17.70734405517578,
+player Fatigue 140 -> 132.1999969482422 -> 124.39999389648438 and sword
+condition 98 -> 97.58000183105469 -> 97.16000366210938. Each process commits exactly
+one intended contact, with unchanged unrelated native values, bases/life,
+inventories and RNG; entire payloads re-encode byte exactly. Fur/BladeFlesh
+requests succeed and captured PCM is nonzero, without isolated-waveform parity.
+
+A supplementary normal-build unarmed replay also performs both contacts and
+fresh-process continuation with clear visible fists and no torso obstruction.
+Exact state remains player Fatigue 140 -> 133 -> 126, Dog Health
+20 -> 18.579999923706055 -> 17.170499801635742 and Dog Fatigue
+153 -> 151.28999328613281 -> 149.58525085449219. Its first save retains an
+active timed pulse; the second course observes expiry. This adds normal
+unarmed visual coverage, without an uninterrupted force-trajectory claim.
+
+Additional independent execution exposed the heading wrap constant: A3D5B0 is
+a double containing float-rounded 2pi (6.2831854820251465), rather than the
+mathematical double constant. The retained first extension fails 432/864 cases;
+the corrected production rule matches all 864 settings/heading cases plus the
+original 15,120 PC007F rows bitwise. There are 84 frozen original golden samples.
+
+Final checks pass 2,802 normal components, 746 sanitizer-selected ESM4 cases,
+1,618 engine cases in each build and 313 Python cases, with exact inventories,
+no failures/skips and leaks disabled. Fingerprint:
+26dc142a696bc36705cb97808d61411601274ccb09c613822d05746387f8d3f8.
+Evidence: S4/firstperson-root-heading-checks-01,
+firstperson-root-renderer-main-02, firstperson-root-renderer-sanitized-02 and
+firstperson-root-renderer-runtime-{normal,sanitized}-04. See
+[M15-FIRST-PERSON-RENDERER-VERIFICATION.json](M15-FIRST-PERSON-RENDERER-VERIFICATION.json)
+for exact sources, binaries, loaded libraries, payload/media hashes and limits.
+
+The retained normal-01 fixture used Tab, which opens inventory in this profile;
+R is the actual perspective binding. Normal-03 continuation also exposed its
+scheduled Health observer running before the hit after the added view changes.
+The corrected course waits for the real committed-hit event and inspects the
+save. Neither failed fixture counts as accepted continuation.
+
+This closes the admitted high-pitch torso obstruction. Creature face deformation
+and brightness changes remain separate defects. All-race/singular-scale/mount
+parity, incoming-attack views, gamepad, measured FPS,
+windup/block/recovery restart matrices, mastery, effects and full S4 acceptance
+remain open. The configured 15 FPS cap is not a performance result.
+
 ## S4 first-person root rotation foundation — 2026-10-16
 
 A pure native first-person root rule now reproduces the original full660130

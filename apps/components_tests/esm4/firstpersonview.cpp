@@ -13,6 +13,7 @@ namespace
         ESM4::FirstPersonRootInput mInput;
         unsigned mFollow;
         std::array<unsigned, 9> mRotation;
+        ESM4::FirstPersonViewSettings mSettings{};
     };
     const OriginalSample samples[]{
 #include "firstpersonview_expected.inc"
@@ -25,6 +26,22 @@ namespace
         for (const auto& sample : samples)
         {
             const auto result = ESM4::updateFirstPersonRootRotation(sample.mInput);
+            ASSERT_TRUE(result);
+            EXPECT_EQ(std::bit_cast<unsigned>(result->mFollow), sample.mFollow);
+            for (unsigned i = 0; i < 9; ++i)
+                EXPECT_EQ(std::bit_cast<unsigned>(result->mRotation.mRotation.mValues[i / 3][i % 3]),
+                    sample.mRotation[i]);
+        }
+    }
+
+    TEST(ESM4FirstPersonView, MatchesOriginalSettingsAndFloatRoundedHeadingWrap)
+    {
+        const OriginalSample settingsSamples[]{
+#include "firstpersonview_settings_expected.inc"
+        };
+        for (const auto& sample : settingsSamples)
+        {
+            const auto result = ESM4::updateFirstPersonRootRotation(sample.mInput, sample.mSettings);
             ASSERT_TRUE(result);
             EXPECT_EQ(std::bit_cast<unsigned>(result->mFollow), sample.mFollow);
             for (unsigned i = 0; i < 9; ++i)
