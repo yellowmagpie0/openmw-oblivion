@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "purpose": "Exact final integer AV42 addition after native547070, including large integer halfway values perturbed by tiny positive or negative damage.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "oracle": {
+    "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-single-oracle-04/report.json",
+    "sha256": "e284adc0c353ef7b9b5628a7fcecff4cd53cac65d732f6cdc6a9e440a01e7cc4",
+    "cases": 1152,
+    "prepared_input_bits_verified": 1152,
+    "controlword": 127,
+    "corpus_sha256": "5368a311cd4653bd31a77fa14d96f4615966cb1142f42da0c4ad5a8a38bf487f",
+    "frozen_rows": 140,
+    "scope": "Complete original484F80 including547070 and485137..485141. Unit condition/skill/attribute terms and +/-1 fatigue produce each requested finite float; actual prepared float bits are observed before AV42 addition. Supplied AV/base-Fatigue/item readers and GMST storage, no arithmetic stubs. Not gameplay acceptance."
+  },
+  "world_regression": {
+    "type": 3,
+    "damage": 20,
+    "maximum": 100,
+    "condition": 100,
+    "skill": 20,
+    "luck": 50,
+    "strength": 40,
+    "current_fatigue": 140,
+    "base_fatigue": 140,
+    "weapon_multiplier": 1.0000000031710769e-30,
+    "rows": [
+      {
+        "bonus": 0,
+        "health": 9.50000003012523e-30,
+        "bits": 255897298
+      },
+      {
+        "bonus": 2147483328,
+        "health": 2147483392.0,
+        "bits": 1325400062,
+        "current_World_expression_bits": 1325400062
+      },
+      {
+        "bonus": 2147483456,
+        "health": 2147483520.0,
+        "bits": 1325400063,
+        "current_World_expression_bits": 1325400062
+      }
+    ],
+    "bindings": [
+      "Player",
+      "NPC"
+    ],
+    "scope": "Real owned World item query with base and modifier float channels composing integer42 exactly. Assert integer getter, original result bits and no query mutation."
+  },
+  "boundaries": "Scalar addition only. Native attack/reaction/mastery RNG, contacts, damage application and huge-bonus lethal outcomes are separate. Normal-input regression uses stock unenchanted Mace and ordinary zero bonus."
+}

@@ -4606,3 +4606,22 @@ matrices. Existing Dog face holes and lighting differences remain outside the
 accepted first-person hand/weapon visibility checks. Full S4 stays incomplete.
 See [the precision verification index](M15-WEAPON-LIVE-PRECISION-VERIFICATION.json)
 for provenance, exact test selections, editable scenarios and runtime limits.
+
+## Final weapon integer-addition follow-up
+
+The final AV42 addition now preserves native FILD/FADD rounding as well as the
+547070 weapon product. Both Player/NPC World queries reproduce the independently
+established large-integer/tiny-damage corner before the fix and pass after it.
+All 1152 original comparisons, 140 frozen rows, the six new owned-item queries and
+previous 1152 entry queries agree. Full checks pass 2805 components, 749 sanitized
+ESM4 components, 1618 engine cases in each configuration and 313 Python tests.
+
+One new normal and one new sanitized third Mace contact load the previous
+accepted second saves and verify exact continuity through F5. Historical first
+two epochs are source lineage only. A read-only normal probe confirms the new
+helper is reached by production animation/contact dispatch and returns the
+expected native bits. Huge-bonus lethal contacts are not established by this
+course. See [the follow-up index](M15-WEAPON-ATTACK-BONUS-VERIFICATION.json).
+Reaction/mastery RNG and consequences, remaining physical arithmetic,
+directional/effect/interruption/input/view/FPS and named restart gates stay open;
+this is another bounded implementation checkpoint, not full S4 delivery.

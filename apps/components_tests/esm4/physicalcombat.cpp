@@ -572,6 +572,23 @@ TEST(ESM4PhysicalCombat, WeaponDamageMatchesOriginalSinglePrecisionArithmetic)
     }
 }
 
+TEST(ESM4PhysicalCombat, WeaponAttackBonusMatchesOriginalIntegerAddition)
+{
+    struct Row { std::uint32_t damage; std::int32_t bonus; std::uint32_t expected; };
+    const Row rows[] = {
+#include "weaponattackbonus_expected.inc"
+    };
+    for (std::size_t i = 0; i < std::size(rows); ++i)
+    {
+        SCOPED_TRACE(i);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::addWeaponAttackBonus(
+            std::bit_cast<float>(rows[i].damage), rows[i].bonus)), rows[i].expected);
+    }
+    for (float bad : {std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+        EXPECT_THROW(ESM4::addWeaponAttackBonus(bad, 0), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, WeaponTermsPreserveRepairedConditionAndAttributeCap)
 {
     ESM4::WeaponDamageInput input{50, 50, 50, 100, .5f, .5f};

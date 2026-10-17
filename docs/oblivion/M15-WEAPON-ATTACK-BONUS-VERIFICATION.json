@@ -1,0 +1,484 @@
+{
+  "schema_version": 1,
+  "status": "Final integer AttackBonus rounding corrected and verified; full M15S4 incomplete",
+  "source_parent_commit": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+  "tested_source": {
+    "head": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+    "source_fingerprint": "827c481849ed1e585eb7d86daad0b42572229121ea1c3ed9a58699b90e021ad9"
+  },
+  "source_sha256": {
+    "components/esm4/physicalcombat.cpp": "9022e89d11b133d9a55bd0ac70ac55ddac117d57bb081df0cf87f6c6797e1a1a",
+    "components/esm4/physicalcombat.hpp": "1a2c8a0070d1a56f4383a076b4ea486b0eac6c6cd5aa8cfd0fd23d595c88d1c3",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "1d009f60f80626dd98b6899ce7868efb9cbaa538631be47b53a4f5c2c5c14bc2",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "d84799373e6a6137dda575a74ae747601b765c4d2a7dfe47a250de73da7354ee",
+    "apps/components_tests/esm4/physicalcombat.cpp": "a82c8d12e7bb4b8c7d48dbeeca46eb0d0e238126811c7b62d0aa773a5cdae795",
+    "apps/components_tests/esm4/weaponattackbonus_expected.inc": "39b0203acd1c34f8bbf9f926146473f8a9fba8a461b6baa39c1fb8780243aec9",
+    "scripts/data/oblivion_compat/m15_weapon_attack_bonus_native_probe.json": "68885c603f65e2de81e0c4b0ed39aa11505c320d4a4fa44e316c2e238464684c",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_blunt_third.json": "166acf54d530a18f9097b7246d7684da5a015e79e5551847ccd1d0edf85f7eae",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_blunt_third_sanitized.json": "ccefd4a939f5ed2091ccc76b65007fefbe985516c1640582e209bbb452238e68"
+  },
+  "problem": {
+    "old_world_bits": 1325400062,
+    "native_bits": 1325400063,
+    "integer_bonus": 2147483456,
+    "synthetic_weapon_multiplier": 1.0000000031710769e-30,
+    "explanation": "A large integer halfway value plus tiny positive damage loses its perturbation with double addition before float conversion. Native485137..485141 loads the integer exactly and rounds FADD at24 significant bits. The new shared helper preserves that rounding in the actual World query."
+  },
+  "checks": {
+    "normal_components_sanitizer_components_normal_engine_python": {
+      "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-final-checks-01/verification.json",
+      "sha256": "4c453efe9389f1b9f92e9d366fc6c71bc4089d42a4647ad1b21abe161b91ac58",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "3"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 137.958
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-final-checks-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 12.955
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "3"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 271.924
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-final-checks-01/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 30.959
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 637.278
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.165
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-final-checks-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 22.271
+          },
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "scripts/tests"
+            ],
+            "log": "python.log",
+            "returncode": 0,
+            "seconds": 66.076
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2805,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "7374c17fe9907c94caa1e2b484b8f877430428aff3ea3f3bb73db91bc6dcfbde",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "c87828758ffa3eba1c8f46a656ede116f2993c94a9818635b1db6e8dba6ca47d",
+            "inventory_sha256": "8c464e306a9903137ebaa4a35af0a46547f5534db5613d6eac4571ebd4f1959b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "sanitize": {
+            "executed": 749,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "260a7dd430b59c06ae99c2142fda7f4fbdc760ea73f8e42b6163702312b61434",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "50cd2929036152b1ae4f104c1b39cb6288da74a90b5f6fffe8c729816230b4a5",
+            "inventory_sha256": "f00a94f82269b69314a76c49db7be4c326925f5faab304e56e3d2d02b6bf41e9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1618,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1af6e1ea2d83a328655cb5225d4725cb6ccba3cb44cd6f9153be7bd85c5ef0e3",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "234bd8ff72592b706acda84698f6cb37cf33829b2f19d5f43b09e35e2616f969",
+            "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 313,
+            "passed": true,
+            "log_sha256": "c7cd6d74af4e205237f38365c86ad5a94e7a021452562525688d87feb7a4b9f2"
+          }
+        },
+        "source_before": {
+          "head": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+          "source_fingerprint": "827c481849ed1e585eb7d86daad0b42572229121ea1c3ed9a58699b90e021ad9"
+        },
+        "source_after": {
+          "head": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+          "source_fingerprint": "827c481849ed1e585eb7d86daad0b42572229121ea1c3ed9a58699b90e021ad9"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-final-engine-sanitized-01/verification.json",
+      "sha256": "0e34a3e98ac9acfa19bedb311dd21b52564a460716ca408472b0ac472912687d",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 1341.742
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.517
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-final-engine-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 142.793
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1618,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "77660aa90f4932e3404116b7a3932bd66d6ef864715c4926b89f5d065920beec",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "890f44ebd429029c49e7be80368a247acc689a65097df890cab9a637bd419d50",
+            "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+          "source_fingerprint": "827c481849ed1e585eb7d86daad0b42572229121ea1c3ed9a58699b90e021ad9"
+        },
+        "source_after": {
+          "head": "d4ee462d8cae6161ab2c1c3070c13f6680ed4d19",
+          "source_fingerprint": "827c481849ed1e585eb7d86daad0b42572229121ea1c3ed9a58699b90e021ad9"
+        }
+      }
+    }
+  },
+  "original_oracle": {
+    "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-single-oracle-04/report.json",
+    "sha256": "e284adc0c353ef7b9b5628a7fcecff4cd53cac65d732f6cdc6a9e440a01e7cc4",
+    "report": {
+      "completed": true,
+      "cases": 1152,
+      "actual_prepared_input_bits_verified": 1152,
+      "controlword": 127,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "5368a311cd4653bd31a77fa14d96f4615966cb1142f42da0c4ad5a8a38bf487f",
+      "wide_expression_mismatches": 10,
+      "scope": "Full original484F80/547070/485125. Supplied AV/base-Fatigue/item readers and GMST values make547070 produce the requested signed finite float with unit factors; actual signed integer AttackBonus is then added. No arithmetic stubs. PC007F. Comparison to current wide expression is diagnostic, not production World execution or gameplay acceptance."
+    }
+  },
+  "production_comparison": {
+    "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-single-oracle-04/comparison-report.json",
+    "sha256": "573ab64eae7ba01372301994b6fbfcbf621535f16d70dec1a5065200a2733c36",
+    "report": {
+      "passed": true,
+      "cases": 1152,
+      "production_sha256": "9022e89d11b133d9a55bd0ac70ac55ddac117d57bb081df0cf87f6c6797e1a1a",
+      "public_header_sha256": "1a2c8a0070d1a56f4383a076b4ea486b0eac6c6cd5aa8cfd0fd23d595c88d1c3",
+      "comparator_sha256": "027d75b7736be228035466987b447770863c511602be4c6b2e2c0ffee7a6b4d2",
+      "binary_sha256": "1df6d808ff325192ca1531fa46499dbdf5572fa32f7355add462117b90d44a03",
+      "corpus_sha256": "5368a311cd4653bd31a77fa14d96f4615966cb1142f42da0c4ad5a8a38bf487f",
+      "scope": "Standalone exact comparison of production addWeaponAttackBonus to original full484F80/547070/485137..485141. Source freeze and exact test inventories are separate run_checks receipts."
+    }
+  },
+  "selected_frozen_rows": 140,
+  "world_queries": {
+    "bindings": [
+      "Player",
+      "NPC"
+    ],
+    "new_corner_queries": 6,
+    "existing_entry_queries": 1152,
+    "expectations": "Original full484F80 tiny multiplier cases, exact integer AV42 getter, expected return bits and unchanged snapshots; previous576 profiles retained on both actor bindings."
+  },
+  "runtime": [
+    {
+      "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-normal-01/verification.json",
+      "sha256": "da3d4f806142dd5489d8db977868e41da6c874e5b19ec6d055519d2e3eff753c",
+      "scope": "New-build third stock Mace ordinary contact after loading prior accepted second save. First two epochs are historical source lineage only. Exact native arrays/bases/life/inventories, Health/Fatigue, wear, ownership and current pipeline RNG; whole payload byte-exact. Real KF contact, F5, acknowledged stock sounds and nonzero PCM. Normal course also has a separate read-only return probe. Zero bonus only in gameplay; huge-bonus native World queries are tested separately. No mastery/reaction RNG, complete pose, FPS, force-trajectory or full S4 claim. Leak checks off.",
+      "historical_source_checkpoint": {
+        "path": "build/oblivion-compat/m15/S4/creature-victim-blunt-runtime-normal-04/verification.json",
+        "sha256": "2fc1c4fd8274a357fd2df8be0e9d424aa729c9fc30846de13c299951a3a3e262"
+      },
+      "current_epoch": {
+        "pid": 1053773,
+        "start_ticks": 37158944,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-normal-01/third/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-normal-01/third/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "efe4dd2c4205c09705d4b86a9f8f7a8c4e821c4045c59398f52031ac7e4a4c60",
+        "loaded_libraries": {
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+        }
+      },
+      "current_save_sha256": "3452c146e035f0c52c3eb99e88b26a9015bfb40697b907afa9932d9ce5933913",
+      "current_payload_sha256": "0fae0dc759ad8b1ac07c12bc719e32a42d0bd5bb9fc923ba3944aced5ea1e392",
+      "damage": 2.221243143081665,
+      "condition": 138.19998168945312,
+      "capture_sha256": "1d23e2a2b3c0f08eb8207a6eca136145a73f5d90abe32f01df9c0506b69c8806",
+      "audio": {
+        "sha256": "55c9534a3b12fdadca026e47eac3c21cb9f6fcbf81234eae7a1db9e130cf10a0",
+        "frames": 2592000,
+        "peak": 18490,
+        "rms": 499.26255400229707
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-sanitized-01/verification.json",
+      "sha256": "bf25b56b215075315f35761e7ce0ff35496ffa39320cb4469b510af145edff2a",
+      "scope": "New-build third stock Mace ordinary contact after loading prior accepted second save. First two epochs are historical source lineage only. Exact native arrays/bases/life/inventories, Health/Fatigue, wear, ownership and current pipeline RNG; whole payload byte-exact. Real KF contact, F5, acknowledged stock sounds and nonzero PCM. Normal course also has a separate read-only return probe. Zero bonus only in gameplay; huge-bonus native World queries are tested separately. No mastery/reaction RNG, complete pose, FPS, force-trajectory or full S4 claim. Leak checks off.",
+      "historical_source_checkpoint": {
+        "path": "build/oblivion-compat/m15/S4/creature-victim-blunt-runtime-sanitized-04/verification.json",
+        "sha256": "b8069106e9f307a481c55ae090082585c576b5f11fc8ed84bd60cba146b9cab2"
+      },
+      "current_epoch": {
+        "pid": 1056657,
+        "start_ticks": 37198994,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-sanitized-01/third/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-sanitized-01/third/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "76d6599d0c41bfce4ba4ed81dd68b6e126c3fc6265457e83ed8278f16658e166",
+        "loaded_libraries": {
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+          "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+          "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+        }
+      },
+      "current_save_sha256": "d0e6742573ed937e3a75e8ae1e15f2cf37bbd2dd68f64f00f11612b4846b1f39",
+      "current_payload_sha256": "c30405db78645342b3c7b7437d738de79cf2b3dc8bb3755a4fc127f4ec6437e0",
+      "damage": 2.221243143081665,
+      "condition": 138.19998168945312,
+      "capture_sha256": "63ab2ca6f2e2ef37efdb8f052dc2a4719006b5c3a8823aa4b8c99da1db6c6c43",
+      "audio": {
+        "sha256": "0a006998060ec2bae77fee8d71e467385b3b474b04a43a32edba51f9e7b4a6e1",
+        "frames": 12743040,
+        "peak": 16045,
+        "rms": 239.1779183702221
+      }
+    }
+  ],
+  "live_normal_probe": {
+    "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-runtime-normal-01/sample.json",
+    "sha256": "55b22f892723527ccd8967032a8053040bdabb1ff73b5928fdadd37bbfc605f3",
+    "report": {
+      "passed": true,
+      "rows": [
+        {
+          "before": {
+            "damage": 2.221243143081665,
+            "damage_bits": 1074669785,
+            "bonus": 0,
+            "stack": [
+              "ESM4::addWeaponAttackBonus",
+              "MWMechanics::weaponContactDamage",
+              "MWMechanics::resolveOblivionWeaponMeleeContact",
+              "MWMechanics::commitOblivionMeleeContact",
+              "MWMechanics::CharacterController::dispatchOblivionMeleeContact",
+              "MWMechanics::CharacterController::update",
+              "MWMechanics::Actors::update",
+              "MWMechanics::MechanicsManager::update",
+              "OMW::Engine::frame",
+              "OMW::Engine::go",
+              "runApplication",
+              "Debug::wrapApplication"
+            ],
+            "thread": [
+              1053773,
+              1053773,
+              0
+            ]
+          },
+          "after": {
+            "return_bits": 1074669785,
+            "return_value": 2.221243143081665,
+            "thread": [
+              1053773,
+              1053773,
+              0
+            ]
+          }
+        }
+      ],
+      "scope": "Actual normal-input addWeaponAttackBonus entry/return with zero bonus; observation only, no forced calls or resource writes."
+    }
+  },
+  "validation_layers": {
+    "structural": "Editable probe JSON retained; Python313 pass. Existing third-contact scenario bytes reused.",
+    "compiler": "Full normal and ASan/UBSan engine and component targets built; exact inventories verified. No new plugin/compiler-world validation is claimed.",
+    "semantic": "1152 complete original query executions with actual prepared float bits observed, production comparison,140 frozen rows, actual owned Player/NPC query corner cases and immutable snapshots.",
+    "runtime": "Two new-build third Mace contacts, loading prior accepted second saves. First two epochs in runtime receipts are historical lineage only. Exact resource/condition/ownership continuity, F5, acknowledged sounds/nonzero PCM. Normal debugger observes actual new helper entry/return, no forced calls or resource writes."
+  },
+  "retained_red": {
+    "path": "build/oblivion-compat/m15/S4/weapon-entry-bonus-red-01/verification.json",
+    "sha256": "c5b292253d7541c84663c9cf13006797f8a066c29e5628a356716dbfac474fe4",
+    "scope": "Both actual Player/NPC bindings reproduce the one-ULP error before the production fix; no red acceptance."
+  },
+  "visual_review": "Both new third-hit captures directly reviewed: hand/Mace visible, existing Dog face holes and lighting differences remain. No complete native pose/pixel parity.",
+  "limits": [
+    "Rare huge-bonus values are tested through actual owned World queries, not normal-input lethal contacts. Live gameplay regression uses zero bonus.",
+    "Only weapon scalar arithmetic corrected. Other physical math still needs live-precision review. Reaction/mastery RNG and real consequences, directional powers, effects and full interruption/input/view/FPS/restart gates remain open.",
+    "Current bounded pipeline RNG preservation is not native reaction RNG parity.",
+    "Debugger pause course is not FPS/performance evidence. No isolated hit waveform/hardware-hearing claim. ASan leak checks disabled; UBSan halts."
+  ]
+}

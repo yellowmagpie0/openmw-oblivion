@@ -1107,7 +1107,7 @@ namespace MWMechanics
             ESM4::buildPhysicalCombatSettings(settings));
         const auto bonus = attacker == player ? service->getPlayerIntegerValue(42)
             : service->getNonPlayerIntegerValue(attacker, 42);
-        const float total = static_cast<float>(double(damage) + bonus);
+        const float total = ESM4::addWeaponAttackBonus(damage, bonus);
         if (!std::isfinite(total))
             throw std::invalid_argument("nonfinite native weapon damage");
         return total;

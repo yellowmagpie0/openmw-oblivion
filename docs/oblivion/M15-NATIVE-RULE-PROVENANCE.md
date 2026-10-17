@@ -15282,9 +15282,8 @@ original explicit float stores. Exact binary integer operands avoid double
 rounding of integer luck products/additions. The original percent constant at
 A3B150 is double(float32(.01)), not mathematical double .01. The Fatigue term
 keeps the native subtraction order. Other physical helpers are unchanged and
-still need their own live-precision audit. The World AttackBonus addition is
-outside this helper; a separate original audit retains a large-integer/tiny-
-damage rounding corner for the next correction.
+still need their own live-precision audit. The separate World AttackBonus
+addition corner is resolved by the follow-up below.
 
 Full original 547070 executes 4103 deterministic profiles without arithmetic
 stubs. All production results match bitwise. Thirty-nine frozen rows retain
@@ -15311,3 +15310,36 @@ evidence. The exact stored Health display may erase a raw-damage ULP, so a
 matching HUD value alone is insufficient. Source recipes, test receipts, actual
 process epochs, bounded runtime courses and remaining limits are recorded in
 [the weapon precision index](M15-WEAPON-LIVE-PRECISION-VERIFICATION.json).
+
+### Final weapon AttackBonus addition
+
+Original 485137..485141 loads signed integer AV42 exactly with FILD, then adds
+the 547070 float result with FADD at 24 significant bits and stores another float.
+The previous World double addition loses a tiny operand that decides how a
+large integer halfway value rounds. With bonus 2147483456 and tiny positive
+weapon damage, both actual Player and NPC queries reproduced bits 1325400062
+against original 1325400063. The retained red case verifies the composed integer
+getter and immutable owned-item query before comparing the result.
+
+`addWeaponAttackBonus` now performs that exact native rounding, and the World
+query uses it after the 547070 calculation and integer AV42 read. Full original
+484F80 executes 1152 finite float/integer cases; an instruction observation checks
+the actual prepared damage bits before every addition. All production results
+match bitwise. The 140 frozen rows include signed zero, subnormals, finite float
+extremes and exact int32 loads near cancellation and halfway values. No test
+tolerance was weakened. Existing 576 entry profiles remain checked on both actor
+bindings, alongside the six new World corner queries.
+
+All 2805 normal component tests, 749 sanitized ESM4 tests, 1618 engine tests in each
+configuration and 313 Python tests pass with exact inventories and no skips.
+New normal and sanitized processes load the prior accepted second Mace save
+and complete one third contact through production input/contact/F5. Their first
+two receipt epochs are historical source lineage, not new-build gameplay tests.
+Exact resource/condition/ownership continuity is checked. A read-only normal
+return probe also observes the new helper through CharacterController dispatch:
+input damage 2.221243143081665, bonus 0, returned bits 1074669785. Gameplay uses zero
+bonus; the huge-bonus corner is verified through original instructions and real
+World queries, without claiming lethal-contact/effect acceptance.
+
+Source inputs, red/green receipts, actual epochs, media and remaining S4 limits:
+[AttackBonus verification](M15-WEAPON-ATTACK-BONUS-VERIFICATION.json).

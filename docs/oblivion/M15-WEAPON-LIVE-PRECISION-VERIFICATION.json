@@ -623,10 +623,16 @@
     "Earlier wide-profile Mace and blade corpora/courses are historical sensitivity evidence, not PC007F raw-damage acceptance"
   ],
   "limits": [
-    "Only weaponDamage arithmetic changed; other physical arithmetic still needs a live-precision audit. The separate World AttackBonus addition has a remaining large-integer/tiny-damage corner; weapon-entry-bonus-single-audit-01/report.json retains original results versus the current expression, pending real World-binding verification and correction.",
+    "Historical checkpoint changed weaponDamage only. The subsequent final AttackBonus addition correction is linked in attack_bonus_followup; other physical arithmetic still needs a live-precision audit.",
     "Default unenchanted stock weapons, ordinary keyboard contacts, default male Player and spell-free stationary Creature. Not directional/mastery/effect/block/interruption acceptance.",
     "RNG preservation is checked against the current bounded pipeline; native reaction/mastery RNG and consequences are still unimplemented.",
     "No isolated hit waveform/hardware-hearing, sustained FPS, all-view/input or windup/block/recovery restart claim. Debugger pause course is not performance evidence.",
     "ASan leak detection disabled; UBSan halts on errors. Original executable/config/pristine saves restored as hashed in cleanup receipt."
-  ]
+  ],
+  "attack_bonus_followup": {
+    "resolved": true,
+    "path": "M15-WEAPON-ATTACK-BONUS-VERIFICATION.json",
+    "sha256": "0b99b1d3b101ed3c3a8cb97fbd13e01aed6767792f98e094e758f4329f0b32dd",
+    "scope": "The separately recorded final integer-addition corner is corrected and verified in the follow-up; original checkpoint code/source hashes remain historical. Other physical arithmetic and full S4 gates remain open."
+  }
 }

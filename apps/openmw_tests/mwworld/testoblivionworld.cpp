@@ -7045,6 +7045,45 @@ namespace
                 EXPECT_EQ(weapon->getCellRef().getNativeItemCondition(), row.condition);
             }
         }
+        // Original full484F80 at007F, weapon-entry-bonus-single-audit-02.
+        // Integer AV composition can produce a halfway value even though
+        // each underlying float channel is exactly representable. The tiny
+        // positive damage must survive the native PC24 FILD/FADD sequence.
+        ESM4::GameSetting tiny{}; tiny.mId = {0x952, 0}; tiny.mEditorId = "fDamageWeaponMult";
+        tiny.mData = 1e-30f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(tiny, ESM::FormKey::content("headless.esm", 0x952));
+        struct BonusRow { float base, modifier; std::int32_t bonus; std::uint32_t bits; };
+        for (const auto actor : {player, npc})
+            for (const BonusRow row : {BonusRow{0, 0, 0, 255897298u},
+                BonusRow{2147483264.f, 64, 2147483328, 1325400062u},
+                BonusRow{2147483392.f, 64, 2147483456, 1325400063u}})
+            {
+                SCOPED_TRACE(::testing::Message() << "AttackBonus " << row.bonus
+                    << (actor == player ? " Player" : " NPC"));
+                auto state = initial;
+                const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+                auto& values = *std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& value) { return value.mActor == key; });
+                for (auto [av, amount] : {std::pair{0, 40.f}, {7, 50.f}, {14, 20.f}, {16, 20.f}, {10, 140.f}})
+                {
+                    values.mValues[av] = {};
+                    values.mValues[av].mBase = amount;
+                }
+                values.mValues[42] = {};
+                values.mValues[42].mBase = row.base;
+                values.mValues[42].mModifiers[0] = row.modifier;
+                service.restore(state, store);
+                ASSERT_EQ(actor == player ? service.getPlayerIntegerValue(42)
+                    : service.getNonPlayerIntegerValue(actor, 42), row.bonus);
+                auto& inventory = actor.getClass().getInventoryStore(actor);
+                const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                ASSERT_NE(weapon, inventory.end());
+                weapon->getCellRef().setNativeItemCondition(100);
+                const auto before = captureNativeActorState(fixture, npc).serializeBinary();
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(MWMechanics::oblivionOrdinaryWeaponContactDamage(
+                    world, actor, *weapon)), row.bits);
+                EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before);
+            }
         const auto playerWeapon = *player.getClass().getInventoryStore(player).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         const auto npcWeapon = *npc.getClass().getInventoryStore(npc).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         EXPECT_THROW(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, npc, playerWeapon), std::invalid_argument);

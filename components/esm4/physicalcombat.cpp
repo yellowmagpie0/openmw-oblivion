@@ -1505,6 +1505,15 @@ namespace ESM4
             multiplySingle(condition, base), skill), attribute), fatigue));
         return rounded(multiplySingle(subtotal, input.mAttackMultiplier));
     }
+    float addWeaponAttackBonus(float damage, std::int32_t bonus)
+    {
+        finite(damage);
+        // Original485137..485141 loads the integer exactly, then rounds the
+        // sum once at PC24. A double addition can lose a tiny float operand
+        // that decides which way an integer halfway value rounds.
+        return rounded(addSingle(bonus, damage));
+    }
+
     void validateHandToHandSettings(const HandToHandSettings& settings)
     {
         for (float value : { settings.mSkillBase, settings.mSkillMultiplier, settings.mStrengthBase,
