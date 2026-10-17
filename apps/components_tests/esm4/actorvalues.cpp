@@ -14,6 +14,38 @@ namespace
     using Modifier = ESM4::ActorValueModifier;
 }
 
+TEST(ESM4ActorValues, ModifierRequestEligibilityUsesNativeOwnerSignAndFatigueFlag)
+{
+    // Original DamageFloat wrapper corpus, actual Creature625710/6250F0 and
+    // Player65E530 dispatch: S4/native-creature-hit-fatigue-eligibility-oracle-02.
+    struct Case { Owner owner; std::uint8_t value; float delta; bool god; bool fatigue; bool allowed; };
+    const Case cases[] = {
+        {Owner::Player, 10, -35, false, false, true},
+        {Owner::Player, 10, -35, true, true, false},
+        {Owner::Player, 8, -.25f, true, true, false},
+        {Owner::Player, 9, -1, true, true, false},
+        {Owner::Player, 7, -1, true, false, true},
+        {Owner::Player, 10, .25f, true, false, true},
+        {Owner::NonPlayer, 10, -5, false, false, false},
+        {Owner::NonPlayer, 10, -5, true, true, true},
+        {Owner::NonPlayer, 8, -35, true, false, true},
+        {Owner::NonPlayer, 10, .25f, false, false, true},
+        {Owner::NonPlayer, 10, -0.f, false, false, true},
+        {Owner::NonPlayer, 10, 0.f, true, false, true},
+        // ModAV's positive INT_MAX float store passes the gate before the
+        // later conversion to INT_MIN. Do not gate on that converted value.
+        {Owner::Player, 8, 0x1p31f, true, true, true},
+    };
+    for (const auto& c : cases)
+        EXPECT_EQ(ESM4::actorValueModifierRequestAllowed(c.owner, c.value, c.delta,
+            {c.god, c.fatigue}), c.allowed);
+    EXPECT_THROW(ESM4::actorValueModifierRequestAllowed(static_cast<Owner>(255), 10, 1, {}), std::invalid_argument);
+    EXPECT_THROW(ESM4::actorValueModifierRequestAllowed(Owner::Player, 72, 1, {}), std::invalid_argument);
+    for (const float bad : {std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+        EXPECT_THROW(ESM4::actorValueModifierRequestAllowed(Owner::NonPlayer, 10, bad, {false, false}),
+            std::invalid_argument);
+}
+
 TEST(ESM4ActorValues, CompositionPreservesPlayerAndNpcStoreOrder)
 {
     const ESM4::ActorValueState state{1, {-1, 0x1p-24f, 0}};

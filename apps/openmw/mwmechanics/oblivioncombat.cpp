@@ -1882,8 +1882,10 @@ namespace MWMechanics
                 throw std::invalid_argument("invalid or stale native physical contact random transition");
         }
         ESM4::validateEssentialRecoverySettings(recovery);
-        const auto change = [&](ESM4::RuntimeActorValues& values, std::uint8_t av, float delta) {
-            if (delta != 0 && !(playerGodMode && values.mOwner == ESM4::ActorValueOwner::Player && delta < 0))
+        const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
+                                std::uint8_t av, float delta) {
+            if (delta != 0 && ESM4::actorValueModifierRequestAllowed(values.mOwner, av, delta,
+                    {playerGodMode, ptr.getType() != ESM::REC_CREA4}))
                 values.mValues[av] = ESM4::changeActorValueModifier(
                     values.mValues[av], values.mOwner, av, ESM4::ActorValueModifier::Damage, delta);
         };
@@ -1897,7 +1899,7 @@ namespace MWMechanics
                 ? ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess)
                 : nonPlayerFloat(values, 10, findActorBase(values.mBase));
             const float debit = ESM4::fatigueExpenditureDebit(current, delta);
-            change(values, 10, -debit);
+            change(values, ptr, 10, -debit);
         };
         std::optional<ESM4::RuntimeActorValues> receiving;
         std::optional<ESM4::RuntimeActorLife> receivingLife;
@@ -1918,8 +1920,8 @@ namespace MWMechanics
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
                 return nullptr;
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
-            change(*receiving, 8, deltas.mVictimHealth);
-            change(*receiving, 10, deltas.mVictimFatigue);
+            change(*receiving, victim, 8, deltas.mVictimHealth);
+            change(*receiving, victim, 10, deltas.mVictimFatigue);
             if (receiving->mOwner == ESM4::ActorValueOwner::Player)
                 preparePlayerValues(*receiving, playerBase);
             if (deltas.mVictimHealth < 0

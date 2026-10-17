@@ -272,6 +272,17 @@ namespace ESM4
         return stored(double(requested) - current);
     }
 
+    bool actorValueModifierRequestAllowed(ActorValueOwner owner, std::uint8_t value,
+        float requestedDelta, const ActorValueCommandPolicy& policy)
+    {
+        validateOwner(owner);
+        if (value >= 72 || !std::isfinite(requestedDelta))
+            throw std::invalid_argument("invalid native modifier request");
+        return !(requestedDelta < 0 && ((owner == ActorValueOwner::Player && policy.mGodMode
+                && value >= 8 && value <= 10)
+            || (owner == ActorValueOwner::NonPlayer && value == 10 && !policy.mCanSpendFatigue)));
+    }
+
     std::optional<ActorValueCommandChange> prepareActorValueModifierCommand(ActorValueOwner owner,
         std::uint8_t value, ActorValueCommand command, ActorValueCommandSource source,
         std::int32_t requested, float current, const ActorValueCommandPolicy& policy)
@@ -284,9 +295,7 @@ namespace ESM4
             ? forceActorValueDelta(requested, current) : static_cast<float>(requested);
         // Eligibility precedes the integer wrapper's conversion. A positive
         // request rounded beyond int32 can become negative after this gate.
-        const bool negative = command == ActorValueCommand::Mod ? requested < 0 : raw < 0;
-        if (negative && ((owner == ActorValueOwner::Player && policy.mGodMode && value >= 8 && value <= 10)
-                || (owner == ActorValueOwner::NonPlayer && value == 10 && !policy.mCanSpendFatigue)))
+        if (!actorValueModifierRequestAllowed(owner, value, raw, policy))
             return std::nullopt;
         // Both original CPU conversion paths return INT_MIN for rounded 2^31.
         // Other int32 inputs round to an exactly integral, in-range float.

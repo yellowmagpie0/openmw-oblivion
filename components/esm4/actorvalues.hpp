@@ -88,8 +88,14 @@ namespace ESM4
     struct ActorValueCommandPolicy
     {
         bool mGodMode = false;
+        // Native nonplayer +278 gates every negative Fatigue modifier,
+        // including direct damage as well as expenditure.
         bool mCanSpendFatigue = true;
     };
+    // Script/Damage wrapper eligibility before integer conversion or mutation.
+    // This does not cap a debit to current Fatigue.
+    bool actorValueModifierRequestAllowed(ActorValueOwner owner, std::uint8_t value,
+        float requestedDelta, const ActorValueCommandPolicy& policy);
     struct ActorValueCommandChange
     {
         ActorValueModifier mModifier;

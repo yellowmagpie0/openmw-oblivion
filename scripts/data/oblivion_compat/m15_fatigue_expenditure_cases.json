@@ -99,5 +99,32 @@
       "scope": "Keep floor position; turn Player away from target. Resources, damage, completed action and inventory unchanged."
     },
     "simulated_time_barrier": "Read-only Player GetBaseAV Acrobatics command scheduled at3 simulated seconds, observed before pressing attack. Keeps original saved floor position and changes only facing; avoids an airborne held-input power selection."
+  },
+  "shared_modifier_regression": {
+    "purpose": "Recheck Player/NPC physical contact after sharing request eligibility with native command wrappers. Creature eligibility is covered separately by actual-Ptr/native wrapper tests; no live Creature input claim.",
+    "first_manifest": "oblivion_m15_fatigue_expenditure_power.json",
+    "first_input": "Identical staged-input SHA and recipe above.",
+    "normal": "One process verifies exact resources and completed playback.",
+    "instrumented": "Post-contact save captured consumed phase1 recovery; inspect that exact state, then launch the declared fresh recovery continuation.",
+    "recovery_continuation_manifest": "oblivion_m15_fatigue_modifier_recovery_continuation.json",
+    "recovery_expectations": {
+      "id": 2,
+      "kind": 2,
+      "power_phase": 1,
+      "contact_committed": true,
+      "animation_time": 0.8000001907348633,
+      "process_action": 3,
+      "physical_actions": {
+        "next": 3,
+        "pending": []
+      }
+    },
+    "second_expectations": {
+      "strike": null,
+      "process_action": -1,
+      "new_contacts": 0,
+      "resource_deltas": 0
+    },
+    "evidence": "docs/oblivion/M15-CREATURE-FATIGUE-ELIGIBILITY-VERIFICATION.json"
   }
 }

@@ -14965,7 +14965,7 @@ both signed zeros), require actor virtual+278 eligibility and positive current
 Fatigue, limit the negative request to minus current Fatigue, then dispatch
 DamageFloat+2A4. This limits the request before actual modifier-storage rounding;
 it does not promise exact zero for arbitrary extreme base/modifier combinations.
-Direct hostile Fatigue damage uses its separate DamageFloat path and retains
+Eligible direct hostile Fatigue damage uses its separate DamageFloat path and retains
 negative-resource behavior.
 
 `S4/native-attack-expenditure-caller-oracle-02/report.json` records2112 composed
@@ -15010,3 +15010,40 @@ query/spending, across both x87 modes. Another1056 ordinary cost-entry controls
 retain their earlier scope. Every nominal/published float matches oracle02 bit
 for bit. This establishes order on the selected power caller branch, not its
 full contact body, all ordinary dispatches, or original input/frame scheduling.
+
+### Direct Creature Fatigue modifiers share the native wrapper gate
+
+Original Character DamageFloat5E2BE0 and Creature alias entry625710 reject
+negative Fatigue10 when actor virtual+278 is false; this gate also applies to
+direct damage. Player65E530 instead suppresses negative AV8..10 in god mode.
+Eligible direct damage is not limited to current Fatigue. The expenditure
+wrapper5E07D0 remains a separate, capped caller of DamageFloat.
+
+`S4/native-creature-hit-fatigue-eligibility-oracle-02/report.json` executes1280
+cases through actual Character/Player/Creature entries, actual eligibility
+getters977C50/6250F0, actual base/type dispatch and Low/MiddleLow/MiddleHigh/High
+process Damage methods. Inputs cover AV8/10, signed zero, negative/positive
+fractions and amounts, god mode, both Creature+104 flag values, absent/present
+processes and both x87 modes. Final scalar/sparse mutation and notification/
+Health callbacks are explicit recorded boundaries; this is not original storage,
+Creature contact or live flag-transition acceptance. Attempt01's incomplete
+synthetic vtable omitted +190 and faulted with a nonnull base; the diagnostic
+trace remains. Corrected02 supplies actual +190 methods from all three tables.
+
+`S4/creature-hit-fatigue-native-compare-01/verification.json` compares1088
+observable direct-write gate cases with `actorValueModifierRequestAllowed`;
+192 absent-process nonplayer outcomes cannot expose that pure gate and are
+excluded. Another6272 original command-wrapper cases preserve exact eligibility,
+modifier channel, delta float bits and Health-callback flags after sharing the
+predicate, including positive INT_MAX conversion after the sign gate. Both
+normal and ASan/UBSan C++ runs pass; leak checks are disabled.
+
+The physical-contact transaction now uses that shared request predicate before
+modifier mutation, matching the existing command policy. Actual-Ptr engine tests
+preserve Creature current2 under incoming-5, allow eligible Player2 -> -3,
+suppress that Player debit in god mode, and retain positive.25 ->2.25 and zero
+requests. They verify atomic preparation, facade agreement, once-only commitment,
+whole C++ state restoration and no repeated commitment. The former Creature
+55-Fatigue expectation retained in4c4116045f was incorrect and is corrected;
+Creature construction/command policy has +278 disabled. Native live flag
+transitions and the still-gated Creature controller/contact route remain open.

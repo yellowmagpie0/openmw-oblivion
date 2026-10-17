@@ -7123,6 +7123,86 @@ namespace
         }
     }
 
+    TEST_F(OblivionActorStatsTest, physicalDirectFatigueUsesCreatureEligibilityWithoutCappingPlayerDamage)
+    {
+        sharedStats();
+        ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(facade);
+        ESM4::Creature creature{}; creature.mId = {0x800, 3}; creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        MWWorld::Player player(playerRecord); const auto playerPtr = player.getPlayer();
+        ESM::NpcState initial{}; initial.blank(); playerPtr.getClass().readAdditionalState(playerPtr, initial);
+        ESM4::ActorCreature reference{}; reference.mId = {0x900, 3};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900); reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr creaturePtr(&live);
+        const std::array residents{creaturePtr};
+        const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+        struct HitCase { bool playerVictim; bool godMode; float delta; float expected; };
+        // Original wrapper dispatch plus the established Damage channel stores:
+        // ineligible Creature requests do nothing; eligible damage is uncapped.
+        const HitCase cases[] = {
+            {false, false, -5, 2}, {false, true, -5, 2},
+            {false, false, 0, 2}, {false, true, 0, 2},
+            {false, false, .25f, 2.25f}, {false, true, .25f, 2.25f},
+            {true, false, -5, -3}, {true, true, -5, 2},
+            {true, false, 0, 2}, {true, true, 0, 2},
+            {true, false, .25f, 2.25f}, {true, true, .25f, 2.25f},
+        };
+        for (const auto& [playerVictim, godMode, delta, expected] : cases)
+        {
+            SCOPED_TRACE(playerVictim);
+            SCOPED_TRACE(godMode);
+            SCOPED_TRACE(delta);
+            MWMechanics::OblivionCombatService service;
+            ESM4::RuntimeActorValues pv; pv.mActor = ESM::FormKey::dynamic("player", 1);
+            pv.mBase = ESM::FormKey::dynamic("player-base", 1); pv.mOwner = ESM4::ActorValueOwner::Player;
+            pv.mPlayerFormValues = {{0, 0, 0, 0}};
+            for (std::size_t i = 0; i < 8; ++i) pv.mValues[i].mBase = 40;
+            pv.mValues[10].mModifiers[2] = -158;
+            service.publishPlayerValues(player, pv, playerBase);
+            service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ESM4::RuntimeActorValues cv; cv.mActor = reference.mFormKey; cv.mBase = mActorKey;
+            cv.mValues[8].mBase = 100; cv.mValues[10] = {60, {0, 0, -58}};
+            service.publishNonPlayerValues(creaturePtr, cv);
+            service.publishNonPlayerLife(creaturePtr, {cv.mActor, cv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            ASSERT_EQ(service.getPlayerValue(10), 2); ASSERT_EQ(service.getNonPlayerValue(creaturePtr, 10), 2);
+            const auto attacker = playerVictim ? creaturePtr : playerPtr;
+            const auto victim = playerVictim ? playerPtr : creaturePtr;
+            const auto id = service.allocateAction(playerVictim ? cv.mActor : pv.mActor);
+            ESM4::RuntimeState saved;
+            saved.mPlayer.mReference = pv.mActor; saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2); saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState ref; ref.mKey = cv.mActor; ref.mBase = cv.mBase;
+            ref.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(ref);
+            service.capture(saved); const auto before = saved.serializeBinary();
+            const MWMechanics::OblivionPhysicalContactDeltas hit{0, 0, delta};
+            auto prepared = service.preparePhysicalContact(id, attacker, victim, hit, &player,
+                false, {}, playerBase, godMode);
+            ASSERT_TRUE(prepared);
+            service.capture(saved); EXPECT_EQ(saved.serializeBinary(), before);
+            ASSERT_TRUE(prepared->commit());
+            EXPECT_EQ(victim.getClass().getCreatureStats(victim).getFatigue().getCurrent(), expected);
+            EXPECT_EQ(service.getPlayerValue(10), playerVictim ? expected : 2);
+            EXPECT_EQ(service.getNonPlayerValue(creaturePtr, 10), playerVictim ? 2 : expected);
+            EXPECT_FALSE(prepared->commit());
+            EXPECT_FALSE(service.takeNextDeathEvent());
+            service.capture(saved); const auto after = saved.serializeBinary();
+            MWMechanics::OblivionCombatService candidate, resumed;
+            candidate.restore(ESM4::RuntimeState::deserializeBinary(after));
+            resumed.installRestoredActorState(std::move(candidate), residents, &player);
+            EXPECT_EQ(victim.getClass().getCreatureStats(victim).getFatigue().getCurrent(), expected);
+            EXPECT_FALSE(resumed.commitPhysicalContact(id, attacker, victim, hit, &player,
+                false, {}, playerBase, godMode));
+            resumed.capture(saved); EXPECT_EQ(saved.serializeBinary(), after);
+        }
+    }
+
     TEST_F(OblivionActorStatsTest, physicalPlayerCreatureContactOwnsDeathEssentialGodModeAndEventFailure)
     {
         sharedStats();
@@ -7190,9 +7270,9 @@ namespace
             EXPECT_EQ(service.isActionPending(victimAction, victimKey), suppressed);
             EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getFatigue().getCurrent(),
                 playerAttacks ? godMode ? 160 : 150 : godMode ? 160 : 155);
-            // The native Creature eligibility byte starts disabled. Direct
-            // incoming Fatigue damage still applies, but attack spending does not.
-            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), playerAttacks ? 55 : 60);
+            // The native Creature eligibility byte starts disabled. Both
+            // expenditure and direct negative Fatigue modifiers are suppressed.
+            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), 60);
             EXPECT_EQ(service.getPlayerValue(8), playerAttacks || godMode ? 80 : essential ? 40 : -920);
             EXPECT_EQ(service.getNonPlayerValue(creaturePtr, 8), !playerAttacks ? 100 : essential ? 50 : -900);
             const auto event = service.takeNextDeathEvent();

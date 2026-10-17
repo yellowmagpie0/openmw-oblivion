@@ -4277,3 +4277,37 @@ establish an exact animation phase. Sound is disabled in these courses. ASan
 leak checks are disabled. No zero-Fatigue acquired hit, Creature/directional
 mastery, other device/view/FPS, full original scheduling or complete M15S4 gate
 is claimed; the delivery audit remains incomplete.
+
+## Direct Creature Fatigue eligibility — integration checkpoint
+
+Physical contacts now share the native modifier request gate with command
+wrappers. A false Creature+278 policy suppresses direct negative Fatigue as well
+as expenditure. Eligible NPC/Player direct damage retains its ability to go
+negative; the expenditure cap remains separate. This corrects the Creature
+expectation retained in the preceding expenditure checkpoint.
+
+[M15-CREATURE-FATIGUE-ELIGIBILITY-VERIFICATION.json](M15-CREATURE-FATIGUE-ELIGIBILITY-VERIFICATION.json)
+records 1,280 original-wrapper observations, 1,088 observable direct-gate
+comparisons, and 6,272 unchanged command-wrapper comparisons. Normal and
+instrumented runs each pass 2,795 component and 1,616 engine tests. Player/NPC
+runtime regressions retain Player Fatigue 0 and target Health/Fatigue Damage
+-4.452499866485596/-4.016249656677246 with complete C++/Python payload identity.
+Actual-Ptr Creature/Player tests cover negative/positive/zero requests, god mode,
+atomic publication, native facade views, saved restoration and once-only action
+consumption. Original final mutators/callbacks are boundary stubs in the new
+wrapper probe; C++ service storage assertions are a separate layer.
+
+These corrections do not admit live Creature attacks. Creature normal-contact
+and playback guards, native eligibility flag transitions, damage/sound/reaction
+integration and actual Creature normal-input/restart acceptance remain open.
+The runtime regressions use the prior declared low-Fatigue/no-regeneration
+fixture, first-person keyboard-originated pending power and disabled sound;
+other view/input/FPS and full S4 gates remain incomplete.
+
+Normal verifies one completed-contact process. The instrumented save captured
+consumed power phase1/action3 recovery. Its first verifier incorrectly assumed
+completed playback and failed; that script/result remain. A separate strict
+recovery verifier checks the exact saved phase, then a fresh engine process
+finishes without another hit/debit, preserving all compared resources and
+inventories. Both complete payloads re-encode exactly. This is a bounded recovery
+continuation, with the failed completed-state assumption recorded separately.

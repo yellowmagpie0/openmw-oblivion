@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "status": "direct Fatigue modifier eligibility integrated; Creature normal-contact dispatch and full M15S4 remain incomplete",
+  "source_parent_commit": "4c4116045fe3710a611d300497b74a456a680036",
+  "source_sha256": {
+    "components/esm4/actorvalues.cpp": "ef49f51c7be288f7524183c322004ce76ec3c415a28dade0b8f69f6f40368e51",
+    "components/esm4/actorvalues.hpp": "11770c11894907d7941e47c3288ac66f0b457fda403f0748404c311d828c1b02",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "5dce67c8f3f92bf46d1b8c0f0f6ee464e84e64804ee7aee2ab8bf9bf55b9dd21",
+    "apps/components_tests/esm4/actorvalues.cpp": "355c821e7ac23d3bc0aab6dd566b267bba06ff70be83223b260cad61fd3354dc",
+    "apps/openmw_tests/mwworld/testoblivionactorstats.cpp": "210b8359d32dd0d2245561db2d8e5b66c7a5ea20040f2f7cac3e748c8ac87717"
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native": {
+    "wrapper_probe": {
+      "path": "build/oblivion-compat/m15/S4/native-creature-hit-fatigue-eligibility-oracle-02/report.json",
+      "sha256": "41df32b0d77adc8e43b7257a60b27648e69d207e8cbd27d6a170e290e33a7c63"
+    },
+    "observations": 1280,
+    "scope": "Actual +2A4 entries Character5E2BE0, Player65E530, Creature625710 alias; actual +278 getters977C50/6250F0 and process Damage methods. Creature flag+104, process pointer, AV8/10, amount/god-mode supplied. Final mutation/notifications/Health callbacks recorded at boundary stubs; no native storage or gameplay claim.",
+    "comparison": {
+      "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-native-compare-01/verification.json",
+      "sha256": "9ef986487d84375e7457ac36663ccfd87cff3b3b1d37e55aa543923e4cf7d47f"
+    },
+    "direct_observable_gate_cases": 1088,
+    "absent_process_nonplayer_cases_excluded_from_gate_comparison": 192,
+    "unchanged_command_wrapper_cases": 6272,
+    "configurations": [
+      "normal",
+      "ASan/UBSan; leak checks off"
+    ]
+  },
+  "implementation": "actorValueModifierRequestAllowed shares original signed request eligibility before integer conversion. Physical direct Fatigue now honors the same nonplayer +278 policy as command wrappers. Expenditure keeps its separate positive-current request cap; eligible direct damage remains uncapped. Current construction/command policy sets Creature eligibility false; live transitions unmodeled.",
+  "actual_ptr_tests": {
+    "Creature_current2_negative5": 2,
+    "Player_current2_negative5": -3,
+    "god_mode_Player_current2_negative5": 2,
+    "positive_delta_0_25": 2.25,
+    "zero_delta": 2,
+    "checks": [
+      "atomic preparation",
+      "class facade and authoritative value agreement",
+      "once-only commit",
+      "whole C++ state round trip",
+      "restored class facade",
+      "no replay on second commitment",
+      "existing lethal/essential/god-mode/death-event matrix"
+    ]
+  },
+  "builds": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-main-01/verification.json",
+        "sha256": "19efd49b2908dc535330540557c8c611fa63dbbf222e7bf01c61c6e50a64f858"
+      },
+      "source_before": {
+        "head": "4c4116045fe3710a611d300497b74a456a680036",
+        "source_fingerprint": "a4857e4bec812f052082529e9cb2df83f4de8175c5b5ad27f0fce2a6ffa8df4e"
+      },
+      "source_after": {
+        "head": "4c4116045fe3710a611d300497b74a456a680036",
+        "source_fingerprint": "a4857e4bec812f052082529e9cb2df83f4de8175c5b5ad27f0fce2a6ffa8df4e"
+      },
+      "results": {
+        "components": {
+          "executed": 2795,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7b08f74ffe2cd65eeacead9c96ea994f7aa8e0b47bc1132cd7fd32c392019d19",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "c831071fe55beca08eb44baafecb46a8af2d198bae39111cbed4b3f77dc10481",
+          "inventory_sha256": "60ccd5671f2924ed3aaa1c5f188f67b20c387fd88dbe328ae7a975783b9b8238",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1616,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f943d1f6d62975481df2be2680685aeed2fc568c7127f5966983f1e9de2f3476",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "4bdd1e1b1836b6905ccee9d0e0ec7483b90540daa405fd1bafab957bcd8bc98b",
+          "inventory_sha256": "c6d187b084c02e37f073d3a5342572675dfe1fbeca597db3cfe2341a8c4369b5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-sanitized-01/verification.json",
+        "sha256": "8f669f5178838e8642405b2efc850e933c727490e3a9930755329f23d7d7c24d"
+      },
+      "source_before": {
+        "head": "4c4116045fe3710a611d300497b74a456a680036",
+        "source_fingerprint": "a4857e4bec812f052082529e9cb2df83f4de8175c5b5ad27f0fce2a6ffa8df4e"
+      },
+      "source_after": {
+        "head": "4c4116045fe3710a611d300497b74a456a680036",
+        "source_fingerprint": "a4857e4bec812f052082529e9cb2df83f4de8175c5b5ad27f0fce2a6ffa8df4e"
+      },
+      "results": {
+        "components": {
+          "executed": 2795,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f6cf7aa180c76f6fd12fd4ae3013220ade4d688d4746dbc8b5709626ea9f8d5d",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "040486064f5dbe49fc8f484b71c58efac2375d6d5e3731056bb8258baba85a57",
+          "inventory_sha256": "23088b0bf4644a96b21f2f1a07d549574ac70277b79013d776c1cb236b66f42e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1616,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c5a033b40470acbb2d1610700713cde3f57c567b71f0109dac20f64244515e94",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "278d4bd8c0abfedbb1de45a06f760bb657f09c9e32bc043e5959de251857951e",
+          "inventory_sha256": "c6d187b084c02e37f073d3a5342572675dfe1fbeca597db3cfe2341a8c4369b5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "runtime_player_npc_regressions": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-normal-01/verification.json",
+        "sha256": "66fd410ccf14607659bbea23b68693e2fcc45109729858a425dd373735eb18d7"
+      },
+      "passed": true,
+      "scope": "One actual pending Player power contact against NPC after sharing modifier eligibility. Identical staged input, exact native-derived Health/Fatigue damage and capped Player spend2->0, once-only action2, all prior inventory/unrelated AV/lifecycle fields preserved, complete C++/Python payload identity. Staged Player Fatigue2 and no-regeneration GMST fixture as declared in preceding committed course. Regression only: no live Creature hit, replay course, audio, gamepad or full S4 acceptance.",
+      "epoch": {
+        "pid": 905279,
+        "start_ticks": 34369909,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-normal-01/first/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "18b00521fb381d4deb41b134c5734411c7aa75f6378628a076cdc30c1e8d75cd"
+      },
+      "input_sha256": "464dfdb5bd67552d30474ffb270f4d5f83ccf424edd767ef71145f629fb1028c",
+      "output_sha256": "f441e268c6dae55bb13e6488ee23e4da827b4b95b0600a731f5bff3ccb3fb947",
+      "verifier_sha256": "ccee1dd7b32674cab859c9bc70709c9d392253e9a6fa726102ec3dc7cfa2a7b9",
+      "scenario_sha256": "33881b50cf91afc4c9fb24467f98b3df923b81befbe66068ef4ad182213909ef",
+      "expectations_sha256": "4145415921055b720e70d1a8e867bda9b2d44ea744787e3e6d2d03e59284ca3b"
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/verification-recovery.json",
+        "sha256": "33f12521da69ca46a955a7251894924d36a31d9c4f87d9c1c52bac0cf51e5d7f"
+      },
+      "passed": true,
+      "scope": "Actual pending Player power contact against NPC after sharing modifier eligibility; exact consumed phase1 recovery save followed by a fresh process finishing recovery without another hit/debit. Identical staged input, exact native-derived Health/Fatigue damage and capped Player spend2->0, once-only action2, all prior inventory/unrelated AV/lifecycle fields preserved, complete C++/Python payload identity. Staged Player Fatigue2 and no-regeneration GMST fixture as declared in preceding committed course. Regression only: no live Creature hit, audio, gamepad or full S4 acceptance.",
+      "epoch": {
+        "pid": 908141,
+        "start_ticks": 34405810,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/first/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d84273fe29691544afa1aa29990b25b7d45a10a4e667e40f06eb54830f2441b2"
+      },
+      "input_sha256": "464dfdb5bd67552d30474ffb270f4d5f83ccf424edd767ef71145f629fb1028c",
+      "output_sha256": "a0c7f76b4330b433b14a368a5f88ea37594abfe397c915d061ee58b7c4cb4215",
+      "verifier_sha256": "7d25ee8a50b30609b1708a86cdb88129a48cd450919115560edebfe2e2a5ae6b",
+      "scenario_sha256": "5b3802128277ecf9960df80422f9c1728eeab6835a7a5db66f2ebe926974db35",
+      "expectations_sha256": "4145415921055b720e70d1a8e867bda9b2d44ea744787e3e6d2d03e59284ca3b",
+      "second_epoch": {
+        "pid": 908435,
+        "start_ticks": 34448259,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/second/config",
+          "--no-sound=1",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d84273fe29691544afa1aa29990b25b7d45a10a4e667e40f06eb54830f2441b2"
+      },
+      "second_output_sha256": "506d54ed75a5b321371ceaee0776fccf9abc688a2c57b0c248c89f822f7e2d67",
+      "second_scenario_sha256": "a39a9f43311adadeba6b7600f3a659011cfe53dd2544313fc02870d69cad247a",
+      "consumed_recovery_strike": {
+        "id": 2,
+        "kind": 2,
+        "weapon_base": "null",
+        "animation_group": "handtohandattackpower",
+        "playback_speed": 1.0,
+        "animation_time": 0.8000001907348633,
+        "contact_committed": true,
+        "ordinary_phase": 0,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -2.000000238418579,
+          "ease_start": 0.6000001430511475,
+          "last_input": 0.8000001907348633,
+          "ease_end": 2.1000001430511475,
+          "weighted_time": 0.8000001907348633,
+          "output_time": 0.8000001907348633
+        },
+        "power_phase": 1
+      },
+      "retained_failed_initial_verifier": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/verify.py",
+        "sha256": "ccee1dd7b32674cab859c9bc70709c9d392253e9a6fa726102ec3dc7cfa2a7b9",
+        "reason": "Incorrect assumption that the post-contact save had already completed playback. Failure retained; exact consumed recovery variant is verified separately."
+      }
+    }
+  ],
+  "retained_failed_probe": {
+    "path": "build/oblivion-compat/m15/S4/native-creature-hit-fatigue-eligibility-oracle-01",
+    "reason": "Synthetic actor vtable omitted +190, queried by the real common wrapper with a nonnull base. Diagnostic trace retained; corrected02 supplies actual +190 methods. No native semantic failure or gameplay acceptance."
+  },
+  "correction_to_prior_evidence": "Corrects the Creature direct-hit Fatigue expectation retained in4c4116045f. The earlier tests did not establish Creature native DamageFloat eligibility; Player/NPC expenditure and their prior runtime evidence remain separately scoped.",
+  "limits": [
+    "Creature controller/contact adapters remain gated; actual-Ptr service coverage is not live Creature attack acceptance.",
+    "Creature+104 live transitions and persistence are not implemented.",
+    "Normal one-process Player/NPC regression and instrumented two-process consumed-recovery continuation; previous wider completed-state restart courses are historical evidence.",
+    "No new audio, input-device/view/FPS, mastery, reaction or full S4 acceptance.",
+    "ASan leak checks disabled."
+  ],
+  "retained_runtime_verifier_failure": {
+    "artifact": {
+      "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/first/completed-verifier-failure.json",
+      "sha256": "d0cbc7ef488f4adcba68d5024a869fd2111ca79dba8004a6cb1ae0d24d855842"
+    },
+    "scope": "The post-contact scenario passed and saved consumed phase1. Its initial verifier incorrectly assumed completed playback. Original failed verifier retained; strict consumed-recovery reinspection plus fresh continuation verified separately."
+  },
+  "instrumented_loaded_libraries": {
+    "path": "build/oblivion-compat/m15/S4/creature-hit-fatigue-player-regression-sanitized-01/first/loaded-libraries.json",
+    "sha256": "c89b0befb2595a5597aa0a9ad11122bcf7f6082ff89e725df7cbee923b012f9b"
+  },
+  "editable_recovery_continuation": "scripts/data/oblivion_compat/oblivion_m15_fatigue_modifier_recovery_continuation.json"
+}
