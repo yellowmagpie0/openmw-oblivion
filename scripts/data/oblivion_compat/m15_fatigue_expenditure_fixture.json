@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "purpose": "Observe native melee expenditure and direct Fatigue damage without intervening regeneration; no actor, attack, damage or contact outcome is authored.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "settings": {
+    "fFatigueReturnBase": 0,
+    "fFatigueReturnMult": 0
+  }
+}

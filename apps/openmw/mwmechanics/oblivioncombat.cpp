@@ -11,6 +11,7 @@
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/actorclock.hpp>
+#include <components/esm4/fatigueexpenditure.hpp>
 
 #include <algorithm>
 #include <bit>
@@ -1886,6 +1887,18 @@ namespace MWMechanics
                 values.mValues[av] = ESM4::changeActorValueModifier(
                     values.mValues[av], values.mOwner, av, ESM4::ActorValueModifier::Damage, delta);
         };
+        const auto spendFatigue = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr, float delta) {
+            // Current native Creature construction/command policy has +278
+            // disabled. Creature contact remains gated until its live flag
+            // transitions are represented; NPC/Player eligibility is true.
+            if (delta >= 0 || ptr.getType() == ESM::REC_CREA4)
+                return;
+            const float current = values.mOwner == ESM4::ActorValueOwner::Player
+                ? ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess)
+                : nonPlayerFloat(values, 10, findActorBase(values.mBase));
+            const float debit = ESM4::fatigueExpenditureDebit(current, delta);
+            change(values, 10, -debit);
+        };
         std::optional<ESM4::RuntimeActorValues> receiving;
         std::optional<ESM4::RuntimeActorLife> receivingLife;
         std::optional<PreparedLifeTransition> transition;
@@ -1904,7 +1917,7 @@ namespace MWMechanics
             receivingLife = *findActorLife(victimKey);
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
                 return nullptr;
-            change(*receiving, 10, deltas.mVictimBlockFatigue);
+            spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, 8, deltas.mVictimHealth);
             change(*receiving, 10, deltas.mVictimFatigue);
             if (receiving->mOwner == ESM4::ActorValueOwner::Player)
@@ -1915,7 +1928,7 @@ namespace MWMechanics
             receiving->validate();
             transition = prepareLifeTransition(*receivingLife);
         }
-        change(attacking, 10, deltas.mAttackerFatigue);
+        spendFatigue(attacking, attacker, deltas.mAttackerFatigue);
         std::optional<decltype(mActorKnockback)> knockback;
         std::optional<ESM4::TimedKnockbackState> expectedKnockback;
         if (deltas.mKnockback)

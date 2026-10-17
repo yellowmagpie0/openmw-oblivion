@@ -1,6 +1,7 @@
 #include <components/esm4/physicalsceneworld.hpp>
 #include <components/esm4/physicalvelocitycontroller.hpp>
 #include <components/esm4/physicalcombat.hpp>
+#include <components/esm4/fatigueexpenditure.hpp>
 #include <components/esm4/physicalblendsettings.hpp>
 #include <components/esm4/physicalblenddispatch.hpp>
 #include <components/esm4/physicalframe.hpp>
@@ -4949,4 +4950,36 @@ TEST(ESM4PhysicalCombat, PowerFrameKeepsNativeTimingAndRejectsInvalidPhaseEvenWh
     auto bad = contact; bad.mPhase = static_cast<Phase>(3); bad.mTiming.mEasing = true;
     EXPECT_THROW(ESM4::advancePowerMeleeFrame(bad, .1f, 1, 1, 0, 1, keys, true), std::invalid_argument);
     EXPECT_EQ(contact.mPhase, Phase::Contact); EXPECT_FLOAT_EQ(contact.mClock, .3f);
+}
+
+TEST(ESM4PhysicalCombat, ExpenditureCapsSpendingButRejectsNonnegativeRequestsAndIneligibleActors)
+{
+    // Full original5E07D0 captures and composed attack-cost caller:
+    // S2/oracle-emulator/fatigue-expenditure-table.json;
+    // S4/native-attack-expenditure-caller-oracle-01/report.json.
+    struct Case { float mCurrent; float mRequest; bool mEligible; float mDebit; };
+    const Case cases[] = {
+        {-5, -35, true, 0}, {-0.f, -35, true, 0}, {0, -35, true, 0},
+        {.25f, -35, true, .25f}, {2, -35, true, 2}, {7, -35, true, 7},
+        {35, -35, true, 35}, {100, -35, true, 35},
+        {100, -35, false, 0}, {100, 1, true, 0}, {100, 0, true, 0},
+    };
+    for (const auto& c : cases)
+    {
+        SCOPED_TRACE(c.mCurrent);
+        EXPECT_EQ(ESM4::fatigueExpenditureDebit(c.mCurrent, c.mRequest, c.mEligible), c.mDebit);
+    }
+    const float tiny = std::numeric_limits<float>::denorm_min();
+    EXPECT_EQ(ESM4::fatigueExpenditureDebit(tiny, -35), tiny);
+    EXPECT_EQ(ESM4::fatigueExpenditureDebit(100, -tiny), tiny);
+    EXPECT_EQ(ESM4::fatigueExpenditureDebit(2, -7), 2);
+    EXPECT_EQ(ESM4::fatigueExpenditureDebit(2, -35), 2);
+    EXPECT_EQ(ESM4::fatigueExpenditureDebit(140, -35), 35);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::fatigueExpenditureDebit(-0.f, -0.f)), 0u);
+    for (float bad : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::fatigueExpenditureDebit(bad, -1), std::invalid_argument);
+        EXPECT_THROW(ESM4::fatigueExpenditureDebit(1, bad), std::invalid_argument);
+    }
 }

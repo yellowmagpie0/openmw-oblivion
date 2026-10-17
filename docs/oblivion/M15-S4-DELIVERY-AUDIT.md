@@ -12,7 +12,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature attacker and victim domains are rejected by these adapters. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC hits and equipped-block sound selection are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
@@ -4217,10 +4217,63 @@ comparisons bounded. The source manifests and case inputs are under
 `scripts/data/oblivion_compat/*standing_power*`. They are editable test sources;
 generated saves, screenshots and original-game corpora stay ignored.
 
-The original expenditure caller audit additionally confirms a remaining defect:
-5E07D0 limits spending to positive current Fatigue. The current melee/block
-spending adapter still needs this cap and its eligibility policy; direct hostile
+The original expenditure caller audit additionally confirmed a defect at that checkpoint:
+5E07D0 limits spending to positive current Fatigue. The then-current melee/block
+spending adapter still needed this cap and its eligibility policy; direct hostile
 Fatigue damage must retain its separate ability to become negative. The2112-case
 original caller corpus is retained in
 `S4/native-attack-expenditure-caller-oracle-01`, but no production cap fix is
-claimed here. This is the next bounded change. Full M15S4 remains incomplete.
+claimed here. The following expenditure checkpoint implements that bounded change. Full M15S4 remains incomplete.
+
+## Native Fatigue expenditure — integration checkpoint
+
+The prepared contact now uses the native expenditure request cap for attacker
+and block spending. It rejects nonnegative requests, spends nothing at current
+Fatigue <=0, and limits a negative request to positive current Fatigue before
+modifier storage rounds. Direct hostile Fatigue damage retains its separate
+negative-resource behavior. NPC/Player eligibility is admitted; Creature live
+eligibility transitions and contact remain gated.
+
+[M15-FATIGUE-EXPENDITURE-VERIFICATION.json](M15-FATIGUE-EXPENDITURE-VERIFICATION.json)
+indexes the source hashes, independent native corpora, exact selections/counts,
+runtime epochs, staged-input recipes and retained failures. Both normal and
+ASan/UBSan component results pass2794 tests; their enclosing initial engine
+attempts failed or were stopped for test corrections. Corrected normal and
+instrumented engine runs each pass1615 tests, and normal Python passes307.
+The2508-case original-instruction debit comparison passes exact float bits in
+both C++ configurations. A separate1056-power-observation caller probe places
+the contact boundary before spending on its selected original branch; it does
+not execute the full contact body or prove all input/frame scheduling.
+
+The previous executable reproduces the regression from an actual keyboard-
+started pending power: current Fatigue2 becomes -33 and saved Damage becomes
+-173. With identical root input and the same script-free no-regeneration GMST
+plugin, normal and instrumented builds save Fatigue0/Damage-140. Target Health
+Damage is exactly -4.452499866485596 and Fatigue Damage -4.016249656677246,
+matching original hand arithmetic at the supplied precontact Fatigue2 followed
+by the separately verified spending wrapper. Each course also starts one real
+configured-keyboard ordinary miss at zero Fatigue and reloads completed state
+without replay. Source/output input hashes, complete C++/Python payload identity,
+prior inventories and unrelated AV/lifecycle fields are checked.
+
+The zero-Fatigue miss inputs differ as declared: normal relocates Player outside
+reach; the corrected instrumented variant preserves floor position, turns away,
+and waits for a read-only command at3 simulated seconds before pressing attack.
+The initial intended zero-Fatigue acquired hit missed as target position changed;
+its failed evidence remains. A stale selection prohibition rejected a subsequent
+normal manifest; an airborne instrumented input selected power instead of
+ordinary and was stopped. The instrumented first epoch's initial process
+observer selected the wrong executable; a corrected observer independently
+captured the same live process, while the original failure remains recorded.
+Failed scenarios are not counted as gameplay acceptance. The first instrumented
+gameplay scenario passed with the observer recovery recorded separately.
+
+The fixture generator's structural/parser checks and real TES4 engine acceptance
+are separate from these contact/resource assertions. Only the two declared
+regeneration GMSTs are authored by the generated plugin. No actor damage or
+contact outcome is injected. Captures of the actual power hit show upright
+Valen Dreth, drawn fists and an empty Fatigue HUD bar; post-save captures do not
+establish an exact animation phase. Sound is disabled in these courses. ASan
+leak checks are disabled. No zero-Fatigue acquired hit, Creature/directional
+mastery, other device/view/FPS, full original scheduling or complete M15S4 gate
+is claimed; the delivery audit remains incomplete.

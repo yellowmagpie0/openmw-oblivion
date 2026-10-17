@@ -253,6 +253,7 @@ add_component_dir (esm4
     ability
     combatstylepolicy
     combatsettings
+    fatigueexpenditure
     physicalcombat
     physicalblendsettings
     physicalvelocitycontroller

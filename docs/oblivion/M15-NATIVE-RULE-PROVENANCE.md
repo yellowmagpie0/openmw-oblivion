@@ -14955,3 +14955,58 @@ Health0.830322265625, power Health2.0702390670776367 and condition55.27500152587
 after both hits. Actual normal-input saved Health and condition match exactly.
 Audio, original live-game held-input parity, all direction/mastery effects and
 the complete S4 acceptance matrix remain open.
+
+### Melee/block Fatigue expenditure wrapper and prepared contact integration
+
+The hash-identified original `Oblivion.exe`
+(`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`)
+executes common expenditure wrapper5E07D0: reject nonnegative requests (including
+both signed zeros), require actor virtual+278 eligibility and positive current
+Fatigue, limit the negative request to minus current Fatigue, then dispatch
+DamageFloat+2A4. This limits the request before actual modifier-storage rounding;
+it does not promise exact zero for arbitrary extreme base/modifier combinations.
+Direct hostile Fatigue damage uses its separate DamageFloat path and retains
+negative-resource behavior.
+
+`S4/native-attack-expenditure-caller-oracle-02/report.json` records2112 composed
+original caller cases. Ordinary5E4010 and power5FCDA6 execute the common wrapper;
+actual5E3270 base-type selection supplies the power penalty's non-Creature flag.
+NPC/Player eligibility977C50 returns true. Creature6250F0 reads byte+104, which
+constructor625100 initializes false; the oracle supplies both byte states without
+claiming live transitions. Equipment/current getters and final mutation are
+supplied boundaries. An entry observer records the nominal request separately
+from the wrapper's final published delta. This corrects the older report's
+misleading `requested_delta` name for the final clamped value. The original block
+caller5F5C5D also reaches5E07D0.
+
+`S4/fatigue-expenditure-native-compare-02/verification.json` compares exact debit
+float bits for these2112 cases and396 earlier signed-wrapper cases under both
+captured x87 modes, in normal and ASan/UBSan C++ executables. Native no-write is
+represented by a zero debit. This verifies the immutable request rule, not actor
+storage or live Creature contact. `ESM4::fatigueExpenditureDebit` rejects nonfinite
+inputs and implements that rule. The prepared physical-contact transaction uses
+it for attacker and block spending, preserving block spend -> Health -> direct
+Fatigue damage ordering, god mode, atomic publication and once-only consumption.
+Current Creature construction/command policy disables expenditure; Creature
+contact and live eligibility transitions remain gated.
+
+The engine transaction tests exercise current Fatigue -5,0,.25,2,35,100,
+nonnegative requests, separate direct damage -3, facade publication and shared
+base restoration. `S4/native-depleted-power-damage-oracle-01/report.json` records
+8 original hand/power observations (four current-Fatigue values, both x87 modes),
+with supplied actor attributes/settings and full reviewed arithmetic bodies.
+At Fatigue2, standing power produces Health bits1078072442 and Fatigue
+bits1082164510. It is an arithmetic/caller oracle, not a full original-game
+contact or original-live normal-input proof.
+
+A separate order probe in `S4/native-attack-expenditure-caller-oracle-03` starts
+at5FCD94 and stops5FCDBA. It executes the caller's actor virtual+3AC dispatch
+before5E4010. Independently read Character/Player/Creature vtables all target
+5FEBF0 at that slot, the contact caller containing the reviewed reach and hand
+arithmetic. Its body is an explicit boundary stub here, observing arguments
+1,0,0 and returning; actual cost/wrapper/eligibility bodies then execute. All1056
+power observations dispatch that contact boundary before the current-Fatigue
+query/spending, across both x87 modes. Another1056 ordinary cost-entry controls
+retain their earlier scope. Every nominal/published float matches oracle02 bit
+for bit. This establishes order on the selected power caller branch, not its
+full contact body, all ordinary dispatches, or original input/frame scheduling.

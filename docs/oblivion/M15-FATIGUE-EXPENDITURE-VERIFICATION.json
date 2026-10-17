@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "status": "bounded Fatigue expenditure integration verified; full M15S4 incomplete",
+  "source_parent_commit": "121120ffc551f58e1411e845795bd6c63c175277",
+  "source_sha256": {
+    "components/esm4/fatigueexpenditure.cpp": "50ad277adc01bc572322209fb49c53a4efe136ee1363d68629d75b58f5004500",
+    "components/esm4/fatigueexpenditure.hpp": "d66cfa371d4f0ea27f9f5237e9abbd52b1e108cadaea3f5cb701210b1b9ce67e",
+    "components/CMakeLists.txt": "104d2a1d72916592c2fc93908bd0a31a3fa14548d695d1c702e97b9f142d888f",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "aa314d697b0af37e8c8b46eaa8643e1460e322e460e29df7a5567d4d3fdb2cf6",
+    "apps/components_tests/esm4/physicalcombat.cpp": "c5326f7479b479d2b745d55b61029bf658972b062457e8ab40f85a2255d479bb",
+    "apps/openmw_tests/mwworld/testoblivionactorstats.cpp": "b30716b542de2916112ed134ba40365e17dde16ed8f4d3b689e45fdc162f513e",
+    "scripts/tes4_m15_fatigue_fixture.py": "cfbae0d79de4cf6995991d9c8dec5f4fb1f142093add86f438230eb77efb5c9a",
+    "scripts/tests/test_tes4_m15_fatigue_fixture.py": "e19ac3aff97d112d4a1b44f5458d73b9ca4d315dc180aac4bb99db734aa4bc34"
+  },
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "rule": "5E07D0 accepts only negative requests with actor+278 eligibility and positive current Fatigue; limits request magnitude before actual AV modifier storage rounds. Direct hostile Fatigue damage remains separate.",
+  "independent_native": {
+    "exact_debit_comparison": {
+      "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-native-compare-02/verification.json",
+      "sha256": "19cf394a80dab03929cbbc59db0f011d186e0671e2d26a2ee5b8ef8297ad1c83"
+    },
+    "cases": 2508,
+    "composed_attack_caller_cases": 2112,
+    "signed_wrapper_cases": 396,
+    "original_attack_caller": {
+      "path": "build/oblivion-compat/m15/S4/native-attack-expenditure-caller-oracle-02/report.json",
+      "sha256": "a86593b2ff7e287170a44ef51e0e1a59bc8d0897e20c1581eb13b86d47c91520"
+    },
+    "depleted_power_damage": {
+      "path": "build/oblivion-compat/m15/S4/native-depleted-power-damage-oracle-01/report.json",
+      "sha256": "cfedd2b1d2c3c8c2af6b233758170c5c1d2e11c5ff7e9d2a068fc5245ee37e0f"
+    },
+    "scope": "Positive debit float bits against2112 composed original attack-cost/common-expenditure cases plus396 original signed wrapper cases, both x87 modes. Original no-write becomes zero debit; only the immutable expenditure rule is compared. Native supplied getter/eligibility/current/mutation boundaries retain their recorded scopes; no Creature contact/gameplay or final AV modifier storage claim.",
+    "power_dispatch_order": {
+      "path": "build/oblivion-compat/m15/S4/native-attack-expenditure-caller-oracle-03/verification.json",
+      "sha256": "9b953b7d977cfd4b0bfe9b5dddc59ea8cd5ca7cc2f8184b0a313ffcc028597dc"
+    }
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-main-01/verification.json",
+        "sha256": "05b23cf03c0bca5cf4acaa1e3afd99e256ffa3f87166bf48f2a306589747811d"
+      },
+      "mode": "components",
+      "result": {
+        "executed": 2794,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2a2ef5505982bf5b31056d64e0d1c2a2a8e8fd152118b2a557859aa28de959a8",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "a76a53ba155826545e6e28193a4aad7910eda98aeef6dd9c1f649e03dd15110d",
+        "inventory_sha256": "4cffa590d0525e70adc31c249240bc425bf20ff9838f6b60e9c62541ebc82827",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "121120ffc551f58e1411e845795bd6c63c175277",
+        "source_fingerprint": "1021201704fbc1796db87c94f5a819c3c697f380821c80db8dc73cef0f328464"
+      },
+      "enclosing_run_passed": false,
+      "note": "Component result passed; enclosing initial engine run failed or was stopped for test corrections."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-sanitized-01/verification.json",
+        "sha256": "fd61dd8e3e6fddf33f25ada3d70fe1a6726365ce23d5cf58ab3b8bc2f644b48d"
+      },
+      "mode": "components",
+      "result": {
+        "executed": 2794,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a57453e7916fd43121941c273b447d6fae6776b2721449b0c4608d693de55752",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "5690f99b9cf939c32fe3b1cd9e6c338fdf4e0710d22b4000021b3b5225b517f4",
+        "inventory_sha256": "66295d2918a75a48cdf24a16ea711f9788979f23f70de3e0c8e4a1b40699a9bb",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "121120ffc551f58e1411e845795bd6c63c175277",
+        "source_fingerprint": "1021201704fbc1796db87c94f5a819c3c697f380821c80db8dc73cef0f328464"
+      },
+      "enclosing_run_passed": false,
+      "note": "Component result passed; enclosing initial engine run failed or was stopped for test corrections."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-main-02/verification.json",
+        "sha256": "afb7702876e770858d90776b56f7b17673d3e0a046d73d81f1a871f877d34743"
+      },
+      "mode": "engine",
+      "result": {
+        "executed": 1615,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "4577819aff782a3241de60462eafe66dbe885e263d8b040f524c0aadca5fbb1b",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "2c8b7b6eb0e50991fd4e322c41d5b34d26d1ef7305d1faea922e3cd98d40f3f3",
+        "inventory_sha256": "989882c1ded04e8d742d365a36b597a7145061e7c8414c2253d3fd1a960f5414",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "121120ffc551f58e1411e845795bd6c63c175277",
+        "source_fingerprint": "227299d7c03ac68c495b02cf51ef0056b223090d4b4f06a7ee9c59d046387278"
+      },
+      "enclosing_run_passed": true,
+      "note": "Passed; source unchanged throughout helper."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-main-02/verification.json",
+        "sha256": "afb7702876e770858d90776b56f7b17673d3e0a046d73d81f1a871f877d34743"
+      },
+      "mode": "python",
+      "result": {
+        "executed": 307,
+        "passed": true,
+        "log_sha256": "d250634797c90cb878fcd518dd884609400dedf47fa95c529b1692de67551d1e"
+      },
+      "source": {
+        "head": "121120ffc551f58e1411e845795bd6c63c175277",
+        "source_fingerprint": "227299d7c03ac68c495b02cf51ef0056b223090d4b4f06a7ee9c59d046387278"
+      },
+      "enclosing_run_passed": true,
+      "note": "Passed; source unchanged throughout helper."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/fatigue-expenditure-sanitized-02/verification.json",
+        "sha256": "3f083d0b9ae32545bed6fbfbcd93edf4b963423caee410624933039edd03e206"
+      },
+      "mode": "engine",
+      "result": {
+        "executed": 1615,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "31fcb8436de7713be3e433d26dffbadb6d8f76ca19d90275b1718c9ec72534dc",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "5c63ddf907ab797c1d5589a747cec7502f3da1fd4764fd03c30b1ae7542df47b",
+        "inventory_sha256": "989882c1ded04e8d742d365a36b597a7145061e7c8414c2253d3fd1a960f5414",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "source": {
+        "head": "121120ffc551f58e1411e845795bd6c63c175277",
+        "source_fingerprint": "227299d7c03ac68c495b02cf51ef0056b223090d4b4f06a7ee9c59d046387278"
+      },
+      "enclosing_run_passed": true,
+      "note": "Passed; source unchanged throughout helper."
+    }
+  ],
+  "runtime": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/verification.json",
+        "sha256": "c334ebae26bdc01cc9e560739375f4b92bd0c3192e453e967d3731eb5cd45339"
+      },
+      "scope": "Actual pending standing power at Fatigue2 spends exactly2; a separately declared outside-reach configured keyboard ordinary attack at Fatigue0 spends0 and misses once; third process has no contact replay. Regeneration disabled through two declared GMST overrides, enabling exact native-derived victim Health/Fatigue damage and Player Fatigue storage assertions. Prior inventories, unrelated AV channels, life/base/death/engagement/breath fields preserved; whole C++ save payload equals Python reencoding. Staged resource, outside-reach Player position for second input, and stationary target; no Creature gameplay, gamepad, audio, or original-live parity claim.",
+      "epochs": [
+        {
+          "pid": 896796,
+          "start_ticks": 34153097,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/first/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "8d14a7881c92cf920b81112e9459ea0f8fb52c1f00ffa50aa575f02e564e7035"
+        },
+        {
+          "pid": 901915,
+          "start_ticks": 34187598,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/second-miss-02/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/second-miss-02/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "8d14a7881c92cf920b81112e9459ea0f8fb52c1f00ffa50aa575f02e564e7035"
+        },
+        {
+          "pid": 902020,
+          "start_ticks": 34194813,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/third/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/third/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "8d14a7881c92cf920b81112e9459ea0f8fb52c1f00ffa50aa575f02e564e7035"
+        }
+      ],
+      "saves": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/staged-input.omwsave",
+          "sha256": "464dfdb5bd67552d30474ffb270f4d5f83ccf424edd767ef71145f629fb1028c"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "0fe10ed2688d88b1feb096aa7d508525d5c0534b764441643c16b8101a5354c6"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/second-miss-02/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "3874e103654812d76455a8c899dccbe93c0de2fadadabf8fcb2f9b2b2671d1fc"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/third/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "6e41a133f4f6d16b2b5284d878ec7b9e76f3f9b823b5d8b5e6a93719e2987c71"
+        }
+      ]
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/verification.json",
+        "sha256": "02368664cb73f9b002a9e40ba2e09b3c9646060bd32690d0dc0113263405217c"
+      },
+      "scope": "Actual pending standing power at Fatigue2 spends exactly2; a separately declared facing away configured keyboard ordinary attack at Fatigue0 spends0 and misses once; third process has no contact replay. Regeneration disabled through two declared GMST overrides, enabling exact native-derived victim Health/Fatigue damage and Player Fatigue storage assertions. Prior inventories, unrelated AV channels, life/base/death/engagement/breath fields preserved; whole C++ save payload equals Python reencoding. Staged resource, facing away Player position for second input, and stationary target; no Creature gameplay, gamepad, audio, or original-live parity claim.",
+      "epochs": [
+        {
+          "pid": 899553,
+          "start_ticks": 34167999,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/first/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "67d800376b2d2a5468e3ed059d62992458719ee84d42af4f5106900129c0b532"
+        },
+        {
+          "pid": 902302,
+          "start_ticks": 34225409,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/second-miss-03/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/second-miss-03/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "67d800376b2d2a5468e3ed059d62992458719ee84d42af4f5106900129c0b532"
+        },
+        {
+          "pid": 902542,
+          "start_ticks": 34256173,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/third/config",
+            "--no-sound=1",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/third/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "67d800376b2d2a5468e3ed059d62992458719ee84d42af4f5106900129c0b532"
+        }
+      ],
+      "saves": [
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/staged-input.omwsave",
+          "sha256": "464dfdb5bd67552d30474ffb270f4d5f83ccf424edd767ef71145f629fb1028c"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "d26c533fc2837bf2d7924224f7e0148c0d233078fda18084bc8933f162527778"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/second-miss-03/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "9f8fd16cb2027c6c0606178bc346864ff69fdb8cb0cd3d1593a4f1d9a5c80a8e"
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/third/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "ab71708cba1d06c6fea3c453cff17b99456b397ed6159d940b439313f5295b28"
+        }
+      ]
+    }
+  ],
+  "runtime_expectations": {
+    "power_nominal_cost": 35,
+    "power_player_before": 2,
+    "power_player_after": 0,
+    "power_health_bits": 1078072442,
+    "power_fatigue_bits": 1082164510,
+    "target_saved_health_damage": -4.452499866485596,
+    "target_saved_fatigue_damage": -4.016249656677246,
+    "separately_staged_keyboard_miss_nominal_cost": 7,
+    "miss_player_before_and_after": 0,
+    "completed_restart_new_contacts": 0
+  },
+  "regression_baseline": {
+    "directory": "build/oblivion-compat/m15/S4/depleted-power-expenditure-baseline-01",
+    "executable_sha256": "452c81bc7ee3fe0317887113ae923ef77b2ccbd2edf14ef79e80f567372ec88f",
+    "observed_player_after": -33,
+    "saved_damage_modifier": -173,
+    "expected_scenario_passed": false,
+    "scope": "Identical root staged input and no-regeneration plugin; real pending power contact under preceding executable."
+  },
+  "fixture": {
+    "recipe": "scripts/data/oblivion_compat/m15_fatigue_expenditure_fixture.json",
+    "cases": "scripts/data/oblivion_compat/m15_fatigue_expenditure_cases.json",
+    "scope": "Script-free plugin overrides only two regeneration GMSTs. Actual TES4 runtime acceptance verified; this does not change the imported TES3 MCP server capability."
+  },
+  "retained_failures": [
+    {
+      "path": "S4/fatigue-expenditure-main-01",
+      "reason": "Engine test fixture violated shared-base snapshot consistency; separate Creature expectation assumed expenditure despite disabled eligibility. Component suite passed."
+    },
+    {
+      "path": "S4/fatigue-expenditure-sanitized-01",
+      "reason": "After component success, owned engine build terminated to correct those tests."
+    },
+    {
+      "path": "S4/depleted-power-expenditure-normal-01/second",
+      "reason": "Intended zero-Fatigue acquired hit missed after target position changed; inherited selection prohibition also failed. No zero-Fatigue hit acceptance claimed."
+    },
+    {
+      "path": "S4/depleted-power-expenditure-normal-01/second-miss",
+      "reason": "Declared staged miss behaved as expected, but obsolete manifest prohibition rejected intentional attack selection. Corrected second-miss-02 retained separately."
+    },
+    {
+      "path": "S4/depleted-power-expenditure-sanitized-01/first",
+      "reason": "Gameplay scenario passed; initial process observer selected normal executable and failed. Corrected observer captured the same live instrumented process; original launcher/observer failure retained.",
+      "recovery": {
+        "path": "build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/first/observer-recovery.json",
+        "sha256": "1cfc0cc10b3cc0add8cf9b59ff3f184d70886176e05ede9c296d85638b929cc1"
+      }
+    },
+    {
+      "path": "S4/depleted-power-expenditure-sanitized-01/second-miss-02",
+      "reason": "Repositioned Player remained airborne and held input selected standing power instead of required ordinary Right. Owned engine stopped peacefully; runner wait-log deadline expedited. Corrected second-miss-03 keeps floor position, turns facing only, and waits for read-only command at3 simulated seconds."
+    }
+  ],
+  "limits": [
+    "Creature live expenditure eligibility transitions and contact remain gated.",
+    "Exact zero is checked for these practical runtime inputs; arbitrary extreme modifier rounding is not claimed.",
+    "No zero-Fatigue acquired hit, original-live parity, audio, gamepad, other views/FPS, directional mastery or full M15S4 acceptance.",
+    "ASan leak checks disabled.",
+    "Original hand arithmetic at supplied precontact Fatigue2 and expenditure wrapper are independently verified boundaries. This change retains existing contact-time spending; full original animation/cost/damage dispatch timing is not established by their composition."
+  ],
+  "runtime_variants": {
+    "normal": "first -> declared outside-reach second-miss-02 -> third",
+    "sanitized": "first (gameplay passed with independently recovered live process observer) -> grounded facing-only second-miss-03 after read-only simulated-time barrier -> third",
+    "scope": "Resource and once-only acceptance is common; the zero-Fatigue miss inputs differ as declared. No uninterrupted kinematic equivalence claim."
+  }
+}

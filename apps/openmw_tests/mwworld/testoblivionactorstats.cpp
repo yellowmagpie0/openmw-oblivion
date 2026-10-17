@@ -6904,6 +6904,59 @@ namespace
         const auto cancelled = resumed.allocateAction(refs[0].mFormKey);
         resumed.cancelActorActions(refs[0].mFormKey);
         EXPECT_FALSE(resumed.commitPhysicalContact(cancelled, ptrs[0], ptrs[1], {-10, -12, -15}, nullptr, false, {4, .5f}, playerBase));
+
+        // Spending uses5E07D0, while direct hit Fatigue uses DamageFloat and
+        // may go negative. Exercise the actual prepared transaction and view
+        // publication, including the block-spend-before-hit-damage order.
+        struct ExpenditureCase { float mCurrent; float mSpend; float mBlock; float mAttacker; float mVictim; };
+        const ExpenditureCase cases[] = {
+            {-5, -35, -2, -5, -8}, {0, -35, -2, 0, -3},
+            {.25f, -35, -2, 0, -3}, {2, -35, -2, 0, -3},
+            {35, -35, -2, 0, 30}, {100, -35, -2, 65, 95},
+            {2, 5, 2, 2, -1},
+        };
+        for (const auto& c : cases)
+        {
+            SCOPED_TRACE(c.mCurrent);
+            for (const auto& ptr : ptrs)
+            {
+                auto values = *resumed.findActorValues(ptr.getCellRef().getFormKey());
+                values.mValues[10] = {100, {7, 3, c.mCurrent - 110}};
+                resumed.publishNonPlayerValues(ptr, values);
+                ASSERT_EQ(resumed.getNonPlayerValue(ptr, 10), c.mCurrent);
+            }
+            const auto action = resumed.allocateAction(refs[0].mFormKey);
+            auto staged = saved; resumed.capture(staged);
+            const auto unchanged = staged.serializeBinary();
+            auto plan = resumed.preparePhysicalContact(action, ptrs[0], ptrs[1],
+                {c.mSpend, 0, -3, c.mBlock}, nullptr, false, {}, playerBase);
+            ASSERT_TRUE(plan);
+            resumed.capture(staged); EXPECT_EQ(staged.serializeBinary(), unchanged);
+            ASSERT_TRUE(plan->commit());
+            EXPECT_EQ(resumed.getNonPlayerValue(ptrs[0], 10), c.mAttacker);
+            EXPECT_EQ(resumed.getNonPlayerValue(ptrs[1], 10), c.mVictim);
+            EXPECT_EQ(ptrs[0].getClass().getCreatureStats(ptrs[0]).getFatigue().getCurrent(), c.mAttacker);
+            EXPECT_EQ(ptrs[1].getClass().getCreatureStats(ptrs[1]).getFatigue().getCurrent(), c.mVictim);
+            EXPECT_EQ(resumed.findActorValues(refs[0].mFormKey)->mValues[10].mModifiers[0], 7);
+            EXPECT_EQ(resumed.findActorValues(refs[0].mFormKey)->mValues[10].mModifiers[1], 3);
+            EXPECT_FALSE(plan->commit());
+            EXPECT_TRUE(resumed.isActionConsumed(action));
+        }
+        auto rebased = saved;
+        resumed.capture(rebased);
+        rebased.mNativeActorBases = {{mActorKey, ESM4::ActorBaseKind::Npc, {{10, std::int32_t{120}}}}};
+        for (auto& actor : rebased.mNativeActorValues)
+            actor.mValues[10].mBase = 120;
+        rebased.mNativeActorValues[0].mValues[10] = {120, {0, 0, -118}};
+        MWMechanics::OblivionCombatService candidateBase;
+        candidateBase.restore(rebased);
+        resumed.installRestoredActorState(std::move(candidateBase), ptrs, nullptr);
+        ASSERT_EQ(resumed.getNonPlayerValue(ptrs[0], 10), 2);
+        const auto bounded = resumed.allocateAction(refs[0].mFormKey);
+        ASSERT_TRUE(resumed.commitPhysicalContact(bounded, ptrs[0], {}, {-35, 0, 0},
+            nullptr, false, {}, playerBase));
+        EXPECT_EQ(resumed.getNonPlayerValue(ptrs[0], 10), 0);
+        EXPECT_EQ(resumed.findActorValues(refs[0].mFormKey)->mValues[10].mModifiers[2], -120);
     }
 
     TEST_F(OblivionActorStatsTest, timedKnockbackCommitsAfterVictimFatigueAndRejectsStalePhysicsAcrossRestart)
@@ -7137,7 +7190,9 @@ namespace
             EXPECT_EQ(service.isActionPending(victimAction, victimKey), suppressed);
             EXPECT_EQ(playerPtr.getClass().getCreatureStats(playerPtr).getFatigue().getCurrent(),
                 playerAttacks ? godMode ? 160 : 150 : godMode ? 160 : 155);
-            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), playerAttacks ? 55 : 50);
+            // The native Creature eligibility byte starts disabled. Direct
+            // incoming Fatigue damage still applies, but attack spending does not.
+            EXPECT_EQ(creaturePtr.getClass().getCreatureStats(creaturePtr).getFatigue().getCurrent(), playerAttacks ? 55 : 60);
             EXPECT_EQ(service.getPlayerValue(8), playerAttacks || godMode ? 80 : essential ? 40 : -920);
             EXPECT_EQ(service.getNonPlayerValue(creaturePtr, 8), !playerAttacks ? 100 : essential ? 50 : -900);
             const auto event = service.takeNextDeathEvent();

@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "purpose": "Editable Fatigue expenditure runtime inputs and acceptance values. Generated saves/plugins remain ignored.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "input_recipe": {
+    "source": "build/oblivion-compat/m15/S4/standing-power-windup-restart-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+    "source_sha256": "2dd5d23036d3cf1d3fe0068669ccff3678ab49dcd4ee3524f3d6f2b3ecfbb606",
+    "purpose": "Unchanged actual keyboard power windup/action ownership; only Player current Fatigue is2 and GMST regeneration disabled. No damage/contact injection.",
+    "native_player_fatigue_damage": -138.0,
+    "player_auxiliary_fatigue_current": 2.0
+  },
+  "staged_input_sha256": "464dfdb5bd67552d30474ffb270f4d5f83ccf424edd767ef71145f629fb1028c",
+  "gmst_recipe": "m15_fatigue_expenditure_fixture.json",
+  "plugin_sha256": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea",
+  "zero_miss_recipe": {
+    "source": "build/oblivion-compat/m15/S4/depleted-power-expenditure-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+    "changes": {
+      "player.position": {
+        "from": [
+          672.0,
+          -40.0,
+          -109.68915557861328,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "to": [
+          672.0,
+          -400,
+          -109.68915557861328,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "scope": "Move Player outside hand reach; preserve zero Fatigue, completed power, damage and inventory."
+  },
+  "expectations": {
+    "player_fatigue": 0.0,
+    "player_damage": -140.0,
+    "victim_health_damage": -4.452499866485596,
+    "victim_fatigue_damage": -4.016249656677246,
+    "power_health_bits": 1078072442,
+    "power_fatigue_bits": 1082164510,
+    "actions": {
+      "next": 3,
+      "pending": []
+    },
+    "after_zero_ordinary": {
+      "player_fatigue": 0.0,
+      "player_damage": -140.0,
+      "victim_health_damage": -4.452499866485596,
+      "victim_fatigue_damage": -4.016249656677246,
+      "actions": {
+        "next": 4,
+        "pending": []
+      }
+    }
+  },
+  "manifests": [
+    "oblivion_m15_fatigue_expenditure_power.json",
+    "oblivion_m15_fatigue_expenditure_zero_miss.json",
+    "oblivion_m15_fatigue_expenditure_completed.json"
+  ],
+  "scope": "Actual earlier keyboard-started power windup is restored at staged current Fatigue2; first contact must spend exactly2. Separately staged outside-reach Player position allows a configured keyboard ordinary miss at Fatigue0; no damage outcome is injected. Third fresh process must not replay either contact. Exact saved AV damage with two declared zero-regeneration GMST overrides. No zero-Fatigue acquired hit, Creature gameplay, audio, other input devices/views/FPS, or original-live parity claim.",
+  "instrumented_variant": {
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "preload": "Actual libasan ELF, preceding SDL input preload.",
+    "action_deadline_seconds": 600,
+    "sdl_input_timeout_seconds": 120,
+    "scenario_deadline_seconds": 1200,
+    "zero_miss_manifest": "oblivion_m15_fatigue_expenditure_grounded_zero_miss.json",
+    "zero_miss_recipe": {
+      "source": "build/oblivion-compat/m15/S4/depleted-power-expenditure-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+      "changes": {
+        "player.position": {
+          "from": [
+            672.0,
+            -40.0,
+            -109.68915557861328,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "to": [
+            672.0,
+            -40.0,
+            -109.68915557861328,
+            0.0,
+            0.0,
+            1.5707963705062866
+          ]
+        }
+      },
+      "scope": "Keep floor position; turn Player away from target. Resources, damage, completed action and inventory unchanged."
+    },
+    "simulated_time_barrier": "Read-only Player GetBaseAV Acrobatics command scheduled at3 simulated seconds, observed before pressing attack. Keeps original saved floor position and changes only facing; avoids an airborne held-input power selection."
+  }
+}
