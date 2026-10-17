@@ -317,5 +317,80 @@
       "No trustworthy prone/fullstanding visual gate: Dog partly occluded in captures.",
       "No fork KO/GetUp, restart, trajectory, pixel or FPS acceptance."
     ]
+  },
+  "getup_deregistration_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "report": "build/oblivion-compat/m15/S4/native-getup-registration-static-03/unregister-report.json",
+    "report_sha256": "e13f717d078addd72aedb9c504caafa7a21d85a4ef8131ba36e6d2d494b814ac",
+    "profiles": 192,
+    "corpus_sha256": "15901266e3d410acbcf7cabfc8b563b97a3848848ef126474f9db0449fd61fed",
+    "native_path": [
+      "full520620 deregistration",
+      "actual5204F0 child removal/successor rewrite",
+      "actual5304C0 root slot removal",
+      "actual494E90 and494ED0 array search/index"
+    ],
+    "boundaries": [
+      "TESForm46C2F0 andcondition56A750 clearing are declared no-op boundaries with owner/call count asserted",
+      "521730 returns declared model bank; model lookup itself not executed",
+      "5A56F0 container compaction supplies dense stable non-null slots without native sharing/capacity management",
+      "RTTI validates supplied IDLE objects",
+      "No TES file reader/override loader or Deleted loader entry policy executed"
+    ],
+    "matrix": {
+      "initial_order": [
+        [],
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "selected_record": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "parent_kind": [
+        "model-bank root",
+        "child"
+      ],
+      "data_handler_skip": [
+        false,
+        true
+      ],
+      "model_bank_available": [
+        false,
+        true
+      ]
+    },
+    "assertions": [
+      "Base and condition clear boundaries are invoked once with the selected owner.",
+      "DataHandler+CD4 skips hierarchy work. Otherwise root/child removal repairs next sibling predecessor and preserves remaining order.",
+      "Missing bank or record leaves hierarchy order unchanged; child path still invokes container compaction when record is absent.",
+      "Main TESIdleForm vtableA53774 has cleanup520620 at+18 and loader520970 at+1C."
+    ],
+    "remaining_question": "Verify actual generic override and Deleted-loader invocation/order before production native model-bank integration. The direct cleanup call before520970 is in a destructor, not loader entry.",
+    "retained_failure": {
+      "path": "S4/native-getup-registration-static-03/unregister-assertion-failure-01.json",
+      "reason": "Initial fixture expected compaction only when a record was removed. Actual child-removal path invokes compaction even when selected child is absent; corrected assertion and retained failed script."
+    }
   }
 }

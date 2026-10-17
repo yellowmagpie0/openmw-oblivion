@@ -15518,3 +15518,19 @@ forced native call supplies these values. Hashes, fixture changes, retained
 missed-contact/setup attempts, occluded visual limits and exact cleanup appear
 in the [physical admission verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 These observations do not close fork normal-input recovery acceptance.
+
+
+A further independent original instruction probe executes 192 IDLE
+deregistration cases through `520620`, actual child removal `5204F0`, root slot
+removal `5304C0`, and array search/index routines. It verifies hierarchy skip
+behavior, root/child removal, successor predecessor-link repair and stable
+remaining order. A missing child still reaches container compaction, which the
+first fixture assertion incorrectly excluded; that failure is retained.
+Model-bank lookup, base/condition clearing and stable container compaction are
+supplied boundaries. Original MSVC RTTI identifies `TESIdleForm` vtable
+`A53774`, with deregistration `520620` at +18 and loading `520970` at +1C.
+The only direct cleanup call found at `5208C1` is in the preceding destructor;
+it does not establish generic override/Deleted loader behavior. Reports,
+corpus hashes and limits are in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This evidence does not implement native GetUp selection or prove recovery.
