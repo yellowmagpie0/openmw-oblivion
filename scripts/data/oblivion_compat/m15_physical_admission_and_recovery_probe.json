@@ -32,12 +32,27 @@
       0
     ],
     "expected_getup": {
-      "idle": "00091fb8",
+      "selection": "Native ordered model bank and CTDA evaluate the current physical orientation; one fixed ID is not a universal expected outcome.",
       "slot": 5,
-      "model": "Creatures/Dog/IdleAnims/SpecialIdle_GetUpLift.kf",
-      "conditions": [
-        "IsLeftUp == 1",
-        "GetKnockedState > 0"
+      "variants": [
+        {
+          "idle": "00091fb7",
+          "model": "Creatures/Dog/IdleAnims/SpecialIdle_GetUpRight.kf",
+          "conditions": [
+            "IsLeftUp != 1",
+            "GetKnockedState != 0"
+          ],
+          "observed_course": "original-live-02"
+        },
+        {
+          "idle": "00091fb8",
+          "model": "Creatures/Dog/IdleAnims/SpecialIdle_GetUpLift.kf",
+          "conditions": [
+            "IsLeftUp == 1",
+            "GetKnockedState != 0"
+          ],
+          "observed_course": "original-live-01"
+        }
       ]
     }
   },
@@ -201,5 +216,36 @@
       }
     },
     "production_status": "No native GetUp selector/playback yet; generic PickIdle section4/skeleton-directory filtering is not equivalent."
+  },
+  "original_spatial_followup": {
+    "purpose": "Passive reference/root/proxy measurements during the declared original normal-input fatigue recovery course. No frozen trajectory expected for fork physics.",
+    "reference_fields": {
+      "rotation": "actor+20,3binary32",
+      "position": "actor+2C,3binary32",
+      "scale": "actor+38,binary32",
+      "full_root": "actor+3C -> NiWorld translation+88",
+      "reaction_root": "ActorAnimData+8 -> NiWorld translation+88",
+      "animation_clock": "ActorAnimData+94,binary32"
+    },
+    "physics_reference": "High/MiddleHigh process virtual18C6348E0 reads+118. Identify bhkCharacterController and underlying ahkCharacterProxy by actual RTTI; do not confuse with+15C.",
+    "observed_states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "assertions": [
+      "Read-only observer sees one retained controller and proxy through all native phases.",
+      "Full actor root translation matches live reference during raw4/3/5/6.",
+      "Reference position advances during incapacitation; body driving cannot leave it fixed.",
+      "Bip01 initially follows the reference; its animated local offset returns during late GetUp blending."
+    ],
+    "nonclaims": [
+      "Pointer presence does not establish capsule collision registration or a suspend/resume policy.",
+      "Raw3 capture is not unambiguously prone and is not accepted as visual parity.",
+      "No fork reaction or native/fork trajectory/FPS acceptance."
+    ]
   }
 }

@@ -15470,3 +15470,31 @@ First optional no-file selection stops later candidates and returns null from
 the outer postcheck. Independent live roots with no predecessor insert at front.
 The existing generic PickIdle helper therefore cannot stand in for native GetUp
 selection. These are original selection rules, not fork recovery acceptance.
+
+
+The second original normal-input fatigue course records 97 frames/96 selected
+controller frames through raw0/4/3/5/6/0. High/MiddleHigh virtual18C6348E0 reads
+process+118; actual runtime RTTI identifies one retained bhkCharacterController
+and underlying ahkCharacterProxy throughout. Process+15C remains null and is a
+separate cache. The live actor reference moves during raw3; its observed spans
+are 39.3434/11.3571/13.1824 world units. Full actor root translation matches that
+reference through raw4/3/5/6. Bip01 initially coincides with it, then restores an
+animated local offset late in GetUp blending. This establishes a live reference
+synchronization requirement, not a trajectory formula or capsule membership
+policy. The native slot30 object lacks MSVC RTTI; its post-recovery+8 object is
+actual ahkWorld, but that link was not sampled during incapacitation.
+
+The new course naturally selects IDLE91FB7 SpecialIdle_GetUpRight in slot5;
+its winning master conditions require IsLeftUp!=1 and GetKnockedState!=0.
+The earlier course selected IDLE91FB8 SpecialIdle_GetUpLift. These observations
+reinforce runtime orientation/condition selection rather than one fixed GetUp ID.
+A pre-publication report assertion caught and corrected the prior-ID assumption.
+
+The raw3 and recovered captures were reviewed. The raw3 view is not clearly
+prone, so no lying-pose visual gate is claimed. Both pristine saves and private
+inputs are restored; original game and owned Steam exit0, with all debugger/
+launcher handles consumed. Hashes, failed Steam startup and metadata-only epoch
+checks are retained in the
+[M15 physical admission index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This is independent original behavior evidence; fork contact/body-frame/GetUp
+acceptance remains open.

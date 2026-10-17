@@ -1315,5 +1315,110 @@
       "path": "S4/native-getup-selection-static-02/selector-setup-failure-01.json",
       "reason": "Security-cookie stub clobbered EAX and destroyed actual hash return; corrected to preserve EAX. Failed script and debug trace retained."
     }
+  },
+  "original_recovery_spatial_followup": {
+    "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-02/report.json",
+    "report_sha256": "a598ad6ce3542d4d310ab9704bbd988d5be2ca76f1ee843393e96a24ce39afb4",
+    "result": {
+      "passed": true,
+      "scope": "Original-game normal-input fatigue-recovery spatial/proxy observation; not fork reaction acceptance or trajectory/FPS parity.",
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+      "raw_observation": {
+        "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-02/observed-01-sample.json",
+        "sha256": "bdfa01a568772fe830f33db6b8bd0a0c2e2e3de48774aa4c5390b24259b7bcc0"
+      },
+      "frames": 97,
+      "selected_controller_frames": 96,
+      "raw_states": [
+        0,
+        4,
+        3,
+        5,
+        6,
+        0
+      ],
+      "frame_counts": {
+        "0": 2,
+        "4": 3,
+        "3": 79,
+        "5": 1,
+        "6": 12
+      },
+      "process118": {
+        "getter": "High/MiddleHigh virtual18C is6348E0, which reads process+118 and copies its reference; Low/MiddleLow use60D860. Static getter audit is inS4/native-recovery-proxy-static-01.",
+        "observed_type": "bhkCharacterController",
+        "underlying_type": "ahkCharacterProxy",
+        "same_object_all_frames": true,
+        "process15c_all_frames": 0,
+        "capsule_membership_limit": "Retained live controller/proxy objects do not alone prove collision phantom registration. Native slot30 object vtableA9AFFC has no MSVC RTTI; its+8 post-recovery object is actual ahkWorld vtableA95C54, verified against original RTTI, but that field was not read during raw3. Do not infer enable/suspend policy from presence alone."
+      },
+      "reference_spatial": {
+        "raw3_span_world_units": [
+          39.3433837890625,
+          11.357065200805664,
+          13.182373046875
+        ],
+        "full_root_position_equals_reference_during_states": [
+          4,
+          3,
+          5,
+          6
+        ],
+        "reaction_root_position_equals_reference_during_states": [
+          4,
+          3,
+          5
+        ],
+        "raw6": "Bip01 initially coincides with reference, then develops an animated local offset as physical blending finishes; full actor root continues matching reference through raw6.",
+        "standing": "Final raw0 full-root Z is reference Z+1.800003; Bip01 additionally has the current animated local offset. Observations only; do not tune offsets from one course.",
+        "implication": "A fork body driver must synchronize live reference/root placement during incapacitation. Suspending the current movement actor and leaving reference placement fixed does not reproduce this observation."
+      },
+      "getup": {
+        "id": 597943,
+        "slot": 5,
+        "record_report_sha256": "854e241c8fdd635683e37e965cfdce90b44f5937a006973fc3754568870c9902",
+        "model": "Creatures\\Dog\\IdleAnims\\SpecialIdle_GetUpRight.kf"
+      },
+      "visual_review_sha256": "287ec8b66af9ada362147b2c573229d2e03c798263f46799f56ed4292d1d7f7c",
+      "cleanup": {
+        "game_exit": 0,
+        "steam_exit": 0,
+        "shutdown_request_exit": 0,
+        "inputs_and_source_clone_pristine_restored": true,
+        "cleanup_sha256": "36e61930dec6c1148915c587f31050b88ad432904c86bd1e45dca4c43d2eb582"
+      },
+      "retained_setup_failures": [
+        "startup-failure-01: Application load error while owned Steam started; dismissed and wrapper exit0 consumed44969, not gameplay acceptance.",
+        "First epoch helper only matched comm Oblivion.exe, but main-game thread renamed itself Main; no game writes. Follow-up rejected Steam compatibility metadata override; corrected guard validates actual private WINEPREFIX. Old helper80328 terminal/consumed; no game reload caused by epoch failures.",
+        "Report assembly initially assumed prior course GetUp91FB8. Pre-publication assertion rejected it; actual new start-idle91FB7 audited independently against same winning master. No docs had been changed and no native behavior was forced."
+      ],
+      "limits": [
+        "Only one isolated stock-Dog course with declared initial AV/GMST setup and AI disabled. No process/body/controller outcomes injected or native calls forced.",
+        "Debugger affects observed FPS; exact frame/clock bits are observations, not duration/FPS acceptance.",
+        "No clear lying-pose visual gate or native/fork trajectory comparison.",
+        "Native controller pointer retention is not a movement-capsule lifecycle policy proof.",
+        "No new production contact/body-frame/GetUp wiring in this observation."
+      ]
+    },
+    "getup_winning_record": {
+      "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-02/getup-winning-record.json",
+      "sha256": "854e241c8fdd635683e37e965cfdce90b44f5937a006973fc3754568870c9902",
+      "scope": "Actual new course selects91FB7 SpecialIdle_GetUpRight; prior course selected91FB8 SpecialIdle_GetUpLift. Do not hardcode either as a universal GetUp outcome."
+    },
+    "post_recovery_snapshot": {
+      "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-02/proxy-post-snapshot.json",
+      "sha256": "01739bbe73b3b126f12cc77a507b3409c5e278b02a35bb0417c7d99ab7789105",
+      "scope": "Post-recovery raw object prefix; slot30 native class lacks MSVC RTTI. World object RTTI identified independently, not sampled through down phases."
+    },
+    "native_getter_static": {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-proxy-static-01/process-getters.json",
+      "sha256": "111db37795e836a99dab3cb9a58d7eb75e2a21d57e5f15a30f1a3310ea36126a"
+    },
+    "native_world_static": {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-proxy-static-01/world-rtti.json",
+      "sha256": "922beab6ca2457a16fde2ec0ca64142a9fbf6159219ca95907868753a189a330"
+    }
   }
 }

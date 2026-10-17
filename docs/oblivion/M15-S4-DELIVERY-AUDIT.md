@@ -4821,3 +4821,18 @@ These results guide the actual recovery implementation; they do not implement
 GetUp selection or prove normal-input recovery. Contact/resource/RNG/body/cache
 atomic publication, per-frame driving, recovery playback/restart and full S4
 acceptance remain open.
+
+
+A second independent original-game fatigue recovery course completes the native
+raw0/4/3/5/6/0 sequence with 97 sampled frames/96 controller frames. It verifies
+actual process+118 controller/proxy identities and changing reference placement
+during incapacitation. The full actor root follows that live reference through
+raw4/3/5/6; late GetUp restores the reaction root's animated local offset. A fork
+implementation must include reference/root synchronization rather than leave
+placement fixed while bodies move. The new course selects native GetUpRight
+IDLE91FB7; the prior course selected GetUpLift91FB8, confirming that one fixed ID
+is not a valid universal expectation. Retained physics pointers do not prove a
+capsule suspension policy. The raw3 capture is not clearly prone and does not
+close a visual gate. Exact inputs, hashes, cleanup and limits are in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json). No additional fork
+normal-input reaction gate is closed; M15S4 remains incomplete.
