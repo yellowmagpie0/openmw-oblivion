@@ -1939,8 +1939,8 @@ namespace MWMechanics
         if (deltas.mKnockback)
         {
             if (!receiving || receiving->mOwner != ESM4::ActorValueOwner::NonPlayer
-                || victim.getType() != ESM::REC_NPC_4)
-                throw std::invalid_argument("native timed contact knockback requires an NPC victim");
+                || (victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4))
+                throw std::invalid_argument("native timed contact knockback requires a native nonplayer victim");
             const auto& request = *deltas.mKnockback;
             const auto* base = findActorBase(receiving->mBase);
             const float force = ESM4::damageKnockback(nonPlayerInteger(*receiving, 3, base),

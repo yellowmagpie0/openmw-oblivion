@@ -1,0 +1,528 @@
+{
+  "schema_version": 1,
+  "status": "Bounded spell-free Creature victim contact verified; full M15S4 incomplete",
+  "source_parent_commit": "2095b6495282c00a0fa0bf67e22d29f8fbac6155",
+  "tested_source_fingerprint": "03ed798d50e3a69754dcd7b3a1f0fb127659419b428ab0e87fdb995db0456972",
+  "source_sha256": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "0bc83451283eb98cb7f7af0ecbb6c8770ee23d98669fc95922ee64fcc557a9ee",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "25211278cccf8f82553e901e584b2bc9d9bf992d532534a0b4bd39aa630897a3",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "1d399aaa708d93e8979ab2eddaa78a8e37c4fbcd7b2789a7b96ccfb76815cf4d",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_contact.json": "53892da9e1c87678f1b8ceadf66e255342ce8f8fa5f0ec58657d28fc42dd80e9",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_contact_sanitized.json": "7300b4e78c4110962e67336786fdf4677d3e86806c7ac03454f202847fea6318",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_contact_continuation.json": "27f412cd6c9f4062491ca4c07b66c305525a2d12dca40f39253604ffcc7c2223",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_victim_contact_sanitized_continuation.json": "6d69568453e7443390276cf2be9d112a626b8c811be310bca5f7d5ab6cb80993",
+    "scripts/data/oblivion_compat/m15_creature_victim_contact_native_probe.json": "4ca769a1a5e576ee9181dd0cc7e4223d335cef7a9db5f41bb2a21f0973b96a5c"
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-contact-main-01/verification.json",
+      "sha256": "b7230c951e2b00503454a640be368c555cf0fe3372e2228b0da7e48aa5af20d0",
+      "fingerprint": "03ed798d50e3a69754dcd7b3a1f0fb127659419b428ab0e87fdb995db0456972",
+      "results": {
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "fc7124af36f65e6c90ff3c5d6199da6f37de4cd7e99c67b2b422cc66a9476ae7",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "6e885d0d356348fe1c007eaa4f5322a8e203e997ed9654e03364c9eba59ad532",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 313,
+          "passed": true,
+          "log_sha256": "0fb22129bf4539770b3301c7cc84d0112c09fd2c6aea4e7b38a23066ac00d5bc"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-contact-sanitized-01/verification.json",
+      "sha256": "31f3a5ff86ff250a232c26ef9afbf1002f36377b8906147439b2b2168729cede",
+      "fingerprint": "03ed798d50e3a69754dcd7b3a1f0fb127659419b428ab0e87fdb995db0456972",
+      "results": {
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "073c4993ed27d0bc0f0922ac7d8d4ee63ec6de9e1cce620a420be9f2262ec931",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "4e6f193c3c92d7a85f6790f1a8ee5a84ab43cea1675f572606d2459617a57c8a",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/verification.json",
+      "sha256": "2904811d7040a6b9a06a416ca98f95cd5a486d586748969f68423ed1c6c80cb3",
+      "report": {
+        "passed": true,
+        "build": "normal",
+        "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "72afdff5a349fefd016f60f9e311535cc2a7858ba1c1dd82fba41653d819b057",
+            "payload_sha256": "2bd636d7dd6012525b2d30a6b3b530cb619d8ce475fba49cb45d213eec702654",
+            "process_epoch": {
+              "pid": 952501,
+              "start_ticks": 35648057,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "11c97dff7cb9c22c8eb76e22253a924d9e268235a18c931d63fa464ee9400ff7",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "damage": {
+              "process": "High",
+              "knocked": 0,
+              "current_fatigue": 140.0,
+              "suppress": false,
+              "health": 1.4199999570846558,
+              "fatigue": 1.7100000381469727
+            },
+            "saved_knockback": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "acceleration": [
+                  0.0,
+                  5.3295578956604,
+                  -0.02466006390750408
+                ],
+                "remaining": 0.8000001907348633
+              }
+            ],
+            "saved_melee": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:026be1",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:15985a",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "dynamic:player:0000000000000001",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": false,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              }
+            ],
+            "audio": {
+              "sha256": "a6de3c29174456a07f4e9afaabf868ac0c219670b7876274c5c81e2bf99ca4e0",
+              "frames": 2509440,
+              "peak": 18740,
+              "rms": 409.1516002642207
+            }
+          },
+          {
+            "phase": "second-retry-01",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/second-retry-01/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "b3fcdff8dc425d44ba36bc6746b54e8849d20edef35b9d48a91114b2d6b7f005",
+            "payload_sha256": "b3a42e370a5124dedf9a68ed5d3ccdf6ce931a9919add5e626b32c332e8f5ad5",
+            "process_epoch": {
+              "pid": 953413,
+              "start_ticks": 35736062,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/second-retry-01/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-normal-01/second-retry-01/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "11c97dff7cb9c22c8eb76e22253a924d9e268235a18c931d63fa464ee9400ff7",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "damage": {
+              "process": "High",
+              "knocked": 0,
+              "current_fatigue": 133.0,
+              "suppress": false,
+              "health": 1.409500002861023,
+              "fatigue": 1.7047500610351562
+            },
+            "saved_knockback": [],
+            "saved_melee": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:026be1",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:15985a",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "dynamic:player:0000000000000001",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              }
+            ],
+            "audio": {
+              "sha256": "a2b87a3c26a6239623da746a6849e1c26dfc82f34391ea772978b96e1fcb1aa2",
+              "frames": 2358720,
+              "peak": 17727,
+              "rms": 379.2775863694793
+            }
+          }
+        ],
+        "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. First save contains active timed knockback; second course observes expiry. Sanitizer first save additionally retains committed action2 recovery at0.5999994278; fresh process finishes it without replay before action3. Does not prove uninterrupted/restarted trajectory equality, recovery animation, weapon runtime, enemy HUD or full S4 matrix. ASan leak checks disabled."
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/verification.json",
+      "sha256": "9cdb7b26bb47dba0bb11866fc620d2e9af23e80e581496d8d17956440b16d67a",
+      "report": {
+        "passed": true,
+        "build": "sanitized",
+        "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "80af18dfbd76021513b8e929a2b44842dfa7709f1304950ac5260962fe4570b5",
+            "payload_sha256": "8c84bde96ab8f611d92d959ed407509ea527d1d858c2936b43f9f2046c65b210",
+            "process_epoch": {
+              "pid": 953359,
+              "start_ticks": 35727158,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "4fbb2ea482289efe53feae09a428866889d7e587fb650304d4a1a63c0cd4bfcc",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "damage": {
+              "process": "High",
+              "knocked": 0,
+              "current_fatigue": 140.0,
+              "suppress": false,
+              "health": 1.4199999570846558,
+              "fatigue": 1.7100000381469727
+            },
+            "saved_knockback": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "acceleration": [
+                  0.0,
+                  5.3295578956604,
+                  -0.02466006390750408
+                ],
+                "remaining": 1.0
+              }
+            ],
+            "saved_melee": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:026be1",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:15985a",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "dynamic:player:0000000000000001",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": false,
+                  "queued": 0
+                },
+                "strike": {
+                  "id": 2,
+                  "kind": 0,
+                  "weapon_base": "null",
+                  "animation_group": "handtohandattackleft",
+                  "playback_speed": 1.0,
+                  "animation_time": 0.5999994277954102,
+                  "contact_committed": true,
+                  "ordinary_phase": 2,
+                  "sequence_timing": {
+                    "easing": false,
+                    "offset": -12.199993133544922,
+                    "ease_start": 0.39999961853027344,
+                    "last_input": 0.5999994277954102,
+                    "ease_end": 12.299993515014648,
+                    "weighted_time": 0.5999994277954102,
+                    "output_time": 0.5999994277954102
+                  },
+                  "power_phase": null
+                },
+                "ai_intent": null
+              }
+            ],
+            "audio": {
+              "sha256": "4b24fd9245c1a4d66f0193c1069270d19fd255b37801ae965b9c295612b2b442",
+              "frames": 12565440,
+              "peak": 18815,
+              "rms": 179.7090544823899
+            }
+          },
+          {
+            "phase": "second",
+            "save": "build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "003aabed3c89643dd2b515d984d43460e587b8c7f26140387b8ede66acc5c2fd",
+            "payload_sha256": "5a23a3ff68a3532cb6b433a65adacc338e7477ca9cf5d3e4162fab690011247c",
+            "process_epoch": {
+              "pid": 953893,
+              "start_ticks": 35799052,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-victim-contact-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "4fbb2ea482289efe53feae09a428866889d7e587fb650304d4a1a63c0cd4bfcc",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "damage": {
+              "process": "High",
+              "knocked": 0,
+              "current_fatigue": 133.0,
+              "suppress": false,
+              "health": 1.409500002861023,
+              "fatigue": 1.7047500610351562
+            },
+            "saved_knockback": [],
+            "saved_melee": [
+              {
+                "actor": "content:m15creaturemelee.esp:000802",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:026be1",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "content:oblivion.esm:15985a",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              },
+              {
+                "actor": "dynamic:player:0000000000000001",
+                "input": {
+                  "held_seconds": 0.0,
+                  "input_held": false,
+                  "prefer_left": true,
+                  "queued": 0
+                },
+                "strike": null,
+                "ai_intent": null
+              }
+            ],
+            "audio": {
+              "sha256": "97fbdd14e2357a4fa6de410f9f3f9330a13acae80dd7eac350067d7be601d310",
+              "frames": 14837760,
+              "peak": 17540,
+              "rms": 137.96648173386342
+            }
+          }
+        ],
+        "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. First save contains active timed knockback; second course observes expiry. Sanitizer first save additionally retains committed action2 recovery at0.5999994278; fresh process finishes it without replay before action3. Does not prove uninterrupted/restarted trajectory equality, recovery animation, weapon runtime, enemy HUD or full S4 matrix. ASan leak checks disabled."
+      }
+    }
+  },
+  "original_instructions": {
+    "creature-victim-contact-oracle-01": {
+      "path": "build/oblivion-compat/m15/S4/creature-victim-contact-oracle-01/report.json",
+      "sha256": "c6c51a95ee853cad50f2f3b938f6dd854c8e7548e29e780f31ecb27a9e2afb04",
+      "observations": 7680,
+      "scope": "Original hand-contact caller5FF3CA..5FF41E, actual victim19C/5E04F0, all actual process2E4 getters, full5F4880 fatigue ratio, full547280 plus luck/fatigue helpers. Attacker base/current AV getters and winning settings are supplied; surrounding contact eligibility, preceding attack cost, damage application, reactions and gameplay are not established."
+    },
+    "native-creature-target-reaction-02": {
+      "path": "build/oblivion-compat/m15/S4/native-creature-target-reaction-02/force-report.json",
+      "sha256": "a042454bf4e096c77cf3cd761d69b40234534e8afb08f3a805a5daddd1a0a67f",
+      "observations": 960,
+      "scope": "Actual shared caller force path, NPC5F1970 and Creature6253C0->5F1970 virtual dispatch, original547690 force arithmetic, original position getters, subtraction/normalization/cap and duration. Shared parent integer getter supplies declared Speed/Agility/Luck, FatigueRatio5F4880 supplied, Havok controller65A2C0 supplies availability; actual8907A0 executes conversion, reciprocal scaling, squared comparison, replacement and remaining-time storage. Its input arguments are recorded before execution. Incoming callback+398 and whole-hit/reaction animation/physics movement remain outside probe."
+    },
+    "native-creature-target-reaction-03": {
+      "path": "build/oblivion-compat/m15/S4/native-creature-target-reaction-03/force-report.json",
+      "sha256": "7fdb8df358eb5fd46c25b282bf3112c80ea8d6e8d529695cfa1aab6add783cf1",
+      "observations": 1152,
+      "scope": "Actual shared caller force path, NPC5F1970 and Creature6253C0->5F1970 virtual dispatch, original547690 force arithmetic, original position getters, subtraction/normalization/cap and duration. Shared parent integer getter supplies declared Speed/Agility/Luck, FatigueRatio5F4880 supplied, Havok controller65A2C0 supplies availability; actual8907A0 executes conversion, reciprocal scaling, squared comparison, replacement and remaining-time storage. Its input arguments are recorded before execution. Incoming callback+398 and whole-hit/reaction animation/physics movement remain outside probe."
+    }
+  },
+  "retained_failures": [
+    {
+      "path": "creature-victim-contact-runtime-normal-01/second",
+      "reason": "Expected rounded GetAV literals18.58/151.29 failed against correct maximum-precision logs18.579999923706055/151.28999328613281. Actual gameplay completed; acceptance failed. Fresh retry corrects expected log precision."
+    },
+    {
+      "path": "creature-victim-contact-assets-01/seed-before-scalar-audit.json",
+      "reason": "Initial descriptive metadata assumed fresh Fatigue160; immutable seed includes prior Creature attack debit7, current153. Corrected description; save payload unmodified."
+    }
+  ],
+  "limits": [
+    "Weapon resolver covered by World test only; no weapon-victim runtime claim",
+    "Active Creature blocking and spell-bearing Creature contacts rejected",
+    "Loaded model Actor byte104 canonical0/1 selects Fur; do not infer Bone from base type",
+    "Source freeze helper results recorded separately after manifests finalized"
+  ],
+  "late_metadata_only": [
+    "Actual vtable slot identity audit appended to protocol after checks",
+    "Verification index, provenance, milestone and delivery audit"
+  ],
+  "sanitizer_leak_checks": false,
+  "reviewed_build_warnings": {
+    "path": "build/oblivion-compat/m15/S4/native-creature-target-reaction-02/unchanged-warning-sources.json",
+    "sha256": "51d1f10558f3bdadb37acedeafa5eec6aef4b3fdacf6a1f2402e1f780abcabb3",
+    "scope": "Every reported warning context is unchanged in parent2095b64952; actual gameplay sources and all accepted test binaries built successfully. No claim of warning-free compilation."
+  }
+}

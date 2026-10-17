@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "purpose": "Creature victim contact and stored native knockback acceptance inputs; bounded original instructions and real engine courses",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_hand_contact": {
+    "range": [
+      "0x5ff3ca",
+      "0x5ff41e"
+    ],
+    "actual_calls": [
+      "0x5e04f0",
+      "0x5f4880",
+      "0x547280"
+    ],
+    "current_source_fatigue": [
+      140,
+      133,
+      126
+    ],
+    "processes": [
+      "unprocessed",
+      "Low",
+      "MiddleLow",
+      "MiddleHigh",
+      "High"
+    ],
+    "knocked": "every signed byte -128..127",
+    "x87": [
+      "0x27f",
+      "0x37f"
+    ],
+    "observations": 7680,
+    "evidence": "build/oblivion-compat/m15/S4/creature-victim-contact-oracle-01/report.json",
+    "boundaries": [
+      "Parent AV/base Fatigue inputs supplied; actual process dispatch and arithmetic execute",
+      "Victim vtable+19C supplies actual shared5E04F0; full Creature hit/reaction animation outside experiment"
+    ]
+  },
+  "original_force_storage": {
+    "range": [
+      "0x5fff99",
+      "0x6000b4"
+    ],
+    "actual_receiver": "0x8907a0",
+    "observations": [
+      960,
+      1152
+    ],
+    "fatigue_ratios": [
+      0,
+      0.25,
+      1,
+      2,
+      0.989312469959259,
+      0.945562481880188
+    ],
+    "evidence": [
+      "build/oblivion-compat/m15/S4/native-creature-target-reaction-02/force-report.json",
+      "build/oblivion-compat/m15/S4/native-creature-target-reaction-03/force-report.json"
+    ],
+    "boundaries": [
+      "Actual Character/Creature force virtual dispatch,547690,position subtract/normalize/cap and8907A0 storage execute",
+      "Shared parent integer AV getter and FatigueRatio5F4880 supplied",
+      "Controller65A2C0 supplies availability; zeroed controller acceleration/time for each case",
+      "No Havok movement or full hit/reaction acceptance from instruction probe"
+    ]
+  },
+  "goldens": {
+    "full_fatigue_hand": {
+      "health": 1.4199999570846558,
+      "fatigue": 1.7100000381469727
+    },
+    "133_of_140_hand": {
+      "health": 1.409500002861023,
+      "fatigue": 1.7047500610351562
+    },
+    "force_storage_eligible_Ft158_289993_of160": [
+      0,
+      5.400936603546143,
+      0
+    ],
+    "force_storage_ineligible_Ft160_of160": [
+      0,
+      5.4178853034973145,
+      0
+    ]
+  },
+  "runtime_seed": {
+    "source_save": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_save_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+    "scope": "Unmodified actual engine save from accepted camera-first Creature course: live Dog Health20/Fatigue153, Player Health72/Fatigue140, completed Creature action1, stopped combat, saved pitch1.171875. Incoming-contact inputs use this camera/placement seed without payload editing.",
+    "creature_native_values": {
+      "3": [
+        50.0,
+        null,
+        null,
+        null
+      ],
+      "4": [
+        13.0,
+        null,
+        null,
+        null
+      ],
+      "7": [
+        40.0,
+        null,
+        null,
+        null
+      ],
+      "8": [
+        20.0,
+        null,
+        null,
+        null
+      ],
+      "10": [
+        160.0,
+        0.0,
+        0.0,
+        -7.0
+      ]
+    },
+    "correction": "Initial descriptive metadata assumed fresh160 Fatigue. The immutable prior-course save includes its already committed7-point attack debit: base160, Damage-7, current153. No saved payload was edited."
+  },
+  "runtime": {
+    "normal": [
+      "creature-victim-contact-runtime-normal-01/first",
+      "creature-victim-contact-runtime-normal-01/second-retry-01"
+    ],
+    "sanitized": [
+      "creature-victim-contact-runtime-sanitized-01/first",
+      "creature-victim-contact-runtime-sanitized-01/second"
+    ],
+    "inputs": "Keyboard f readies hands in first epoch; u attacks; fresh process retains readied state and u attacks again. F5 actual saves. No direct damage/outcome commands.",
+    "expected": {
+      "Player_Health": [
+        72,
+        72,
+        72
+      ],
+      "Player_Fatigue": [
+        140,
+        133,
+        126
+      ],
+      "Creature_Health": [
+        20,
+        18.579999923706055,
+        17.170499801635742
+      ],
+      "Creature_Fatigue": [
+        153,
+        151.2899932861328,
+        149.5852508544922
+      ],
+      "committed_action_ids": [
+        2,
+        3
+      ],
+      "sounds": [
+        "PHYDamageFur",
+        "WPNHitHand"
+      ]
+    },
+    "scope": "Spell-free ordinary unblocked incoming unarmed contacts. First save retains active force; next fresh epoch observes expiry and exactly one next contact. No full trajectory, first-person pose, enemy HUD, recovery/knockdown or full S4 acceptance."
+  },
+  "retained_failures": [
+    {
+      "path": "creature-victim-contact-runtime-normal-01/second",
+      "reason": "Expected rounded GetAV literals18.58/151.29 failed against correct maximum-precision logs18.579999923706055/151.28999328613281. Actual gameplay completed; acceptance failed. Fresh retry corrects expected log precision."
+    },
+    {
+      "path": "creature-victim-contact-assets-01/seed-before-scalar-audit.json",
+      "reason": "Initial descriptive metadata assumed fresh Fatigue160; immutable seed includes prior Creature attack debit7, current153. Corrected description; save payload unmodified."
+    }
+  ],
+  "limits": [
+    "Weapon resolver covered by World test only; no weapon-victim runtime claim",
+    "Active Creature blocking and spell-bearing Creature contacts rejected",
+    "Loaded model Actor byte104 canonical0/1 selects Fur; do not infer Bone from base type",
+    "Source freeze helper results recorded separately after manifests finalized"
+  ],
+  "late_metadata": {
+    "actual_vtable_19C": {
+      "passed": true,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "vtable_19C": {
+        "NPC": "0x5e04f0",
+        "Creature": "0x5e04f0",
+        "Player": "0x5e04f0"
+      },
+      "scope": "Read actual hash-identified PE vtable slots; confirms the probe uses the real shared victim getter. No whole-hit claim."
+    },
+    "sanitizer_recovery": "First save retains committed action 2 at animation time0.5999994277954102. Fresh process logs restore then finish, emits no repeated contact and commits exactly action 3."
+  }
+}

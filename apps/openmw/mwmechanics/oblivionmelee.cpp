@@ -411,22 +411,26 @@ namespace MWMechanics
             result.mHitSoundPosition = position;
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
-        if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4)
+        if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
+                || contact->getType() == ESM::REC_CREA4)
             && !blockAccepted)
         {
-            // Unarmored ordinary NPC contacts reach original5FFD61 with no
-            // armor/shield material and neither selector flag. Armor-hit
-            // selection and Creature sound families remain separate adapters.
+            // Original5FFD61 supplies no armor/shield material or selector
+            // flags. Model initialization projects Creature Actor byte104 as
+            // canonical0/1; the TESCreature base type is not this sound input.
             auto& inventory = contact->getClass().getInventoryStore(*contact);
             const bool armored = std::any_of(inventory.begin(), inventory.end(), [&](const auto& item) {
                 return item.getType() == ESM::REC_ARMO && inventory.isEquipped(item);
             });
             if (!armored)
-                result.mHitSounds = ESM4::nativeNpcMeleeHitSounds({soundWeaponType});
+                result.mHitSounds = ESM4::nativeMeleeHitSounds({soundWeaponType},
+                    contact->getType() == ESM::REC_CREA4
+                        ? std::optional<std::uint8_t>{contact->getRefData().getOblivionCanSpendFatigue() ? 1u : 0u}
+                        : std::nullopt);
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
-        if (!contact->isEmpty() && contact->getType() == ESM::REC_NPC_4
+        if (!contact->isEmpty() && (contact->getType() == ESM::REC_NPC_4 || contact->getType() == ESM::REC_CREA4)
             && result.mBlockAbsorbedFraction == 0 && oblivionKnockedState(world, *contact) == 0
             && service->getNonPlayerIntegerValue(*contact, 4) > 0)
         {
@@ -612,6 +616,16 @@ namespace MWMechanics
 
     namespace
     {
+        bool creatureHasSpells(const MWWorld::Ptr& actor)
+        {
+            if (actor.isEmpty() || actor.getType() != ESM::REC_CREA4)
+                return false;
+            const auto& spells = actor.get<ESM4::Creature>()->mBase->mSpell;
+            return std::any_of(spells.begin(), spells.end(), [](ESM::FormId spell) {
+                return spell != ESM::FormId{};
+            });
+        }
+
         bool creatureUsesDefaultWeaponHitSound(const MWWorld::ESMStore& store, const MWWorld::Ptr& actor)
         {
             // Original51CEC0 follows CSCR until flag100 selects an own sound
@@ -685,6 +699,8 @@ namespace MWMechanics
             PreparedBlock result{remaining};
             if (!oblivionBlockingPosture(world, victim) || oblivionParalyzed(world, victim))
                 return result;
+            if (victim.getType() == ESM::REC_CREA4)
+                return std::nullopt; // Creature defensive posture/equipment policy needs its native caller.
             const auto& from = attacker.getRefData().getPosition();
             const auto& to = victim.getRefData().getPosition();
             const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
@@ -805,8 +821,9 @@ namespace MWMechanics
             return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
         };
         const bool creature = !attacker.isEmpty() && attacker.getType() == ESM::REC_CREA4;
-        if ((!creature && !eligible(attacker)) || !eligible(victim))
-            return std::nullopt; // Creature victim material/reaction policy remains separate.
+        const bool creatureVictim = !victim.isEmpty() && victim.getType() == ESM::REC_CREA4;
+        if ((!creature && !eligible(attacker)) || (!creatureVictim && !eligible(victim)))
+            return std::nullopt;
         const auto integer = [&](const MWWorld::Ptr& ptr, std::uint8_t av) {
             return ptr == player ? service->getPlayerIntegerValue(av)
                 : service->getNonPlayerIntegerValue(ptr, av);
@@ -818,10 +835,7 @@ namespace MWMechanics
         if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
         auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
             : oblivionHandToHandContactDamage(world, attacker, victim);
-        if (creature && std::any_of(attacker.get<ESM4::Creature>()->mBase->mSpell.begin(),
-                attacker.get<ESM4::Creature>()->mBase->mSpell.end(), [](ESM::FormId spell) {
-                    return spell != ESM::FormId{};
-                }))
+        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
             return std::nullopt; // Creature spell/contact-effect resolution must join this transaction.
         if (creature && !creatureUsesDefaultWeaponHitSound(world.getStore(), attacker))
             return std::nullopt;
@@ -978,7 +992,9 @@ namespace MWMechanics
         const auto eligible = [&](const MWWorld::Ptr& ptr) {
             return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
         };
-        if (!service || !eligible(attacker) || !eligible(victim) || attacker == victim || sneaking)
+        const bool creatureVictim = !victim.isEmpty() && victim.getType() == ESM::REC_CREA4;
+        if (!service || !eligible(attacker) || (!eligible(victim) && !creatureVictim)
+            || attacker == victim || sneaking)
             return std::nullopt;
         // Validate authority before class queries can initialize shared caches.
         if (victim == player) (void)service->getPlayerValue(8);
@@ -989,6 +1005,8 @@ namespace MWMechanics
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
         const float incoming = weaponContactDamage(world, attacker, item, kind);
+        if (creatureHasSpells(victim))
+            return std::nullopt; // Do not omit Creature passive/contact-effect consequences.
         if (incoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.
         std::vector<const ESM4::GameSetting*> settings;

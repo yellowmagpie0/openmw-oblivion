@@ -6588,6 +6588,123 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionCreatureNaturalContactDamage(world, {}), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, CreatureVictimContactOwnsHealthFatigueAndRestoredForce)
+    {
+        for (const bool eligible : {false, true})
+        {
+            SCOPED_TRACE(eligible);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            auto& store = world.getStore();
+            MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+            MWClass::Weapon::registerSelf(); world.setupPlayer();
+            ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+            native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7); native.mData.health = 100;
+            store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+            ASSERT_TRUE(world.initializeOblivionPlayerActor());
+            const auto player = world.getPlayerPtr();
+            auto& service = *world.getOblivionCombatService();
+            ESM4::Creature creature{}; creature.mId = {0x840, 0};
+            creature.mFormKey = ESM::FormKey::content("headless.esm", 0x840);
+            creature.mAttackReach = 50; creature.mBaseConfig.tes4.levelOrOffset = 1;
+            creature.mBaseConfig.tes4.fatigue = 160; creature.mData.health = 20;
+            creature.mData.attribs.agility = 50; creature.mData.attribs.luck = 40;
+            creature.mData.attribs.speed = 13;
+            store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+            ESM4::ActorCreature reference{}; reference.mId = {0x940, 0};
+            reference.mFormKey = ESM::FormKey::content("headless.esm", 0x940);
+            reference.mBaseKey = creature.mFormKey;
+            store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+            auto& cell = world.getWorldModel().getDraftCell();
+            const MWWorld::Ptr victim(cell.insert(&live), &cell);
+            ASSERT_TRUE(world.activateOblivionActor(victim));
+            victim.getRefData().setOblivionCanSpendFatigue(eligible);
+            for (auto [av, value] : {std::pair{17, 10}, {14, 10}, {7, 50}, {0, 40}, {2, 30}, {3, 30}, {5, 40}})
+                ASSERT_TRUE(world.executeOblivionActorValueCommand(player, av, ESM4::ActorValueCommand::Set,
+                    ESM4::ActorValueCommandSource::Script, value));
+            unsigned settingId = 0x970;
+            for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fHandHealthMax", 15.f},
+                {"fHandFatigueDamageBase", 1.f}, {"fHandFatigueDamageMult", .5f},
+                {"fDamageWeaponMult", .5f}, {"fDamageSkillBase", .2f}, {"fDamageSkillMult", 1.5f},
+                {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+                {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}})
+            {
+                ESM4::GameSetting setting{}; setting.mId = {settingId, 0};
+                setting.mEditorId = name; setting.mData = value;
+                store.getWritable<ESM4::GameSetting>().insertStatic(setting,
+                    ESM::FormKey::content("headless.esm", settingId++));
+            }
+            const auto snapshot = [&] { return captureNativeActorState(fixture, victim).serializeBinary(); };
+            const auto before = snapshot();
+            const auto damage = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false);
+            ASSERT_TRUE(damage);
+            EXPECT_EQ(damage->mHealth, 0x1.6b851ep+0f);
+            EXPECT_EQ(damage->mFatigue, 0x1.b5c29p+0f);
+            EXPECT_EQ(damage->mBlockAbsorbedFraction, 0);
+            EXPECT_EQ(snapshot(), before);
+            auto physical = ESM4::buildPhysicalCombatSettings({}); physical.mFatigueBase = 1;
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -damage->mHealth, -damage->mFatigue};
+            deltas.mKnockback = MWMechanics::OblivionKnockbackContact{{0, 40, 0}, 1, 160,
+                {1, -.008f, 50, 10, 512, 1}, physical};
+            const auto id = world.beginOblivionPhysicalAction(player);
+            ASSERT_TRUE(world.commitOblivionPhysicalContact(id, player, victim, deltas));
+            EXPECT_EQ(service.getPlayerValue(10), 133);
+            EXPECT_EQ(service.getNonPlayerValue(victim, 8), 18.58f);
+            EXPECT_EQ(service.getNonPlayerValue(victim, 10), eligible ? 158.29f : 160.f);
+            const auto* values = service.findActorValues(reference.mFormKey);
+            ASSERT_TRUE(values);
+            EXPECT_EQ(values->mValues[8].mModifiers[2], -0x1.6b851ep+0f);
+            EXPECT_EQ(values->mValues[10].mModifiers[2], eligible ? -0x1.b5c29p+0f : 0);
+            const auto pulse = service.actorKnockback(reference.mFormKey);
+            ASSERT_TRUE(pulse);
+            // Actual original caller and8907A0 storage, including the updated
+            // victim Fatigue ratio158.289993/160 when the model gate permits it.
+            EXPECT_EQ(pulse->mAcceleration, (std::array<float, 3>{0,
+                eligible ? 0x1.59a8f2p+2f : 0x1.5abea2p+2f, 0}));
+            EXPECT_EQ(pulse->mRemaining, 1);
+            const auto committed = snapshot();
+            EXPECT_FALSE(world.commitOblivionPhysicalContact(id, player, victim, deltas));
+            EXPECT_EQ(snapshot(), committed);
+            const auto saved = captureNativeActorState(fixture, victim);
+            MWMechanics::OblivionCombatService restored;
+            ASSERT_NO_THROW(restored.restore(saved, store));
+            auto resaved = saved; restored.capture(resaved);
+            EXPECT_EQ(resaved.serializeBinary(), saved.serializeBinary());
+            EXPECT_EQ(restored.actorKnockback(reference.mFormKey), pulse);
+
+            ESM4::Weapon blade{}; blade.mId = {0x950, 0}; blade.mData.type = 0;
+            blade.mData.health = 100; blade.mData.damage = 20; blade.mData.speed = blade.mData.reach = 1;
+            const auto bladeKey = ESM::FormKey::content("headless.esm", 0x950);
+            store.getWritable<ESM4::Weapon>().insertStatic(blade, bladeKey);
+            ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(blade.mId);
+            projected.mData.mType = ESM::Weapon::ShortBladeOneHand; projected.mData.mHealth = 100;
+            store.insertStatic(projected);
+            ESM4::RuntimeInventoryItem owned; owned.mBase = bladeKey; owned.mCount = 1;
+            owned.mCondition = 100; owned.mEquippedSlots = ESM4::InventorySlotWeapon;
+            installEquipmentInventory(fixture, player, {owned});
+            auto& inventory = player.getClass().getInventoryStore(player);
+            const auto item = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            ASSERT_NE(item, inventory.end());
+            const auto equipped = snapshot();
+            const auto weapon = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, *item, 0, false);
+            ASSERT_TRUE(weapon);
+            // 20*.5 * (.2+10*.01*1.5) *1 *(.75+40*.01*.5) *(.5+.5*133/140).
+            EXPECT_NEAR(weapon->mHealth, 3.241875f, .000001f);
+            EXPECT_EQ(item->getCellRef().getNativeItemCondition(), 100);
+            EXPECT_EQ(snapshot(), equipped);
+            ASSERT_TRUE(service.beginBlocking(reference.mFormKey));
+            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false));
+            EXPECT_TRUE(service.endBlocking(reference.mFormKey));
+            creature.mSpell.push_back({0x999, 0});
+            store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+            const auto withSpell = snapshot();
+            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false));
+            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, *item, 0, false));
+            EXPECT_EQ(snapshot(), withSpell);
+        }
+    }
+
     TEST(OblivionWorldTest, NativeArmorQueryReadsDefenseAuthorityWithoutProjectedItemRatings)
     {
         NativeWorldFixture fixture;

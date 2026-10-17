@@ -15202,3 +15202,33 @@ pass 2,799 cases; sanitizers pass 743 ESM4* cases, with leak checking disabled.
 Tested fingerprint:`f568b530d97b275ca4e6e650d915b2dcafe9c4ad2f1f9e838b6ab90b987f7b43`.
 No engine Creature-victim contact gate is removed by this rule checkpoint;
 full S4 remains incomplete.
+
+### Creature victim damage and stored timed force
+
+Original SHA256 a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6.
+The hand-contact caller 5FF3CA..5FF41E runs actual 5E04F0 and process 2E4 getters,
+full 5F4880 and 547280 luck/Fatigue helpers for source Fatigue 140/133/126. All
+signed knocked bytes, five process kinds and both x87 words pass 7,680 cases.
+Actual NPC/Creature/Player vtable+19C slots all point to 5E04F0. Parent AV/base
+inputs remain declared boundaries. High process knocked0 goldens are
+Health 1.4199999570846558/Fatigue 1.7100000381469727 at 140, and
+Health 1.409500002861023/Fatigue 1.7047500610351562 at 133.
+
+The extended 5FFF99..6000B4 force experiment now executes actual 8907A0 against a
+zeroed controller: reciprocal conversion, squared comparison/replacement,
+acceleration +2F0 and remaining time +300. The 960-case and 1,152-case corpora add
+actual post-contact Fatigue ratios 158.289993/160 and 151.289993/160. Shared
+parent integer values/FatigueRatio and controller availability remain supplied;
+no Havok movement or whole-hit/reaction animation is established by emulation.
+With Agility 50/Luck 40, damage 1.42 truncated 1, delta [0,40,0], the World fixture's
+eligible and ineligible stored Y acceleration is respectively 5.400936603546143
+and 5.4178853034973145. Its binary service restore preserves pulse and action
+ownership. Runtime uses the original camera-course seed with Dog Fatigue 153,
+not a freshly initialized 160. The real contact owns its updated resources and
+force; fresh process neither replays committed contact nor loses subsequent
+left/right strike selection.
+
+Evidence and limitations: [Creature victim verification index](M15-CREATURE-VICTIM-CONTACT-VERIFICATION.json)
+and editable m15_creature_victim_contact_native_probe.json. These accept bounded
+spell-free incoming resources/timed force; active Creature block, effects,
+full recovery/knockdown/HUD and complete S4 matrices remain open.
