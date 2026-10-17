@@ -1561,17 +1561,25 @@ namespace ESM4
         validateHandToHandSettings(settings);
         if (input.mStrength < 0)
             throw std::invalid_argument("negative native hand damage strength");
+        finite(input.mFatigueRatio);
+        // Full original547280, including547B90/547F00, uses PC24 in the
+        // live unarmed caller. Preserve each arithmetic rounding and store.
         constexpr double percent = static_cast<double>(0.01f);
-        const float skill = rounded(settings.mSkillBase
-            + skillValue(input.mSkill, input.mLuck, physical) * percent * settings.mSkillMultiplier);
-        const float strength = rounded(settings.mStrengthBase
-            + std::min(input.mStrength, 100) * percent * settings.mStrengthMultiplier);
-        const float factor = std::min(1.f, rounded(double(strength) * skill * fatigueValue(input.mFatigueRatio, physical)));
+        const float luckTerm = rounded(multiplySingle(input.mLuck, physical.mLuckSkillMultiplier));
+        const float adjustment = rounded(addSingle(luckTerm, physical.mLuckSkillBase));
+        const float effectiveSkill = rounded(std::clamp(addSingle(input.mSkill, adjustment), 0.0, 100.0));
+        const float skill = rounded(addSingle(multiplySingle(multiplySingle(effectiveSkill, percent),
+            settings.mSkillMultiplier), settings.mSkillBase));
+        const float strength = rounded(addSingle(multiplySingle(multiplySingle(percent,
+            std::min(input.mStrength, 100)), settings.mStrengthMultiplier), settings.mStrengthBase));
+        const float fatigue = rounded(addSingle(physical.mFatigueBase,
+            -multiplySingle(addSingle(1.0, -double(input.mFatigueRatio)), physical.mFatigueMultiplier)));
+        const float factor = std::min(1.f, rounded(multiplySingle(multiplySingle(strength, skill), fatigue)));
         HandToHandDamage result;
-        result.mHealth = rounded(settings.mHealthMinimum
-            + (double(settings.mHealthMaximum) - settings.mHealthMinimum) * factor);
+        result.mHealth = rounded(addSingle(settings.mHealthMinimum,
+            multiplySingle(addSingle(settings.mHealthMaximum, -double(settings.mHealthMinimum)), factor)));
         result.mFatigue = input.mSuppressFatigueDamage ? 0.f
-            : rounded(double(result.mHealth) * settings.mFatigueMultiplier + settings.mFatigueBase);
+            : rounded(addSingle(multiplySingle(result.mHealth, settings.mFatigueMultiplier), settings.mFatigueBase));
         return result;
     }
 

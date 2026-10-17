@@ -4625,3 +4625,43 @@ course. See [the follow-up index](M15-WEAPON-ATTACK-BONUS-VERIFICATION.json).
 Reaction/mastery RNG and consequences, remaining physical arithmetic,
 directional/effect/interruption/input/view/FPS and named restart gates stay open;
 this is another bounded implementation checkpoint, not full S4 delivery.
+
+## Live unarmed precision checkpoint — 2026-10-17
+
+Read-only observations of normal mouse contacts in the isolated original game
+confirm control word 007F through 5FF3CA -> 547280 -> 5FF41E. The fresh second
+contact reads Hand 10/Luck 50/Strength 40, current Fatigue 133/base 140 and standing
+Dog knocked state 0. Native Health/Fatigue output bits are 1068788350/1071265087,
+one ULP below the prior wider-intermediate CPP results. Both actual output
+pointers, getters, live GMST values and code identities are checked. Setup and
+sampler failures remain recorded; the source/clone pristine save hashes remain
+unchanged and exact input files are restored after normal game exit.
+
+The hand helper now preserves per-instruction PC24 rounding and explicit float
+stores, including the original subtraction order in fatigue. It agrees with all
+4222 independently generated original arithmetic profiles; the old source differs
+on 288. There are 190 frozen native rows plus the actual second-contact regression.
+NPC and actual Player/Creature World queries check Fatigue 133 and all 256 signed
+victim states without query mutations. All 2806 components, 750 sanitized ESM4
+components, 1618 engine cases in each configuration and 313 Python tests pass,
+without failures or skips. Fingerprint: `1f2199ce03f7497a10ecf6a8e311027f491f1c62c50e055464cc45fc1974c44a`. Leak checks are disabled.
+
+Normal and sanitized engines each commit two ordinary unarmed contacts across
+F5/quit/fresh-process load. Exact Player Fatigue 140 -> 133 -> 126, Dog Health 20
+-> 18.579999923706055 -> 17.170499801635742 and Dog Fatigue 153 -> 151.28999328613281
+-> 149.58525085449219 match original damage inputs. Full saved payloads re-encode
+byte-exactly; unrelated native arrays, bases/life, inventories and current RNG
+are preserved. Each process owns one contact and sound pair with nonzero PCM.
+A read-only fork probe observes the production controller/contact call returning
+the exact same second-contact bits as the live original. Saved resource rounding
+alone could hide this discrepancy; the raw return check does not.
+
+Both builds save completed attack strikes while the first timed knockback pulse
+remains active. The inherited historical sanitizer residual-strike verifier fails
+and is retained; the current verifier strictly checks idle strikes/action -1.
+This is completed-strike continuation, not uninterrupted/restarted recovery
+trajectory equivalence. Current screenshots show fists without torso occlusion;
+Dog face geometry holes and lighting differences remain. Native reaction/mastery
+RNG and consequences, remaining physical math, directional/effect/interruption/
+input/view/FPS and named restart gates stay open. **Full S4 is incomplete.**
+See [the verification index](M15-UNARMED-LIVE-PRECISION-VERIFICATION.json).

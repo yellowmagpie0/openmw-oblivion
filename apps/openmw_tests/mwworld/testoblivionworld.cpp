@@ -6342,6 +6342,7 @@ namespace
             {0, 0x1.35c28ep+0f, 0x1.9ae148p+0f},
             {70, 0x1.50a3d6p+0f, 0x1.a851ecp+0f},
             {140, 0x1.6b851ep+0f, 0x1.b5c29p+0f},
+            {133, 0x1.68d4fc0000000p+0f, 0x1.b46a7e0000000p+0f},
             {-14, 0x1.30624ep+0f, 0x1.983128p+0f},
         };
         for (const auto& row : rows)
@@ -6462,6 +6463,23 @@ namespace
             EXPECT_EQ(*service.findActorValues(ESM::FormKey::dynamic("player", 1)), originalPlayer);
             EXPECT_EQ(*service.findActorValues(actor.getCellRef().getFormKey()), originalCreature);
         }
+        // Actual original second-hit inputs, including the PC24-sensitive stores.
+        service.changePlayerValue(world.getPlayer(), 10, ESM4::ActorValueModifier::Damage, -7,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        ASSERT_EQ(service.getPlayerValue(10), 133);
+        const auto depletedPlayer = *service.findActorValues(ESM::FormKey::dynamic("player", 1));
+        for (int raw = -128; raw <= 127; ++raw)
+        {
+            service.setProcessKnockedState(actor.getCellRef().getFormKey(), static_cast<std::int8_t>(raw));
+            const auto before = *service.findActorValues(actor.getCellRef().getFormKey());
+            const auto damage = MWMechanics::oblivionHandToHandContactDamage(world, player, actor);
+            EXPECT_EQ(std::bit_cast<unsigned>(damage.mHealth), 1068788350u);
+            EXPECT_EQ(std::bit_cast<unsigned>(damage.mFatigue), raw == 0 ? 1071265087u : 0u);
+            EXPECT_EQ(*service.findActorValues(ESM::FormKey::dynamic("player", 1)), depletedPlayer);
+            EXPECT_EQ(*service.findActorValues(actor.getCellRef().getFormKey()), before);
+        }
+        service.changePlayerValue(world.getPlayer(), 10, ESM4::ActorValueModifier::Damage, 7,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
         EXPECT_EQ(MWMechanics::oblivionHandToHandContactDamage(world, player, player).mFatigue, 0x1.b5c29p+0f);
         service.setProcessKnockedState(ESM::FormKey::dynamic("player", 1), -1);
         EXPECT_EQ(MWMechanics::oblivionHandToHandContactDamage(world, player, player).mFatigue, 0);

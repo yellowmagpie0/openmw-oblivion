@@ -1,0 +1,1083 @@
+{
+  "schema_version": 1,
+  "status": "Live unarmed PC24 precision fixed and bounded two-contact restart verified; full M15S4 remains incomplete",
+  "source_parent_commit": "1af146c3d23e07473179b7fc074ce44194d08dd2",
+  "tested_dirty_source_fingerprint": "1f2199ce03f7497a10ecf6a8e311027f491f1c62c50e055464cc45fc1974c44a",
+  "source_sha256": {
+    "components/esm4/physicalcombat.cpp": "e59a645200e01577b12f87649eb95b914577b29ba90bd7a7883a4163a66fdb83",
+    "apps/components_tests/esm4/physicalcombat.cpp": "dba39e7e5a267f9de81c5d89c4f2a9bfdb801dc10c1dfdbc76aa8faec2b0727d",
+    "apps/components_tests/esm4/handdamage_expected.inc": "0c7204c08bf538bfa6262d6a5cb3f46ddcf6f7ecf0d64ee5c064b81701bc43ac",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "d75bce0b8fbb747831a11617b52f6ee520f938403e4f6b65996ee1cf9dfd6600",
+    "scripts/data/oblivion_compat/m15_unarmed_live_precision_native_probe.json": "7a15442ffe7e2db461ddb11632ddb4b1a8729cc9ab557cfda50855be2b649888"
+  },
+  "checks": {
+    "main": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-single-final-checks-01/verification.json",
+        "sha256": "0859d3dd8c63e2e411f03a2ec37bf9971a67b096a9673fa661ded5a0460cda0c"
+      },
+      "results": {
+        "components": {
+          "executed": 2806,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "34f38a38b09ea0fc4cfb626c53152c1d6d42f2cc2599948e862d4641957c8222",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "4306d80a147cf0be52f9c91842b25566736219886f397d3b290110d08e9aac03",
+          "inventory_sha256": "fe972a79061da240b1406c2115892d34aad5b2b8d4b41f7ba398235377630506",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 750,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "d6e2fc295d41366bf2fecaf563e25dac2f97974c8674c4e7ba04826c7dd8d85d",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "069a1d891af15cdaa446cece93906b9f36924b9518f8f5f446e10446d8e8be73",
+          "inventory_sha256": "868701834e0f714e7d01ea111797b4d3389bae2439bc041ed8545faf65a1a2da",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e862685f1ade5b899fbfcdca5a33859c0687b038e99a99159e995feeb407e428",
+          "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+          "xml_sha256": "97269aefc2dae37d2f07a2f68ef9d1b29c212b535cc2dc5e577def916fe20aa2",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 313,
+          "passed": true,
+          "log_sha256": "e0d12677008a242e8487bf42cba55c7ddafdd3e9d381219889fa5af4e4eae173"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-single-final-engine-sanitized-01/verification.json",
+        "sha256": "bfafdb6c72bd02ee848e73f0f2fc02fe9432a563c7228be41868b1e9793a08ef"
+      },
+      "results": {
+        "engine": {
+          "executed": 1618,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "86ac2e3e17aaf666ce3b997ef6fdaaf41b4d675094328fb874b3369547abfb0b",
+          "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+          "xml_sha256": "1b82559a99b3e9630d2d4d616c65d6f319c0841e44562630d4af1da39a59fffa",
+          "inventory_sha256": "0caa2be478cb063f9d852c2eb8bb7077cc496ed2409ad8dbaef0d3f96c46115f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "original_live": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/fresh-first-01-sample.json",
+        "sha256": "a2da9ae00a5b02fe871afc58c76f83aa2cf4748a20a4e3b88f0b54b9bf4f837e"
+      },
+      "observation": {
+        "before": {
+          "actor": 411209004,
+          "victim": 805536536,
+          "victim_ref": 4278192130,
+          "victim_base": 416664596,
+          "victim_base_id": 124405,
+          "entry_esp": 15791280,
+          "entry_fpcw": 127,
+          "thread": [
+            1060817,
+            1060817,
+            0
+          ],
+          "monotonic_ns": 374514375434515,
+          "settings": {
+            "luck_multiplier": 0.4000000059604645,
+            "fatigue_base": 1.0,
+            "fatigue_multiplier": 0.5,
+            "hand_skill_base": 0.0,
+            "hand_skill_multiplier": 1.0,
+            "hand_strength_base": 0.0,
+            "hand_strength_multiplier": 0.75,
+            "health_minimum": 1.0,
+            "health_maximum": 15.0,
+            "hand_fatigue_multiplier": 0.5,
+            "hand_fatigue_base": 1.0,
+            "luck_base": -20
+          },
+          "actual_readers": [
+            {
+              "kind": "knocked",
+              "av": null,
+              "value": 0,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 10,
+              "value": 140,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "float",
+              "av": 10,
+              "value": 140.0,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            }
+          ],
+          "native547280_args": {
+            "skill": 10,
+            "luck": 50,
+            "strength": 40,
+            "fatigue_ratio": 1.0,
+            "knocked_word": 0,
+            "knocked_low_byte": 0,
+            "health_output": 15791304,
+            "fatigue_output": 15791340,
+            "fpcw": 127
+          }
+        },
+        "after": {
+          "return_fpcw": 127,
+          "health": 1.4199999570846558,
+          "health_bits": 1068876431,
+          "fatigue": 1.7100000381469727,
+          "fatigue_bits": 1071309128,
+          "monotonic_ns": 374514397991688
+        }
+      },
+      "scope": "Actual Player ordinary unarmed caller5FF3CA -> full547280 ->5FF41E, matched stock Dog target and Player vtables/globals. Code bytes, argument/output-pointer layout and actual getters observed; FPCW and both native output stores captured. Read-only debugger observation after normal mouse input; no forced calls or resource/state writes. Surrounding power/mitigation/contact application is outside this query snapshot."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/fresh-second-01-sample.json",
+        "sha256": "cf86867a25bbc9e17dd8cb3d9080fa1f6730173fa42f55339f49108175b5247b"
+      },
+      "observation": {
+        "before": {
+          "actor": 411209004,
+          "victim": 805536536,
+          "victim_ref": 4278192130,
+          "victim_base": 416664596,
+          "victim_base_id": 124405,
+          "entry_esp": 15791280,
+          "entry_fpcw": 127,
+          "thread": [
+            1060817,
+            1060817,
+            0
+          ],
+          "monotonic_ns": 374526646258670,
+          "settings": {
+            "luck_multiplier": 0.4000000059604645,
+            "fatigue_base": 1.0,
+            "fatigue_multiplier": 0.5,
+            "hand_skill_base": 0.0,
+            "hand_skill_multiplier": 1.0,
+            "hand_strength_base": 0.0,
+            "hand_strength_multiplier": 0.75,
+            "health_minimum": 1.0,
+            "health_maximum": 15.0,
+            "hand_fatigue_multiplier": 0.5,
+            "hand_fatigue_base": 1.0,
+            "luck_base": -20
+          },
+          "actual_readers": [
+            {
+              "kind": "knocked",
+              "av": null,
+              "value": 0,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 10,
+              "value": 140,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "float",
+              "av": 10,
+              "value": 133.0,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            }
+          ],
+          "native547280_args": {
+            "skill": 10,
+            "luck": 50,
+            "strength": 40,
+            "fatigue_ratio": 0.949999988079071,
+            "knocked_word": 0,
+            "knocked_low_byte": 0,
+            "health_output": 15791304,
+            "fatigue_output": 15791340,
+            "fpcw": 127
+          }
+        },
+        "after": {
+          "return_fpcw": 127,
+          "health": 1.4094998836517334,
+          "health_bits": 1068788350,
+          "fatigue": 1.7047499418258667,
+          "fatigue_bits": 1071265087,
+          "monotonic_ns": 374526666093941
+        }
+      },
+      "scope": "Actual Player ordinary unarmed caller5FF3CA -> full547280 ->5FF41E, matched stock Dog target and Player vtables/globals. Code bytes, argument/output-pointer layout and actual getters observed; FPCW and both native output stores captured. Read-only debugger observation after normal mouse input; no forced calls or resource/state writes. Surrounding power/mitigation/contact application is outside this query snapshot."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/observed-03-sample.json",
+        "sha256": "12a07a24526ab54d7a6ff2f266a397e055f26e46007745cdf91bb234168a9315"
+      },
+      "observation": {
+        "before": {
+          "actor": 411209004,
+          "victim": 805523456,
+          "victim_ref": 4278192128,
+          "victim_base": 416664596,
+          "victim_base_id": 124405,
+          "entry_esp": 15791280,
+          "entry_fpcw": 127,
+          "thread": [
+            1060817,
+            1060817,
+            0
+          ],
+          "monotonic_ns": 374431480251938,
+          "settings": {
+            "luck_multiplier": 0.4000000059604645,
+            "fatigue_base": 1.0,
+            "fatigue_multiplier": 0.5,
+            "hand_skill_base": 0.0,
+            "hand_skill_multiplier": 1.0,
+            "hand_strength_base": 0.0,
+            "hand_strength_multiplier": 0.75,
+            "health_minimum": 1.0,
+            "health_maximum": 15.0,
+            "hand_fatigue_multiplier": 0.5,
+            "hand_fatigue_base": 1.0,
+            "luck_base": -20
+          },
+          "actual_readers": [
+            {
+              "kind": "knocked",
+              "av": null,
+              "value": 1,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 10,
+              "value": 140,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 2,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 3,
+              "value": 30,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 5,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "float",
+              "av": 10,
+              "value": 119.0,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 0,
+              "value": 40,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 7,
+              "value": 50,
+              "fpcw": 127
+            },
+            {
+              "kind": "base",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            },
+            {
+              "kind": "integer",
+              "av": 17,
+              "value": 10,
+              "fpcw": 127
+            }
+          ],
+          "native547280_args": {
+            "skill": 10,
+            "luck": 50,
+            "strength": 40,
+            "fatigue_ratio": 0.8500000238418579,
+            "knocked_word": 1,
+            "knocked_low_byte": 1,
+            "health_output": 15791304,
+            "fatigue_output": 15791340,
+            "fpcw": 127
+          }
+        },
+        "after": {
+          "return_fpcw": 127,
+          "health": 1.3884999752044678,
+          "health_bits": 1068612190,
+          "fatigue": 0.0,
+          "fatigue_bits": 0,
+          "monotonic_ns": 374431509428575
+        }
+      },
+      "scope": "Actual Player ordinary unarmed caller5FF3CA -> full547280 ->5FF41E, matched stock Dog target and Player vtables/globals. Code bytes, argument/output-pointer layout and actual getters observed; FPCW and both native output stores captured. Read-only debugger observation after normal mouse input; no forced calls or resource/state writes. Surrounding power/mitigation/contact application is outside this query snapshot."
+    }
+  ],
+  "original_cleanup": {
+    "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/cleanup.json",
+    "sha256": "a9adbb2251185583ce1131eae101cdbfad273adb931d8d753aae610820dd4872"
+  },
+  "independent_arithmetic": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-arithmetic-oracle-01/report.json",
+      "sha256": "661466ee93bfb5cc7b22fba2431a382cbf14f4ebbb789da1c7b592953ecc9822"
+    },
+    "comparison": {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-arithmetic-oracle-01/comparison-report.json",
+      "sha256": "6466de602f2f3b6a8d9b4dcb017e6816d4c2ffd895dab15fbafa5a2272525af4"
+    },
+    "profiles": 4222,
+    "before_mismatches": 288,
+    "after_mismatches": 0,
+    "frozen_rows": 190,
+    "scope": "Complete original547280/547B90/547F00 at live-confirmed007F; canonical installed settings supplied. Arithmetic evidence independent of CPP and gameplay."
+  },
+  "world_queries": "Existing NPC integer-authority/all-signed-knocked-state query now includes Fatigue133; actual Player/Creature binding repeats all256 victim states at133, verifies original output bits and immutable actor-value snapshots.",
+  "runtime": {
+    "normal": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/verification.json",
+        "sha256": "258fbd059e2d29ccb07fbf54cacb43da304cf57f7a3dab37042aaed2898b92a5"
+      },
+      "epochs": [
+        {
+          "phase": "first",
+          "process": {
+            "pid": 1083294,
+            "start_ticks": 37498809,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "aa390d0bb438351ec708813badc8534ae15b0c289e1df689a990e20ccd867ed7",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            }
+          },
+          "save_sha256": "1ef8a32adf74fcb504b4fd7f8f0943c8190b11d6d6bdf2611fc5797b28bd4052",
+          "payload_sha256": "2bd636d7dd6012525b2d30a6b3b530cb619d8ce475fba49cb45d213eec702654",
+          "damage": {
+            "process": "High",
+            "knocked": 0,
+            "current_fatigue": 140.0,
+            "observed": [
+              {
+                "controlword": 127,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              },
+              {
+                "controlword": 639,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              },
+              {
+                "controlword": 895,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              }
+            ],
+            "health": 1.4199999570846558,
+            "fatigue": 1.7100000381469727
+          },
+          "audio": {
+            "sha256": "9fe8f1d700f2930a1f5fa3b3ed972f324007811dceb0ac4a56fe3185bf469cf0",
+            "frames": 2300160,
+            "peak": 17309,
+            "rms": 353.5852007679938
+          }
+        },
+        {
+          "phase": "second",
+          "process": {
+            "pid": 1083497,
+            "start_ticks": 37505830,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "aa390d0bb438351ec708813badc8534ae15b0c289e1df689a990e20ccd867ed7",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+            }
+          },
+          "save_sha256": "676d36df5f2ff21ed466962aa39c6824760100b96d5f82319c0c15a276472688",
+          "payload_sha256": "4bc1a34f4fa1e57500587d7cd1ecd692f40f00d5a2a600402170d94de07bf88b",
+          "damage": {
+            "process": "High",
+            "knocked": 0,
+            "current_fatigue": 133.0,
+            "observed": [
+              {
+                "controlword": 127,
+                "health_bits": 1068788350,
+                "fatigue_bits": 1071265087
+              },
+              {
+                "controlword": 639,
+                "health_bits": 1068788351,
+                "fatigue_bits": 1071265088
+              },
+              {
+                "controlword": 895,
+                "health_bits": 1068788351,
+                "fatigue_bits": 1071265088
+              }
+            ],
+            "health": 1.4094998836517334,
+            "fatigue": 1.7047499418258667
+          },
+          "audio": {
+            "sha256": "883fcc5cec48071d905b05b533dc44d8280ccd881408aa8614d5b456b5033b34",
+            "frames": 3024000,
+            "peak": 18247,
+            "rms": 348.47388297509576
+          }
+        }
+      ],
+      "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. First save contains active timed knockback; second course observes expiry. Does not prove uninterrupted/restarted trajectory equality, recovery animation, all-race/native pixel parity, incoming-attack visuals or full S4 matrix. Captures separately reviewed for clear lower view and visible fists after the first-person renderer change. ASan leak checks disabled."
+    },
+    "sanitized": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/verification.json",
+        "sha256": "f11b21cd0bf7d3d378225fce43e2043a326f601ddf53ecd832be9c63bb6b6006"
+      },
+      "epochs": [
+        {
+          "phase": "first",
+          "process": {
+            "pid": 1083477,
+            "start_ticks": 37505531,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "ce8b70fe563ed637607541d12e067452c3775705308d53046229304a2ab14b62",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+              "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+              "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+            }
+          },
+          "save_sha256": "c9294d857b8865c78a965dea8ef056aa81c5198257ee00ead5da8037d4e88123",
+          "payload_sha256": "3c0569055c3740052e3ac384ab2108de75ba16b0fb3f7f4db64bb843c56c3559",
+          "damage": {
+            "process": "High",
+            "knocked": 0,
+            "current_fatigue": 140.0,
+            "observed": [
+              {
+                "controlword": 127,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              },
+              {
+                "controlword": 639,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              },
+              {
+                "controlword": 895,
+                "health_bits": 1068876431,
+                "fatigue_bits": 1071309128
+              }
+            ],
+            "health": 1.4199999570846558,
+            "fatigue": 1.7100000381469727
+          },
+          "audio": {
+            "sha256": "02db20286baaaff8e71ec2d39ab3ce754fa3d7d17c7cb9d1f52d4c5326a123f6",
+            "frames": 14513280,
+            "peak": 16204,
+            "rms": 134.89584838438606
+          }
+        },
+        {
+          "phase": "second",
+          "process": {
+            "pid": 1086246,
+            "start_ticks": 37538235,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "ce8b70fe563ed637607541d12e067452c3775705308d53046229304a2ab14b62",
+            "loaded_libraries": {
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+              "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+              "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+            }
+          },
+          "save_sha256": "be4ed4b87a35058c501caff160b50e6fbefa460ed85bc0ea94666dc6f399aba2",
+          "payload_sha256": "2787ca446160228f34281a79883b1d9a016fb70db2e5cc0f726b897e38d2d532",
+          "damage": {
+            "process": "High",
+            "knocked": 0,
+            "current_fatigue": 133.0,
+            "observed": [
+              {
+                "controlword": 127,
+                "health_bits": 1068788350,
+                "fatigue_bits": 1071265087
+              },
+              {
+                "controlword": 639,
+                "health_bits": 1068788351,
+                "fatigue_bits": 1071265088
+              },
+              {
+                "controlword": 895,
+                "health_bits": 1068788351,
+                "fatigue_bits": 1071265088
+              }
+            ],
+            "health": 1.4094998836517334,
+            "fatigue": 1.7047499418258667
+          },
+          "audio": {
+            "sha256": "54e7cadb08a2125ba56b920ec68de08d26091bc91c1cf4c4b7ab1050bb83c612",
+            "frames": 14323200,
+            "peak": 17329,
+            "rms": 141.71645244781956
+          }
+        }
+      ],
+      "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. First save contains active timed knockback; second course observes expiry. Does not prove uninterrupted/restarted trajectory equality, recovery animation, all-race/native pixel parity, incoming-attack visuals or full S4 matrix. Both current captures are reviewed separately for visible fists and clear lower view; known Dog face geometry defects remain. This new course saves completed strikes in both builds; it does not reuse the historical sanitizer residual-strike expectation. ASan leak checks disabled."
+    }
+  },
+  "normal_live_fork": {
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/sample.json",
+      "sha256": "4ce7b02021eaa38ad1c7b99bb695c77533113f16d6ef16db615e1130dadc8307"
+    },
+    "report": {
+      "passed": true,
+      "rows": [
+        {
+          "before": {
+            "input": {
+              "mSkill": 10,
+              "mLuck": 50,
+              "mStrength": 40,
+              "mFatigueRatio": 0.949999988079071,
+              "mSuppressFatigueDamage": false
+            },
+            "stack": [
+              "ESM4::handToHandDamage",
+              "ESM4::handToHandContactDamage",
+              "MWMechanics::oblivionHandToHandContactDamage",
+              "MWMechanics::resolveOblivionUnarmedMeleeContact",
+              "MWMechanics::commitOblivionMeleeContact",
+              "MWMechanics::CharacterController::dispatchOblivionMeleeContact",
+              "MWMechanics::CharacterController::update",
+              "MWMechanics::Actors::update",
+              "MWMechanics::MechanicsManager::update",
+              "OMW::Engine::frame",
+              "OMW::Engine::go",
+              "runApplication",
+              "Debug::wrapApplication",
+              "__libc_start_call_main",
+              "__libc_start_main_impl",
+              "_start"
+            ],
+            "thread": [
+              1083497,
+              1083497,
+              0
+            ]
+          },
+          "after": {
+            "health_bits": 1068788350,
+            "fatigue_bits": 1071265087,
+            "thread": [
+              1083497,
+              1083497,
+              0
+            ]
+          }
+        }
+      ],
+      "scope": "Actual ordinary second-contact handToHandDamage entry/return reached by production normal-input contact path. Read-only debugger; actual arguments and ABI output stores observed, no forced calls or resource writes."
+    },
+    "gdb_run": {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-runtime-normal-01/gdb-run.json",
+      "sha256": "630a2c408714972aa0fcd63f7420c0340ebff28cf10e35aed1c7d67b811b7a91"
+    }
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/setup-console-toggle-failure.json",
+      "sha256": "2ec9538e93cce706cbc3b2f3a4783c03ecc6368be60ec135e391dcf14fbc3778"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01/sampler-base-offset-failure.json",
+      "sha256": "88d4319975bda1c90185d73530f16db83b664b299ea8bdb9eb284feca1a0d884"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-arithmetic-oracle-01/comparison-setup-failure.json",
+      "sha256": "163a11ee1f7f203a89c04a44a82288613ea53dcc770e11f9657338dcd5bb9cef"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/unarmed-single-runtime-sanitized-01/verification-inherited-assumptions-failure.json",
+      "sha256": "238e35a61cb136ee075e20c0aa0373b225c6f9d63719b9a2125e1ee5df156bd8"
+    }
+  ],
+  "limits": [
+    "Full S4 is incomplete: native reaction/mastery RNG and consequences, directional powers, dropped identities/effects, interruption and full input/view/FPS/named restart matrices remain open.",
+    "Completed-strike restart with timed knockback; no uninterrupted/restarted recovery-trajectory equivalence established.",
+    "Only unarmed arithmetic changed; remaining physical arithmetic requires caller-accurate evidence.",
+    "Original AI disabled during setup; actual normal-input queries do not establish complete native AI, mitigation or reaction acceptance.",
+    "Current fork combat RNG remains unchanged in these bounded courses; this is not native post-contact reaction RNG parity.",
+    "Captured PCM is nonzero with sound acknowledgements; no isolated waveform or hardware hearing claim.",
+    "Four current hit captures reviewed: fists visible, no torso obstruction; known Dog face holes/lighting artifacts remain.",
+    "ASan leak checks disabled."
+  ],
+  "late_metadata_only": [
+    "Verification index, provenance, S4 delivery audit; no code or executable mutation after checks."
+  ]
+}

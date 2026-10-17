@@ -5059,3 +5059,24 @@ TEST(ESM4PhysicalCombat, ExpenditureCapsSpendingButRejectsNonnegativeRequestsAnd
         EXPECT_THROW(ESM4::fatigueExpenditureDebit(1, bad), std::invalid_argument);
     }
 }
+
+TEST(ESM4PhysicalCombat, HandDamageMatchesLiveNativeSinglePrecision)
+{
+    const ESM4::HandToHandSettings hand{0, 1, 0, .75f, 1, 15, 1, .5f};
+    struct Row { int skill, luck, strength; float ratio; bool knocked; unsigned health, fatigue; };
+    const Row rows[] = {
+#include "handdamage_expected.inc"
+    };
+    for (const auto& row : rows)
+    {
+        SCOPED_TRACE(::testing::Message() << row.skill << "," << row.luck << "," << row.strength << "," << row.ratio);
+        const auto actual = ESM4::handToHandDamage(
+            {row.skill, row.luck, row.strength, row.ratio, row.knocked}, hand, installed);
+        EXPECT_EQ(std::bit_cast<unsigned>(actual.mHealth), row.health);
+        EXPECT_EQ(std::bit_cast<unsigned>(actual.mFatigue), row.fatigue);
+    }
+    // Actual normal-input second contact, current Fatigue133/base140, standing Dog.
+    const auto live = ESM4::handToHandContactDamage({10, 50, 40, 133, 140, 0}, hand, installed);
+    EXPECT_EQ(std::bit_cast<unsigned>(live.mHealth), 1068788350u);
+    EXPECT_EQ(std::bit_cast<unsigned>(live.mFatigue), 1071265087u);
+}

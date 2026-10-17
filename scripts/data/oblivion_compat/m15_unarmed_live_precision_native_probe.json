@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "purpose": "Match full original unarmed Health/Fatigue PC24 instruction rounding in actual World contact query and ordinary-input saved-game continuation.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "live_evidence": "build/oblivion-compat/m15/S4/unarmed-fpu-original-live-01",
+  "live_phases": [
+    "fresh-first-01",
+    "fresh-second-01",
+    "observed-03"
+  ],
+  "normal_input": "Player unarmed mouse clicks against spawned stock Dog0001E5F5 after declared stat/GMST/camera setup; AI disabled with tai. Read-only GDB observes actual actor/vtables, baseForm+1C, readers,547280 arguments and output pointers. No forced calls or resource writes during observations.",
+  "controlword": 127,
+  "actual_second_contact": {
+    "skill": 10,
+    "luck": 50,
+    "strength": 40,
+    "current_fatigue": 133,
+    "base_fatigue": 140,
+    "knocked": 0,
+    "health_bits": 1068788350,
+    "fatigue_bits": 1071265087
+  },
+  "arithmetic_oracle": {
+    "completed": true,
+    "profiles": 4222,
+    "controlword": 127,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "10b5fd2be992852840fea596b53156afc410d43fdfdae21d27303a62a4f3ff2e",
+    "scope": "Full original547280 and actual547B90/547F00 callees at live-confirmed007F. Inputs and installed settings supplied; no arithmetic stubs. Direct function execution is arithmetic evidence, not gameplay or contact acceptance."
+  },
+  "frozen_rows": 190,
+  "scope": "Arithmetic and actual query precision. Surrounding native reaction RNG/mastery and full S4 delivery remain open.",
+  "retained_failures": [
+    "Console toggle setup failed then F9 reloaded pristine",
+    "Two sampler attempts excluded targets due to incorrect baseForm offset; corrected before accepted observations",
+    "Standalone comparison setup left unrelated settings fields uninitialized; discarded first comparison and reran both source versions with fully initialized settings."
+  ]
+}
