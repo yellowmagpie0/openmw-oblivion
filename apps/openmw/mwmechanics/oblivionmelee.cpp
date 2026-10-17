@@ -5,6 +5,7 @@
 #include "creaturestats.hpp"
 #include "movement.hpp"
 #include "../mwworld/oblivioncombatdata.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/world.hpp"
@@ -14,6 +15,7 @@
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
 #include "../mwworld/worldimp.hpp"
 #include <components/esm/records.hpp>
@@ -180,7 +182,8 @@ namespace MWMechanics
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
         auto* combat = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
         auto* ai = nativeWorld ? nativeWorld->getOblivionAiService() : nullptr;
-        if (!combat || !ai || actor.isEmpty() || actor.getType() != ESM::REC_NPC_4)
+        if (!combat || !ai || actor.isEmpty()
+            || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
             return false;
         const auto key = actor.getCellRef().getFormKey();
         auto& stats = actor.getClass().getCreatureStats(actor);
@@ -257,11 +260,22 @@ namespace MWMechanics
         const float placed = actor.getCellRef().getScale();
         osg::Vec3f scale(placed, placed, placed);
         actor.getClass().adjustScale(actor, scale, true);
-        float reach = ESM4::unarmedMeleeReach(scale.z(), reachSettings);
+        const bool creature = actor.getType() == ESM::REC_CREA4;
+        const auto naturalReach = creature ? actor.get<ESM4::Creature>()->mBase->mAttackReach : std::nullopt;
+        if (creature && !naturalReach)
+            throw std::invalid_argument("native stationary Creature lacks RNAM reach");
+        float reach = creature ? ESM4::creatureMeleeReach(*naturalReach,
+            actor.get<ESM4::Creature>()->mBase->mData.creatureType, scale.z(), reachSettings)
+            : ESM4::unarmedMeleeReach(scale.z(), reachSettings);
         auto& inventory = actor.getClass().getInventoryStore(actor);
         if (const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             equipped != inventory.end())
         {
+            if (creature)
+            {
+                combat->clearMeleeAiIntent(key);
+                throw std::runtime_error("native stationary Creature weapon contact is not admitted");
+            }
             const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), equipped->getCellRef().getRefId());
             const auto* form = id.getIf<ESM::FormId>();
             const auto* weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
@@ -284,13 +298,16 @@ namespace MWMechanics
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
         auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
-        if (!service || attacker.isEmpty() || attacker.getType() == ESM::REC_CREA4)
-            return std::nullopt; // Creature process/fatigue eligibility is a separate caller.
+        if (!service || attacker.isEmpty())
+            return std::nullopt;
         const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : attacker.getCellRef().getFormKey();
         if (!service->isMeleeContactPending(actionId, actor))
             return std::nullopt;
         const auto kind = service->findMeleeState(actor)->mStrike->mKind;
+        const bool creature = attacker.getType() == ESM::REC_CREA4;
+        if (creature && !service->findMeleeState(actor)->mStrike->mWeaponBase.isNull())
+            return std::nullopt; // Armed Creature multipliers/wear remain a separate caller.
         // Directional unlocked mastery consequences must join this transaction
         // before those contacts are admitted. Standing power has no proc hook.
         if (kind > ESM4::MeleeStrikeKind::StandingPower)
@@ -301,7 +318,7 @@ namespace MWMechanics
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
-        const float cost = ESM4::attackFatigueCost(weaponWeight, power,
+        const float cost = ESM4::attackFatigueCost(weaponWeight, power && !creature,
             ESM4::buildAttackFatigueSettings(settings));
         const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, selectedTarget, reach);
         if (!contact)
@@ -545,6 +562,49 @@ namespace MWMechanics
             ESM4::buildPhysicalCombatSettings(settings));
     }
 
+    ESM4::HandToHandDamage oblivionCreatureNaturalContactDamage(
+        MWBase::World& world, const MWWorld::Ptr& attacker)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || attacker.isEmpty() || attacker.getType() != ESM::REC_CREA4)
+            throw std::invalid_argument("native natural contact requires a Creature attacker");
+        // Resolve the actual binding before reading form inputs. The native
+        // TESCreature damage getter recalculates PCLevelOffset scaling on each
+        // query; the construction-time shared damage projection is insufficient.
+        const float current = service->getNonPlayerValue(attacker, 10);
+        const auto key = attacker.getCellRef().getFormKey();
+        const auto& values = *service->findActorValues(key);
+        const auto* record = world.getStore().search<ESM4::Creature>(values.mBase);
+        if (!record)
+            throw std::invalid_argument("native natural contact lacks its winning Creature form");
+        std::optional<std::uint16_t> playerLevel;
+        if (record->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset)
+        {
+            const auto player = world.getPlayerPtr();
+            if (player.isEmpty())
+                throw std::invalid_argument("scaled natural contact requires the native Player");
+            const int level = player.getClass().getCreatureStats(player).getLevel();
+            if (level < 1 || level > std::numeric_limits<std::uint16_t>::max())
+                throw std::invalid_argument("scaled natural contact has invalid Player level");
+            playerLevel = static_cast<std::uint16_t>(level);
+        }
+        const auto base = MWWorld::resolveOblivionActorBaseStats(world.getStore(), values.mBase, playerLevel);
+        if (!base.mNaturalDamage)
+            throw std::invalid_argument("native Creature lacks its damage word");
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const float ratio = ESM4::combatFatigueRatio(current,
+            service->getNonPlayerBaseValue(key, 10, world.getStore()));
+        const auto damage = ESM4::creatureNaturalDamage(*base.mNaturalDamage, ratio,
+            ESM4::buildPhysicalCombatSettings(settings));
+        return {static_cast<float>(damage), 0};
+    }
+
     float oblivionNormalizedDifficulty(int difficultySetting)
     {
         return static_cast<float>(double(std::clamp(difficultySetting, -100, 100)) / 100.0);
@@ -552,6 +612,34 @@ namespace MWMechanics
 
     namespace
     {
+        bool creatureUsesDefaultWeaponHitSound(const MWWorld::ESMStore& store, const MWWorld::Ptr& actor)
+        {
+            // Original51CEC0 follows CSCR until flag100 selects an own sound
+            // array. All installed master CREA groups lack Weapon9 entries.
+            // A custom group needs the original per-candidate RNG transition;
+            // retain an explicit unsupported boundary until that joins contact.
+            constexpr std::uint32_t ownSounds = 0x100;
+            const auto* record = actor.get<ESM4::Creature>()->mBase;
+            std::set<ESM::FormKey> seen;
+            while (!(record->mBaseConfig.tes4.flags & ownSounds))
+            {
+                if (!record->mSounds.empty())
+                    return false; // Mixed local/inherited union load precedence is unreviewed.
+                if (record->mSoundBaseKey.isNull())
+                    return true;
+                if (!seen.insert(record->mSoundBaseKey).second)
+                    throw std::invalid_argument("cyclic native Creature sound inheritance");
+                record = store.search<ESM4::Creature>(record->mSoundBaseKey);
+                if (!record)
+                    throw std::invalid_argument("missing native Creature sound inheritance base");
+            }
+            if (!record->mSoundBaseKey.isNull())
+                return false;
+            return std::none_of(record->mSounds.begin(), record->mSounds.end(), [](const auto& sound) {
+                return sound.mType == ESM4::Creature::SoundType::Weapon;
+            });
+        }
+
         float contactPowerMultiplier(MWBase::World& world, OblivionCombatService& service,
             const MWWorld::Ptr& attacker, std::uint8_t skill, ESM4::MeleeStrikeKind kind,
             std::span<const ESM4::GameSetting* const> settings)
@@ -716,8 +804,9 @@ namespace MWMechanics
         const auto eligible = [&](const MWWorld::Ptr& ptr) {
             return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
         };
-        if (!service || !eligible(attacker) || !eligible(victim))
-            return std::nullopt; // Creature Fatigue eligibility is not NPC eligibility.
+        const bool creature = !attacker.isEmpty() && attacker.getType() == ESM::REC_CREA4;
+        if ((!creature && !eligible(attacker)) || !eligible(victim))
+            return std::nullopt; // Creature victim material/reaction policy remains separate.
         const auto integer = [&](const MWWorld::Ptr& ptr, std::uint8_t av) {
             return ptr == player ? service->getPlayerIntegerValue(av)
                 : service->getNonPlayerIntegerValue(ptr, av);
@@ -727,13 +816,24 @@ namespace MWMechanics
         if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
-        auto incoming = oblivionHandToHandContactDamage(world, attacker, victim);
+        auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
+            : oblivionHandToHandContactDamage(world, attacker, victim);
+        if (creature && std::any_of(attacker.get<ESM4::Creature>()->mBase->mSpell.begin(),
+                attacker.get<ESM4::Creature>()->mBase->mSpell.end(), [](ESM::FormId spell) {
+                    return spell != ESM::FormId{};
+                }))
+            return std::nullopt; // Creature spell/contact-effect resolution must join this transaction.
+        if (creature && !creatureUsesDefaultWeaponHitSound(world.getStore(), attacker))
+            return std::nullopt;
+        if (creature && incoming.mHealth <= 0)
+            return std::nullopt; // The native nonpositive contact consequences remain unreviewed.
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
-        const float multiplier = contactPowerMultiplier(world, *service, attacker, 17, kind, settings);
+        const float multiplier = creature ? 1.f
+            : contactPowerMultiplier(world, *service, attacker, 17, kind, settings);
         // Native5FF46C stores Health and Fatigue separately after the complete
         // hand calculation, including knocked-state Fatigue suppression.
         incoming.mHealth = static_cast<float>(double(incoming.mHealth) * multiplier);

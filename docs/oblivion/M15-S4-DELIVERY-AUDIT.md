@@ -10,8 +10,8 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 | S4 item | Current source evidence | Remaining delivery work |
 | --- | --- | --- |
-| 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Creature dispatch explicitly returns before contact. Trace and verify every actor route through production input, animation and class/service ownership. |
-| 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature attacker and victim domains are rejected by these adapters. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
+| 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Spell-free, unarmed Creature ordinary strikes now reach the same contact owner through stationary AI and stock handtohand KFs. Creature victims, armed/effect-bearing sources and the complete input/view matrix remain open. Trace and verify every admitted actor route. |
+| 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Creature victims and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC hits and equipped-block sound selection are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, unarmed-only/creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
@@ -4354,3 +4354,80 @@ Dog combat, audio or normal-input Creature contact. Creature controller/contact/
 AI adapters, sound/reaction integration, nonresident flag retention without model
 reconstruction and the other controlling S4 gates remain open. Status remains
 **incomplete**.
+
+
+## Creature natural melee — bounded implementation checkpoint
+
+Spell-free, unarmed Creatures now choose an ordinary attack through the explicit
+stationary CSTY policy, play their stock handtohand group, acquire the actual
+physics/LOS target at RNAM reach, and commit native damage and capped Fatigue
+through the existing contact transaction. Creature AI identity survives typed
+save validation. Ordinary five-phase and standing-power three-phase playback
+share the existing owner; natural damage does not receive the NPC power or
+AttackBonus multiplier. The form's damage word is resolved afresh for each
+query, including current Player-level scaling; a shared construction cache is
+not authoritative. Native source/probe inputs are versioned in
+`m15_creature_natural_contact_native_probe.json`.
+
+The independent instruction experiment passes 5,120 original-executable cases,
+including default/installed Fatigue settings, PCLevelOffset, both conversion
+branches and both x87 precision words. Its dynamic cast, Player base getter and
+Fatigue ratio are declared boundaries; post-selection mitigation/effects are
+outside that probe. It does not prove original-game whole-hit acceptance.
+
+Normal and ASan/UBSan checks each pass all 1,617 engine tests in 122 suites;
+normal Python passes 313. Leak checking is disabled. Final C++ checks use
+`creature-natural-melee-main-02` / `creature-natural-melee-sanitized-03` and
+fingerprint
+`29a4879a954f8c839c693a4f80f47218c44f504833633879b26a34373566669e`.
+Final Python evidence is `creature-natural-melee-python-02`, including the
+executed manifest copies. The AV42 test-data
+correction was rebuilt and rerun in both final full engine suites.
+No component implementation changed in this checkpoint. The integration case
+covers negative/excess Fatigue, both loaded-model eligibility flags, independent
+Health/Fatigue, ignored NPC bonus/power multipliers, fresh Player-level reads,
+installed settings, AI restore and explicit unsupported spell/custom-sound paths.
+
+The editable fixture clones stock Dog stats/reach/assets/sounds/inventory,
+removes its script/packages/**SPLO**, and supplies one deterministic CSTY and
+ACRE in the unchanged master CELL. Stock Dog SPLO181D13 is an LVSP, not an
+absent SPEL. Removing it explicitly isolates physical contact; this is not an
+unchanged stock Dog gameplay claim. Structural readback and semantic byte
+preservation, clean fork compiler diagnostics, and actual runtime acceptance
+are reported separately. No TES4 editor/MCP world-validation claim is made.
+
+The normal two-process runtime course records Health 80->72->65, Creature
+Fatigue 160->153->146 and Player Fatigue 140 unchanged. One contact/action/sound
+pair occurs per epoch. F5 saves and fresh-process reconstruction preserve all
+unrelated native AVs, bases/life, combat RNG and inventories; the entire binary
+payload re-encodes byte-exactly in Python. This is completed-strike restart
+coverage. Rendered PCM is nonzero and both hit-sound requests acknowledge
+playback; it is not isolated-waveform or hardware-listening acceptance.
+Instrumented runtime results and loaded ASan/UBSan/MyGUI library identities
+are recorded in the verification index. The first continuation attempt exceeded
+the SDL focus acknowledgement deadline of 10 seconds; a fresh process reuses
+the pristine accepted first save with a declared 60-second receipt deadline.
+A successful continuation initially captured maps before libubsan loaded; the
+final retry adds a library-readiness barrier and preserves that incomplete
+snapshot rather than weakening the library-identity check.
+
+Retained attempts include a same-line GTest trace compilation defect, a mistaken
+windup contact-pending assertion, unsupported offscreen mouse action, an expected
+Health 70 derived from fallback rather than installed FatigueBase 1, and a stopped
+sanitizer build missing explicit options. Corrected tests/runtime retain these
+failures. Early Xvfb captures precede camera initialization/deferred control
+application. SDL/GDB diagnostics locate the normal previous-frame Lua bridge;
+no camera implementation change was needed. The corrected visual course waits
+for simulation-time barriers before camera setup and engagement. Normal
+`creature-natural-melee-visual-normal-12` shows the named Dog in distinct idle,
+windup and contact poses, records Health 80->72/Fatigue 160->153, and saves pitch
+1.171875. First-person torso occlusion and original pose/geometry parity remain
+open. Its 30 FPS cap is a configuration input: observed native frame increments
+are .2 seconds, not a proved 30-FPS matrix. Attempts 01-09/11 are retained
+visual/diagnostic failures; 10 proves only post-contact visibility. No accepted
+visual claim relies on screenshot entropy alone.
+
+Creature victims/materials, armed sources, spell/contact effects, custom Weapon9
+sound selection, nonpositive contact consequences, Rat power-only fallback,
+directional/mastery effects and the full interruption/view/input/FPS/restart
+matrix remain open. **S4 is incomplete.**

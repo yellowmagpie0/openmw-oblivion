@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "name": "m15-creature-natural-melee-continuation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=Oblivion.esm\ncontent=M15CreatureMelee.esp\ncontent=fatigue-no-regen.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 15\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n\n[Sound]\nmaster volume = 1\nmusic volume = 0\nvoice volume = 0\nfootsteps volume = 0\nsfx volume = 1\n[Input]\ncamera sensitivity = 1\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command player GetAV Health\nat 0 command content:m15creaturemelee.esp:000802 GetAV Fatigue\nat 1 command content:m15creaturemelee.esp:000802 StartCombat dynamic:player:0000000000000001\nat 2.3 command content:m15creaturemelee.esp:000802 StopCombat\nat 2.4 command player GetAV Health\nat 2.4 command content:m15creaturemelee.esp:000802 GetAV Fatigue\n"
+    },
+    {
+      "path": "config/alsoft.conf",
+      "content": "[general]\ndrivers=wave\nchannels=stereo\nsample-type=int16\nfrequency=48000\n[wave]\nfile={output}/rendered-audio.wav\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=GetAV result=72",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=content:m15creaturemelee.esp:000802.*fatigue_cost=7 before=153 after=146",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:m15creaturemelee.esp:000802 name=GetAV result=146",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "screenshot",
+      "name": "creature-natural-hit.png",
+      "minimum_entropy": 0.03,
+      "timeout_seconds": 300
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 creature assembled:.*dog/skeleton.nif.*fatigue_eligible=1",
+    "M15 melee hit committed: actor=content:m15creaturemelee.esp:000802.*fatigue_cost=7 before=153 after=146",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetAV result=65",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "AddressSanitizer",
+    "runtime error:"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "ALSOFT_CONF": "{output}/config/alsoft.conf",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "sdl_offscreen_input": true,
+  "sdl_input_timeout_seconds": 60
+}

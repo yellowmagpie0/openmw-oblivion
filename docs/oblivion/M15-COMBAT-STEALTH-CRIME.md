@@ -6,6 +6,58 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 Creature natural melee through production contact — 2026-10-16
+
+Spell-free, unarmed Creature attackers now use the explicit stationary CSTY
+policy, stock handtohand groups, RNAM/type/scale reach and the existing owned
+physical contact transaction. The damage getter resolves the original form's
+natural damage word for every query, including current Player-level scaling;
+shared construction damage is insufficient. Creature natural damage bypasses
+the NPC power/AttackBonus path and keeps contact Fatigue independently zero.
+Actual attack expenditure still uses loaded-model eligibility and the positive
+current cap. Creature AI identity is admitted by typed save validation.
+
+The independent, hash-bound original-instruction probe passes 5,120 cases across
+scaling, word wrapping, default/installed Fatigue settings, both conversion
+branches and both x87 precision words. Dynamic cast, Player base and Fatigue
+ratio inputs are declared boundaries; whole original-game hits and post-selection
+mitigation/effects are not established by that probe.
+
+Both final full engine suites pass 1,617 tests in 122 suites, with exact
+inventories and no failures/skips. ASan leak checks are disabled and UBSan halts.
+Final Python passes 313 tests with the executed manifest copies. Corrected AV42 test data was rebuilt and run in both full
+engine suites. Their shared tested source fingerprint is
+`29a4879a954f8c839c693a4f80f47218c44f504833633879b26a34373566669e`.
+Evidence: `S4/creature-natural-melee-main-02`,
+`creature-natural-melee-sanitized-03`, and final Python in `creature-natural-melee-python-02`.
+
+The editable fixture preserves Dog stats, reach, assets, inventory and sounds,
+removes scripts/packages/SPLO, and supplies a deterministic style and one ACRE
+in the unchanged master CELL. Stock SPLO181D13 is LVSP/LL0DiseaseDog10; removing
+it explicitly isolates physical behavior. Structural readback, semantic byte
+preservation, clean fork compiler diagnostics and engine acceptance remain
+separate layers. No TES4 editor/MCP validation is implied.
+
+Normal completed-strike save/quit/fresh-process courses produce Health 80->72->65
+and Creature Fatigue 160->153->146, with Player Fatigue 140 unchanged, one hit per
+epoch and no replay. Complete C++ payloads re-encode byte-exactly in Python;
+unrelated native AVs, bases/life, combat RNG and inventories are preserved.
+Instrumented runtime and exact process/library identities are recorded in
+[M15-CREATURE-NATURAL-MELEE-VERIFICATION.json](M15-CREATURE-NATURAL-MELEE-VERIFICATION.json).
+Nonzero rendered PCM and exact sound-manager acknowledgements are qualified
+separately from isolated waveform/hardware hearing acceptance.
+
+The normal Xvfb camera-first course shows the named Dog in distinct idle,
+windup and contact poses and records the same single 8-point Health/7-point
+Fatigue delta. Camera setup waits for simulation barriers rather than an early
+capture of deferred input. First-person torso occlusion, original pose parity
+and the actual FPS matrix remain open; a 30 FPS cap is only configuration.
+The [S4 audit](M15-S4-DELIVERY-AUDIT.md#creature-natural-melee--bounded-implementation-checkpoint)
+and verification index retain failed attempts and the remaining domains.
+Creature victims, armed/effect-bearing sources, custom Weapon9 sounds,
+nonpositive contacts, power-only fallback, directional/mastery and complete
+interruption/input/view/restart campaigns remain required. **S4 is incomplete.**
+
 ## S4 admitted physical target world poses — 2026-10-16
 
 Loose physics now exposes the actual target's rigid native scene/world pose

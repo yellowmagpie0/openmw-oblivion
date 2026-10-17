@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent original Creature natural contact and fresh PCLevelOffset damage selection; bounded instruction experiment, not gameplay acceptance",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "instruction_ranges": {
+    "zero_initialization": [
+      "0x5ff351",
+      "0x5ff363"
+    ],
+    "unarmed_selection": [
+      "0x5ff38a",
+      "0x5ff519"
+    ]
+  },
+  "actual_calls": {
+    "creature_damage": "0x624f90",
+    "base_lookup": "0x5e02e0",
+    "damage_component_dispatch": "0x468a10",
+    "TESCreature_damage_getter": "0x51c980",
+    "fresh_player_level": "0x4677f0",
+    "fatigue_factor": [
+      "0x547f00",
+      "0x546b00"
+    ],
+    "integer_conversion": "0x9828c0"
+  },
+  "damage_component": {
+    "vtable": "0xa530dc",
+    "locator": "0xabe08c",
+    "subobject_offset": "0xe4",
+    "slot": "0x10",
+    "RTTI": ".?AVTESCreature@@"
+  },
+  "boundaries": {
+    "0x9832e6": "Assert exact RTTI arguments and supply declared TESCreature damage subobject +E4",
+    "player_virtual_0x170": "Supply declared Player base form",
+    "0x5f4880": "Supply declared float32 Fatigue ratio"
+  },
+  "outside_probe": [
+    "Preselection gaps",
+    "All mitigation/effects after0x5ff519",
+    "Original whole-hit animation/audio/gameplay"
+  ],
+  "matrix": {
+    "raw_damage": [
+      0,
+      1,
+      8,
+      65535
+    ],
+    "signed_offset": [
+      -1,
+      0,
+      1,
+      7
+    ],
+    "player_level": [
+      0,
+      11
+    ],
+    "scaled": [
+      false,
+      true
+    ],
+    "fatigue_ratio": [
+      0,
+      0.25,
+      1,
+      2,
+      0.95625
+    ],
+    "power": [
+      false,
+      true
+    ],
+    "CPU_conversion_branch": [
+      0,
+      1
+    ],
+    "x87_control_word": [
+      "0x27f",
+      "0x37f"
+    ],
+    "fatigue_base": [
+      1,
+      1.25
+    ],
+    "fatigue_multiplier": 0.5,
+    "creature_damage_level_multiplier": 1
+  },
+  "expected_observations": 5120,
+  "fixed_damage_word": "raw_damage",
+  "scaled_damage_word": "uint16(raw_damage + max(1, signed_offset + player_level))",
+  "contact_health": "float32(truncate(float32(prepared_damage * float32(fatigue_base - .5 * (1 - fatigue_ratio)))))",
+  "contact_fatigue": 0,
+  "NPC_power_multiplier_applies": false,
+  "installed_runtime_expectations": [
+    {
+      "current_fatigue": 160,
+      "base_fatigue": 160,
+      "natural_damage_word": 8,
+      "fatigue_base": 1,
+      "health_damage": 8,
+      "contact_fatigue": 0,
+      "attack_fatigue_cost": 7
+    },
+    {
+      "current_fatigue": 153,
+      "base_fatigue": 160,
+      "natural_damage_word": 8,
+      "fatigue_base": 1,
+      "health_damage": 7,
+      "contact_fatigue": 0,
+      "attack_fatigue_cost": 7
+    }
+  ],
+  "evidence": "build/oblivion-compat/m15/S4/native-creature-natural-contact-oracle-03/report.json"
+}

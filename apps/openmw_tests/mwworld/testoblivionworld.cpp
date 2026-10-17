@@ -6468,6 +6468,126 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, actor, player), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, CreatureNaturalContactUsesNativeWordAndIndependentFatigueDamage)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+        world.setupPlayer();
+        ESM4::Npc native{}; native.mId = {7, 1};
+        native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7); native.mIsTES4 = true;
+        native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr();
+        auto& service = *world.getOblivionCombatService();
+        ESM4::Creature creature{}; creature.mId = {0x830, 0};
+        creature.mFormKey = ESM::FormKey::content("headless.esm", 0x830);
+        creature.mAttackReach = 50; creature.mBaseConfig.tes4.levelOrOffset = 1;
+        creature.mBaseConfig.tes4.fatigue = 160; creature.mData.health = 20; creature.mData.damage = 8;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{}; reference.mId = {0x930, 0};
+        reference.mFormKey = ESM::FormKey::content("headless.esm", 0x930);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr actor(cell.insert(&live), &cell);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& projection = actor.getRefData().getCustomData()->asESM4CreatureCustomData();
+        projection.mNativeDamage = 0; // A stale shared projection cannot supply native damage.
+        struct Case { float current; float health; };
+        const Case cases[] = {{-320, -2}, {-160, 2}, {0, 6}, {40, 7}, {160, 10}, {320, 14}};
+        for (const bool eligible : {false, true})
+        for (const auto& [current, health] : cases)
+        {
+            SCOPED_TRACE(eligible);
+            SCOPED_TRACE(current);
+            actor.getRefData().setOblivionCanSpendFatigue(eligible);
+            auto values = *service.findActorValues(reference.mFormKey);
+            const float delta = current - 160;
+            values.mValues[10] = {160, {0.f, delta > 0 ? delta : 0.f, delta < 0 ? delta : 0.f}};
+            values.mValues[42].mModifiers[1] = 1000; // AttackBonus is outside Creature+34C.
+            service.publishNonPlayerValues(actor, values);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            const auto result = MWMechanics::oblivionCreatureNaturalContactDamage(world, actor);
+            EXPECT_EQ(result.mHealth, health); EXPECT_EQ(result.mFatigue, 0);
+            EXPECT_EQ(projection.mNativeDamage, 0);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                const auto contact = MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false, kind);
+                if (health <= 0)
+                {
+                    EXPECT_FALSE(contact);
+                }
+                else
+                {
+                    ASSERT_TRUE(contact); EXPECT_EQ(contact->mHealth, health); EXPECT_EQ(contact->mFatigue, 0);
+                }
+            }
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        }
+        auto values = *service.findActorValues(reference.mFormKey);
+        values.mValues[10] = {160, {0.f, 0.f, 0.f}};
+        service.publishNonPlayerValues(actor, values);
+        auto scaled = creature;
+        scaled.mBaseConfig.tes4.flags = ESM4::Creature::TES4_PCLevelOffset;
+        scaled.mBaseConfig.tes4.levelOrOffset = 0;
+        store.getWritable<ESM4::Creature>().insertStatic(scaled, scaled.mFormKey);
+        player.getClass().getCreatureStats(player).setLevel(7);
+        const auto originalValues = *service.findActorValues(reference.mFormKey);
+        // Original form getter: word(8 + current Player level7 * default1),
+        // then float(15 * 1.25), truncate18. The construction cache stays0.
+        EXPECT_EQ(MWMechanics::oblivionCreatureNaturalContactDamage(world, actor).mHealth, 18);
+        player.getClass().getCreatureStats(player).setLevel(11);
+        EXPECT_EQ(MWMechanics::oblivionCreatureNaturalContactDamage(world, actor).mHealth, 23);
+        EXPECT_EQ(*service.findActorValues(reference.mFormKey), originalValues);
+        EXPECT_EQ(projection.mNativeDamage, 0);
+        // Installed master overrides the compiled 1.25 fatigue base with1.
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::GameSetting fatigueBase{}; fatigueBase.mId = {0x881, 0};
+        fatigueBase.mEditorId = "fFatigueBase"; fatigueBase.mData = 1.f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(fatigueBase,
+            ESM::FormKey::content("headless.esm", 0x881));
+        EXPECT_EQ(MWMechanics::oblivionCreatureNaturalContactDamage(world, actor).mHealth, 8);
+        values.mValues[10] = {160, {0.f, 0.f, -7.f}};
+        service.publishNonPlayerValues(actor, values);
+        EXPECT_EQ(MWMechanics::oblivionCreatureNaturalContactDamage(world, actor).mHealth, 7);
+        ESM4::CombatStyle style{}; style.mId = {0x880, 0}; style.mStandard.emplace();
+        style.mStandard->mAttackChance = 100; style.mStandard->mFlags = 34;
+        style.mStandard->mDoNotAcquire = true;
+        const auto styleKey = ESM::FormKey::content("headless.esm", 0x880);
+        store.getWritable<ESM4::CombatStyle>().insertStatic(style, styleKey);
+        creature.mCombatStyle = style.mId;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        ASSERT_TRUE(service.engage(reference.mFormKey, playerKey));
+        ASSERT_NO_THROW(service.setMeleeAiIntent(reference.mFormKey, {playerKey, styleKey}, store));
+        const auto strike = service.beginMeleeStrike(reference.mFormKey, ESM4::MeleeStrikeKind::Left,
+            "handtohandattackleft");
+        auto saved = captureNativeActorState(fixture, actor);
+        MWMechanics::OblivionCombatService restored;
+        ASSERT_NO_THROW(restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), store));
+        ASSERT_TRUE(restored.findMeleeState(reference.mFormKey)->mAiIntent);
+        EXPECT_EQ(restored.findMeleeState(reference.mFormKey)->mAiIntent->mTarget, playerKey);
+        EXPECT_TRUE(restored.isActionPending(strike, reference.mFormKey));
+        EXPECT_FALSE(restored.isMeleeContactPending(strike, reference.mFormKey)); // Still in windup.
+        creature.mSpell.push_back({0x999, 0});
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false,
+            ESM4::MeleeStrikeKind::Left));
+        creature.mSpell.clear(); creature.mBaseConfig.tes4.flags = 0x100;
+        creature.mSounds.push_back({ESM4::Creature::SoundType::Weapon, {0x999, 0},
+            ESM::FormKey::content("headless.esm", 0x999), 100});
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false,
+            ESM4::MeleeStrikeKind::Left));
+        EXPECT_THROW(MWMechanics::oblivionCreatureNaturalContactDamage(world, player), std::invalid_argument);
+        EXPECT_THROW(MWMechanics::oblivionCreatureNaturalContactDamage(world, {}), std::invalid_argument);
+    }
+
     TEST(OblivionWorldTest, NativeArmorQueryReadsDefenseAuthorityWithoutProjectedItemRatings)
     {
         NativeWorldFixture fixture;

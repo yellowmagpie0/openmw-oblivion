@@ -15114,3 +15114,43 @@ compilation, semantic inspection and runtime acceptance are recorded separately
 from structural readback. This checkpoint establishes resident model eligibility
 and command/reload behavior. Creature contact/audio/reaction integration and
 nonresident flag retention without reconstruction remain open, as does full S4.
+
+
+### Creature natural contact reads fresh form damage
+
+Pinned original1.2.0416 executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes zero initialization5FF351..363 and unarmed selection5FF38A..519.
+Creature+34C624F90, base lookup5E02E0 and damage dispatch468A10 select the
+TESCreature damage component: vtableA530DC, locatorABE08C, subobject offsetE4,
+slot+10->51C980, RTTI`.?AVTESCreature@@`. The actual getter invokes4677F0
+on each PCLevelOffset query (ACBS flag80), reads current Player base level,
+floors effective signed level to1, adds level*fCreatureCalcDamage to the raw
+damage and returns the wrapped uint16 word. Cached construction damage is not
+authoritative after Player-level changes.
+
+Original547F00/546B00 and9828C0 then select integer natural Health damage;
+Fatigue remains independently initialized zero. Creature natural damage bypasses
+the NPC power/AttackBonus path. Probe03 passes 5,120 cases crossing raw words,
+signed offsets, Player levels, scaling, five Fatigue ratios, power, BAABE0
+conversion branches, x87 words27F/37F and FatigueBase1/1.25. Dynamic cast9832E6
+asserts exact arguments and supplies base+E4; Player virtual+170 and
+FatigueRatio5F4880 are supplied boundaries. Preselection gaps and mitigation/
+effects after519 are outside the probe. Probe01/02 and their narrower matrices
+remain retained. Editable protocol:
+`scripts/data/oblivion_compat/m15_creature_natural_contact_native_probe.json`.
+Evidence: `S4/native-creature-natural-contact-oracle-03/report.json`.
+
+Installed fFatigueBase1/fFatigueMult.5 give stock-derived Dog word8 Health8
+at Fatigue160/160, then Health7 at153/160, with contact Fatigue0. The ordinary
+attack debit is separately7 and uses the loaded-model eligibility/cap rule.
+The clone removes stock SPLO181D13 (LVSP), scripts and packages and supplies
+an explicit stationary style; it does not model disease/contact effects. All
+17 installed BSAs contain these three Dog attack KFs only in the base Meshes
+archive, with no loose canonical overrides: leftSHA7f8bfa9eb732952f96eb75f25bb8f04551558e284b2b39340a2822ff53e4a413,
+rightSHA4c8b3f531e5b49fbf0d0d148ad57f93e7dc8b05abd1c4f9dafa8e25300a0bbb5,
+powerSHA08f1247a9ee21ff3968f6314e1e4e4710f973a5fc1c2e0899403ab8bfad4ddec.
+This resolves KF overlap independently of the two differing installed Dog NIFs.
+The integration/verification index and S4 audit state the runtime boundaries;
+no original whole-hit gameplay, visible Dog, or full S4 claim follows from this
+instruction experiment.

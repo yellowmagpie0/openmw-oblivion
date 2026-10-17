@@ -84,6 +84,12 @@ namespace MWMechanics
     ESM4::HandToHandDamage oblivionHandToHandContactDamage(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim);
 
+    // Creature +34C reads the current form's scaled damage word, applies its
+    // Fatigue factor, truncates to integer, then returns floating Health damage.
+    // It writes no hand-to-hand Fatigue damage and has no NPC power multiplier.
+    ESM4::HandToHandDamage oblivionCreatureNaturalContactDamage(
+        MWBase::World& world, const MWWorld::Ptr& attacker);
+
     // Read-only ordinary unarmed hit policy. Unsupported contact branches
     // return nullopt; malformed or missing authority is diagnosed. Geometry
     // and owned-action admission remain the contact caller's responsibility.

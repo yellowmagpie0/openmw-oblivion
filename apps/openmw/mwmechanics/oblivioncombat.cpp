@@ -1286,11 +1286,11 @@ namespace MWMechanics
             || values->mBase != life->mBase || life->mPhase != ESM4::ActorLifePhase::Alive
             || !targetValues || !targetLife || targetValues->mBase != targetLife->mBase
             || targetLife->mPhase != ESM4::ActorLifePhase::Alive || !isInCombatWith(actor, intent.mTarget))
-            throw std::invalid_argument("native melee AI requires Alive NPC and engaged target authority");
-        if (nonPlayerContentIsCreature(*values, store)
-            || MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
+            throw std::invalid_argument("native melee AI requires Alive nonplayer and engaged target authority");
+        nonPlayerContentIsCreature(*values, store); // Validate the actual winning actor kind.
+        if (MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
                 MWWorld::buildOblivionCombatDefaults(store)).mStyle != intent.mStyle)
-            throw std::invalid_argument("native melee AI style does not match winning NPC content");
+            throw std::invalid_argument("native melee AI style does not match winning actor content");
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end() && found->second.mAiIntent == intent)
             return;
@@ -4415,10 +4415,12 @@ namespace MWMechanics
             {
                 const auto values = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
                     [&](const auto& actor) { return actor.mActor == owner; });
-                if (values == state.mNativeActorValues.end() || nonPlayerContentIsCreature(*values, store)
-                    || MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
+                if (values == state.mNativeActorValues.end())
+                    throw std::invalid_argument("restored native melee AI lacks actor authority");
+                nonPlayerContentIsCreature(*values, store);
+                if (MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
                         MWWorld::buildOblivionCombatDefaults(store)).mStyle != melee.mAiIntent->mStyle)
-                    throw std::invalid_argument("restored native melee AI style does not match winning NPC content");
+                    throw std::invalid_argument("restored native melee AI style does not match winning actor content");
             }
         restore(state);
     }

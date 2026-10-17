@@ -63,6 +63,7 @@
 #include "../mwworld/oblivionactorstats.hpp"
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadcrea.hpp>
 #include "aicombataction.hpp"
 #include "creaturestats.hpp"
 #include "movement.hpp"
@@ -1422,8 +1423,7 @@ namespace MWMechanics
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
             ? world->getOblivionCombatService() : nullptr;
-        if (!service || !mOblivionRenderedStrike || mSkipAnim || !mAnimation
-            || mPtr.getType() == ESM::REC_CREA4)
+        if (!service || !mOblivionRenderedStrike || mSkipAnim || !mAnimation)
             return;
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
@@ -1454,9 +1454,18 @@ namespace MWMechanics
         const float placed = mPtr.getCellRef().getScale();
         osg::Vec3f scale(placed, placed, placed);
         mPtr.getClass().adjustScale(mPtr, scale, true);
+        const bool creature = mPtr.getType() == ESM::REC_CREA4;
+        if (creature && weapon)
+            return; // Armed Creature contact has a separate native multiplier path.
+        const auto* natural = creature ? mPtr.get<ESM4::Creature>()->mBase : nullptr;
+        if (natural && !natural->mAttackReach)
+            return;
         const float reach = weapon ? ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings)
+            : natural ? ESM4::creatureMeleeReach(*natural->mAttackReach,
+                natural->mData.creatureType, scale.z(), reachSettings)
             : ESM4::unarmedMeleeReach(scale.z(), reachSettings);
-        const float cost = ESM4::attackFatigueCost(weaponWeight, strike.mKind >= ESM4::MeleeStrikeKind::StandingPower,
+        const float cost = ESM4::attackFatigueCost(weaponWeight,
+            !creature && strike.mKind >= ESM4::MeleeStrikeKind::StandingPower,
             ESM4::buildAttackFatigueSettings(settings));
         const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
             ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
@@ -1572,11 +1581,6 @@ namespace MWMechanics
         }
         const auto strike = *state->mStrike;
         const bool power = strike.mKind >= ESM4::MeleeStrikeKind::StandingPower;
-        if (mPtr.getType() == ESM::REC_CREA4)
-        {
-            service->advanceAnimationClock(actor, duration);
-            return;
-        }
         const auto metadata = nativeMeleePlayback(*mAnimation, strike.mAnimationGroup, power);
         if (!metadata || mOblivionRenderedStrike != strike.mActionId)
         {
@@ -1767,7 +1771,8 @@ namespace MWMechanics
             return false;
         }
         MWWorld::Ptr weapon;
-        std::string family = mPtr.getType() == ESM::REC_CREA4 ? "" : "handtohand";
+        const bool creature = mPtr.getType() == ESM::REC_CREA4;
+        std::string family = "handtohand";
         ESM::FormKey weaponBase;
         float speed = 1;
         int weaponType = ESM::Weapon::HandToHand;
@@ -1777,6 +1782,11 @@ namespace MWMechanics
             auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             if (equipped != inventory.end())
             {
+                if (creature)
+                {
+                    interrupt();
+                    return false;
+                }
                 weapon = *equipped;
                 const auto id = MWWorld::OblivionProfileServices::nativeItemId(
                     world->getStore(), weapon.getCellRef().getRefId());
@@ -1974,7 +1984,6 @@ namespace MWMechanics
                 bool nativeKeysValid = true;
                 std::optional<NativeMeleePlayback> nativePlayback;
                 float nativeEase = 0;
-                if (mPtr.getType() != ESM::REC_CREA4)
                 {
                     nativePlayback = nativeMeleePlayback(*mAnimation, group,
                         *selected >= ESM4::MeleeStrikeKind::StandingPower);

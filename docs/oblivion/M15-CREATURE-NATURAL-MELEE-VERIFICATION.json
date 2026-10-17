@@ -1,0 +1,415 @@
+{
+  "schema_version": 1,
+  "status": "bounded Creature natural melee integrated and tested; full M15S4 remains incomplete",
+  "source_parent_commit": "582b5f33127d3130c3f69405b451f24ff063b3b2",
+  "tested_Cpp_source_fingerprint": "29a4879a954f8c839c693a4f80f47218c44f504833633879b26a34373566669e",
+  "source_sha256": {
+    "apps/openmw/mwmechanics/character.cpp": "56f9bb843ad41402888ff97959e3c30c4f10844e1a68271327f1328a7dafa1ae",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "f0aeb04d0efd2cf29e5f17b9573f97844f9d27bfc565a14e5f156ffff19b830b",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "f8b99a4a73d0b4b8fe4399cab8bd4d77088670d1ad9fd720ff84fa3323dd0397",
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": "bbe5399676763a879ae99e2827f2f9dff751ad24976c45758e9f7a912909f05d",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "1c46ecfef8d0d466d1da8f468105a13e62ecf249c8ecdcd8ca1c56e178dada2d",
+    "scripts/tes4_m15_creature_melee_fixture.py": "470f904a59a31b50394f7b01860bba071e62f86c55e36ceb4c79dde3dfa9cb39",
+    "scripts/tests/test_tes4_m15_creature_melee_fixture.py": "326c8d1b77e9dc5dfb192705471de6250fdcba427f218841cc780111e7c1a8e7",
+    "scripts/data/oblivion_compat/m15_creature_melee_fixture.json": "3e443fbd00eb1f4eef86977f8fc4000c1c7bfcf8a0bd57705c9491c051a2bd68",
+    "scripts/data/oblivion_compat/m15_creature_natural_contact_native_probe.json": "517e4533f6d5be08b4a68b202cc34e7899c843b797faed427b4bca5c24c8e7e2",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_natural_melee.json": "68a9fee21802b9df5600f2e4aed120f1491e9816d2d18aed1458c0f1954098f9",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_natural_melee_continuation.json": "f82392001614343d6de3adf2a4ed3503dcc83ee3b9d39e289462805edb4128e4",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_natural_melee_sanitized.json": "5a685b68d2e611597859d7b8be4c30a665723cd1ee20bd534438a4cf1e424400",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_natural_melee_sanitized_continuation.json": "a0e61d2364904166191aa7f72b7dd633eda83a716f9e1da7baeff09ab2866403",
+    "scripts/data/oblivion_compat/oblivion_m15_creature_natural_melee_visible.json": "f237a90b5777cb0e978fa60bfaad3e556d3dfe1cdfcd10a7e341215a6a89c372"
+  },
+  "late_metadata_only": [
+    "verification/provenance/milestone/delivery audit",
+    "executed sanitizer receipt-timeout and visible-course manifest copies"
+  ],
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-main-02/verification.json",
+      "sha256": "0db63d521fd6deac5a04d1e8aefe1b02ef2bdafa76690d7aeb5d02140b6233ee",
+      "source": {
+        "head": "582b5f33127d3130c3f69405b451f24ff063b3b2",
+        "source_fingerprint": "29a4879a954f8c839c693a4f80f47218c44f504833633879b26a34373566669e"
+      },
+      "selection": {
+        "executed": 1617,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0593357b06bccf257c6b0f3233fad430c3ecd6640af69736a0c46b78f08d3a8f",
+        "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+        "xml_sha256": "b4126dd8742fe4fb9c233e148cf2aaa14010f6dbb5817f55082fa82fd5734be7",
+        "inventory_sha256": "06f4be4e363f9cc8ac156491d59abda16680d879d94fcef95493e488f9e3da1d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-sanitized-03/verification.json",
+      "sha256": "1acee1847729cd7fb6a02cd17c94720e43694807e70b1bb86ac3828f05abe385",
+      "source": {
+        "head": "582b5f33127d3130c3f69405b451f24ff063b3b2",
+        "source_fingerprint": "29a4879a954f8c839c693a4f80f47218c44f504833633879b26a34373566669e"
+      },
+      "selection": {
+        "executed": 1617,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "b01e996fc88d0c2efee7275773fd2fc9da09225e5002668f5247610b68c5b2b9",
+        "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+        "xml_sha256": "5ea6cc5cbeaff90f90fd994604090d70e8f67a200912b12a5fd5ea3cc23da46a",
+        "inventory_sha256": "06f4be4e363f9cc8ac156491d59abda16680d879d94fcef95493e488f9e3da1d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "python": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-python-02/verification.json",
+      "sha256": "7014334ed9c67014e9927976c71afe76ee31c40ad932a0468f665b7c8330172b",
+      "source": {
+        "head": "582b5f33127d3130c3f69405b451f24ff063b3b2",
+        "source_fingerprint": "02cd89a911ee39537c5b9d201d2eb78e43d737ca2e4fac3d647ec1bf4e73f81d"
+      },
+      "selection": {
+        "executed": 313,
+        "passed": true,
+        "log_sha256": "fd97f6a6124f6c7d64c4f6c05ed37f0a3f30dda68d7efdc5282c979c44be0b08"
+      }
+    }
+  },
+  "native_oracle": {
+    "path": "build/oblivion-compat/m15/S4/native-creature-natural-contact-oracle-03/report.json",
+    "sha256": "1583568265ab552d213e40354986d383ce932024fe1bc3331bee4bffd1ea661d",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "observations": 5120,
+    "scope": "Concatenated original zero initialization5FF351..363 and unarmed selection/contact5FF38A..519, actual Creature+34C624F90, actual form lookup5E02E0, actual damage getter468A10 and TESCreature component vtableA530DC+10->51C980, level4677F0, fatigue547F00/546B00 and9828C0. Cast9832E6 returns declared TESCreature damage subobject+E4; player base getter and Fatigue ratio5F4880 supplied. Source damage scaling is read fresh from form/player-level inputs each invocation. Prefix gaps before unarmed selection and all post519 mitigation/effects are outside probe.",
+    "editable_protocol": "scripts/data/oblivion_compat/m15_creature_natural_contact_native_probe.json",
+    "comparison_limit": "5120 original instruction cases; C++ integration uses independent literal boundaries/scaling/installed-setting expectations, not a claim that all5120 were replayed through the engine."
+  },
+  "fixture": {
+    "path": "build/oblivion-compat/m15/S4/creature-natural-melee-assets-02/M15CreatureMelee.esp",
+    "sha256": "4617d34442c1a18dcf43cd9ebc50446d532dae98d81697e54cea5e3fefc37282",
+    "structural_report": {
+      "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "sha256": "4617d34442c1a18dcf43cd9ebc50446d532dae98d81697e54cea5e3fefc37282",
+      "record_count": 4,
+      "script_count": 0,
+      "creature_fields_changed": [
+        "EDID",
+        "FULL",
+        "PKID",
+        "SCRI",
+        "SPLO",
+        "ZNAM"
+      ],
+      "stats_and_assets_preserved": true,
+      "style": {
+        "standard_size": 124,
+        "standard": {
+          "dodge_chance": 0,
+          "left_right_chance": 0,
+          "dodge_lr_min": 0.0,
+          "dodge_lr_max": 0.0,
+          "dodge_forward_min": 0.0,
+          "dodge_forward_max": 0.0,
+          "dodge_back_min": 0.0,
+          "dodge_back_max": 0.0,
+          "idle_min": 0.0,
+          "idle_max": 0.0,
+          "block_chance": 0,
+          "attack_chance": 100,
+          "attack_recoil_bonus": 0.0,
+          "attack_unconscious_bonus": 0.0,
+          "attack_unarmed_bonus": 0.0,
+          "power_attack_chance": 0,
+          "power_recoil_bonus": 0.0,
+          "power_unconscious_bonus": 0.0,
+          "power_normal": 0,
+          "power_forward": 0,
+          "power_back": 0,
+          "power_left": 0,
+          "power_right": 0,
+          "hold_min": 0.0,
+          "hold_max": 0.0,
+          "flags": 34,
+          "acrobatic_chance": 0,
+          "optimal_range_multiplier": 1.0,
+          "maximum_range_multiplier": 1.0,
+          "melee_switch_distance": 250.0,
+          "ranged_switch_distance": 1000.0,
+          "buff_standoff": 325.0,
+          "ranged_standoff": 500.0,
+          "group_standoff": 325.0,
+          "rush_chance": 1,
+          "rush_distance_multiplier": 1.0,
+          "do_not_acquire": true
+        },
+        "advanced": null
+      },
+      "runtime_accepted": false
+    },
+    "source_semantics": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-assets-02/source-spell-audit.json",
+      "sha256": "23b9aa15a6f52056576f5d1a4b75c97c02f9c9b8fd0649beed6c633ba274abc3"
+    },
+    "compiler_validation": "No authored scripts; actual game report has zero compilation failures and diagnostics. This is not editor/compiler/world validation via OpenMW-CS MCP.",
+    "runtime_acceptance": "Separate accepted runtime reports below; generator runtime_accepted false is structural artifact metadata."
+  },
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/verification.json",
+      "sha256": "54c94afc8e9e5add0347258ee6a3731ea5c2c785ab35ed30896834278fef94c7",
+      "verified": {
+        "passed": true,
+        "scope": "Spell-free stock-derived Dog stationary production AI/controller/ordinary animation/contact, exactly one physical hit per epoch, F5 save and fresh-process restore followed by a second hit. Installed fatigue settings give8 then7 Health damage. Creature fatigue160->153->146; victim Fatigue140 unchanged. Complete C++ save payload re-encodes byte-exactly in Python. Unrelated native AVs, life/bases, combat RNG and saved inventories preserved. This is completed-strike restart coverage, not mid-strike or full S4 acceptance. Room capture does not establish visible Dog; audio coverage is qualified separately.",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/first/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "save_sha256": "00627140bf68a64671ef40c8c8d5a21bd35e07ff19b03e5cdb9c03b334901b46",
+            "payload_sha256": "0bb95860a6cdde0f9b4e513028bc9766ad6b3e71902b27be6d0c3ebae91cb208",
+            "fatigue_before": 160,
+            "fatigue_after": 153,
+            "health_damage": 8,
+            "process_epoch": {
+              "pid": 935660,
+              "start_ticks": 35270148,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/first/config",
+                "--no-grab"
+              ],
+              "executable_sha256": "3ce41b5d87846bec0946a1cff70bee20499b42fbad169a3b551fd633901852fc",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "audio": {
+              "sha256": "4b38273c91ba2960c97fda04a053772d8605bef721020daa9347e716311a4291",
+              "frames": 1416960,
+              "peak": 18605,
+              "rms": 433.8095702519975,
+              "scope": "Nonzero rendered PCM and two exact sound-manager acknowledgements; no subjective hearing or isolated hit-waveform equivalence claim."
+            }
+          },
+          {
+            "phase": "second",
+            "save": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "39de167fe7c1250a5077683442806009923a8c556c19dcfecd3aeb8ff0f920c3",
+            "payload_sha256": "c141384b38f5ee6a068a2a40b2f7cc99b17ca3b3621a721e1bea7d3eb4927b04",
+            "fatigue_before": 153,
+            "fatigue_after": 146,
+            "health_damage": 7,
+            "process_epoch": {
+              "pid": 936156,
+              "start_ticks": 35274773,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "3ce41b5d87846bec0946a1cff70bee20499b42fbad169a3b551fd633901852fc",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+              }
+            },
+            "audio": {
+              "sha256": "60eff7c41d8af73ec3b383e2bd356e24d747ce7416e275e1b412077e5959217e",
+              "frames": 2120640,
+              "peak": 18773,
+              "rms": 351.71820126708536,
+              "scope": "Nonzero rendered PCM and two exact sound-manager acknowledgements; no subjective hearing or isolated hit-waveform equivalence claim."
+            }
+          }
+        ]
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/verification.json",
+      "sha256": "dde45568544ab6b3edc555e222241f1d5f638e82178f68cfda35eab305a11561",
+      "verified": {
+        "passed": true,
+        "scope": "Spell-free stock-derived Dog stationary production AI/controller/ordinary animation/contact, exactly one physical hit per epoch, F5 save and fresh-process restore followed by a second hit. Installed fatigue settings give8 then7 Health damage. Creature fatigue160->153->146; victim Fatigue140 unchanged. Complete C++ save payload re-encodes byte-exactly in Python. Unrelated native AVs, life/bases, combat RNG and saved inventories preserved. This is completed-strike restart coverage, not mid-strike or full S4 acceptance. Room capture does not establish visible Dog; audio coverage is qualified separately.",
+        "epochs": [
+          {
+            "phase": "first",
+            "save": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/first/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+            "save_sha256": "e03c60ccc0f156cd247a0c260d8366b8a3eb3a5325e0c7d91fc7b64e528593ef",
+            "payload_sha256": "451fbc8cc4a4941ccedaadd2a295b8a2f5cdce0b3495222ba5842b7dc3f3d8c0",
+            "fatigue_before": 160,
+            "fatigue_after": 153,
+            "health_damage": 8,
+            "process_epoch": {
+              "pid": 940562,
+              "start_ticks": 35332798,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/first/config",
+                "--no-grab"
+              ],
+              "executable_sha256": "ad59761975c6e21c60407e82ab79fbc3d4037440c7b782dcfd62a287a1564a04",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "audio": {
+              "sha256": "e056fd9765ef998419dfa38d20f1fb2d3be64cbc1dd49bd89875506563dae93b",
+              "frames": 8513280,
+              "peak": 16257,
+              "rms": 175.30086872273748,
+              "scope": "Nonzero rendered PCM and two exact sound-manager acknowledgements; no subjective hearing or isolated hit-waveform equivalence claim."
+            }
+          },
+          {
+            "phase": "second",
+            "save": "build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/second-retry-02/userdata/saves/M15Review/Quicksave.omwsave",
+            "save_sha256": "e7c933939d5ea4df6f23a16ca22910bfd76bb1877dc3b9a4ff1f3acc34035575",
+            "payload_sha256": "8742ed830850b1691855389b5ca932c635470276572dc885dc5ea2f48200f7c6",
+            "fatigue_before": 153,
+            "fatigue_after": 146,
+            "health_damage": 7,
+            "process_epoch": {
+              "pid": 949285,
+              "start_ticks": 35422026,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/second-retry-02/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-runtime-sanitized-03/second-retry-02/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "ad59761975c6e21c60407e82ab79fbc3d4037440c7b782dcfd62a287a1564a04",
+              "loaded_libraries": {
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+              }
+            },
+            "audio": {
+              "sha256": "18d975d99a4b062c2521a57dfb042764fdd78a285d47543ddfb8d1f06b29a2ae",
+              "frames": 12806400,
+              "peak": 18538,
+              "rms": 127.80708977102196,
+              "scope": "Nonzero rendered PCM and two exact sound-manager acknowledgements; no subjective hearing or isolated hit-waveform equivalence claim."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "visible_course": {
+    "scenario": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/scenario.json",
+      "sha256": "36fb0690a2abf49b8d115cfa58ff080db13754e6f3080c9e9d27d993480aebf9"
+    },
+    "process_epoch": {
+      "pid": 946522,
+      "start_ticks": 35394148,
+      "clock_ticks_per_second": 100,
+      "boot_id": "0a0a4c69-8c9c-4729-98e0-f170a5c2be5c",
+      "command": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/config"
+      ],
+      "executable_sha256": "3ce41b5d87846bec0946a1cff70bee20499b42fbad169a3b551fd633901852fc",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    "save": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62"
+    },
+    "saved_pitch": 1.171875,
+    "captures": {
+      "creature-idle.png": {
+        "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/creature-idle.png",
+        "sha256": "3179119a45dbab1f99e2c4a846f372a157bd2446feccb0e8e8b0f84ccce16ea2"
+      },
+      "creature-windup.png": {
+        "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/creature-windup.png",
+        "sha256": "7b33b3adcf5f3a9cee20535da8cd0438d184b61921cec301f9ba765f9f09d076"
+      },
+      "creature-contact.png": {
+        "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/creature-contact.png",
+        "sha256": "29f35cd9bc6aa29035fdf2c9a416f59a418ba69e481b5a8c7fda399ea58d27e6"
+      },
+      "creature-natural-hit.png": {
+        "path": "build/oblivion-compat/m15/S4/creature-natural-melee-visual-normal-12/first/creature-natural-hit.png",
+        "sha256": "498b4569d5f2125d4261e597cb9976cd2f111162631a6ce441f2b90b802933db"
+      }
+    },
+    "observed": "Named Dog visible in distinct idle, windup and committed-contact poses. Camera setup and engagement use simulation barriers. Exactly one hit changes Player Health80->72 and Creature Fatigue160->153; Player Fatigue140 unchanged.",
+    "limits": [
+      "First-person torso occludes part of Dog",
+      "No original-game pose/geometry parity",
+      "30 FPS cap is configuration, not actual FPS acceptance",
+      "No Creature victim/block/miss/wall/directional/mastery/mid-strike restart acceptance"
+    ]
+  },
+  "assets": {
+    "kf_audit": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-assets-02/kf-overlap/installed.json",
+      "sha256": "f172effcc5d028e9e0a8501e5639e16a1702cd4a80c47b5c7933422bf6567f98"
+    },
+    "kf_members": {
+      "path": "build/oblivion-compat/m15/S4/creature-natural-melee-assets-02/kf-overlap/report.json",
+      "sha256": "38ce5a43f6394b9a926eb3b02284322bd552d1a11a79246191e82fd5e24d3fd2"
+    },
+    "model_choice": "Two differing installed Dog NIF candidates both qualify for Fatigue; actual runtime NIF archive winner is not captured. Three attack KFs occur only in base Meshes BSA among17 installed archives, with no loose overrides."
+  },
+  "retained_attempts": [
+    "native-creature-natural-contact-oracle-02/initial-build.log: same-line GTest traces",
+    "native-creature-natural-contact-oracle-02/first-unit.xml: wrong contact-pending assertion during windup",
+    "creature-natural-melee-runtime-normal-01: unsupported offscreen mouse action",
+    "creature-natural-melee-runtime-normal-02: expected Health70 used fallback instead of installed FatigueBase1",
+    "creature-natural-melee-sanitized-01: stopped before tests because explicit engine sanitizer options were omitted",
+    "Initial AV71 discriminator test data corrected to AV42; both final full engine suites rebuilt and passed",
+    "creature-natural-melee-runtime-sanitized-03/second: focus receipt deadline10 exceeded, no accepted continuation",
+    "creature-natural-melee-runtime-sanitized-03/second-retry-01: gameplay passed, process-map collector sampled before libubsan mapped; corrected retry waits for required libraries",
+    "Early visual01-09/11: room-only captures/diagnostics;10 only proves post-contact visibility;12 is accepted bounded visible course",
+    "creature-natural-melee-assets-02/late-check-failure.json: isolated Python invocation omitted module search path; final full313 pass has explicit PYTHONPATH"
+  ],
+  "remaining": [
+    "Creature victims/materials/reactions",
+    "Armed, spell/effect-bearing and nonpositive source domains",
+    "Custom Creature Weapon9 RNG sound selection",
+    "Rat power-only selection and actual Creature standing-power runtime course",
+    "Directional/mastery/drop/narrow effect semantics",
+    "Full interruption, first/third-person keyboard/mouse/gamepad and FPS matrices",
+    "Windup/block/recovery restart equivalence and controlling S4 gameplay/original-reference gates"
+  ]
+}
