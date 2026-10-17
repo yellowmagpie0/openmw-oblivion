@@ -4750,3 +4750,13 @@ original observation establish fork live knockout/recovery or recovery restart
 equivalence. Full S4 remains incomplete. See the
 [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json) and
 [editable probe protocol](../../scripts/data/oblivion_compat/m15_physical_admission_and_recovery_probe.json).
+
+The named-pose follow-up reads current NIF controller/physical locals using exact
+unique names, separate scale and verified Single composition. It ignores drawing
+traversal projections and rejects ambiguous or unsupported scene paths. All2808
+normal component cases and the32 selected ActorRagdollPoseTest cases under
+ASan/UBSan pass (leaks disabled). The Animation wrapper passes syntax only; no
+new linked engine/runtime acceptance is claimed. Fingerprint:
+`36e0fcc890898f574fb252d8fe9614c2e1ae9adbc36e16076ddcfb5a9a4e0925`.
+Canonical actor root/placement resolution, World/M7/CTDA285 and automatic recovery
+integration still remain open. Follow-up details are in the same verification index.

@@ -579,6 +579,10 @@ namespace MWRender
             const Nif::NiTransform& objectWorld);
         void endPhysicalPose();
         bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }
+        // Current controller/physical locals, independent of file bind poses
+        // and optional drawing traversal projections. Exact native node names.
+        std::optional<Nif::NiTransform> captureNativeNodeWorldPose(
+            std::string_view name, const Nif::NiTransform& placement) const;
         std::optional<std::uint32_t> getNativeReactionRootRecord() const { return mNativeReactionRootRecord; }
 
         void setLoopingEnabled(std::string_view groupname, bool enabled);

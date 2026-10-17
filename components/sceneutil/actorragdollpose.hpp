@@ -5,7 +5,9 @@
 #include <components/nif/niftypes.hpp>
 
 #include <memory>
+#include <optional>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace osg
@@ -15,6 +17,14 @@ namespace osg
 
 namespace SceneUtil
 {
+    // Read a uniquely named live NIF node using case-sensitive scene lookup.
+    // Placement is the actor's native reference root, outside the loaded NIF.
+    // Preserve separate NIF scale and observed Single composition. Missing
+    // names return empty; ambiguous paths/names and unsupported transforms throw.
+    // A unique name makes controller-palette and recursive lookup agree.
+    std::optional<Nif::NiTransform> captureNativeNodeWorldPose(
+        const osg::Group& root, std::string_view name, const Nif::NiTransform& placement);
+
     // Immutable, binding-owned local checkpoint for temporarily sampling
     // animation targets. Retains OSG double matrices and separate NIF caches.
     // Ephemeral renderer state, not a save format or physical world snapshot.

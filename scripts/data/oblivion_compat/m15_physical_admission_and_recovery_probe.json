@@ -49,7 +49,7 @@
     "process_state_gate": false,
     "oracle_profiles": 9072,
     "oracle_corpus_sha256": "ab1c5380a04f2bf243bc87039e77656329f6d52860e1e45f63139b0b85c760e3",
-    "remaining_binding": "Actual renderer world pose, canonical actor root and native scene-name lookup semantics."
+    "remaining_binding": "Current named NIF pose reader verified at component layer. Canonical full actor root/placement resolution and World/M7/CTDA adapter still open."
   },
   "fork_integration_checks": {
     "physics_worker_counts": [

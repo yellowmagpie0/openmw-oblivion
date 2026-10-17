@@ -170,5 +170,96 @@
     "native-physical-admission-selection-normal-01: 3 selected cases passed before detached preparation extensions.",
     "prepared-actor-admission-syntax-01: 3 translation units passed syntax before final slot/cell guards.",
     "isleftup-native-oracle-01: wrong sign interpretation falsified by negative infinity; corrected02 accepted."
-  ]
+  ],
+  "named_pose_followup": {
+    "status": "Current named NIF world-pose reader verified at component layer; World/M7/CTDA285 integration remains open",
+    "parent_commit": "640850bbda1309aad069c77b4d506a2faac050b3",
+    "tested_source_fingerprint": "36e0fcc890898f574fb252d8fe9614c2e1ae9adbc36e16076ddcfb5a9a4e0925",
+    "checks": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/native-node-world-pose-components-normal-01/verification.json",
+        "sha256": "bbfe792f29c4787efcaca3a7f81a5234e96f63fb78aa1c8909fa39e24ef14be3",
+        "source": {
+          "head": "640850bbda1309aad069c77b4d506a2faac050b3",
+          "source_fingerprint": "36e0fcc890898f574fb252d8fe9614c2e1ae9adbc36e16076ddcfb5a9a4e0925"
+        },
+        "results": {
+          "components": {
+            "executed": 2808,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9738d2a90e2dd753f9bce799b1ad162cbf565bf8f8c2a4e9e9005e843d9d017d",
+            "cache_sha256": "6beeb34f7aedba391b01aec8c8c93487bc5587de67e5bb5a49d307494782785c",
+            "xml_sha256": "e9f85a1795306176da03cf9fae25b1d5366c7ef4fb8459bcfb22a41ba396ff8a",
+            "inventory_sha256": "f4371d016ffe7ab712b240e4642c67fd4e7a4ed17f308bc71dba8c0f29dc8ce0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/m15/S4/native-node-world-pose-components-sanitized-01/verification.json",
+        "sha256": "cb6425e0b224486d7db4faaf030e2fb5f69d7e367af3b2705a95d2ff5976c06f",
+        "source": {
+          "head": "640850bbda1309aad069c77b4d506a2faac050b3",
+          "source_fingerprint": "36e0fcc890898f574fb252d8fe9614c2e1ae9adbc36e16076ddcfb5a9a4e0925"
+        },
+        "results": {
+          "components": {
+            "executed": 32,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ActorRagdollPoseTest.*",
+            "binary_sha256": "68ba45035a7675bd4ff9f2b7536e92afa5f182fc5565af77361ea34a0b4b6cf2",
+            "cache_sha256": "d5ef1283e11b2b9940dac4003976898c8606a12da0bc357d2836fd96e1af7118",
+            "xml_sha256": "f98f62bf794908c599fc0adc27350c11a3083c221b4d4e3de49c0cc38776e625",
+            "inventory_sha256": "5de15f02ded92a7c759e977855d97021c6533a9e6f46b73e828774b5197a2c79",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    },
+    "animation_wrapper_syntax": {
+      "path": "build/oblivion-compat/m15/S4/native-node-world-pose-animation-syntax-02/result.json",
+      "returncode": 0,
+      "retained_failed_setup": "native-node-world-pose-animation-syntax-01 had no compile database entry; failed before compiler invocation; corrected02 uses configured openmw-lib flags.make"
+    },
+    "semantics": [
+      "Exact unique name; current controller/physical locals; separate native scale; Single composition; independent of authored bind pose and drawing-only traversal projection.",
+      "Ambiguous names/paths, cycles, unsupported transforms and nonfinite scene inputs reject. Missing name returns empty.",
+      "Verified synthetic native morphology/current procedural rotation, unchanged scene matrices/caches and case-sensitive missing names."
+    ],
+    "source_sha256": {
+      "components/sceneutil/actorragdollpose.cpp": "a0bb43cd4cb09ef1f75bc13e8c5b56b14f4afb87af949e56f2439aa3c59c5a69",
+      "components/sceneutil/actorragdollpose.hpp": "9099e136064d2870ef1e9bb4d97b257adf23460b6fe1bae79857bafc684f382b",
+      "apps/components_tests/sceneutil/actorragdollpose.cpp": "8f52523c73a2bb7396df32032c12e16184248f9c1cb115bab25a85b9dc88bbc1",
+      "apps/openmw/mwrender/animation.cpp": "fa3434e4b69eb63a5c35f0ae323b1c2ca4ee282eab826aa52180b7f19d1f89bd",
+      "apps/openmw/mwrender/animation.hpp": "340118c4552ec7af902de1dd7490c05e223e2d6aaad27b1d49da56def4e65a8f"
+    },
+    "native_lookup_static_review": {
+      "evidence_directory": "build/oblivion-compat/m15/S4/native-physical-admission-checkpoint-assets-01",
+      "verified_vtable": "NiNode RTTI getter70B800 identifies A7E38C; virtual58 is70AC00; exact byte matcher7073F0. Root then child-slot depth-first recursion.",
+      "palette_boundary": "6F94A0 tries controller palette before recursive fallback. Duplicate matching names reject in the new reader, requiring an unambiguous target; native palette implementation is not fully emulated."
+    },
+    "scope_limits": [
+      "Only32selectedposecases ran under sanitizers; this is not full sanitized components coverage. Leak checking disabled.",
+      "Animation wrapper syntax is not a linked engine/runtime result.",
+      "No new normal-input runtime course or recovery acceptance.",
+      "Reader admits finite, representable scene transforms; the independent native direct-coefficient predicate also specifies nonfinite IEEE results."
+    ]
+  }
 }

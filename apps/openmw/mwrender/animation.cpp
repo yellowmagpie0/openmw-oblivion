@@ -2587,6 +2587,13 @@ namespace MWRender
         return true;
     }
 
+    std::optional<Nif::NiTransform> Animation::captureNativeNodeWorldPose(
+        std::string_view name, const Nif::NiTransform& placement) const
+    {
+        if (!mObjectRoot) return std::nullopt;
+        return SceneUtil::captureNativeNodeWorldPose(*mObjectRoot, name, placement);
+    }
+
     const osg::Node* Animation::getNode(std::string_view name) const
     {
         NodeMap::const_iterator found = getNodeMap().find(name);

@@ -4,6 +4,7 @@
 
 #include <components/misc/osguservalues.hpp>
 #include <components/nifbullet/ragdollbonepose.hpp>
+#include <components/nif/nativetransform.hpp>
 #include <components/nifosg/matrixtransform.hpp>
 
 #include <osg/Group>
@@ -12,6 +13,7 @@
 #include <osg/ValueObject>
 
 #include <optional>
+#include <algorithm>
 #include <bit>
 #include <cmath>
 #include <stdexcept>
@@ -77,6 +79,49 @@ namespace SceneUtil
             result.mScale = node.mScale;
             return result;
         }
+    }
+
+    std::optional<Nif::NiTransform> captureNativeNodeWorldPose(
+        const osg::Group& root, std::string_view name, const Nif::NiTransform& placement)
+    {
+        require(!name.empty(), "empty native scene lookup name");
+        std::vector<const osg::Node*> path, selected;
+        const auto walk = [&](auto&& self, const osg::Node& node) -> void {
+            require(std::find(path.begin(), path.end(), &node) == path.end(), "cyclic native scene lookup");
+            path.push_back(&node);
+            if (node.getName() == name)
+            {
+                require(selected.empty(), "ambiguous native scene lookup name");
+                selected = path;
+            }
+            if (const auto* group = node.asGroup())
+                for (unsigned i = 0; i < group->getNumChildren(); ++i)
+                    self(self, *group->getChild(i));
+            path.pop_back();
+        };
+        walk(walk, root);
+        if (selected.empty()) return std::nullopt;
+        require(dynamic_cast<const NifOsg::MatrixTransform*>(selected.back()),
+            "native scene lookup target has no NIF transform");
+        auto world = placement;
+        // Even identity locals execute the original matrix product and stores.
+        for (const auto* node : selected)
+        {
+            auto local = Nif::NiTransform::getIdentity();
+            if (const auto* transform = dynamic_cast<const osg::Transform*>(node))
+            {
+                const auto* nif = dynamic_cast<const NifOsg::MatrixTransform*>(transform);
+                require(nif && nif->getReferenceFrame() == osg::Transform::RELATIVE_RF,
+                    "unsupported native scene lookup transform");
+                local = nif->getControllerTransform();
+            }
+            else
+                continue; // Renderer-only groups have no native transform.
+            const auto composed = Nif::tryComposeNativeTransform(world, local, Nif::NativeTransformPrecision::Single);
+            require(composed.has_value(), "unrepresentable native scene lookup world pose");
+            world = *composed;
+        }
+        return world;
     }
 
     struct ActorRagdollLocalPose::State

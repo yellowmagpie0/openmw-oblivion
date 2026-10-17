@@ -759,6 +759,65 @@ namespace
             EXPECT_EQ(std::bit_cast<std::uint32_t>(mPelvis->mRotationScale.mValues[i / 3][i % 3]), rotation[i]);
     }
 
+    TEST_F(ActorRagdollPoseTest, NativeNamedWorldPoseReadsCurrentLocalsWithSeparateScale)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        placement.mTranslation = {100, 200, 300};
+        placement.mScale = 3;
+        placement.mRotation.mValues[2][2] = 2; // Native morphology stays in rotation.
+        mPelvis->setScale(2);
+        const auto before = mHand->getMatrix();
+        const auto capture = [&] { return SceneUtil::captureNativeNodeWorldPose(*mRoot, "Hand", placement); };
+        auto pose = capture();
+        ASSERT_TRUE(pose);
+        EXPECT_EQ(pose->mTranslation, osg::Vec3f(136, 212, 300));
+        EXPECT_EQ(pose->mScale, 6);
+        EXPECT_EQ(pose->mRotation.mValues[2][2], 2);
+        // A procedural write changes the drawing/controller local while the
+        // separate NIF cache deliberately retains its previous identity.
+        auto rotated = before;
+        rotated(1, 1) = rotated(2, 2) = -1;
+        mHand->setMatrix(rotated);
+        EXPECT_EQ(mHand->mRotationScale.mValues[2][2], 1);
+        mHand->setTraversalMatrix(NifOsg::MatrixTransform::TraversalMatrix(osg::Matrixd::identity()));
+        pose = capture();
+        ASSERT_TRUE(pose);
+        EXPECT_EQ(pose->mRotation.mValues[2][2], -2);
+        EXPECT_EQ(pose->mTranslation, osg::Vec3f(136, 212, 300));
+        EXPECT_EQ(mHand->getMatrix(), rotated);
+        EXPECT_EQ(mHand->mRotationScale.mValues[2][2], 1);
+        EXPECT_NE(mHand->getTraversalMatrix().getMatrix(), nullptr);
+        EXPECT_FALSE(SceneUtil::captureNativeNodeWorldPose(*mRoot, "hand", placement));
+        EXPECT_FALSE(SceneUtil::captureNativeNodeWorldPose(*mRoot, "Bip01 Spine", placement));
+        EXPECT_THROW(SceneUtil::captureNativeNodeWorldPose(*mRoot, "", placement), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativeNamedWorldPoseRejectsAmbiguousOrUnsupportedSources)
+    {
+        const auto placement = Nif::NiTransform::getIdentity();
+        const auto capture = [&] { return SceneUtil::captureNativeNodeWorldPose(*mRoot, "Hand", placement); };
+        osg::ref_ptr<NifOsg::MatrixTransform> duplicate
+            = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        duplicate->setName("Hand");
+        mRoot->addChild(duplicate);
+        EXPECT_THROW(capture(), std::invalid_argument);
+        mRoot->removeChild(duplicate);
+        mPelvis->addChild(mHand); // Same target has two scene paths.
+        EXPECT_THROW(capture(), std::invalid_argument);
+        mPelvis->removeChild(mHand);
+        auto malformed = mHand->getMatrix();
+        malformed(2, 2) = std::numeric_limits<double>::quiet_NaN();
+        mHand->setMatrix(malformed);
+        EXPECT_THROW(capture(), std::invalid_argument);
+        mHand->setMatrix(osg::Matrixd::identity());
+        osg::ref_ptr<osg::MatrixTransform> wrapper = new osg::MatrixTransform;
+        mConnector->removeChild(mHand);
+        mConnector->addChild(wrapper);
+        wrapper->addChild(mHand);
+        EXPECT_THROW(capture(), std::invalid_argument);
+        EXPECT_EQ(mHand->getMatrix(), osg::Matrixd::identity());
+    }
+
     TEST_F(ActorRagdollPoseTest, ReferenceWorldModeRequiresADeclaredSingleHierarchyRoot)
     {
         EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot, RootSpace::ReferenceWorld)), std::invalid_argument);
