@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "status": "resident base-model Fatigue eligibility integrated and tested; Creature contact dispatch and full M15S4 remain incomplete",
+  "source_parent_commit": "33113c42ab637f44f210c2ef1bc65df12ba439ff",
+  "tested_source_fingerprint": "65100945d920ec251d6164f25212acf64686f6243b2ca40398c345a88e515ce5",
+  "source_sha256": {
+    "components/nif/node.cpp": "3b4696a732b916b0bf9460a26ad182b870b5832b6854e36dca5080f9eca35436",
+    "components/nif/node.hpp": "348a7db093672639b6b0986d789bfa837338d33f1a3659b855b31816791f571b",
+    "apps/components_tests/nif/testphysics.cpp": "088845d7912c812887c63268f77679f549637c7d1a87a74ffd8b871844c76b7c",
+    "apps/openmw/mwworld/refdata.cpp": "40d939b9933fcf15f1f183fac63138c84efbaae7ae794c5f48e8594cb091e896",
+    "apps/openmw/mwworld/refdata.hpp": "80ad4678ed76f97749d79a1497eb7432525106707a2c428fc5fff0665eba8fd5",
+    "apps/openmw/mwworld/worldimp.cpp": "f7dc1a03264188b0b32a819e04d215a1784677ba4a8075ce53241d018c309f5c",
+    "apps/openmw/mwrender/esm4npcanimation.cpp": "dbaadbecffe253db23fdad8bd22b73050178d1b254588e107d93eba51bfdd964",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "c55777808ebbfb46d45a576b4d4dfbaade2208deec753f53bfd674ee115895a7",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "3544d031de4b1321a14eb2af37ae2b4e636e6936e84ef8b02dec126913b9f4bb",
+    "apps/openmw_tests/mwworld/testoblivionactorstats.cpp": "2646b7fa5b46704152cd661193768ad2c0c839960d73d1c301e5155477c0e5b6",
+    "scripts/tes4_m15_creature_fixture.py": "759fcbf124e1e3147f8afc54369958fafcd238302ebabe5fe2ee772006d7ef8a",
+    "scripts/tests/test_tes4_m15_creature_fixture.py": "185f5afcb694130b192e07817f26db0fbd57eb9c23bc505762cf54b9d79d721c",
+    "scripts/data/oblivion_compat/m15_creature_fatigue_fixture.json": "a2af094ebe85feaeb5ed3f9c66357046b2da9867269664da9fd3fd69717ce5d7"
+  },
+  "late_metadata_only": [
+    "executed runtime manifest copies",
+    "manual original-game probe protocol",
+    "verification/provenance/delivery audit"
+  ],
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_rule": {
+    "model_initializer": "4E4186..4E41AE calls Creature625850, then virtual+2746250E0",
+    "predicate": "Root plus at most three first children; qualifying collision RTTI ancestry bhkNiCollisionObject at BA7B80. Ignores siblings, deeper nodes and generic NiCollisionObject. Counter B3B918 balances on exit.",
+    "fatigue_getter": "virtual+2786250F0 returns actor byte104; NPC/Player getter977C50 returns true",
+    "construction_default": 0,
+    "scope": "C++ models the normal root invocation with initial recursion counter0 over the retained base NIF. The oracle additionally exercises native initial counters0..3."
+  },
+  "original_live": {
+    "observations": {
+      "path": "build/oblivion-compat/m15/S4/original-creature-state-01/observations.jsonl",
+      "sha256": "57a2b89e0aa8b32121cece8ab660903c11bf118b7bf9d8acc935d84cca350a0a"
+    },
+    "actors": {
+      "Dog": {
+        "base": "0x1e5f5",
+        "reference": "0xff000800",
+        "constructor_byte": 0,
+        "model_setter_argument": 1,
+        "loaded_byte": 1,
+        "base_byte104": 0
+      },
+      "Skeleton1": {
+        "base": "0x24ddb",
+        "reference": "0xff000801",
+        "constructor_byte": 0,
+        "model_setter_argument": 1,
+        "loaded_byte": 1,
+        "base_byte104": 2
+      }
+    },
+    "fatigue_console_observation": [
+      160,
+      155
+    ],
+    "console_capture": {
+      "path": "build/oblivion-compat/m15/S4/original-creature-state-01/dog-fatigue-command.png",
+      "sha256": "0a5f8afcf817f50597afcbd346146b877ea025c9d28b816c27df109d6a87dbc1"
+    },
+    "save_selection": "Continue-selected existing private save; exact quicksave/autosave identity was not separately captured. The pristine quicksave hash below is preservation evidence.",
+    "pristine_quicksave_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "cleanup": {
+      "path": "build/oblivion-compat/m15/S4/original-creature-state-01/cleanup-verification.json",
+      "sha256": "c8c444c4842f54f5f22d5accbbaf550793c509325ab29b7539373142aa0487ec"
+    },
+    "exit": {
+      "path": "build/oblivion-compat/m15/S4/original-creature-state-01/exit.json",
+      "sha256": "6074f3dcafa1b5e66aa3ba7a4a8a96833433b0658e3d34f6f5a61929d0f6b6c8"
+    },
+    "scope": "Breakpoint observations/stopped memory reads, normal template spawning and console ModAV. No actor-memory writes or inferior function calls. Original console uses Damage; fork runtime courses deliberately exercise Script ModAV."
+  },
+  "native_oracle": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-creature-model-eligibility-oracle-01/report.json",
+      "sha256": "61a4c06de0db690e51c03a68bf163fb7889acc5f8fe659036c7daafcd98f7603"
+    },
+    "observations": 3072,
+    "scope": "Original625850 full recursive path,4A05E0 collision RTTI ancestry walk,405790 actual child-array slot0 lookup. Supplied virtual RTTI/IsNode getter results and synthetic Ni objects; no actor/model loader or live gameplay emulation. Global recursion starts0 in production, explicitly covered0..3.",
+    "cpp_shared_matrix": "64 collision masks at six-node depth, normal recursion0 and qualifying collision type; three component tests also cover null, generic collision, siblings, null child0, leaves and cycles."
+  },
+  "assets": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-assets-01/inspection-verification.json",
+      "sha256": "931106a5411f026fbb01a1d83ca47d1b974ae380ee297940cbd84488fc521d00"
+    },
+    "Dog_first_collision_depth": 3,
+    "Skeleton_first_collision_depth": 2,
+    "scope": "Read-only stock NIF inspection; no mesh edits. A model collision is distinct from an already-instantiated live ragdoll.",
+    "artifact_sha256": {
+      "skeleton.nif": "2ab0b0a6aa6cb63253d8d2c2557fc831de138ab162088c736b5c4aebac76d1e7",
+      "skeleton/skeleton.nif": "2b20eb7c173d3b8cf20c22f4952f93f2fdb8769768f9546dd35fde8a9b6f2abc",
+      "M15CreatureFatigue.esp": "6ae849998720b4a7341852c24b65792ffbce55bd3e59aeea3b0a604855224e15",
+      "fatigue-no-regen.esp": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea",
+      "shivering-dog/skeleton.nif": "1ef0e22fb6738ebb6a31203804583dbe56193620e460795619c0dd1c09182459"
+    },
+    "loose_overrides": "Read-only installed Data inventory found no loose Dog/Skeleton skeleton.nif overriding the pinned archive members.",
+    "installed_member_audit": {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-assets-01/installed-model-members-02.json",
+      "sha256": "ad5f0df6a96351e4db7c235a7083df6f5344e49226ef92798f6fe497889833d3"
+    },
+    "archive_overlap_scope": "Both installed Dog candidates have differing bytes but matching qualifying first-child collision at depth3. Skeleton has one candidate at depth2. No loose canonical-path overrides found. Actual archive selection was not captured; this eligibility result is invariant across both Dog candidates."
+  },
+  "implementation": "Transient RefData flag starts false, refreshes from the loaded Creature base model, and is recomputed on fresh-process model construction. One service accessor feeds physical direct damage, capped attacker/block expenditure, resident commands, resource requests and frame movement eligibility. NPC/Player eligibility is preserved. The flag is not a new serialized resource or independent damage authority.",
+  "content_validation": {
+    "recipe": "scripts/data/oblivion_compat/m15_creature_fatigue_fixture.json",
+    "generator": "scripts/tes4_m15_creature_fixture.py",
+    "plugin": {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-assets-01/M15CreatureFatigue.esp",
+      "sha256": "6ae849998720b4a7341852c24b65792ffbce55bd3e59aeea3b0a604855224e15"
+    },
+    "structural": {
+      "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "sha256": "6ae849998720b4a7341852c24b65792ffbce55bd3e59aeea3b0a604855224e15",
+      "record_count": 2,
+      "script_count": 0,
+      "base_changes": false,
+      "runtime_accepted": false
+    },
+    "semantic": "One unchanged master CELL payload plus one new persistent ACRE pointing to unchanged CreatureDog. Source base has no SCRI. Native queries establish Fatigue160 and Health20. Existing two-GMST no-regeneration fixture supplies timing isolation.",
+    "compiler": "No new SCPT records. Both phases in both engine configurations report zero compilation failures and no diagnostics.",
+    "world_validation": "Engine content loading, assembly, authoritative queries and saved-state inspection passed. No editor/MCP world-validation claim."
+  },
+  "checks": {
+    "normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-main-02/verification.json",
+        "sha256": "a612fe0ff002a2a17bae7e7860d2f8113048761498657dfc341504107cd1efdc"
+      },
+      "components": 2798,
+      "component_suites": 267,
+      "engine": 1616,
+      "engine_suites": 122,
+      "python": 310,
+      "filter": "*"
+    },
+    "sanitized": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-sanitized-02/verification.json",
+        "sha256": "3597edde28d61c74b4241f14004dfc5e9c3049cb80db3eba2b1829a7fae23f52"
+      },
+      "components": 742,
+      "component_suites": 55,
+      "component_filter": "ESM4*",
+      "engine": 1616,
+      "engine_suites": 122,
+      "engine_filter": "*",
+      "environment": "ASan/UBSan; leak checks disabled, UBSan halts"
+    },
+    "actual_ptr": "24 direct-modifier cases with both model flags, Player/Creature victim, god mode, negative/positive/zero deltas; atomic preparation, facade views, service restoration and once-only commitment. Twelve additional capped attacker requests and twelve block-plus-direct-damage requests distinguish2->0->-5 from uncapped2->-3."
+  },
+  "runtime": {
+    "normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-runtime-normal-01/verification.json",
+        "sha256": "82bbe0528dc4897653003d7ff2d1c18b41b2b82d1e1132c3321d1e1749bcaccd"
+      },
+      "epochs": [
+        {
+          "pid": 926133,
+          "start_ticks": 34815340,
+          "binary_sha256": "7a10c9c5dbe2284a6d23def84d5e0e1c7dd8255cfb83e4936a059c649002d2e9",
+          "save_sha256": "1bc7be525a726a9fb2d8430ba167ba2c0c8f5cedd6de9403ec57da24a443eab6",
+          "payload_sha256": "bdad7ce5bfe942fb144d688ae68c2c2207d2cb17b9c1f48fbe8d0267c1337ef4",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          }
+        },
+        {
+          "pid": 926314,
+          "start_ticks": 34825446,
+          "binary_sha256": "7a10c9c5dbe2284a6d23def84d5e0e1c7dd8255cfb83e4936a059c649002d2e9",
+          "save_sha256": "48638e3f36fa7724f2477ca8d9c0c80e87a1ca6868afced44eef743706e899d6",
+          "payload_sha256": "b21a8cf32c54c58e2f508b2e07d3f80abf2bc5e896b06737c283153911473f7e",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+          }
+        }
+      ]
+    },
+    "sanitized": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-runtime-sanitized-02/verification.json",
+        "sha256": "7e0831f36a94d3460f8cd2c8b7fe9648d8ea83147caae1135650c45bcb1ff368"
+      },
+      "epochs": [
+        {
+          "pid": 930276,
+          "start_ticks": 34910676,
+          "binary_sha256": "51f7b7e9eb821f62b111b970bea2c6b0696cf1577068bd792157f1d92df0566d",
+          "save_sha256": "d9c674af315eb42a3f362d03da1e8459cd98d87f680b334da2866bf2091b0bbd",
+          "payload_sha256": "0a95526049d9c4c3147b4a76322856a62df803245da2f59992d7b3042c26f76d",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+            "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+            "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+          }
+        },
+        {
+          "pid": 930480,
+          "start_ticks": 34940241,
+          "binary_sha256": "51f7b7e9eb821f62b111b970bea2c6b0696cf1577068bd792157f1d92df0566d",
+          "save_sha256": "07eb0a011983763cf9baa560223f6e748d6f8e0414363e74229618c9746e692d",
+          "payload_sha256": "ac2daa52ca10f18342d355afc419f2a4d534b29ed54de9e124c38302880bf0fe",
+          "loaded_libraries": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+            "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+            "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+          }
+        }
+      ]
+    }
+  },
+  "runtime_expected": {
+    "fatigue": [
+      160,
+      155,
+      150
+    ],
+    "health": 20,
+    "modifier_channel": "Script; -5 then -10, Damage remains0",
+    "processes_per_configuration": 2,
+    "native_actor_count": 10,
+    "scope": "Stock model construction and script command/save/fresh-process reload. Exact C++/Python payload identity, all unrelated native AVs, bases/lifecycle/action ownership and saved inventories preserved. Sound disabled; screenshot faces the room, with no visible-Dog or normal-input contact acceptance claim.",
+    "facade_scope": "Facade agreement is tested with actual Ptrs; runtime GetAV reads native authority."
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-main-01",
+      "reason": "Engine build intentionally stopped after discovering binary NIF hash diagnostic output; component pass is partial evidence only."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-sanitized-01",
+      "reason": "New helper called RecordPtr.getPtr on an optional empty collision; debug assertion aborted. Corrected collision/child empty checks pass in02."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-runtime-sanitized-01",
+      "reason": "ASan preload-order rejection before gameplay. Readiness wait explicitly expedited via SIGALRM after game exit. Corrected separate manifests preload ASan ahead of SDL shim; runtime02 passes."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/creature-model-fatigue-assets-01/installed-model-members-failed-01.json",
+      "reason": "Initial one-archive-per-model assumption falsified by the installed Shivering Isles Dog override. No prior uniqueness pass is claimed."
+    }
+  ],
+  "remaining": [
+    "Creature controller/contact/AI ownership adapters remain gated.",
+    "Creature audio/material/custom-source sound and reaction integration remain open.",
+    "Nonresident flag retention without model reconstruction and the full Creature input/restart matrix are not accepted by this course.",
+    "Full directional/mastery/interrupt/view/input/FPS and other controlling S4 gates remain incomplete."
+  ]
+}

@@ -334,6 +334,7 @@ namespace MWMechanics
 
     public:
         OblivionActorLifeAdoption guardLifeAdoption(const MWWorld::Ptr& actor, MWWorld::Player* player = nullptr);
+        static bool canSpendFatigue(const MWWorld::Ptr& actor);
         void clear();
         std::optional<ESM4::TimedKnockbackState> actorKnockback(const ESM::FormKey& actor) const;
         // Physics snapshots state on the main thread. A newer hit prevents an

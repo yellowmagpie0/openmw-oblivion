@@ -7154,8 +7154,14 @@ namespace
             {true, false, 0, 2}, {true, true, 0, 2},
             {true, false, .25f, 2.25f}, {true, true, .25f, 2.25f},
         };
-        for (const auto& [playerVictim, godMode, delta, expected] : cases)
+        for (const bool modelCollision : {false, true})
+        for (const auto& [playerVictim, godMode, delta, constructionExpected] : cases)
         {
+            SCOPED_TRACE(modelCollision);
+            creaturePtr.getRefData().setOblivionCanSpendFatigue(modelCollision);
+            EXPECT_EQ(MWMechanics::OblivionCombatService::canSpendFatigue(creaturePtr), modelCollision);
+            const float expected = !playerVictim && modelCollision && delta < 0
+                ? 2 + delta : constructionExpected;
             SCOPED_TRACE(playerVictim);
             SCOPED_TRACE(godMode);
             SCOPED_TRACE(delta);
@@ -7200,6 +7206,22 @@ namespace
             EXPECT_FALSE(resumed.commitPhysicalContact(id, attacker, victim, hit, &player,
                 false, {}, playerBase, godMode));
             resumed.capture(saved); EXPECT_EQ(saved.serializeBinary(), after);
+            if (!playerVictim)
+            {
+                // The same flag controls capped expenditure, independently of
+                // uncapped direct damage. Player god mode does not protect a
+                // nonplayer Creature from either request.
+                resumed.publishNonPlayerValues(creaturePtr, cv);
+                const auto spend = resumed.allocateAction(cv.mActor);
+                ASSERT_TRUE(resumed.commitPhysicalContact(spend, creaturePtr, {}, {-7, 0, 0}, &player,
+                    false, {}, playerBase, godMode));
+                EXPECT_EQ(resumed.getNonPlayerValue(creaturePtr, 10), modelCollision ? 0 : 2);
+                resumed.publishNonPlayerValues(creaturePtr, cv);
+                const auto block = resumed.allocateAction(pv.mActor);
+                ASSERT_TRUE(resumed.commitPhysicalContact(block, playerPtr, creaturePtr, {0, 0, -5, -7}, &player,
+                    false, {}, playerBase, godMode));
+                EXPECT_EQ(resumed.getNonPlayerValue(creaturePtr, 10), modelCollision ? -5 : 2);
+            }
         }
     }
 

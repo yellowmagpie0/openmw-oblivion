@@ -2661,7 +2661,8 @@ namespace MWWorld
         auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
         auto* reference = adoptOblivionActorLife(actor);
         const auto deadMarker = findLegacyDeathMarker(reference);
-        const ESM4::ActorValueCommandPolicy policy{player && getGodModeState(), actor.getType() != ESM::REC_CREA4};
+        const ESM4::ActorValueCommandPolicy policy{
+            player && getGodModeState(), MWMechanics::OblivionCombatService::canSpendFatigue(actor)};
         if (player)
             mOblivionCombat->executePlayerValueCommand(*mPlayer, value, command, source, requested, policy,
                 playerSettings, essential, recoverySettings);
@@ -2749,7 +2750,7 @@ namespace MWWorld
                 essential, recovery, settings);
         else
             mOblivionCombat->requestNonPlayerResourceCurrent(actor, value, requested,
-                {false, actor.getType() != ESM::REC_CREA4}, essential, recovery);
+                {false, MWMechanics::OblivionCombatService::canSpendFatigue(actor)}, essential, recovery);
         if (deadMarker)
             reference->mCustomState.erase(*deadMarker);
         adoption.commit();
@@ -2805,7 +2806,8 @@ namespace MWWorld
         const bool player = actor == getPlayerPtr();
         // Original Character/Player virtual +278 returns true. The Creature
         // constructor initializes its separate expenditure flag to false.
-        const bool canSpend = actor.getType() != ESM::REC_CREA4 && (!player || !getGodModeState());
+        const bool canSpend = MWMechanics::OblivionCombatService::canSpendFatigue(actor)
+            && (!player || !getGodModeState());
         const MWMechanics::OblivionActorMovement movement{
             ESM4::combatBaseValue(actor.getClass().getEncumbrance(actor)), running, canSpend};
         // Native spell/enchantment execution is an explicit M16 boundary below.

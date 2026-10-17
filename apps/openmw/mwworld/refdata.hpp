@@ -54,6 +54,9 @@ namespace MWWorld
             { if (this != &other) { mValue.reset(); other.mValue.reset(); } return *this; }
         } mRuntimeIdentity;
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> mBaseNode;
+        // TES4 Creature Actor+104 starts false and is refreshed when its model
+        // attaches. Recomputed from the loaded NIF after a fresh-process load.
+        bool mOblivionCanSpendFatigue = false;
 
         MWScript::Locals mLocals;
         std::shared_ptr<MWLua::LocalScripts> mLuaScripts;
@@ -112,6 +115,9 @@ namespace MWWorld
 
         /// Set base node (can be a null pointer).
         void setBaseNode(osg::ref_ptr<SceneUtil::PositionAttitudeTransform> base);
+
+        bool getOblivionCanSpendFatigue() const { return mOblivionCanSpendFatigue; }
+        void setOblivionCanSpendFatigue(bool value) { mOblivionCanSpendFatigue = value; }
 
         void setLocals(const ESM::Script& script, MWScript::Locals* prepared = nullptr);
 

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "kind": "manual-original-game-probe",
+  "purpose": "Independently observe Creature Actor+104 initialization and negative Fatigue command eligibility",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "meshes_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "private_prefix": "build/oblivion-compat/m15/S2/original-06/compat/pfx",
+  "pristine_quicksave_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "plugins": ["Oblivion.esm"],
+  "observer": {
+    "constructor_after_zero": ["0x6250ce", "0x625133"],
+    "setter_before_write": "0x6250e0",
+    "fields": ["actor+104", "base+104", "reference_id", "base_id", "process", "NiNode"],
+    "actor_data_writes": false,
+    "inferior_function_calls": false
+  },
+  "steps": [
+    "Back up exact private Oblivion.ini and Plugins.txt bytes/modes/timestamps; verify executable, master, archive and pristine save hashes.",
+    "Disable private autosaves, load the private Continue-selected save, focus the isolated window and open the console. Record the selection separately from the protected pristine quicksave hash; Continue alone does not prove which save was loaded.",
+    "Enter player.placeatme 0001e5f5 1 and player.placeatme 00024ddb 1. Inspect complete command text before Enter when debugger overhead can drop fast input.",
+    "Record constructor byte0, model callback setter argument1 and post-load byte1 for each spawned reference, distinguishing base creature kind from actor state.",
+    "Select the newly spawned Dog reference reported by the observer; run getav fatigue, modav fatigue -5, getav fatigue while the console pauses simulation.",
+    "Detach the observer, exit via qqq, verify wrapper exit0, restore exact private inputs and preserve the pristine save hash. Identify owned Wine processes by WINEPREFIX; Steam can rewrite STEAM_COMPAT_DATA_PATH."
+  ],
+  "expected": {
+    "Dog": {"base_id": "0001e5f5", "constructor_actor_byte104": 0, "loaded_actor_byte104": 1, "base_byte104": 0, "fatigue_before": 160, "fatigue_after": 155},
+    "Skeleton1": {"base_id": "00024ddb", "constructor_actor_byte104": 0, "loaded_actor_byte104": 1, "base_byte104": 2},
+    "setter_return_address": "0x4e41ae",
+    "modifier_source": "console Damage channel"
+  },
+  "scope": "Live constructor/model initialization and one console resource command. Contact damage, audio, flag persistence without model reconstruction and full M15S4 acceptance require separate evidence. Never overwrite the pristine save with F5."
+}

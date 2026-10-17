@@ -13,6 +13,19 @@
 #include "physics.hpp"
 #include "property.hpp"
 
+bool Nif::tes4CreatureHasFatigueCollision(const NiAVObject* root)
+{
+    for (unsigned depth = 0; root && depth < 4; ++depth)
+    {
+        if (!root->mCollision.empty() && dynamic_cast<const bhkCollisionObject*>(root->mCollision.getPtr()))
+            return true;
+        const auto* node = dynamic_cast<const NiNode*>(root);
+        root = node && !node->mChildren.empty() && !node->mChildren.front().empty()
+            ? node->mChildren.front().getPtr() : nullptr;
+    }
+    return false;
+}
+
 namespace
 {
 

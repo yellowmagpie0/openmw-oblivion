@@ -4311,3 +4311,46 @@ recovery verifier checks the exact saved phase, then a fresh engine process
 finishes without another hit/debit, preserving all compared resources and
 inventories. Both complete payloads re-encode exactly. This is a bounded recovery
 continuation, with the failed completed-state assumption recorded separately.
+
+## Resident Creature model-derived Fatigue eligibility
+
+The blanket false policy was only a construction default. A private original-game
+probe observes stock Dog and Skeleton1 actor byte104 changing from 0 to 1 in the
+model callback, independently of base creature kind. Original625850 searches
+the root plus three first children for `bhkNiCollisionObject` ancestry. The
+paused original Dog console case observes Fatigue 160 ->155. The pristine save
+hash was preserved; Continue's precise loaded-save identity was not captured.
+Input bytes/modes/timestamps and private-prefix process cleanup are verified.
+
+The renderer now derives a transient reference flag from the retained base NIF.
+A shared service accessor supplies resident commands, resource/frame updates and
+physical contact eligibility, preserving the separate expenditure cap and direct
+damage semantics. The stock Dog collision sits at the final admitted depth 3;
+the actual loaded model and original live flag agree. See
+[the verification index](M15-CREATURE-MODEL-FATIGUE-VERIFICATION.json) for the
+3,072-case instruction oracle, 64-mask C++ matrix, expanded actual-Ptr tests,
+source hashes and declared boundaries.
+
+Shivering Isles supplies a second Dog skeleton with different bytes. Both
+installed candidates qualify at depth3. The corrected archive audit records the
+overlap and the failed uniqueness assumption; no specific runtime archive-choice
+claim is needed for this invariant result.
+
+Normal checks pass 2,798 component /1,616 engine /310 Python tests. Sanitizers
+pass 742 `ESM4*` component cases and all 1,616 engine tests, with leak checks off.
+Normal and instrumented two-process command courses both preserve Health 20 and
+observe Fatigue 160 ->155 ->150. Script modifiers are -5/-10 and Damage remains 0;
+the original console's channel is Damage. Complete C++/Python binary payloads
+agree, with all unrelated native AVs, lifecycle/action ownership and saved
+inventories preserved. New source recipes retain the executed manifests and
+reproduce an unchanged master CELL plus one placed, unchanged stock Dog base.
+Structural readback, compiler diagnostics, semantic inspection and engine runtime
+acceptance are separate evidence layers; this is no editor/MCP validation claim.
+
+The first optional-pointer debug assertion, canceled partial normal build and
+sanitizer preload-order startup failure remain recorded. Corrected checks and
+ASan-first runtime manifests pass. The room captures do not establish visible
+Dog combat, audio or normal-input Creature contact. Creature controller/contact/
+AI adapters, sound/reaction integration, nonresident flag retention without model
+reconstruction and the other controlling S4 gates remain open. Status remains
+**incomplete**.

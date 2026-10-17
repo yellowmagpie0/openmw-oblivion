@@ -25,6 +25,7 @@
 #include <components/misc/osguservalues.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/nifosg/matrixtransform.hpp>
+#include <components/nif/node.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/imagemanager.hpp>
 #include <components/resource/scenemanager.hpp>
@@ -1129,11 +1130,15 @@ namespace MWRender
         osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
         : Animation(ptr, std::move(parentNode), resourceSystem)
     {
+        mPtr.getRefData().setOblivionCanSpendFatigue(false);
         const VFS::Path::Normalized source(model);
         const VFS::Path::Normalized path = source.view().starts_with("meshes/")
             ? source
             : Misc::ResourceHelpers::correctMeshPath(source);
         setObjectRoot(path.value(), true, false, true);
+        const auto file = mResourceSystem->getNifFileManager()->get(path);
+        const auto* root = file->mRoots.empty() ? nullptr : dynamic_cast<const Nif::NiAVObject*>(file->mRoots.front());
+        mPtr.getRefData().setOblivionCanSpendFatigue(Nif::tes4CreatureHasFatigueCollision(root));
         if (mPtr.getCellRef().getRagdollPose() == nullptr)
             addAnimDirectory(path.parent());
         const ESM4::Creature* creature = mPtr.get<ESM4::Creature>()->mBase;
@@ -1157,7 +1162,8 @@ namespace MWRender
         const std::size_t ragdollBones = applyRagdollPose();
         Log(Debug::Info) << "M11 creature assembled: ref=" << mPtr.getCellRef().getRefId() << " model=" << path
                          << " parts=" << mParts.size() << " animation_groups=" << mSupportedAnimations.size()
-                         << " ragdoll_bones=" << ragdollBones;
+                         << " ragdoll_bones=" << ragdollBones
+                         << " fatigue_eligible=" << mPtr.getRefData().getOblivionCanSpendFatigue();
     }
 
     std::size_t ESM4CreatureAnimation::applyRagdollPose()

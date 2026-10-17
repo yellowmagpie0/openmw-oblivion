@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "name": "m15-creature-model-fatigue-continuation",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{fixture_data}\"\ncontent=Oblivion.esm\ncontent=M15CreatureFatigue.esp\ncontent=fatigue-no-regen.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 15\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 2 command content:m15creaturefatigue.esp:000800 GetAV Fatigue\nat 2 command content:m15creaturefatigue.esp:000800 ModAV Fatigue -5\nat 2 command content:m15creaturefatigue.esp:000800 GetAV Fatigue\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+  ],
+  "xvfb": false,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "M11 creature assembled:.*fatigue_eligible=1",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: acceptance-command actor=content:m15creaturefatigue.esp:000800 name=GetAV result=150",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "screenshot",
+      "name": "creature-after-command.png",
+      "minimum_entropy": 0.03,
+      "timeout_seconds": 300
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 600,
+  "expected_exit": 0,
+  "expected_log": [
+    "M11 creature assembled:.*fatigue_eligible=1",
+    "M7 ObScript: acceptance-command actor=content:m15creaturefatigue.esp:000800 name=GetAV result=150",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted"
+  ],
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  },
+  "sdl_offscreen_input": true
+}

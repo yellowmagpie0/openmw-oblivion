@@ -1,6 +1,56 @@
 #include <components/nif/physics.hpp>
+#include "node.hpp"
 
 #include <gtest/gtest.h>
+
+TEST(ESM4CreatureModelEligibility, UsesOnlyRootAndThreeFirstChildren)
+{
+    for (unsigned mask = 0; mask < 64; ++mask)
+    {
+        SCOPED_TRACE(mask);
+        std::array<Nif::NiNode, 6> nodes;
+        Nif::bhkBlendCollisionObject collision;
+        for (unsigned i = 0; i < nodes.size(); ++i)
+        {
+            Nif::Testing::init(static_cast<Nif::NiAVObject&>(nodes[i]));
+            if (mask & (1u << i)) nodes[i].mCollision = Nif::NiCollisionObjectPtr(&collision);
+            if (i + 1 < nodes.size()) nodes[i].mChildren.emplace_back(&nodes[i + 1]);
+        }
+        EXPECT_EQ(Nif::tes4CreatureHasFatigueCollision(&nodes.front()), (mask & 15) != 0);
+    }
+}
+
+TEST(ESM4CreatureModelEligibility, IgnoresSiblingsAndGenericCollision)
+{
+    Nif::NiNode root, first, second;
+    for (auto* node : {&root, &first, &second})
+        Nif::Testing::init(static_cast<Nif::NiAVObject&>(*node));
+    Nif::NiCollisionObject generic;
+    Nif::bhkCollisionObject havok;
+    root.mCollision = Nif::NiCollisionObjectPtr(&generic);
+    second.mCollision = Nif::NiCollisionObjectPtr(&havok);
+    root.mChildren = {Nif::NiAVObjectPtr(&first), Nif::NiAVObjectPtr(&second)};
+    EXPECT_FALSE(Nif::tes4CreatureHasFatigueCollision(&root));
+    root.mChildren.front() = Nif::NiAVObjectPtr(nullptr);
+    EXPECT_FALSE(Nif::tes4CreatureHasFatigueCollision(&root));
+    root.mChildren.front() = Nif::NiAVObjectPtr(&second);
+    EXPECT_TRUE(Nif::tes4CreatureHasFatigueCollision(&root));
+}
+
+TEST(ESM4CreatureModelEligibility, HandlesMissingRootLeafAndCycle)
+{
+    EXPECT_FALSE(Nif::tes4CreatureHasFatigueCollision(nullptr));
+    Nif::NiTriShape leaf;
+    Nif::Testing::init(leaf);
+    EXPECT_FALSE(Nif::tes4CreatureHasFatigueCollision(&leaf));
+    Nif::bhkCollisionObject havok;
+    leaf.mCollision = Nif::NiCollisionObjectPtr(&havok);
+    EXPECT_TRUE(Nif::tes4CreatureHasFatigueCollision(&leaf));
+    Nif::NiNode root;
+    Nif::Testing::init(static_cast<Nif::NiAVObject&>(root));
+    root.mChildren.emplace_back(&root);
+    EXPECT_FALSE(Nif::tes4CreatureHasFatigueCollision(&root));
+}
 
 namespace Nif
 {

@@ -682,6 +682,12 @@ namespace MWMechanics
             *this, values.mActor, actor.getClass().getCreatureStats(actor)));
     }
 
+    bool OblivionCombatService::canSpendFatigue(const MWWorld::Ptr& actor)
+    {
+        return !actor.isEmpty() && (actor.getType() != ESM::REC_CREA4
+            || actor.getRefData().getOblivionCanSpendFatigue());
+    }
+
     void OblivionCombatService::clear()
     {
         mPreparedReleaseIdentity.mValue.reset();
@@ -1885,15 +1891,12 @@ namespace MWMechanics
         const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
                                 std::uint8_t av, float delta) {
             if (delta != 0 && ESM4::actorValueModifierRequestAllowed(values.mOwner, av, delta,
-                    {playerGodMode, ptr.getType() != ESM::REC_CREA4}))
+                    {playerGodMode, canSpendFatigue(ptr)}))
                 values.mValues[av] = ESM4::changeActorValueModifier(
                     values.mValues[av], values.mOwner, av, ESM4::ActorValueModifier::Damage, delta);
         };
         const auto spendFatigue = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr, float delta) {
-            // Current native Creature construction/command policy has +278
-            // disabled. Creature contact remains gated until its live flag
-            // transitions are represented; NPC/Player eligibility is true.
-            if (delta >= 0 || ptr.getType() == ESM::REC_CREA4)
+            if (delta >= 0 || !canSpendFatigue(ptr))
                 return;
             const float current = values.mOwner == ESM4::ActorValueOwner::Player
                 ? ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess)

@@ -14,6 +14,11 @@ namespace Nif
 {
 
     struct NiNode;
+    struct NiAVObject;
+
+    // TES4 Creature625850: inspect the root and at most three first children.
+    // Siblings and deeper Havok collision objects do not enable Actor+104.
+    bool tes4CreatureHasFatigueCollision(const NiAVObject* root);
 
     struct BoundingVolume
     {

@@ -15047,3 +15047,70 @@ whole C++ state restoration and no repeated commitment. The former Creature
 55-Fatigue expectation retained in4c4116045f was incorrect and is corrected;
 Creature construction/command policy has +278 disabled. Native live flag
 transitions and the still-gated Creature controller/contact route remain open.
+
+### Loaded Creature model initialization enables Fatigue modifiers
+
+The preceding construction default is insufficient for resident models. Original
+Creature625850 searches the supplied model root and at most three first children
+for collision RTTI derived from `bhkNiCollisionObject` (BA7B80). It ignores
+siblings, deeper nodes and generic collision objects. Original4E4186..4E41AE
+passes that result to actor virtual+2746250E0; virtual+2786250F0 reads the same
+actor byte104. This is separate from TESCreature base byte104.
+
+`M15-CREATURE-MODEL-FATIGUE-VERIFICATION.json` pins the executable, code and
+evidence. A private original-game observer records newly spawned stock Dog and
+Skeleton1 construction0 -> model setter1 -> loaded1, with return address4E41AE.
+Skeleton base byte104 is2 while its actor byte is1. The paused original console
+observes Dog Fatigue 160 ->155 after ModAV-5. Continue selected an existing private
+save; its precise quicksave/autosave identity was not separately captured. The
+pristine quicksave hash is preservation evidence. No actor-memory edits or
+inferior calls supplied the observations. Final cleanup verifies original input
+bytes/modes/atime/mtime and no remaining private-WINEPREFIX process; Steam rewrote
+the child's STEAM_COMPAT_DATA_PATH. The game and wrapper exited normally.
+
+The new instruction oracle executes 3,072 original625850/4A05E0/405790 cases,
+including recursion counters 0..3, collision ancestry, chain depths and masks.
+Virtual RTTI/IsNode accessor results and synthetic objects are declared
+boundaries. C++ uses the normal root invocation with counter 0. Three component
+tests include its shared 64-mask matrix plus generic/null collisions, siblings,
+empty child0, leaves and cycles. Unmodified stock Dog/Skeleton base NIFs agree;
+their first qualifying collisions occur at depths 3/2. A loaded model collision
+does not require an already-instantiated live ragdoll.
+
+The installed archive audit falsified an initial uniqueness assumption: Shivering
+Isles also supplies a different Dog skeleton. Both extracted versions qualify at
+depth3; Skeleton has one candidate at depth2. The actual archive selection was
+not captured, and the eligibility result is invariant across both Dog candidates.
+The failed assumption and corrected member/content audit are retained.
+
+The transient RefData flag starts false and refreshes from the loaded Creature
+base NIF. One accessor supplies resident commands/resource requests, frame
+movement eligibility, physical direct damage and separate capped attacker/block
+expenditure. NPC/Player eligibility is unchanged. Actual-Ptr tests exercise 24
+direct requests across both model flags, Player/Creature victims, god mode and
+signed deltas, with atomic publication, facade agreement, restoration and no
+replay. Twelve attacker requests and twelve block-plus-direct requests check
+capped2 ->0 ->-5 versus uncapped2 ->-3.
+
+Normal checks pass 2,798 component /1,616 engine /310 Python tests. ASan/UBSan
+passes 742 component cases selected by `ESM4*` and all 1,616 engine cases; leak
+checks are disabled. The source fingerprint is
+`65100945d920ec251d6164f25212acf64686f6243b2ca40398c345a88e515ce5`.
+Only retained input manifests and evidence documentation follow those checks.
+Both configurations also pass actual two-process stock-Dog courses: Script
+ModAV produces160 ->155, then fresh model reconstruction permits155 ->150.
+Script modifiers are -5/-10 and Damage remains 0; the original console instead
+uses Damage. Exact C++/Python binary payload identity, all unrelated native AVs,
+bases/lifecycle/action ownership and saved inventories are preserved. Facade
+agreement is an actual-Ptr assertion; runtime GetAV queries native authority.
+
+Retained failures include the first helper's optional-pointer debug assertion,
+an intentionally stopped normal build after discovering binary hash diagnostic
+output, and the first sanitizer game's ASan preload-order rejection before
+gameplay. Corrected checks and the separate ASan-first manifests pass. Source
+JSON and a bounded writer reproduce one ACRE plus an unchanged master CELL;
+CreatureDog itself is unchanged and no new script/outcome is authored. Engine
+compilation, semantic inspection and runtime acceptance are recorded separately
+from structural readback. This checkpoint establishes resident model eligibility
+and command/reload behavior. Creature contact/audio/reaction integration and
+nonresident flag retention without reconstruction remain open, as does full S4.

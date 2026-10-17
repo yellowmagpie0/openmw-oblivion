@@ -36,6 +36,7 @@ namespace MWWorld
     {
         mRuntimeIdentity.mValue.reset();
         mBaseNode = refData.mBaseNode;
+        mOblivionCanSpendFatigue = refData.mOblivionCanSpendFatigue;
         mLocals = refData.mLocals;
         mEnabled = refData.mEnabled;
         mPosition = refData.mPosition;
