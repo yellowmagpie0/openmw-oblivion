@@ -11956,7 +11956,7 @@ namespace
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
     std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1,
-        bool rotatedRoot = false, bool scabbard = false)
+        bool rotatedRoot = false, bool scabbard = false, std::string_view rootName = "Owned weapon")
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -11976,7 +11976,7 @@ namespace
         if (scabbard) data += bytes(std::uint16_t{0}) + bytes(std::uint16_t{0});
         data += bytes(std::uint32_t{0}); // No groups.
         // NiNode / NiAVObject / NiObjectNET.
-        data += string("Owned weapon") + bytes(std::uint32_t{1})
+        data += string(rootName) + bytes(std::uint32_t{1})
             + bytes(std::int32_t(childTarget ? 5 : 4)) + bytes(std::int32_t{-1})
             + bytes(std::uint16_t{14});
         const std::array<float, 13> rootTransform = rotatedRoot
@@ -23246,6 +23246,34 @@ TEST(OblivionWorldTest, NativeGetKnockedStateUsesTheCommandTranslationAcrossScri
     const auto npc = addNativeNpc(fixture, 0x801);
     const auto creature = addEquipmentCreature(fixture);
     const auto low = addNativeNpc(fixture, 0x802);
+    ESM4::RuntimeState coldBefore;
+    world.getOblivionCombatService()->capture(coldBefore);
+    for (const auto& cold : {npc, creature, low})
+    {
+        const auto key = cold.getCellRef().getFormKey();
+        const auto* customData = cold.getRefData().getCustomData();
+        ASSERT_FALSE(world.getOblivionCombatService()->findActorValues(key));
+        EXPECT_EQ(world.getOblivionScriptIsLeftUp(key), 1.0);
+        ObScript::RuntimeContext context;
+        context.mSelf = key;
+        const auto reference = ObScript::Value{ObScript::ReferenceValue{key, {}}};
+        EXPECT_EQ(ObScript::asNumber(world.getOblivionScriptManager()->call(
+            "IsLeftUp", reference, {}, context, {})), 1.0);
+        EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(key));
+        EXPECT_EQ(cold.getRefData().getCustomData(), customData);
+    }
+    ESM4::ActorCharacter unloaded{};
+    unloaded.mId = {0x803, 0};
+    unloaded.mFormKey = ESM::FormKey::content("headless.esm", 0x803);
+    unloaded.mBaseObj = npc.get<ESM4::Npc>()->mBase->mId;
+    unloaded.mBaseKey = npc.get<ESM4::Npc>()->mBase->mFormKey;
+    world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(unloaded, unloaded.mFormKey);
+    ASSERT_TRUE(world.getWorldModel().getPtr(unloaded.mId).isEmpty());
+    EXPECT_EQ(world.getOblivionScriptIsLeftUp(unloaded.mFormKey), 1.0);
+    EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(unloaded.mFormKey));
+    ESM4::RuntimeState coldAfter;
+    world.getOblivionCombatService()->capture(coldAfter);
+    EXPECT_EQ(coldAfter, coldBefore);
     ASSERT_TRUE(world.activateOblivionActor(npc));
     ASSERT_TRUE(world.activateOblivionActor(creature));
     ASSERT_TRUE(world.initializeOblivionNonPlayerActor(low, ESM4::ActorValueProcess::Low));
@@ -23280,10 +23308,133 @@ TEST(OblivionWorldTest, NativeGetKnockedStateUsesTheCommandTranslationAcrossScri
             EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::True);
             condition.mComparisonValue = static_cast<float>(1.0 - expected);
             EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::False);
+            // Native IsLeftUp has no process/knocked-state gate. This
+            // headless World has no Spine, which returns1 for every actor.
+            EXPECT_EQ(world.getOblivionScriptIsLeftUp(key), 1.0);
+            EXPECT_EQ(ObScript::asNumber(scripts->call("IsLeftUp", reference, {}, context, {})), 1.0);
+            condition.mFunction = 285;
+            condition.mComparisonValue = 1;
+            EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::True);
+            condition.mComparisonValue = 0;
+            EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)), ESM4::ConditionResult::False);
             EXPECT_EQ(*combat.findActorValues(key), before);
         }
     }
     EXPECT_FALSE(world.getOblivionScriptKnockedState(ESM::FormKey::content("headless.esm", 0xabcdef)));
+    EXPECT_FALSE(world.getOblivionScriptIsLeftUp(ESM::FormKey::content("headless.esm", 0xabcdef)));
+}
+
+TEST(OblivionWorldTest, NativeIsLeftUpReadsPhysicalSpineAndScopedHorseFallback)
+{
+    class SourceAnimation : public MWRender::Animation
+    {
+    public:
+        SourceAnimation(const MWWorld::Ptr& actor, osg::Group* parent, Resource::ResourceSystem* resources,
+            const std::string& model) : Animation(actor, parent, resources)
+        { setObjectRoot(model, true, false, false); }
+    };
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto npc = addNativeNpc(fixture, 0x900);
+    const auto creature = addEquipmentCreature(fixture);
+    auto creatureBase = *creature.get<ESM4::Creature>()->mBase;
+    creatureBase.mBaseScale = 1;
+    world.getStore().getWritable<ESM4::Creature>().insertStatic(creatureBase, creatureBase.mFormKey);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.activateOblivionActor(creature));
+    ESM4::RuntimeState before;
+    world.getOblivionCombatService()->capture(before);
+    const std::string model = "meshes/m15-is-left-up.nif";
+    std::filesystem::create_directories(fixture.mDirectory / "meshes");
+    {
+        std::ofstream file(fixture.mDirectory / model, std::ios::binary);
+        const auto bytes = nativeCarriedWeaponNif(.5f, false, 1, false, false, "Bip01 Spine");
+        file.write(bytes.data(), bytes.size());
+        ASSERT_TRUE(file);
+    }
+    fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+    fixture.mVfs.buildIndex();
+    fixture.mResources.getSceneManager()->setShaderPath(
+        std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+    osg::ref_ptr<osg::Group> parent = new osg::Group;
+    SourceAnimation animation(npc, parent, &fixture.mResources, model);
+    SourceAnimation creatureAnimation(creature, parent, &fixture.mResources, model);
+    const auto placement = Nif::NiTransform::getIdentity();
+    EXPECT_THROW(world.getOblivionActorIsLeftUp(creature, animation, placement), std::invalid_argument);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 1);
+    const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
+    ASSERT_TRUE(source);
+    auto poses = animation.beginPhysicalPose(
+        *source->definition(), placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
+    ASSERT_EQ(poses.size(), 1u);
+    auto flip = osg::Matrixf::identity();
+    flip(1, 1) = flip(2, 2) = -1;
+    flip.setTrans(poses[0].mPose.getTrans());
+    poses[0].mPose = flip;
+    animation.applyPhysicalPose(poses, placement);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 0);
+    animation.endPhysicalPose();
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 1);
+    auto* spine = const_cast<NifOsg::MatrixTransform*>(
+        dynamic_cast<const NifOsg::MatrixTransform*>(creatureAnimation.getNode("Bip01 Spine")));
+    ASSERT_NE(spine, nullptr);
+    spine->setMatrix(flip);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 0);
+    auto base = *creature.get<ESM4::Creature>()->mBase;
+    base.mData.creatureType = 4;
+    world.getStore().getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1); // Horse ignores Bip01.
+    osg::ref_ptr<NifOsg::MatrixTransform> second
+        = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+    second->setName("Bip02 Spine");
+    second->setMatrix(flip);
+    spine->addChild(second); // Two flips give the second Spine positive world R22.
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1);
+    base.mData.creatureType = 0;
+    world.getStore().getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 0); // Prefer Bip01.
+    spine->setName("bip01 spine");
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1); // Exact-case fallback.
+    second->setName("Other");
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1); // Missing both.
+    ESM4::RuntimeState after;
+    world.getOblivionCombatService()->capture(after);
+    EXPECT_EQ(after, before);
+}
+
+TEST(OblivionWorldTest, NativeCreatureRenderedScaleUsesAbsoluteStoredBnamProduct)
+{
+    NativeWorldFixture fixture;
+    const auto actor = addEquipmentCreature(fixture);
+    ESM4::RuntimeState before;
+    fixture.mWorld.getOblivionCombatService()->capture(before);
+    auto base = *actor.get<ESM4::Creature>()->mBase;
+    for (const float baseScale : {-.25f, .25f, 0.f, -0.f})
+    {
+        base.mBaseScale = baseScale;
+        fixture.mWorld.getStore().getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        for (const float referenceScale : {-2.f, 2.f, -0.f, 0.f})
+        {
+            osg::Vec3f scale(referenceScale, referenceScale, referenceScale);
+            actor.getClass().adjustScale(actor, scale, false);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(scale[axis]), std::bit_cast<std::uint32_t>(referenceScale));
+            actor.getClass().adjustScale(actor, scale, true);
+            const float expected = baseScale == 0 || referenceScale == 0 ? 0.f : .5f;
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(scale[axis]), std::bit_cast<std::uint32_t>(expected));
+        }
+    }
+    base.mBaseScale = 1;
+    fixture.mWorld.getStore().getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+    osg::Vec3f invalid(2, std::numeric_limits<float>::infinity(), 2);
+    EXPECT_THROW(actor.getClass().adjustScale(actor, invalid, true), std::invalid_argument);
+    EXPECT_EQ(invalid.x(), 2);
+    EXPECT_TRUE(std::isinf(invalid.y()));
+    EXPECT_EQ(invalid.z(), 2);
+    ESM4::RuntimeState after;
+    fixture.mWorld.getOblivionCombatService()->capture(after);
+    EXPECT_EQ(after, before);
 }
 
 TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSavedAuthority)

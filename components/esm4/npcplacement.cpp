@@ -2,10 +2,31 @@
 #include "placementsincos.hpp"
 
 #include <components/nif/nativetransform.hpp>
+#include <components/nif/nativetransformmath.hpp>
 #include <cmath>
 
 namespace ESM4
 {
+    std::optional<float> creaturePlacementScale(
+        float referenceScale, float baseScale, Nif::NativeTransformPrecision precision) noexcept
+    {
+        const Nif::Detail::NativeTransformMath math(precision);
+        if (!math.valid() || !std::isfinite(referenceScale) || !std::isfinite(baseScale))
+            return std::nullopt;
+        float product;
+        if (!Nif::tryStoreNativeTransformFloat(math.multiply(baseScale, referenceScale), product))
+            return std::nullopt;
+        return std::abs(product);
+    }
+
+    std::optional<Nif::NiTransform> creaturePlacementRoot(const ESM::Position& position,
+        float referenceScale, float baseScale, Nif::NativeTransformPrecision precision) noexcept
+    {
+        const auto scale = creaturePlacementScale(referenceScale, baseScale, precision);
+        if (!scale) return std::nullopt;
+        return npcPlacementRoot(position, *scale, std::nullopt);
+    }
+
     std::optional<Nif::NiTransform> npcPlacementRoot(const ESM::Position& position,
         float referenceScale, std::optional<NpcPlacementMorphology> morphology) noexcept
     {

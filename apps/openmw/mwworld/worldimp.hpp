@@ -416,6 +416,11 @@ namespace MWWorld
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
+        std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
+        // Borrow the current actor renderer with an already resolved native
+        // reference placement. No process/knocked-state predicate participates.
+        double getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,
+            const Nif::NiTransform& placement) const;
         bool setOblivionPlayerCrimeLevel(int amount) override;
         bool requestOblivionReputation(const Ptr& actor, int amount) override;
         std::optional<std::int32_t> getOblivionPlayerInfamy() const;

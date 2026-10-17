@@ -261,5 +261,857 @@
       "No new normal-input runtime course or recovery acceptance.",
       "Reader admits finite, representable scene transforms; the independent native direct-coefficient predicate also specifies nonfinite IEEE results."
     ]
+  },
+  "isleftup_world_followup": {
+    "status": "World/M7/CTDA pose-query and Creature scale checkpoint verified; full M15S4 remains incomplete",
+    "parent_commit": "f9998275ad7e2edfe34ea2030905111d134c703f",
+    "tested_engine_source_fingerprint": "c5ae17f58d5890ee4a822e5cf39618bfcee6c0165ef6d29a786333e77c6b05cf",
+    "checks": {
+      "engine_normal": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-cold-engine-normal-07/verification.json",
+          "sha256": "f70928f6849d671c06d45a3895dcf1019d0cf809006a8cd41445927e7d8fc85a"
+        },
+        "source": {
+          "head": "f9998275ad7e2edfe34ea2030905111d134c703f",
+          "source_fingerprint": "c5ae17f58d5890ee4a822e5cf39618bfcee6c0165ef6d29a786333e77c6b05cf"
+        },
+        "result": {
+          "executed": 1623,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f07edd71eb91b348ff7f7c42f3c89684fe9e00f4801ecf6ae78023f5b2938953",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "000fd84b66eef708fe502d81620bc09de6748e731c6fe68f496d5ff7968acde1",
+          "inventory_sha256": "b4a135cb41b02601e05f263dd69b23f905d18a74ee5d89312ba8f2ce07516587",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "engine_sanitized": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-cold-engine-sanitized-07/verification.json",
+          "sha256": "61a4cf12588e1ab41e464d7c06919dee3c8319cfb94873159f4f9cd393bba95b"
+        },
+        "source": {
+          "head": "f9998275ad7e2edfe34ea2030905111d134c703f",
+          "source_fingerprint": "c5ae17f58d5890ee4a822e5cf39618bfcee6c0165ef6d29a786333e77c6b05cf"
+        },
+        "result": {
+          "executed": 1623,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0a5e213928dab7fbab876e8aaa93e34161536b6191297c2040bf0299b5798834",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6ce46145ab1b188d6c0455c60357a9b3e664b81bde81972a21e7882dd5998c1c",
+          "inventory_sha256": "b4a135cb41b02601e05f263dd69b23f905d18a74ee5d89312ba8f2ce07516587",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "components_normal": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-world-components-normal-05/verification.json",
+          "sha256": "d301e1a15d8bd1c43aa3cbcf11871724115dbf9596374146358b998914729907"
+        },
+        "source": {
+          "head": "f9998275ad7e2edfe34ea2030905111d134c703f",
+          "source_fingerprint": "0d2725da7e75510802d757023aad942b1125113560598ea595b669a119a7f6cd"
+        },
+        "result": {
+          "executed": 2809,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "be9f5dc390f0045ec3d6e6a823c5205e8c26604d110ea5645bfaab82e808690d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "10a9f6943464f74a7d957893d9b4e9e37d0c87dff1c0ee9db7d81c09fa240952",
+          "inventory_sha256": "d49feb73de65234d0e1c24e787dcd2a0aed44255a3be69eee4f3ac9c4156b40b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "components_sanitized": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-world-components-sanitized-05/verification.json",
+          "sha256": "a1a002a204fe9033a75216225c64c63e10e1147b83bff463f9d2897002fd71bc"
+        },
+        "source": {
+          "head": "f9998275ad7e2edfe34ea2030905111d134c703f",
+          "source_fingerprint": "0d2725da7e75510802d757023aad942b1125113560598ea595b669a119a7f6cd"
+        },
+        "result": {
+          "executed": 751,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "fe0fac9dcadb23ae9a307222b8077cf050e1889eb6968a2a11139b6ac56e8fbc",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e6216ea3224a547493cc9d4b27be7497813f9885ff14ac3c012a8cee096f6f5d",
+          "inventory_sha256": "f65de1c85b7c9b940394e66218ef3dca3e7b5f32f7c657f45d314770035dffa0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "python": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-audit-python-08/verification.json",
+          "sha256": "5d1338e2f10a12d89a192be342c4dde07e2c658e16d6b7d6f9195d4c174850ca"
+        },
+        "source": {
+          "head": "f9998275ad7e2edfe34ea2030905111d134c703f",
+          "source_fingerprint": "a5d2ab5289b9594200ca33813c73690e7aac05d520a79e47758ee1af063f9853"
+        },
+        "result": {
+          "executed": 313,
+          "passed": true,
+          "log_sha256": "69e965009d1beb61ffaf3eaa4c25086732498e445a4bd222779ed5d3eff48f96"
+        }
+      }
+    },
+    "coverage_note": "After component verification only World actor classification and its World integration test change; final engine inventories and runtime courses cover them. Python is checked again after adding the IsLeftUp audit label; that label is the only change after final engine verification. Compiled implementation is unchanged. Documentation and editable runtime recipes follow checks.",
+    "source_sha256": {
+      "components/esm4/npcplacement.cpp": "d754bbea75efeb9952c51a1c18b97719ba8529c0a663a54c84030651643212ec",
+      "components/esm4/npcplacement.hpp": "df66692dcc8c1241b885a99c807a438b8db6659d83c608e23b0951c749be8aa3",
+      "apps/components_tests/esm4/npcplacement.cpp": "02acfa43ffd0eb22a8ff7f616740d2ffb36d3b0885745eefbf7c21c6d633f5ba",
+      "apps/components_tests/esm4/creatureplacement_expected.inc": "cc0c2d06923916c978a57a02d3be0e7e2491d248ef1209065b9f28171c542524",
+      "apps/openmw/mwclass/esm4interactive.cpp": "a0374490e78994eb3529314544c768e83bf741d600559b7a43f62d257204896c",
+      "apps/openmw/mwmechanics/oblivionai.cpp": "8fda0424970a171db7b7e4c539cb0768a762211d5eeed94aa17449444f2dafbf",
+      "apps/openmw/mwworld/oblivionscriptmanager.cpp": "ad4121bf21a09d8b831ec9857620103314a6882616d12f494cf080116485e31f",
+      "apps/openmw/mwworld/worldimp.cpp": "a3738fc449ccd21c552b5b064cce822b2bd7e9fd2049e62d8fa4e07fe557bda0",
+      "apps/openmw/mwworld/worldimp.hpp": "fd3a01152295f93a36f18eae53690feaf4d49100c235ec4f2eba268ac6e6b25c",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "f3b7fc6871f3e22c87d3686dba04cb836230349e91cfb0f67a48c00d55ad672c",
+      "scripts/tes4_m14_audit.py": "620378c674b4af9c56a01c2c27ad8c7e6db09cd2949052aad71176cc06a7356e"
+    },
+    "editable_runtime_recipes_sha256": {
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query.json": "8e1bf27b2c21c73c034f35fc96e2c9f8460bbe57e07c19906ba980fc7bdf8019",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_sanitized.json": "cd6ac1cdea7870a8b9213fa1d04751f65b7a9371440f7164e2858909afceea7a",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_continuation.json": "2608d4d7497548496f592108e71e24fab5b58d41da5682eca9d96899dad7d554",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_sanitized_continuation.json": "f96198e27a7facbdaca1164b504c5b9bd108f4e1b0df9fe9b7783acff4152d89"
+    },
+    "native": {
+      "isleftup": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-native-oracle-02/report.json",
+          "sha256": "e0ed7daddb714b50e6cdd004a27b6f413a2c910923970b80a06506008802d438"
+        },
+        "report": {
+          "passed": true,
+          "profiles": 9072,
+          "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "corpus_sha256": "ab1c5380a04f2bf243bc87039e77656329f6d52860e1e45f63139b0b85c760e3",
+          "actual_paths": [
+            "full4F89E0 evaluator and504930 command wrapper",
+            "actual977C50 actor class predicate",
+            "full4D96F0 scopedBip01/Bip02Spine lookup ordering/Horse handling",
+            "full8975C0 direct WorldRotation+84 comparison"
+          ],
+          "boundaries": [
+            "Actor base-form virtual returns supplied typed base; nonactor class predicate suppliesfalse;6F94A0 scene-name lookup supplies declared node presence with name/root arguments asserted. Console printing disabled."
+          ],
+          "rule": "Valid actor missingSpine=>1; presentSpine worldR22>0=>1 (positiveInfinity included; bothsignedzeros/negative/NaNfalse); nonactor/nullevaluator=>0. No process/knocked-state dependency; invalid processpointer proves it is notread. Horse type4 alwaysBip02, other actorsBip01 withBip02fallback.",
+          "null_command": "Null command wrapper preserves prior result sentinel123.5; high-level result initialization outside probe.",
+          "scope": "Native IsLeftUp query/lookup/IEEE comparison only; renderer world-pose binding, GetUp selection and physical recovery remain production integration work."
+        }
+      },
+      "creature_placement": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/creature-query-placement-native-02/report.json",
+          "sha256": "12992049b8a6da4f7d0360004282336a4f4c031e549c528dd488cad7439e405c"
+        },
+        "report": {
+          "passed": true,
+          "cases": 1615,
+          "repeat_identical": true,
+          "matrix_matches_original_npc_no_race": 1615,
+          "finite_results": 1523,
+          "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "corpus_sha256": "049139b4d1644f228a15581ac8dd389d29fb164856d98a9c16789acce12ab946",
+          "source_sha256": "734615fdfa6664e75dcd1d1e9d2a4ea7e040966f85dbfb2c399f241d0984f86d",
+          "harness_sha256": "82cb96f9389f9fa8b5964e80619e2742bbdc478c65d5065537bbf57882bdfbc9",
+          "scope": "Native i386 full4D7AF0, actual4D7260, scale prefix4E43C8..4E43E9. Actor class190977C50 skips pitch/roll. Creature base36 skips NPC morphology but multiplies reference scale by base+114 BNAM before float store/FABS. BaseScale1 exactly matches native NPC-no-race scale; all matrices match independent original NPC-no-race execution. No production C++ used.",
+          "boundaries": [
+            "Reference uses the same actual977C50 actor-class slot as previously verified NPC fixture, not a full Creature constructor/vtable.",
+            "Private reference/base/node/race inputs; node virtual50 stops before scene/world update.",
+            "Matrix consumes fixed nonzero pitch.7/roll-.9 to verify actor branch ignores them; scale products include signed zero, subnormals, extremes and CW007F/027F/037F."
+          ],
+          "retained_failure": "creature-query-placement-native-01 omitted base+114 and observed zero scale. This is a fixture failure that identified a required Creature BNAM input, not a production discrepancy.",
+          "production_work": "World query placement must include BNAM scale; native finite-domain helper, class sign policy and actual renderer/script integration pending."
+        }
+      },
+      "placement_cpp_normal": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/normal-verification.json",
+          "sha256": "eeec282b7d3827fb9acf2c3337f656ab3bf8f8586294c9afaea421e4f65b34b7"
+        },
+        "report": {
+          "passed": true,
+          "cases": 1615,
+          "finite_exact": 1523,
+          "nonfinite_rejected": 92,
+          "flavour": "normal",
+          "negative_controls": {
+            "wrong_bit": true,
+            "missing_row": true,
+            "duplicate_row": true,
+            "malformed_input": true
+          },
+          "source_sha256": {
+            "components/esm4/npcplacement.cpp": "d754bbea75efeb9952c51a1c18b97719ba8529c0a663a54c84030651643212ec",
+            "components/esm4/npcplacement.hpp": "df66692dcc8c1241b885a99c807a438b8db6659d83c608e23b0951c749be8aa3",
+            "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare.cpp": "27a5b0658f0c15d1ca35bf7bbef8f89c9ce57b9534194d260a39886c4775ef8c"
+          },
+          "cases_sha256": "049139b4d1644f228a15581ac8dd389d29fb164856d98a9c16789acce12ab946",
+          "binary_sha256": "e491d6e85f6e35ee3283216311fbf35c67def8f0ca945050edcd90d820b70ddc",
+          "build_command": [
+            "c++",
+            "-std=c++20",
+            "-I.",
+            "-O2",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare.cpp",
+            "components/esm4/npcplacement.cpp",
+            "components/nif/nativetransform.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare-normal"
+          ]
+        }
+      },
+      "placement_cpp_sanitized": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/sanitized-verification.json",
+          "sha256": "57a1c979ecbd8024b434c9642ffbf6267bb807547c4838a4911519a8827cc34f"
+        },
+        "report": {
+          "passed": true,
+          "cases": 1615,
+          "finite_exact": 1523,
+          "nonfinite_rejected": 92,
+          "flavour": "sanitized",
+          "negative_controls": {
+            "wrong_bit": true,
+            "missing_row": true,
+            "duplicate_row": true,
+            "malformed_input": true
+          },
+          "source_sha256": {
+            "components/esm4/npcplacement.cpp": "d754bbea75efeb9952c51a1c18b97719ba8529c0a663a54c84030651643212ec",
+            "components/esm4/npcplacement.hpp": "df66692dcc8c1241b885a99c807a438b8db6659d83c608e23b0951c749be8aa3",
+            "components/nif/nativetransform.cpp": "a4ef7fbb8b5db89ecf8e843c0cddaa3a390df7e96d43f0fc30e27e8117e43000",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare.cpp": "27a5b0658f0c15d1ca35bf7bbef8f89c9ce57b9534194d260a39886c4775ef8c"
+          },
+          "cases_sha256": "049139b4d1644f228a15581ac8dd389d29fb164856d98a9c16789acce12ab946",
+          "binary_sha256": "990864f32e8bd4248775a64d0dd85518e54514d4930ef05fa691718067e50c9d",
+          "build_command": [
+            "c++",
+            "-std=c++20",
+            "-I.",
+            "-O1",
+            "-g",
+            "-fsanitize=address,undefined",
+            "-fno-omit-frame-pointer",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare.cpp",
+            "components/esm4/npcplacement.cpp",
+            "components/nif/nativetransform.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/creature-query-placement-comparison-01/compare-sanitized"
+          ]
+        }
+      }
+    },
+    "runtime": {
+      "normal": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/verification.json",
+          "sha256": "82c6d938392c2080791292fcc54f5aa1eea8d44fda27040ba75e0e534d2779f9"
+        },
+        "report": {
+          "passed": true,
+          "build": "normal",
+          "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+          "epochs": [
+            {
+              "phase": "first",
+              "save": "build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave",
+              "save_sha256": "26db2c3c8446426e757092646358f07f8568afd882c09aada74abfc93ae97828",
+              "payload_sha256": "5c36d988fb09cfefef429c35dc3fd75bd08cf953fc07654352f18233ac5b8d81",
+              "isleftup_observations": [
+                0,
+                1
+              ],
+              "cold_actor_observations": [
+                1,
+                1
+              ],
+              "process_epoch": {
+                "pid": 27771,
+                "start_ticks": 1279815,
+                "clock_ticks_per_second": 100,
+                "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+                "command": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                  "--replace=config",
+                  "--config",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/first/config",
+                  "--no-grab",
+                  "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+                ],
+                "executable_sha256": "997e87edc25423c0b6501628214eb8f124db09952012c4c96b4168dcd93a3f0b",
+                "loaded_libraries": {
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+                }
+              },
+              "damage": {
+                "process": "High",
+                "knocked": 0,
+                "current_fatigue": 140.0,
+                "observed": [
+                  {
+                    "controlword": 127,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  },
+                  {
+                    "controlword": 639,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  },
+                  {
+                    "controlword": 895,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  }
+                ],
+                "health": 1.4199999570846558,
+                "fatigue": 1.7100000381469727
+              },
+              "saved_knockback": [],
+              "saved_melee": [
+                {
+                  "actor": "content:m15creaturemelee.esp:000802",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:026be1",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:15985a",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": false,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                }
+              ],
+              "audio": {
+                "sha256": "71f17b7a48a06d525cf718779ae94b09b13f746a34bddd6fa588f7f7796d903f",
+                "frames": 3069120,
+                "peak": 18225,
+                "rms": 345.84166998689005
+              }
+            },
+            {
+              "phase": "second",
+              "save": "build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave",
+              "save_sha256": "41c9d7bc5976921f56f36c8b50dfdfb88c27cc336a32fb57c6e09fb7f731a32c",
+              "payload_sha256": "1898ea637b100392c63807c0ae8da6d6dee2b2d32ffdac32cf84ef3d71203d71",
+              "isleftup_observations": [
+                0,
+                1
+              ],
+              "cold_actor_observations": [
+                1,
+                1
+              ],
+              "process_epoch": {
+                "pid": 30055,
+                "start_ticks": 1294085,
+                "clock_ticks_per_second": 100,
+                "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+                "command": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                  "--replace=config",
+                  "--config",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/second/config",
+                  "--no-grab",
+                  "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+                ],
+                "executable_sha256": "997e87edc25423c0b6501628214eb8f124db09952012c4c96b4168dcd93a3f0b",
+                "loaded_libraries": {
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+                }
+              },
+              "damage": {
+                "process": "High",
+                "knocked": 0,
+                "current_fatigue": 133.0,
+                "observed": [
+                  {
+                    "controlword": 127,
+                    "health_bits": 1068788350,
+                    "fatigue_bits": 1071265087
+                  },
+                  {
+                    "controlword": 639,
+                    "health_bits": 1068788351,
+                    "fatigue_bits": 1071265088
+                  },
+                  {
+                    "controlword": 895,
+                    "health_bits": 1068788351,
+                    "fatigue_bits": 1071265088
+                  }
+                ],
+                "health": 1.4094998836517334,
+                "fatigue": 1.7047499418258667
+              },
+              "saved_knockback": [],
+              "saved_melee": [
+                {
+                  "actor": "content:m15creaturemelee.esp:000802",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:026be1",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:15985a",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                }
+              ],
+              "audio": {
+                "sha256": "49bea07a3c19f81184827e7f964266b98d31b5a7756fa927f51adc827861c0e2",
+                "frames": 3009600,
+                "peak": 18212,
+                "rms": 322.97948195649474
+              }
+            }
+          ],
+          "isleftup_scope": "Two Creature and two unloaded NPC M7 IsLeftUp calls per process complete during the live standing-target contact course. Values are observations constrained to native boolean domain; no independent standing-bone coefficient/FPS/pixel parity is claimed. World tests separately establish exact physical-pose and Horse lookup semantics. Unloaded NPC06A837 has no actor-value authority before or after either process and returns native missing-Spine1 without resource birth. Player first-person IsLeftUp is outside this course.",
+          "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. Both completed-strike saves occur after an explicit simulation-time6 barrier and contain no active timed knockback. Does not prove uninterrupted/restarted trajectory equality, recovery animation, all-race/native pixel parity, incoming-attack visuals or full S4 matrix. Both current captures are reviewed separately for visible fists and clear lower view; known Dog face geometry defects remain. Four real M7 GetKnockedState query results per process (Player and Creature before/after contact) are0. Native positive script-query states are established by World tests, not this gameplay course. Source-body capture is tested with an owned NIF, not invoked by these contacts; automatic physical reactions remain open. ASan leak checks disabled."
+        },
+        "visual_review": {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/isleftup-query-runtime-normal-03/visual-review.json",
+            "sha256": "bdfadf5fedc9998d44cc10c44ce71b2757b1ed28b7e00076abb9f8452eede26b"
+          },
+          "report": {
+            "reviewed_directly": true,
+            "images": {
+              "first/player-hit-creature.png": "01f71e8ec2332089a896304e2b546f443bfee1ebc5fe44300468ce7ac2fe7d38",
+              "second/player-hit-creature-after-restart.png": "d4d5fd044f2bf5de3ecb332b1763b75a77290666e04d492b8f8751b85b62bccc"
+            },
+            "observations": "Dungeon and standing named Dog are visible with both drawn first-person fists and no torso occlusion. Dog face mesh gaps/lighting defects remain. No lying/GetUp frame is part of this course.",
+            "scope": "Current cold/pose query course; visual review separate from native instruction, resource/save and sound checks."
+          }
+        }
+      },
+      "sanitized": {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/verification.json",
+          "sha256": "ce6a31f1acbc364c19ede589f41517daa8ec8fffe39953d2cdc7ae3b741f5121"
+        },
+        "report": {
+          "passed": true,
+          "build": "sanitized",
+          "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+          "epochs": [
+            {
+              "phase": "first",
+              "save": "build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/first/userdata/saves/M15Review/Quicksave.omwsave",
+              "save_sha256": "dd8c20c69891c114a5b27f14348b996cf2875aa2f41b1fc417c9342ab9f06da4",
+              "payload_sha256": "07e1796fc26933d1afe80791e27e26d9b15c65de84f38ea969e3c464a6c97faa",
+              "isleftup_observations": [
+                0,
+                1
+              ],
+              "cold_actor_observations": [
+                1,
+                1
+              ],
+              "process_epoch": {
+                "pid": 30157,
+                "start_ticks": 1294559,
+                "clock_ticks_per_second": 100,
+                "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+                "command": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                  "--replace=config",
+                  "--config",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/first/config",
+                  "--no-grab",
+                  "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+                ],
+                "executable_sha256": "9cc16d5603d2ef4a3f1d16780fd382716ea04a87883478d72730c921854444c2",
+                "loaded_libraries": {
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                  "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                  "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+                }
+              },
+              "damage": {
+                "process": "High",
+                "knocked": 0,
+                "current_fatigue": 140.0,
+                "observed": [
+                  {
+                    "controlword": 127,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  },
+                  {
+                    "controlword": 639,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  },
+                  {
+                    "controlword": 895,
+                    "health_bits": 1068876431,
+                    "fatigue_bits": 1071309128
+                  }
+                ],
+                "health": 1.4199999570846558,
+                "fatigue": 1.7100000381469727
+              },
+              "saved_knockback": [],
+              "saved_melee": [
+                {
+                  "actor": "content:m15creaturemelee.esp:000802",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:026be1",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:15985a",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": false,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                }
+              ],
+              "audio": {
+                "sha256": "a4e37488e9e2a1aa4efc2b5f01b621892c00f032904ebfe52ff74593f6ac0352",
+                "frames": 17432640,
+                "peak": 18254,
+                "rms": 139.97640070883455
+              }
+            },
+            {
+              "phase": "second",
+              "save": "build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/second/userdata/saves/M15Review/Quicksave.omwsave",
+              "save_sha256": "a7b6efd4f5f94879d74f20bf064ff9224a8a0533d800a6acb0d8c29af0ab8e82",
+              "payload_sha256": "cdb4e869b6828eb2798c7d95cb04af0991ced8eb075310ce7b0bec8918a302ee",
+              "isleftup_observations": [
+                0,
+                1
+              ],
+              "cold_actor_observations": [
+                1,
+                1
+              ],
+              "process_epoch": {
+                "pid": 32735,
+                "start_ticks": 1333846,
+                "clock_ticks_per_second": 100,
+                "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+                "command": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                  "--replace=config",
+                  "--config",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/second/config",
+                  "--no-grab",
+                  "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+                ],
+                "executable_sha256": "9cc16d5603d2ef4a3f1d16780fd382716ea04a87883478d72730c921854444c2",
+                "loaded_libraries": {
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67",
+                  "/usr/lib64/libasan.so.8.0.0": "e4a7dbd1207e0140f2ddedecdf6ffaba87e542693247d9f51b5ec1e9b320da9f",
+                  "/usr/lib64/libubsan.so.1.0.0": "7a86e4af33a636ea89cc64295e04bb02fc067d8f2f929d87475d971f852b4f17"
+                }
+              },
+              "damage": {
+                "process": "High",
+                "knocked": 0,
+                "current_fatigue": 133.0,
+                "observed": [
+                  {
+                    "controlword": 127,
+                    "health_bits": 1068788350,
+                    "fatigue_bits": 1071265087
+                  },
+                  {
+                    "controlword": 639,
+                    "health_bits": 1068788351,
+                    "fatigue_bits": 1071265088
+                  },
+                  {
+                    "controlword": 895,
+                    "health_bits": 1068788351,
+                    "fatigue_bits": 1071265088
+                  }
+                ],
+                "health": 1.4094998836517334,
+                "fatigue": 1.7047499418258667
+              },
+              "saved_knockback": [],
+              "saved_melee": [
+                {
+                  "actor": "content:m15creaturemelee.esp:000802",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:026be1",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "content:oblivion.esm:15985a",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                },
+                {
+                  "actor": "dynamic:player:0000000000000001",
+                  "input": {
+                    "held_seconds": 0.0,
+                    "input_held": false,
+                    "prefer_left": true,
+                    "queued": 0
+                  },
+                  "strike": null,
+                  "ai_intent": null
+                }
+              ],
+              "audio": {
+                "sha256": "dcdae6e43e7242628475fbd7211546c46972c4c56107930ea325dbf66b63291a",
+                "frames": 15771840,
+                "peak": 17182,
+                "rms": 162.86807822806415
+              }
+            }
+          ],
+          "isleftup_scope": "Two Creature and two unloaded NPC M7 IsLeftUp calls per process complete during the live standing-target contact course. Values are observations constrained to native boolean domain; no independent standing-bone coefficient/FPS/pixel parity is claimed. World tests separately establish exact physical-pose and Horse lookup semantics. Unloaded NPC06A837 has no actor-value authority before or after either process and returns native missing-Spine1 without resource birth. Player first-person IsLeftUp is outside this course.",
+          "scope": "Player keyboard unarmed contacts with spell-free Creature: exactly one new hit per process, action ownership, independent original damage, native HP/Fatigue modifiers, Fur/Hand sound acknowledgements, nonzero rendered PCM, F5 and fresh-process continuation. Complete payload byte-exact re-encoding; unrelated native AVs, bases/life, RNG and inventories unchanged. Both completed-strike saves occur after an explicit simulation-time6 barrier and contain no active timed knockback. Does not prove uninterrupted/restarted trajectory equality, recovery animation, all-race/native pixel parity, incoming-attack visuals or full S4 matrix. Both current captures are reviewed separately for visible fists and clear lower view; known Dog face geometry defects remain. Four real M7 GetKnockedState query results per process (Player and Creature before/after contact) are0. Native positive script-query states are established by World tests, not this gameplay course. Source-body capture is tested with an owned NIF, not invoked by these contacts; automatic physical reactions remain open. ASan leak checks disabled."
+        },
+        "visual_review": {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/isleftup-query-runtime-sanitized-03/visual-review.json",
+            "sha256": "df53a9a580b69f73eeaa61f4c6ccd6f8269c2c830cbeb6684eba5a1f019424cb"
+          },
+          "report": {
+            "reviewed_directly": true,
+            "images": {
+              "first/player-hit-creature.png": "683147f985d222af58ff512d06652bb93cd1828957fb347fb95134f2c4fc1aa2",
+              "second/player-hit-creature-after-restart.png": "57164e1f3e2768310335de8d73471d673ce7e3b2791a998bca66d2307472a0d1"
+            },
+            "observations": "Standing named Dog and drawn first-person fists render in the dungeon without torso occlusion. Dog face mesh gaps/lighting defects remain. No lying/GetUp frame is part of this course.",
+            "scope": "Current sanitized cold/pose query course, distinct from native instruction, resource/save and audio checks."
+          }
+        }
+      }
+    },
+    "cold_actor_input": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/cold-actor-query-input-01.json",
+        "sha256": "b024e834efe1aa4d28447218678d58674583420db33b2e719f5d442c2345e38c"
+      },
+      "report": {
+        "passed": true,
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "plugins": [
+          "Oblivion.esm",
+          "M15CreatureMelee.esp",
+          "fatigue-no-regen.esp"
+        ],
+        "key": "content:oblivion.esm:06a837",
+        "reference": {
+          "type": "ACHR",
+          "form_id": "0x6a837",
+          "flags": 1024,
+          "offset": 232332929
+        },
+        "base": {
+          "type": "NPC_",
+          "form_id": "0x6a82f",
+          "flags": 262144,
+          "offset": 10359312
+        },
+        "base_editor_id": "MGMageScholar2",
+        "seed_sha256": "d3d7406c53513ce4c8a10adc6cbeb77944feea99737f94420800aecbafa81f62",
+        "seed_has_resource_authority": false,
+        "expected_query_result_without_resident_spine": 1,
+        "basis": "Original IsLeftUp actual actor-class/no-process/missing-Spine cases; read-only typed ACHR/NPC identity. Cold query must not create actor-value/lifecycle authority or inventory state."
+      }
+    },
+    "dependency_refresh": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/isleftup-dependency-refresh-01/report.json",
+        "sha256": "0e234c80d25223b5a446f28c40aac254dfb32a775058928ea422bfece8655527"
+      },
+      "reason": "Installed SDL library changed from2.32.72 to2.32.74. Both existing CMake configurations refreshed; protected build/sanitizer/Bullet/MyGUI options preserved. No compatibility symlink."
+    },
+    "semantics": [
+      "World/M7 and both AI CTDA resolvers use current rendered Spine world R22; no raw knocked-state gate.",
+      "Typed actor classification works without resource authority and without actor-value/lifecycle/custom-data birth; unloaded actor missing Spine returns1.",
+      "Horse Creature type4 uses Bip02 Spine; other actors prefer Bip01 with Bip02 fallback.",
+      "Native Creature scene scale stores referenceScale * BNAM then FABS, with native Single default and explicit precision. Rendering prepares all axes before assignment; other imported record domains keep their existing policy.",
+      "World tests read an actual owned-NIF physical pose and verify restoration, exact-case fallback, foreign-renderer rejection and unchanged authority."
+    ],
+    "scope_limits": [
+      "Player live first-person IsLeftUp requires a retained canonical full actor root. The current guard rejects an active partial first-person skeleton; headless Player tests do not establish that missing view path.",
+      "Pose reader admits finite representable scene transforms and unique names. Native direct-coefficient oracle also specifies NaN/infinity and null-command-wrapper behavior; those are not expanded renderer domains.",
+      "Native controller palette implementation is not fully emulated; current immutable unique bone names keep the admitted target unambiguous.",
+      "Runtime uses SDL offscreen scancode replay, private configuration/saves and software rendering. It does not establish physical gamepad or actual FPS coverage.",
+      "Standing-target query values are observations; native standing-bone, pixel and trajectory parity is not claimed.",
+      "No automatic body contact/frame/GetUp caller or recovery restart acceptance is added. Native postcontact reaction/mastery RNG and remaining full S4 matrix stay open.",
+      "ASan leak checking is disabled."
+    ],
+    "retained_attempts": [
+      "isleftup-world-syntax-01: World missing Race include and const Player getter; corrected02 passes.",
+      "isleftup-world-full-*-01: component modes pass; engine builds intentionally interrupted to correct the new test Frozen/AnimatedTargets mode.",
+      "isleftup-world-engine-*-02:1623 executed,2 new tests failed because full World state capture required a Player. Corrected to capture the tested combat authority directly.",
+      "isleftup-world-selection-normal-03:missing cached SDL2.32.72 link; matching sanitized03 intentionally stopped before dependency refresh.",
+      "creature-query-placement-native-01:fixture omitted BNAM and produced zero scale; corrected02 executes all required inputs.",
+      "isleftup-query-runtime-normal-01:first launch rejected incompatible xvfb+SDLoffscreen manifest before any game process. Exact failed manifests retained under assets01/failed-xvfb-setup-01.",
+      "isleftup-query-runtime-*-02:successful prior pose-query courses before the final cold-actor classification correction; superseded by03.",
+      "assets02/setup-failure.json:verification-script preparation used the wrong map identifier before launch; corrected before03 courses."
+    ]
   }
 }

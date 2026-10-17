@@ -37,6 +37,49 @@ namespace
         {0x1.b727ba0000000p-121f, -0x0.0p+0f, ESM4::NpcPlacementMorphology{0x1.0000000000000p+1f, -0x1.0000000000000p-1f}, {0x40000000u, 0x3db93ddu, 0x0u, 0x83db93ddu, 0x40000000u, 0x0u, 0x0u, 0x0u, 0xbf000000u}, 0x0u},
     }};
 
+    TEST(ESM4CreaturePlacement, MatchesOriginalActorYawAndStoredBaseScaleProduct)
+    {
+        struct OriginalCreaturePlacement
+        {
+            float mYaw, mReferenceScale, mBaseScale;
+            unsigned mControlWord;
+            std::array<unsigned, 9> mMatrix;
+            unsigned mScale;
+            bool mFinite;
+        };
+        constexpr OriginalCreaturePlacement originalCreature[]{
+#include "creatureplacement_expected.inc"
+        };
+        for (const auto& sample : originalCreature)
+        {
+            SCOPED_TRACE(sample.mControlWord);
+            SCOPED_TRACE(sample.mReferenceScale);
+            SCOPED_TRACE(sample.mBaseScale);
+            ESM::Position position{};
+            position.pos[0] = 12.25f; position.pos[1] = -9.5f; position.pos[2] = 1001.125f;
+            position.rot[0] = .7f; position.rot[1] = -.9f; position.rot[2] = sample.mYaw;
+            const auto precision = sample.mControlWord == 0x7f ? Nif::NativeTransformPrecision::Single
+                                                             : Nif::NativeTransformPrecision::Double;
+            const auto result = ESM4::creaturePlacementRoot(
+                position, sample.mReferenceScale, sample.mBaseScale, precision);
+            ASSERT_EQ(result.has_value(), sample.mFinite);
+            if (!result) continue;
+            EXPECT_EQ(std::bit_cast<unsigned>(result->mScale), sample.mScale);
+            EXPECT_EQ(result->mTranslation, position.asVec3());
+            for (unsigned row = 0; row < 3; ++row)
+                for (unsigned column = 0; column < 3; ++column)
+                    EXPECT_EQ(std::bit_cast<unsigned>(result->mRotation.mValues[row][column]),
+                        sample.mMatrix[row * 3 + column]);
+        }
+        for (float invalid : {std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        {
+            EXPECT_FALSE(ESM4::creaturePlacementScale(invalid, 1));
+            EXPECT_FALSE(ESM4::creaturePlacementScale(1, invalid));
+        }
+        EXPECT_FALSE(ESM4::creaturePlacementScale(1, 1, static_cast<Nif::NativeTransformPrecision>(99)));
+    }
+
     TEST(ESM4NpcPlacement, MatchesOriginalActorRootIncludingSeparateScaleAndMorphology)
     {
         // Native i386 execution of complete original4D7AF0/4D7260,

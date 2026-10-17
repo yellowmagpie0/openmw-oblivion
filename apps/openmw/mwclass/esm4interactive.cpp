@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 #include <MyGUI_TextIterator.h>
 #include <MyGUI_UString.h>
@@ -13,6 +14,7 @@
 #include <components/esm3/doorstate.hpp>
 #include <components/esm3/loadskil.hpp>
 #include <components/esm4/playermechanics.hpp>
+#include <components/esm4/npcplacement.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
@@ -418,8 +420,21 @@ namespace MWClass
 
     void ESM4Creature::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const
     {
-        if (rendering)
-            scale *= ptr.get<ESM4::Creature>()->mBase->mBaseScale;
+        if (!rendering) return;
+        const auto* base = ptr.get<ESM4::Creature>()->mBase;
+        if (!base->mAttackReach)
+        {
+            scale *= base->mBaseScale;
+            return;
+        }
+        osg::Vec3f prepared;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            const auto value = ESM4::creaturePlacementScale(scale[axis], base->mBaseScale);
+            if (!value) throw std::invalid_argument("unrepresentable native Creature scene scale");
+            prepared[axis] = *value;
+        }
+        scale = prepared;
     }
 
     void ESM4Creature::insertObjectRendering(const MWWorld::Ptr& ptr, const std::string& model,

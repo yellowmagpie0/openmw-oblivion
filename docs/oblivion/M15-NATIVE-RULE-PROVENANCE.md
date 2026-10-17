@@ -15429,3 +15429,28 @@ admission, physical recovery, directional/mastery/effect integration and the
 remaining input/view/FPS/restart matrix remain open. **Full S4 is incomplete.**
 See [the verification index](M15-NATIVE-REACTION-QUERY-VERIFICATION.json) and
 [editable probe protocol](../../scripts/data/oblivion_compat/m15_native_reaction_sources_and_queries_probe.json).
+
+## M15S4 IsLeftUp / Creature placement integration
+
+Original image SHA256 a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6:
+4F89E0/504930, actual977C50, scoped4D96F0 and8975C0 produce9072 accepted IsLeftUp
+profiles. Present Spine tests strict world R22 >0; missing Spine returns1, with no
+process state dependency. Horse type4 uses Bip02; others prefer Bip01 then Bip02.
+Scene lookup6F94A0 tries the controller palette then case-sensitive recursive
+NiNode70AC00/7073F0 lookup. The renderer reader requires a unique admitted target;
+the native palette itself is an explicit remaining emulation boundary.
+
+Full original4D7AF0/4D7260 and4E43C8..4E43E9 execute1615 Creature profiles twice on
+i386 hardware. Actor yaw skips pitch/roll; Creature base36 skips NPC morphology
+but4D7260 multiplies reference scale by BNAM at base+114 before the float store
+and FABS. Matrix outputs match independent original NPC-without-race executions.
+The supplied vtable uses the shared actual977C50 actor-class slot; this is not a
+full Creature constructor. Node virtual50 stops before scene/world updates.
+Corpus SHA256049139b4d1644f228a15581ac8dd389d29fb164856d98a9c16789acce12ab946.
+The first missing-BNAM fixture is retained as failed evidence.
+
+World/M7/CTDA and renderer integration,109 frozen rows, full test inventories,
+current SDL input/load courses, exact boundary descriptions and remaining Player
+view/recovery limits are recorded in
+[M15-PHYSICAL-ADMISSION-VERIFICATION.json](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+These query/placement results do not establish full S4 reaction acceptance.

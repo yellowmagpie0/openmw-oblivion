@@ -4760,3 +4760,39 @@ new linked engine/runtime acceptance is claimed. Fingerprint:
 `36e0fcc890898f574fb252d8fe9614c2e1ae9adbc36e16076ddcfb5a9a4e0925`.
 Canonical actor root/placement resolution, World/M7/CTDA285 and automatic recovery
 integration still remain open. Follow-up details are in the same verification index.
+
+## World-backed IsLeftUp and native Creature scale
+
+World, M7 and both CTDA evaluators now read the current rendered native Spine
+world R22 for IsLeftUp285. Horse type4 selects Bip02; other actors prefer Bip01
+with Bip02 fallback. Missing Spine returns1, without a process/knocked-state gate
+or resource-authority requirement. Cold actor queries preserve actor values,
+lifecycle and custom data. The owned-NIF test applies a real renderer physical
+pose, verifies the query and restores the animated target. Player first-person
+still needs a retained canonical full actor root; the current guard rejects the
+partial view skeleton instead of using it as a full actor.
+
+Native Creature scale multiplies reference scale by BNAM, stores binary32 and
+then takes the absolute value. The renderer now uses that stored product.
+1615 independent original i386 profiles repeat identically;1523 finite outputs
+match the production helper exactly and92 nonfinite results reject normally and
+under sanitizers.109 frozen rows cover the helper, including live Single products.
+The missing-BNAM fixture failure is retained.
+
+All 1623 engine cases /122 suites pass normally and under ASan/UBSan on the final
+query-classification source. The 2809 normal component and 751 sanitized ESM4
+cases pass on the preceding source; only World classification and its integration
+test change afterward, covered by full engine tests. All 313 Python tests pass
+after the subsequent audit-label addition.
+Leak detection is disabled. Source fingerprints, hashes and retained failures are
+in the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+
+Both current engines complete two SDL scancode contacts across F5/quit/fresh
+process load. The unloaded NPC06A837 returns1 before/after each contact without
+creating resource/lifecycle authority or inventory state. The rendered Creature
+queries complete alongside exact native Health/Fatigue, ownership, no replay,
+unchanged unrelated state/RNG/inventories, hit sounds and nonzero PCM. All four
+captures are reviewed; fists render clearly, while Dog face mesh/lighting defects
+remain. This is a standing-target query/contact course, with no native standing
+bone/pixel/FPS parity claim. Actual body admission on contact, body frame driving,
+GetUp selection/playback, recovery restart and the rest of S4 remain incomplete.

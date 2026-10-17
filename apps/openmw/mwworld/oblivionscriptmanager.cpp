@@ -1910,6 +1910,8 @@ namespace MWWorld
         }
         if (name == "getknockedstate")
             return std::int64_t(mWorld.getOblivionScriptKnockedState(objectKey()).value_or(0.0));
+        if (name == "isleftup")
+            return std::int64_t(mWorld.getOblivionScriptIsLeftUp(objectKey()).value_or(0.0));
         if (name == "getdead")
         {
             if (const auto* combat = mWorld.getOblivionCombatService())

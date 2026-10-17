@@ -49,6 +49,7 @@
 #include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadrace.hpp>
 #include <components/esm4/loadstat.hpp>
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/loadweap.hpp>
@@ -56,6 +57,7 @@
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/actorclock.hpp>
+#include <components/esm4/npcplacement.hpp>
 #include <components/esm4/runtimereferences.hpp>
 
 #include <components/misc/constants.hpp>
@@ -121,6 +123,7 @@
 #include "../mwrender/animation.hpp"
 #include "../mwrender/camera.hpp"
 #include "../mwrender/npcanimation.hpp"
+#include "../mwrender/obliviondropplacement.hpp"
 #include "../mwrender/postprocessor.hpp"
 #include "../mwrender/renderingmanager.hpp"
 #include "../mwrender/vismask.hpp"
@@ -2292,6 +2295,87 @@ namespace MWWorld
         if (!mOblivionCombat || !mOblivionCombat->findActorValues(key))
             return std::nullopt;
         return ESM4::nativeScriptKnockedState(mOblivionCombat->getProcessKnockedState(key)) ? 1.0 : 0.0;
+    }
+
+    double World::getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,
+        const Nif::NiTransform& placement) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty() || animation.getPtr() != actor
+            || (actor != getPlayerConstPtr() && nativeActorBase(actor).isNull()))
+            throw std::invalid_argument("native IsLeftUp requires its actor renderer");
+        const bool horse = actor.getType() == ESM::REC_CREA4
+            && actor.get<ESM4::Creature>()->mBase->mData.creatureType == 4;
+        auto spine = horse ? std::optional<Nif::NiTransform>{}
+                           : animation.captureNativeNodeWorldPose("Bip01 Spine", placement);
+        if (!spine) spine = animation.captureNativeNodeWorldPose("Bip02 Spine", placement);
+        // Original8975C0 directly compares NiWorld rotation+84, without a
+        // process/state gate. Missing Spine is true; both signed zeros are false.
+        return !spine || spine->mRotation.mValues[2][2] > 0 ? 1.0 : 0.0;
+    }
+
+    std::optional<double> World::getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto* values = mOblivionCombat ? mOblivionCombat->findActorValues(key) : nullptr;
+        Ptr resident;
+        const bool player = key == ESM::FormKey::dynamic("player", 1);
+        if (player) resident = mPlayer ? mPlayer->getPlayer() : Ptr{};
+        else if (key.isDynamic()) resident = mWorldModel.getDynamicNativePtr(key);
+        else if (const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key))
+            resident = mWorldModel.getPtr(*id);
+        bool actorClass = !resident.isEmpty() && (player || !nativeActorBase(resident).isNull());
+        if (resident.isEmpty())
+        {
+            actorClass = values != nullptr;
+            if (const auto* npcReference = mStore.search<ESM4::ActorCharacter>(key))
+            {
+                const auto* base = mStore.search<ESM4::Npc>(npcReference->mBaseKey);
+                actorClass = base && base->mIsTES4;
+            }
+            else if (const auto* creatureReference = mStore.search<ESM4::ActorCreature>(key))
+            {
+                const auto* base = mStore.search<ESM4::Creature>(creatureReference->mBaseKey);
+                actorClass = base && base->mAttackReach.has_value();
+            }
+        }
+        if (!actorClass) return std::nullopt;
+        // An actor with no resident scene has no matching Spine, as in native.
+        const auto* animation = resident.isEmpty() ? nullptr : getAnimation(ConstPtr(resident));
+        if (!animation) return 1.0;
+        std::optional<Nif::NiTransform> placement;
+        if (resident.getType() == ESM::REC_CREA4)
+            placement = ESM4::creaturePlacementRoot(resident.getRefData().getPosition(),
+                resident.getCellRef().getScale(), resident.get<ESM4::Creature>()->mBase->mBaseScale);
+        else if (resident.getType() == ESM::REC_NPC_4)
+            placement = MWRender::resolveOblivionNpcDropPlacement(resident, mStore);
+        else if (player)
+        {
+            const auto* base = mStore.search<ESM4::Npc>(values ? values->mBase
+                : ESM::FormKey::content("Oblivion.esm", 7));
+            if (!base || !base->mIsTES4)
+                throw std::invalid_argument("native Player IsLeftUp requires its NPC base");
+            const auto* race = mStore.get<ESM4::Race>().search(base->mRace);
+            const bool female = base->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female;
+            std::optional<ESM4::NpcPlacementMorphology> morphology;
+            if (race) morphology = ESM4::NpcPlacementMorphology{
+                female ? race->mWeightFemale : race->mWeightMale,
+                female ? race->mHeightFemale : race->mHeightMale};
+            placement = ESM4::npcPlacementRoot(
+                resident.getRefData().getPosition(), resident.getCellRef().getScale(), morphology);
+            // The active first-person skeleton cannot stand in for the full
+            // actor root used by native4D96F0. Admit the canonical model only.
+            auto model = resident.getClass().getCorrectedModel(resident);
+            if (resident.getType() == ESM::REC_NPC_ && !resident.get<ESM::NPC>()->mBase->mModel.empty())
+                model = Misc::ResourceHelpers::correctActorModelPath(
+                    Misc::ResourceHelpers::correctMeshPath(resident.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                    mResourceSystem->getVFS());
+            const auto source = animation->captureNativePhysicalSource(model);
+            if (!source || !animation->isCurrentNativePhysicalSource(*source))
+                throw std::invalid_argument("native Player IsLeftUp requires the canonical full actor root");
+        }
+        if (!placement) throw std::invalid_argument("native IsLeftUp has no admitted actor placement");
+        return getOblivionActorIsLeftUp(resident, *animation, *placement);
     }
 
     bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate)

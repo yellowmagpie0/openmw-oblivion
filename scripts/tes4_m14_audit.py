@@ -189,6 +189,7 @@ SUPPORTED_CONDITION_FUNCTIONS = {
     84,   # GetDeadCount
     91,   # GetIsAlerted
     107,  # GetKnockedState: native process translation owned by M15
+    285,  # IsLeftUp: current native actor Spine pose owned by M15
     132,  # GetPCInFaction
     136,  # GetIsReference
     159,  # GetSitting
@@ -267,6 +268,7 @@ CONDITION_NAMES = {
     249: "GetPCFame",
     266: "IsPleasant",
     280: "IsCellOwner",
+    285: "IsLeftUp",
     310: "GetInWorldspace",
     339: "IsPlayersLastRiddenHorse",
     358: "IsPlayerMovingIntoNewSpace",

@@ -49,7 +49,7 @@
     "process_state_gate": false,
     "oracle_profiles": 9072,
     "oracle_corpus_sha256": "ab1c5380a04f2bf243bc87039e77656329f6d52860e1e45f63139b0b85c760e3",
-    "remaining_binding": "Current named NIF pose reader verified at component layer. Canonical full actor root/placement resolution and World/M7/CTDA adapter still open."
+    "remaining_binding": "Player canonical full actor root across first/third-person changes remains open. World/M7/CTDA285 reads admitted current native actor poses; Creature and headless/cold actor paths verified."
   },
   "fork_integration_checks": {
     "physics_worker_counts": [
@@ -83,5 +83,31 @@
     "No ordinary HIT-body setup observed in this course.",
     "Native process+15C virtual9C is not established as a movement capsule control.",
     "IsLeftUp instruction evidence does not establish a fork renderer adapter."
-  ]
+  ],
+  "world_query_checkpoint": {
+    "cold_actor": {
+      "key": "content:oblivion.esm:06a837",
+      "base_key": "content:oblivion.esm:06a82f",
+      "expected_missing_spine": 1,
+      "resource_birth_allowed": false
+    },
+    "runtime_query_times": [
+      0,
+      5
+    ],
+    "actor_conditions": [
+      "No process/raw-knocked-state gate.",
+      "No actor-value authority required to classify an actor.",
+      "Scene pose uses exact unique Spine name and native Single composition."
+    ],
+    "creature_scale": "Original4D7260 reference * BNAM float store, then GenerateNiNode FABS;109 frozen native rows and1615 full original comparisons.",
+    "current_engine_cases": 1623,
+    "runtime_recipes": [
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query.json",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_sanitized.json",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_continuation.json",
+      "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_sanitized_continuation.json"
+    ],
+    "remaining": "Automatic contact/body/frame/GetUp/recovery/restart and remaining S4 actor/view/input/FPS/mastery/effect matrix."
+  }
 }
