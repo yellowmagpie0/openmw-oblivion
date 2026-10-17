@@ -82,6 +82,7 @@ namespace
         osg::ref_ptr<PoseWriter> mWriter = new PoseWriter;
         MWRender::ActiveControllersVector mBeforeControllers;
         bool mThrowAfterControllers = false;
+        unsigned mControllerBuilds = 0;
         TestAnimation(osg::ref_ptr<osg::Group> parent, osg::ref_ptr<SceneUtil::Skeleton> root,
             osg::ref_ptr<NifOsg::MatrixTransform> bone)
             : Animation({}, parent, nullptr), mBone(std::move(bone))
@@ -97,6 +98,7 @@ namespace
     private:
         void addControllers() override
         {
+            ++mControllerBuilds;
             for (const auto& [node, callback] : mBeforeControllers)
             {
                 node->addUpdateCallback(callback);
@@ -138,6 +140,81 @@ namespace
         }
         void traverse() { mRoot->accept(mVisitor); }
     };
+
+
+    TEST_F(PhysicalPoseAnimationTest, PreparedOwnershipLeavesCallbacksLiveUntilCommitWithoutControllerRebuild)
+    {
+        traverse();
+        const auto matrix = mBone->getMatrix();
+        const auto builds = mAnimation->mControllerBuilds;
+        osg::ref_ptr<osg::Callback> callback = mBone->getUpdateCallback();
+        {
+            const auto discarded = mAnimation->preparePhysicalPose(mGraph, Nif::NiTransform::getIdentity(),
+                MWRender::PhysicalPoseAnimation::AnimatedTargets);
+            EXPECT_TRUE(discarded->isValid());
+            EXPECT_EQ(discarded->initialBones().size(), 1u);
+            EXPECT_EQ(mBone->getUpdateCallback(), callback);
+            EXPECT_FALSE(mAnimation->hasPhysicalPose());
+        }
+        EXPECT_EQ(mBone->getUpdateCallback(), callback);
+        auto prepared = mAnimation->preparePhysicalPose(mGraph, Nif::NiTransform::getIdentity(),
+            MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        auto competing = mAnimation->preparePhysicalPose(mGraph, Nif::NiTransform::getIdentity());
+        // Publishing the already selected controllers must not invoke a
+        // potentially throwing subclass's controller-selection hook again.
+        mAnimation->mThrowAfterControllers = true;
+        ASSERT_TRUE(mAnimation->commitPhysicalPose(*prepared));
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        EXPECT_EQ(mBone->getUpdateCallback(), nullptr);
+        EXPECT_FALSE(prepared->isValid());
+        EXPECT_FALSE(competing->isValid());
+        EXPECT_FALSE(mAnimation->commitPhysicalPose(*prepared));
+        EXPECT_THROW(prepared->initialBones(), std::invalid_argument);
+        traverse();
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        EXPECT_EQ(std::memcmp(matrix.ptr(), mBone->getMatrix().ptr(), sizeof(double) * 16), 0);
+        EXPECT_EQ(mAnimation->samplePhysicalAnimationTarget(Nif::NiTransform::getIdentity(), mVisitor).size(), 1u);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 2u);
+        mAnimation->mThrowAfterControllers = false;
+        mAnimation->endPhysicalPose();
+        EXPECT_FALSE(competing->isValid()); // Cannot revive after release.
+        EXPECT_FALSE(mAnimation->commitPhysicalPose(*competing));
+        traverse();
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 3u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, PreparedOwnershipRejectsChangedPoseCallbackTopologyAndExpiredOwner)
+    {
+        const auto placement = osg::Matrixf::identity();
+        auto changedPose = mAnimation->preparePhysicalPose(mGraph, placement);
+        mBone->setTranslation({1, 0, 0});
+        EXPECT_FALSE(changedPose->isValid());
+        EXPECT_FALSE(mAnimation->commitPhysicalPose(*changedPose));
+        EXPECT_EQ(mBone->getUpdateCallback(), mAnimation->mWriter);
+        auto changedCallback = mAnimation->preparePhysicalPose(mGraph, placement);
+        osg::ref_ptr<SceneCounter> counter = new SceneCounter;
+        mRoot->addUpdateCallback(counter);
+        EXPECT_FALSE(changedCallback->isValid());
+        EXPECT_FALSE(mAnimation->commitPhysicalPose(*changedCallback));
+        auto changedChildren = mAnimation->preparePhysicalPose(mGraph, placement);
+        mRoot->addChild(new osg::Group);
+        EXPECT_FALSE(changedChildren->isValid());
+        EXPECT_FALSE(mAnimation->commitPhysicalPose(*changedChildren));
+        auto foreign = mAnimation->preparePhysicalPose(mGraph, placement);
+        osg::ref_ptr<SceneUtil::Skeleton> otherRoot = new SceneUtil::Skeleton;
+        osg::ref_ptr<NifOsg::MatrixTransform> otherBone = new NifOsg::MatrixTransform;
+        otherRoot->addChild(otherBone);
+        TestAnimation other(new osg::Group, otherRoot, otherBone);
+        ASSERT_TRUE(foreign->isValid());
+        EXPECT_FALSE(other.commitPhysicalPose(*foreign));
+        EXPECT_TRUE(foreign->isValid());
+        EXPECT_FALSE(mAnimation->hasPhysicalPose());
+        // The borrowed animation pointer must never be followed after death.
+        auto expired = mAnimation->preparePhysicalPose(mGraph, placement);
+        mAnimation.reset();
+        EXPECT_FALSE(expired->isValid());
+        EXPECT_THROW(expired->initialBones(), std::invalid_argument);
+    }
 
 
     TEST_F(PhysicalPoseAnimationTest, NativePlacementCarriesSeparateUniformScaleThroughOwnership)

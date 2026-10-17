@@ -1113,5 +1113,207 @@
       "isleftup-query-runtime-*-02:successful prior pose-query courses before the final cold-actor classification correction; superseded by03.",
       "assets02/setup-failure.json:verification-script preparation used the wrong map identifier before launch; corrected before03 courses."
     ]
+  },
+  "prepared_renderer_followup": {
+    "status": "Prepared renderer/body staging checkpoint; full M15S4 remains incomplete",
+    "source_parent_commit": "3aec3767a0df2808e0973ec912498cbfde604a48",
+    "tested_source": {
+      "head": "3aec3767a0df2808e0973ec912498cbfde604a48",
+      "source_fingerprint": "e5e09a0b206ea16cc7cac3dc7107f67793db9cf82292442919095d461c8075be"
+    },
+    "source_sha256": {
+      "apps/openmw/mwrender/animation.cpp": "3fe81e7431715cf6dc116853b6a07683903d4e0a1d5468315a273180a9af4d58",
+      "apps/openmw/mwrender/animation.hpp": "2c1f48b9fc8d734fb1e09fc62fc3a82b14f6f4095d69d57c55847c5887bfac76",
+      "apps/openmw/mwworld/oblivionphysicalpose.cpp": "1e88c89a50ef4b7901d252118be02d81941dcde11d97e01ceb50fa04535f01fb",
+      "apps/openmw_tests/mwrender/testphysicalpose.cpp": "86ab71a77c9f831e95e235537a6494b230d885807e85e33fa35dd80f62bcece5",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "b260e918775d1e87f2557bcff847196c3acbab4a3cf57ffb2fb03f0bad506b4a"
+    },
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/prepared-renderer-engine-normal-02/verification.json",
+        "report_sha256": "5332b4832692e08c40fc78cb56b4eee24b72707743e73d4e403ca0d5f45f9702",
+        "source": {
+          "head": "3aec3767a0df2808e0973ec912498cbfde604a48",
+          "source_fingerprint": "e5e09a0b206ea16cc7cac3dc7107f67793db9cf82292442919095d461c8075be"
+        },
+        "result": {
+          "executed": 1625,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7b5aee91fb81a96da34b4fb75ef47f1dc9818c8a875cd94bdaa2ac671657ab9d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ea499c4c0df96d03537d81c1cb8eed9cdf5c341cd98222d76ec58939a5c80614",
+          "inventory_sha256": "61251f65dcf3c82e2c4904c902d5cd6ea43445590b5a405aec1b4e3627002665",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/prepared-renderer-engine-sanitized-02/verification.json",
+        "report_sha256": "855bbaf91cabbe08f659f87f0ef4d4ecc963a7f8e9c7b3daf52aa18a0e745da1",
+        "source": {
+          "head": "3aec3767a0df2808e0973ec912498cbfde604a48",
+          "source_fingerprint": "e5e09a0b206ea16cc7cac3dc7107f67793db9cf82292442919095d461c8075be"
+        },
+        "result": {
+          "executed": 1625,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ff7669c1f60f4cfac898b26c3ec281e39130489f9c5632c91962d534c68f1bb8",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5479757a64795663128af0276f829184af2c9c155b5584029b29ca72d8fe70f8",
+          "inventory_sha256": "61251f65dcf3c82e2c4904c902d5cd6ea43445590b5a405aec1b4e3627002665",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "leak_coverage": false
+    },
+    "behavior": [
+      "Renderer preparation records its actor/cell, asset/local checkpoint, complete current callback chains and child slots without detaching callbacks.",
+      "Noexcept renderer commit validates owner/lifetime/generation, actor/cell, locals, callbacks and topology; moves prepared storage and detaches selected/resident callbacks without rebuilding animation groups.",
+      "Consumed/competing preparations cannot revive after physical release. Manual target sampling retains selected external and resident keyframe callbacks.",
+      "Native body entry stages converted geometry and detached PhysicsSystem graph before renderer ownership. Invalid inertia rejects with zero renderer rebuilds for 0/1/2 physics workers."
+    ],
+    "scope_limits": [
+      "No new automatic contact, per-frame physical controller, GetUp playback or recovery save/load caller.",
+      "Strict World saved-cache restore/CAS still occurs after body publication; complete resource/RNG/body/cache atomic admission remains open.",
+      "Native GetUp selection evidence is original instruction execution, not a production selector or runtime acceptance.",
+      "ObjectLocal physical-body driving precision and NPC nonuniform morphology remain separate work.",
+      "No new normal-input gameplay E2E acceptance claimed for this staged admission change."
+    ],
+    "retained_failures": [
+      {
+        "path": "S4/prepared-renderer-syntax-01",
+        "reason": "compile-command lookup setup failed; no compiler ran"
+      },
+      {
+        "path": "S4/prepared-renderer-syntax-02",
+        "reason": "same compile-command lookup error; actual DB contains dependency commands only"
+      },
+      {
+        "path": "S4/prepared-renderer-syntax-03",
+        "reason": "Animation const Group yielded const child pointer for retained nonconst refs; fixed. Body helper and renderer test syntax passed."
+      },
+      {
+        "path": "S4/prepared-renderer-engine-normal-01",
+        "reason": "Full1625 ran1624pass/1failed: old invalid-inertia test expected renderer rebuild1; new staging correctly reports0 on all3 worker profiles. Updated expectation and success assertion."
+      },
+      {
+        "path": "S4/prepared-renderer-engine-sanitized-01",
+        "reason": "Owned CMake process group33785 intentionally SIGINT after normal failure; helper77987 consumed with-2. No SANpass."
+      }
+    ],
+    "native_getup_selection": {
+      "path-key": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/path-key-report.json",
+        "sha256": "f4345ec110e8eb8c226243ed19a887f7a125f38253c2ee9bb2d371e390c64a6f",
+        "result": {
+          "passed": true,
+          "profiles": 237,
+          "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "corpus_sha256": "8d2a49568497520dabe9b3e647c6a9d1a0f9070dfe66afd47295444f54cbecbc",
+          "actual_path": "full521370, actual9840E0 case-sensitive substring search, actual983FD0 reverse character search",
+          "boundaries": [
+            "BSString assignment/append materializes actual supplied byte strings; heap free and security cookie helper return without allocator/TLS machinery"
+          ],
+          "rule": "first exact case-sensitive IdleAnims substring truncates after9 bytes anywhere; otherwise last backslash directory plus IdleAnims; null/empty/no backslash returns empty. No slash normalization in521370. ASCII paths shorter than260 bytes only."
+        }
+      },
+      "tree": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/tree-report.json",
+        "sha256": "7d5303038c2e9a0d234bcaff30156d6b8ede8695e88fd59496dca8e583925371",
+        "result": {
+          "passed": true,
+          "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "file_predicate": {
+            "profiles": 3584,
+            "corpus_sha256": "33c13d99fbfc440163ad9e652a66ac5cd810a5423db6bfaf81a9f8ed95c62876"
+          },
+          "tree_profiles": 2048,
+          "tree_corpus_sha256": "3150ca9e6f42881e52a2d4d44e612262c74b52fcc655103dd81583af0e8ffa44",
+          "actual_path": [
+            "full5206B0 ordered recursive selection",
+            "full520220 HasFile with actual983FD0 and98262D/982525 ASCII comparison",
+            "actual494ED0 child array lookup"
+          ],
+          "boundaries": [
+            "model-path virtual supplies declared string",
+            "CTDA56A950 returns declared boolean with owner, actor and argument0 asserted",
+            "RTTI9832E6 validates/returns supplied IDLE child"
+          ],
+          "scope": "Subtree selection and .kf predicate only. No outer521450 model-index lookup or optional-no-file postcheck execution, no animation or physics."
+        }
+      },
+      "selector": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/selector-report.json",
+        "sha256": "eca7945cd578a479b83bd6f3968ce4b08c92245857336cdf968e3d85cae1f014",
+        "result": {
+          "passed": true,
+          "profiles": 1280,
+          "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "corpus_sha256": "11cad480d7f2bc72d1cb27ab81cc7de54b15733ccc69b1930699eb5c43433f5e",
+          "actual_paths": [
+            "full521450 outer selection +521370 path key",
+            "full55E000 bank lookup using actual manager vtable A53920",
+            "full4A80A0 case-folded33-hash/mod37 +584D10/98262D ASCII equality",
+            "full5206B0 subtree,494ED0 ordered root array,520210 optional flag and520220 file predicate"
+          ],
+          "boundaries": [
+            "actor-base and base-model getters return declared fixture identities/path",
+            "BSString assignment/append/free and stack-cookie helper bypass allocator/security machinery",
+            "CRT tolower supplies declared ASCII C-locale mapping; actual hash/comparison executes",
+            "CTDA supplies condition booleans; IDLE RTTI supplies typed child (flat roots here)"
+          ],
+          "findings": [
+            "bank equality ignores ASCII case, retains slash/backslash distinctions",
+            "eligible selected leaf can have a file outside the actor skeleton directory",
+            "first optional-no-file root stops later roots then outer postcheck returnsnull",
+            "ANAM low7 does not filter GetUp selection"
+          ],
+          "scope": "Supplied already-built ordered model bank; plugin load/root registration and native animation playback still separate. ASCII path length below260."
+        }
+      },
+      "root-order": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/root-order-report.json",
+        "sha256": "f83e3d9013cddab5f96532bcff8b67616c2fea3284bcda9eea4fab073ba96ce4",
+        "result": {
+          "passed": true,
+          "profiles": 40,
+          "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "corpus_sha256": "0c18f32aea271adfa47097ee4577505cdbc0faf3e8f1e456973142ffe3f0da94",
+          "actual_path": "root IDLE registration block520BAF..520C42, actual494E90 search/494ED0 indexing,52F3C0 insertion/memmove",
+          "boundaries": [
+            "5216A0 supplies already-resolved model bank; scalar previous/record pointers are already resolved from DATA links; no TES file reader",
+            "5A56F0 dense uniquely-owned array sharing/compaction bookkeeping bypassed, capacity16 prevents reallocation",
+            "IDLE RTTI supplies declared typed records"
+          ],
+          "finding": "Independent live root records lacking a predecessor are inserted at front, reversing their load order; a found predecessor inserts after it, a missing predecessor appends; Deleted root without predecessor appends. Previous links are rewritten around insertion.",
+          "scope": "Narrow root registration block, not complete plugin override/file loading."
+        }
+      }
+    },
+    "native_selector_fixture_failure": {
+      "path": "S4/native-getup-selection-static-02/selector-setup-failure-01.json",
+      "reason": "Security-cookie stub clobbered EAX and destroyed actual hash return; corrected to preserve EAX. Failed script and debug trace retained."
+    }
   }
 }

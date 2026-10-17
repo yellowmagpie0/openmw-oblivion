@@ -1041,12 +1041,14 @@ namespace
             auto rejectedGraph = renderedGraph;
             rejectedGraph.mBodies[0].mInertia = {};
             EXPECT_THROW(beginPhysical(rejectedGraph), std::invalid_argument);
-            EXPECT_EQ(animation.mPhysicalRebuilds, 1u);
+            // Invalid body geometry now rejects before renderer ownership.
+            EXPECT_EQ(animation.mPhysicalRebuilds, 0u);
             EXPECT_FALSE(animation.hasPhysicalPose());
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));
             EXPECT_FALSE(capsule->isCollisionSuspended());
             EXPECT_EQ(physicalBone->getMatrix(), originalBone);
             beginPhysical(renderedGraph);
+            EXPECT_EQ(animation.mPhysicalRebuilds, 0u);
             ASSERT_TRUE(animation.hasPhysicalPose());
             ASSERT_TRUE(physics.hasActorRagdoll(ptr));
             EXPECT_TRUE(capsule->isCollisionSuspended());
@@ -23442,10 +23444,17 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
     class SourceAnimation : public MWRender::Animation
     {
     public:
+        bool mRejectControllerRebuild = false;
         SourceAnimation(const MWWorld::Ptr& actor, osg::Group* parent, Resource::ResourceSystem* resources,
             const std::string& model)
             : Animation(actor, parent, resources)
         { setObjectRoot(model, true, false, false); }
+    private:
+        void addControllers() override
+        {
+            if (mRejectControllerRebuild)
+                throw std::runtime_error("unexpected physical admission controller rebuild");
+        }
     };
     struct RestoreThreads
     {
@@ -23497,11 +23506,37 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
             EXPECT_FALSE(physics.getActor(actor)->isCollisionSuspended());
             EXPECT_NE(physics.getActor(actor)->getCollisionObject()->getBroadphaseHandle(), nullptr);
         };
+        {
+            const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
+            ASSERT_TRUE(source);
+            auto renderer = animation.preparePhysicalPose(*source->definition(), placement,
+                MWRender::PhysicalPoseAnimation::AnimatedTargets);
+            ASSERT_TRUE(renderer->isValid());
+            animation.updatePtr(other);
+            EXPECT_FALSE(renderer->isValid());
+            EXPECT_FALSE(animation.commitPhysicalPose(*renderer));
+            animation.updatePtr(actor);
+            // Ptr equality alone ignores cells; a renderer moved to another
+            // cell must not consume an earlier prepared ownership handoff.
+            auto moved = actor;
+            moved.mCell = nullptr;
+            ASSERT_TRUE(actor.isInCell());
+            auto cellGuard = animation.preparePhysicalPose(*source->definition(), placement);
+            animation.updatePtr(moved);
+            EXPECT_FALSE(cellGuard->isValid());
+            EXPECT_FALSE(animation.commitPhysicalPose(*cellGuard));
+            animation.updatePtr(actor);
+            absent();
+        }
         EXPECT_THROW(begin(foreign, filters), std::invalid_argument);
         EXPECT_THROW(begin(animation, {}), std::invalid_argument);
         absent();
         EXPECT_FALSE(combat.actorRagdoll(key));
+        // Geometry/body staging and renderer publication retain the selected
+        // controllers; admission must not call a fallible rebuild hook.
+        animation.mRejectControllerRebuild = true;
         begin(animation, filters);
+        animation.mRejectControllerRebuild = false;
         EXPECT_TRUE(animation.hasPhysicalPose());
         EXPECT_TRUE(physics.hasActorRagdoll(actor));
         EXPECT_TRUE(physics.getActor(actor)->isCollisionSuspended());

@@ -1915,8 +1915,70 @@ namespace MWRender
             && source.mReactionRootRecord == mNativeReactionRootRecord;
     }
 
+    struct Animation::PreparedPhysicalPose::Data
+    {
+        struct Chain
+        {
+            osg::ref_ptr<osg::Node> mNode;
+            std::vector<osg::ref_ptr<osg::Callback>> mCallbacks;
+            std::vector<osg::ref_ptr<osg::Node>> mChildren;
+        };
+        Animation* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        osg::ref_ptr<osg::Group> mRoot;
+        MWWorld::Ptr mActor;
+        std::uint64_t mGeneration;
+        PhysicalPoseAnimation mMode;
+        std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mBinding;
+        std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mLocal;
+        std::vector<NifBullet::RagdollBoneWorldPose> mBones;
+        ActiveControllersVector mExternal, mResident;
+        std::vector<Chain> mChains;
+    };
+
+    Animation::PreparedPhysicalPose::PreparedPhysicalPose(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Animation::PreparedPhysicalPose::~PreparedPhysicalPose() = default;
+
+    bool Animation::PreparedPhysicalPose::isValid() const noexcept
+    {
+        const auto* data = mData.get();
+        if (!data || data->mIdentity.expired()) return false;
+        const auto& owner = *data->mOwner;
+        if (owner.mObjectRoot != data->mRoot || owner.mPtr != data->mActor
+            || owner.mPtr.isInCell() != data->mActor.isInCell()
+            || (owner.mPtr.isInCell() && owner.mPtr.getCell() != data->mActor.getCell())
+            || owner.mPhysicalPose
+            || owner.mPhysicalPoseGeneration != data->mGeneration
+            || owner.mActiveControllers != data->mExternal
+            || !data->mBinding || !data->mBinding->matchesLocalPose(*data->mLocal))
+            return false;
+        for (const auto& chain : data->mChains)
+        {
+            const osg::Callback* current = chain.mNode->getUpdateCallback();
+            for (const auto& callback : chain.mCallbacks)
+            {
+                if (current != callback) return false;
+                current = current->getNestedCallback();
+            }
+            if (current) return false;
+            const osg::Group* group = chain.mNode->asGroup();
+            if (group && group->getNumChildren() != chain.mChildren.size()) return false;
+            for (std::size_t i = 0; i < chain.mChildren.size(); ++i)
+                if (!group || group->getChild(i) != chain.mChildren[i]) return false;
+        }
+        return true;
+    }
+
+    std::span<const NifBullet::RagdollBoneWorldPose> Animation::PreparedPhysicalPose::initialBones() const
+    {
+        if (!isValid())
+            throw std::invalid_argument("consumed, stale or expired prepared renderer pose");
+        return mData->mBones;
+    }
+
     template <class Placement>
-    std::vector<NifBullet::RagdollBoneWorldPose> Animation::beginPhysicalPoseImpl(
+    std::unique_ptr<Animation::PreparedPhysicalPose> Animation::preparePhysicalPoseImpl(
         const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
         PhysicalPoseAnimation animation)
     {
@@ -1926,63 +1988,113 @@ namespace MWRender
             throw std::invalid_argument("invalid physical animation mode");
         if (!mObjectRoot)
             throw std::invalid_argument("physical renderer pose requires an object root");
-        auto binding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
-        auto initial = binding->captureWorldBones(objectWorld);
-        std::unique_ptr<SceneUtil::ActorRagdollLocalPose> animated;
-        if (animation == PhysicalPoseAnimation::AnimatedTargets)
-            animated = std::make_unique<SceneUtil::ActorRagdollLocalPose>(binding->captureLocalPose());
-        // Embedded keyframe callbacks can reset the NIF rotation cache even
-        // without an input source. Retain them ahead of selected external
-        // tracks, and detach them while physics owns the renderer.
+        if (mPhysicalPoseGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("physical renderer preparation generation exhausted");
+        auto data = std::make_unique<PreparedPhysicalPose::Data>();
+        data->mOwner = this;
+        data->mIdentity = mNativePhysicalSourceIdentity;
+        data->mRoot = mObjectRoot;
+        data->mActor = mPtr;
+        data->mGeneration = mPhysicalPoseGeneration;
+        data->mMode = animation;
+        data->mBinding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot);
+        data->mBones = data->mBinding->captureWorldBones(objectWorld);
+        data->mLocal = std::make_unique<SceneUtil::ActorRagdollLocalPose>(data->mBinding->captureLocalPose());
+        data->mExternal = mActiveControllers;
         struct ResidentControllers : osg::NodeVisitor
         {
             const ActiveControllersVector& mExternal;
             ActiveControllersVector mResident;
-            explicit ResidentControllers(const ActiveControllersVector& external)
-                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mExternal(external)
+            PreparedPhysicalPose::Data& mData;
+            ResidentControllers(const ActiveControllersVector& external, PreparedPhysicalPose::Data& data)
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mExternal(external), mData(data)
             {
                 // Ownership must cover hidden nodes that can become visible later.
                 setNodeMaskOverride(~0u);
             }
             void apply(osg::Node& node) override
             {
-                if (dynamic_cast<osg::MatrixTransform*>(&node))
-                    for (osg::Callback* callback = node.getUpdateCallback(); callback;
-                         callback = callback->getNestedCallback())
-                        if (dynamic_cast<SceneUtil::KeyframeController*>(callback)
+                const auto& path = getNodePath();
+                if (std::count(path.begin(), path.end(), &node) != 1)
+                    throw std::invalid_argument("cyclic physical renderer hierarchy");
+                if (std::any_of(mData.mChains.begin(), mData.mChains.end(),
+                        [&](const auto& chain) { return chain.mNode == &node; }))
+                    return;
+                PreparedPhysicalPose::Data::Chain chain;
+                chain.mNode = &node;
+                for (osg::Callback* callback = node.getUpdateCallback(); callback;
+                     callback = callback->getNestedCallback())
+                {
+                    if (std::find(chain.mCallbacks.begin(), chain.mCallbacks.end(), callback) != chain.mCallbacks.end())
+                        throw std::invalid_argument("cyclic physical renderer callback chain");
+                    chain.mCallbacks.emplace_back(callback);
+                    if (dynamic_cast<osg::MatrixTransform*>(&node)
+                        && dynamic_cast<SceneUtil::KeyframeController*>(callback)
                             && std::none_of(mExternal.begin(), mExternal.end(), [&](const auto& entry) {
                                 return entry.first == &node && entry.second == callback;
                             }))
-                            mResident.emplace_back(&node, callback);
+                        mResident.emplace_back(&node, callback);
+                }
+                if (auto* group = node.asGroup())
+                    for (unsigned i = 0; i < group->getNumChildren(); ++i)
+                        chain.mChildren.emplace_back(group->getChild(i));
+                mData.mChains.push_back(std::move(chain));
                 traverse(node);
             }
-        } resident(mActiveControllers);
+        } resident(mActiveControllers, *data);
         mObjectRoot->accept(resident);
-        mPhysicalResidentControllers = std::move(resident.mResident);
-        for (const auto& [node, callback] : mPhysicalResidentControllers)
+        data->mResident = std::move(resident.mResident);
+        for (const auto& [node, callback] : data->mExternal)
+        {
+            const auto found = std::find_if(data->mChains.begin(), data->mChains.end(),
+                [&](const auto& chain) { return chain.mNode == node; });
+            if (found == data->mChains.end()
+                || std::find(found->mCallbacks.begin(), found->mCallbacks.end(), callback) == found->mCallbacks.end())
+                throw std::invalid_argument("selected physical controller is not attached to its renderer");
+        }
+        return std::unique_ptr<PreparedPhysicalPose>(new PreparedPhysicalPose(std::move(data)));
+    }
+
+    bool Animation::commitPhysicalPose(PreparedPhysicalPose& prepared) noexcept
+    {
+        if (!prepared.isValid() || prepared.mData->mOwner != this) return false;
+        auto& data = *prepared.mData;
+        // All allocation, traversal and validation finished during preparation.
+        // Retain selected external controllers for manual animation sampling;
+        // rebuilding the same selection here would add a fallible callback.
+        for (const auto& [node, callback] : data.mResident)
         {
             node->removeUpdateCallback(callback);
             callback->setNestedCallback(nullptr);
         }
-        mPhysicalPose = std::move(binding);
-        mPhysicalAnimatedLocal = std::move(animated);
-        mPhysicalAnimatedTargets = animation == PhysicalPoseAnimation::AnimatedTargets;
-        try
+        for (const auto& [node, callback] : mActiveControllers)
         {
-            resetActiveGroups();
+            node->removeUpdateCallback(callback);
+            callback->setNestedCallback(nullptr);
         }
-        catch (...)
-        {
-            mPhysicalPose.reset();
-            mPhysicalAnimatedLocal.reset();
-            mPhysicalAnimatedTargets = false;
-            for (const auto& [node, callback] : mPhysicalResidentControllers)
-                node->addUpdateCallback(callback);
-            mPhysicalResidentControllers.clear();
-            resetActiveGroups();
-            throw;
-        }
-        return initial;
+        mPhysicalResidentControllers = std::move(data.mResident);
+        mPhysicalPose = std::move(data.mBinding);
+        mPhysicalAnimatedTargets = data.mMode == PhysicalPoseAnimation::AnimatedTargets;
+        if (mPhysicalAnimatedTargets)
+            mPhysicalAnimatedLocal = std::move(data.mLocal);
+        else
+            mAccumCtrl = nullptr;
+        ++mPhysicalPoseGeneration;
+        return true;
+    }
+
+    std::unique_ptr<Animation::PreparedPhysicalPose> Animation::preparePhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+        PhysicalPoseAnimation animation)
+    {
+        return preparePhysicalPoseImpl(definition, objectWorld, animation);
+    }
+
+    std::unique_ptr<Animation::PreparedPhysicalPose> Animation::preparePhysicalPose(
+        const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+        PhysicalPoseAnimation animation)
+    {
+        return preparePhysicalPoseImpl(definition, objectWorld, animation);
     }
 
     template <class Placement>
@@ -2077,7 +2189,11 @@ namespace MWRender
         const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
         PhysicalPoseAnimation animation)
     {
-        return beginPhysicalPoseImpl(definition, objectWorld, animation);
+        auto prepared = preparePhysicalPose(definition, objectWorld, animation);
+        auto bones = std::move(prepared->mData->mBones);
+        if (!commitPhysicalPose(*prepared))
+            throw std::invalid_argument("renderer changed before physical pose admission");
+        return bones;
     }
 
     std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(
@@ -2106,7 +2222,11 @@ namespace MWRender
         const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
         PhysicalPoseAnimation animation)
     {
-        return beginPhysicalPoseImpl(definition, objectWorld, animation);
+        auto prepared = preparePhysicalPose(definition, objectWorld, animation);
+        auto bones = std::move(prepared->mData->mBones);
+        if (!commitPhysicalPose(*prepared))
+            throw std::invalid_argument("renderer changed before physical pose admission");
+        return bones;
     }
 
     std::vector<NifBullet::RagdollBoneWorldPose> Animation::samplePhysicalAnimationTarget(

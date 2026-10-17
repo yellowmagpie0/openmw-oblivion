@@ -24,20 +24,22 @@ namespace MWWorld
         const auto linked = NifBullet::ragdollDefinitionWithNativeLinkedBlendState(
             authored, resolvedPackedFilters, resolvedGains);
         const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(linked, placement.mScale);
-        const auto bones = animation.beginPhysicalPose(
+        auto renderer = animation.preparePhysicalPose(
             scaled, placement, MWRender::PhysicalPoseAnimation::AnimatedTargets);
-        try
+        const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, renderer->initialBones());
+        auto bodies = physics.prepareActorRagdoll(actor, scaled, NifBullet::RagdollNativeLengthScale,
+            poses, collisionGroup, collisionMask, internalFilter);
+        // Staging may allocate or reject geometry. Neither renderer callbacks
+        // nor capsule ownership has changed at that point. Physics publication
+        // invokes no renderer callbacks; the validated renderer commit below
+        // only detaches the captured chains and moves already-owned storage.
+        if (!renderer->isValid() || !physics.validatePreparedActorRagdoll(*bodies)
+            || !physics.commitActorRagdoll(*bodies))
+            throw std::invalid_argument("native physical actor changed before admission");
+        if (!animation.commitPhysicalPose(*renderer))
         {
-            const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
-            physics.addActorRagdoll(actor, scaled, NifBullet::RagdollNativeLengthScale,
-                poses, collisionGroup, collisionMask, internalFilter);
-        }
-        catch (...)
-        {
-            // Physics admission publishes capsule suspension only on success.
-            // Restore animation ownership if conversion/body admission rejects.
-            animation.endPhysicalPose();
-            throw;
+            physics.removeActorRagdoll(actor);
+            throw std::logic_error("renderer changed during native physics publication");
         }
     }
 

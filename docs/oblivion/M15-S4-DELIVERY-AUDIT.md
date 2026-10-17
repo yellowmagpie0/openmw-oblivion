@@ -4796,3 +4796,28 @@ captures are reviewed; fists render clearly, while Dog face mesh/lighting defect
 remain. This is a standing-target query/contact course, with no native standing
 bone/pixel/FPS parity claim. Actual body admission on contact, body frame driving,
 GetUp selection/playback, recovery restart and the rest of S4 remain incomplete.
+
+
+Prepared renderer admission now retains the selected animation callbacks until
+geometry and detached physics preparation finish. Publication validates the
+actor and cell, local checkpoint, callback chains and child slots, then detaches
+callbacks without rebuilding active animation groups. Invalid body inertia
+rejects before renderer ownership; tests cover all three physics worker counts.
+Stale, competing, consumed, foreign and expired renderer preparations reject.
+Both full engine inventories pass1625 cases/122 suites on the same final source
+fingerprint, normally and under ASan/UBSan with leak detection disabled. The
+obsolete rebuild-count failure and intentionally stopped sanitizer build remain
+in the [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+
+Independent original instruction probes add237 model-path-key cases,3584 KF
+predicate cases,2048 recursive-tree cases,1280 outer selector/model-bank cases
+and40 root-registration cases. GetUp uses an ordered model bank with ASCII
+case-insensitive equality and exact separators. KF suffix eligibility ignores
+ANAM's low group bits and the selected leaf's skeleton-directory prefix. An
+optional no-file selection blocks later roots, then the outer selector returns
+null. Unrelated live roots without predecessors insert at the front, reversing
+load order. Boundary stubs and corpus hashes are recorded in the index.
+These results guide the actual recovery implementation; they do not implement
+GetUp selection or prove normal-input recovery. Contact/resource/RNG/body/cache
+atomic publication, per-frame driving, recovery playback/restart and full S4
+acceptance remain open.

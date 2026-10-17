@@ -67,7 +67,9 @@
       "Detached graph preparation has no collision-query or capsule effects.",
       "Commit publishes once, preserves actor routing and staged native KEY6, and supports explicit Suspend/Retain capsule policies.",
       "Foreign owners, competing/consumed candidates, changed reference scale, replaced capsule and destroyed PhysicsSystem reject. Competing candidates stay invalid after committed bodies are removed.",
-      "Integration case exercises 0/1/2 physics workers and leaves actor values/lifecycle unchanged."
+      "Integration case exercises 0/1/2 physics workers and leaves actor values/lifecycle unchanged.",
+      "Renderer preparation leaves all callback chains and child slots unchanged; stale local pose, callbacks, topology, actor/cell binding, foreign owner and expired renderer reject before handoff.",
+      "Invalid body inertia fails before renderer detachment or a controller rebuild; valid admission also avoids rebuilding the already selected controllers."
     ]
   },
   "pending_live_acceptance": [
@@ -109,5 +111,95 @@
       "scripts/data/oblivion_compat/oblivion_m15_native_isleftup_query_sanitized_continuation.json"
     ],
     "remaining": "Automatic contact/body/frame/GetUp/recovery/restart and remaining S4 actor/view/input/FPS/mastery/effect matrix."
+  },
+  "getup_selection_oracle": {
+    "path-key": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/path-key-report.json",
+      "sha256": "f4345ec110e8eb8c226243ed19a887f7a125f38253c2ee9bb2d371e390c64a6f",
+      "result": {
+        "passed": true,
+        "profiles": 237,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "8d2a49568497520dabe9b3e647c6a9d1a0f9070dfe66afd47295444f54cbecbc",
+        "actual_path": "full521370, actual9840E0 case-sensitive substring search, actual983FD0 reverse character search",
+        "boundaries": [
+          "BSString assignment/append materializes actual supplied byte strings; heap free and security cookie helper return without allocator/TLS machinery"
+        ],
+        "rule": "first exact case-sensitive IdleAnims substring truncates after9 bytes anywhere; otherwise last backslash directory plus IdleAnims; null/empty/no backslash returns empty. No slash normalization in521370. ASCII paths shorter than260 bytes only."
+      }
+    },
+    "tree": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/tree-report.json",
+      "sha256": "7d5303038c2e9a0d234bcaff30156d6b8ede8695e88fd59496dca8e583925371",
+      "result": {
+        "passed": true,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "file_predicate": {
+          "profiles": 3584,
+          "corpus_sha256": "33c13d99fbfc440163ad9e652a66ac5cd810a5423db6bfaf81a9f8ed95c62876"
+        },
+        "tree_profiles": 2048,
+        "tree_corpus_sha256": "3150ca9e6f42881e52a2d4d44e612262c74b52fcc655103dd81583af0e8ffa44",
+        "actual_path": [
+          "full5206B0 ordered recursive selection",
+          "full520220 HasFile with actual983FD0 and98262D/982525 ASCII comparison",
+          "actual494ED0 child array lookup"
+        ],
+        "boundaries": [
+          "model-path virtual supplies declared string",
+          "CTDA56A950 returns declared boolean with owner, actor and argument0 asserted",
+          "RTTI9832E6 validates/returns supplied IDLE child"
+        ],
+        "scope": "Subtree selection and .kf predicate only. No outer521450 model-index lookup or optional-no-file postcheck execution, no animation or physics."
+      }
+    },
+    "selector": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/selector-report.json",
+      "sha256": "eca7945cd578a479b83bd6f3968ce4b08c92245857336cdf968e3d85cae1f014",
+      "result": {
+        "passed": true,
+        "profiles": 1280,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "11cad480d7f2bc72d1cb27ab81cc7de54b15733ccc69b1930699eb5c43433f5e",
+        "actual_paths": [
+          "full521450 outer selection +521370 path key",
+          "full55E000 bank lookup using actual manager vtable A53920",
+          "full4A80A0 case-folded33-hash/mod37 +584D10/98262D ASCII equality",
+          "full5206B0 subtree,494ED0 ordered root array,520210 optional flag and520220 file predicate"
+        ],
+        "boundaries": [
+          "actor-base and base-model getters return declared fixture identities/path",
+          "BSString assignment/append/free and stack-cookie helper bypass allocator/security machinery",
+          "CRT tolower supplies declared ASCII C-locale mapping; actual hash/comparison executes",
+          "CTDA supplies condition booleans; IDLE RTTI supplies typed child (flat roots here)"
+        ],
+        "findings": [
+          "bank equality ignores ASCII case, retains slash/backslash distinctions",
+          "eligible selected leaf can have a file outside the actor skeleton directory",
+          "first optional-no-file root stops later roots then outer postcheck returnsnull",
+          "ANAM low7 does not filter GetUp selection"
+        ],
+        "scope": "Supplied already-built ordered model bank; plugin load/root registration and native animation playback still separate. ASCII path length below260."
+      }
+    },
+    "root-order": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/root-order-report.json",
+      "sha256": "f83e3d9013cddab5f96532bcff8b67616c2fea3284bcda9eea4fab073ba96ce4",
+      "result": {
+        "passed": true,
+        "profiles": 40,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "0c18f32aea271adfa47097ee4577505cdbc0faf3e8f1e456973142ffe3f0da94",
+        "actual_path": "root IDLE registration block520BAF..520C42, actual494E90 search/494ED0 indexing,52F3C0 insertion/memmove",
+        "boundaries": [
+          "5216A0 supplies already-resolved model bank; scalar previous/record pointers are already resolved from DATA links; no TES file reader",
+          "5A56F0 dense uniquely-owned array sharing/compaction bookkeeping bypassed, capacity16 prevents reallocation",
+          "IDLE RTTI supplies declared typed records"
+        ],
+        "finding": "Independent live root records lacking a predecessor are inserted at front, reversing their load order; a found predecessor inserts after it, a missing predecessor appends; Deleted root without predecessor appends. Previous links are rewritten around insertion.",
+        "scope": "Narrow root registration block, not complete plugin override/file loading."
+      }
+    },
+    "production_status": "No native GetUp selector/playback yet; generic PickIdle section4/skeleton-directory filtering is not equivalent."
   }
 }

@@ -15454,3 +15454,19 @@ current SDL input/load courses, exact boundary descriptions and remaining Player
 view/recovery limits are recorded in
 [M15-PHYSICAL-ADMISSION-VERIFICATION.json](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 These query/placement results do not establish full S4 reaction acceptance.
+
+
+GetUp selection instruction follow-up executes the hash-identified original
+521450 outer selector,521370 key builder,55E000 model bank with its A53920
+vtable's4A80A0 hash/584D10 equality,5206B0 recursion and520220 KF predicate.
+The root registration block520BAF..520C42 executes actual52F3C0 insertion.
+Counts, immutable corpus hashes, supplied actor/model/condition/RTTI boundaries,
+ASCII tolower and dense-container bookkeeping limits, and the retained
+security-cookie stub error are recorded in the
+[M15 physical admission verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+Model keys preserve separators; bank equality ignores ASCII case. Native file
+eligibility ignores ANAM low7 and the selected leaf's skeleton-directory prefix.
+First optional no-file selection stops later candidates and returns null from
+the outer postcheck. Independent live roots with no predecessor insert at front.
+The existing generic PickIdle helper therefore cannot stand in for native GetUp
+selection. These are original selection rules, not fork recovery acceptance.

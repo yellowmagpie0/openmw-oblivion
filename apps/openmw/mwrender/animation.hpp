@@ -125,6 +125,7 @@ namespace MWRender
     class Animation : public osg::Referenced
     {
     public:
+        class PreparedPhysicalPose;
         using BlendMask = MWRender::BlendMask;
         using BoneGroup = MWRender::BoneGroup;
         using AnimPriority = MWRender::AnimPriority;
@@ -225,7 +226,7 @@ namespace MWRender
         osg::ref_ptr<osg::Group> mObjectRoot;
         SceneUtil::Skeleton* mSkeleton;
         template <class Placement>
-        std::vector<NifBullet::RagdollBoneWorldPose> beginPhysicalPoseImpl(
+        std::unique_ptr<PreparedPhysicalPose> preparePhysicalPoseImpl(
             const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
             PhysicalPoseAnimation animation);
         template <class Placement>
@@ -235,6 +236,7 @@ namespace MWRender
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
         std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mPhysicalAnimatedLocal;
         bool mPhysicalAnimatedTargets = false;
+        std::uint64_t mPhysicalPoseGeneration = 0;
         // Original palette is built from the model before equipment is attached.
         std::unordered_map<std::string, std::uint32_t> mNativeReactionNodeRecords;
         std::string mNativeReactionModelRootName;
@@ -552,6 +554,29 @@ namespace MWRender
         // The sequence-selected reaction root stays distinct from file root0.
         std::optional<NativePhysicalSource> captureNativePhysicalSource(VFS::Path::NormalizedView model) const;
         bool isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept;
+
+        class PreparedPhysicalPose
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedPhysicalPose(std::unique_ptr<Data> data);
+            friend class Animation;
+        public:
+            ~PreparedPhysicalPose();
+            PreparedPhysicalPose(const PreparedPhysicalPose&) = delete;
+            PreparedPhysicalPose& operator=(const PreparedPhysicalPose&) = delete;
+            bool isValid() const noexcept;
+            std::span<const NifBullet::RagdollBoneWorldPose> initialBones() const;
+        };
+        // Stage binding, local checkpoint and exact callback chains without
+        // detaching anything. Commit only on this renderer's update thread.
+        std::unique_ptr<PreparedPhysicalPose> preparePhysicalPose(
+            const NifBullet::ActorRagdollDefinition& definition, const osg::Matrixf& objectWorld,
+            PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
+        std::unique_ptr<PreparedPhysicalPose> preparePhysicalPose(
+            const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& objectWorld,
+            PhysicalPoseAnimation animation = PhysicalPoseAnimation::Frozen);
+        bool commitPhysicalPose(PreparedPhysicalPose& prepared) noexcept;
 
         // Borrowed renderer projection; physical bodies and lifecycle state
         // remain with the physics scheduler and native actor authority.
