@@ -362,6 +362,14 @@ namespace NifBullet
         // members. Validate an entire batch before committing any pose/selection.
         std::unique_ptr<PreparedWorldRegistration> prepareWorldRegistrationSelection(
             const RagdollWorldRegistration& selection) const;
+        // Native8DC1C0 removes every registered incident constraint, regardless
+        // of its authored association or which endpoint owns the master record.
+        // Prepare that removal for these body records without deleting objects
+        // or changing poses/controllers. Unknown/duplicate records reject;
+        // already absent bodies are allowed. Use the normal admission/commit
+        // barrier. This does not select gain/counter policy or emulate queues.
+        std::unique_ptr<PreparedWorldRegistration> prepareWorldBodyRemovals(
+            std::span<const std::uint32_t> records) const;
         bool validateWorldRegistrationSelection(const PreparedWorldRegistration& prepared) const noexcept;
         void admitWorldRegistrationSelection(PreparedWorldRegistration& prepared);
         void rollbackWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept;

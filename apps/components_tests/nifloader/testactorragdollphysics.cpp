@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <limits>
 #include <cmath>
 #include <cstddef>
@@ -5001,6 +5002,124 @@ namespace
 namespace
 {
     using GraphPublication = NifBullet::ActorRagdollPhysics::Publication;
+    class AuditedBodyRemovalWorld : public NifBullet::NativeDynamicsWorld
+    {
+    public:
+        using NifBullet::NativeDynamicsWorld::NativeDynamicsWorld;
+        bool mRemovedWithIncidentConstraint = false;
+        void removeRigidBody(btRigidBody* body) override
+        {
+            for (int i = 0; i < getNumConstraints(); ++i)
+                if (&getConstraint(i)->getRigidBodyA() == body || &getConstraint(i)->getRigidBodyB() == body)
+                    mRemovedWithIncidentConstraint = true;
+            NifBullet::NativeDynamicsWorld::removeRigidBody(body);
+        }
+    };
+
+    TEST_F(ActorRagdollPhysicsTest, PreparedBodyRemovalMatchesOriginalIncidentConstraintMatrix)
+    {
+        // Frozen remaining edge masks from original8DC1C0/A9A274 virtualC/
+        // 8CB4E0/91ED30, native-body-removal-cascade-static-01 (1548 cases).
+        // Every native master assignment/order/refcount/pending depth agrees.
+        struct Sample { unsigned mLeaves, mRemoved, mRemainingEdges; };
+        const std::array<Sample, 15> samples{{
+            {0, 0, 0x0u}, {1, 0, 0x0u}, {1, 1, 0x0u},
+            {2, 0, 0x0u}, {2, 1, 0x2u}, {2, 2, 0x1u},
+            {3, 0, 0x0u}, {3, 1, 0x6u}, {3, 2, 0x5u}, {3, 3, 0x3u},
+            {4, 0, 0x0u}, {4, 1, 0xeu}, {4, 2, 0xdu}, {4, 3, 0xbu}, {4, 4, 0x7u},
+        }};
+        addHinge();
+        const auto sourceBody = mGraph.mBodies[0];
+        const auto sourceJoint = mGraph.mJoints[0];
+        AuditedBodyRemovalWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        unsigned cases = 0;
+        for (const auto& sample : samples)
+            for (unsigned orientation = 0; orientation < (1u << sample.mLeaves); ++orientation)
+                for (bool reverse : {false, true})
+                {
+                    SCOPED_TRACE(::testing::Message() << sample.mLeaves << '/' << sample.mRemoved
+                        << '/' << orientation << '/' << reverse);
+                    NifBullet::ActorRagdollDefinition definition;
+                    std::vector<btTransform> poses;
+                    for (unsigned i = 0; i <= sample.mLeaves; ++i)
+                    {
+                        auto body = sourceBody; body.mRecord = 12 + i * 12;
+                        definition.mBodies.push_back(body);
+                        poses.emplace_back(btQuaternion::getIdentity(), btVector3(i, 0, 2));
+                    }
+                    for (unsigned i = 0; i < sample.mLeaves; ++i)
+                    {
+                        auto joint = sourceJoint; joint.mRecord = 100 + i;
+                        joint.mBodyA = orientation & (1u << i) ? i + 1 : 0;
+                        joint.mBodyB = orientation & (1u << i) ? 0 : i + 1;
+                        definition.mJoints.push_back(joint);
+                    }
+                    if (reverse) std::reverse(definition.mJoints.begin(), definition.mJoints.end());
+                    NifBullet::ActorRagdollPhysics graph(definition, world, 1, poses, 1, -1);
+                    const auto before = graph.captureWorldRegistrationSelection();
+                    const auto objects = std::vector<btCollisionObject*>(
+                        graph.collisionObjects().begin(), graph.collisionObjects().end());
+                    const std::array removed{12 + sample.mRemoved * 12};
+                    auto prepared = graph.prepareWorldBodyRemovals(removed);
+                    graph.admitWorldRegistrationSelection(*prepared);
+                    // Even admitted removals wait for publication.
+                    EXPECT_EQ(graph.captureWorldRegistrationSelection(), before);
+                    EXPECT_EQ(world.getNumCollisionObjects(), sample.mLeaves + 1);
+                    EXPECT_EQ(world.getNumConstraints(), sample.mLeaves);
+                    ASSERT_TRUE(graph.commitWorldRegistrationSelection(*prepared));
+                    const auto after = graph.captureWorldRegistrationSelection();
+                    NifBullet::RagdollWorldRegistration expected;
+                    for (unsigned i = 0; i <= sample.mLeaves; ++i)
+                    {
+                        if (i != sample.mRemoved) expected.mBodies.push_back(12 + i * 12);
+                        EXPECT_EQ(graph.collisionObjects()[i], objects[i]);
+                        EXPECT_EQ(graph.capture()[i].mPose, poses[i]);
+                        EXPECT_EQ(objects[i]->getBroadphaseHandle() != nullptr, i != sample.mRemoved);
+                    }
+                    for (const auto& joint : definition.mJoints)
+                        if (sample.mRemainingEdges & (1u << (joint.mRecord - 100)))
+                            expected.mConstraints.push_back(joint.mRecord);
+                    EXPECT_EQ(after, expected);
+                    EXPECT_EQ(world.getNumCollisionObjects(), sample.mLeaves);
+                    EXPECT_EQ(world.getNumConstraints(), std::popcount(sample.mRemainingEdges));
+                    EXPECT_FALSE(world.mRemovedWithIncidentConstraint);
+                    // Authored resources survive and can be registered again.
+                    graph.setWorldRegistrationSelection(before);
+                    EXPECT_EQ(world.getNumConstraints(), sample.mLeaves);
+                    ++cases;
+                }
+        EXPECT_EQ(cases, 258u);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, PreparedBodyRemovalRejectsInvalidAndStaleBatchesAndAllowsAbsentBodies)
+    {
+        addHinge();
+        NifBullet::ActorRagdollPhysics graph(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto full = graph.captureWorldRegistrationSelection();
+        const std::array<std::uint32_t, 2> duplicate{12, 12}, unknown{12, 999};
+        EXPECT_THROW(graph.prepareWorldBodyRemovals(duplicate), std::invalid_argument);
+        EXPECT_THROW(graph.prepareWorldBodyRemovals(unknown), std::invalid_argument);
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), full);
+        const std::array<std::uint32_t, 2> both{24, 12};
+        auto stale = graph.prepareWorldBodyRemovals(both);
+        auto discarded = graph.prepareWorldBodyRemovals(both);
+        graph.admitWorldRegistrationSelection(*discarded);
+        EXPECT_THROW(graph.prepareWorldBodyRemovals(both), std::invalid_argument);
+        discarded.reset();
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), full);
+        graph.setWorldRegistrationSelection({{24}, {}});
+        EXPECT_THROW(graph.admitWorldRegistrationSelection(*stale), std::invalid_argument);
+        auto prepared = graph.prepareWorldBodyRemovals(both);
+        graph.admitWorldRegistrationSelection(*prepared);
+        ASSERT_TRUE(graph.commitWorldRegistrationSelection(*prepared));
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), NifBullet::RagdollWorldRegistration{});
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 0);
+        auto absent = graph.prepareWorldBodyRemovals(both);
+        graph.admitWorldRegistrationSelection(*absent);
+        ASSERT_TRUE(graph.commitWorldRegistrationSelection(*absent));
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), NifBullet::RagdollWorldRegistration{});
+    }
+
     class ThrowingNativeBodyWorld : public NifBullet::NativeDynamicsWorld
     {
     public:

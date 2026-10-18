@@ -5157,3 +5157,25 @@ were reverified. Protocol, counts, hashes and limits are in
 `M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json`. This documentation adds independent
 original evidence; the passing C++ precision checkpoint remains unchanged.
 Automatic fork reaction/GetUp and the full S4 acceptance gates remain open.
+
+
+The retained graph can now prepare explicit body removals with every incident
+selected constraint, regardless of authored endpoint orientation or association.
+The existing registration transaction holds removals until commit and releases
+constraints before bodies. Shapes, bodies, joints, controllers and poses remain
+owned for re-registration. Unknown/duplicate requests and stale preparations
+reject; absent-body requests are accepted without inventing membership.
+
+The frozen1548-case native removal corpus supplies15 remaining-edge masks.
+A258-graph Bullet comparison covers zero through four star edges, every removed
+body, all endpoint orientations and reversed joint order. It verifies staged
+publication, exact remaining membership, object/pose retention, constraint-before-
+body removal and re-registration. Additional cases cover malformed/stale batches,
+discarded admission and already absent bodies. Both full component runs pass
+2826 tests in269 suites without skips/failures; ASan/UBSan leak checks remain
+disabled. Tested source fingerprint: `712d5554d716a6cb6eed2ace57b395c4d75b4dd1a29e47a3bd32e8043a1873e0`.
+
+Hashes and limits are in `retained_incident_body_removal_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. This chunk changes no engine caller
+or Python/schema. Native gain/counter and directed admission policy, automatic
+contact/reaction/GetUp, and the full S4 normal-input/restart gates remain open.

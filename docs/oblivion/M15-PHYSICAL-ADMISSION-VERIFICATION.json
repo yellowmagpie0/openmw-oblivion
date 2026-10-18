@@ -3249,5 +3249,178 @@
       "Exact scene conversion regressions and full C++ checks, not solver trajectory parity or normal-input fork acceptance.",
       "Automatic reaction/GetUp integration and all remaining full S4 acceptance gates remain open."
     ]
+  },
+  "retained_incident_body_removal_followup": {
+    "status": "Retained graph prepares native incident-constraint removal for explicit body requests; automatic reaction admission policy remains open",
+    "source": {
+      "head": "3d0b904b36272ac0c4088057da0f117c48ab40d1",
+      "source_fingerprint": "712d5554d716a6cb6eed2ace57b395c4d75b4dd1a29e47a3bd32e8043a1873e0"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "8022f3c36dde0970d4dc9e5176322f97e359731d88b33626dff854bfe4613cd9",
+      "components/nifbullet/actorragdollphysics.cpp": "721612963dbfea328b5a458cdb38b9cc16be73c1a736ab91465c7d518b7968db",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "10dbb1f433125e969b6cd881e62993e4a6c5adcf3332b1d3cc62a35f9649e8b4"
+    },
+    "changes": [
+      "prepareWorldBodyRemovals consumes known unique body records, retaining only nonremoved selected bodies and nonincident selected constraints. It delegates to the existing staged registration transaction.",
+      "Preparation/admission do not release registrations; commit removes constraints before bodies and preserves authored objects, poses and controllers. Unknown/duplicate and stale batches reject; absent requested bodies are allowed.",
+      "No gain/counter policy, recursion/forced ancestor admission or native queue scheduler is inferred by this API."
+    ],
+    "independent_expectation": {
+      "corpus": "build/oblivion-compat/m15/S4/native-body-removal-cascade-static-01/corpus.json",
+      "sha256": "a2f6b75f3de267c0c8280cae44966a985ab6d638eb335e6ee5bbf1c0660a0880",
+      "native_profiles": 1548,
+      "frozen_rows": [
+        {
+          "leaves": 0,
+          "removed_body": 0,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 1,
+          "removed_body": 0,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 1,
+          "removed_body": 1,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 2,
+          "removed_body": 0,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 2,
+          "removed_body": 1,
+          "remaining_edge_mask": 2
+        },
+        {
+          "leaves": 2,
+          "removed_body": 2,
+          "remaining_edge_mask": 1
+        },
+        {
+          "leaves": 3,
+          "removed_body": 0,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 3,
+          "removed_body": 1,
+          "remaining_edge_mask": 6
+        },
+        {
+          "leaves": 3,
+          "removed_body": 2,
+          "remaining_edge_mask": 5
+        },
+        {
+          "leaves": 3,
+          "removed_body": 3,
+          "remaining_edge_mask": 3
+        },
+        {
+          "leaves": 4,
+          "removed_body": 0,
+          "remaining_edge_mask": 0
+        },
+        {
+          "leaves": 4,
+          "removed_body": 1,
+          "remaining_edge_mask": 14
+        },
+        {
+          "leaves": 4,
+          "removed_body": 2,
+          "remaining_edge_mask": 13
+        },
+        {
+          "leaves": 4,
+          "removed_body": 3,
+          "remaining_edge_mask": 11
+        },
+        {
+          "leaves": 4,
+          "removed_body": 4,
+          "remaining_edge_mask": 7
+        }
+      ],
+      "comparison": "258 retained Bullet graphs cover zero through four star edges, every removed body, both authored endpoint orientations for each edge, and reversed joint order. Frozen native masks agree for every native master/refcount/pending-depth variant."
+    },
+    "cases": [
+      "ActorRagdollPhysicsTest.PreparedBodyRemovalMatchesOriginalIncidentConstraintMatrix",
+      "ActorRagdollPhysicsTest.PreparedBodyRemovalRejectsInvalidAndStaleBatchesAndAllowsAbsentBodies"
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-incident-removal-normal-01/verification.json",
+        "sha256": "4854eeed14c3121fb3dda4a4d4f64a382daee6520a880b8647b9f8a889d07bb3",
+        "source": {
+          "head": "3d0b904b36272ac0c4088057da0f117c48ab40d1",
+          "source_fingerprint": "712d5554d716a6cb6eed2ace57b395c4d75b4dd1a29e47a3bd32e8043a1873e0"
+        },
+        "results": {
+          "components": {
+            "executed": 2826,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "600e93c9f12533d6bbbd8d6255ad67978fe221626f79a22a8e002eac88132675",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "807da2adc54e5f6dde3b2e339d129b5d476f02ced01fafd94b13f2cad407403d",
+            "inventory_sha256": "63d2f5c5dd8c9bd198ffcc7105b9bb78f1978d13b1c3c85f5ee8f491cb89e95f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 269
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-incident-removal-sanitized-01/verification.json",
+        "sha256": "232032a770243d47b9b53fac3f460a9cb22d05cfb676cb2bf73a2683303a61f4",
+        "source": {
+          "head": "3d0b904b36272ac0c4088057da0f117c48ab40d1",
+          "source_fingerprint": "712d5554d716a6cb6eed2ace57b395c4d75b4dd1a29e47a3bd32e8043a1873e0"
+        },
+        "results": {
+          "components": {
+            "executed": 2826,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0a025a557affaf58dd00253a46fd62fb20528bb86c7661c1160a61abed516f1b",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "31f858d0c833b8bba5f75e795c2910726140a0621bbb7e02d0d3465cc6f9ad71",
+            "inventory_sha256": "daf8123353592b1dec7a4a2db79c3fe1cff91529597a680c429c57813d7560bf",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 269
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Full component checks in normal and instrumented builds; no engine service/caller wiring or Python/schema change. Earlier full engine checkpoint remains historical evidence for its tested source, not a fresh engine build of this chunk.",
+    "limits": [
+      "Authored persistent constraints only; transient Bullet contacts remain owned by the physics World, not synthesized as authored records.",
+      "Prepared removal is not automatic contact/FSM/GetUp integration or normal-input/restart acceptance. Full M15S4 remains incomplete."
+    ]
   }
 }

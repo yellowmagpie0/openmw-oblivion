@@ -1431,6 +1431,34 @@ namespace NifBullet
         return std::unique_ptr<PreparedWorldRegistration>(new PreparedWorldRegistration(std::move(data)));
     }
 
+    std::unique_ptr<ActorRagdollPhysics::PreparedWorldRegistration>
+    ActorRagdollPhysics::prepareWorldBodyRemovals(std::span<const std::uint32_t> records) const
+    {
+        require(mImpl->worldAlive() && mImpl->mPendingRegistration.expired(),
+            "expired or admitted physical World registration");
+        std::vector<unsigned char> removed(mImpl->mBodies.size(), 0);
+        for (const auto record : records)
+        {
+            std::size_t index = 0;
+            while (index < mImpl->mBodies.size() && mImpl->mBodies[index].mRecord != record) ++index;
+            require(index < removed.size() && !removed[index], "unknown or duplicate World body removal");
+            removed[index] = 1;
+        }
+        RagdollWorldRegistration selection;
+        selection.mBodies.reserve(mImpl->mBodies.size());
+        selection.mConstraints.reserve(mImpl->mConstraints.size());
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+            if (mImpl->mSelectedBodies[i] && !removed[i])
+                selection.mBodies.push_back(mImpl->mBodies[i].mRecord);
+        for (std::size_t i = 0; i < mImpl->mConstraints.size(); ++i)
+        {
+            const auto [a, b] = mImpl->mConstraintEndpoints[i];
+            if (mImpl->mSelectedConstraints[i] && !removed[a] && !removed[b])
+                selection.mConstraints.push_back(mImpl->mConstraintRecords[i]);
+        }
+        return prepareWorldRegistrationSelection(selection);
+    }
+
     bool ActorRagdollPhysics::validateWorldRegistrationSelection(const PreparedWorldRegistration& prepared) const noexcept
     {
         const auto* data = prepared.mData.get();
