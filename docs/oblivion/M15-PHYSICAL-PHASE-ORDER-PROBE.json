@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "purpose": "Read-only original-game ordering observation over complete intervals between actual main-frame preparation entries; editable probe recipe, not an automated gameplay acceptance gate.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "baseline": "Loaded stock prison idle baseline from isolated pristine quickload; actor life/knockdown state not separately sampled.",
+  "complete_intervals": 8,
+  "entry": {
+    "address": "0x889810",
+    "required_return": "0x40D8C7"
+  },
+  "observers": {
+    "0x40D8C7": "prepare-return",
+    "0x47C930": "own-controllers",
+    "0x47C990": "selector-wrapper",
+    "0x88EDC0": "blend-collision",
+    "0x88C530": "world-step-loop",
+    "0x88C543": "world-step-iteration",
+    "0x88C59D": "world-steps-complete",
+    "0x898B70": "regular-world-step",
+    "0x8BAB10": "alternate-world-step",
+    "0x8AAD60": "blend-controller",
+    "0x8B8770": "velocity-controller"
+  },
+  "sampling": "Code-hash/PID/prefix guards; count all events, retain run-length compressed first/last register/global snapshots per thread and event kind. No game/controller/body calls or outcome writes.",
+  "checks": [
+    "Eight consecutive native counters and complete preparation/world-step intervals.",
+    "Every captured blend-controller and blend-collision call precedes world-step-loop.",
+    "Observed substep entries match prepared count and complete before next frame.",
+    "Record own-controller calls on both sides of world steps without assigning unresolved post-step identities.",
+    "Require exact cloned input restoration, unchanged pristine saves, owned game/Steam exit0 and no remaining owned process."
+  ],
+  "interpretation_limits": [
+    "Debugger overhead changes timing; three observed substeps do not establish uninstrumented FPS or scheduling.",
+    "No velocity-controller call observed in this baseline.",
+    "Post-step lists at original88A660/88A790 and post-step controller identities remain unresolved.",
+    "No fork gameplay, contacts, reactions or fresh-process save/restart acceptance."
+  ],
+  "retained_evidence": "build/oblivion-compat/m15/S4/native-phase-order-original-live-01"
+}

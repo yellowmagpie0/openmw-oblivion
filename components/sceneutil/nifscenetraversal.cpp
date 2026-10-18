@@ -1,6 +1,7 @@
 #include "nifscenetraversal.hpp"
 
 #include "skeleton.hpp"
+#include "riggeometry.hpp"
 
 #include <components/nifosg/matrixtransform.hpp>
 
@@ -582,6 +583,42 @@ namespace SceneUtil
     }
     bool NifSceneTraversal::commitPrepared() noexcept { return mImpl->commitPrepared(); }
     bool NifSceneTraversal::retire() noexcept { return mImpl->retire(); }
+    void NifSceneTraversal::refreshDrawingPlacement(const osg::FrameStamp& stamp, unsigned traversalNumber)
+    {
+        require(mImpl->valid() && mImpl->mPublished && !mImpl->mUpdating,
+            "invalid or updating NIF drawing placement");
+        struct Reset { bool& mUpdating; ~Reset() { mUpdating = false; } } reset{mImpl->mUpdating};
+        mImpl->mUpdating = true;
+        osg::ref_ptr<osg::Group> root;
+        require(mImpl->mRoot.lock(root), "expired NIF drawing root");
+        const auto placement = mImpl->placement();
+        mImpl->reanchor(placement);
+        struct Bounds : osg::NodeVisitor
+        {
+            Bounds() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) { setNodeMaskOverride(~0u); }
+            void apply(osg::Drawable& drawable) override
+            {
+                if (auto* rig = dynamic_cast<RigGeometry*>(&drawable))
+                {
+                    // RigGeometry's update accept path only refreshes bounds
+                    // and skin space. Do not run any drawable callbacks.
+                    osgUtil::UpdateVisitor bounds;
+                    bounds.setFrameStamp(new osg::FrameStamp(*getFrameStamp()));
+                    bounds.setTraversalNumber(getTraversalNumber());
+                    bounds.setNodeMaskOverride(~0u);
+                    const auto& path = getNodePath();
+                    for (std::size_t i = 0; i + 1 < path.size(); ++i) bounds.pushOntoNodePath(path[i]);
+                    rig->RigGeometry::accept(bounds);
+                }
+            }
+        } bounds;
+        bounds.setFrameStamp(new osg::FrameStamp(stamp));
+        bounds.setTraversalNumber(traversalNumber);
+        for (auto* node : placement.mPath) bounds.pushOntoNodePath(node);
+        root->accept(bounds);
+        require(mImpl->valid(), "skin bounds changed the NIF hierarchy");
+        mImpl->requirePlacement(placement);
+    }
     NifSceneTraversal::~NifSceneTraversal() = default;
     bool NifSceneTraversal::isValid() const noexcept { return mImpl->valid(); }
     Nif::NiTransform NifSceneTraversal::cachedWorld(const NifOsg::MatrixTransform& node) const

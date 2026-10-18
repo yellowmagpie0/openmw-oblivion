@@ -40,6 +40,7 @@
 
 #include <components/sceneutil/glextensions.hpp>
 #include <components/sceneutil/workqueue.hpp>
+#include <components/sceneutil/postphysicsupdatevisitor.hpp>
 
 #include <components/files/configurationmanager.hpp>
 
@@ -1028,6 +1029,8 @@ void OMW::Engine::go()
 
     // Setup viewer
     mViewer = new MWRender::RuntimeViewer;
+    if (resolveResourceProfile() == ESM::GameProfile::Oblivion)
+        mViewer->setUpdateVisitor(new SceneUtil::PostPhysicsUpdateVisitor);
     SceneUtil::disableFFPLightModelForRenderer(static_cast<osgViewer::Renderer*>(mViewer->getCamera()->getRenderer()));
     mViewer->setReleaseContextAtEndOfFrameHint(false);
 

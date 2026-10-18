@@ -7773,5 +7773,467 @@
       "Full normal and ASan/UBSan checks cover2920 components/273 suites and1645 engine/122 suites, no failures/skips; standalone comparisons cover29538 cases/177228 fields each. ASan leaks disabled. Python/schema unchanged and not rerun.",
       "Native World owner activation, coherent group/filter/capsule/root/reference policy, contacts/reaction/FSM/GetUp and every remaining normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart gate remain open. Full M15S4 is not complete."
     ]
+  },
+  "native_prephysics_scene_phase_followup": {
+    "status": "Scene phase driver implemented and regression checked; full M15S4 incomplete.",
+    "manifest": {
+      "path": "docs/oblivion/M15-PHYSICAL-PHASE-ORDER-PROBE.json",
+      "sha256": "f15b5d748658558072f2972244cb91028922e8fdb07a924a65caf17db9a0eafa"
+    },
+    "implementation": [
+      "Oblivion Engine installs a post-physics update visitor; World asks RenderingManager to snapshot and advance native-owned scenes before the existing physics step.",
+      "An explicit pre-pass runs live properties/controllers/collision once per finite frame, retaining the full ancestor path; owner release/rebind/detach and recursive phase entry reject during root properties as well as node callbacks. Failed pre-passes do not consume the frame.",
+      "Later viewer update skips owned properties/controllers/collision and rebases drawing from retained native worlds. RigGeometry skin-space and bounds refresh without callbacks. Unowned scenes retain standard update behavior. Late native admission waits for the next pre-pass.",
+      "Existing real owned-Bullet-body course now runs through the pre/post visitor boundary; no physical contact step is added."
+    ],
+    "original": {
+      "path": "build/oblivion-compat/m15/S4/native-phase-order-original-live-01/verification.json",
+      "sha256": "4b821e3137aff6d9c44af69edd8acadae956fcbb87454873cf1d104be1fc46b8",
+      "result": {
+        "passed": true,
+        "complete_frames": 8,
+        "aggregate_calls": {
+          "prepare-entry": 8,
+          "prepare-return": 8,
+          "selector-wrapper": 104,
+          "own-controllers": 7878,
+          "blend-controller": 1160,
+          "blend-collision": 1168,
+          "world-step-loop": 8,
+          "world-step-iteration": 24,
+          "regular-world-step": 24,
+          "world-steps-complete": 8
+        },
+        "frames": [
+          {
+            "native_counter": 1856,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 984,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 153,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1857,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 984,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 153,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1858,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 984,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 153,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1859,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 984,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 153,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1860,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 984,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 153,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1861,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 986,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 155,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1862,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 986,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 155,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          },
+          {
+            "native_counter": 1863,
+            "counts": {
+              "prepare-entry": 1,
+              "prepare-return": 1,
+              "selector-wrapper": 13,
+              "own-controllers": 986,
+              "blend-controller": 145,
+              "blend-collision": 146,
+              "world-step-loop": 1,
+              "world-step-iteration": 3,
+              "regular-world-step": 3,
+              "world-steps-complete": 1
+            },
+            "own_controller_calls_before_world": 831,
+            "own_controller_calls_after_world": 155,
+            "world_substeps": 3,
+            "step_bits": 1015598704,
+            "fpcw": [
+              127
+            ],
+            "blend_collision_selectors": [
+              0
+            ]
+          }
+        ],
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "artifacts": {
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/standing-sample.json": "5a17b1df68e7aa66bee8266575854f017cc9e0fb7bfc1436ee4afa88741af47e",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/standing-gdb-command.json": "64ff6488b8a0f6b07e97f5173777d1524dcccf37878a0e3caf8cf5f343847353",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/standing-wrapper-format-failure.json": "3d0e17b560c5effb7fc117bfa7582e12b8c63a529da4353e993af85f1c1a13ae",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/sample.py": "ae038483482321af12ff7c224725be0ac1c551fb576c8730416c24ce08f7017c",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/capture.py": "c415dc12670461052734477a419279fc60de78b46ea3213ff43d21a16e2b0056",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/function-identity.json": "038a6981a73ca4beb67ed4a1d91b1cf2ecab0fed23bd881a4be5390053b031ad",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/inputs.json": "5e0a8f03078e753b554df71fb0ced218d445b7c0848198c15a76e268618460e9",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/input-log.jsonl": "1e964a10bb8600bebccccd6c3ae6f31fbefe5a58a3c651775f16cb3ff2a7b935",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/game-process-epoch.json": "55c21a80275142f9c67270bdc69f7cbf54f8c37bc8ca6aab152296d09039f5cf",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/game-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/cleanup-inputs.json": "93cfbf768299a97b36ff3ac22183c02188b9fe557d59871b6bb569e0b0d0c58f",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/owned-steam-epoch.json": "0829d63d9e75f6fc805e0da16c1388396b1096c47a87d8b494d43c0a116f10eb",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/steam-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/steam-shutdown.json": "0f6cd6f01238938238971933a48b22595c954e1e2dce8be53a34bd59934dd8ff",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-phase-order-original-live-01/current.png": "d583927552a57601e23bc8551bfd488121a10a53984433577523333384976fe9"
+        },
+        "verifier_sha256": "9d6c87d9a758de920cfe620065bcb0e3f59c15e78cdc4dc12a46420f7f583842",
+        "retained_wrapper_failure": "Original GDB exits0 and all8 complete frames were verified; copied wrapper final print then expects obsolete collisions field and exits1. Corrected only the summary formatter; observation not repeated or discarded.",
+        "scope": "Original stock prison standing mode0, complete intervals between real main-frame preparation calls, code-hash/PID guards, read-only breakpoints. All captured blend-controller and base-collision calls precede the world substeps; other own-controller calls also occur after. Post-step controller identities and world callback lists are not resolved by this trace. No velocity-controller path occurs in this standing sample. Instrumentation forces slow/capped frames; no wall timing/FPS/trajectory/contact/fork gameplay or restart acceptance. Games/owned Steam exit0, exact cloned inputs restored, pristine save unchanged, no owned process remains."
+      },
+      "scope_clarification": "Loaded stock prison idle baseline; raw actor life/knockdown state was not sampled. Post-step controller identities remain unresolved."
+    },
+    "normal_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-prephysics-normal-02/verification.json",
+      "sha256": "e7ae99f3fe508e7eb672232c4ed8e79078765c212ebd6f7b672a471df86f4073",
+      "source": {
+        "head": "0a7889859809ca0179bca11a455f0bdc9d9441c2",
+        "source_fingerprint": "e65a7346fbcc4a8e8fc758279128239d680814cc2f5e73b751760273d961bd1e"
+      },
+      "results": {
+        "engine": {
+          "executed": 1651,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5251477f2cb743a95fb26c49bdcae8dd89391309df54b79e5e49c2e494203e96",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c1bf19856abbe678ca60fb8daf7e7209c02a32161ed8280e3beb5c38d8e46ab2",
+          "inventory_sha256": "3dfa2489b060a72f3753336d3ffaa382cf248bcb1fdb1836b7e3d72c1b228212",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-prephysics-sanitized-02/verification.json",
+      "sha256": "6e4bc8654399d404374034e7928d469ec3ce6803e366ca268439029befbcb36b",
+      "source": {
+        "head": "0a7889859809ca0179bca11a455f0bdc9d9441c2",
+        "source_fingerprint": "e65a7346fbcc4a8e8fc758279128239d680814cc2f5e73b751760273d961bd1e"
+      },
+      "results": {
+        "engine": {
+          "executed": 1651,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4190585c5c83d1fb45238dc67fa1d17775f3cc17e0b8b19cbb9be09a1904f9b2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "35e29f57105575eb423fbde9a8300f68e24065058c6425f1533b59dc42e80e60",
+          "inventory_sha256": "3dfa2489b060a72f3753336d3ffaa382cf248bcb1fdb1836b7e3d72c1b228212",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "earlier_full_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-prephysics-normal-01/verification.json",
+      "sha256": "72178daae047b490901c679c02defb27e7dcca3ad7f6cca75bd190607e069a38",
+      "source": {
+        "head": "0a7889859809ca0179bca11a455f0bdc9d9441c2",
+        "source_fingerprint": "5ed9db75ac1280768be00a9b0f61499fd292dc30110aeba5a6c1a9c5118cd34f"
+      },
+      "results": {
+        "components": {
+          "executed": 2920,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "29c2fae981e0534e35e618e1e2e298bdbc2ba56aee776f802ff909d0a6429252",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "680436409bb021f81f0b02877d8b19960dfec5736c5a96ba391860f4bfd3eb21",
+          "inventory_sha256": "64be00f09efd99b0fd7b8464f93e6c259563431831992ec3d6481208b00b1948",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1650,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a6c9fafc809e4cf15cef9545fd60a70608e93b99cc4cab9637435d3ca7e6c88a",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "233de58a28f54428aa41889aa91a307b4378017cb50a049b624f85b30523a857",
+          "inventory_sha256": "b5616fbc762c3ec72a4824bd5f986c8df2bc6684b49ac9ca0848ce4b48539027",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "earlier_full_sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-prephysics-sanitized-01/verification.json",
+      "sha256": "94f7ab0ffa951a95eb0be6f14ec1f88d057a026c9cf44d6992342087e479d3af",
+      "source": {
+        "head": "0a7889859809ca0179bca11a455f0bdc9d9441c2",
+        "source_fingerprint": "5ed9db75ac1280768be00a9b0f61499fd292dc30110aeba5a6c1a9c5118cd34f"
+      },
+      "results": {
+        "components": {
+          "executed": 2920,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6c9e9bad8e9fa62c0f0837d22fdfb7a5e6c0673a8caacb027d499cb15481276f",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e793f4d1de2deca168ff8f5aadd4639bbbe2b622127a387f7da8314f3db25f16",
+          "inventory_sha256": "4cf9ff130a964207494eaef631a2d528bd56f4e820d3709022f7cff11bbe19bb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1650,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1267cd7d728868decf69e5bc8060a55ec013d64f861a7af39fc2e99a9b2466cc",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6c5175d38a205b1307492bf32a554a786580dd393d966289093c3e9f924b3008",
+          "inventory_sha256": "b5616fbc762c3ec72a4824bd5f986c8df2bc6684b49ac9ca0848ce4b48539027",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "component_evidence_scope": "Full01 checks each pass2920 component tests/273 suites plus1650 engine/122. Component implementation/tests are unchanged afterward; final02 changes only Animation lifecycle/path handling and engine regressions, and reruns all1651 engine/122 in both configurations. The two source fingerprints are intentionally distinct.",
+    "production_source_sha256": {
+      "apps/openmw/engine.cpp": "8eb426c1cc0052a575929620ecb02128a4141ba4568d11681619c1452d6bc1fe",
+      "apps/openmw/mwrender/animation.cpp": "a9d6773a4a6c669ff21f05ed98900b11a33f21becc440aff2ed02adc47347098",
+      "apps/openmw/mwrender/animation.hpp": "63097659309a6d6897ac0f07782c7bbdaf54e62dd8773a91e70fd1fb71dfcf3e",
+      "apps/openmw/mwrender/objects.cpp": "b4205266539af45e91f86c32cfa2ca1caefe171a73b383476fde839063be48a0",
+      "apps/openmw/mwrender/objects.hpp": "e0b7acd90be162c14d005960d610ff8610ac63d23104fb29a7d656a71640454e",
+      "apps/openmw/mwrender/renderingmanager.cpp": "5370c417b935585ecb96499952da60de197d57fb41ef8ff3cf8fa4aee08b88f3",
+      "apps/openmw/mwrender/renderingmanager.hpp": "10535433d351302e93796687a01dea0fa7cb8172c97337d43ad863a9a3b7cd00",
+      "apps/openmw/mwworld/worldimp.cpp": "96272f3696134ecfda2253c59c8efeea6cba3b265ab786d2cb66cdc4f15980d0",
+      "apps/openmw_tests/mwrender/testphysicalpose.cpp": "8e1f6e402d2ee452dbd8586a5bdc29134404d0455c5db31a68526578d9fa825a",
+      "components/CMakeLists.txt": "e5527789b62091b8f36f9f2758a6ab23f7bd5f3c90e487834b2f96a74223d329",
+      "components/sceneutil/nifscenetraversal.cpp": "e898ae87a38d489d6a3f842226870c012c7951f6f716f050ee3aa0161ef64213",
+      "components/sceneutil/nifscenetraversal.hpp": "83901ef934a15829f418d1199aa4e62267b50c2b2ce96a218c12142420408103",
+      "components/sceneutil/postphysicsupdatevisitor.hpp": "bc42efa83833045832fdc99920b14f528363b1a0a8f480f8f7bf3efee60190ef"
+    },
+    "openmw_executables": {
+      "build/openmw": "c9d32bdfcdcf4244f8df1b4510c079723e2d1908f4d01bdf7151b7223f7e7add",
+      "build/m15-sanitize/openmw": "0c5c1729926ac238c085d35560f07e6d26b7a8849ca66735fbb49cb68ff02e01"
+    },
+    "regressions": [
+      "PhysicalPoseAnimationTest.NativeScenePrePhysicsTraversalsDriveOwnedBodyDeferralSyncAndPhysicalContinuation",
+      "PhysicalPoseAnimationTest.NativePrePhysicsRunsPropertiesOnceAndLeavesOtherCallbacksForViewer",
+      "PhysicalPoseAnimationTest.NativePostPhysicsReanchorsDrawingWithoutChangingPhysicalCacheOrLocals",
+      "PhysicalPoseAnimationTest.NativeSceneAdmittedAfterPrePhysicsWaitsUntilNextOwnedPass",
+      "PhysicalPoseAnimationTest.NativePrePhysicsFailureDoesNotConsumeTheFrame",
+      "PhysicalPoseAnimationTest.NativePostPhysicsRejectsChangedFrameStampBeforeProperties",
+      "PhysicalPoseAnimationTest.NativePrePhysicsRootPropertiesCannotReleaseOrRebindOwner"
+    ],
+    "retained_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-prephysics-syntax-02",
+        "result": "Syntax check rejected const FrameStamp pointer in bounds visitor;03 uses an owned copy and all five syntax checks pass. Full subsequent builds supersede syntax-only evidence."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-prephysics-context-red-01/verification.json",
+        "sha256": "5418cdc8e03db4eee0075d215093dd069a0cf185b322335e35b65f336625328b",
+        "result": "Both focused tests fail before the final fix: root property path length1 instead of2, and updatePtr/endNativeScene/removeFromScene allowed during root property callback."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-phase-order-original-live-01/standing-wrapper-format-failure.json",
+        "sha256": "3d0e17b560c5effb7fc117bfa7582e12b8c63a529da4353e993af85f1c1a13ae",
+        "result": "GDB observer exits0 and complete8 intervals survive; wrapper final summary expects obsolete collisions field and exits1. Formatter corrected after detach; observation not repeated."
+      }
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Final02 engine build logs contain no warnings. Earlier full01 logs retain warnings in unchanged character.cpp and existing testoblivionactorstats/testoblivionworld code; no new scene driver warning. ASan leak checks disabled.",
+    "limits": [
+      "Native World physical-pose admission still uses generic AnimatedTargets. This driver does not automatically construct native scene owners or supply authoritative native clock/selector inputs.",
+      "Shared main-frame clock, nonpositive-time policy and scheduler step counts remain unconnected; existing performance-budget physics scheduling is unchanged.",
+      "Drawing rebase ensures renderer consistency; original post-world lists88A660/88A790 remain unresolved and no complete native post-step publication equivalence is claimed.",
+      "KF/first-person/hidden-body ordering, selector2 producer, subtype/extra-rotation, group/filter/capsule/root/morphology coordination remain open.",
+      "No fork normal-input gameplay, physical contact/reaction/FSM/GetUp or save/restart gate is closed here. Full M15S4 remains incomplete."
+    ]
   }
 }

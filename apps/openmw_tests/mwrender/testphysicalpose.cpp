@@ -4,6 +4,9 @@
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/nif/niftypes.hpp>
 #include <components/sceneutil/skeleton.hpp>
+#include <components/sceneutil/postphysicsupdatevisitor.hpp>
+#include <components/sceneutil/riggeometry.hpp>
+#include <osgUtil/CullVisitor>
 #include <components/sceneutil/keyframe.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
@@ -760,7 +763,9 @@ namespace
     {
     public:
         unsigned mVisits = 0;
-        void operator()(osg::StateSet*, osg::NodeVisitor*) override { ++mVisits; }
+        std::size_t mPathLength = 0;
+        void operator()(osg::StateSet*, osg::NodeVisitor* visitor) override
+        { ++mVisits; mPathLength = visitor->getNodePath().size(); }
     };
 
     TEST_F(PhysicalPoseAnimationTest, NativeScenePreparationCommitsLiveCallbacksAndRetiresWithoutRebuilding)
@@ -932,7 +937,7 @@ namespace
 
 namespace
 {
-    TEST_F(PhysicalPoseAnimationTest, NativeSceneNormalUpdateTraversalsDriveOwnedBodyDeferralSyncAndPhysicalContinuation)
+    TEST_F(PhysicalPoseAnimationTest, NativeScenePrePhysicsTraversalsDriveOwnedBodyDeferralSyncAndPhysicalContinuation)
     {
         btDefaultCollisionConfiguration configuration;
         btCollisionDispatcher dispatcher(&configuration);
@@ -980,25 +985,206 @@ namespace
         auto* rigid = btRigidBody::upcast(owned.collisionObjects()[0]); rigid->setActivationState(ISLAND_SLEEPING);
         const auto before = owned.capture()[0];
         ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        unsigned renderFrame = 0;
+        auto update = [&] {
+            mFrameStamp->setFrameNumber(++renderFrame);
+            EXPECT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, renderFrame));
+            SceneUtil::PostPhysicsUpdateVisitor post;
+            post.setFrameStamp(mFrameStamp); post.setTraversalNumber(renderFrame);
+            mRoot->accept(post);
+        };
         for (const unsigned phase : {2u, 3u})
         {
-            selector = phase; traverse();
+            selector = phase; update();
             EXPECT_EQ(owned.captureNativeBlendStates()[0].mCollisionFlags, 0x49);
             EXPECT_EQ(owned.capture()[0].mPose, before.mPose); EXPECT_FALSE(rigid->isActive());
             EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 101, 1e-5);
         }
-        selector = 0; traverse();
+        selector = 0; update();
         EXPECT_EQ(owned.captureNativeBlendStates()[0].mCollisionFlags, 9);
         EXPECT_NEAR(owned.capture()[0].mPose.getOrigin().x(), 101, 1e-4);
         EXPECT_EQ(owned.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
         EXPECT_EQ(owned.captureNativeBlendStates()[0].mRequestedMotion, 1u);
         mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
         auto moved = rigid->getWorldTransform(); moved.setOrigin(btVector3(200, 0, 0)); rigid->setCenterOfMassTransform(moved);
-        traverse(); traverse();
+        update(); update();
         EXPECT_EQ(frames, 5u); EXPECT_EQ(collisions, 5u); EXPECT_EQ(mAnimation->mWriter->mWrites, 5u);
         EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 200, 1e-3);
         EXPECT_NEAR(mAnimation->mWriter->mObservedLocalBefore.x(), 100, 1e-3);
         EXPECT_EQ(owned.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
         mAnimation->endNativeScene();
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, NativePrePhysicsRunsPropertiesOnceAndLeavesOtherCallbacksForViewer)
+    {
+        unsigned frames = 0;
+        osg::ref_ptr<NativeRootProperty> rootProperty = new NativeRootProperty, boneProperty = new NativeRootProperty;
+        mRoot->getOrCreateStateSet()->setUpdateCallback(rootProperty);
+        mBone->getOrCreateStateSet()->setUpdateCallback(boneProperty);
+        osg::ref_ptr<osg::Group> other = new osg::Group;
+        osg::ref_ptr<SceneCounter> late = new SceneCounter;
+        other->setUpdateCallback(late); mParent->addChild(other);
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) { ++frames; return MWRender::Animation::NativeSceneFrame{}; });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        SceneUtil::PostPhysicsUpdateVisitor post;
+        post.setFrameStamp(mFrameStamp); post.setTraversalNumber(17);
+        for (unsigned frame : {1u, 2u})
+        {
+            mFrameStamp->setFrameNumber(frame);
+            ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 17));
+            EXPECT_FALSE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 17));
+            EXPECT_EQ(frames, frame); EXPECT_EQ(mAnimation->mWriter->mWrites, frame);
+            EXPECT_EQ(rootProperty->mVisits, frame); EXPECT_EQ(boneProperty->mVisits, frame);
+            EXPECT_EQ(rootProperty->mPathLength, 2u);
+            EXPECT_EQ(boneProperty->mPathLength, 3u);
+            EXPECT_EQ(late->mVisits, frame - 1);
+            mParent->accept(post);
+            EXPECT_EQ(late->mVisits, frame); EXPECT_EQ(frames, frame);
+            EXPECT_EQ(rootProperty->mVisits, frame); EXPECT_EQ(boneProperty->mVisits, frame);
+            EXPECT_EQ(mAnimation->mWriter->mWrites, frame);
+        }
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativePostPhysicsReanchorsDrawingWithoutChangingPhysicalCacheOrLocals)
+    {
+        osg::ref_ptr<osg::MatrixTransform> outer = new osg::MatrixTransform;
+        outer->addChild(mParent);
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        osg::ref_ptr<SceneUtil::RigGeometry> rig = new SceneUtil::RigGeometry;
+        osg::ref_ptr<osg::Geometry> source = new osg::Geometry;
+        osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+        vertices->push_back({0, 0, 0}); source->setVertexArray(vertices);
+        rig->setSourceGeometry(source);
+        rig->setBoneInfo({{"Pelvis", osg::BoundingSpheref(osg::Vec3f(), 1), osg::Matrixf::identity()}});
+        rig->setTransform(osg::Matrixf::identity()); rig->setRootBone("Pelvis");
+        rig->setInfluences({{{0, 1.f}}});
+        geode->addDrawable(rig); mBone->addChild(geode);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        unsigned frames = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, [&](const auto&, const auto&, unsigned) {
+            ++frames;
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [](auto, const auto&) {
+                auto physical = Nif::NiTransform::getIdentity(); physical.mTranslation = {140, 0, 0};
+                return SceneUtil::NifSceneTraversal::CollisionResult{9, physical};
+            };
+            return frame;
+        });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 17));
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 140, 1e-9);
+        const auto local = mBone->getControllerTransform();
+        outer->setMatrix(osg::Matrixd::translate(500, 0, 0));
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 640, 1e-9);
+        SceneUtil::PostPhysicsUpdateVisitor post; post.setFrameStamp(mFrameStamp); post.setTraversalNumber(17);
+        outer->accept(post);
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 140, 1e-9);
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation, local.mTranslation);
+        for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+            EXPECT_EQ(mBone->getControllerTransform().mRotation.mValues[r][c], local.mRotation.mValues[r][c]);
+        EXPECT_EQ(frames, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        struct Capture : osgUtil::CullVisitor
+        {
+            osg::Vec3f mPosition;
+            unsigned mCalls = 0;
+            void apply(osg::Geometry& geometry) override
+            {
+                ++mCalls;
+                mPosition = static_cast<const osg::Vec3Array*>(geometry.getVertexArray())->front();
+            }
+        } capture;
+        capture.setTraversalNumber(17);
+        rig->accept(capture);
+        EXPECT_EQ(capture.mCalls, 1u);
+        EXPECT_NEAR(capture.mPosition.x(), 0, 1e-5);
+        EXPECT_NEAR(rig->getBoundingBox().center().x(), 0, 1e-5);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneAdmittedAfterPrePhysicsWaitsUntilNextOwnedPass)
+    {
+        unsigned frames = 0;
+        osg::ref_ptr<NativeRootProperty> property = new NativeRootProperty;
+        mRoot->getOrCreateStateSet()->setUpdateCallback(property);
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) { ++frames; return MWRender::Animation::NativeSceneFrame{}; });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        SceneUtil::PostPhysicsUpdateVisitor post; post.setFrameStamp(mFrameStamp);
+        mRoot->accept(post);
+        EXPECT_EQ(frames, 0u); EXPECT_EQ(property->mVisits, 0u); EXPECT_EQ(mAnimation->mWriter->mWrites, 0u);
+        mFrameStamp->setFrameNumber(1);
+        ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 1));
+        mRoot->accept(post);
+        EXPECT_EQ(frames, 1u); EXPECT_EQ(property->mVisits, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativePrePhysicsFailureDoesNotConsumeTheFrame)
+    {
+        bool fail = true;
+        unsigned frames = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) {
+                ++frames;
+                if (fail) throw std::runtime_error("frame preparation failed");
+                return MWRender::Animation::NativeSceneFrame{};
+            });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        EXPECT_THROW(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 0), std::runtime_error);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 0u);
+        fail = false;
+        EXPECT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 0));
+        SceneUtil::PostPhysicsUpdateVisitor post; post.setFrameStamp(mFrameStamp); mRoot->accept(post);
+        EXPECT_EQ(frames, 2u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativePostPhysicsRejectsChangedFrameStampBeforeProperties)
+    {
+        osg::ref_ptr<NativeRootProperty> property = new NativeRootProperty;
+        mRoot->getOrCreateStateSet()->setUpdateCallback(property);
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [](const auto&, const auto&, unsigned) { return MWRender::Animation::NativeSceneFrame{}; });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 0));
+        const auto simulation = mFrameStamp->getSimulationTime();
+        mFrameStamp->setSimulationTime(simulation + 1);
+        SceneUtil::PostPhysicsUpdateVisitor post; post.setFrameStamp(mFrameStamp);
+        EXPECT_THROW(mRoot->accept(post), std::invalid_argument);
+        EXPECT_EQ(property->mVisits, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        mFrameStamp->setSimulationTime(simulation);
+        EXPECT_NO_THROW(mRoot->accept(post));
+        EXPECT_EQ(property->mVisits, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, NativePrePhysicsRootPropertiesCannotReleaseOrRebindOwner)
+    {
+        struct Property : osg::StateSet::Callback
+        {
+            MWRender::Animation& mOwner;
+            unsigned mVisits = 0;
+            explicit Property(MWRender::Animation& owner) : mOwner(owner) {}
+            void operator()(osg::StateSet*, osg::NodeVisitor*) override
+            {
+                ++mVisits;
+                EXPECT_THROW(mOwner.updatePtr(mOwner.getPtr()), std::logic_error);
+                EXPECT_THROW(mOwner.endNativeScene(), std::logic_error);
+                EXPECT_THROW(mOwner.removeFromScene(), std::logic_error);
+            }
+        };
+        osg::ref_ptr<Property> property = new Property(*mAnimation);
+        mRoot->getOrCreateStateSet()->setUpdateCallback(property);
+        unsigned frames = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) { ++frames; return MWRender::Animation::NativeSceneFrame{}; });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        ASSERT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 0));
+        EXPECT_TRUE(mAnimation->hasNativeScene()); EXPECT_EQ(frames, 1u);
+        SceneUtil::PostPhysicsUpdateVisitor post; post.setFrameStamp(mFrameStamp); mRoot->accept(post);
+        EXPECT_EQ(property->mVisits, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
     }
 }

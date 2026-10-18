@@ -142,6 +142,10 @@ namespace SceneUtil
         // damage. Preserve current author locals and foreign replacements.
         // Reject reentry while traversing. Retirement is final for this owner.
         bool retire() noexcept;
+        // Rebase only drawing handles against current rendering ancestors.
+        // Preserve cached native worlds and author locals; refresh skin bounds
+        // and space conversion without controller/property/collision callbacks.
+        void refreshDrawingPlacement(const osg::FrameStamp& stamp, unsigned traversalNumber);
         ~NifSceneTraversal();
         NifSceneTraversal(const NifSceneTraversal&) = delete;
         NifSceneTraversal& operator=(const NifSceneTraversal&) = delete;

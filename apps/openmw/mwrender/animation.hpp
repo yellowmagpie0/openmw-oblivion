@@ -610,6 +610,10 @@ namespace MWRender
         bool commitNativeScene(PreparedNativeScene& prepared) noexcept;
         void endNativeScene();
         bool hasNativeScene() const { return mNativeScene != nullptr; }
+        // Normal OSG callbacks/collision run once before the shared world step.
+        // PostPhysicsUpdateVisitor later rebases drawing without repeating them.
+        // Repeated calls for the same finite frame stamp are idempotent.
+        bool updateNativeSceneBeforePhysics(const osg::FrameStamp& stamp, unsigned traversalNumber);
         // Stage binding, local checkpoint and exact callback chains without
         // detaching anything. Commit only on this renderer's update thread.
         std::unique_ptr<PreparedPhysicalPose> preparePhysicalPose(

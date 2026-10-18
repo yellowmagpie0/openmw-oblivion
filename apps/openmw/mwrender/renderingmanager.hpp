@@ -229,6 +229,7 @@ namespace MWRender
         void notifyWorldSpaceChanged();
 
         void update(float dt, bool paused);
+        void updateNativeScenesBeforePhysics();
 
         Animation* getAnimation(const MWWorld::Ptr& ptr);
         const Animation* getAnimation(const MWWorld::ConstPtr& ptr) const;

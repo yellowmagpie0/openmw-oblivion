@@ -38,6 +38,7 @@
 #include <components/sceneutil/stateupdater.hpp>
 #include <components/sceneutil/visitor.hpp>
 #include <components/sceneutil/workqueue.hpp>
+#include <components/sceneutil/postphysicsupdatevisitor.hpp>
 #include <components/sceneutil/writescene.hpp>
 
 #include <components/misc/constants.hpp>
@@ -746,6 +747,20 @@ namespace MWRender
     SkyManager* RenderingManager::getSkyManager()
     {
         return mSky.get();
+    }
+
+    void RenderingManager::updateNativeScenesBeforePhysics()
+    {
+        std::vector<osg::ref_ptr<Animation>> animations;
+        mObjects->collectNativeSceneAnimations(animations);
+        if (mPlayerAnimation && mPlayerAnimation->hasNativeScene()) animations.push_back(mPlayerAnimation);
+        if (animations.empty()) return;
+        if (!dynamic_cast<SceneUtil::PostPhysicsUpdateVisitor*>(mViewer->getUpdateVisitor())
+            || !mViewer->getFrameStamp())
+            throw std::logic_error("native scenes require the engine post-physics update visitor");
+        const osg::FrameStamp stamp(*mViewer->getFrameStamp());
+        for (const auto& animation : animations)
+            animation->updateNativeSceneBeforePhysics(stamp, stamp.getFrameNumber());
     }
 
     void RenderingManager::update(float dt, bool paused)

@@ -15827,3 +15827,49 @@ all hashes, source identity, cleanup, failures and limits are in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Native main-frame publication, clock
 lifecycle/persistence, downstream nonpositive-time handling, World activation,
 selector2/KF/subtype policy and complete gameplay/restart acceptance remain open.
+
+
+### Native scenes advance before the shared physics pass
+
+The Oblivion viewer now separates native-owned scene advancement from its later
+update traversal. World snapshots owned renderer scenes before existing physics;
+live properties, own controllers and collision run once per finite frame. The
+later viewer pass refreshes drawing placement and RigGeometry skin space/bounds
+from retained native worlds. It preserves author locals and does not repeat
+native callbacks. Unowned scenes keep ordinary viewer updates. Late admission
+waits for the next pre-pass; failed preparation does not consume that frame.
+Root properties receive the full ancestor path and cannot rebind, release or
+detach their owner during the pass. Focused red tests establish both defects
+before the final fix.
+
+A read-only original-game trace retains eight complete loaded stock prison idle
+frames, counters1856..1863. All1,160 captured blend-controller and1,168 collision
+calls precede the world substeps;24 regular world steps occur. Own-controller
+calls also occur afterward:6,648 before and1,230 after. Their post-step identities
+and original callback lists88A660/88A790 remain unresolved. No velocity-controller
+path occurs in this baseline. Debugger overhead forces capped slow frames, so
+three steps per sampled frame have no uninstrumented timing/FPS implication.
+Code/PID guards, exact cloned-input restoration, pristine-save identity and
+owned game/Steam exit0 are verified. No owned process remains. A copied wrapper's
+obsolete final summary field fails after successful detach; the complete native
+observation and that failure are both retained.
+
+Full final normal and ASan/UBSan engine checks each pass **1,651 tests in122
+suites**, exact inventory and no failures/skips. Earlier full01 checks each pass
+**2,920 components in273 suites** and1,650 engine tests; component sources/tests
+are unchanged by the final owner/path fix. Final tested fingerprint:
+`e65a7346fbcc4a8e8fc758279128239d680814cc2f5e73b751760273d961bd1e`;
+full01 fingerprint:
+`5ed9db75ac1280768be00a9b0f61499fd292dc30110aeba5a6c1a9c5118cd34f`.
+The real owned-Bullet-body regression now uses the pre/post boundary through
+selector deferral, first synchronization and physical continuation. A real
+RigGeometry vertex/bounds case checks drawing reanchor. No contact simulation
+or fork normal-input course is added. ASan leak checks are disabled.
+
+Editable observation inputs are in `M15-PHYSICAL-PHASE-ORDER-PROBE.json`; exact
+hashes, failed attempts and reports are in `native_prephysics_scene_phase_followup`
+in the verification index. World admission still uses generic AnimatedTargets;
+automatic native owners, shared authoritative frame clock/step counts, complete
+native post-world publication, KF/selector/subtype/group/filter/root/capsule
+coordination and all remaining contact/reaction/FSM/GetUp and normal-input/
+fresh-process gameplay/save-restart gates remain open. Full M15S4 is incomplete.

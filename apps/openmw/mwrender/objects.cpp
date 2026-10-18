@@ -620,6 +620,12 @@ namespace MWRender
             iter->second->updatePtr(cur);
     }
 
+    void Objects::collectNativeSceneAnimations(std::vector<osg::ref_ptr<Animation>>& result) const
+    {
+        for (const auto& [_, animation] : mObjects)
+            if (animation->hasNativeScene()) result.push_back(animation);
+    }
+
     Animation* Objects::getAnimation(const MWWorld::Ptr& ptr)
     {
         PtrAnimationMap::const_iterator iter = mObjects.find(ptr.mRef);

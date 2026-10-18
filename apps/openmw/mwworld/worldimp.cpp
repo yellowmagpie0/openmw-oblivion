@@ -5485,6 +5485,8 @@ namespace MWWorld
     void World::updatePhysics(
         float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
     {
+        if (mGameProfile == ESM::GameProfile::Oblivion && mRendering)
+            mRendering->updateNativeScenesBeforePhysics();
         if (!paused)
         {
             doPhysics(duration, frameStart, frameNumber, stats);

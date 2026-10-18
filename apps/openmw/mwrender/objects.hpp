@@ -5,6 +5,7 @@
 #include <memory>
 #include <osg/Quat>
 #include <string>
+#include <vector>
 
 #include <osg/Object>
 #include <osg/ref_ptr>
@@ -122,6 +123,7 @@ namespace MWRender
         void insertCreature4(const MWWorld::Ptr& ptr, const std::string& model);
 
         Animation* getAnimation(const MWWorld::Ptr& ptr);
+        void collectNativeSceneAnimations(std::vector<osg::ref_ptr<Animation>>& result) const;
         const Animation* getAnimation(const MWWorld::ConstPtr& ptr) const;
 
         class PreparedModelRemoval

@@ -1,5 +1,7 @@
 #include "animation.hpp"
 
+#include <components/sceneutil/postphysicsupdatevisitor.hpp>
+
 #include <exception>
 
 #include <components/sceneutil/actorragdollpose.hpp>
@@ -1918,15 +1920,43 @@ namespace MWRender
 
     struct Animation::NativeSceneState
     {
+        struct Frame
+        {
+            unsigned mNumber;
+            double mSimulation, mReference;
+            bool operator==(const Frame&) const = default;
+            explicit Frame(const osg::FrameStamp& stamp)
+                : mNumber(stamp.getFrameNumber()), mSimulation(stamp.getSimulationTime()),
+                  mReference(stamp.getReferenceTime())
+            {
+                if (!std::isfinite(mSimulation) || !std::isfinite(mReference))
+                    throw std::invalid_argument("nonfinite native renderer frame");
+            }
+        };
         struct Chain
         {
             osg::ref_ptr<osg::Node> mNode;
             std::vector<osg::ref_ptr<osg::Callback>> mCallbacks;
         };
-        struct Update : osg::NodeCallback
+        struct Update : SceneUtil::PrePhysicsSceneCallback
         {
             std::weak_ptr<NativeSceneState> mState;
             explicit Update(const std::shared_ptr<NativeSceneState>& state) : mState(state) {}
+            bool finishAfterPhysics(osg::NodeVisitor& visitor) override
+            {
+                const auto state = mState.lock();
+                if (!state) return false;
+                if (!state->current() || state->mUpdating || state->mPrePhysicsInProgress || !visitor.getFrameStamp())
+                    throw std::invalid_argument("invalid native renderer post-physics owner");
+                const Frame frame(*visitor.getFrameStamp());
+                if (state->mBeforePhysics && state->mBeforePhysics->mNumber == frame.mNumber
+                    && *state->mBeforePhysics != frame)
+                    throw std::invalid_argument("native frame stamp changed during physics");
+                // An owner admitted after the pre-step pass waits until the
+                // next frame. Its prepared cache still needs current placement.
+                state->mTraversal->refreshDrawingPlacement(*visitor.getFrameStamp(), visitor.getTraversalNumber());
+                return true;
+            }
             void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
             {
                 // The explicit native traversal evaluates the live nested root
@@ -1943,6 +1973,8 @@ namespace MWRender
                     || visitor->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR
                     || !std::isfinite(stamp->getSimulationTime()) || !std::isfinite(stamp->getReferenceTime()))
                     throw std::invalid_argument("stale, reentrant or invalid native renderer frame");
+                if (state->mBeforePhysics && *state->mBeforePhysics == Frame(*stamp))
+                    throw std::logic_error("native scene already advanced before physics");
                 struct Reset
                 {
                     NativeSceneState& mState;
@@ -1979,7 +2011,8 @@ namespace MWRender
         ActiveControllersVector mExternal;
         std::vector<Chain> mChains;
         std::vector<NifBullet::RagdollBoneWorldPose> mBones;
-        bool mPublished = false, mUpdating = false, mClosed = false;
+        bool mPublished = false, mUpdating = false, mPrePhysicsInProgress = false, mClosed = false;
+        std::optional<Frame> mBeforePhysics;
 
         bool ownerMatches() const noexcept
         {
@@ -2092,15 +2125,52 @@ namespace MWRender
     void Animation::rebindNativeScenePtr(const MWWorld::Ptr& ptr)
     {
         if (!mNativeScene) return;
-        if (mNativeScene->mUpdating) throw std::logic_error("native scene cannot rebind during its update");
+        if (mNativeScene->mUpdating || mNativeScene->mPrePhysicsInProgress) throw std::logic_error("native scene cannot rebind during its update");
         mNativeScene->mActor = ptr;
     }
     void Animation::endNativeScene()
     {
         if (!mNativeScene) return;
-        if (mNativeScene->mUpdating) throw std::logic_error("native scene cannot release during its update");
+        if (mNativeScene->mUpdating || mNativeScene->mPrePhysicsInProgress) throw std::logic_error("native scene cannot release during its update");
         mNativeScene->close();
         mNativeScene.reset();
+    }
+    bool Animation::updateNativeSceneBeforePhysics(const osg::FrameStamp& stamp, unsigned traversalNumber)
+    {
+        if (!mNativeScene) return false;
+        const auto state = mNativeScene;
+        const NativeSceneState::Frame frame(stamp);
+        if (!state->current() || state->mUpdating || state->mPrePhysicsInProgress)
+            throw std::invalid_argument("stale or reentrant native renderer pre-physics owner");
+        if (state->mBeforePhysics == frame) return false;
+        osgUtil::UpdateVisitor visitor;
+        visitor.setFrameStamp(new osg::FrameStamp(stamp));
+        visitor.setTraversalNumber(traversalNumber);
+        visitor.setNodeMaskOverride(~0u);
+        std::vector<osg::ref_ptr<osg::Node>> parents;
+        for (osg::Node* node = state->mRoot; node->getNumParents() != 0;)
+        {
+            if (node->getNumParents() != 1)
+                throw std::invalid_argument("ambiguous native renderer ancestor path");
+            node = node->getParent(0);
+            if (node == state->mRoot
+                || std::any_of(parents.begin(), parents.end(),
+                    [node](const auto& parent) { return parent.get() == node; }))
+                throw std::invalid_argument("cyclic native renderer ancestor path");
+            parents.emplace_back(node);
+        }
+        for (auto it = parents.rbegin(); it != parents.rend(); ++it)
+            visitor.pushOntoNodePath(it->get());
+        struct Reset
+        {
+            bool& mFlag;
+            ~Reset() { mFlag = false; }
+        } reset{state->mPrePhysicsInProgress};
+        state->mPrePhysicsInProgress = true;
+        state->mRoot->accept(visitor);
+        if (!state->current()) throw std::invalid_argument("native scene changed during pre-physics traversal");
+        state->mBeforePhysics = frame;
+        return true;
     }
 
     struct Animation::PreparedPhysicalPose::Data
@@ -3077,6 +3147,8 @@ namespace MWRender
 
     void Animation::removeFromScene()
     {
+        if (mNativeScene && (mNativeScene->mUpdating || mNativeScene->mPrePhysicsInProgress))
+            throw std::logic_error("native scene cannot detach during its update");
         removeFromSceneImpl();
     }
 
