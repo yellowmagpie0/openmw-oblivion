@@ -36,6 +36,10 @@
 namespace
 {
 
+    // OpenAL's null-device enumeration strings are shared across outputs and
+    // can be replaced by the next probe. Hold this through the owned copy.
+    std::mutex sDeviceEnumerationMutex;
+
     const float sLoudnessFPS = 20.0f; // loudness values per second of audio
 
     ALCenum checkALCError(ALCdevice* device, const char* func, int line)
@@ -168,8 +172,9 @@ namespace
         getALError();
     }
 
-    std::basic_string_view<ALCchar> getDeviceName(ALCdevice* device)
+    std::basic_string<ALCchar> getDeviceName(ALCdevice* device)
     {
+        const std::lock_guard<std::mutex> lock(sDeviceEnumerationMutex);
         const ALCchar* name = nullptr;
         if (alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT"))
             name = alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
@@ -481,7 +486,7 @@ namespace MWSound
             {
                 {
                     const std::lock_guard<std::mutex> openLock(mOutput.mReopenMutex);
-                    std::basic_string_view<ALCchar> defaultName = getDeviceName(nullptr);
+                    const auto defaultName = getDeviceName(nullptr);
                     if (mCurrentName != defaultName)
                     {
                         mCurrentName = defaultName;
@@ -721,6 +726,7 @@ namespace MWSound
     //
     std::vector<std::string> OpenALOutput::enumerate()
     {
+        const std::lock_guard<std::mutex> lock(sDeviceEnumerationMutex);
         std::vector<std::string> devlist;
         const ALCchar* devnames;
 

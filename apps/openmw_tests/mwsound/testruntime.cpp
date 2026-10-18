@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <atomic>
+#include <barrier>
 #include <chrono>
 #include <cstring>
 #include <functional>
@@ -226,4 +227,28 @@ TEST(SoundOutputRuntime, DecoderOffsetCallbackCannotReenterSelection)
     output.finishStream(&stream);
     retained.reset();
     output.deinit();
+}
+
+TEST(OpenALDeviceEnumerationTest, CopiesDeviceListsAcrossConcurrentOutputs)
+{
+    // Separate outputs require a process-wide guard, not a per-device lock.
+    MWSound::SoundManager manager(nullptr, false);
+    MWSound::OpenALOutput first(manager), second(manager);
+    std::barrier query(2);
+    std::atomic<unsigned> completed = 0;
+    std::atomic<bool> emptyName = false;
+    const auto enumerate = [&](MWSound::OpenALOutput& output) {
+        for (unsigned i = 0; i < 64; ++i)
+        {
+            query.arrive_and_wait();
+            const auto devices = output.enumerate();
+            for (const auto& name : devices)
+                if (name.empty()) emptyName = true;
+            ++completed;
+        }
+    };
+    std::thread one(enumerate, std::ref(first)), two(enumerate, std::ref(second));
+    one.join(); two.join();
+    EXPECT_EQ(completed, 128u);
+    EXPECT_FALSE(emptyName);
 }
