@@ -2065,7 +2065,7 @@
   },
   "original_body_lifecycle_followup": {
     "protocol": "M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json",
-    "protocol_sha256": "780a54b3826e782839d9b32b6f4729deb0f40d24f949a49b61b26b7c23d3ee83",
+    "protocol_sha256": "b10450b09cd4a10d002bfae345b3faf262473513e9ff99f158013580d39f0910",
     "report": {
       "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/report.json",
       "sha256": "ac717bd3ac6d74ca6e1cd2f8c2a19767ebe38a96113c1208e961f4a3eb2fbbae"
@@ -2108,6 +2108,20 @@
         "sha256": "a558e5ae505ac5ab5278fe10b5ece9a55265d76e67435f1217ce8169e92d49d1"
       },
       "scope": "Per-body admission dispatch with explicit world-operation/constraint boundaries; not a fork or native full-physics acceptance gate."
+    },
+    "untouched_standing_followup": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-05/report.json",
+        "sha256": "e440a636ebf0ca149cf4aec2c2af2258178d0c149c630163eaa8eaf447e0244f"
+      },
+      "standing_bodies": 26,
+      "standing_constraints": 25,
+      "frames": 93,
+      "controllers_before_contact": 9,
+      "controllers_after_contact": 92,
+      "main_body_hardware_world_writes": 2,
+      "proxy_world_filter_writes": 0,
+      "scope": "Independent original untouched pre-hit baseline and normal-input body/constraint registration observation; not fork or visual acceptance."
     }
   },
   "native_body_admission_precision_followup": {

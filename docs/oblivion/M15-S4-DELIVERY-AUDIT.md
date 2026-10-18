@@ -4950,3 +4950,20 @@ with leak detection disabled. Source, selections and hashes are recorded in the
 This closes the initial graph-adapter precision gap recorded above. Automatic
 reaction frames, body membership through recovery, reference/proxy movement,
 GetUp playback and normal-input/view/FPS/restart acceptance remain open.
+
+
+The untouched standing baseline is now observed before attack input in a fresh
+original-game course. All26 bodies and25 constraints already exist with null
+world links/constraint owners, both blend gains1, requested/actual motion6 and
+counter+24 zero. LiveBA7909 is zero; its independent setting identity is
+bAddBipedWhenKeyframed:HAVOK. The 93 post-contact reaction samples retain every
+body, constraint and endpoint identity through raw0/4/3/5/6/0. All bodies and
+constraints register during Down and leave again in raw6 before animation
+completion. Four hardware watches record the main body world stores at8CB652
+and8CBE9B and zero proxy world/filter writes. Nine pre-contact controller
+samples are separated from92post-contact samples. Exact setup, hashes,25
+directed constraint edges, timing and cleanup are in the
+[protocol](M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json). This closes the pre-hit
+allocation question for this Dog. Partial HIT/constraint callback ordering,
+other actors and full fork reaction/recovery acceptance remain open; the
+occluded captures close no visual gate.

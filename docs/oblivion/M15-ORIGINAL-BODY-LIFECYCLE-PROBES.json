@@ -498,5 +498,394 @@
         "sha256": "a558e5ae505ac5ab5278fe10b5ece9a55265d76e67435f1217ce8169e92d49d1"
       }
     }
+  },
+  "untouched_standing_followup": {
+    "scope": "Independent original untouched pre-hit baseline and normal-input body/constraint registration observation; not fork or visual acceptance.",
+    "standing_baseline": {
+      "raw": 0,
+      "fatigue": 1.0027008056640625,
+      "bodies": 26,
+      "actual_motion": 6,
+      "requested_motion": 6,
+      "hierarchy_gain": 1,
+      "velocity_gain_raw18": 1,
+      "registered_bodies": 0,
+      "owned_constraints": 0,
+      "constraints": 25,
+      "blend_counter24": 0,
+      "live_BA7909": 0,
+      "captured_before_contact": true
+    },
+    "frames": 93,
+    "controllers": 101,
+    "controllers_before_contact": 9,
+    "controllers_after_contact": 92,
+    "states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "nodes_each_frame": 52,
+    "body_objects_retained": 26,
+    "constraint_objects_and_endpoints_retained": 25,
+    "hierarchy_read_errors": 0,
+    "constraint_types": {
+      "bhkMalleableConstraint": 3,
+      "bhkRagdollConstraint": 10,
+      "bhkLimitedHingeConstraint": 12
+    },
+    "constraint_edges": [
+      {
+        "listed_on": "Bip01 Spine",
+        "a": "Bip01 Spine",
+        "b": "Bip01 Spine0"
+      },
+      {
+        "listed_on": "Bip01 Spine1",
+        "a": "Bip01 Spine1",
+        "b": "Bip01 Spine"
+      },
+      {
+        "listed_on": "Bip01 Spine2",
+        "a": "Bip01 Spine2",
+        "b": "Bip01 Spine1"
+      },
+      {
+        "listed_on": "Bip01 Spine3",
+        "a": "Bip01 Spine3",
+        "b": "Bip01 Spine2"
+      },
+      {
+        "listed_on": "Bip01 Neck",
+        "a": "Bip01 Neck",
+        "b": "Bip01 Spine3"
+      },
+      {
+        "listed_on": "Bip01 Neck2",
+        "a": "Bip01 Neck2",
+        "b": "Bip01 Neck"
+      },
+      {
+        "listed_on": "Bip01 Head",
+        "a": "Bip01 Head",
+        "b": "Bip01 Neck2"
+      },
+      {
+        "listed_on": "Bip01 L UpperArm",
+        "a": "Bip01 L UpperArm",
+        "b": "Bip01 Spine3"
+      },
+      {
+        "listed_on": "Bip01 L Forearm",
+        "a": "Bip01 L Forearm",
+        "b": "Bip01 L UpperArm"
+      },
+      {
+        "listed_on": "Bip01 L Hand",
+        "a": "Bip01 L Hand",
+        "b": "Bip01 L Forearm"
+      },
+      {
+        "listed_on": "Bip01 R UpperArm",
+        "a": "Bip01 R UpperArm",
+        "b": "Bip01 Spine3"
+      },
+      {
+        "listed_on": "Bip01 R Forearm",
+        "a": "Bip01 R Forearm",
+        "b": "Bip01 R UpperArm"
+      },
+      {
+        "listed_on": "Bip01 R Hand",
+        "a": "Bip01 R Hand",
+        "b": "Bip01 R Forearm"
+      },
+      {
+        "listed_on": "Bip01 L Thigh",
+        "a": "Bip01 L Thigh",
+        "b": "Bip01 Spine0"
+      },
+      {
+        "listed_on": "Bip01 L Calf",
+        "a": "Bip01 L Calf",
+        "b": "Bip01 L Thigh"
+      },
+      {
+        "listed_on": "Bip01 L Foot",
+        "a": "Bip01 L Foot",
+        "b": "Bip01 L Calf"
+      },
+      {
+        "listed_on": "Bip01 L Toe0",
+        "a": "Bip01 L Toe0",
+        "b": "Bip01 L Foot"
+      },
+      {
+        "listed_on": "Bip01 R Thigh",
+        "a": "Bip01 R Thigh",
+        "b": "Bip01 Spine0"
+      },
+      {
+        "listed_on": "Bip01 R Calf",
+        "a": "Bip01 R Calf",
+        "b": "Bip01 R Thigh"
+      },
+      {
+        "listed_on": "Bip01 R Foot",
+        "a": "Bip01 R Foot",
+        "b": "Bip01 R Calf"
+      },
+      {
+        "listed_on": "Bip01 R Toe0",
+        "a": "Bip01 R Toe0",
+        "b": "Bip01 R Foot"
+      },
+      {
+        "listed_on": "Bip01 Tail",
+        "a": "Bip01 Tail",
+        "b": "Bip01 Spine0"
+      },
+      {
+        "listed_on": "Bip01 Tail1",
+        "a": "Bip01 Tail1",
+        "b": "Bip01 Tail"
+      },
+      {
+        "listed_on": "Bip01 Tail2",
+        "a": "Bip01 Tail2",
+        "b": "Bip01 Tail1"
+      },
+      {
+        "listed_on": "Bip01 Tail3",
+        "a": "Bip01 Tail3",
+        "b": "Bip01 Tail2"
+      }
+    ],
+    "registration_writes": [
+      {
+        "raw": 4,
+        "writer": "0x8cb652",
+        "hardware_stop_pc": "0x8cb655",
+        "actor_manager_time": 4.297999382019043,
+        "old_nonzero": false,
+        "new_nonzero": true
+      },
+      {
+        "raw": 6,
+        "writer": "0x8cbe9b",
+        "hardware_stop_pc": "0x8cbea2",
+        "actor_manager_time": 18.318017959594727,
+        "old_nonzero": true,
+        "new_nonzero": false
+      }
+    ],
+    "proxy_world_link_filter_writes": 0,
+    "proxy_world_link_retained": true,
+    "transitions": [
+      {
+        "frame": 0,
+        "raw": 0,
+        "actor_manager_time": 4.131999492645264,
+        "registered_bodies": 0,
+        "owned_constraints": 0,
+        "hierarchy_gains": [
+          1.0
+        ]
+      },
+      {
+        "frame": 1,
+        "raw": 4,
+        "actor_manager_time": 4.297999382019043,
+        "registered_bodies": 0,
+        "owned_constraints": 0,
+        "hierarchy_gains": [
+          1.0
+        ]
+      },
+      {
+        "frame": 2,
+        "raw": 4,
+        "actor_manager_time": 4.463999271392822,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.3360004425048828
+        ]
+      },
+      {
+        "frame": 3,
+        "raw": 4,
+        "actor_manager_time": 4.629999160766602,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.0
+        ]
+      },
+      {
+        "frame": 4,
+        "raw": 3,
+        "actor_manager_time": 4.795999050140381,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.0
+        ]
+      },
+      {
+        "frame": 79,
+        "raw": 5,
+        "actor_manager_time": 17.156015396118164,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.0
+        ]
+      },
+      {
+        "frame": 80,
+        "raw": 6,
+        "actor_manager_time": 17.3220157623291,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.0
+        ]
+      },
+      {
+        "frame": 81,
+        "raw": 6,
+        "actor_manager_time": 17.48801612854004,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.1660003662109375
+        ]
+      },
+      {
+        "frame": 82,
+        "raw": 6,
+        "actor_manager_time": 17.654016494750977,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.332000732421875
+        ]
+      },
+      {
+        "frame": 83,
+        "raw": 6,
+        "actor_manager_time": 17.820016860961914,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.4980010986328125
+        ]
+      },
+      {
+        "frame": 84,
+        "raw": 6,
+        "actor_manager_time": 17.98601722717285,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.66400146484375
+        ]
+      },
+      {
+        "frame": 85,
+        "raw": 6,
+        "actor_manager_time": 18.15201759338379,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.8300018310546875
+        ]
+      },
+      {
+        "frame": 86,
+        "raw": 6,
+        "actor_manager_time": 18.318017959594727,
+        "registered_bodies": 26,
+        "owned_constraints": 25,
+        "hierarchy_gains": [
+          0.996002197265625
+        ]
+      },
+      {
+        "frame": 87,
+        "raw": 6,
+        "actor_manager_time": 18.484018325805664,
+        "registered_bodies": 0,
+        "owned_constraints": 0,
+        "hierarchy_gains": [
+          1.0
+        ]
+      },
+      {
+        "frame": 92,
+        "raw": 0,
+        "actor_manager_time": 19.31402015686035,
+        "registered_bodies": 0,
+        "owned_constraints": 0,
+        "hierarchy_gains": [
+          1.0
+        ]
+      }
+    ],
+    "selected_getup": [
+      {
+        "form_id": "0x91fb7",
+        "slot": 5
+      }
+    ],
+    "limits": [
+      "Only one controlled stock Dog course; full-gain uniform Down/GetUp does not prove partial HIT or all actor/effect branches.",
+      "Only main-body and proxy links/filter are hardware watched; other body links and constraint owner fields are sampled.",
+      "Constraint owner+8 is recorded as ownership, with actual8A05E0 interpreting presence through endpointA world. Full Havok constraint simulation/removal callbacks are not proved by snapshots.",
+      "GDB caller unwind was unreliable; writer stores are verified against original instruction bytes. Do not treat arbitrary unwound frames or raw stack words as proved callers.",
+      "Raw3/recovered images remain partially occluded; no unequivocal prone/standing visual, trajectory, pixel or FPS gate.",
+      "No forced calls or physical outcome writes. Initial stats/GMSTs, spawn, AI and camera are disclosed setup; nine pre-contact controller samples are separated from92post-contact samples."
+    ],
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-05/report.json",
+      "sha256": "e440a636ebf0ca149cf4aec2c2af2258178d0c149c630163eaa8eaf447e0244f"
+    },
+    "editable_protocol": {
+      "fixture": "Same disclosed AV/GMST, stock Dog, AI-off and camera recipe as original04; fresh restored prefix clone and pristine load.",
+      "baseline": "IdentifyFF000800 at6545F8, arm four watches, capture standing at654649. Orchestrator waits for baseline file before delivering mouse1; post-contact reaction frames stay separate.",
+      "constraints": "For each bhkRigidBody wrapper traverse embedded list+10, next+4; actual677C70 confirms value pointer. Require bhkConstraint NiRTTI before reading native+8, then owner+8 and endpoints+10/+14. Capture endpoint world links and per-blend signed counter+24, remembered owner+20 and liveBA7909.",
+      "writer_verification": "Main-body+8 hardware writes stop immediately after original8CB652 and8CBE9B stores; inspect exact bytes against pinned executable. Ignore unreliable GDB deeper unwinds.",
+      "cleanup": "Original qqq and owned private Steam shutdown both exit0; INI/plugins/autosave restored exactly and both pristine saves unchanged."
+    },
+    "observer": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-05/sample.py",
+      "sha256": "2e3141d347bbae5c51dc8319a64e2b24173980dcda28b0d0ad5e7e27f02aac51"
+    },
+    "assembler": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-05/assemble-report.py",
+      "sha256": "dcc611b1e837ef05d8133809143fc9aff6728ec65e8fbd5262d0011c76979182"
+    },
+    "registration_setting_identity": {
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "setting": "bAddBipedWhenKeyframed:HAVOK",
+      "compiled_value_address": "B0521C",
+      "compiled_value": false,
+      "name_pointer_address": "B05220",
+      "name_address": "0xa37938",
+      "startup_read": "441A20 reads B0521C to CL",
+      "startup_copy": "441A66 stores CL at BA7909",
+      "admission_read": "8A493C tests BA7909",
+      "fixture_ini_sha256": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+      "fixture_ini": "bAddBipedWhenKeyframed=0",
+      "limit": "This establishes the setting identity and declared fixture input. BA7909 was not sampled live in course04; counter24 production lifetime remains unproved.",
+      "artifact": {
+        "path": "build/oblivion-compat/m15/S4/native-body-registration-static-01/configuration-identity.json",
+        "sha256": "160df0a5c078db4f784229afbbe44dcebde0b4f8744686a05270383c19af16bd"
+      }
+    }
   }
 }
