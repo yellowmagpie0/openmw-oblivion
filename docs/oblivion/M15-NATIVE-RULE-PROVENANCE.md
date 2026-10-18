@@ -15873,3 +15873,40 @@ automatic native owners, shared authoritative frame clock/step counts, complete
 native post-world publication, KF/selector/subtype/group/filter/root/capsule
 coordination and all remaining contact/reaction/FSM/GetUp and normal-input/
 fresh-process gameplay/save-restart gates remain open. Full M15S4 is incomplete.
+
+
+### Post-world callback identities separated from actor pose publication
+
+Full original88A660/88A790 and listener dispatcher8A7830 pass336 manifest-driven
+instruction cases:240 registered callback and96 queued-pair cases. Null entries,
+zero/signed finite frame arguments, gates, forward callback order, reverse queue
+order, listener dispatch and unconditional queue clearing are checked. Virtual
+entry/listener bodies and Windows locking remain declared boundaries. The initial
+report's hard-coded720 registered-case label was wrong; corrected runs derive
+and assert the inventory and retain the identical numerical case array.
+
+A separate read-only stock prison idle process captures8 complete frames,
+counters3456..3463, with24 world substeps and1,234 later own-controller calls.
+Original MSVC RTTI identifies both registered post-world objects:
+TESTrapListener at vtableA56350 (frame virtual537630) and TESArrowTargetListener
+atA562F4 (frame virtual68F970, ret4). The list is not a generic actor-pose
+publication pass. The other queue contains6 object/color pairs per frame with
+its dispatch gate null. Its producer88BB60 and packed-byte caller path are
+retained. Later scene callbacks include dungeon props, particles, lights,
+cameras and HUD compass; classifying every post-world call as UI is incorrect.
+Live RTTI getter bytes agree with the pinned original image. This baseline
+does not establish complete actor/ragdoll post-step publication or trap/arrow
+contact outcomes.
+
+GDB exits0 and detaches after the complete capture. A copied wrapper's final
+summary then fails on obsolete nested fields; that failure is retained and its
+formatter corrected without repeating/discarding the observation. The game and
+owned Steam process exit0; exact cloned inputs restore, pristine quicksave hash
+is unchanged and owned process epochs are absent. Debugger overhead precludes
+any timing/FPS interpretation. No fork gameplay/contact/restart acceptance is
+claimed. C++ and tests are unchanged fromcfcf9f9de9, so passing full builds/suites
+are not repeated. Editable inputs are in `M15-PHYSICAL-POSTWORLD-PROBE.json`;
+exact reports, hashes and limits are under `native_postworld_identity_followup`
+in the verification index. Main clock ownership/shared scheduling, World native
+owner activation, complete actor publication and all remaining M15S4 gameplay/
+fresh-process gates remain open. Full M15S4 is incomplete.

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent original post-world list/dispatcher cases and bounded read-only live identity recipe.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entries": [
+    "0x88A660",
+    "0x88A790",
+    "0x8A7830"
+  ],
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "gates": [
+    0,
+    1
+  ],
+  "registered_entry_masks": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "frame_bits": [
+    0,
+    2147483648,
+    1015598704,
+    3163082352,
+    1065353216
+  ],
+  "queued_counts": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "listener_counts": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "expected_inventory": {
+    "registered": 240,
+    "queued": 96,
+    "total": 336
+  },
+  "boundaries": [
+    "Registered entry virtual+14 records frame bits and this, then ret4.",
+    "Actual8A7830 listener dispatcher executes, with8A7720 synchronization entry/imported release at declared boundaries.",
+    "Listener virtual+8 records three words and this, then ret12."
+  ],
+  "live": {
+    "baseline": "Isolated stock pristine prison quickload; no raw actor life/knockdown state sampling.",
+    "complete_frames": 8,
+    "breakpoints": [
+      "0x889810",
+      "0x88C59D",
+      "0x88A660",
+      "0x88A790",
+      "0x47C930"
+    ],
+    "own_controller_capture": "Enable47C930 after steps-complete; disable at next889810. Retain scene name, live RTTI getter/name, controller chains and caller for every captured own-controller call.",
+    "registered_identity": "Compare captured vtable words with pinned image; follow original MSVC complete-object locator/type descriptor. Do not infer type from an external reverse-engineering label.",
+    "cleanup": "Exact cloned inputs/pristine hash, normal game exit, owned Steam shutdown, epoch identity and terminal wrapper checks."
+  },
+  "limits": [
+    "Synthetic entries establish loops and dispatch only.",
+    "Idle live identity does not prove complete actor/ragdoll publication or trap/arrow contact outcomes.",
+    "Debugger overhead precludes timing/FPS equivalence; no fork gameplay or fresh-process restart acceptance."
+  ]
+}

@@ -8235,5 +8235,177 @@
       "KF/first-person/hidden-body ordering, selector2 producer, subtype/extra-rotation, group/filter/capsule/root/morphology coordination remain open.",
       "No fork normal-input gameplay, physical contact/reaction/FSM/GetUp or save/restart gate is closed here. Full M15S4 remains incomplete."
     ]
+  },
+  "native_postworld_identity_followup": {
+    "status": "Post-world list loops verified and baseline identities resolved; full M15S4 incomplete.",
+    "source_head": "cfcf9f9de9",
+    "manifest": {
+      "path": "docs/oblivion/M15-PHYSICAL-POSTWORLD-PROBE.json",
+      "sha256": "b4acbee4cd8a46e65f80e2ae3333834e4c84db684281019d28886fc42b0398c7"
+    },
+    "instruction_oracle": {
+      "path": "build/oblivion-compat/m15/S4/native-postworld-audit-03/verification.json",
+      "sha256": "83346c08aa6ab62b392dd6f39c4e570623b079bf6fd54a364e7a0263538bb830",
+      "result": {
+        "passed": true,
+        "cases": 336,
+        "registered_callbacks_cases": 240,
+        "queued_pair_cases": 96,
+        "manifest_sha256": "b4acbee4cd8a46e65f80e2ae3333834e4c84db684281019d28886fc42b0398c7",
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "cases_sha256": "ba0be98f44b0d41cb33992246df73cb1dbdd175c7c643d17e481683c2b49cef1",
+        "probe_sha256": "34b58c933b26d65399fbc9c4373fbdfe941b52b25a6469b30ab371b5c1f3e658",
+        "boundaries": [
+          "Registered virtual+14 records this/frame and ret4.",
+          "Full original8A7830 executes; declared8A7720 lock entry and imported lock release do not enter Windows synchronization. Listener virtual+8 records this/three arguments and ret12."
+        ],
+        "scope": "Full original88A660 and88A790 list loops and full listener dispatcher8A7830 across gate/null/order/time cases. Synthetic entries do not establish actual registered object identities, game input or physical publication."
+      },
+      "functions": {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-audit-03/function-identity.json",
+        "sha256": "2cde92483400e6a2a4aa1cfdd81ed5d25facf6071ff17151699998e57f57f210"
+      }
+    },
+    "live": {
+      "path": "build/oblivion-compat/m15/S4/native-postworld-original-live-01/verification.json",
+      "sha256": "62015bf8de51f60ef4a6ec7a8de1ee653126037fd9fe94ecd0cf3b36e7e6ee5d",
+      "result": {
+        "passed": true,
+        "frames": 8,
+        "native_counters": [
+          3456,
+          3457,
+          3458,
+          3459,
+          3460,
+          3461,
+          3462,
+          3463
+        ],
+        "world_substeps": 24,
+        "registered_objects": {
+          "0xa56350": {
+            "class": ".?AVTESTrapListener@@",
+            "complete_object_locator": "0xabf7ac",
+            "type_descriptor": "0xb11844",
+            "frame_virtual": "0x537630"
+          },
+          "0xa562f4": {
+            "class": ".?AVTESArrowTargetListener@@",
+            "complete_object_locator": "0xabf66c",
+            "type_descriptor": "0xb116b4",
+            "frame_virtual": "0x68f970"
+          }
+        },
+        "post_world_own_calls": 1234,
+        "scene_types": {
+          "NiNode": 528,
+          "BSFadeNode": 88,
+          "NiBillboardNode": 32,
+          "NiTriStrips": 424,
+          "NiParticleSystem": 88,
+          "NiTriShape": 21,
+          "BSTempNodeManager": 8,
+          "NiPointLight": 32,
+          "BSScissorTriShape": 8,
+          "BSCubeMapCamera": 5
+        },
+        "callers": {
+          "0x70a1ae": 624,
+          "0x7075cd": 504,
+          "0x70a0ec": 32,
+          "0x707599": 74
+        },
+        "controller_chains": [
+          {
+            "types": [],
+            "calls": 1114
+          },
+          {
+            "types": [
+              "NiControllerManager",
+              "NiMultiTargetTransformController"
+            ],
+            "calls": 16
+          },
+          {
+            "types": [
+              "NiPSysEmitterCtlr",
+              "NiPSysUpdateCtlr"
+            ],
+            "calls": 88
+          },
+          {
+            "types": [
+              "NiControllerManager",
+              "NiMultiTargetTransformController",
+              "NiTransformController"
+            ],
+            "calls": 16
+          }
+        ],
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "artifacts": {
+          "postworld-sample.json": "14aa843712217e4b978dac3cf0a3c9df024c4bca55d7bb9d5915720e17983f38",
+          "postworld-gdb-command.json": "68dc9be1b68be8c13c4107393602b178bb510aa233489e294c97c8b2c391f2c7",
+          "sample.py": "afd9680505811b264be7792d11c7eb128e58a9fcd9139b0ea613a10d73dd0e3e",
+          "capture.py": "20bce0d7d270357750a98756d6e82b6c36a09bd1c8c9064e444e10c216b98ee2",
+          "function-identity.json": "c6f929df6c965ee90425a11f2c42dee21bfd8b97bbcbae22de382bbfee843d59",
+          "inputs.json": "f6f0179dc2243a51d8af478707b6f37c33ff60edade215287d96e1ad4850375b",
+          "input-log.jsonl": "c1d57462206e64112dae04de171ff409b4a5a0f36f195f316edfe246dad5161f",
+          "game-process-epoch.json": "7725be5c1734d0fca07c20fc597f89d097a757d4894b8934ca55d5e5fe57f525",
+          "game-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+          "cleanup-inputs.json": "fb50888cfab6d2037d6c6c9a2e6a67e8f357affb5584044d6854fc1f97960e07",
+          "owned-steam-epoch.json": "ad2ee9966dc67561900d165a51505414a0c1b84983c5029298c9f0e72c5b7266",
+          "steam-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+          "steam-shutdown.json": "2a5d7cde599370709e97b402f5dfefe53c74ac2661a3616e9fc055421d85ea19",
+          "wrapper-format-failure.json": "5043ab5bd978a9dd3df99348357dd59086ab6a49b14469514cd19d9521467a24"
+        },
+        "verifier_sha256": "7eedfed0fc9de3187840f80950a52732cf539f14c601e13b833ca3664459aa18",
+        "scope": "Actual post-world lists each contain TESTrapListener and TESArrowTargetListener; first dispatches537630, second68F970 is ret4. Color-pair queue gate is null in all8 sampled frames. Later own-controller scenes include dungeon geometry/particles/lights/cameras and HUD compass. This is an idle prison baseline, not complete actor/ragdoll post-step publication, trap/arrow contact outcome, fork gameplay, timing/FPS or restart acceptance. Inputs restored, pristine save unchanged, owned game/Steam exit0 and epoch checks find no surviving owned game/Steam process."
+      }
+    },
+    "interpretation": [
+      "Original88C530 performs88A660/88A790 only after a nonzero prepared substep loop. The first list accepts nonzero signed finite frame arguments, skips null entries and invokes entry virtual+14 in forward order. The second visits queued pairs in reverse order through full8A7830 and clears the queue even with its gate absent.",
+      "All eight captured stock idle frames register TESTrapListener (MSVC vtable A56350, frame virtual537630) and TESArrowTargetListener (A562F4, frame virtual68F970, ret4). Original MSVC complete-object locators/type descriptors independently establish names. This list is not a generic actor-pose publication list.",
+      "Queued pairs are produced by88BB60 from an object-derived handle and a packed four-byte value supplied through8AEB80 by callers such as531EC4. The sampled queue has6 pairs and null gate, so no queue listener dispatch occurs in these frames.",
+      "Later47C930 callbacks contain dungeon geometry, chained props, particles, lights, cameras and HUD compass. They are not all UI. Live RTTI getter bytes match the pinned image; exact scene/controller type counts and callers are retained. No actor/ragdoll post-step publication equivalence follows from this idle baseline."
+    ],
+    "cleanup": {
+      "game_exit": {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-original-live-01/game-exit.json",
+        "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+      },
+      "steam_exit": {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-original-live-01/steam-exit.json",
+        "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+      },
+      "input_restore": {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-original-live-01/cleanup-inputs.json",
+        "sha256": "fb50888cfab6d2037d6c6c9a2e6a67e8f357affb5584044d6854fc1f97960e07"
+      },
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+      "owned_processes": "Game/Steam epochs are absent after terminal wrappers; no owned Xvfb remains."
+    },
+    "retained_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-audit-01/inventory-label-failure.json",
+        "sha256": "691e41a5f0273175c6c75f2f6224fd0f525842322447d7a97c42e6f1e90c2af0",
+        "meaning": "Hard-coded registered-case summary720 contradicted actual240;02 computes counts,03 additionally reads editable manifest and asserts336 unique cases. All case arrays have the same hash."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-postworld-original-live-01/wrapper-format-failure.json",
+        "sha256": "5043ab5bd978a9dd3df99348357dd59086ab6a49b14469514cd19d9521467a24",
+        "meaning": "Copied phase wrapper final summary expects nested entry fields. GDB exits0, all8 intervals complete and detach succeeds before formatter exits1. Corrected formatter afterward; raw sample not discarded/repeated."
+      }
+    ],
+    "validation": "Python JSON parsing,336 manifest-driven original instruction cases, independent eight-frame live verifier and git diff --check pass. Production C++/tests are unchanged from cfcf9f9de9; full suites/app builds are not repeated.",
+    "limits": [
+      "Frame callback identities are the two registered objects in this stock idle baseline; other scenes/registrations, trap and arrow contact outcomes remain untested.",
+      "Locking and listener virtual bodies are declared boundaries in the instruction oracle; actual full physical world simulation is not emulated.",
+      "Native main clock lifecycle/settings/scene-complex lifetime, coherent shared scheduling and World native owner activation remain open.",
+      "KF/selector2/subtype/group/filter/root/capsule/morphology and complete actor/reaction/FSM/GetUp publication still require integration and acceptance.",
+      "No fork normal-input gameplay, timing/FPS, contact or fresh-process save/restart gate is closed. Full M15S4 remains incomplete."
+    ]
   }
 }
