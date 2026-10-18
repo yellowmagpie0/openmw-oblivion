@@ -9577,5 +9577,91 @@
       "Native owner admission, KF/selector/subtype/group/filter/root/capsule/morphology coordination, complete contact/reaction/FSM/GetUp publication and every remaining view/device/FPS/fresh-process gameplay/save-restart gate remain open.",
       "Actual shared Bullet steps are exercised without physical contacts or fork normal-input combat/restart acceptance. The audio fix closes the observed UAF, not the melee audible-feedback acceptance matrix. Full M15S4 remains incomplete."
     ]
+  },
+  "native_world_prepared_frame_followup": {
+    "implementation": "World snapshots and validates prepared native frames before native scene updates or stats publication, rejects non-Oblivion profiles and missing services, and forwards input delta plus prepared steps through the existing door/projectile/physics/hit/actor synchronization order. The generic entry shares the unchanged legacy path.",
+    "reports": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/native-world-frame-normal-01/verification.json",
+        "sha256": "1ef77ec1c1af3cf1847542c98e6ee6ed2cacc49fcf0384b65eeac1c9bf62b9c1",
+        "source": {
+          "head": "bdbbfdf4bb334d0526d0696c5805a7034f9c230d",
+          "source_fingerprint": "94de9d15e6abff2f23cc6bfd7efdc6e8bbcb6acee9548c52896070e4a3ab4d0c"
+        },
+        "suites": 123,
+        "result": {
+          "executed": 1680,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "651aca1af27f557f7fe0cb911ddccf9ab7b9f201f8099387ea2da570e03f9bf9",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d86207ed3d9de3d85dd8b603fde53a1f5bfc18ca2a9b044b1a7108a5d578aaa9",
+          "inventory_sha256": "aff9d1bb273fa077cf694dd8c09429ddef978bf0f035b651c35f355f3f103bce",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/m15/S4/native-world-frame-sanitized-01/verification.json",
+        "sha256": "953d133d874619cbdb19f72d4390690e9a08e8035741c70cdcb33522aa843bbb",
+        "source": {
+          "head": "bdbbfdf4bb334d0526d0696c5805a7034f9c230d",
+          "source_fingerprint": "94de9d15e6abff2f23cc6bfd7efdc6e8bbcb6acee9548c52896070e4a3ab4d0c"
+        },
+        "suites": 123,
+        "result": {
+          "executed": 1680,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "07d74d6c3896727fce88bffa9e63a5dad0b3135bc632353f333b8749de65e929",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "dc9b0717945ccaff1302099769a611634b15548fbd07b6783159e2270cd5d790",
+          "inventory_sha256": "aff9d1bb273fa077cf694dd8c09429ddef978bf0f035b651c35f355f3f103bce",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "source_sha256": {
+      "apps/openmw/mwworld/worldimp.cpp": "e54c2b50c0182c1514058058fed870289f13553bc8342e91abc59b1d861959de",
+      "apps/openmw/mwworld/worldimp.hpp": "db12e0a4b50437f01fe225c6e2deaa1e308c7414330f15beea51d3b2d13ac9ea",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2bdfb95192256a701fce93ca6bfa5b216556756a8840e5770fbf038e57ba907c"
+    },
+    "openmw_executables": {
+      "build/openmw": "7c654cdfb16d3ab5cf9d4a6575324c0ffe3f919ce38c8c398ece52a39b468012",
+      "build/m15-sanitize/openmw": "9dceff337aa8a486796dc1db748795bddec2dd1a5d8a39d44b28f3ce57e4c0f3"
+    },
+    "new_cases": [
+      "OblivionWorldTest.PreparedNativePhysicsPausedFrameKeepsBodiesAndZerosWorkerStats",
+      "OblivionWorldTest.PreparedNativePhysicsRejectsInvalidFrameBeforePausedStatsPublication",
+      "OblivionWorldTest.PreparedNativePhysicsRequiresInitializedServicesBeforeWorldUpdates",
+      "OblivionWorldTest.PreparedNativePhysicsRejectsNonNativeWorldBeforeAnyServices"
+    ],
+    "coverage": "A real headless native World with an admitted loose body keeps its pose and zeros worker stats while paused at 0/1/2 workers. Invalid frames/carry, missing services and a nonnative/unresolved World reject before stats publication. The active World forwarding path is compiled; these new tests do not execute it with complete rendering/projectile services.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Both broad builds retain existing unused-context and dangling-else warnings in unchanged World tests (15830/19871). Normal also retains the existing CharacterController::unpersistAnimationState entry maybe-uninitialized warning. No warning points to changed code. ASan leaks are disabled.",
+    "unchanged_checks": "Components and Python/schema unchanged; not rerun. Both engine checks rebuild openmw, openmw-tests and esmtool.",
+    "limits": [
+      "Engine still calls the legacy World physics entry. Authoritative clock/settings/pause-source ownership and main-loop publication/activation remain open.",
+      "No active native World course with complete backend, physical contact, normal game input or fresh-process gameplay/save-restart course was run for this chunk. Previous lower PhysicsSystem/scheduler stepping tests are regression coverage, not active World or gameplay acceptance.",
+      "Native actor admission, complete reactions/FSM/GetUp and all remaining S4 gameplay/view/device/FPS/restart gates remain open. Full M15S4 is incomplete."
+    ]
   }
 }

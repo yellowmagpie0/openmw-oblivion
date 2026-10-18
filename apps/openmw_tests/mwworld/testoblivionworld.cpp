@@ -1,5 +1,8 @@
 #include <apps/openmw/mwrender/looseobjectscenebinding.hpp>
 #include <components/sceneutil/actorragdollpose.hpp>
+#include <components/esm4/physicalframe.hpp>
+#include <components/nifbullet/actorragdollphysics.hpp>
+#include <apps/openmw/mwclass/static.hpp>
 #include <components/l10n/manager.hpp>
 #include "apps/openmw/mwinput/inputmanagerimp.hpp"
 #include <SDL.h>
@@ -23886,5 +23889,98 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         EXPECT_FALSE(combat.actorRagdoll(key));
         EXPECT_EQ(*combat.findActorValues(key), values);
         EXPECT_EQ(*combat.findActorLife(key), life);
+    }
+}
+
+namespace
+{
+    TEST(OblivionWorldTest, PreparedNativePhysicsPausedFrameKeepsBodiesAndZerosWorkerStats)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restore;
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            NativeWorldFixture fixture;
+            auto& physics = fixture.mWorld.initializePhysics(new osg::Group);
+            MWClass::Static::registerSelf();
+            ESM::Static base; base.blank();
+            ESM::CellRef reference; reference.blank();
+            MWWorld::LiveCellRef<ESM::Static> live(reference, &base);
+            const MWWorld::Ptr ptr(&live);
+            NifBullet::ActorRagdollDefinition graph;
+            NifBullet::RagdollBodyDefinition body{};
+            body.mRecord = 12; body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f}; graph.mBodies.push_back(body);
+            const std::array<btTransform, 1> poses{btTransform(btQuaternion::getIdentity(), btVector3(0, 0, 2))};
+            auto prepared = physics.prepareLooseObject(ptr, graph, 1, poses, 1, -1);
+            ASSERT_TRUE(physics.commitLooseObject(*prepared));
+            osg::ref_ptr<osg::Stats> stats = new osg::Stats("World native paused frame");
+            fixture.mWorld.updatePreparedNativePhysics({.1f, .05f, .0167f, 3}, 0, true,
+                osg::Timer::instance()->tick(), 7, *stats);
+            EXPECT_EQ(physics.captureLooseObject(ptr)[0].mPose, poses[0]);
+            for (const auto* name : {"physicsworker_time_begin", "physicsworker_time_taken", "physicsworker_time_end"})
+            {
+                double value = -1;
+                EXPECT_TRUE(stats->getAttribute(7, name, value));
+                EXPECT_EQ(value, 0);
+            }
+            physics.removeLooseObject(ptr);
+        }
+    }
+
+    TEST(OblivionWorldTest, PreparedNativePhysicsRejectsInvalidFrameBeforePausedStatsPublication)
+    {
+        NativeWorldFixture fixture;
+        fixture.mWorld.initializePhysics(new osg::Group);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("World rejected native frame");
+        stats->setAttribute(7, "physicsworker_time_taken", 37.);
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        for (const auto& frame : std::array<ESM4::PhysicalFrameResult, 4>{{
+                 {.1f, .05f, .0167f, 4}, {nan, .01f, .01f, 1},
+                 {.1f, .01f, nan, 1}, {-.1f, .01f, .01f, 1}}})
+            EXPECT_THROW(fixture.mWorld.updatePreparedNativePhysics(frame, 0, true,
+                osg::Timer::instance()->tick(), 7, *stats), std::invalid_argument);
+        EXPECT_THROW(fixture.mWorld.updatePreparedNativePhysics({.01f, .01f, .01f, 1}, nan, true,
+            osg::Timer::instance()->tick(), 7, *stats), std::invalid_argument);
+        double value = 0;
+        EXPECT_TRUE(stats->getAttribute(7, "physicsworker_time_taken", value));
+        EXPECT_EQ(value, 37.);
+    }
+
+    TEST(OblivionWorldTest, PreparedNativePhysicsRequiresInitializedServicesBeforeWorldUpdates)
+    {
+        NativeWorldFixture fixture;
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("World missing native physics services");
+        stats->setAttribute(7, "physicsworker_time_taken", 37.);
+        for (bool paused : {false, true})
+            EXPECT_THROW(fixture.mWorld.updatePreparedNativePhysics({.01f, .01f, .01f, 1}, 0, paused,
+                osg::Timer::instance()->tick(), 7, *stats), std::logic_error);
+        fixture.mWorld.initializePhysics(new osg::Group);
+        // Physics alone is enough for pause; active World updates also require
+        // the projectile/rendering backend initialized by World::init.
+        EXPECT_THROW(fixture.mWorld.updatePreparedNativePhysics({.01f, .01f, .01f, 1}, 0, false,
+            osg::Timer::instance()->tick(), 7, *stats), std::logic_error);
+        double value = 0;
+        EXPECT_TRUE(stats->getAttribute(7, "physicsworker_time_taken", value));
+        EXPECT_EQ(value, 37.);
+    }
+
+    TEST(OblivionWorldTest, PreparedNativePhysicsRejectsNonNativeWorldBeforeAnyServices)
+    {
+        MWWorld::World world(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        ASSERT_NE(world.getGameProfile(), ESM::GameProfile::Oblivion);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("World foreign native frame");
+        stats->setAttribute(7, "physicsworker_time_taken", 37.);
+        EXPECT_THROW(world.updatePreparedNativePhysics({.01f, .01f, .01f, 1}, 0, true,
+            osg::Timer::instance()->tick(), 7, *stats), std::invalid_argument);
+        double value = 0;
+        EXPECT_TRUE(stats->getAttribute(7, "physicsworker_time_taken", value));
+        EXPECT_EQ(value, 37.);
     }
 }

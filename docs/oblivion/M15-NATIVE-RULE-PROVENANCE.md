@@ -16073,3 +16073,34 @@ KF/selector/subtype/group/filter/root/capsule/morphology and complete reactions/
 FSM/GetUp remain open, alongside all remaining normal-input/view/device/FPS/
 fresh-process gameplay/save-restart gates. No new physical contact or game-input
 course is claimed. Full M15S4 is incomplete.
+
+
+### Prepared native frames enter World physics
+
+World now accepts a prepared native frame through an explicit Oblivion entry.
+It snapshots and validates the frame and carry, and checks required services,
+before native scene updates or stats publication. Active forwarding retains the
+existing door/projectile/physics/hit/actor synchronization order: World uses the
+input delta and PhysicsSystem receives the prepared substeps. The generic entry
+continues through the shared legacy path.
+
+Four new World cases cover invalid frames/carry, missing services, nonnative
+profile rejection and paused loose-body preservation with zero worker stats at
+0/1/2 workers. Both full normal and ASan/UBSan engine checks pass **1,680 tests
+in123 suites**, exact inventories, no failures/skips. Tested dirty fingerprint:
+`94de9d15e6abff2f23cc6bfd7efdc6e8bbcb6acee9548c52896070e4a3ab4d0c`.
+Both helpers terminated before documentation or commit changes. Existing broad-
+build warnings remain in unchanged World tests and normal CharacterController
+code; no warning points to changed code. ASan leak checking is disabled.
+Exact source/binary hashes and reports are in
+`native_world_prepared_frame_followup` in the verification index. Unchanged
+component/Python/schema checks are not repeated.
+
+Engine still selects the legacy World entry. The new active forwarding path is
+compiled, but these World tests exercise pause and rejection, not a complete
+active rendering/projectile backend. Prior lower PhysicsSystem/scheduler tests
+prove shared stepping only at their layer. Native process-clock activation,
+settings/pause ownership, actor admission and complete reactions/FSM/GetUp remain
+open. No new physical-contact, normal-input or fresh-process gameplay/restart
+course is claimed. All remaining S4 acceptance gates stay open. Full M15S4 is
+incomplete.

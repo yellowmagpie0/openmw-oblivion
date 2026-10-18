@@ -65,6 +65,7 @@ namespace ESM4
     struct RuntimeInventoryItem;
     struct RuntimeReferenceState;
     struct RuntimeState;
+    struct PhysicalFrameResult;
     class ObservationStream;
 }
 
@@ -288,7 +289,10 @@ namespace MWWorld
         void processDoors(float duration);
         ///< Run physics simulation and modify \a world accordingly.
 
-        void doPhysics(float duration, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
+        void doPhysics(float duration, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats,
+            const ESM4::PhysicalFrameResult* nativeFrame, float remaining);
+        void updatePhysicsImpl(float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber,
+            osg::Stats& stats, const ESM4::PhysicalFrameResult* nativeFrame, float remaining);
         ///< Run physics simulation and modify \a world accordingly.
 
         void updateNavigator();
@@ -711,6 +715,11 @@ namespace MWWorld
         void update(float duration, bool paused);
         void updatePhysics(
             float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
+        // Consume a frame from the authoritative native process clock. World
+        // updates use its input delta; shared physics uses its prepared steps.
+        // Validate/profile-check before renderer, World or physics mutations.
+        void updatePreparedNativePhysics(const ESM4::PhysicalFrameResult& frame, float remaining,
+            bool paused, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
 
         void updateFocusObject();
 

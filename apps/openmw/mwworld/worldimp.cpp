@@ -136,6 +136,8 @@
 #include "../mwphysics/collisiontype.hpp"
 #include "../mwphysics/object.hpp"
 #include "../mwphysics/physicssystem.hpp"
+#include "../mwphysics/mtphysics.hpp"
+#include <components/esm4/physicalframe.hpp>
 
 #include "../mwsound/constants.hpp"
 
@@ -5250,11 +5252,16 @@ namespace MWWorld
         mPhysics->updateAnimatedCollisionShape(ptr);
     }
 
-    void World::doPhysics(float duration, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+    void World::doPhysics(float duration, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats,
+        const ESM4::PhysicalFrameResult* nativeFrame, float remaining)
     {
         processDoors(duration);
         mProjectileManager->update(duration);
-        mPhysics->stepSimulation(duration, mDiscardMovements, frameStart, frameNumber, stats);
+        if (nativeFrame)
+            mPhysics->stepPreparedNativeFrame(*nativeFrame, remaining, mDiscardMovements,
+                frameStart, frameNumber, stats);
+        else
+            mPhysics->stepSimulation(duration, mDiscardMovements, frameStart, frameNumber, stats);
         mProjectileManager->processHits();
         mDiscardMovements = false;
         mPhysics->moveActors();
@@ -5485,11 +5492,29 @@ namespace MWWorld
     void World::updatePhysics(
         float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
     {
+        updatePhysicsImpl(duration, paused, frameStart, frameNumber, stats, nullptr, 0.f);
+    }
+
+    void World::updatePreparedNativePhysics(const ESM4::PhysicalFrameResult& frame, float remaining,
+        bool paused, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            throw std::invalid_argument("prepared native physics requires an Oblivion World");
+        const auto prepared = frame;
+        MWPhysics::PhysicsTaskScheduler::validatePreparedNativeFrame(prepared, remaining);
+        if (!mPhysics || (!paused && !mProjectileManager))
+            throw std::logic_error("prepared native physics requires initialized World services");
+        updatePhysicsImpl(prepared.mInputDelta, paused, frameStart, frameNumber, stats, &prepared, remaining);
+    }
+
+    void World::updatePhysicsImpl(float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber,
+        osg::Stats& stats, const ESM4::PhysicalFrameResult* nativeFrame, float remaining)
+    {
         if (mGameProfile == ESM::GameProfile::Oblivion && mRendering)
             mRendering->updateNativeScenesBeforePhysics();
         if (!paused)
         {
-            doPhysics(duration, frameStart, frameNumber, stats);
+            doPhysics(duration, frameStart, frameNumber, stats, nativeFrame, remaining);
         }
         else
         {
