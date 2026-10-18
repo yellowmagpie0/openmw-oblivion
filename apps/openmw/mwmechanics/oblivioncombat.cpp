@@ -691,6 +691,7 @@ namespace MWMechanics
     void OblivionCombatService::clear()
     {
         mPreparedReleaseIdentity.mValue.reset();
+        mPreparedRagdollIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
         mCrimeContracts = {};
@@ -4085,6 +4086,98 @@ namespace MWMechanics
         }
     }
 
+    struct OblivionCombatService::PreparedActorRagdollUpdate::Impl
+    {
+        OblivionCombatService* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        ESM::FormKey mActor;
+        std::optional<ESM4::RuntimeActorRagdoll> mExpected;
+        std::optional<ESM4::RuntimeActorValues> mValues;
+        std::optional<ESM4::RuntimeActorLife> mLife;
+        std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mNext;
+        bool mCommitted = false;
+    };
+
+    OblivionCombatService::PreparedActorRagdollUpdate::PreparedActorRagdollUpdate(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionCombatService::PreparedActorRagdollUpdate::~PreparedActorRagdollUpdate() = default;
+
+    bool OblivionCombatService::PreparedActorRagdollUpdate::isValid() const noexcept
+    {
+        return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->validateActorRagdollUpdate(*this);
+    }
+
+    bool OblivionCombatService::PreparedActorRagdollUpdate::commit() noexcept
+    {
+        return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->commitActorRagdollUpdate(*this);
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedActorRagdollUpdate>
+    OblivionCombatService::prepareActorRagdollUpdate(const ESM::FormKey& actor,
+        const std::optional<ESM4::RuntimeActorRagdoll>& expected,
+        const std::optional<ESM4::RuntimeActorRagdoll>& updated)
+    {
+        const auto found = mActorRagdolls.find(actor);
+        if (expected ? found == mActorRagdolls.end() || found->second != *expected
+                     : found != mActorRagdolls.end())
+            return {};
+        auto data = std::make_unique<PreparedActorRagdollUpdate::Impl>();
+        data->mOwner = this;
+        data->mActor = actor;
+        data->mExpected = expected;
+        if (updated)
+        {
+            const auto* values = findActorValues(actor);
+            const auto* life = findActorLife(actor);
+            validatePhysicalPoseUpdate(expected, updated, values, life);
+            data->mValues = *values;
+            data->mLife = *life;
+            data->mNext.emplace(actor, *updated);
+        }
+        if (!mPreparedRagdollIdentity.mValue)
+            mPreparedRagdollIdentity.mValue = std::make_shared<const char>();
+        data->mIdentity = mPreparedRagdollIdentity.mValue;
+        return std::unique_ptr<PreparedActorRagdollUpdate>(new PreparedActorRagdollUpdate(std::move(data)));
+    }
+
+    bool OblivionCombatService::validateActorRagdollUpdate(const PreparedActorRagdollUpdate& update) const noexcept
+    {
+        const auto* data = update.mImpl.get();
+        if (!data || data->mOwner != this || data->mCommitted || data->mIdentity.expired()
+            || data->mIdentity.lock() != mPreparedRagdollIdentity.mValue)
+            return false;
+        const auto found = mActorRagdolls.find(data->mActor);
+        if (data->mExpected ? found == mActorRagdolls.end() || found->second != *data->mExpected
+                            : found != mActorRagdolls.end())
+            return false;
+        if (!data->mNext.empty())
+        {
+            const auto* values = findActorValues(data->mActor);
+            const auto* life = findActorLife(data->mActor);
+            if (!values || !life || *values != *data->mValues || *life != *data->mLife) return false;
+        }
+        return true;
+    }
+
+    bool OblivionCombatService::commitActorRagdollUpdate(PreparedActorRagdollUpdate& update) noexcept
+    {
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorRagdoll>);
+        if (!validateActorRagdollUpdate(update)) return false;
+        auto& data = *update.mImpl;
+        const auto found = mActorRagdolls.find(data.mActor);
+        if (data.mNext.empty())
+        {
+            if (found != mActorRagdolls.end()) mActorRagdolls.erase(found);
+        }
+        else if (found == mActorRagdolls.end())
+            mActorRagdolls.insert(data.mNext.extract(data.mNext.begin()));
+        else
+            std::swap(found->second, data.mNext.begin()->second);
+        data.mCommitted = true;
+        mPreparedRagdollIdentity.mValue.reset();
+        return true;
+    }
+
     bool OblivionCombatService::syncActorRagdoll(const ESM::FormKey& actor,
         const std::optional<ESM4::RuntimeActorRagdoll>& expected,
         const std::optional<ESM4::RuntimeActorRagdoll>& updated)
@@ -4097,6 +4190,7 @@ namespace MWMechanics
         {
             if (found != mActorRagdolls.end())
                 mActorRagdolls.erase(found);
+            mPreparedRagdollIdentity.mValue.reset();
             return true;
         }
         validatePhysicalPoseUpdate(expected, updated, findActorValues(actor), findActorLife(actor));
@@ -4108,6 +4202,7 @@ namespace MWMechanics
             static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorRagdoll>);
             std::swap(found->second, candidate);
         }
+        mPreparedRagdollIdentity.mValue.reset();
         return true;
     }
 
@@ -4140,6 +4235,7 @@ namespace MWMechanics
         // actor values/life, action IDs, and events retain their live authority.
         static_assert(noexcept(mActorRagdolls.swap(candidate)));
         mActorRagdolls.swap(candidate);
+        mPreparedRagdollIdentity.mValue.reset();
         return true;
     }
 
@@ -4473,6 +4569,7 @@ namespace MWMechanics
             lives.emplace(life.mActor, life);
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
         mPreparedReleaseIdentity.mValue.reset();
+        mPreparedRagdollIdentity.mValue.reset();
         mActions = std::move(actions);
         mCombatRngState = state.mCombatRngState;
         std::swap(mCrimeContracts, crime);

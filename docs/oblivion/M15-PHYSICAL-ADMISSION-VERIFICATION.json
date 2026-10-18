@@ -1949,5 +1949,118 @@
       "Stable container compaction, model-bank lookup and base/condition clearing are declared supplied boundaries.",
       "No production GetUp selector/playback or new normal-input fork acceptance."
     ]
+  },
+  "prepared_native_cache_followup": {
+    "status": "Strict native resource/snapshot/cache admission checkpoint; full M15S4 remains incomplete",
+    "source_parent_commit": "a6e2ba8a3a2eaf485849eed52908efb92fe62131",
+    "tested_source": {
+      "head": "a6e2ba8a3a2eaf485849eed52908efb92fe62131",
+      "source_fingerprint": "15dd40cb663960281d5fe571421edbe65df81d44df1dca56667514ee844bfe97"
+    },
+    "source_sha256": {
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "8f39a9899be64de111ede048739d70127ec90a808d5d96514ff60fdd60d28160",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "b5e5f30fefed1ece9549ddd45de902556dac701979a217cea2a9d1b85b76a0eb",
+      "apps/openmw/mwphysics/mtphysics.cpp": "c9acff0d8ad4652d96169c3f7602bf81b1801c3dd3e4321079952dd4621b1b27",
+      "apps/openmw/mwphysics/oblivionragdoll.cpp": "c86e97ced79179346f186e071bb15cf1469417393bef2812a6c16597e3eb90c0",
+      "apps/openmw/mwphysics/oblivionragdoll.hpp": "6d8e94f8c56c899a06f96aa94dfb04bc7e652ea773f962630a6babaeb887051d",
+      "apps/openmw/mwphysics/physicssystem.cpp": "d3939a678d173493cfea275772a8a819c97c4e0bf47049597e568c7d8b95a0e4",
+      "apps/openmw/mwphysics/physicssystem.hpp": "b8ebe7ab1404fd17cdc6cd7ba180f8fe5f00a1c45f1c60521695fbd48c646652",
+      "apps/openmw/mwworld/oblivionphysicalpose.cpp": "cb60ef8178d296810c9010528a96597f5924cf93bc81d3eb2c32ec524445a13f",
+      "apps/openmw/mwworld/oblivionphysicalpose.hpp": "8680f0b07a3d756325d7047493a9a46d79ac57574390d76079b146a71840549d",
+      "apps/openmw/mwworld/worldimp.cpp": "505686cbc037b4d094c4d590d726f1a6487b0a360833ffabe0f881e9abbc4584",
+      "apps/openmw_tests/mwworld/testoblivioncombat.cpp": "47c8a322156d983c7f1bfabb5ef75b86301d2ab723ca93c35afee8cb14f33162",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8e7592b80ef9671a069b5ed4f6e80d47422d37ed5857010fba23b935b4d33fbd"
+    },
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/prepared-native-cache-engine-normal-03/verification.json",
+        "report_sha256": "bb118b1111e04f8c578b2de59911101832624770f34eff7f1c3520c1245c42fa",
+        "source": {
+          "head": "a6e2ba8a3a2eaf485849eed52908efb92fe62131",
+          "source_fingerprint": "15dd40cb663960281d5fe571421edbe65df81d44df1dca56667514ee844bfe97"
+        },
+        "result": {
+          "executed": 1628,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "483cad1fb29875ccc23ba89d84e88693edd976f1145264839aef6bc3d703491c",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ea700e12c34409cc487ef88276e4592e72dc291de0a7395c652a81312ec76b7c",
+          "inventory_sha256": "040bb8d19fbf1b3a83fb174ae6c30d7fa4fa5578f6b08973dbc9dc0ca906a555",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/prepared-native-cache-engine-sanitized-03/verification.json",
+        "report_sha256": "e5fefd402fd460b7cfeaf76ff3409d0725ff6f0590795f52a52e49275b044719",
+        "source": {
+          "head": "a6e2ba8a3a2eaf485849eed52908efb92fe62131",
+          "source_fingerprint": "15dd40cb663960281d5fe571421edbe65df81d44df1dca56667514ee844bfe97"
+        },
+        "result": {
+          "executed": 1628,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "e1e26d9cf0d1ebbba488a87212a27456c5a3724cc325a29a543690fb2e3d9e0f",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "3ac39d6559ce98554747f840ae749113765df2e8b1d31335d511947b2ff535bc",
+          "inventory_sha256": "040bb8d19fbf1b3a83fb174ae6c30d7fa4fa5578f6b08973dbc9dc0ca906a555",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "leak_coverage": false
+    },
+    "behavior": [
+      "PreparedNativeActorPhysicalPose retains prepared renderer ownership, detached physical graph, scaled definition, weak actor lifetime and reference placement. Saved snapshots and generated controller changes can stage before publication.",
+      "Shared snapshot adapters capture/restore the same body, packed velocity, motion, blend and controller state for detached or scheduler-locked live graphs.",
+      "PreparedActorRagdollUpdate validates ownership and allocates DTO/map storage before publication. Commit checks the expected cache and complete actor values/life, then swaps storage or inserts a prepared map node without allocation or callbacks.",
+      "Cache publication, clear, restore and owner copy/move invalidate older prepared cache handles; consumed/competing candidates cannot revive when equal cache values or absence return.",
+      "Strict World admission restores/captures the detached graph and prepares cache publication before renderer/physics ownership changes. All guards are checked before resource commit and the final cache commit.",
+      "The existing immediate syncActorRagdoll path retains allocation-free cache removal; it additionally invalidates old cache preparations."
+    ],
+    "tests": [
+      "Two new service cases cover discard without serialized-state changes, foreign owner, expected-value rejection, competing/consumed handles, release/recreation, equal batch publication, changed actor life, restore, move, clear and expired owner.",
+      "Expanded native World admission test covers invalid saved asset with a renderer rebuild hook that would throw, detached restore/capture/discard, competing resource handles after release, changed placement, expired renderer/physics owners and safe expired prepared-physics commit, with zero/one/two physics workers."
+    ],
+    "retained_interrupted_attempts": {
+      "report": "build/oblivion-compat/m15/S4/prepared-native-cache-build-interruption-01.json",
+      "reason": "Review caught new allocation on immediate cache deletion when it delegated to prepared API. Both owned normal/SAN01 CMake groups were intentionally interrupted before correcting that regression. Both helpers consumed exit1 with build exit-2; no test pass claimed.",
+      "paths": [
+        "S4/prepared-native-cache-engine-normal-01",
+        "S4/prepared-native-cache-engine-sanitized-01",
+        "S4/prepared-native-cache-engine-normal-02",
+        "S4/prepared-native-cache-engine-sanitized-02"
+      ],
+      "additional_failure": {
+        "report": "build/oblivion-compat/m15/S4/prepared-native-cache-build-failure-02.json",
+        "reason": "Normal02 World placement test tried to write const getPosition; corrected to setPosition. SAN02 owned build intentionally stopped after known normal compile error. No pass claimed."
+      }
+    },
+    "limits": [
+      "Physics commit retains fallible collision routing/world registration and its existing rollback before renderer/cache publication; only the validated renderer/cache commits are allocation/callback free.",
+      "This stages restored physical bodies and cache ownership, not first-frame visible pose projection or full recovery restart acceptance.",
+      "Automatic contact/RNG/reaction-frame publication, native reference/proxy policy, GetUp playback and full input/view/FPS/restart gates remain open.",
+      "Native scene-to-body admission still uses the default Double adapter. No new normal-input fork KO/GetUp acceptance is claimed."
+    ]
   }
 }

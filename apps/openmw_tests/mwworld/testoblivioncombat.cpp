@@ -733,6 +733,96 @@ TEST(OblivionCombatService, InvalidPhysicalPublicationAndRestoreAreAtomic)
     EXPECT_EQ(service.actorRagdoll(actor), pose);
 }
 
+TEST(OblivionCombatService, PreparedPhysicalCachePublicationStagesStorageWithoutPublishing)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto pose = physicalSnapshot(state);
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    const auto other = state.mReferences.back().mKey;
+    auto otherPose = pose;
+    otherPose.mBase = state.mReferences.back().mBase;
+    ASSERT_TRUE(service.syncActorRagdoll(other, std::nullopt, otherPose));
+    auto before = state;
+    service.capture(before);
+    {
+        auto discarded = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+        ASSERT_TRUE(discarded);
+        EXPECT_TRUE(discarded->isValid());
+        EXPECT_FALSE(service.actorRagdoll(actor));
+    }
+    auto after = state;
+    service.capture(after);
+    EXPECT_EQ(after.serializeBinary(), before.serializeBinary());
+    auto first = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    auto competing = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    ASSERT_TRUE(first); ASSERT_TRUE(competing);
+    MWMechanics::OblivionCombatService foreign = service;
+    EXPECT_FALSE(foreign.validateActorRagdollUpdate(*first));
+    EXPECT_FALSE(foreign.commitActorRagdollUpdate(*first));
+    ASSERT_TRUE(first->commit());
+    EXPECT_FALSE(first->isValid());
+    EXPECT_FALSE(first->commit());
+    EXPECT_EQ(service.actorRagdoll(actor), pose);
+    EXPECT_FALSE(competing->isValid());
+    ASSERT_TRUE(service.syncActorRagdoll(actor, pose, std::nullopt));
+    EXPECT_FALSE(competing->isValid());
+    EXPECT_FALSE(competing->commit()); // Absence again cannot revive old admission.
+    ASSERT_TRUE(service.syncActorRagdoll(actor, std::nullopt, pose));
+    auto changed = pose;
+    changed.mBodies[0].mPosition[0] = 100;
+    auto update = service.prepareActorRagdollUpdate(actor, pose, changed);
+    ASSERT_TRUE(update);
+    EXPECT_EQ(service.actorRagdoll(actor), pose);
+    ASSERT_TRUE(update->commit());
+    EXPECT_EQ(service.actorRagdoll(actor), changed);
+    EXPECT_FALSE(service.prepareActorRagdollUpdate(actor, pose, pose));
+    auto same = service.prepareActorRagdollUpdate(actor, changed, changed);
+    ASSERT_TRUE(same);
+    ASSERT_TRUE(service.syncActorRagdolls({{actor, {changed, changed}}}));
+    EXPECT_FALSE(same->commit()); // Even equal batch publication invalidates old preparations.
+    EXPECT_EQ(service.actorRagdoll(other), otherPose);
+}
+
+TEST(OblivionCombatService, PreparedPhysicalCacheRejectsChangedLifeRestoreMoveAndExpiredOwner)
+{
+    auto state = combatMembershipState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto pose = physicalSnapshot(state);
+    using Prepared = MWMechanics::OblivionCombatService::PreparedActorRagdollUpdate;
+    std::unique_ptr<Prepared> expired;
+    {
+        MWMechanics::OblivionCombatService service;
+        service.restore(state);
+        expired = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+        ASSERT_TRUE(expired);
+        EXPECT_TRUE(expired->isValid());
+    }
+    EXPECT_FALSE(expired->isValid()); EXPECT_FALSE(expired->commit());
+    MWMechanics::OblivionCombatService service;
+    service.restore(state);
+    auto life = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    ASSERT_TRUE(life);
+    service.setProcessKnockedState(actor, 3);
+    EXPECT_FALSE(life->isValid()); EXPECT_FALSE(life->commit());
+    EXPECT_FALSE(service.actorRagdoll(actor));
+    service.restore(state);
+    auto restored = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    ASSERT_TRUE(restored);
+    service.restore(state);
+    EXPECT_FALSE(restored->commit());
+    auto moved = service.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    ASSERT_TRUE(moved);
+    MWMechanics::OblivionCombatService destination(std::move(service));
+    EXPECT_FALSE(moved->isValid()); EXPECT_FALSE(moved->commit());
+    EXPECT_FALSE(destination.commitActorRagdollUpdate(*moved));
+    auto cleared = destination.prepareActorRagdollUpdate(actor, std::nullopt, pose);
+    ASSERT_TRUE(cleared);
+    destination.clear();
+    EXPECT_FALSE(cleared->isValid()); EXPECT_FALSE(cleared->commit());
+}
+
 TEST(OblivionCombatService, PhysicalDowngradeClearAndLegacyReplacementDoNotInventHistory)
 {
     auto state = combatMembershipState();

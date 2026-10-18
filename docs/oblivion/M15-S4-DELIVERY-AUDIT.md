@@ -4881,3 +4881,27 @@ under ASan/UBSan with leak detection disabled. Hashes and selections are in the
 This covers renderer composition/writeback. The scene-to-body admission adapter
 still uses its default Double conversion. Automatic contact/reaction-frame,
 GetUp playback, recovery restart and full normal-input acceptance remain open.
+
+
+Strict native physical admission now restores saved body/controller state into
+the detached graph and prepares cache DTO/map storage before renderer or physics
+ownership is published. Invalid saved assets reject while the selected
+renderer callbacks and movement capsule retain ownership. Resource preparations
+also guard the reference lifetime/placement, renderer, cell, scale, capsule and
+competing handoffs. The cache preparation checks expected state and complete
+actor values/life, then publishes by swap or prepared map-node insertion.
+Older cache preparations stay invalid after release/recreation, equal batch
+publication, clear, restore or owner move. The immediate cache-removal API
+retains its allocation-free implementation.
+Both full engine inventories pass 1628 cases/122 suites, normally and under
+ASan/UBSan with leak detection disabled. Tests include rejected saved assets
+with a throwing renderer rebuild hook and detached restore/capture/discard with
+zero, one and two physics workers, plus stale/foreign/expired/competing cache
+handles. The initial builds stopped to correct the immediate-removal allocation
+regression and the later placement-test compilation failure remain in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This resolves the earlier strict-admission snapshot/cache work that occurred
+after resource publication. Physics registration still has its own fallible
+routing/world-registration rollback. First-frame visible projection, compound
+contact/RNG/reaction publication, native proxy/reference movement, GetUp
+playback and full recovery/input/view/FPS/restart acceptance remain open.

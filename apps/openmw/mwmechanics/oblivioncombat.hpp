@@ -255,6 +255,7 @@ namespace MWMechanics
             PreparedReleaseIdentity& operator=(PreparedReleaseIdentity&& other) noexcept
             { if (this != &other) { mValue.reset(); other.mValue.reset(); } return *this; }
         } mPreparedReleaseIdentity;
+        PreparedReleaseIdentity mPreparedRagdollIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
         ESM4::CrimeStateContracts mCrimeContracts;
@@ -342,6 +343,27 @@ namespace MWMechanics
         bool syncActorKnockback(const ESM::FormKey& actor, const ESM4::TimedKnockbackState& expected,
             const ESM4::TimedKnockbackState& updated);
         std::optional<ESM4::RuntimeActorRagdoll> actorRagdoll(const ESM::FormKey& actor) const;
+        class PreparedActorRagdollUpdate
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedActorRagdollUpdate(std::unique_ptr<Impl> impl);
+            friend class OblivionCombatService;
+        public:
+            ~PreparedActorRagdollUpdate();
+            PreparedActorRagdollUpdate(const PreparedActorRagdollUpdate&) = delete;
+            PreparedActorRagdollUpdate& operator=(const PreparedActorRagdollUpdate&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        // Stage validation, saved DTO storage and map-node allocation before
+        // external body/renderer publication. Any cache publication invalidates
+        // older preparations, even if an identical value is later restored.
+        std::unique_ptr<PreparedActorRagdollUpdate> prepareActorRagdollUpdate(const ESM::FormKey& actor,
+            const std::optional<ESM4::RuntimeActorRagdoll>& expected,
+            const std::optional<ESM4::RuntimeActorRagdoll>& updated);
+        bool validateActorRagdollUpdate(const PreparedActorRagdollUpdate& update) const noexcept;
+        bool commitActorRagdollUpdate(PreparedActorRagdollUpdate& update) noexcept;
         // Main-thread physical projection publication. Null represents absence;
         // a stale capture cannot replace a newer pose or recreate released bodies.
         // Asset/body identity changes require release followed by new admission.

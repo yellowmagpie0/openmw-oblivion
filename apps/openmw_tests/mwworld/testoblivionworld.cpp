@@ -23569,7 +23569,11 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         auto wrong = cached;
         wrong->mAssetHash[0] = wrong->mAssetHash[0] == 'a' ? 'b' : 'a';
         ASSERT_TRUE(combat.syncActorRagdoll(key, std::nullopt, wrong));
+        // Snapshot restoration must reject before any callback detachment or
+        // rebuild, not publish bodies then repair renderer ownership on failure.
+        animation.mRejectControllerRebuild = true;
         EXPECT_THROW(begin(animation, filters), std::invalid_argument);
+        animation.mRejectControllerRebuild = false;
         absent();
         EXPECT_EQ(combat.actorRagdoll(key), wrong);
         ASSERT_TRUE(combat.syncActorRagdoll(key, wrong, std::nullopt));
@@ -23577,6 +23581,63 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
         ASSERT_TRUE(source);
         const auto& graph = *source->definition();
+        const auto prepareNative = [&] {
+            return MWWorld::PreparedNativeActorPhysicalPose::prepare(physics, animation, actor,
+                graph, placement, filters, world.getOblivionPhysicalBlendConfiguration().mPostLink,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, nullptr);
+        };
+        {
+            auto detached = prepareNative();
+            ASSERT_TRUE(detached->isValid());
+            EXPECT_FALSE(detached->physics().isPublished());
+            const auto original = detached->captureSnapshot(npc.mFormKey, model);
+            EXPECT_THROW(detached->restoreSnapshot(*wrong, npc.mFormKey, model), std::invalid_argument);
+            EXPECT_EQ(detached->captureSnapshot(npc.mFormKey, model), original);
+            detached->restoreSnapshot(*cached, npc.mFormKey, model);
+            EXPECT_EQ(detached->captureSnapshot(npc.mFormKey, model), *cached);
+            absent();
+        }
+        absent();
+        {
+            auto admitted = prepareNative();
+            auto competitor = prepareNative();
+            ASSERT_TRUE(admitted->commit());
+            EXPECT_FALSE(admitted->isValid());
+            EXPECT_FALSE(admitted->commit());
+            EXPECT_FALSE(competitor->isValid());
+            EXPECT_FALSE(competitor->commit());
+            EXPECT_THROW(admitted->captureSnapshot(npc.mFormKey, model), std::invalid_argument);
+            MWWorld::endNativeActorPhysicalPose(physics, animation, actor);
+            EXPECT_FALSE(competitor->isValid());
+            EXPECT_FALSE(competitor->commit());
+            absent();
+        }
+        {
+            auto moved = prepareNative();
+            const auto position = actor.getRefData().getPosition();
+            auto changedPosition = position;
+            changedPosition.pos[0] += 1;
+            actor.getRefData().setPosition(changedPosition);
+            EXPECT_FALSE(moved->isValid()); EXPECT_FALSE(moved->commit());
+            actor.getRefData().setPosition(position);
+            absent();
+        }
+        std::unique_ptr<MWWorld::PreparedNativeActorPhysicalPose> expiredResources;
+        {
+            auto temporary = std::make_unique<MWPhysics::PhysicsSystem>(&fixture.mResources, new osg::Group);
+            temporary->addActor(actor, VFS::Path::toNormalized(model));
+            SourceAnimation temporaryAnimation(actor, parent, &fixture.mResources, model);
+            expiredResources = MWWorld::PreparedNativeActorPhysicalPose::prepare(*temporary,
+                temporaryAnimation, actor, graph, placement, filters,
+                world.getOblivionPhysicalBlendConfiguration().mPostLink,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, nullptr);
+            ASSERT_TRUE(expiredResources->isValid());
+        }
+        EXPECT_FALSE(expiredResources->isValid());
+        EXPECT_FALSE(expiredResources->commit());
+        EXPECT_THROW(expiredResources->physics(), std::invalid_argument);
+        expiredResources.reset();
+        absent();
         const std::array<btTransform, 1> remotePose{
             btTransform(btQuaternion::getIdentity(), btVector3(1000, 1000, 1000))};
         const auto prepare = [&](MWPhysics::ActorRagdollCapsulePolicy policy) {
@@ -23645,6 +23706,8 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
             expired = temporary->prepareActorRagdoll(actor, graph, NifBullet::RagdollNativeLengthScale,
                 remotePose, MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
         }
+        EXPECT_FALSE(expired->isValid());
+        EXPECT_FALSE(expired->commit());
         EXPECT_THROW(expired->physics(), std::invalid_argument);
         expired.reset(); // Deferred geometry safely outlives its World.
         auto suspendedCapsule = prepare(MWPhysics::ActorRagdollCapsulePolicy::Suspend);

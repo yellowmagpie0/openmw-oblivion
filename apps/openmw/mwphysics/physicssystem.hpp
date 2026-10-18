@@ -156,6 +156,8 @@ namespace MWPhysics
         // Borrowed detached graph. Stage controller/motion changes here;
         // commitActorRagdoll owns World publication and capsule handoff.
         NifBullet::ActorRagdollPhysics& physics();
+        bool isValid() const;
+        bool commit();
     };
 
     struct NativeRagdollSnapshotGroup;

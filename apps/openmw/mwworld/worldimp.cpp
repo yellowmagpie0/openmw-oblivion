@@ -1696,23 +1696,25 @@ namespace MWWorld
         if (!source || !animation.isCurrentNativePhysicalSource(*source))
             throw std::invalid_argument("native physical admission requires the actual rendered actor NIF");
         const auto previous = mOblivionCombat->actorRagdoll(key);
-        beginNativeActorPhysicalPose(*mPhysics, animation, actor, *source->definition(), placement,
-            resolvedPackedFilters, configuration.mPostLink, collisionGroup, collisionMask, internalFilter);
-        try
+        auto resources = PreparedNativeActorPhysicalPose::prepare(*mPhysics, animation, actor,
+            *source->definition(), placement, resolvedPackedFilters, configuration.mPostLink,
+            collisionGroup, collisionMask, internalFilter);
+        if (previous)
+            resources->restoreSnapshot(*previous, base, model.value());
+        const auto current = resources->captureSnapshot(base, model.value());
+        auto cache = mOblivionCombat->prepareActorRagdollUpdate(key, previous, current);
+        if (!animation.isCurrentNativePhysicalSource(*source) || !cache || !cache->isValid()
+            || !resources->isValid())
+            throw std::runtime_error("native physical admission lost its renderer or authority binding");
+        if (!resources->commit())
+            throw std::invalid_argument("native physical actor changed before admission");
+        // All restoration, DTO allocation and ownership checks finished before
+        // publication. Neither resource commit invokes an external callback;
+        // this validated cache commit only swaps storage or inserts its map node.
+        if (!cache->commit())
         {
-            if (previous)
-                mPhysics->restoreActorRagdollSnapshot(actor, *previous, base, model.value());
-            auto current = mPhysics->captureActorRagdollSnapshot(actor, base, model.value());
-            if (!animation.isCurrentNativePhysicalSource(*source)
-                || !mOblivionCombat->syncActorRagdoll(key, previous, current))
-                throw std::runtime_error("native physical admission lost its renderer or authority binding");
-        }
-        catch (...)
-        {
-            // Failed asset restoration/cache allocation must leave neither an
-            // untracked body owner nor a suspended movement capsule behind.
             endNativeActorPhysicalPose(*mPhysics, animation, actor);
-            throw;
+            throw std::logic_error("native physical cache changed during resource publication");
         }
     }
 

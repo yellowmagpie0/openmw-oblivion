@@ -3,8 +3,12 @@
 
 #include <components/esm4/physicalblendsettings.hpp>
 #include <span>
+#include <memory>
+#include <string_view>
 #include <osg/Vec3f>
 
+namespace ESM { struct FormKey; }
+namespace ESM4 { struct RuntimeActorRagdoll; }
 namespace MWPhysics { class PhysicsSystem; }
 namespace MWRender { class Animation; }
 namespace Nif { struct NiTransform; }
@@ -13,6 +17,7 @@ namespace NifBullet
     enum class RagdollNativeKnockdownBlendDisposition;
     enum class RagdollNativeHitBlendDisposition;
     struct ActorRagdollDefinition;
+    class ActorRagdollPhysics;
     struct RagdollInternalCollisionFilter;
 }
 
@@ -36,6 +41,32 @@ namespace MWWorld
         std::array<float, 4> mNativeSourceVector;
         float mResolvedMassMultiplier;
     };
+    // Owns staged renderer callbacks/binding and an unpublished physical graph.
+    // Snapshot restore and controller setup can fail here without taking live
+    // renderer/capsule ownership. A consumed or expired candidate cannot revive.
+    class PreparedNativeActorPhysicalPose
+    {
+        struct Data;
+        std::unique_ptr<Data> mData;
+        explicit PreparedNativeActorPhysicalPose(std::unique_ptr<Data> data);
+    public:
+        ~PreparedNativeActorPhysicalPose();
+        PreparedNativeActorPhysicalPose(const PreparedNativeActorPhysicalPose&) = delete;
+        PreparedNativeActorPhysicalPose& operator=(const PreparedNativeActorPhysicalPose&) = delete;
+        static std::unique_ptr<PreparedNativeActorPhysicalPose> prepare(
+            MWPhysics::PhysicsSystem& physics, MWRender::Animation& animation,
+            const Ptr& actor, const NifBullet::ActorRagdollDefinition& authored,
+            const Nif::NiTransform& placement, std::span<const std::uint32_t> resolvedPackedFilters,
+            const ESM4::PhysicalBlendGainTable& resolvedGains, int collisionGroup, int collisionMask,
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter);
+        bool isValid() const;
+        NifBullet::ActorRagdollPhysics& physics();
+        void restoreSnapshot(const ESM4::RuntimeActorRagdoll& snapshot,
+            const ESM::FormKey& base, std::string_view model);
+        ESM4::RuntimeActorRagdoll captureSnapshot(const ESM::FormKey& base, std::string_view model);
+        bool commit();
+    };
+
     // Borrowed renderer/physics lifetimes. The caller supplies resolved native
     // uniform placement, resolved packed body filters/gain table and collision policy; this does not select reactions,
     // infer NPC morphology, or install generated controllers.

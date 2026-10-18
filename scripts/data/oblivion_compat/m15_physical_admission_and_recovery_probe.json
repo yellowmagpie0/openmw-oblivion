@@ -88,7 +88,10 @@
       "Compound native frame stages generated controller forces before blend-body drives and advances selected controllers/shared clocks once.",
       "Rejected scene publication preserves body poses/velocities/packed lanes/activation, controller lists, target state and shared clock; scheduler rejects stale actor handles and preserves complete snapshots with 0/1/2 physics workers.",
       "Native renderer admission and animated target sampling use explicit NativeObjectLocal Single composition/writeback, matching frozen original707370 bits while applying placement outside the authored root.",
-      "Native object-local root writeback remains relative to placement; ReferenceWorld and legacy defaults preserve their established root semantics."
+      "Native object-local root writeback remains relative to placement; ReferenceWorld and legacy defaults preserve their established root semantics.",
+      "Strict World admission restores saved bodies/controllers and prepares cache DTO/map storage before publishing renderer/physics ownership. Invalid saved assets reject without a renderer rebuild or capsule handoff.",
+      "Prepared native resources reject stale placement/expired owner and consumed/competing handoffs; detached restore/capture/discard does not publish collision bodies, renderer ownership or cache state.",
+      "Prepared physical cache updates reject foreign/expired/moved/restored owners, changed life or stale expected cache, and cannot revive after release/recreation or equal batch publication. Immediate cache removal retains allocation-free behavior."
     ]
   },
   "pending_live_acceptance": [

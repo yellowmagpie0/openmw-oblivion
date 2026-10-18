@@ -266,4 +266,48 @@ namespace MWPhysics
             result.mVelocities.push_back({controller.mAttachedNode, controller.mTargetNode, controller.mState, controller.mPrecedesBlend});
         return result;
     }
+    ESM4::RuntimeActorRagdoll captureNativeActorRagdollSnapshot(
+        const NifBullet::ActorRagdollPhysics& physics, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        const auto authored = physics.captureNativeBlendControllers();
+        const auto generated = physics.captureNativeVelocityControllers();
+        return captureNativeActorRagdoll(base, model, definition, physics.capture(),
+            physics.captureNativePackedVelocities(), physics.captureNativeMotionModes(),
+            physics.captureNativeBlendStates(), NativeRagdollControllerSnapshot{authored, generated});
+    }
+
+    void restoreNativeActorRagdollSnapshot(NifBullet::ActorRagdollPhysics& physics,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        const auto states = restoreNativeActorRagdoll(snapshot, base, model, definition);
+        const auto packed = restoreNativeActorRagdollPackedVelocities(snapshot, base, model, definition);
+        const auto motions = restoreNativeActorRagdollMotionModes(snapshot, base, model, definition);
+        const auto blends = restoreNativeActorRagdollBlendStates(snapshot, base, model, definition);
+        const auto controllers = restoreNativeActorRagdollControllers(snapshot, base, model, definition);
+        if (controllers)
+        {
+            if (!packed || !motions || !blends)
+                throw std::invalid_argument("native controller restoration requires complete physical and blend state");
+            physics.restore(states, *packed, *motions, *blends, controllers->mBlends, controllers->mVelocities);
+        }
+        else if (blends)
+        {
+            if (!packed || !motions)
+                throw std::invalid_argument("native blend restoration requires packed velocity and motion state");
+            physics.restore(states, *packed, *motions, *blends);
+        }
+        else if (motions)
+        {
+            if (!packed)
+                throw std::invalid_argument("native motion restoration requires packed velocities");
+            physics.restore(states, *packed, *motions);
+        }
+        else if (packed)
+            physics.restore(states, *packed);
+        else
+            physics.restore(states);
+    }
+
 }

@@ -951,6 +951,17 @@ namespace MWPhysics
         return mData->mPhysical->physics();
     }
 
+    bool PreparedActorRagdoll::isValid() const
+    {
+        return mData && !mData->mIdentity.expired()
+            && mData->mOwner->validatePreparedActorRagdoll(*this);
+    }
+
+    bool PreparedActorRagdoll::commit()
+    {
+        return isValid() && mData->mOwner->commitActorRagdoll(*this);
+    }
+
     std::unique_ptr<PreparedActorRagdoll> PhysicsSystem::prepareActorRagdoll(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,

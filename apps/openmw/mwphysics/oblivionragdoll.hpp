@@ -28,6 +28,15 @@ namespace MWPhysics
         std::vector<NifBullet::RagdollNativeVelocityControllerState> mVelocities;
     };
 
+    // Shared live/detached snapshot adapters. Detached use stages a saved
+    // graph completely before renderer, collision-world or cache publication.
+    ESM4::RuntimeActorRagdoll captureNativeActorRagdollSnapshot(
+        const NifBullet::ActorRagdollPhysics& physics, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+    void restoreNativeActorRagdollSnapshot(NifBullet::ActorRagdollPhysics& physics,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+
     // Save boundary for the physical projection. World lengths are already
     // converted by the physics owner; this adapter does not convert units again.
     ESM4::RuntimeActorRagdoll captureNativeActorRagdoll(const ESM::FormKey& base,
