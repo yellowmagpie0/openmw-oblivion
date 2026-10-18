@@ -3916,6 +3916,26 @@ TEST(ESM4RuntimeState, LooseWeaponVersionFiftyThreeHasLiteralWireAndLegacyAbsenc
     auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 53;
     const auto offset = expected.size(); const auto suffix = looseWeaponGoldenSuffix();
     expected.insert(expected.end(), suffix.begin(), suffix.end());
+    auto multiple = state;
+    const std::array<ESM::FormKey, 2> keys{ESM::FormKey::dynamic("a", 1), ESM::FormKey::dynamic("a-", 1)};
+    multiple.mReferences = {state.mReferences.front(), state.mReferences.front()};
+    multiple.mNativeLooseWeapons.clear();
+    std::vector<std::uint8_t> orderedSuffix{2, 0, 0, 0};
+    const auto tail = suffix.begin() + 8 + state.mNativeLooseWeapons.begin()->first.serialize().size();
+    for (std::size_t i = 0; i < keys.size(); ++i)
+    {
+        multiple.mReferences[i].mKey = keys[i];
+        multiple.mNativeLooseWeapons.emplace(keys[i], state.mNativeLooseWeapons.begin()->second);
+        const auto key = keys[i].serialize();
+        ASSERT_LT(key.size(), 256u);
+        orderedSuffix.insert(orderedSuffix.end(), {static_cast<std::uint8_t>(key.size()), 0, 0, 0});
+        orderedSuffix.insert(orderedSuffix.end(), key.begin(), key.end());
+        orderedSuffix.insert(orderedSuffix.end(), tail, suffix.end());
+    }
+    const auto multiBytes = multiple.serializeBinary();
+    ASSERT_GE(multiBytes.size(), orderedSuffix.size());
+    EXPECT_TRUE(std::equal(orderedSuffix.rbegin(), orderedSuffix.rend(), multiBytes.rbegin()));
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(multiBytes).mNativeLooseWeapons, multiple.mNativeLooseWeapons);
     EXPECT_EQ(state.serializeBinary(), expected);
     const auto restored = ESM4::RuntimeState::deserializeBinary(expected);
     EXPECT_EQ(restored.mNativeLooseWeapons, state.mNativeLooseWeapons);

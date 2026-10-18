@@ -178,6 +178,23 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         "000000000000803f0000a03f000000c00000804200004040000080400000a0c0000000bf0000803e000000800000803f"
         "000000400000404000000080000080400000a0400000c0400000003e01010000803f0000000000000000000000000000"
         "803f0000000000000000000000000000803f0000004000004040000080400000403f")
+        # Namespace-prefix punctuation must follow native FormKey tuple order,
+        # independent of the input owner list or the serialized ':' delimiter.
+        multiple = self.loose_weapon_state()
+        keys = ["dynamic:a:0000000000000001", "dynamic:a-:0000000000000001"]
+        refs = [copy.deepcopy(multiple["references"][0]) for _ in keys]
+        weapons = [copy.deepcopy(multiple["native_loose_weapons"][0]) for _ in keys]
+        for key, ref, weapon in zip(keys, refs, weapons):
+            ref["key"] = key; weapon["reference"] = key
+        multiple["references"] = refs
+        multiple["native_loose_weapons"] = list(reversed(weapons))
+        old_key_size = len(state["native_loose_weapons"][0]["reference"].encode())
+        entry_tail = suffix[4 + 4 + old_key_size:]
+        ordered_suffix = struct.pack("<I", 2) + b"".join(
+            struct.pack("<I", len(key)) + key.encode() + entry_tail for key in keys)
+        encoded = state_io.encode_payload(multiple)
+        self.assertEqual(encoded[-len(ordered_suffix):], ordered_suffix)
+        self.assertEqual([entry["reference"] for entry in state_io.decode_payload(encoded)["native_loose_weapons"]], keys)
         expected = bytes(prefix) + suffix
         self.assertEqual(state_io.encode_payload(state), expected)
         restored = state_io.decode_payload(expected)

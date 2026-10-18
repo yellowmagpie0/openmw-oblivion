@@ -2670,7 +2670,9 @@ def encode_payload(state: dict[str, Any]) -> bytes:
     if version >= 42:
         crime_io.write(writer, state.get("native_crime", crime_io.empty_state()), version=version)
     if version >= 53:
-        weapons = sorted(state.get("native_loose_weapons", []), key=lambda item: item["reference"])
+        # Match FormKey's kind/namespace/value tuple order. Sorting the raw
+        # string compares the ':' delimiter against namespace punctuation.
+        weapons = sorted(state.get("native_loose_weapons", []), key=lambda item: tuple(item["reference"].split(":")))
         writer.pack("<I", len(weapons))
         for entry in weapons:
             for field in ("reference", "base", "model", "asset_hash"):

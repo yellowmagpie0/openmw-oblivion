@@ -6349,3 +6349,28 @@ Correct that codec edge case, wire retained World state and physical scene
 admission, then repeat the airborne fresh-process course. No fresh runtime or
 component/Python verification is claimed for this physics chunk.
 **Full M15S4 remains incomplete.**
+
+
+## Loose-weapon owner ordering — codec correction
+
+The Python writer now orders the new loose-weapon collection by FormKey's
+kind/namespace/value components. Sorting the whole serialized key incorrectly
+put `dynamic:a-:...` before `dynamic:a:...`; native C++ orders namespace `a`
+first. A failing two-owner reproduction is retained in
+`S4/native-loose-weapon-order-baseline-01`. Extended C++/Python wire assertions
+pin the same native owner order and literal body-entry tail, including reversed
+Python input order. The single-owner golden bytes and schema53 fields do not
+change; readers still accept prior owner order.
+
+All **2934 component cases /274 suites** pass normally and under ASan/UBSan,
+with exact unfiltered inventories, no failures or skips. All **324 Python cases**
+pass. Evidence: `S4/native-loose-weapon-order-normal-01` and `-sanitized-01`;
+receipts are under `native_loose_weapon_owner_order` in the verification index.
+Tested dirty-source fingerprint:
+`2c93052fde9d75f3072842acad1fae60a8e75460e35ba26fb323fe9b8e942f96`.
+ASan leak checks are disabled. Engine C++ behavior is unchanged from the prior
+physics checkpoint; no new engine or runtime acceptance is claimed here.
+
+The earlier ordering follow-up is resolved. World retention and loaded-item
+physical/render admission, followed by the falling-item fresh-process course,
+remain next. **Full M15S4 is incomplete.**

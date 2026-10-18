@@ -11389,5 +11389,49 @@
       "The binary fixture uses the production native-reference namespace. A separately retained two-namespace reproduction exposes a Python owner-order mismatch and is queued for correction.",
       "Components/Python implementation is unchanged in this chunk; their prior schema53 verification is not presented as a fresh run."
     ]
+  },
+  "native_loose_weapon_owner_order": {
+    "status": "Corrected new loose-weapon owner ordering in the Python writer; matches native FormKey tuple ordering, including namespace prefixes. World load integration remains open.",
+    "source_parent_commit": "27a3b4bcbda5e72d30eb6ff1b6333fa27a67851c",
+    "tested_dirty_source_fingerprint": "2c93052fde9d75f3072842acad1fae60a8e75460e35ba26fb323fe9b8e942f96",
+    "source_files": [
+      {
+        "path": "scripts/tes4_runtime_state.py",
+        "sha256": "a8d6a03b0136146f87931bd1ff79edc3400eac4e0677915364913107401cad2f"
+      },
+      {
+        "path": "scripts/tests/test_tes4_runtime_state.py",
+        "sha256": "6010735afb18247b00e9d52c033791b00d6ea5bb91c9eba2d8eea70e1ece9a09"
+      },
+      {
+        "path": "apps/components_tests/esm4/runtimestate.cpp",
+        "sha256": "a8b7805bdfdbf7613aecd406b4b963d67e83aca5e2786d9c6fbd46a58c22b2cd"
+      }
+    ],
+    "baseline": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-order-baseline-01/verification.json",
+      "sha256": "a3a0ccb0e165382d81f6637e1b96bdffa9bb5c0520edaf3283b350559f15607f"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-order-normal-01/verification.json",
+      "sha256": "901226eba737a3b0d5e74115edbc883743ea3d4046368bcfe5a1cdb510182bbe"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-order-sanitized-01/verification.json",
+      "sha256": "8566b0c13d1cfae83ed01a82cf380345f4315f672b594efda18730f7af5b3879"
+    },
+    "verification": {
+      "components_normal": 2934,
+      "components_sanitized": 2934,
+      "suites": 274,
+      "python": 324,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "case": "Two owners dynamic:a:0000000000000001 and dynamic:a-:0000000000000001, with reversed Python input order, must encode in kind/namespace/value order. Both codecs match the same literal body-entry tail and native owner sequence.",
+    "compatibility": "No wire field or schema change; the existing single-owner golden suffix remains identical. Readers continue accepting previously written owner order.",
+    "limits": "Only the new native_loose_weapons collection changes. Engine C++ behavior is unchanged from the preceding tested physics checkpoint; no new engine or runtime course is claimed."
   }
 }
