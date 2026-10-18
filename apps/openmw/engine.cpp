@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "nativeframeclock.hpp"
 #include <components/esm4/observation.hpp>
 #include <components/resource/oblivionui.hpp>
 #include <components/vfs/archive.hpp>
@@ -6,6 +7,7 @@
 #include <cerrno>
 #include <chrono>
 #include <future>
+#include <optional>
 #include <system_error>
 
 #include <osgDB/ReaderWriter>
@@ -196,20 +198,37 @@ void OMW::Engine::executeLocalScripts()
     }
 }
 
-bool OMW::Engine::frame(unsigned frameNumber, float frametime)
+bool OMW::Engine::frame(unsigned frameNumber, float& frametime)
 {
     const osg::Timer_t frameStart = mViewer->getStartTick();
     const osg::Timer* const timer = osg::Timer::instance();
     osg::Stats* const stats = mViewer->getViewerStats();
 
-    mEnvironment.setFrameDuration(frametime);
+    if (!mNativeFrameClock)
+        mEnvironment.setFrameDuration(frametime);
+    std::optional<ESM4::PhysicalFrameResult> nativeFrame;
 
     try
     {
         // update input
         {
             ScopedProfile<UserStatsType::Input> profile(frameStart, frameNumber, *timer, *stats);
-            mInputManager->update(frametime, false);
+            if (mNativeFrameClock)
+            {
+                frametime = 0.f;
+                mInputManager->captureEvents(false);
+                nativeFrame = mNativeFrameClock->advance(SDL_GetTicks(),
+                    mWorld->getTimeManager()->getSimulationTimeScale(), !mWindowManager->isWindowVisible());
+                frametime = nativeFrame->mInputDelta;
+                mEnvironment.setFrameDuration(frametime);
+                mInputManager->updateControls(frametime, false);
+                stats->setAttribute(frameNumber, "NativeFrameInputDelta", frametime);
+                stats->setAttribute(frameNumber, "NativeFrameSubstepSeconds", nativeFrame->mSubstepSeconds);
+                stats->setAttribute(frameNumber, "NativeFrameSubstepCount", nativeFrame->mSubstepCount);
+                stats->setAttribute(frameNumber, "NativeFrameRemaining", mNativeFrameClock->remaining());
+            }
+            else
+                mInputManager->update(frametime, false);
         }
 
         // When the window is minimized, pause the game. Currently this *has* to be here to work around a MyGUI bug.
@@ -305,7 +324,11 @@ bool OMW::Engine::frame(unsigned frameNumber, float frametime)
 
             if (mStateManager->getState() != MWBase::StateManager::State_NoGame)
             {
-                mWorld->updatePhysics(frametime, paused, frameStart, frameNumber, *stats);
+                if (nativeFrame)
+                    mWorld->updatePreparedNativePhysics(*nativeFrame, mNativeFrameClock->remaining(),
+                        paused, frameStart, frameNumber, *stats);
+                else
+                    mWorld->updatePhysics(frametime, paused, frameStart, frameNumber, *stats);
             }
         }
 
@@ -757,6 +780,10 @@ void OMW::Engine::prepareEngine()
 
     const ESM::GameProfile resourceProfile = resolveResourceProfile();
     if (resourceProfile == ESM::GameProfile::Oblivion)
+        mNativeFrameClock = std::make_unique<NativeFrameClock>(SDL_GetTicks(),
+            Settings::physics().mOblivionFixedSubstep, Settings::physics().mOblivionChaseDeltaMult,
+            static_cast<std::uint32_t>(Settings::physics().mOblivionUpdateType.get()));
+    if (resourceProfile == ESM::GameProfile::Oblivion)
         mVFS->addArchive(Resource::makeOblivionUiArchive(*mVFS));
     if (mArchives.empty())
     {
@@ -1130,7 +1157,8 @@ void OMW::Engine::go()
 
         const unsigned frameNumber = mViewer->getFrameStamp()->getFrameNumber();
 
-        if (!frame(frameNumber, static_cast<float>(dt)))
+        float frameDuration = static_cast<float>(dt);
+        if (!frame(frameNumber, frameDuration))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
             continue;
@@ -1138,8 +1166,9 @@ void OMW::Engine::go()
         timeManager.updateIsPaused();
         if (!timeManager.isPaused())
         {
-            timeManager.setSimulationTime(timeManager.getSimulationTime() + dt);
-            timeManager.setRenderingSimulationTime(timeManager.getRenderingSimulationTime() + dt);
+            const double elapsed = mNativeFrameClock ? double(frameDuration) : dt;
+            timeManager.setSimulationTime(timeManager.getSimulationTime() + elapsed);
+            timeManager.setRenderingSimulationTime(timeManager.getRenderingSimulationTime() + elapsed);
         }
 
         if (stats)

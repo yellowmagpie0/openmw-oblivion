@@ -11,6 +11,7 @@ set(OPENMW_RESOURCES
 set(OPENMW_HEADERS
     doc.hpp
     engine.hpp
+    nativeframeclock.hpp
     options.hpp
     profile.hpp
 )

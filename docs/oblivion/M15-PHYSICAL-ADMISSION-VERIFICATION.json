@@ -9663,5 +9663,317 @@
       "No active native World course with complete backend, physical contact, normal game input or fresh-process gameplay/save-restart course was run for this chunk. Previous lower PhysicsSystem/scheduler stepping tests are regression coverage, not active World or gameplay acceptance.",
       "Native actor admission, complete reactions/FSM/GetUp and all remaining S4 gameplay/view/device/FPS/restart gates remain open. Full M15S4 is incomplete."
     ]
+  },
+  "native_engine_process_clock_followup": {
+    "implementation": "Engine owns one native millisecond timer plus physical frame clock from prepareEngine through shutdown. Oblivion captures events before sampling SDL_GetTicks, updates duration-dependent input and all frame consumers from native input delta, forwards prepared steps/carry into World, and advances simulation/render time by that same input delta. Legacy profile retains its prior double main-loop elapsed time. No opt-in flag; Oblivion selects the prepared path automatically.",
+    "host_policy": "Existing OpenMW window visibility drives one balanced timer suspension; hidden polls preserve physical carry. Original focus/loading source ownership and scene-complex command lifecycle are not yet implemented.",
+    "configuration": "Three explicit typed OpenMW Physics settings: oblivion fixed substep0.0167 (observed shipped/live value), oblivion update type0 and oblivion chase delta mult0.05. No external Oblivion.ini import. Fixed step caps at1; unsupported configurations reject at startup.",
+    "manifest": {
+      "path": "docs/oblivion/M15-NATIVE-FRAME-CLOCK-RUNTIME-PROBE.json",
+      "sha256": "e49cde46395ed792f097a3412fc8cbfd4f4d9a44fd15dbf3dc87cdfe99180c54"
+    },
+    "reports": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-normal-02/verification.json",
+        "sha256": "c8da7e6a99bc483e42cd8e6042f68a36e08a3e4b42ed04a032cfbb54216b623a",
+        "source": {
+          "head": "8bacbef0141a8e0ac7a602973603c8e187384446",
+          "source_fingerprint": "cb1d13164eef5c5e0f3b69dd75c1034c77d7ca41f97f84fb5ebdd12f2d5c6440"
+        },
+        "suites": {
+          "engine": 124,
+          "components": 274
+        },
+        "results": {
+          "engine": {
+            "executed": 1690,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b939a850663359cea711f5aea3825dfb7704f2e747abab2259c259e0af55b9c6",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a5a0ab12ca43f41a9832dd77652b46a7735a33055cf1aabe03fa465d3ad35d59",
+            "inventory_sha256": "c48b6217a4e3d1732a88bb29e051b7521382260e7445296e1f69d1552eff87c9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2930,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ec4bfdb597fcd1d14994487c990111899c70fdfbc63c916b6a0d63124991d783",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "0a22b2947486cdca5e42d48b1120b7af67bf51cfa303f0d96d244e57f5a1fa96",
+            "inventory_sha256": "cbc4a1d561afdda0726827fac6dae9b9ccec6dff115580e66fa1330d2e83eb90",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-sanitized-02/verification.json",
+        "sha256": "7550e53433c7a44bc01ddb7c4be90fc8c6708309f6eaf7282252ba5ee4675e0b",
+        "source": {
+          "head": "8bacbef0141a8e0ac7a602973603c8e187384446",
+          "source_fingerprint": "cb1d13164eef5c5e0f3b69dd75c1034c77d7ca41f97f84fb5ebdd12f2d5c6440"
+        },
+        "suites": {
+          "engine": 124,
+          "components": 274
+        },
+        "results": {
+          "engine": {
+            "executed": 1690,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "dc15631f145c61ebc8fbde38b867c043e029507b29045e2deb4dda140e2939d0",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "4adcaf889208d8db4f9ed6fdddf5898053174af4e9528d090aa01dbbf34ccfc3",
+            "inventory_sha256": "c48b6217a4e3d1732a88bb29e051b7521382260e7445296e1f69d1552eff87c9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2930,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "7c3467cb44919394c2b0b960bd2085df90269469bd2bd57145365226ad7dd72e",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "518dd944a0a98f10253d0002e99dd2a521cfe2edfda4adc01b185919e963418d",
+            "inventory_sha256": "50b868b4158497cbd949dcc18c6e98b60aa96f4740668256ee072cae7c30e022",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    },
+    "new_engine_cases": {
+      "count": 10,
+      "suites": [
+        "NativeFrameClock",
+        "InputRuntimeFacade",
+        "WorkerCounts/RagdollSchedulerTest"
+      ],
+      "coverage": [
+        "Exact original timer/frame bit rows across uint32 wrap, repeated ticks and long delays; divided/smoothed modes and nonzero raw modes.",
+        "Idempotent hidden polling with preserved carry, native outer resume behavior and atomic rejection before host-time consumption.",
+        "Window events precede clock sampling and duration-dependent controls; nested loading disable state survives the split.",
+        "Process ticks drive actual PhysicsSystem body/projectile steps at0/1/2 workers, including zero-step frames and no leak into legacy accumulated time."
+      ]
+    },
+    "retained_initial_failures": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-normal-01/failure-identity.json",
+        "sha256": "3ae8420e1ee4e816c06c651e1340dc52caca266c8e5ec074461ee9355d9f27a6",
+        "identity": {
+          "source": {
+            "head": "8bacbef0141a8e0ac7a602973603c8e187384446",
+            "source_fingerprint": "5028be4818dd111ba06a865b96deb9b6ae67967b24869ca4a2ee3aba8be1460f"
+          },
+          "binary_sha256": "1861e96c9bafa8098363466fbe2bb8695f573d1a39e134dd29fe33cedebc3ec7",
+          "openmw_sha256": "f39af3c1d1f92e4f67af6bdc88d9248ccaf5be7ab7ee0db4c6f3dab772b081cf",
+          "xml_attributes": {
+            "tests": "1689",
+            "failures": "3",
+            "disabled": "0",
+            "errors": "0",
+            "time": "25.612",
+            "timestamp": "2026-10-18T09:46:16.643",
+            "name": "AllTests"
+          },
+          "suites": 124,
+          "failed_cases": [
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/0",
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/1",
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/2"
+          ],
+          "failure_scope": "New test queued projectile velocity once before two valid zero-step frames. Actual World republishes projectile movement every frame; correct the test producer rather than change queue consumption."
+        }
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-sanitized-01/failure-identity.json",
+        "sha256": "a093d759c73c7646fa59ba8dfe03c6b19bf2aef956b8e5368f3f440eaadf76e2",
+        "identity": {
+          "source": {
+            "head": "8bacbef0141a8e0ac7a602973603c8e187384446",
+            "source_fingerprint": "5028be4818dd111ba06a865b96deb9b6ae67967b24869ca4a2ee3aba8be1460f"
+          },
+          "binary_sha256": "4e683263a8fc2e7569679b9092c662fda33b77edc4cb17e436e3635266b83e2f",
+          "openmw_sha256": "6a66049bb6c817a36909138ee875970739b8a9c4ff549528d693a5dd988b76a8",
+          "xml_attributes": {
+            "tests": "1689",
+            "failures": "3",
+            "disabled": "0",
+            "errors": "0",
+            "time": "147.424",
+            "timestamp": "2026-10-18T09:53:08.941",
+            "name": "AllTests"
+          },
+          "suites": 124,
+          "failed_cases": [
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/0",
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/1",
+            "WorkerCounts/RagdollSchedulerTest.ProcessClockFramesReachSharedBodyAndProjectileWithoutLegacyAccumulation/2"
+          ],
+          "failure_scope": "Same three fixture velocity-producer failures as normal. No ASan/UBSan diagnostic."
+        }
+      }
+    },
+    "failure_resolution": "Both initial inventories run1689 cases with the same3 new fixture failures, no sanitizer diagnostic. Fixture queued projectile velocity once across valid zero-step frames; actual ProjectileManager republishes each frame. Corrected fixture mirrors that producer. Review also removed a duplicate control-disable assignment that could overwrite nested loading state and added its regression. Original queue semantics were not changed.",
+    "runtime": {
+      "acceptance": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-runtime-normal-02/acceptance-verification.json",
+        "sha256": "273b2e3bf1cf31a50724ac7241fb1b142458e0b5700831364b1308b9ee690a08"
+      },
+      "save_report": {
+        "path": "build/oblivion-compat/m15/S4/native-engine-clock-runtime-normal-02/verification.json",
+        "sha256": "c8620a0dbf598aaa599838b02e0b825b3d0131a0d6d5aa2da937edbc601a92e9"
+      },
+      "frame_stats": {
+        "passed": true,
+        "phases": [
+          {
+            "phase": "first",
+            "stats_sha256": "80251482ed699d837b4069e83bce8e40333f3f47ba4d5a73289050604b928d76",
+            "native_frames": 79,
+            "worker_timed_positive_step_frames": 77,
+            "input_delta_range": [
+              0.166,
+              0.166
+            ],
+            "step_counts": [
+              3
+            ],
+            "remaining_range": [
+              0.0167,
+              0.0167
+            ]
+          },
+          {
+            "phase": "second",
+            "stats_sha256": "d2f8f48886f4413cbebccd2eb41e377c44fd5e94cd261109c1f845cad7562e5f",
+            "native_frames": 55,
+            "worker_timed_positive_step_frames": 53,
+            "input_delta_range": [
+              0.166,
+              0.166
+            ],
+            "step_counts": [
+              3
+            ],
+            "remaining_range": [
+              0.0167,
+              0.0167
+            ]
+          }
+        ],
+        "scope": "Actual Engine-native frame publication with finite stock-mode durations/carry and matching frame-number worker timing. This does not independently measure native body contact or assert complete gameplay parity."
+      },
+      "terminal_pids": [
+        351102,
+        351292
+      ],
+      "preserved_native_actor_value_arrays": 9,
+      "preserved_player_inventory_items": 4,
+      "schemas": [
+        29,
+        52
+      ],
+      "save_sha256": [
+        "a8acf8a5a8fdeb2c06ce567c946c56869ec9e8644ea53652b052fc4bb233a9cb",
+        "498a68e6687a79eec6e3ff3dafdf72ccdb8fdb082d3a0919f3744a1dac5f0f0e"
+      ],
+      "binary_sha256": "8e69e6461aa731ec00c486b814f8f370d5d2f3c7dec4332e638e0c0976c2cf07",
+      "mygui_sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54",
+      "outcome": "One first-person normal-input unarmed miss, action2->3, Fatigue140->133; completed strike saved. Fresh process loads actual output without replay. Actual PCM matches stock swishhand02 once (correlation0.9999203797), none after restart. Ready/restart images directly inspected: dungeon and drawn unarmed hands. All134 recorded native frames use166ms/3-step cap;130 have positive actual worker timing. Not steady30FPS acceptance despite configured30FPS limit."
+    },
+    "runtime_retained_attempt": {
+      "path": "build/oblivion-compat/m15/S4/native-engine-clock-runtime-normal-01",
+      "instrumentation_failure": "OPENMW_OSG_STATS_FILE alone omitted engine worker timing; rerun02 adds OPENMW_OSG_STATS_LIST=engine without lowering assertions.",
+      "save_verifier_failure": "Historical verifier predates optional extra_scale. Four schema29 source items omit it; schema52 outputs explicitly storeNone. Updated02 normalizes only schema-defined absent extra_scale, ownership_rank and ownership_global; every field remains compared. No other inventory difference."
+    },
+    "static_focus_review": {
+      "path": "build/oblivion-compat/m15/S4/native-engine-clock-static-review-01/verification.json",
+      "sha256": "5d621066708029a1f1c6bc2eeba5ac017f315154ee66a67254fd98aa5f656fc6",
+      "result": {
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "window_proc": {
+          "entry": "0x4060f0",
+          "message": 6,
+          "table_index": 1,
+          "handler": "0x406130",
+          "pause": "0x4061af ->0x47d120",
+          "resume": "0x40616e ->0x47d0f0",
+          "guards": "App pointer B33398 must exist. Pause lowword0 requires B333F0==0. Resume lowword1/2 additionally requires highword0."
+        },
+        "pause_guard_object": {
+          "address": "0xb333f0",
+          "cleanup": "A166D0 loads this slot as a pointer and conditionally decrements its referenced+4 counter, with virtual destruction when zero. Do not treat this slot as a proven boolean bRunInBackground setting. Object identity/indirect writers remain unresolved."
+        },
+        "scope": "Bounded static instruction and jump-table review only; no full WndProc instruction execution or live focus/loading probe. Current Engine integration retains OpenMW window-visibility policy, not verified original focus lifecycle.",
+        "setup_note": "The initial metadata read attempted to read the B333F0 BSS slot through a raw-section-only helper and rejected that address. No execution or result was produced; the unnecessary initial-word read was removed."
+      }
+    },
+    "source_sha256": {
+      "apps/openmw/CMakeLists.txt": "f276f7d0ab52aedf6297674a174a158967e025868a99c9038139e3d5329f083d",
+      "apps/openmw/engine.cpp": "d14f07248a6919d25e1fa14a341df3fead9e1f322e9e17357cbad90285519aac",
+      "apps/openmw/engine.hpp": "dafad968090dd37edc0f9edbdc211870d3f308e5eb8ae7ad6407a2e674cb6911",
+      "apps/openmw/nativeframeclock.hpp": "0b6ea0a43d895835574ae646e7b0ce65441da506da894af4d9601a0491a96828",
+      "apps/openmw/mwinput/inputmanagerimp.cpp": "d111b4a0572cd4ed2562ea86feaf840b1d8a1d2996471259e9c1df1d18173ac1",
+      "apps/openmw/mwinput/inputmanagerimp.hpp": "d7b6dbb163450a537f0befe6f0fc6750ba83ad260d3f1f44a8c334d6ce50da81",
+      "apps/openmw_tests/CMakeLists.txt": "8ab48cb7cd3a5cc090913e195f3869609ff67b5e7316bd9e01b1f53ecd1fa347",
+      "apps/openmw_tests/testnativeframeclock.cpp": "5d559c66fd98e2ddc90399418c1af73a56ed27deda98f8464f9da69abfbbc2a4",
+      "apps/openmw_tests/mwinput/testruntime.cpp": "7c690c247f8b450bd2e4ec686ddba7fa6e9052a4d02ee02061c2af507162ded3",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "fa35e5f39545b379f8e389d8a711b8d8e1a2150198d36954e332f0ace79a9044",
+      "components/settings/categories/physics.hpp": "02e3bc480ab508f8ba3036a84c257756b6d0950dce3863ac47fee7b2c9459a89",
+      "files/settings-default.cfg": "453a57bde37fa29e0fc34cba46eaa8349627edfa3c8603f8fb2da1dd91c85929"
+    },
+    "openmw_executables": {
+      "build/openmw": "8e69e6461aa731ec00c486b814f8f370d5d2f3c7dec4332e638e0c0976c2cf07",
+      "build/m15-sanitize/openmw": "d9854804dbe027463c7b3559035623269f73a6e7be40f2611ef43ba6782893f5"
+    },
+    "defaults_sha256": {
+      "build/defaults.bin": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "build/m15-sanitize/defaults.bin": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77"
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Final02 engine/component build logs have no warnings. Initial broad builds retain unchanged World-test unused-context/dangling-else warnings, normal CharacterController unpersistAnimationState entry maybe-uninitialized, and sanitizer libstdc++ regex/std::function maybe-uninitialized warnings through unchanged mwgui/console.cpp. No warning points to changed code. ASan leaks disabled.",
+    "source_identity": "Both final helpers terminated before documentation/manifest publication or commit. Final dirty fingerprint identifies tested C++/settings/CMake bytes. Documentation and editable probe manifest are added after tests. Python/schema implementation unchanged; Python inventory not repeated.",
+    "limits": [
+      "Real-content runtime is normal build; full synthetic engine/component inventories pass under ASan/UBSan, not a new sanitized real-content course.",
+      "Actual Engine runtime stats exercise capped three-step frames only. Other modes, zero/short frames and signed-carry bit cases remain oracle/unit/PhysicsSystem evidence at their own layer.",
+      "Original focus/loading pause-source identity, scene-complex command lifecycle, native actor owner admission and complete contact/reaction/FSM/GetUp integration remain open.",
+      "No new nonlethal contact/block/recovery, alternate view/device/FPS, or windup/block/recovery fresh-process acceptance. Full M15S4 remains incomplete."
+    ]
   }
 }

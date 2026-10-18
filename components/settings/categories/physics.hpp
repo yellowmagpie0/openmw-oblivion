@@ -21,6 +21,9 @@ namespace Settings
         SettingValue<int> mAsyncNumThreads{ mIndex, "Physics", "async num threads", makeMaxSanitizerInt(0) };
         SettingValue<int> mLineofsightKeepInactiveCache{ mIndex, "Physics", "lineofsight keep inactive cache",
             makeMaxSanitizerInt(-1) };
+        SettingValue<float> mOblivionFixedSubstep{ mIndex, "Physics", "oblivion fixed substep" };
+        SettingValue<float> mOblivionChaseDeltaMult{ mIndex, "Physics", "oblivion chase delta mult" };
+        SettingValue<int> mOblivionUpdateType{ mIndex, "Physics", "oblivion update type" };
     };
 }
 

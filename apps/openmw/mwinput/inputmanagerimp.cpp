@@ -181,13 +181,24 @@ namespace MWInput
 
     void InputManager::update(float dt, bool disableControls, bool disableEvents)
     {
+        captureEvents(disableControls, disableEvents);
+        updateControls(dt, disableControls);
+    }
+
+    void InputManager::captureEvents(bool disableControls, bool disableEvents)
+    {
         requireMutableRuntime();
         RuntimeCall call(mActiveCalls);
         mControlsDisabled = disableControls;
 
         mInputWrapper->setMouseVisible(MWBase::Environment::get().getWindowManager()->getCursorVisible());
         mInputWrapper->capture(disableEvents);
+    }
 
+    void InputManager::updateControls(float dt, bool disableControls)
+    {
+        requireMutableRuntime();
+        RuntimeCall call(mActiveCalls);
         if (disableControls)
         {
             mMouseManager->updateCursorMode();

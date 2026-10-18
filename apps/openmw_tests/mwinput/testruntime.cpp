@@ -7,6 +7,7 @@
 
 #include "apps/openmw/mwbase/environment.hpp"
 #include "apps/openmw/mwinput/inputmanagerimp.hpp"
+#include "apps/openmw/nativeframeclock.hpp"
 #include "../mwworld/inventorywindowmanager.hpp"
 #include <components/sdlutil/sdlinputwrapper.hpp>
 #include <components/testing/util.hpp>
@@ -93,6 +94,16 @@ namespace
     struct InputWindows final : TestingOpenMW::InventoryWindowManager
     {
         std::function<void()> cursorCallback;
+        std::function<void()> cursorModeCallback;
+        bool visible = true;
+        bool containsMode(MWGui::GuiMode) const override
+        {
+            if (cursorModeCallback) cursorModeCallback();
+            return false;
+        }
+        bool isGuiMode() const override { return true; }
+        bool isConsoleMode() const override { return false; }
+        void windowVisibilityChange(bool value) override { visible = value; }
         float getScalingFactor() const override { return 1.f; }
         bool getCursorVisible() override
         {
@@ -159,6 +170,52 @@ TEST_F(InputRuntimeFacade, SwitchesAndControllerModesRestoreAcrossMoveAndScope)
     EXPECT_TRUE(input->getControlSwitch("playerfighting"));
     EXPECT_TRUE(input->joystickLastUsed());
     EXPECT_FALSE(input->isGamepadGuiCursorEnabled());
+}
+
+TEST_F(InputRuntimeFacade, NativeClockSeesWindowEventsBeforeDurationDependentControls)
+{
+    OMW::NativeFrameClock clock(0, .0167f, .05f, 0);
+    clock.advance(1, 1.f, false);
+    SDL_Event event{};
+    event.type = SDL_WINDOWEVENT;
+    event.window.windowID = SDL_GetWindowID(window);
+    event.window.event = SDL_WINDOWEVENT_HIDDEN;
+    ASSERT_EQ(SDL_PushEvent(&event), 1);
+    input->captureEvents(true);
+    EXPECT_FALSE(windows.visible);
+    const auto hidden = clock.advance(2, 1.f, !windows.visible);
+    EXPECT_EQ(hidden.mInputDelta, 0.f);
+    input->updateControls(hidden.mInputDelta, true);
+    event.window.event = SDL_WINDOWEVENT_SHOWN;
+    ASSERT_EQ(SDL_PushEvent(&event), 1);
+    input->captureEvents(true);
+    EXPECT_TRUE(windows.visible);
+    const auto shown = clock.advance(1000, 1.f, !windows.visible);
+    EXPECT_GT(shown.mInputDelta, 0.f);
+    input->updateControls(shown.mInputDelta, true);
+}
+
+TEST_F(InputRuntimeFacade, SplitControlsPreserveDisableStateFromNestedLoadingEvents)
+{
+    bool nested = false, reachedControls = false;
+    windows.cursorCallback = [&]
+    {
+        if (!nested)
+        {
+            nested = true;
+            input->captureEvents(true, true);
+        }
+    };
+    windows.cursorModeCallback = [&]
+    {
+        reachedControls = true;
+        EXPECT_TRUE(input->controlsDisabled());
+        throw std::runtime_error("stop before duration-dependent fixture services");
+    };
+    EXPECT_THROW(input->update(0.f, false, true), std::runtime_error);
+    EXPECT_TRUE(nested);
+    EXPECT_TRUE(reachedControls);
+    EXPECT_TRUE(input->controlsDisabled());
 }
 
 TEST_F(InputRuntimeFacade, CommitAndOwnerDeathReleaseArchives)

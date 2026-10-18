@@ -123,6 +123,7 @@ struct SDL_Window;
 
 namespace OMW
 {
+    class NativeFrameClock;
     /// \brief Main engine class, that brings together all the components of OpenMW
     class Engine
     {
@@ -132,6 +133,7 @@ namespace OMW
         osg::ref_ptr<SceneUtil::WorkQueue> mWorkQueue;
         std::unique_ptr<SceneUtil::UnrefQueue> mUnrefQueue;
         std::unique_ptr<MWWorld::World> mWorld;
+        std::unique_ptr<NativeFrameClock> mNativeFrameClock;
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
         std::unique_ptr<MWScript::ScriptManager> mScriptManager;
         std::unique_ptr<MWGui::WindowManager> mWindowManager;
@@ -194,7 +196,7 @@ namespace OMW
 
         void executeLocalScripts();
 
-        bool frame(unsigned frameNumber, float dt);
+        bool frame(unsigned frameNumber, float& dt);
 
         /// Prepare engine for game play
         void prepareEngine();

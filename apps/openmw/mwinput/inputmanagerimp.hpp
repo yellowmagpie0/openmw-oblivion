@@ -80,6 +80,10 @@ namespace MWInput
         void clear() override;
 
         void update(float dt, bool disableControls, bool disableEvents = false) override;
+        // Native frame timing is sampled after event dispatch and before
+        // duration-dependent controls. Loading callers can keep using update.
+        void captureEvents(bool disableControls, bool disableEvents = false);
+        void updateControls(float dt, bool disableControls);
 
         void changeInputMode(bool guiMode) override;
 

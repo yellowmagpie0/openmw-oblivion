@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "purpose": "Exercise the authoritative Oblivion Engine millisecond clock through World prepared scheduling, normal-input first-person unarmed miss and idle fresh-process continuation.",
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_rule_inputs": [
+    "docs/oblivion/M15-PHYSICAL-TIMER-PROBE.json",
+    "docs/oblivion/M15-PHYSICAL-TIMER-LIFECYCLE-PROBE.json",
+    "docs/oblivion/M15-PHYSICAL-FRAME-PRODUCER-PROBE.json"
+  ],
+  "process_owner": "OMW::Engine owns NativeFrameClock from prepareEngine through shutdown; it is independent of save/actor/renderer-frame ownership.",
+  "settings": {
+    "source": "OpenMW Physics settings, sampled at initialization; no external Oblivion.ini import",
+    "oblivion fixed substep": 0.0167,
+    "oblivion chase delta mult": 0.05,
+    "oblivion update type": 0,
+    "fixed_step_initialization": "Finite positive input, capped at1, as the reviewed native initializer; unsupported settings reject before frames."
+  },
+  "host_policy": {
+    "ticks": "SDL_GetTicks unsigned32 milliseconds, sampled after event capture and before duration-dependent controls",
+    "suspension": "Existing OpenMW window visibility; one owned transition for repeated hidden polls, carry preserved while hidden",
+    "unresolved": "Original focus/loading pause-source ownership and scene-complex command lifecycle remain separate. B333F0 is a pointer with reference-counted cleanup atA166D0, not a proven background boolean."
+  },
+  "runtime_recipe": {
+    "source_manifests": [
+      "scripts/data/oblivion_compat/oblivion_m15_native_firstperson_melee_idle.json",
+      "scripts/data/oblivion_compat/oblivion_m15_native_firstperson_melee_idle_continuation.json"
+    ],
+    "environment_overlay": {
+      "OPENMW_OSG_STATS_FILE": "{output}/native-frame-stats.txt",
+      "OPENMW_OSG_STATS_LIST": "engine"
+    },
+    "staging": "Use a private copy of the declared source save for first; after the process exits, copy its actual changed save into a new second output. Never overwrite historical evidence. Retain source/pristine hashes and distinct terminal PID epochs.",
+    "source_save": "build/oblivion-compat/m15/S4/current-firstperson-restart-02/staged-input.omwsave",
+    "source_save_sha256": "8c7c1ff8ba69869c3bbe35e7ffd863bfe5077352fabb597079fdcc797725c180",
+    "fixture_variable": "build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/fixture"
+  },
+  "assertions": [
+    "All selected engine/component cases execute with exact inventory/XML agreement and no failures/skips in normal and ASan/UBSan configurations.",
+    "First runtime process commits exactly one unarmed miss, action counter2->3 and Fatigue140->133; no contact damage is injected.",
+    "Second process loads the exact first output and has no replayed strike, action, miss or swish.",
+    "Preserve every native actor-value array, combat RNG and Player inventory field. Normalize schema-defined absent optional ownership_rank/extra_scale toNone and ownership_global tonull when comparing the older source save.",
+    "Review rendered first-person hands/dungeon after ready and fresh load. Match actual PCM against all three predeclared stock swish assets; one cluster before restart, none afterward, using unchanged acceptance threshold.",
+    "Native frame stats contain finite nonnegative input delta capped at166ms at scale1, integer step count0..3, zero duration for zero steps, positive stock-mode duration in[0.0167/2,0.0167], finite signed carry at most0.0167, and actual positive worker timing alongside positive native-step frames."
+  ],
+  "numeric_tolerance": 1e-06,
+  "audio_acceptance_source": "build/oblivion-compat/m15/S4/current-firstperson-restart-02/preregistered-acceptance.json",
+  "coverage_limits": [
+    "Not nonlethal target damage, block, contact/reaction parity, complete actor admission or GetUp/FSM acceptance.",
+    "Idle restart only; windup/block/recovery restart, remaining view/device/FPS and complete S4 gates remain open.",
+    "Runtime real-content course is normal build; ASan/UBSan evidence here is the complete synthetic engine/component inventory, not a sanitized real-content course.",
+    "Do not infer original focus/loading behavior from the visibility adapter or activate a guessed background setting.",
+    "Recorded real-content134 frames all take166ms/3-step capped path; not steady high-FPS or alternate-mode/zero-step Engine runtime coverage."
+  ]
+}

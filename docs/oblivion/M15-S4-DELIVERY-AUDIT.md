@@ -6060,3 +6060,55 @@ settings/pause ownership, actor admission and complete reactions/FSM/GetUp remai
 open. No new physical-contact, normal-input or fresh-process gameplay/restart
 course is claimed. All remaining S4 acceptance gates stay open. Full M15S4 is
 incomplete.
+
+
+### Engine activates the native process clock and prepared World path
+
+Oblivion now automatically selects one Engine-owned native millisecond timer
+and physical frame clock. Events are captured before the SDL unsigned tick is
+sampled; duration-dependent input, scripts/mechanics/World and simulation/render
+clock publication use the native input delta. World receives the separate
+prepared substeps/carry. The legacy profile retains its prior main-loop double
+time. Hidden-window polling owns one suspension and preserves carry. Three
+explicit OpenMW Physics settings default to fixed step0.0167, mode0 and
+smoothing0.05; this does not import an external Oblivion INI.
+
+Ten new cases cover exact retained original bit rows across tick wrap/caps,
+divided/smoothed configuration, hidden polling and atomic rejection, event order,
+nested loading control-disable preservation, and clock-to-PhysicsSystem shared
+body/projectile stepping at0/1/2 workers. Both full normal and ASan/UBSan checks
+pass **1,690 engine tests in124 suites** and **2,930 component tests in274 suites**,
+exact inventories, no failures/skips. Tested dirty fingerprint:
+`cb1d13164eef5c5e0f3b69dd75c1034c77d7ca41f97f84fb5ebdd12f2d5c6440`.
+Both initial1689-case attempts retain three new fixture failures: the test
+queued projectile velocity only once across valid zero-step frames. Corrected
+fixture supplies it every frame, as actual ProjectileManager does. No queue
+semantics were changed. Final incremental build logs have no warnings; broad
+initial builds retain warnings in unchanged World tests, CharacterController
+and sanitizer libstdc++ regex instantiated through unchanged console.cpp.
+ASan leaks are disabled; Python/schema code is unchanged and not retested.
+
+Real-content normal-input first-person unarmed miss and idle fresh-process
+continuation pass in PIDs351102/351292, both terminal. One miss advances action2
+->3 and spends Fatigue140->133; no strike/miss/swish replays after load. Nine
+native AV arrays, four Player items and combat RNG survive; schema29 absent
+optional extra_scale/ownership fields are normalized to their declared defaults.
+Actual PCM matches stock swishhand02 once (correlation0.9999203797) and none
+after restart. Ready/restart images were directly inspected: dungeon and drawn
+first-person hands render. Recorded134 native frames all take166ms/3 steps;
+130 have positive worker timing. This is a capped-frame course, **not steady
+30FPS acceptance**. Other modes and short/zero frames retain lower-layer tests.
+The first runtime attempt retains missing engine timing collection and an old
+verifier's absent-extra_scale mismatch;02 enables the existing stats list and
+normalizes only the schema-defined absent value, without lowering assertions.
+
+Editable recipe: `M15-NATIVE-FRAME-CLOCK-RUNTIME-PROBE.json`. Exact source/binary/
+defaults hashes, failed attempts and reports are in
+`native_engine_process_clock_followup` in the verification index. Static review
+confirms message6 dispatch to406130, but B333F0 has object-pointer cleanup at
+A166D0: it is not a proven background boolean. Original focus/loading ownership
+and scene-complex command lifecycle remain open; the current adapter retains
+OpenMW visibility policy. Native actor admission, complete contact/reaction/FSM/
+GetUp and all remaining view/device/FPS and in-action restart gates remain open.
+The real-content course uses the normal binary; sanitizer evidence here is the
+synthetic full inventories. Full M15S4 is incomplete.
