@@ -166,6 +166,12 @@ namespace NifBullet
         ESM4::PhysicalWorldSceneVelocities mVelocities;
     };
 
+    struct RagdollInternalBodyFilter
+    {
+        std::uint32_t mRecord, mPackedFilter;
+        friend bool operator==(const RagdollInternalBodyFilter&, const RagdollInternalBodyFilter&) = default;
+    };
+
     struct RagdollNativeWorldSceneRequest
     {
         std::uint32_t mRecord;
@@ -374,6 +380,33 @@ namespace NifBullet
         void admitWorldRegistrationSelection(PreparedWorldRegistration& prepared);
         void rollbackWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept;
         bool commitWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept;
+
+        class PreparedInternalCollisionFilters
+        {
+        public:
+            ~PreparedInternalCollisionFilters();
+            PreparedInternalCollisionFilters(const PreparedInternalCollisionFilters&) = delete;
+            PreparedInternalCollisionFilters& operator=(const PreparedInternalCollisionFilters&) = delete;
+        private:
+            friend class ActorRagdollPhysics;
+            struct Data;
+            explicit PreparedInternalCollisionFilters(std::unique_ptr<Data> data);
+            std::unique_ptr<Data> mData;
+        };
+        // Complete owned-body order, including absent World members. These
+        // words control this graph's configured native internal mask policy;
+        // external World collision routing is separate. Preparation validates
+        // symmetry/layers and reserves ignore-list capacity without changing
+        // collision decisions or cached contacts. Hold the World barrier until
+        // commit. Stale membership/filter/ignore-list snapshots reject.
+        std::vector<RagdollInternalBodyFilter> captureInternalCollisionFilters() const;
+        std::unique_ptr<PreparedInternalCollisionFilters> prepareInternalCollisionFilters(
+            std::span<const RagdollInternalBodyFilter> filters) const;
+        bool validateInternalCollisionFilters(const PreparedInternalCollisionFilters& prepared) const noexcept;
+        // Nonallocating publication. Preserve unrelated ignore entries and
+        // invalidate algorithms only for pairs whose native mask decision
+        // changed, using World's normal nonthrowing cleanup contract.
+        bool commitInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept;
 
         // Borrowed identities for engine collision routing; ownership stays here.
         std::span<btCollisionObject* const> collisionObjects() const;

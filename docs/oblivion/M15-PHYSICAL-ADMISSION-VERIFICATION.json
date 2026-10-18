@@ -4006,5 +4006,210 @@
       "A backend executor must preserve remove/re-add and filter effects even if final selected record sets agree. Counter/remembered-owner/filter persistence and publication remain required.",
       "Full M15S4 automatic contact/FSM/GetUp and normal-input/device/view/FPS/interrupt/restart gates remain open."
     ]
+  },
+  "internal_filter_contact_publication_followup": {
+    "status": "Retained physics publishes internal native mask changes and invalidates changed pair contacts; ordered registration executor and saved state remain open",
+    "source": {
+      "head": "3217303171fedd03807a39a7390e21e7ad7a3718",
+      "source_fingerprint": "8e0f0ec742f0d608d3f368daf06213f6666da04fd9355e0499168e30f0f27ee1"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "55cf883a6f585fba539a80f6b9a10d8d2705ea15d08bddd05720d5e652b14112",
+      "components/nifbullet/actorragdollphysics.cpp": "ca6544a0c6a258e980e99fd402c424d58be4ab48be504f3def68cffa488648eb",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "a26cf297f2bd5fcb13a477c22068be69c33892230bb4eefb764d089d8404f79e"
+    },
+    "changes": [
+      "Retain the configured native internal mask table, current packed body words and the ignore entries owned by that policy.",
+      "prepareInternalCollisionFilters validates a complete body-record-ordered input, layer support and pair symmetry, then stages replacement lists and reserves live Bullet ignore-list capacity. It changes no collision decision or cached contact.",
+      "Commit validates owner/World lifetime, filter/registration generations and the exact previous ignore lists; it then publishes from reserved storage without allocating. Unrelated and duplicate external ignore entries survive.",
+      "Changed owned pairs discard their collision algorithms/manifolds while retaining broadphase overlaps. Re-enabling collision recreates contacts on the next detection without body or AABB movement. Outside pairs are not invalidated."
+    ],
+    "readmission_design_prototype": {
+      "report": "build/oblivion-compat/m15/S4/prepared-proxy-readmission-prototype-01/report.json",
+      "report_sha256": "7be467a3be093a0e218597ce4474d1acebb0e1563ee7376596bc0a50df35f12d",
+      "driver_sha256": "0d304e0c0fca2ec0becada36496307f69d6616b69fbdc5a6b4a3ba1a7fc48be2",
+      "results": {
+        "passed": true,
+        "source_sha256": "0d304e0c0fca2ec0becada36496307f69d6616b69fbdc5a6b4a3ba1a7fc48be2",
+        "runs": {
+          "normal": {
+            "passed": true,
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-DBT_USE_DOUBLE_PRECISION",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+              "-O2",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/prepared-proxy-readmission-prototype-01/probe.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/prepared-proxy-readmission-prototype-01/normal"
+            ],
+            "stdout": "passed: 100 rollback/contact-preservation cycles and one reserved-proxy readmission\n",
+            "binary_sha256": "2b9603fdfcbcc462963679f90d370eae554114bfb9d8dbf36a06d5dab6238288"
+          },
+          "sanitized": {
+            "passed": true,
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-DBT_USE_DOUBLE_PRECISION",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+              "-O1",
+              "-g",
+              "-fsanitize=address,undefined",
+              "-fno-omit-frame-pointer",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/prepared-proxy-readmission-prototype-01/probe.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/prepared-proxy-readmission-prototype-01/sanitized"
+            ],
+            "stdout": "passed: 100 rollback/contact-preservation cycles and one reserved-proxy readmission\n",
+            "binary_sha256": "07beaf9dca0a13670025d334fd1b8a169a037e4e185759ce49af6815fe8cb51e"
+          }
+        },
+        "libraries_sha256": {
+          "build/_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171",
+          "build/_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9",
+          "build/_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+        },
+        "scope": "Isolated design prototype only. Instrumented driver uses the ordinary Bullet libraries. No production transaction, owner lifetime, multi-body/native routing/group rollback or allocation-failure proof. No runtime acceptance."
+      }
+    },
+    "component_cases": [
+      "InternalFilterPublicationReleasesOnlyChangedPairContactsAndReenablesWithoutMovement",
+      "InternalFilterPublicationPreservesOtherIgnoreReferences",
+      "InternalFilterPreparationRejectsMalformedAndStaleState",
+      "InternalFiltersCanChangeBeforePublicationAndTokensOutliveOwnersSafely",
+      "InternalFilterTokensRejectForeignAndExpiredNativeWorlds"
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/internal-filter-contact-normal-01/verification.json",
+        "report_sha256": "23d0b9549fa34ca150854f1c7b8e548f152f9dc42c8618ca5b9697d107380215",
+        "source": {
+          "head": "3217303171fedd03807a39a7390e21e7ad7a3718",
+          "source_fingerprint": "8e0f0ec742f0d608d3f368daf06213f6666da04fd9355e0499168e30f0f27ee1"
+        },
+        "results": {
+          "components": {
+            "executed": 2844,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "be460eb838a6bf7cc52dbf11802ed227168fc45c66a1e4bfaaf3aa246b8e7793",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "24f6f15cb06a30d87d928772395df59d2799b2afb2c3048236e449986a5d03de",
+            "inventory_sha256": "cd2f6b3e391d4b27ebcf78a48483bbd1d05cc0e0f9b608738456e66927ebd198",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a2a9e1126547525c4a937b87af548646707cd8ab872e71760bcf8bc39a692b53",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "2ce59c96d8f2d692454aef92687f400582da57b810f156be1a8a80b2776a0f0a",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 270,
+          "engine": 122
+        },
+        "openmw_sha256": "95776dbc7c1f7ffb2915ec8c98b93f23aefe1863b48c3858d17c1dabe61eb59c"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/internal-filter-contact-sanitized-01/verification.json",
+        "report_sha256": "68b9849f90723ab4d36c649e657d4ae0fba35e658d20e37b1878584d9d04a9e1",
+        "source": {
+          "head": "3217303171fedd03807a39a7390e21e7ad7a3718",
+          "source_fingerprint": "8e0f0ec742f0d608d3f368daf06213f6666da04fd9355e0499168e30f0f27ee1"
+        },
+        "results": {
+          "components": {
+            "executed": 2844,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "bafb51a203264ddcd44739552ddc9489c47c18ced7ca8f4450ab0baff705a35a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c0ea0f905bc6d92b5359ea5006dc548f815021808a7085b20aec9811949d4bda",
+            "inventory_sha256": "94bf3e9f9d74fef3a6e6b9e480262db2478446e7468005af0d15d587e1265ed3",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b3e943381cf0ee3a9e7d8506c7a81d0d6cc1bac3c815cbe974b2b686af3c4ccd",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "33828a3c57c3d99eb0c7bcaf278d0009883cf839e4e7f109a55806706415ffa4",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 270,
+          "engine": 122
+        },
+        "openmw_sha256": "fdb3b14b8bbcceab1b9791140ebc993c4a5f946640f94ee4d3447a463c364937"
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Actual Bullet collision detection and cached-contact publication, plus full normal/instrumented component and engine builds/tests. No new normal-input fork course, native solver trajectory parity or fresh-process recovery gate.",
+    "limits": [
+      "Internal pairs within the configured owned graph only. External World/native actor filter routing and group ownership remain separate required integration.",
+      "The new filter transaction is not yet part of RuntimeActorRagdoll or the ordered registration publisher; current save version remains50.",
+      "The actual ordered publisher must still preserve native remove/re-add effects and combine filter/registration/state publication safely.",
+      "Automatic contact/FSM/GetUp and every remaining full M15S4 acceptance gate remain open.",
+      "Borrowed non-Native Worlds retain the existing requirement to outlive their graph; explicit expired-World rejection uses NativeDynamicsWorld lifetime leases."
+    ]
   }
 }

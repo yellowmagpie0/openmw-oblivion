@@ -5257,3 +5257,36 @@ World/solver boundaries are in `directed_registration_plan_followup` in
 preserve remove/re-add effects even when final membership agrees. This planner
 adds no engine caller, physical publication or persisted registration fields;
 automatic contact/reaction/GetUp and full S4 gameplay/restart gates stay open.
+
+
+The retained physics graph now publishes changes to its configured native
+internal collision filters. Preparation stages complete replacement ignore
+lists and reserves capacity while preserving collision decisions and contacts.
+Commit checks owner/World lifetime, filter and registration epochs and exact
+ignore-list snapshots, then uses reserved storage. Other ignore references,
+including duplicates for the same peer, survive the policy update.
+
+Actual Bullet contact tests verify that disabling an owned pair releases its
+cached manifold immediately, re-enabling recreates contacts without movement,
+and outside contacts retain their existing manifold. Invalid layers, asymmetric
+policy, malformed identities and stale/foreign/expired tokens reject. Deferred
+graphs can prepare filter decisions before their World publication.
+
+Full normal and ASan/UBSan checkpoints each pass 2,844 component tests in 270
+suites and 1,634 engine tests in 122 suites, with exact inventories and no skips
+or failures. Leak checks are disabled. Tested source fingerprint:
+`8e0f0ec742f0d608d3f368daf06213f6666da04fd9355e0499168e30f0f27ee1`.
+Both engines were rebuilt against the accumulated registration work; executable hashes and detailed scope are in
+`internal_filter_contact_publication_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+An isolated design prototype also preserves old contacts through 100 provisional
+proxy rollback cycles, then recreates contacts after one reserved-proxy
+readmission. Both drivers pass, but they use the ordinary Bullet libraries;
+this is not a production publisher or full instrumented Bullet proof.
+
+This adds real internal collision/contact behavior, but no external World
+filter routing, ordered registration publisher, saved registration fields or
+new gameplay/restart acceptance. Current save version remains 50. Automatic
+contact/reaction/GetUp and full M15S4 normal-input, view/device/FPS, interruption
+and fresh-process recovery gates remain open.

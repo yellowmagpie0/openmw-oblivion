@@ -7,8 +7,10 @@
 #include <components/esm4/physicalblenddispatch.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
+#include <limits>
 #include <type_traits>
 #include <unordered_set>
 #include <unordered_map>
@@ -19,6 +21,7 @@
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletCollision/BroadphaseCollision/btOverlappingPairCache.h>
 #include <BulletDynamics/ConstraintSolver/btHingeConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
@@ -28,6 +31,28 @@ namespace NifBullet
 {
     namespace
     {
+        class RagdollRigidBody : public btRigidBody
+        {
+        public:
+            using btRigidBody::btRigidBody;
+            void reserveCollisionIgnores(std::size_t count)
+            {
+                if (count > std::size_t(std::numeric_limits<int>::max()))
+                    throw std::length_error("Physical collision ignore list too large");
+                m_objectsWithoutCollisionCheck.reserve(static_cast<int>(count));
+            }
+            void replaceCollisionIgnores(std::span<const btCollisionObject* const> objects) noexcept
+            {
+                // Capacity was reserved during preparation, while publication
+                // still checks the complete old list for intervening changes.
+                assert(objects.size() <= std::size_t(m_objectsWithoutCollisionCheck.capacity()));
+                m_objectsWithoutCollisionCheck.resize(static_cast<int>(objects.size()));
+                for (std::size_t i = 0; i < objects.size(); ++i)
+                    m_objectsWithoutCollisionCheck[static_cast<int>(i)] = objects[i];
+                m_checkCollideWith = !objects.empty();
+            }
+        };
+
         void require(bool valid, const char* message)
         {
             if (!valid)
@@ -348,6 +373,10 @@ namespace NifBullet
         std::vector<std::pair<std::size_t, std::size_t>> mConstraintEndpoints;
         std::vector<unsigned char> mRegisteredBodies, mRegisteredConstraints;
         std::vector<unsigned char> mSelectedBodies, mSelectedConstraints;
+        std::optional<RagdollCollisionFilter> mInternalMasks;
+        std::vector<std::uint32_t> mInternalFilterWords;
+        std::vector<std::pair<std::size_t, std::size_t>> mInternalDisabledPairs;
+        std::shared_ptr<const char> mInternalFilterGeneration = std::make_shared<const char>();
         int mCollisionGroup = 0, mCollisionMask = 0;
         bool mDisableLinkedCollisions = true;
         bool mPublished = false, mNativeWorld = false;
@@ -1188,7 +1217,7 @@ namespace NifBullet
             // Havok coefficients above one cannot be passed to Bullet's
             // exponential damping API. The serial caller applies native damping.
             info.m_linearDamping = info.m_angularDamping = 0;
-            auto body = std::make_unique<btRigidBody>(info);
+            auto body = std::make_unique<RagdollRigidBody>(info);
             body->setUserPointer(userPointer);
             mImpl->mCollisionObjects.push_back(body.get());
             mImpl->mShapes.push_back(std::move(shape));
@@ -1234,6 +1263,7 @@ namespace NifBullet
         }
         if (internalFilter)
         {
+            mImpl->mInternalMasks = internalFilter->mMasks;
             std::vector<std::uint32_t> filters;
             filters.reserve(definition.mBodies.size());
             for (const auto& body : definition.mBodies)
@@ -1253,10 +1283,12 @@ namespace NifBullet
                     require(forward == backward, "asymmetric internal collision filter");
                     if (!forward)
                     {
+                        mImpl->mInternalDisabledPairs.emplace_back(a, b);
                         mImpl->mBodies[a].mBody->setIgnoreCollisionCheck(mImpl->mBodies[b].mBody.get(), true);
                         mImpl->mBodies[b].mBody->setIgnoreCollisionCheck(mImpl->mBodies[a].mBody.get(), true);
                     }
                 }
+            mImpl->mInternalFilterWords = std::move(filters);
         }
         // Native activation belongs to an island, not just the setter's body.
         // Reconstruct constraint-connected owned groups once so every connected
@@ -1553,6 +1585,133 @@ namespace NifBullet
         auto prepared = prepareWorldRegistrationSelection(selection);
         admitWorldRegistrationSelection(*prepared);
         require(commitWorldRegistrationSelection(*prepared), "registration changed before publication");
+    }
+
+    struct ActorRagdollPhysics::PreparedInternalCollisionFilters::Data
+    {
+        const ActorRagdollPhysics* mOwner = nullptr;
+        const Impl* mImpl = nullptr;
+        std::weak_ptr<const char> mLifetime, mExpectedFilters, mExpectedRegistration;
+        std::shared_ptr<const char> mNext;
+        std::vector<std::uint32_t> mWords;
+        std::vector<std::vector<const btCollisionObject*>> mExpectedIgnores, mReplacementIgnores;
+        std::vector<std::pair<std::size_t, std::size_t>> mDisabledPairs, mChangedPairs;
+    };
+
+    ActorRagdollPhysics::PreparedInternalCollisionFilters::PreparedInternalCollisionFilters(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    ActorRagdollPhysics::PreparedInternalCollisionFilters::~PreparedInternalCollisionFilters() = default;
+
+    std::vector<RagdollInternalBodyFilter> ActorRagdollPhysics::captureInternalCollisionFilters() const
+    {
+        require(mImpl->mInternalMasks.has_value(), "unconfigured internal collision policy");
+        std::vector<RagdollInternalBodyFilter> result;
+        result.reserve(mImpl->mBodies.size());
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+            result.push_back({mImpl->mBodies[i].mRecord, mImpl->mInternalFilterWords[i]});
+        return result;
+    }
+
+    std::unique_ptr<ActorRagdollPhysics::PreparedInternalCollisionFilters>
+    ActorRagdollPhysics::prepareInternalCollisionFilters(std::span<const RagdollInternalBodyFilter> filters) const
+    {
+        require(mImpl->worldAlive() && mImpl->mPendingRegistration.expired() && mImpl->mInternalMasks
+                && filters.size() == mImpl->mBodies.size(), "unavailable internal collision policy or filter count");
+        auto data = std::make_unique<PreparedInternalCollisionFilters::Data>();
+        data->mOwner = this; data->mImpl = mImpl.get(); data->mLifetime = mImpl->mLifetime;
+        data->mExpectedFilters = mImpl->mInternalFilterGeneration;
+        data->mExpectedRegistration = mImpl->mRegistrationGeneration;
+        data->mNext = std::make_shared<const char>();
+        data->mWords.reserve(filters.size());
+        for (std::size_t i = 0; i < filters.size(); ++i)
+        {
+            require(filters[i].mRecord == mImpl->mBodies[i].mRecord, "internal collision filter record order");
+            mImpl->mInternalMasks->enabled(filters[i].mPackedFilter, filters[i].mPackedFilter);
+            data->mWords.push_back(filters[i].mPackedFilter);
+        }
+        for (std::size_t a = 0; a < filters.size(); ++a)
+            for (std::size_t b = a + 1; b < filters.size(); ++b)
+            {
+                const bool enabled = mImpl->mInternalMasks->enabled(data->mWords[a], data->mWords[b]);
+                require(enabled == mImpl->mInternalMasks->enabled(data->mWords[b], data->mWords[a]),
+                    "asymmetric internal collision filter");
+                if (!enabled) data->mDisabledPairs.emplace_back(a, b);
+                if (enabled != mImpl->mInternalMasks->enabled(
+                        mImpl->mInternalFilterWords[a], mImpl->mInternalFilterWords[b]))
+                    data->mChangedPairs.emplace_back(a, b);
+            }
+        data->mExpectedIgnores.resize(filters.size());
+        for (std::size_t i = 0; i < filters.size(); ++i)
+        {
+            auto& body = *mImpl->mBodies[i].mBody;
+            auto& old = data->mExpectedIgnores[i];
+            old.reserve(body.getNumObjectsWithoutCollision());
+            for (int j = 0; j < body.getNumObjectsWithoutCollision(); ++j)
+                old.push_back(body.getObjectWithoutCollision(j));
+        }
+        data->mReplacementIgnores = data->mExpectedIgnores;
+        // Remove exactly the ignore entries owned by this mask policy. Other
+        // entries, including an explicit duplicate for the same peer, survive.
+        const auto remove = [&](std::size_t a, std::size_t b) {
+            auto& objects = data->mReplacementIgnores[a];
+            const auto found = std::find(objects.begin(), objects.end(), mImpl->mBodies[b].mBody.get());
+            require(found != objects.end(), "internal collision ignore entry removed externally");
+            objects.erase(found);
+        };
+        for (const auto& [a, b] : mImpl->mInternalDisabledPairs) { remove(a, b); remove(b, a); }
+        for (const auto& [a, b] : data->mDisabledPairs)
+        {
+            data->mReplacementIgnores[a].push_back(mImpl->mBodies[b].mBody.get());
+            data->mReplacementIgnores[b].push_back(mImpl->mBodies[a].mBody.get());
+        }
+        for (std::size_t i = 0; i < filters.size(); ++i)
+            static_cast<RagdollRigidBody&>(*mImpl->mBodies[i].mBody)
+                .reserveCollisionIgnores(data->mReplacementIgnores[i].size());
+        return std::unique_ptr<PreparedInternalCollisionFilters>(new PreparedInternalCollisionFilters(std::move(data)));
+    }
+
+    bool ActorRagdollPhysics::validateInternalCollisionFilters(const PreparedInternalCollisionFilters& prepared) const noexcept
+    {
+        const auto* data = prepared.mData.get();
+        if (!data || data->mLifetime.expired() || data->mOwner != this || data->mImpl != mImpl.get()
+            || data->mLifetime.lock() != mImpl->mLifetime || !mImpl->worldAlive()
+            || !mImpl->mPendingRegistration.expired()
+            || data->mExpectedFilters.lock() != mImpl->mInternalFilterGeneration
+            || data->mExpectedRegistration.lock() != mImpl->mRegistrationGeneration) return false;
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+        {
+            auto& body = *mImpl->mBodies[i].mBody;
+            const auto& expected = data->mExpectedIgnores[i];
+            if (std::size_t(body.getNumObjectsWithoutCollision()) != expected.size()) return false;
+            for (std::size_t j = 0; j < expected.size(); ++j)
+                if (body.getObjectWithoutCollision(static_cast<int>(j)) != expected[j]) return false;
+        }
+        return true;
+    }
+
+    bool ActorRagdollPhysics::commitInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept
+    {
+        if (!validateInternalCollisionFilters(prepared)) return false;
+        auto& data = *prepared.mData;
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+            static_cast<RagdollRigidBody&>(*mImpl->mBodies[i].mBody).replaceCollisionIgnores(data.mReplacementIgnores[i]);
+        mImpl->mInternalFilterWords.swap(data.mWords);
+        mImpl->mInternalDisabledPairs.swap(data.mDisabledPairs);
+        mImpl->mInternalFilterGeneration.swap(data.mNext);
+        // Keep overlapping pairs themselves. Discard only changed algorithms,
+        // releasing their manifolds now; allowed pairs recreate algorithms on
+        // the next collision detection even when their AABBs have not moved.
+        auto* cache = mImpl->mWorld.getBroadphase()->getOverlappingPairCache();
+        for (const auto& [a, b] : data.mChangedPairs)
+        {
+            auto* left = mImpl->mBodies[a].mBody->getBroadphaseHandle();
+            auto* right = mImpl->mBodies[b].mBody->getBroadphaseHandle();
+            if (left && right)
+                if (auto* pair = cache->findPair(left, right))
+                    cache->cleanOverlappingPair(*pair, mImpl->mWorld.getDispatcher());
+        }
+        prepared.mData.reset();
+        return true;
     }
 
     std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const

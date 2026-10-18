@@ -8,6 +8,7 @@
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletCollision/NarrowPhaseCollision/btPersistentManifold.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
@@ -5192,6 +5193,176 @@ namespace
         EXPECT_EQ(world.getNumCollisionObjects(), 0); EXPECT_EQ(world.getNumConstraints(), 0);
         admitted.reset();
         world.stepSimulation(.01, 0);
+    }
+
+    NifBullet::RagdollInternalCollisionFilter permissiveInternalFilter()
+    {
+        NifBullet::RagdollInternalCollisionFilter result;
+        result.mSystemGroup = 1;
+        result.mMasks.mLayerMasks.fill(0xffffffffu);
+        result.mMasks.mBoneMasks.fill(0xffffffffu);
+        return result;
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InternalFilterPublicationReleasesOnlyChangedPairContactsAndReenablesWithoutMovement)
+    {
+        addHinge(); mGraph.mJoints.clear();
+        for (auto& body : mGraph.mBodies) body.mInfoFilter.mLayer = 8;
+        mPoses[0].setOrigin(btVector3(0, 0, 0));
+        mPoses[1].setOrigin(btVector3(.5, 0, 0));
+        const auto masks = permissiveInternalFilter();
+        NifBullet::ActorRagdollPhysics graph(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &masks);
+        btSphereShape outsideShape(.5);
+        btCollisionObject outside;
+        outside.setCollisionShape(&outsideShape);
+        outside.setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0, .5, 0)));
+        mWorld.addCollisionObject(&outside, 1, -1);
+        struct RemoveOutside
+        {
+            btDynamicsWorld& mWorld;
+            btCollisionObject& mObject;
+            ~RemoveOutside() { mWorld.removeCollisionObject(&mObject); }
+        } removeOutside{mWorld, outside};
+        auto* a = graph.collisionObjects()[0]; auto* b = graph.collisionObjects()[1];
+        const auto manifold = [&](const btCollisionObject* left, const btCollisionObject* right) -> const btPersistentManifold* {
+            for (int i = 0; i < mDispatcher.getNumManifolds(); ++i)
+            {
+                const auto* value = mDispatcher.getManifoldByIndexInternal(i);
+                if ((value->getBody0() == left && value->getBody1() == right)
+                    || (value->getBody0() == right && value->getBody1() == left)) return value;
+            }
+            return nullptr;
+        };
+        mWorld.performDiscreteCollisionDetection();
+        const auto* internal = manifold(a, b);
+        ASSERT_NE(internal, nullptr); EXPECT_GT(internal->getNumContacts(), 0);
+        const auto* external = manifold(a, &outside);
+        ASSERT_NE(external, nullptr); EXPECT_GT(external->getNumContacts(), 0);
+        const auto before = graph.captureInternalCollisionFilters();
+        EXPECT_EQ(before, (std::vector<NifBullet::RagdollInternalBodyFilter>{{12, 0x10008}, {24, 0x10008}}));
+        auto disabled = before; disabled[0].mPackedFilter |= 0x4000;
+        auto discarded = graph.prepareInternalCollisionFilters(disabled);
+        discarded.reset();
+        EXPECT_EQ(manifold(a, b), internal);
+        auto prepared = graph.prepareInternalCollisionFilters(disabled);
+        EXPECT_EQ(graph.captureInternalCollisionFilters(), before);
+        EXPECT_EQ(manifold(a, b), internal);
+        ASSERT_TRUE(graph.commitInternalCollisionFilters(*prepared));
+        EXPECT_FALSE(graph.commitInternalCollisionFilters(*prepared));
+        EXPECT_FALSE(a->checkCollideWith(b)); EXPECT_FALSE(b->checkCollideWith(a));
+        EXPECT_EQ(manifold(a, b), nullptr);
+        EXPECT_EQ(manifold(a, &outside), external);
+        mWorld.performDiscreteCollisionDetection();
+        EXPECT_EQ(manifold(a, b), nullptr);
+        auto enabled = graph.prepareInternalCollisionFilters(before);
+        ASSERT_TRUE(graph.commitInternalCollisionFilters(*enabled));
+        EXPECT_TRUE(a->checkCollideWith(b)); EXPECT_TRUE(b->checkCollideWith(a));
+        mWorld.performDiscreteCollisionDetection();
+        ASSERT_NE(manifold(a, b), nullptr);
+        EXPECT_GT(manifold(a, b)->getNumContacts(), 0);
+        EXPECT_EQ(manifold(a, &outside), external);
+        EXPECT_EQ(graph.capture()[0].mPose, mPoses[0]);
+        EXPECT_EQ(graph.capture()[1].mPose, mPoses[1]);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InternalFilterPublicationPreservesOtherIgnoreReferences)
+    {
+        addHinge();
+        for (auto& body : mGraph.mBodies) body.mInfoFilter.mLayer = 8;
+        const auto masks = permissiveInternalFilter();
+        NifBullet::ActorRagdollPhysics graph(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &masks);
+        auto original = graph.captureInternalCollisionFilters();
+        auto disabled = original; disabled[0].mPackedFilter |= 0x4000;
+        auto off = graph.prepareInternalCollisionFilters(disabled);
+        ASSERT_TRUE(graph.commitInternalCollisionFilters(*off));
+        auto* a = graph.collisionObjects()[0]; auto* b = graph.collisionObjects()[1];
+        btCollisionObject unrelated;
+        a->setIgnoreCollisionCheck(&unrelated, true);
+        a->setIgnoreCollisionCheck(b, true); // An additional, separately owned reference.
+        auto on = graph.prepareInternalCollisionFilters(original);
+        ASSERT_TRUE(graph.commitInternalCollisionFilters(*on));
+        EXPECT_FALSE(a->checkCollideWith(b)); EXPECT_TRUE(b->checkCollideWith(a));
+        EXPECT_FALSE(a->checkCollideWith(&unrelated));
+        EXPECT_EQ(a->getNumObjectsWithoutCollision(), 2);
+        a->setIgnoreCollisionCheck(b, false);
+        EXPECT_TRUE(a->checkCollideWith(b));
+        EXPECT_FALSE(a->checkCollideWith(&unrelated));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InternalFilterPreparationRejectsMalformedAndStaleState)
+    {
+        addHinge();
+        for (auto& body : mGraph.mBodies) body.mInfoFilter.mLayer = 8;
+        auto masks = permissiveInternalFilter();
+        masks.mMasks.mLayerMasks[8] &= ~(1u << 9);
+        NifBullet::ActorRagdollPhysics graph(mGraph, mWorld, 1, mPoses, 1, -1, nullptr, &masks);
+        const auto original = graph.captureInternalCollisionFilters();
+        EXPECT_THROW(graph.prepareInternalCollisionFilters({}), std::invalid_argument);
+        auto invalid = original; invalid[1].mRecord = 12;
+        EXPECT_THROW(graph.prepareInternalCollisionFilters(invalid), std::invalid_argument);
+        invalid = original; invalid[1].mPackedFilter = 0x10020;
+        EXPECT_THROW(graph.prepareInternalCollisionFilters(invalid), std::invalid_argument);
+        invalid = original; invalid[1].mPackedFilter = 0x20009;
+        EXPECT_THROW(graph.prepareInternalCollisionFilters(invalid), std::invalid_argument);
+        EXPECT_EQ(graph.captureInternalCollisionFilters(), original);
+        auto token = graph.prepareInternalCollisionFilters(original);
+        auto* a = graph.collisionObjects()[0]; auto* b = graph.collisionObjects()[1];
+        a->setIgnoreCollisionCheck(b, true);
+        EXPECT_FALSE(graph.commitInternalCollisionFilters(*token));
+        a->setIgnoreCollisionCheck(b, false);
+        EXPECT_TRUE(graph.validateInternalCollisionFilters(*token));
+        auto competing = graph.prepareInternalCollisionFilters(original);
+        ASSERT_TRUE(graph.commitInternalCollisionFilters(*competing));
+        EXPECT_FALSE(graph.validateInternalCollisionFilters(*token));
+        auto membershipStale = graph.prepareInternalCollisionFilters(original);
+        auto registration = graph.prepareWorldBodyRemovals(std::array<std::uint32_t, 1>{12});
+        graph.admitWorldRegistrationSelection(*registration);
+        EXPECT_FALSE(graph.validateInternalCollisionFilters(*membershipStale));
+        EXPECT_THROW(graph.prepareInternalCollisionFilters(original), std::invalid_argument);
+        graph.rollbackWorldRegistrationSelection(*registration);
+        EXPECT_TRUE(graph.validateInternalCollisionFilters(*membershipStale));
+        graph.setWorldRegistrationSelection({});
+        graph.setWorldRegistrationSelection({{12, 24}, {25}});
+        EXPECT_FALSE(graph.validateInternalCollisionFilters(*membershipStale));
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InternalFiltersCanChangeBeforePublicationAndTokensOutliveOwnersSafely)
+    {
+        addHinge();
+        for (auto& body : mGraph.mBodies) body.mInfoFilter.mLayer = 8;
+        const auto masks = permissiveInternalFilter();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        auto graph = std::make_unique<NifBullet::ActorRagdollPhysics>(mGraph, world, 1, mPoses, 1, -1,
+            nullptr, &masks, GraphPublication::Deferred);
+        auto filters = graph->captureInternalCollisionFilters(); filters[0].mPackedFilter |= 0x4000;
+        auto token = graph->prepareInternalCollisionFilters(filters);
+        ASSERT_TRUE(graph->commitInternalCollisionFilters(*token));
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        ASSERT_TRUE(graph->publish(world));
+        EXPECT_FALSE(graph->collisionObjects()[0]->checkCollideWith(graph->collisionObjects()[1]));
+        auto survives = graph->prepareInternalCollisionFilters(filters);
+        graph.reset(); survives.reset();
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        NifBullet::ActorRagdollPhysics unconfigured(mGraph, world, 1, mPoses, 1, -1);
+        EXPECT_THROW(unconfigured.captureInternalCollisionFilters(), std::invalid_argument);
+        EXPECT_THROW(unconfigured.prepareInternalCollisionFilters(filters), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, InternalFilterTokensRejectForeignAndExpiredNativeWorlds)
+    {
+        addHinge();
+        for (auto& body : mGraph.mBodies) body.mInfoFilter.mLayer = 8;
+        const auto masks = permissiveInternalFilter();
+        auto world = std::make_unique<NifBullet::NativeDynamicsWorld>(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, *world, 1, mPoses, 1, -1, nullptr, &masks);
+        NifBullet::ActorRagdollPhysics other(mGraph, *world, 1, mPoses, 1, -1, nullptr, &masks);
+        graph.setWorldRegistrationSelection({}); other.setWorldRegistrationSelection({});
+        auto token = graph.prepareInternalCollisionFilters(graph.captureInternalCollisionFilters());
+        EXPECT_FALSE(other.validateInternalCollisionFilters(*token));
+        EXPECT_FALSE(other.commitInternalCollisionFilters(*token));
+        world.reset();
+        EXPECT_FALSE(graph.validateInternalCollisionFilters(*token));
+        EXPECT_FALSE(graph.commitInternalCollisionFilters(*token));
     }
 
     TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRetainsObjectsControllersAndPackedState)
