@@ -129,7 +129,7 @@ namespace MWMechanics
         bool mWeaponBlockSound = false;
         std::optional<std::array<std::string_view, 3>> mBlockSounds{};
         std::int32_t mHitArmorClass = -1;
-        bool mUnequipOnBreak = false;
+        OblivionWeaponBreakDisposition mBreakDisposition = OblivionWeaponBreakDisposition::None;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

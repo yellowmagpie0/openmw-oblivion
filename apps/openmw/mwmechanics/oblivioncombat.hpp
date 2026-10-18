@@ -183,6 +183,8 @@ namespace MWMechanics
 
     // A transient, precomputed condition publication on an equipped instance.
     // Capture comparison fields before rule evaluation; no Ptr enters a save.
+    enum class OblivionWeaponBreakDisposition : std::uint8_t { None, Unequip, Drop };
+
     struct OblivionPhysicalConditionChange
     {
         MWWorld::Ptr mOwner;
@@ -193,8 +195,8 @@ namespace MWMechanics
         int mExpectedCount = 1;
         float mCondition = 0;
         std::optional<float> mExpectedExtraScale = std::nullopt;
-        // Resolved native Player/quest weapon break consequence, staged with wear.
-        bool mUnequipOnBreak = false;
+        // Resolved native weapon break policy. World composes Drop with actual scene admission.
+        OblivionWeaponBreakDisposition mBreakDisposition = OblivionWeaponBreakDisposition::None;
     };
     OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
         const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition);

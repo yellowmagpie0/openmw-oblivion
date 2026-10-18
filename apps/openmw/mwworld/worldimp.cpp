@@ -123,6 +123,7 @@
 #include "../mwrender/animation.hpp"
 #include "../mwrender/camera.hpp"
 #include "../mwrender/npcanimation.hpp"
+#include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/obliviondropplacement.hpp"
 #include "../mwrender/postprocessor.hpp"
 #include "../mwrender/renderingmanager.hpp"
@@ -2630,6 +2631,7 @@ namespace MWWorld
         bool mGodMode;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
+        std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
         std::optional<WorldModel::RegistryGuard> mRegistry;
     };
 
@@ -2642,7 +2644,8 @@ namespace MWWorld
         if (!mData || mData->mIdentity.expired() || !mData->mRegistry->isValid()
             || !mData->mContact->isValid()
             || std::any_of(mData->mNotifications.begin(), mData->mNotifications.end(),
-                [](const auto& notification) { return !notification->isValid(); })) return false;
+                [](const auto& notification) { return !notification->isValid(); })
+            || (mData->mDrops && !mData->mDrops->isValid())) return false;
         const auto& world = *mData->mWorld;
         return world.mOblivionClearGeneration == mData->mGeneration
             && world.mOblivionCombat.get() == mData->mCombat && world.mPlayer.get() == mData->mPlayer
@@ -2651,15 +2654,72 @@ namespace MWWorld
             && (!world.mRetainedSimulation || world.mRetainedSimulation->mDetached);
     }
 
-    bool World::PreparedOblivionPhysicalContact::commit() noexcept
+    bool World::PreparedOblivionPhysicalContact::commit()
     {
-        if (!isValid() || !mData->mContact->commit()) return false;
-        for (auto& notification : mData->mNotifications)
-            if (!notification->commit()) std::terminate();
+        if (!isValid()) return false;
+        const auto publish = [](void* context) noexcept {
+            auto& data = *static_cast<PreparedOblivionPhysicalContact*>(context)->mData;
+            if (!data.mContact->commit()) std::terminate();
+            for (auto& notification : data.mNotifications)
+                if (!notification->commit()) std::terminate();
+        };
+        if (mData->mDrops)
+            return !mData->mDrops->commit({this,
+                [](void* context) noexcept {
+                    return static_cast<PreparedOblivionPhysicalContact*>(context)->isValid();
+                }, publish}).isEmpty();
+        publish(this);
         return true;
     }
 
-    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(
+        std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas);
+        if (!contact) return nullptr;
+        std::vector<EquippedWeaponDrop> drops;
+        for (const auto& change : deltas.mConditionChanges)
+            if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
+            {
+                if (!mRendering || !mPhysics) return nullptr;
+                auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(change.mOwner));
+                if (!animation) return nullptr;
+                drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition});
+            }
+        if (!drops.empty())
+            contact->mData->mDrops = prepareEquippedWeaponDrops(*this, mRendering->getObjects(), *mPhysics, drops);
+        return contact;
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactWithWeaponDrops(
+        std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, MWRender::Objects& objects,
+        MWPhysics::PhysicsSystem& physics, std::span<const EquippedWeaponDrop> drops)
+    {
+        std::size_t expected = 0;
+        for (const auto& change : deltas.mConditionChanges)
+            if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
+            {
+                ++expected;
+                const auto count = std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
+                    return drop.mActor == change.mOwner && drop.mItem == change.mItem
+                        && drop.mConditionAfterWear == std::optional<float>(0.f);
+                });
+                if (change.mCondition != 0 || change.mOwner.isEmpty() || change.mOwner == getPlayerPtr()
+                    || change.mOwner.getType() != ESM::REC_NPC_4 || count != 1)
+                    throw std::invalid_argument("native contact drop requires one matching broken NPC weapon");
+            }
+        if (expected == 0 || expected != drops.size())
+            throw std::invalid_argument("native contact drop requests do not match contact dispositions");
+        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas);
+        if (!contact) return nullptr;
+        contact->mData->mDrops = prepareEquippedWeaponDrops(*this, objects, physics, drops);
+        return contact;
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactResources(
+        std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {
         if (!mOblivionCombat || attacker.isEmpty())
@@ -2690,7 +2750,7 @@ namespace MWWorld
         data->mGodMode = getGodModeState();
         data->mContact = std::move(contact);
         for (const auto& condition : deltas.mConditionChanges)
-            if (condition.mUnequipOnBreak)
+            if (condition.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Unequip)
                 data->mNotifications.push_back(prepareOblivionEquipmentNotification(
                     [contact = data->mContact, item = condition.mItem] { contact->notifyEquipmentChange(item); }));
         data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());

@@ -16249,3 +16249,48 @@ fists in both reviewed images. This is a staged first-person keyboard1FPS course
 not normal-equipping, live NPC quest/drop/defensive break, complete reaction,
 view/device/FPS or in-action restart acceptance. Full M15S4 remains incomplete.
 Editable inputs/boundaries: `M15-RETAINED-MELEE-BREAK-PROBE.json`.
+
+
+### Attacking NPC weapon breaks compose actual drop admission
+
+The existing original5F39D3 dispatch corpus still controls readiness, actual
+Player identity and WEAP quest flag0x400; no new interpretation is inferred from
+an executable label. The new profile independently executes484F80 weapon damage,
+547240 wear and5F3870/484850 condition publication at007F with the existing
+explicit AV/base/damage/condition/RTTI/extra-data/publication reader boundaries.
+Damage5/max56/condition1.125, Strength40/Luck50/Blade15, current/base Fatigue155
+and bonus0 yield Health bits1057213352, wear bits1050253721 and condition bits0.
+This is not original inventory/drop or collision gameplay execution.
+
+Independent winning-record reinspection pins mastera26e21ea... and the existing
+three-record stationary fixturebd79c20d...: sword090615 is unenchanted/nonquest,
+and ImperialDungeon01 has no cell owner. Fresh stock mesh extraction pins
+shortsword SHA256100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d
+from the registered base Meshes archive. World now composes the actual equipped
+weapon factory with prepared contact resources before observers. Missing render
+context cannot silently omit the drop; exact explicit contexts support owned
+asset integration. Source removals and the new reference share final wear.
+
+Real stock rendering exposes an overstrict parent check on shared Drawable
+leaves, before any publication. A preserved throw backtrace and failing clone
+baseline locate/reproduce it. adc5a538cd excludes leaves from discovery while
+retaining physical transform/ancestor/cycle/record guards. Full frozen normal
+and ASan/UBSan checks each pass1695/124 engine and2932/274 component inventories,
+with no failures/skips. The tested dirty181a14 snapshot includes both fixes;
+committing the renderer fix changes no tested C++ bytes.
+
+Normal and sanitizer production NPC attacks then match exact Health/wear,
+positive Fatigue cost, one dynamic reference/count, ownership/drop relations,
+serial/action/RNG and separate-process persistence. Nine original AV arrays,
+lifecycle/death/engagement state and Player inventory are checked. Instrumented
+recovery uses a read-only acknowledgment after a retained wall-time settling
+failure. Added static cache references are independently resolved against the
+master; exactly one dynamic reference remains required. Direct instrumented
+image review and the generic ESM4 item load path contradict full drop/restart
+acceptance: scabbard returns and native loose physics is not restored. This is
+a required follow-up; no in-flight body persistence gate is closed. A staged camera
+view directly shows the dropped sword, without claiming normal look input or
+loose-body velocity continuation. Boundary-rich recipes, failed attempts and
+hashes are in `M15-NPC-MELEE-BREAK-PROBE.json` and the verification index entry
+`native_npc_melee_break_followup`. Defensive breaks, native reactions/FSM/GetUp,
+mastery/effects and remaining S4 matrix/restart requirements stay open.

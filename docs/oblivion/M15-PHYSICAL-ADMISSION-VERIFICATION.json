@@ -10666,5 +10666,589 @@
       "Full actor admission, mastery/effects, native reactions/FSM/GetUp and remaining S4 gates stay open.",
       "ASan leak checking is disabled. No new real-content sanitizer runtime or PCM waveform analysis is claimed; two impact playback requests are asserted. Unchanged components/Python suites were not repeated."
     ]
+  },
+  "native_npc_melee_break_followup": {
+    "manifest": {
+      "path": "docs/oblivion/M15-NPC-MELEE-BREAK-PROBE.json",
+      "sha256": "433696d52a5ff8be457c0b8aaa2ce0414a4ebffb6e0d9de24dc0a24273149b5f"
+    },
+    "component_fix_commit": "adc5a538cdacb5c4773500b70a7d7e6b8a0d84a4",
+    "implementation": "Explicit None/Unequip/Drop disposition. World owns the prepared contact and actual equipped-weapon drop plan; fallible scene insertion and final revalidation precede contact, source debit, drop relations, dynamic serial, registry and cell publication. Deferred notifications follow the whole transaction.",
+    "reports": {
+      "normal": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-normal-02/verification.json",
+          "sha256": "8bfa4558286518ef96498adb4c281ef147380b49b590c6f1b257a75c2debec8e"
+        },
+        "source": {
+          "head": "181a14ba0425a6325b0da61beb1e687c4bf33ea5",
+          "source_fingerprint": "635b808014be1ef74202b796d1a7a91a49f1b2c88e31125b45f64dd36fdc098c"
+        },
+        "suites": {
+          "engine": 124,
+          "components": 274
+        },
+        "results": {
+          "engine": {
+            "executed": 1695,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "6b55a8eb563edf522c71d2dd8218530a6fcf1795ff4b1ebe370c32f540e330ad",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "7ca3b4b779aafb35fa1901df0798ecc4c3e382eca58ec17856786516cd6e4215",
+            "inventory_sha256": "1923123befa92fa652e7e28feebee6b65d959110faa972929258024f2d3a5aa6",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2932,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3c7edcc8c769a69f89c0dcbe264ae9e6941543572e6f5873527af974499184a6",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "3bf95fafa52ff0c04f3d5833c977e6e68672318e61025dda97866bfb01cc6991",
+            "inventory_sha256": "6c4e66ef8b5d938a8d6fd0ed97a52aa31e1f8c1ce7386aa276d8d474602b2ca4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      },
+      "sanitized": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-sanitized-02/verification.json",
+          "sha256": "d557920f21be9718e341669f1e07702ce913df1462c9a948815421ca061b5433"
+        },
+        "source": {
+          "head": "181a14ba0425a6325b0da61beb1e687c4bf33ea5",
+          "source_fingerprint": "635b808014be1ef74202b796d1a7a91a49f1b2c88e31125b45f64dd36fdc098c"
+        },
+        "suites": {
+          "engine": 124,
+          "components": 274
+        },
+        "results": {
+          "engine": {
+            "executed": 1695,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "23a74ea59af39d3d4e5cfc1d8458fd1947b7265446c424b3653b12dfa7944a0a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "729da5801ba3a3ca8b8714cfd7c3c0ba5d8d478252c93ac7aa4fd98d76224035",
+            "inventory_sha256": "1923123befa92fa652e7e28feebee6b65d959110faa972929258024f2d3a5aa6",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2932,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "93fa17c7bb66c0a6c530fead2d0692206dd8fda76e7b2dd3749a5ede40800ad1",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fb1de76ba3361781b0b1c1757602f8d8bcd03267375991472dbc3502d6d6284f",
+            "inventory_sha256": "c5d2b1c8d26795255039f9fdbc9302da1eef142d9852379571a95ee11dacbb7f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        }
+      }
+    },
+    "new_engine_tests": [
+      "OblivionWorldTest.NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeResourcePublication",
+      "OblivionWorldTest.NativeContactCombinesDropAndRetainedBreakBeforeThrowingEquipmentObservers",
+      "OblivionWorldTest.NativeContactDropRejectsMismatchedContextsAndRetiredOwnersWithoutSpending"
+    ],
+    "expanded_policy_test": "OblivionWorldTest.OrdinaryWeaponPolicyPreparesNativeWearBeforeOwnedResourcePublication",
+    "new_component_tests": [
+      "ActorRagdollPoseTest.ClonedStaticDrawableSharingPreservesPrivatePhysicalPoseAuthority",
+      "ActorRagdollPoseTest.SharedPhysicalTransformsAndCyclesStillRejectBeforePoseWrites"
+    ],
+    "oracle": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-oracle-01/report.json",
+        "sha256": "f7e690f70d04c6068aad8ae2b9e7dbd5833b7e16b721877ad31466e17f726f31"
+      },
+      "probe": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-oracle-01/probe.py",
+        "sha256": "a62a9c4e6d50bc3d64d9b0221401ec7925fb5fc0bd51dd7477f17ed67b89c2c0"
+      }
+    },
+    "records": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/winning-record-audit.json",
+      "sha256": "5b658a044708794d5d03b83a86997021aa8272e7d7d68411f256c38923eca088"
+    },
+    "stock_mesh": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/stock-mesh-audit.json",
+      "sha256": "e6bba1cb581acb4797ef6eb22b94d962522a7b23ca0c1cb067b3a1be2e0d47f1"
+    },
+    "runtimes": {
+      "normal": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/verification.json",
+          "sha256": "5ab82b88253f9f715add310665e2bdc915ca642bdac34e7ee4454a9b198444eb"
+        },
+        "result": {
+          "passed": true,
+          "scope": "One production-policy NPC ordinary sword contact after normal Space activation, unblocked Player, staged near-broken NPC weapon; real drop, native resources and idle separate-process persistence. First-person keyboard replay at1FPS, not complete S4.",
+          "epochs": [
+            {
+              "pid": 376403,
+              "start_ticks": 8356197,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "eaaaa4b865e74d8fb4a1c5497d00f3309512449321b39219b97dc7bac846deda"
+            },
+            {
+              "pid": 376603,
+              "start_ticks": 8367923,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "eaaaa4b865e74d8fb4a1c5497d00f3309512449321b39219b97dc7bac846deda"
+            }
+          ],
+          "binary_sha256": "eaaaa4b865e74d8fb4a1c5497d00f3309512449321b39219b97dc7bac846deda",
+          "source_sha256": "5ea988aedf462af2bf3b76e697262d4ac1354443c28f4bf60f8f585a36933f9b",
+          "save_sha256": [
+            "0d102c9a348c14cbfe6dc0812b045bc7334af5e81dc38bf7a84ced55ca9309ca",
+            "16e3261723531003f500955f77f3ea272f123cbe24bc4e3639f7cba5ec4d0a0c"
+          ],
+          "native_actor_value_arrays_checked": 9,
+          "player_health_damage_bits": 1057213352,
+          "player_inventory_unchanged": true,
+          "npc_weapon_count": 0,
+          "dynamic_reference": "dynamic:native-reference:0000000000000001",
+          "dynamic_reference_count": 1,
+          "dynamic_condition": 0,
+          "dynamic_owner": null,
+          "dropper": "content:oblivion.esm:01fc43",
+          "dynamic_serial": 2,
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "placement": [
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -101.80317687988281,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ],
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -101.80317687988281,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ]
+          ],
+          "limits": "Exact first output is second input; one dynamic reference, unchanged broken condition/ownership/drop relations and contact resources; no duplicate debit, drop, action or hit sound. Physics can advance after loading; this course does not claim exact loose-body velocity continuation.",
+          "verification_layer": "Contact resources, action ownership and item identity/extras only",
+          "full_drop_restart_acceptance": false,
+          "reload_layer_review": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/reload-layer-review.json"
+        },
+        "verifier": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/verify.py",
+          "sha256": "587448c0f98e9cb11f4f909d6ff7d8b0b03eb388657384574efe383bce18df36"
+        },
+        "preregistration": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/preregistered-acceptance.json",
+          "sha256": "064baa23a3533277c6221223991af5b704c9a4a311aa034d460df381ad444613"
+        },
+        "first_manifest": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/manifest.json",
+          "sha256": "e5eeb8fb8f7521f004f26c221af852c461ae0ad86be95f0271827273628c0fd0"
+        },
+        "continuation_manifest": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/continuation.json",
+          "sha256": "f948d247f5c713d7a4d9373a0b9f99e1ca8d569f8e71aebeb9e03c5d29c2446b"
+        },
+        "extra_content_audit": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/extra-content-reference-audit.json",
+          "sha256": "fa9e0d75f7ca8f97ce3d81cfdec65e99b7b1d5e83048e7e2f6de97669dc6ce10"
+        }
+      },
+      "sanitized": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/verification.json",
+          "sha256": "fb3c3eea66bdb646095ec769e911f9af4f3c0d7bf313b29fcc48a47ca60c0d91"
+        },
+        "result": {
+          "passed": true,
+          "scope": "ASan/UBSan production-policy NPC ordinary sword contact after normal Space activation, unblocked Player, staged near-broken NPC weapon; real drop, native resources and idle separate-process persistence. First-person keyboard replay at1FPS, not complete S4.",
+          "epochs": [
+            {
+              "pid": 379988,
+              "start_ticks": 8463572,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "8c77a5aeee26f08052e0303156a2347d66320fffa1e58ee6404b0f38df6569e1"
+            },
+            {
+              "pid": 380301,
+              "start_ticks": 8492147,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "8c77a5aeee26f08052e0303156a2347d66320fffa1e58ee6404b0f38df6569e1"
+            }
+          ],
+          "binary_sha256": "8c77a5aeee26f08052e0303156a2347d66320fffa1e58ee6404b0f38df6569e1",
+          "source_sha256": "5ea988aedf462af2bf3b76e697262d4ac1354443c28f4bf60f8f585a36933f9b",
+          "save_sha256": [
+            "3870b1036867f3cf9f51658f2783c6314995e8f7ef603a5d47ccd22b87c5ff76",
+            "6c63494192dadcf22f9b57d222191bce1848c461d4b698687018ccbe925c7285"
+          ],
+          "native_actor_value_arrays_checked": 9,
+          "player_health_damage_bits": 1057213352,
+          "player_inventory_unchanged": true,
+          "npc_weapon_count": 0,
+          "dynamic_reference": "dynamic:native-reference:0000000000000001",
+          "dynamic_reference_count": 1,
+          "dynamic_condition": 0,
+          "dynamic_owner": null,
+          "dropper": "content:oblivion.esm:01fc43",
+          "dynamic_serial": 2,
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "placement": [
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -40.9031982421875,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ],
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -40.9031982421875,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ]
+          ],
+          "limits": "Exact first output is second input; one dynamic reference, unchanged broken condition/ownership/drop relations and contact resources; no duplicate debit, drop, action or hit sound. Physics can advance after loading; this course does not claim exact loose-body velocity continuation.",
+          "verification_layer": "Contact resources, action ownership and item identity/extras only",
+          "full_drop_restart_acceptance": false,
+          "reload_layer_review": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/reload-layer-review.json"
+        },
+        "verifier": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/verify.py",
+          "sha256": "1ae183c0e759bd7e78c4d9158c3fa3826a814248406cdf94fd086ff5863d5908"
+        },
+        "preregistration": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/preregistered-acceptance.json",
+          "sha256": "6ed0958e66d04308379e215a06cd0f6861faf0522b9ceadbdea5f0ac12076d04"
+        },
+        "first_manifest": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/manifest.json",
+          "sha256": "d2105f8515e562ec53e512506f8700e2eceb31f95fb3edf60d5d287a14cd6de7"
+        },
+        "continuation_manifest": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/continuation.json",
+          "sha256": "1f2de7a4190480812430064ff432ce312b3dbb1c6fd60acd53c34b4bb1623fd4"
+        },
+        "extra_content_audit": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/extra-content-reference-audit.json",
+          "sha256": "809ad5fdeb9ca336ef30d6a21934ca703762cb7d3231338a03e4f79443fbba21"
+        }
+      }
+    },
+    "content_reference_auditor": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/audit-extra-content.py",
+      "sha256": "dfa08a645031526c557d822bbc13c0e6a9fb5c98c16d675c040e4b85b7e11f18"
+    },
+    "images": {
+      "first": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/npc-weapon-drop-first.png",
+        "sha256": "95937cfa41acc56bfc7286425d03de7834d65d2263700b13cbf973cac7bccd62",
+        "direct_review": "Named Valen Dreth now holds fists; Player keeps its separate drawn shortsword; dungeon and HUD render."
+      },
+      "second": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/second/npc-weapon-drop-second.png",
+        "sha256": "072f2873ac1c69b5c73e2c1320ca9a7acc50d25706d9cc102b3d584fa928672d",
+        "direct_review": "After exact-lineage restart Valen still has fists; Player separate shortsword and dungeon/HUD render."
+      },
+      "floor_view": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-floor-view-01/first/npc-weapon-floor-view.png",
+        "sha256": "15db9f1a9eb9b0ed208b596aed9f2c957dfa7de39f4594e8851f6098ee336a3c",
+        "direct_review": "Direct review shows the separate dropped stock shortsword beside the unarmed NPC on the dungeon floor; Player still carries its own sword. Camera pitch/yaw are declared setup, not normal look-input acceptance."
+      },
+      "sanitized_first": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/first/npc-weapon-drop-first.png",
+        "sha256": "d64963a8a6a4704ef39db72adfb611108f40afd911091533a0667b0182de1e2f",
+        "direct_review": "Direct review: NPC has fists; Player retains its separate sword. The loose sword is airborne to the left, unsheathed."
+      },
+      "sanitized_second": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-02/second/npc-weapon-drop-second.png",
+        "sha256": "ff13e51c78a0f365364d0d57edadaa7dc49c142fb5c8215a437c510293b1c44e",
+        "direct_review": "Direct review: NPC remains unarmed and Player keeps its sword. The loaded loose item has its brown scabbard visible again; full native drop reload is not accepted."
+      }
+    },
+    "visual_probe": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-floor-view-01/verification.json",
+        "sha256": "0633d6d1a0bd0ff83dc02b657b8726aa6b01ea320904083edbcd7adc9889c76c"
+      },
+      "result": {
+        "passed": true,
+        "scope": "Additional visual inspection of the real committed drop. Only copied Player pitch/yaw are staged toward the saved item. No injected contact, item, resource or outcome; not the exact-lineage restart acceptance course.",
+        "setup": {
+          "source": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "source_sha256": "0d102c9a348c14cbfe6dc0812b045bc7334af5e81dc38bf7a84ced55ca9309ca",
+          "input_sha256": "8d09843f3656fe07fec9042c0d18becb7f0a90599f6e514f6cd8731a37db87b9",
+          "before_player_position": [
+            672.0,
+            -40.0,
+            -109.68915557861328,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "after_player_position": [
+            672.0,
+            -40.0,
+            -109.68915557861328,
+            0.7,
+            0.0,
+            -0.26421885411283763
+          ],
+          "scope": "Additional visual inspection of the real committed drop. Only copied Player pitch/yaw are staged toward the saved item. No injected contact, item, resource or outcome; not the exact-lineage restart acceptance course."
+        },
+        "epoch": {
+          "pid": 377019,
+          "start_ticks": 8392555,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-floor-view-01/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-melee-break-floor-view-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "eaaaa4b865e74d8fb4a1c5497d00f3309512449321b39219b97dc7bac846deda"
+        },
+        "input_sha256": "8d09843f3656fe07fec9042c0d18becb7f0a90599f6e514f6cd8731a37db87b9",
+        "output_sha256": "3b1f56fcde2672adf70aeed00d058030dd5afaae4be943c0cfd7cfd0f8b7613d",
+        "images": {
+          "first": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/npc-weapon-drop-first.png",
+            "sha256": "95937cfa41acc56bfc7286425d03de7834d65d2263700b13cbf973cac7bccd62",
+            "direct_review": "Named Valen Dreth now holds fists; Player keeps its separate drawn shortsword; dungeon and HUD render."
+          },
+          "second": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/second/npc-weapon-drop-second.png",
+            "sha256": "072f2873ac1c69b5c73e2c1320ca9a7acc50d25706d9cc102b3d584fa928672d",
+            "direct_review": "After exact-lineage restart Valen still has fists; Player separate shortsword and dungeon/HUD render."
+          },
+          "floor_view": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-floor-view-01/first/npc-weapon-floor-view.png",
+            "sha256": "15db9f1a9eb9b0ed208b596aed9f2c957dfa7de39f4594e8851f6098ee336a3c",
+            "direct_review": "Direct review shows the separate dropped stock shortsword beside the unarmed NPC on the dungeon floor; Player still carries its own sword. Camera pitch/yaw are declared setup, not normal look-input acceptance."
+          }
+        },
+        "native_actor_value_arrays_unchanged": 9,
+        "dynamic_reference": "dynamic:native-reference:0000000000000001",
+        "dynamic_count": 1,
+        "dynamic_condition": 0,
+        "action_next": 3
+      }
+    },
+    "reload_gate_review": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/reload-layer-review.json",
+        "sha256": "2b49a01955ed7d2aeee696890b3637c1c50e657be31890849c51e5cfabe28780"
+      },
+      "result": {
+        "contact_resource_layer_passed": true,
+        "drop_identity_and_extras_roundtrip_passed": true,
+        "full_drop_restart_acceptance": false,
+        "observations": {
+          "instrumented_first": "A separate unsheathed loose sword is still airborne beside the unarmed NPC when saved.",
+          "instrumented_second": "After fresh load its scabbard returns and the item remains at the exact same airborne pose.",
+          "saved_positions": [
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -40.9031982421875,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ],
+            [
+              635.1429443359375,
+              96.23310089111328,
+              -40.9031982421875,
+              -0.26186442375183105,
+              0.18337874114513397,
+              -2.2038207054138184
+            ]
+          ]
+        },
+        "source_evidence": [
+          {
+            "path": "apps/openmw/mwclass/esm4base.cpp",
+            "sha256": "38630a4df2a7a390628193c1e8160666298b4641005e2184c056418b61c0ae52",
+            "lines": "19-32",
+            "finding": "Loaded generic native items call Objects::insertModel, set Mask_Static and PhysicsSystem::addObject."
+          },
+          {
+            "path": "apps/openmw/mwphysics/physicssystem.cpp",
+            "sha256": "045549a00edd5f1df48b7e1400cb47a3c39bfd843865872ce2e6e1faae3514db",
+            "lines": "470 onward",
+            "finding": "Generic addObject refuses existing loose physics and inserts ordinary Object collision; it does not prepare a loose object."
+          },
+          {
+            "path": "apps/openmw/mwrender/animation.cpp",
+            "sha256": "a9d6773a4a6c669ff21f05ed98900b11a33f21becc440aff2ed02adc47347098",
+            "lines": "3291-3365",
+            "finding": "Loose reference normalization, scabbard removal and ActorRagdollPoseBinding occur only in bindLoosePhysicalPose, called by Objects::prepareModel with a physical definition."
+          }
+        ],
+        "required_followup": [
+          "Persist complete native loose-body state for a live dropped reference.",
+          "Restore active dropped-weapon rendering/physics with native reference normalization and scabbard removal.",
+          "Repeat separate-process save/load while the dropped sword is falling; assert restored loose owner/body, render mode, motion and no duplicate resources/items."
+        ],
+        "scope": "Authoritative code and direct image reinspection contradict full drop/restart acceptance despite passing resource/identity checks. Keep M15S4 open."
+      }
+    },
+    "retained_attempts": [
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-normal-01/verification.json",
+          "sha256": "f1ede3a6bb96ea0b029725887662f8fd70ccc9a503a416564b2c6841224b62e4"
+        },
+        "scope": "Pre-renderer-fix integration passes1695 engine tests, but does not establish stock-asset gameplay."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-sanitized-01/verification.json",
+          "sha256": "2ec86f29f8a0733e498c01156a0904e58b4780f16b2dd12a9af549bab7ada5a3"
+        },
+        "reason": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-sanitized-01/cancelled-build.json",
+          "sha256": "9ca7341217478312f9bbea856ed36da82f1387bbe5afcca99b336e9a4086f10b"
+        },
+        "scope": "Superseded pre-renderer-fix build; no sanitizer acceptance from this attempt."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-drawable-baseline-01/verification.json",
+          "sha256": "d237d073d7533a7d843201089d811ef8f78a0a3d2395f6bce2eca9984372257f"
+        },
+        "scope": "Intended baseline: cloned static geometry reproduces ambiguous renderer parent; shared physical transforms/cycles still reject."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-01/first/failed-attempt.json",
+          "sha256": "dcea03db3c4b5f32c9d62db3af2251a5e323ef596e2dc9faa29980d5e920d042"
+        },
+        "launcher": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-01/first/launcher.json",
+          "sha256": "a3493888c1c19f1fca6da801a79d2b52af031e66525627ebaa7a635be912c69f"
+        },
+        "scope": "Actual stock drop failed before publication; exact game process stopped and attempt retained."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-renderer-diagnostic-01/diagnosis.json",
+          "sha256": "e874f754b1d777c27127ba0d04d43ba025b9882f5b46079519615c61a8730ad4"
+        },
+        "backtrace": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-renderer-diagnostic-01/first/gdb-throw.log",
+          "sha256": "cc81304bd464c676293a60bf126881e23a8556a30336b3a8faee8390133526bf"
+        },
+        "scope": "Diagnostic startup/termination only, not gameplay acceptance. First source-line breakpoint missed the guard; throw backtrace located loose-object pose binding."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/verify-failed-01.json",
+          "sha256": "c534bc196c3ce2a808fe0200eccff6a237479025a67a1bb2fa0fd1b738f2709d"
+        },
+        "scope": "Whole resident-reference set may grow from content/cell lookup. Corrected verifier keeps exact dynamic set/count, no lost original references and independent master base/cell checks for every added content identity."
+      },
+      {
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-01/verification-failed-01.log",
+          "sha256": "20cb24d64dd486b2fb6a402f8c694380fc40dd2cacbfa5452e2b925c5a6d71a4"
+        },
+        "observation": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-sanitized-01/first/recovery-observation.json",
+          "sha256": "fe3bdf0f53e632b4b90c5f8e0c7ea1a43c1828f64eedcc3ea39af9a16d55b7e6"
+        },
+        "scope": "Correct hit/drop, but ten wall seconds under instrumented frames save partially regenerated NPC Fatigue. Corrected02 waits for read-only actual recovery without changing expected resource channels."
+      }
+    ],
+    "source_identity": "Final normal and sanitized helpers completed against identical frozen C++/test bytes before either commit. Their dirty181a14 fingerprint includes the renderer fix and contact/drop integration. adc5a538cd then commits the independent renderer fix; remaining C++ bytes are unchanged from that tested snapshot. Runtime executable hashes remain exact. Later manifest/docs publication does not claim a fresh compiler run.",
+    "limits": [
+      "Near-broken equipped gear and deterministic stationary opponent are declared setup. Normal activation drives the production AI/controller/contact; no hit/damage/drop outcome is injected.",
+      "First-person keyboard replay, configured1FPS cap; instrumented frames are slower. No alternate view/device/FPS matrix acceptance.",
+      "Full drop/restart acceptance fails: loaded weapons use generic static rendering/physics and re-show the scabbard. Loose-body state persistence/restoration is required next.",
+      "Player/quest retained breaks remain covered by prior work; defensive breaks, mastery/effects, complete actor admission and native reactions/FSM/GetUp remain open. Full M15S4 is incomplete.",
+      "ASan leak checking is disabled. Both real-content sanitizer processes are checked separately from synthetic inventories. No new PCM waveform analysis is claimed. Unchanged Python implementation/suites were not rerun."
+    ]
   }
 }

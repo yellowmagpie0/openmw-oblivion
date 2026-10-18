@@ -80,6 +80,7 @@ namespace MWRender
     class Animation;
     class Camera;
     class PostProcessor;
+    class Objects;
 }
 
 namespace ToUTF8
@@ -107,6 +108,7 @@ namespace MWWorld
     class Player;
     class ProjectileManager;
     class OblivionScriptManager;
+    struct EquippedWeaponDrop;
 
     /// \brief The game world and its visual representation
 
@@ -445,11 +447,18 @@ namespace MWWorld
             PreparedOblivionPhysicalContact& operator=(const PreparedOblivionPhysicalContact&) = delete;
             // Revalidate the selected World simulation after external admission.
             bool isValid() const noexcept;
-            bool commit() noexcept;
+            // Scene admission may throw before any contact resources publish.
+            bool commit();
         };
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContact(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas);
+        // Explicit owned render/animation context, also used by synthetic asset tests.
+        // Requests must exactly match the Drop dispositions in the contact.
+        std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactWithWeaponDrops(
+            std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, MWRender::Objects& objects,
+            MWPhysics::PhysicsSystem& physics, std::span<const EquippedWeaponDrop> drops);
         bool commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas) override;
         bool getOblivionKnockback(const Ptr& actor, ESM4::TimedKnockbackState& state) const override;
@@ -1019,6 +1028,10 @@ namespace MWWorld
         DateTimeManager* getTimeManager() override { return mTimeManager.get(); }
 
         void setActorActive(const MWWorld::Ptr& ptr, bool value) override;
+    private:
+        std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
+            std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas);
     };
 }
 

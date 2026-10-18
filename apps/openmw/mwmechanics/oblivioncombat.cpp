@@ -1796,7 +1796,13 @@ namespace MWMechanics
                 return true;
             }
         };
-        struct Condition { MWWorld::Ptr mItem; MWWorld::CellRef mReference; bool mApply; };
+        struct Condition
+        {
+            MWWorld::Ptr mItem;
+            MWWorld::CellRef mReference;
+            bool mApply;
+            OblivionWeaponBreakDisposition mBreakDisposition;
+        };
         OblivionCombatService* mOwner = nullptr;
         std::weak_ptr<const char> mIdentity;
         std::uint64_t mId = 0;
@@ -2013,14 +2019,16 @@ namespace MWMechanics
                 throw std::invalid_argument("native contact condition requires owned equipped equipment");
             auto found = std::find_if(conditions.begin(), conditions.end(),
                 [&](const auto& prepared) { return prepared.mItem == request.mItem; });
-            if (found != conditions.end() && (request.mUnequipOnBreak
-                || std::any_of(unequips.begin(), unequips.end(),
-                    [&](const auto& prepared) { return prepared.mItem == request.mItem; })))
+            if (request.mBreakDisposition > OblivionWeaponBreakDisposition::Drop)
+                throw std::invalid_argument("invalid native weapon break disposition");
+            if (found != conditions.end() && (request.mBreakDisposition != OblivionWeaponBreakDisposition::None
+                || found->mBreakDisposition != OblivionWeaponBreakDisposition::None))
                 throw std::invalid_argument("duplicate native break condition request");
             if (found == conditions.end())
             {
                 const bool isPlayer = player && request.mOwner == player->getPlayer();
-                conditions.push_back({request.mItem, request.mItem.getCellRef(), !(playerGodMode && isPlayer)});
+                conditions.push_back({request.mItem, request.mItem.getCellRef(), !(playerGodMode && isPlayer),
+                    request.mBreakDisposition});
                 found = std::prev(conditions.end());
             }
             auto& ref = found->mReference;
@@ -2030,14 +2038,14 @@ namespace MWMechanics
                 || ref.getCharge() != request.mExpectedCharge
                 || ref.getChargeIntRemainder() != request.mExpectedRemainder)
                 throw std::invalid_argument("stale or stacked native contact condition request");
-            if (request.mUnequipOnBreak)
+            if (request.mBreakDisposition != OblivionWeaponBreakDisposition::None)
             {
                 const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
                 if (request.mCondition != 0 || request.mItem.getType() != ESM::REC_WEAP
                     || carried == inventory.end() || *carried != request.mItem)
-                    throw std::invalid_argument("native break unequip requires a broken carried weapon");
+                    throw std::invalid_argument("native break consequence requires a broken carried weapon");
                 // Do not publish a god-mode break consequence when wear is suppressed.
-                if (found->mApply)
+                if (found->mApply && request.mBreakDisposition == OblivionWeaponBreakDisposition::Unequip)
                     unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight)});
             }
             if (found->mApply)

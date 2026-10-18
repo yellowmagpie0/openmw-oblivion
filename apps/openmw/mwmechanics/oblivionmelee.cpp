@@ -393,7 +393,7 @@ namespace MWMechanics
                 if (damage->mConditionAfterWear)
                 {
                     condition.mCondition = *damage->mConditionAfterWear;
-                    condition.mUnequipOnBreak = damage->mUnequipOnBreak;
+                    condition.mBreakDisposition = damage->mBreakDisposition;
                     deltas.mConditionChanges.push_back(std::move(condition));
                 }
                 deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
@@ -1026,7 +1026,7 @@ namespace MWMechanics
             return std::nullopt; // Do not consume an enchanted hit before its typed M16 effect hook exists.
         const auto durability = ESM4::buildDurabilitySettings(settings);
         std::optional<float> condition;
-        bool unequipOnBreak = false;
+        auto breakDisposition = OblivionWeaponBreakDisposition::None;
         if (!(attacker == player && world.getGodModeState()))
         {
             const auto& ref = item.getCellRef();
@@ -1044,9 +1044,8 @@ namespace MWMechanics
                 if (values->mProcess == ESM4::ActorValueProcess::Active
                     && attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon)
                 {
-                    if (attacker != player && !(weapon->mFlags & ESM4::Rec_Persistent))
-                        return std::nullopt; // Ordinary NPC break needs compound world-drop admission.
-                    unequipOnBreak = true;
+                    breakDisposition = attacker == player || (weapon->mFlags & ESM4::Rec_Persistent)
+                        ? OblivionWeaponBreakDisposition::Unequip : OblivionWeaponBreakDisposition::Drop;
                 }
             }
         }
@@ -1068,7 +1067,7 @@ namespace MWMechanics
             return std::nullopt;
         return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
-            wear->mHitArmorClass, unequipOnBreak};
+            wear->mHitArmorClass, breakDisposition};
     }
 
     static float weaponContactDamage(MWBase::World& world,

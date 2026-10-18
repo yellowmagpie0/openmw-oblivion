@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "name": "NPC attacking melee weapon breaks publish through native world admission",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "dispatch_source": "M15-RETAINED-MELEE-BREAK-PROBE.json",
+  "dispatch_corpus": {
+    "path": "build/oblivion-compat/m15/S5/native-broken-weapon-dispatch-oracle-02/report.json",
+    "sha256": "dba968af5502251f4e441607b55e94ee731f2c38158622e0d47cde0a2d550bf8"
+  },
+  "policy": "Active weapon-out Player/quest weapons request retained unequip; ordinary NPC weapons request one drop. Undrawn/Low processes have no equipment request. No defensive armor/shield/weapon-break admission is added here.",
+  "implementation": "Explicit None/Unequip/Drop disposition. World owns the prepared contact and actual equipped-weapon drop plan; fallible scene insertion and final revalidation precede contact, source debit, drop relations, dynamic serial, registry and cell publication. Deferred notifications follow the whole transaction.",
+  "explicit_context_api": "prepareOblivionPhysicalContactWithWeaponDrops requires real Objects/animation/physics context and an exact match to all declared Drop dispositions; the production adapter selects current renderer/physics owners. Missing rendering does not bypass drop consequences.",
+  "component_fix_commit": "adc5a538cdacb5c4773500b70a7d7e6b8a0d84a4",
+  "renderer_fix": "Ignore Drawable leaves during pose-node discovery: ordinary cloned geometry is shared with cached NIFs, while NifOsg transform and ancestor-path uniqueness, identity and cycle guards remain intact.",
+  "damage_oracle": {
+    "passed": true,
+    "cases": 1,
+    "profiles": 1,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "inputs": {
+      "weapon": "content:oblivion.esm:090615",
+      "type": 0,
+      "damage": 5,
+      "maximum": 56,
+      "current": 1.125,
+      "skill": 15,
+      "luck": 50,
+      "strength": 40,
+      "current_fatigue": 155,
+      "base_fatigue": 155,
+      "attack_bonus": 0,
+      "wear_multiplier": 0.05999999865889549
+    },
+    "results": [
+      {
+        "x87_control_word": 127,
+        "health_bits": 1057213352,
+        "wear_bits": 1050253721,
+        "condition_bits": 0
+      }
+    ],
+    "scope": "Full original484F80 ordinary multiplier1 WEAP entry/product/bonus,547240 wear amount,5F3870/484850 positive wear and condition publication. Original entry AV/base/damage/condition readers supplied as in91; wear current reader executes full484850 with supplied RTTI/maximum/extra-data, and reference/publication boundary stubs as corrected93. No collision/armor/block/reaction/attack debit execution or runtime acceptance."
+  },
+  "winning_records": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "fixture_plugin_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+    "weapon": "content:oblivion.esm:090615",
+    "weapon_flags": 0,
+    "weapon_type": 0,
+    "base_damage": 5,
+    "maximum_condition": 56,
+    "enchantment": null,
+    "cell_owner": null,
+    "scope": "Existing three-record stationary CSTY/SCPT/NPC fixture changes only NPC ZNAM/SCRI; no WEAP/CELL override. Raw independent record audit is retained privately."
+  },
+  "stock_mesh": {
+    "path": "meshes/weapons/iron/shortsword.nif",
+    "sha256": "100d7d346159372906c85a605cde022198b88a8c6ba5a30e64c7e655c657519d",
+    "archive": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Meshes.bsa",
+    "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "scope": "Fresh extraction from the registered base Meshes archive. No loose shortsword mesh override was found in the configured game Data directory. The runtime log registers the six base Oblivion archives only."
+  },
+  "normal_runtime": {
+    "scope": "One production-policy NPC ordinary sword contact after normal Space activation, unblocked Player, staged near-broken NPC weapon; real drop, native resources and idle separate-process persistence. First-person keyboard replay at1FPS, not complete S4.",
+    "parent_save": "build/oblivion-compat/m15/S4/block-sound-runtime-normal-01/staged-input.omwsave",
+    "parent_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+    "source_sha256": "5ea988aedf462af2bf3b76e697262d4ac1354443c28f4bf60f8f585a36933f9b",
+    "fixture_changes": {
+      "npc_weapon_condition": 1.125,
+      "typed_promotion_from": 46,
+      "typed_promotion_to": 52
+    },
+    "expected": {
+      "action_id": 2,
+      "action_next": 3,
+      "initial_dynamic_serial": 1,
+      "final_dynamic_serial": 2,
+      "dynamic_reference": "dynamic:native-reference:0000000000000001",
+      "base": "content:oblivion.esm:090615",
+      "cell": "content:oblivion.esm:01fbb9",
+      "dropper": "content:oblivion.esm:01fc43",
+      "owner": null,
+      "item_condition_bits": 0,
+      "item_charge": null,
+      "npc_weapon_count": 0,
+      "player_health_damage_bits": 1057213352,
+      "player_health_damage": 0.5148262977600098,
+      "npc_fatigue_before": 155,
+      "npc_fatigue_after": 147.2,
+      "fatigue_debit": 7.8,
+      "combat_rng": 505908858,
+      "script_local_after": 2
+    },
+    "placement_admission_bounds": {
+      "max_planar_distance_from_actor": 128,
+      "max_absolute_height_difference": 128,
+      "require_finite_position_rotation": true
+    },
+    "continuation": "Exact first output is second input; one dynamic reference, unchanged broken condition/ownership/drop relations and contact resources; no duplicate debit, drop, action or hit sound. Physics can advance after loading; this course does not claim exact loose-body velocity continuation.",
+    "oracle_report_sha256": "f7e690f70d04c6068aad8ae2b9e7dbd5833b7e16b721877ad31466e17f726f31",
+    "plugin_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+  },
+  "sanitized_runtime": {
+    "scope": "ASan/UBSan production-policy NPC ordinary sword contact after normal Space activation, unblocked Player, staged near-broken NPC weapon; real drop, native resources and idle separate-process persistence. First-person keyboard replay at1FPS, not complete S4.",
+    "parent_save": "build/oblivion-compat/m15/S4/block-sound-runtime-normal-01/staged-input.omwsave",
+    "parent_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+    "source_sha256": "5ea988aedf462af2bf3b76e697262d4ac1354443c28f4bf60f8f585a36933f9b",
+    "fixture_changes": {
+      "npc_weapon_condition": 1.125,
+      "typed_promotion_from": 46,
+      "typed_promotion_to": 52
+    },
+    "expected": {
+      "action_id": 2,
+      "action_next": 3,
+      "initial_dynamic_serial": 1,
+      "final_dynamic_serial": 2,
+      "dynamic_reference": "dynamic:native-reference:0000000000000001",
+      "base": "content:oblivion.esm:090615",
+      "cell": "content:oblivion.esm:01fbb9",
+      "dropper": "content:oblivion.esm:01fc43",
+      "owner": null,
+      "item_condition_bits": 0,
+      "item_charge": null,
+      "npc_weapon_count": 0,
+      "player_health_damage_bits": 1057213352,
+      "player_health_damage": 0.5148262977600098,
+      "npc_fatigue_before": 155,
+      "npc_fatigue_after": 147.2,
+      "fatigue_debit": 7.8,
+      "combat_rng": 505908858,
+      "script_local_after": 2
+    },
+    "placement_admission_bounds": {
+      "max_planar_distance_from_actor": 128,
+      "max_absolute_height_difference": 128,
+      "require_finite_position_rotation": true
+    },
+    "continuation": "Exact first output is second input; one dynamic reference, unchanged broken condition/ownership/drop relations and contact resources; no duplicate debit, drop, action or hit sound. Physics can advance after loading; this course does not claim exact loose-body velocity continuation.",
+    "oracle_report_sha256": "f7e690f70d04c6068aad8ae2b9e7dbd5833b7e16b721877ad31466e17f726f31",
+    "plugin_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+    "runtime_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+      "initial_settle_seconds": 40,
+      "framerate_limit": 1,
+      "post_contact_settling": "Wait for actual read-only NPC Fatigue recovery acknowledgment, not wall-clock sleep"
+    },
+    "observer": "Read nearby target position/base Fatigue to recognize this staged actor, observe a debit then current>=155, and print once. No actor/resource/action writes."
+  },
+  "observer_source": "local nearby = require('openmw.nearby')\nlocal Actor = require('openmw.types').Actor\nlocal sawDebit = false\nlocal announced = false\nreturn { engineHandlers = { onFrame = function()\n    if announced then return end\n    for _, actor in ipairs(nearby.actors) do\n        local position = actor.position\n        if math.abs(position.x - 672) < 4 and math.abs(position.y - 60) < 4 then\n            local fatigue = Actor.stats.dynamic.fatigue(actor)\n            if fatigue.base == 155 and fatigue.current < 155 then sawDebit = true end\n            if sawDebit and fatigue.current >= 155 then\n                print('M15 NPC break fatigue recovered: current=' .. tostring(fatigue.current))\n                announced = true\n            end\n        end\n    end\nend } }\n",
+  "visual_probe_setup": {
+    "source": "build/oblivion-compat/m15/S4/native-npc-melee-break-runtime-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+    "source_sha256": "0d102c9a348c14cbfe6dc0812b045bc7334af5e81dc38bf7a84ced55ca9309ca",
+    "input_sha256": "8d09843f3656fe07fec9042c0d18becb7f0a90599f6e514f6cd8731a37db87b9",
+    "before_player_position": [
+      672.0,
+      -40.0,
+      -109.68915557861328,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "after_player_position": [
+      672.0,
+      -40.0,
+      -109.68915557861328,
+      0.7,
+      0.0,
+      -0.26421885411283763
+    ],
+    "scope": "Additional visual inspection of the real committed drop. Only copied Player pitch/yaw are staged toward the saved item. No injected contact, item, resource or outcome; not the exact-lineage restart acceptance course."
+  },
+  "reload_gate": {
+    "contact_resource_layer_passed": true,
+    "drop_identity_and_extras_roundtrip_passed": true,
+    "full_drop_restart_acceptance": false,
+    "observations": {
+      "instrumented_first": "A separate unsheathed loose sword is still airborne beside the unarmed NPC when saved.",
+      "instrumented_second": "After fresh load its scabbard returns and the item remains at the exact same airborne pose.",
+      "saved_positions": [
+        [
+          635.1429443359375,
+          96.23310089111328,
+          -40.9031982421875,
+          -0.26186442375183105,
+          0.18337874114513397,
+          -2.2038207054138184
+        ],
+        [
+          635.1429443359375,
+          96.23310089111328,
+          -40.9031982421875,
+          -0.26186442375183105,
+          0.18337874114513397,
+          -2.2038207054138184
+        ]
+      ]
+    },
+    "source_evidence": [
+      {
+        "path": "apps/openmw/mwclass/esm4base.cpp",
+        "sha256": "38630a4df2a7a390628193c1e8160666298b4641005e2184c056418b61c0ae52",
+        "lines": "19-32",
+        "finding": "Loaded generic native items call Objects::insertModel, set Mask_Static and PhysicsSystem::addObject."
+      },
+      {
+        "path": "apps/openmw/mwphysics/physicssystem.cpp",
+        "sha256": "045549a00edd5f1df48b7e1400cb47a3c39bfd843865872ce2e6e1faae3514db",
+        "lines": "470 onward",
+        "finding": "Generic addObject refuses existing loose physics and inserts ordinary Object collision; it does not prepare a loose object."
+      },
+      {
+        "path": "apps/openmw/mwrender/animation.cpp",
+        "sha256": "a9d6773a4a6c669ff21f05ed98900b11a33f21becc440aff2ed02adc47347098",
+        "lines": "3291-3365",
+        "finding": "Loose reference normalization, scabbard removal and ActorRagdollPoseBinding occur only in bindLoosePhysicalPose, called by Objects::prepareModel with a physical definition."
+      }
+    ],
+    "required_followup": [
+      "Persist complete native loose-body state for a live dropped reference.",
+      "Restore active dropped-weapon rendering/physics with native reference normalization and scabbard removal.",
+      "Repeat separate-process save/load while the dropped sword is falling; assert restored loose owner/body, render mode, motion and no duplicate resources/items."
+    ],
+    "scope": "Authoritative code and direct image reinspection contradict full drop/restart acceptance despite passing resource/identity checks. Keep M15S4 open."
+  },
+  "limits": [
+    "Near-broken equipped gear and deterministic stationary opponent are declared setup. Normal activation drives the production AI/controller/contact; no hit/damage/drop outcome is injected.",
+    "First-person keyboard replay, configured1FPS cap; instrumented frames are slower. No alternate view/device/FPS matrix acceptance.",
+    "Full drop/restart acceptance fails: loaded weapons use generic static rendering/physics and re-show the scabbard. Loose-body state persistence/restoration is required next.",
+    "Player/quest retained breaks remain covered by prior work; defensive breaks, mastery/effects, complete actor admission and native reactions/FSM/GetUp remain open. Full M15S4 is incomplete."
+  ]
+}
