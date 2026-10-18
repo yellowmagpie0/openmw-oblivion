@@ -2628,7 +2628,8 @@ namespace MWWorld
         MWPhysics::PhysicsSystem* mPhysics;
         Scene* mScene;
         bool mGodMode;
-        std::unique_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
+        std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
+        std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
         std::optional<WorldModel::RegistryGuard> mRegistry;
     };
 
@@ -2639,7 +2640,9 @@ namespace MWWorld
     bool World::PreparedOblivionPhysicalContact::isValid() const noexcept
     {
         if (!mData || mData->mIdentity.expired() || !mData->mRegistry->isValid()
-            || !mData->mContact->isValid()) return false;
+            || !mData->mContact->isValid()
+            || std::any_of(mData->mNotifications.begin(), mData->mNotifications.end(),
+                [](const auto& notification) { return !notification->isValid(); })) return false;
         const auto& world = *mData->mWorld;
         return world.mOblivionClearGeneration == mData->mGeneration
             && world.mOblivionCombat.get() == mData->mCombat && world.mPlayer.get() == mData->mPlayer
@@ -2650,7 +2653,10 @@ namespace MWWorld
 
     bool World::PreparedOblivionPhysicalContact::commit() noexcept
     {
-        return isValid() && mData->mContact->commit();
+        if (!isValid() || !mData->mContact->commit()) return false;
+        for (auto& notification : mData->mNotifications)
+            if (!notification->commit()) std::terminate();
+        return true;
     }
 
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,
@@ -2683,6 +2689,10 @@ namespace MWWorld
         data->mScene = mWorldScene.get();
         data->mGodMode = getGodModeState();
         data->mContact = std::move(contact);
+        for (const auto& condition : deltas.mConditionChanges)
+            if (condition.mUnequipOnBreak)
+                data->mNotifications.push_back(prepareOblivionEquipmentNotification(
+                    [contact = data->mContact, item = condition.mItem] { contact->notifyEquipmentChange(item); }));
         data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());
         return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
     }

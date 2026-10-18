@@ -10408,5 +10408,263 @@
       "Light/god-mode/positive-Fatigue/unarmed and Creature material/RNG behavior is covered at native caller and World query layers, not new live PCM courses for each cross.",
       "Complete native actor admission, contact reactions/FSM/GetUp, defensive/mastery/breakage/effects and all remaining S4 gates remain open. Full M15S4 is incomplete."
     ]
+  },
+  "native_retained_melee_break_followup": {
+    "implementation": "Resolve retained attacking WEAP break policy in the melee adapter; stage exact carried-right unequip with condition/resources/RNG/action; reserve one World notification per item, dispatch only after the complete transaction, and retain payload lifetime independently of the caller.",
+    "manifest": {
+      "path": "docs/oblivion/M15-RETAINED-MELEE-BREAK-PROBE.json",
+      "sha256": "f6c75946706db442b2530f057542f9489f469e2929a1276e24deb114bdcc0af0"
+    },
+    "reports": {
+      "normal": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-normal-02/verification.json",
+          "sha256": "8210bbc5e985768c67bf50ed39d63badf9aa2ab8b70f84d999214ec311de5c3d"
+        },
+        "source": {
+          "head": "7a8d09f017c11b6148e4116385b3bb61b62fb77f",
+          "source_fingerprint": "f069dc38863f106ad54bb8fc96a306223b8cef8914773b6d6c315e40c928e56b"
+        },
+        "suites": 124,
+        "result": {
+          "executed": 1692,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6c4a355750e98a682702b744db01b59b06050dfb825b69e49b9b8fd4877f2cac",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "eb3f006456fd79dab169e155410749cf6fe9e956f315d17da9a6219ad91fff8f",
+          "inventory_sha256": "5e9eca22c135989df2e433aeecb62a13d1a663169beba1ce4b5f53a671deb123",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "sanitized": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-sanitized-02/verification.json",
+          "sha256": "b176d7881916edd610bc971d0c0a9245cfc411aebb3751a211e8a3e51f33ba47"
+        },
+        "source": {
+          "head": "7a8d09f017c11b6148e4116385b3bb61b62fb77f",
+          "source_fingerprint": "f069dc38863f106ad54bb8fc96a306223b8cef8914773b6d6c315e40c928e56b"
+        },
+        "suites": 124,
+        "result": {
+          "executed": 1692,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "49708812d0a0f34e68f41e29195aab085da5ac9ca1f12bfe0ce1f85953f597f7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f10057e5d161a32af0ca245d8de2b7b981ee9a7cad52c9f9353ca47412c4f7e8",
+          "inventory_sha256": "5e9eca22c135989df2e433aeecb62a13d1a663169beba1ce4b5f53a671deb123",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "new_tests": [
+      "OblivionWorldTest.NativeContactRetainedBreaksPublishBeforeDeferredObserversAndDoNotReplay",
+      "OblivionWorldTest.NativeContactRetainedBreakRejectsStaleAndMalformedRequestsWithoutSpending"
+    ],
+    "expanded_test": "OblivionWorldTest.OrdinaryWeaponPolicyPreparesNativeWearBeforeOwnedResourcePublication",
+    "dispatch_reinspection": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-oracle-01/dispatch-reinspection.json",
+        "sha256": "e6a1f9d8a816fcfd110c05fab8210aa0730fc211eea9ff6004adc14fe5fcb68a"
+      },
+      "result": {
+        "passed": true,
+        "cases": 720,
+        "source_report": "build/oblivion-compat/m15/S5/native-broken-weapon-dispatch-oracle-02/report.json",
+        "source_report_sha256": "dba968af5502251f4e441607b55e94ee731f2c38158622e0d47cde0a2d550bf8",
+        "original_probe_sha256": "1499d2716bf16927606d2519e29642467ca1a981af5e231fe87ab58536335e5b",
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "classified_requests": {
+          "none": 624,
+          "unequip": 64,
+          "drop": 32
+        },
+        "scope": "Reinspection of the retained independently executed original dispatch corpus. No new native execution or gameplay; original boundaries and source identity are unchanged."
+      }
+    },
+    "runtime_instruction_oracle": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-oracle-01/report.json",
+        "sha256": "d9574215ba604a9849f2d629dacb4a30764cad6d90da2606ea03057c53824ee8"
+      },
+      "probe": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-oracle-01/probe.py",
+        "sha256": "7bc7463409927b235c48ec68b88c3c459b01a2ecb7b9b8f668a9faac8e0ef236"
+      },
+      "result": {
+        "passed": true,
+        "cases": 1,
+        "profiles": 1,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "inputs": {
+          "weapon": "content:oblivion.esm:090615",
+          "type": 0,
+          "damage": 5,
+          "maximum": 56,
+          "current": 1.125,
+          "skill": 10,
+          "luck": 50,
+          "strength": 40,
+          "current_fatigue": 140,
+          "base_fatigue": 140,
+          "attack_bonus": 0,
+          "wear_multiplier": 0.05999999865889549
+        },
+        "results": [
+          {
+            "x87_control_word": 127,
+            "health_bits": 1054413618,
+            "wear_bits": 1050253721,
+            "condition_bits": 0
+          }
+        ],
+        "scope": "Full original484F80 ordinary multiplier1 WEAP entry/product/bonus,547240 wear amount,5F3870/484850 positive wear and condition publication. Original entry AV/base/damage/condition readers supplied as in91; wear current reader executes full484850 with supplied RTTI/maximum/extra-data, and reference/publication boundary stubs as corrected93. No collision/armor/block/reaction/attack debit execution or runtime acceptance."
+      }
+    },
+    "runtime": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/verification.json",
+        "sha256": "f0c20ef40b80aca901dd9ff149dd0c26301fb1bb5fc90aa0e6f2275002538f3e"
+      },
+      "result": {
+        "passed": true,
+        "epochs": [
+          {
+            "pid": 360170,
+            "start_ticks": 8118778,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "72d29bf58ef3976ff1c185d8eb7ec32de2fe871f944a310e13232cdd5654f46b"
+          },
+          {
+            "pid": 360273,
+            "start_ticks": 8125372,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "72d29bf58ef3976ff1c185d8eb7ec32de2fe871f944a310e13232cdd5654f46b"
+          }
+        ],
+        "input_sha256": "d3d7415afd72b2641384bc2b64aa5785158c44f3d4f438c05f97bbe5d5a159bc",
+        "save_sha256": [
+          "0d41079bfcc2bffebd1c5da34dca202da775b3250ab4a31c18cc341220882bae",
+          "774a98d2b5dc850853cd9030d82b6b825e5e95ef3e40e03d5050338551caabfa"
+        ],
+        "binary_sha256": "72d29bf58ef3976ff1c185d8eb7ec32de2fe871f944a310e13232cdd5654f46b",
+        "native_actor_value_arrays_checked": 9,
+        "expected_health_damage_bits": 1054413618,
+        "weapon_count": 1,
+        "weapon_condition": 0,
+        "weapon_equipped_slots": 0,
+        "expected_sounds": [
+          "PHYDamageFlesh",
+          "WPNHitBladeFlesh"
+        ],
+        "scope": "One ordinary normal Player shortsword contact at declared 1 FPS; wear-to-zero retained unequip, no selected armor, exactly one action and Health debit; fresh-process continuation without contact replay. Native full break/drop/reaction matrix remains open."
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/verify.py",
+        "sha256": "84e740af6bdb1442267f244d238132e4cfb0a3f5004a1aa426a8094280388d88"
+      },
+      "images": {
+        "first": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/first/weapon-victim-after-hit.png",
+          "sha256": "7e05f11c6e81579db17a7193fe6590116baae2b72be86d05b8fbbfcd000e5bd3",
+          "inspection": "Direct image review: named Valen Dreth stands unarmored in Imperial Prison; Player shows both fists, Hand to Hand HUD and no shortsword. Dungeon, target and HUD render in both processes."
+        },
+        "second": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/second/weapon-victim-continuation.png",
+          "sha256": "90cbdf109ed112f4501b82f782da5b5f9ac9e8aa6bb8186aaa1cd97868295769",
+          "inspection": "Direct image review: named Valen Dreth stands unarmored in Imperial Prison; Player shows both fists, Hand to Hand HUD and no shortsword. Dungeon, target and HUD render in both processes."
+        }
+      },
+      "first_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/first.json",
+        "sha256": "d2f97fc83b71bcfbdfc4f1f95e42ddb8f46915ac9016daa6a97a0a07d5c8d42f"
+      },
+      "second_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/second.json",
+        "sha256": "ecbfb7abedbe683795df056f67345eb977583b535f2bff39966a79295a4716bd"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/preregistered-acceptance.json",
+        "sha256": "261f78b0e7a071ba7eaa54f8b893a44242c6e68732f3c12c66f13293575965b3"
+      }
+    },
+    "retained_failures": [
+      {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-normal-01/verification.json",
+          "sha256": "88141c635ab2c0635ce9dbecf1cead1199575aa0dd27f389cbbb8c7071327047"
+        },
+        "reason": "One new test attempted full runtime capture without a Player. Corrected fixture compares the prepared dynamic-reference key directly; all production C++ bytes remain unchanged."
+      },
+      {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-sanitized-01/verification.json",
+          "sha256": "76ef86795ea967bed701357d0d2575fde46faf0d1f32786a90579bf4a5ca3026"
+        },
+        "cancellation": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-sanitized-01/cancelled-build.json",
+          "sha256": "ec0781812f8ec28bf9254eaa7ff27984ee1bd1fbdce9f5bd9de2b16273bfb39d"
+        },
+        "reason": "Stopped the equivalent pre-correction sanitizer build after the normal fixture failure."
+      },
+      {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/verify-failed-01.json",
+          "sha256": "938ce3e1d18e6bef55e0417fc1140e7db92c2994f29252df1764152beeee501e"
+        },
+        "reason": "Pristine absent optional Health Damage is zero; the first verifier incorrectly required numeric zero."
+      },
+      {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/verify-failed-02.json",
+          "sha256": "1943142937efae6d2ab478547b8528c68d959680e48e8a66683f52024a231160"
+        },
+        "reason": "Compare inventory records by stable base key, not serialization order. Exact full-record assertions remain."
+      }
+    ],
+    "source_identity": "Both final build/test helpers completed with identical frozen source before documentation/manifest publication or commit. The corrected test fixture changes no production bytes; the live executable SHA matches the final normal build exactly.",
+    "limits": [
+      "Normal build first-person keyboard replay at declared1FPS, staged near-broken equipped shortsword and restrained unarmored NPC. Not normal-equipping or full weapon/view/device/FPS acceptance.",
+      "Fresh continuation is after the committed contact and interruption, not during windup or recovery.",
+      "NPC quest and undrawn policies have query tests; live course is Player only. Defensive weapon/shield/selected-armor breaks and ordinary NPC world drops remain rejected.",
+      "Full actor admission, mastery/effects, native reactions/FSM/GetUp and remaining S4 gates stay open.",
+      "ASan leak checking is disabled. No new real-content sanitizer runtime or PCM waveform analysis is claimed; two impact playback requests are asserted. Unchanged components/Python suites were not repeated."
+    ]
   }
 }

@@ -16209,3 +16209,43 @@ build, staged unblocked Heavy-armor shortsword course at1FPS. Light/unarmed/
 Creature crosses retain lower-layer checks; remaining live material/weapon,
 view/device/FPS, actor admission, reaction/FSM/GetUp, mastery/breakage/effects
 and in-action restart gates stay open. Full M15S4 is incomplete.
+
+
+### Retained melee break consequence and normal-input interruption
+
+The retained pinned-image S5 dispatch corpus is reinspected for all720 cases:
+624 no-request,64 unequip and32 drop. It executes5F39D3 through5F3B25/5F3B31,
+with null enchantment argument. Actual process virtual+304 is false for
+Low/MiddleLow (69D990), and MiddleHigh/High64AD30 reads byte115. Positive remaining
+condition or a non-ready process issues no equipment request. Actual Player
+bypasses the quest getter; WEAP virtual+78->4D7030 tests form+8 bit0x400. Player
+or quest retains/unequips; the other ready actors request one drop. Rotation
+711440 executes; actor+168, process+118/+120 node access,5F2E70 unequip,
+5FC440 drop and4DC000 notification remain declared boundaries. Reinspection is
+not new original execution or actual original inventory/drop acceptance.
+
+The new runtime-specific instruction probe executes original484F80 weapon
+entry,547240 wear amount and5F3870/484850 condition publication using the existing
+explicit input-reader/RTTI/maximum/extra-data/publication boundaries. Shortsword
+damage5/max56/condition1.125, Strength40/Luck50/Blade10, current/base Fatigue140,
+bonus0 and controlword007F yield Health bits1054413618, wear bits1050253721 and
+condition bits0. There is no armor mitigation in the staged live course.
+Static caller review confirms5FF5F8 ignores wear's returned AL and continues the
+contact. No arithmetic or precision rule changed in this integration.
+
+The melee adapter now admits the retained attacking-weapon consequence and
+commits its prepared unequip with contact resources before World observers.
+The service request is explicitly resolved policy, not a new arbitrary item
+unequip command. Existing condition-only prepared-contact/drop-composition
+contracts retain their behavior. Full normal and ASan/UBSan engine inventories
+each pass1692/124; exact dirty source, binaries, failed fixture/cancelled build
+and verifier attempts are recorded in `native_retained_melee_break_followup`.
+
+A real normal-build Player attack and distinct fresh-process continuation match
+the native Health/condition bits, retain count1/unequipped weapon, consume only
+ID1, preserve RNG and unrelated AV channels, and do not replay contact/audio.
+The actual subsequent controller interruption clears the strike and renders
+fists in both reviewed images. This is a staged first-person keyboard1FPS course,
+not normal-equipping, live NPC quest/drop/defensive break, complete reaction,
+view/device/FPS or in-action restart acceptance. Full M15S4 remains incomplete.
+Editable inputs/boundaries: `M15-RETAINED-MELEE-BREAK-PROBE.json`.

@@ -1815,6 +1815,13 @@ namespace MWMechanics
         std::unique_ptr<OblivionActorProjection> mPlayerView;
         std::unique_ptr<PreparedNonPlayerView> mAttackerView, mVictimView;
         std::vector<Condition> mConditions;
+        struct Unequip
+        {
+            MWWorld::Ptr mItem;
+            MWWorld::InventoryStore* mInventory;
+            std::unique_ptr<MWWorld::InventoryStore::PreparedUnequip> mPreparation;
+        };
+        std::vector<Unequip> mUnequips;
         bool mCommitted = false;
     };
 
@@ -1833,6 +1840,13 @@ namespace MWMechanics
     bool OblivionCombatService::PreparedPhysicalContact::commit() noexcept
     {
         return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->commitPhysicalContact(*this);
+    }
+
+    void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
+    {
+        if (!mImpl || !mImpl->mCommitted || mImpl->mIdentity.expired()) return;
+        for (auto& unequip : mImpl->mUnequips)
+            if (unequip.mItem == item) unequip.mPreparation->notify();
     }
 
     std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
@@ -1977,6 +1991,7 @@ namespace MWMechanics
             prepareView(victim, *receiving, &*receivingLife, victimView);
         std::vector<PreparedPhysicalContact::Impl::Condition> conditions;
         conditions.reserve(deltas.mConditionChanges.size());
+        std::vector<PreparedPhysicalContact::Impl::Unequip> unequips;
         if (victim.isEmpty() && !deltas.mConditionChanges.empty())
             throw std::invalid_argument("native missed swing cannot change equipment condition");
         for (const auto& request : deltas.mConditionChanges)
@@ -1998,6 +2013,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native contact condition requires owned equipped equipment");
             auto found = std::find_if(conditions.begin(), conditions.end(),
                 [&](const auto& prepared) { return prepared.mItem == request.mItem; });
+            if (found != conditions.end() && (request.mUnequipOnBreak
+                || std::any_of(unequips.begin(), unequips.end(),
+                    [&](const auto& prepared) { return prepared.mItem == request.mItem; })))
+                throw std::invalid_argument("duplicate native break condition request");
             if (found == conditions.end())
             {
                 const bool isPlayer = player && request.mOwner == player->getPlayer();
@@ -2011,6 +2030,16 @@ namespace MWMechanics
                 || ref.getCharge() != request.mExpectedCharge
                 || ref.getChargeIntRemainder() != request.mExpectedRemainder)
                 throw std::invalid_argument("stale or stacked native contact condition request");
+            if (request.mUnequipOnBreak)
+            {
+                const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if (request.mCondition != 0 || request.mItem.getType() != ESM::REC_WEAP
+                    || carried == inventory.end() || *carried != request.mItem)
+                    throw std::invalid_argument("native break unequip requires a broken carried weapon");
+                // Do not publish a god-mode break consequence when wear is suppressed.
+                if (found->mApply)
+                    unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight)});
+            }
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
         }
@@ -2044,6 +2073,7 @@ namespace MWMechanics
         data->mAttackerView = std::move(attackerView);
         data->mVictimView = std::move(victimView);
         data->mConditions = std::move(conditions);
+        data->mUnequips = std::move(unequips);
         return std::unique_ptr<PreparedPhysicalContact>(new PreparedPhysicalContact(std::move(data)));
     }
 
@@ -2071,6 +2101,9 @@ namespace MWMechanics
             if ((found != mActorKnockback.end()) != data->mExpectedKnockback.has_value()
                 || (data->mExpectedKnockback && found->second != *data->mExpectedKnockback)) return false;
         }
+        for (const auto& unequip : data->mUnequips)
+            if (!unequip.mPreparation->ownerIsCurrent()
+                || !unequip.mInventory->validatePreparedUnequip(*unequip.mPreparation)) return false;
         for (const auto& condition : data->mConditions)
             if (condition.mApply && (!condition.mItem.getCellRef().supportsNativeItemCondition()
                 || !condition.mReference.supportsNativeItemCondition())) return false;
@@ -2096,6 +2129,8 @@ namespace MWMechanics
         const auto* victimKey = data.mVictim ? &data.mVictim->mValues.mActor : nullptr;
         for (auto& condition : data.mConditions)
             if (condition.mApply) condition.mItem.getCellRef().swapNativeItemCondition(condition.mReference);
+        for (auto& unequip : data.mUnequips)
+            if (!unequip.mInventory->commitPreparedUnequip(*unequip.mPreparation)) std::terminate();
         if (data.mRandom) mCombatRngState = data.mRandom->mNextState;
         if (data.mKnockback && !data.mKnockback->empty())
         {

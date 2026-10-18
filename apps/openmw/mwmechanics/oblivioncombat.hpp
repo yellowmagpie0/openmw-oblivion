@@ -193,6 +193,8 @@ namespace MWMechanics
         int mExpectedCount = 1;
         float mCondition = 0;
         std::optional<float> mExpectedExtraScale = std::nullopt;
+        // Resolved native Player/quest weapon break consequence, staged with wear.
+        bool mUnequipOnBreak = false;
     };
     OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
         const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition);
@@ -511,6 +513,8 @@ namespace MWMechanics
             // Safe entry points even after service/participant destruction.
             bool isValid() const noexcept;
             bool commit() noexcept;
+            // One-shot observers, after the complete World transaction.
+            void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;
         };
         std::unique_ptr<PreparedPhysicalContact> preparePhysicalContact(std::uint64_t id,

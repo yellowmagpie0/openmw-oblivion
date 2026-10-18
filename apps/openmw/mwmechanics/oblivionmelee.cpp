@@ -393,6 +393,7 @@ namespace MWMechanics
                 if (damage->mConditionAfterWear)
                 {
                     condition.mCondition = *damage->mConditionAfterWear;
+                    condition.mUnequipOnBreak = damage->mUnequipOnBreak;
                     deltas.mConditionChanges.push_back(std::move(condition));
                 }
                 deltas.mConditionChanges.insert(deltas.mConditionChanges.end(),
@@ -1025,6 +1026,7 @@ namespace MWMechanics
             return std::nullopt; // Do not consume an enchanted hit before its typed M16 effect hook exists.
         const auto durability = ESM4::buildDurabilitySettings(settings);
         std::optional<float> condition;
+        bool unequipOnBreak = false;
         if (!(attacker == player && world.getGodModeState()))
         {
             const auto& ref = item.getCellRef();
@@ -1033,7 +1035,20 @@ namespace MWMechanics
                 : double(ref.getCharge()) + ref.getChargeIntRemainder();
             condition = ESM4::nativeConditionAfterWear(current, ESM4::weaponWear(weapon->mData.damage, durability));
             if (condition && *condition == 0)
-                return std::nullopt; // Native broken-item unequip/reactions remain a separate policy.
+            {
+                const auto key = attacker == player ? ESM::FormKey::dynamic("player", 1)
+                    : attacker.getCellRef().getFormKey();
+                const auto* values = service->findActorValues(key);
+                // Original5F39D3: only an active, weapon-out process requests
+                // an equipment consequence. Undrawn/low-process wear still commits.
+                if (values->mProcess == ESM4::ActorValueProcess::Active
+                    && attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon)
+                {
+                    if (attacker != player && !(weapon->mFlags & ESM4::Rec_Persistent))
+                        return std::nullopt; // Ordinary NPC break needs compound world-drop admission.
+                    unequipOnBreak = true;
+                }
+            }
         }
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
@@ -1053,7 +1068,7 @@ namespace MWMechanics
             return std::nullopt;
         return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
-            wear->mHitArmorClass};
+            wear->mHitArmorClass, unequipOnBreak};
     }
 
     static float weaponContactDamage(MWBase::World& world,

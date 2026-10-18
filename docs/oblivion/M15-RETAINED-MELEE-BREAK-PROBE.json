@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "name": "Native retained melee weapon breaks",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "dispatch": {
+    "entry": "0x5f39d3",
+    "returns": [
+      "0x5f3b25",
+      "0x5f3b31"
+    ],
+    "positive_remaining_condition": "No equipment request",
+    "weapon_readiness": "Only MiddleHigh/High process virtual+304 reads weapon-out byte+115; missing/Low/MiddleLow process has no request.",
+    "active_process_getter": "0x64ad30",
+    "low_process_getter": "0x69d990",
+    "retained_weapon": "Actual Player or WEAP flag+8 bit0x400 requests unequip.",
+    "ordinary_npc_or_creature": "Requests one dropped reference; remains unadmitted in this melee adapter.",
+    "boundaries": [
+      "Actor virtual+168 query",
+      "Process virtual+118/+120 node getters",
+      "Unequip request 0x5f2e70",
+      "Drop request 0x5fc440",
+      "Drop notification 0x4dc000"
+    ],
+    "actual_instructions": [
+      "WEAP virtual+78 getter 0x4d7030",
+      "Node rotation conversion 0x711440"
+    ],
+    "caller_review": "Weapon-wear call at5FF5F8 ignores returned AL and continues the contact. Armor caller5FFC6B also ignores returned AL; full armor-break consequence policy remains separate."
+  },
+  "independent_dispatch_corpus": {
+    "path": "build/oblivion-compat/m15/S5/native-broken-weapon-dispatch-oracle-02/report.json",
+    "sha256": "dba968af5502251f4e441607b55e94ee731f2c38158622e0d47cde0a2d550bf8"
+  },
+  "dispatch_cases": 720,
+  "dispatch_control_words": [
+    639,
+    895
+  ],
+  "runtime_damage_oracle": {
+    "entry": "0x484f80",
+    "wear_entry": "0x547240",
+    "condition_entry": "0x5f3870",
+    "control_word": 127,
+    "weapon_type": 0,
+    "base_damage": 5,
+    "maximum_condition": 56,
+    "initial_condition": 1.125,
+    "current_av": {
+      "0": 40,
+      "7": 50,
+      "10": 140,
+      "14": 10,
+      "16": 10
+    },
+    "base_fatigue": 140,
+    "attack_bonus": 0,
+    "wear_multiplier": 0.06,
+    "expected_health_bits": 1054413618,
+    "expected_wear_bits": 1050253721,
+    "expected_condition_bits": 0,
+    "boundaries": "Declared AV/base/damage/condition readers, RTTI/maximum/extra-data, reference and publication boundaries inherited from the independently executed native weapon/condition probes. No full original contact or inventory consequence execution."
+  },
+  "runtime": {
+    "scope": "One ordinary normal Player shortsword contact at declared 1 FPS; wear-to-zero retained unequip, no selected armor, exactly one action and Health debit; fresh-process continuation without contact replay. Native full break/drop/reaction matrix remains open.",
+    "source_save_sha256": "d3d7415afd72b2641384bc2b64aa5785158c44f3d4f438c05f97bbe5d5a159bc",
+    "source_fixture_sha256": "e39ed54c4b3a98fd380aa1d794bf351093beaaf56587956b6d3fd900ace4048a",
+    "fixture_changes": {
+      "player_weapon_condition": 1.125,
+      "target_equipped_slots": 0
+    },
+    "expected_condition": 0,
+    "expected_weapon_count": 1,
+    "expected_weapon_equipped_slots": 0,
+    "expected_random_state": 1,
+    "expected_action_next": 2,
+    "expected_sounds": [
+      "PHYDamageFlesh",
+      "WPNHitBladeFlesh"
+    ],
+    "health_expectation": "Original independent instruction probe below; no armor mitigation.",
+    "fatigue_debit": 7.8,
+    "restart_required": true,
+    "expected_health_damage_bits": 1054413618,
+    "expected_health_damage": 0.42397457361221313,
+    "original_probe_sha256": "7bc7463409927b235c48ec68b88c3c459b01a2ecb7b9b8f668a9faac8e0ef236"
+  },
+  "runtime_input": {
+    "parent": {
+      "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/staged-input.omwsave",
+      "sha256": "e39ed54c4b3a98fd380aa1d794bf351093beaaf56587956b6d3fd900ace4048a"
+    },
+    "writer": "scripts.tes4_runtime_state.write_save",
+    "initial_state_changes": [
+      {
+        "actor": "dynamic:player:0000000000000001",
+        "item": "content:oblivion.esm:090615",
+        "condition": 1.125
+      },
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "inventory": "Set every equipped_slots field to zero; preserve items, conditions and all other extras."
+      }
+    ],
+    "scenario": "Reuse the prior armor-feedback first/second manifests with identical input bindings and private normal OpenMW configuration. First omits Heavy impact expectation, forbids armor impact sound, and does not wait for normal animation finish because the actual weapon change interrupts it.",
+    "input_actions": [
+      "Draw with F",
+      "Press U until onehandattackleft plays, then release",
+      "Wait for committed native hit ID1",
+      "Settle, F5, capture, quit",
+      "Fresh process loads the actual first output; settle, F5, capture, quit"
+    ],
+    "first_manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/first.json",
+      "sha256": "d2f97fc83b71bcfbdfc4f1f95e42ddb8f46915ac9016daa6a97a0a07d5c8d42f"
+    },
+    "second_manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/second.json",
+      "sha256": "ecbfb7abedbe683795df056f67345eb977583b535f2bff39966a79295a4716bd"
+    },
+    "preregistration": {
+      "path": "build/oblivion-compat/m15/S4/native-retained-melee-break-runtime-01/preregistered-acceptance.json",
+      "sha256": "261f78b0e7a071ba7eaa54f8b893a44242c6e68732f3c12c66f13293575965b3"
+    }
+  },
+  "implementation": "Resolve retained attacking WEAP break policy in the melee adapter; stage exact carried-right unequip with condition/resources/RNG/action; reserve one World notification per item, dispatch only after the complete transaction, and retain payload lifetime independently of the caller.",
+  "limits": [
+    "Normal build first-person keyboard replay at declared1FPS, staged near-broken equipped shortsword and restrained unarmored NPC. Not normal-equipping or full weapon/view/device/FPS acceptance.",
+    "Fresh continuation is after the committed contact and interruption, not during windup or recovery.",
+    "NPC quest and undrawn policies have query tests; live course is Player only. Defensive weapon/shield/selected-armor breaks and ordinary NPC world drops remain rejected.",
+    "Full actor admission, mastery/effects, native reactions/FSM/GetUp and remaining S4 gates stay open."
+  ]
+}

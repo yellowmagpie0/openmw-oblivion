@@ -7412,7 +7412,25 @@ namespace
         ASSERT_TRUE(in); EXPECT_EQ(std::bit_cast<std::uint32_t>(in->mHealth), 1120370688u); EXPECT_EQ(in->mConditionAfterWear, 994.f);
         EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, true));
         source.getCellRef().setNativeItemCondition(6);
+        const auto undrawnBreak = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+        ASSERT_TRUE(undrawnBreak); EXPECT_EQ(undrawnBreak->mConditionAfterWear, 0.f);
+        EXPECT_FALSE(undrawnBreak->mUnequipOnBreak);
+        npc.getClass().getCreatureStats(npc).setDrawState(MWMechanics::DrawState::Weapon);
         EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false));
+        native.mFlags |= ESM4::Rec_Persistent;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        const auto questBreak = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+        ASSERT_TRUE(questBreak); EXPECT_TRUE(questBreak->mUnequipOnBreak);
+        EXPECT_EQ(questBreak->mConditionAfterWear, 0.f);
+        playerSource.getCellRef().setNativeItemCondition(6);
+        player.getClass().getCreatureStats(player).setDrawState(MWMechanics::DrawState::Weapon);
+        native.mFlags &= ~ESM4::Rec_Persistent;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        const auto playerBreak = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, playerSource, 0, false);
+        ASSERT_TRUE(playerBreak); EXPECT_TRUE(playerBreak->mUnequipOnBreak);
+        EXPECT_EQ(playerBreak->mConditionAfterWear, 0.f);
+        EXPECT_EQ(playerSource.getCellRef().getNativeItemCondition(), 6.f);
+        playerSource.getCellRef().setNativeItemCondition(1000);
         source.getCellRef().setNativeItemCondition(1000);
         ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Mod,
             ESM4::ActorValueCommandSource::Script, 25));
@@ -24009,5 +24027,122 @@ namespace
         double value = 0;
         EXPECT_TRUE(stats->getAttribute(7, "physicsworker_time_taken", value));
         EXPECT_EQ(value, 37.);
+    }
+}
+
+
+TEST(OblivionWorldTest, NativeContactRetainedBreaksPublishBeforeDeferredObserversAndDoNotReplay)
+{
+    for (int outcome = 0; outcome < 3; ++outcome)
+    {
+        SCOPED_TRACE(outcome);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        ESM4::RuntimeInventoryItem equipped;
+        equipped.mBase = addEquipmentWeapon(fixture); equipped.mCount = 1; equipped.mCondition = 1.f;
+        equipped.mCharge = 7.25f; equipped.mExtraScale = .13f;
+        equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, attacker, {equipped});
+        installEquipmentInventory(fixture, victim, {equipped});
+        auto& firstInventory = attacker.getClass().getInventoryStore(attacker);
+        auto& secondInventory = victim.getClass().getInventoryStore(victim);
+        const auto first = *firstInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto second = *secondInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        auto& service = *world.getOblivionCombatService();
+        const auto action = world.beginOblivionPhysicalAction(attacker);
+        const auto fatigue = service.getNonPlayerValue(attacker, 10), health = service.getNonPlayerValue(victim, 8);
+        const auto nextKey = world.prepareOblivionDynamicReferenceKeys(1)->keys().front();
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, 0};
+        for (auto [actor, item] : {std::pair{attacker, first}, std::pair{victim, second}})
+        {
+            auto change = MWMechanics::captureOblivionPhysicalConditionChange(actor, item, 0);
+            change.mUnequipOnBreak = true; deltas.mConditionChanges.push_back(change);
+        }
+        deltas.mRandomTransition = service.prepareCombatRandom(3);
+        struct Observer : MWWorld::InventoryStoreListener
+        {
+            std::function<void()> mCheck;
+            int mCalls = 0;
+            void equipmentChanged() override { ++mCalls; mCheck(); }
+        } firstObserver, secondObserver;
+        const auto check = [&] {
+            EXPECT_EQ(firstInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), firstInventory.end());
+            EXPECT_EQ(secondInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), secondInventory.end());
+            EXPECT_EQ(first.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(second.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(first.getCellRef().getCount(), 1); EXPECT_EQ(second.getCellRef().getCount(), 1);
+            EXPECT_EQ(first.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(first.getCellRef().getNativeItemScale(), .13f);
+            EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue - 7);
+            EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 3);
+            EXPECT_EQ(service.combatRandomState(), deltas.mRandomTransition->mNextState);
+            EXPECT_TRUE(service.isActionConsumed(action));
+            EXPECT_EQ(world.prepareOblivionDynamicReferenceKeys(1)->keys().front(), nextKey);
+        };
+        firstObserver.mCheck = [&] {
+            check();
+            if (outcome == 2) { firstInventory.clear(); secondInventory.clear(); }
+            if (outcome != 0) throw std::runtime_error("injected break observer");
+        };
+        secondObserver.mCheck = check;
+        firstInventory.setInvListener(&firstObserver); secondInventory.setInvListener(&secondObserver);
+        auto prepared = world.prepareOblivionPhysicalContact(action, attacker, victim, deltas);
+        ASSERT_TRUE(prepared); EXPECT_TRUE(prepared->isValid());
+        EXPECT_EQ(first.getCellRef().getNativeItemCondition(), 1.f);
+        EXPECT_EQ(*firstInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), first);
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(firstObserver.mCalls, 0);
+        ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit()); check();
+        EXPECT_EQ(firstObserver.mCalls, 0); EXPECT_EQ(secondObserver.mCalls, 0);
+        prepared.reset(); // The queued notifications own their transaction payload.
+        if (outcome == 0) EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        else EXPECT_THROW(world.dispatchOblivionEquipmentNotifications(), std::runtime_error);
+        EXPECT_EQ(firstObserver.mCalls, 1);
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(secondObserver.mCalls, outcome == 2 ? 0 : 1);
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(firstObserver.mCalls, 1);
+        firstInventory.setInvListener(nullptr); secondInventory.setInvListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativeContactRetainedBreakRejectsStaleAndMalformedRequestsWithoutSpending)
+{
+    for (int change = 0; change < 7; ++change)
+    {
+        SCOPED_TRACE(change);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        ESM4::RuntimeInventoryItem equipped;
+        equipped.mBase = addEquipmentWeapon(fixture); equipped.mCount = 1; equipped.mCondition = change == 5 ? 0 : 1;
+        equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, attacker, {equipped});
+        auto& inventory = attacker.getClass().getInventoryStore(attacker);
+        const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto action = world.beginOblivionPhysicalAction(attacker);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -3, 0};
+        auto wear = MWMechanics::captureOblivionPhysicalConditionChange(attacker, item, change == 4 ? 1 : 0);
+        wear.mUnequipOnBreak = true; deltas.mConditionChanges.push_back(wear);
+        if (change == 5) deltas.mConditionChanges.push_back(wear);
+        if (change == 4 || change == 5)
+        {
+            const auto before = contactSnapshot(fixture, {attacker, victim});
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(action, attacker, victim, deltas), std::invalid_argument);
+            EXPECT_EQ(contactSnapshot(fixture, {attacker, victim}), before);
+            continue;
+        }
+        auto prepared = world.prepareOblivionPhysicalContact(action, attacker, victim, deltas); ASSERT_TRUE(prepared);
+        if (change == 0) attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        if (change == 1) item.getCellRef().setNativeItemCondition(2);
+        if (change == 2) inventory.clear();
+        if (change == 3) world.toggleGodMode();
+        if (change == 6) { world.clear(); EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit()); continue; }
+        const auto before = contactSnapshot(fixture, {attacker, victim});
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+        EXPECT_EQ(contactSnapshot(fixture, {attacker, victim}), before);
+        EXPECT_TRUE(world.getOblivionCombatService()->isActionPending(action, attacker.getCellRef().getFormKey()));
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
     }
 }
