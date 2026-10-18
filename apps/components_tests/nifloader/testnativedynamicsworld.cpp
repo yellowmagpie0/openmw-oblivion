@@ -1,9 +1,12 @@
 #include <components/nifbullet/nativedynamicsworld.hpp>
+#include <components/nifbullet/nativecompoundcollision.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/NarrowPhaseCollision/btPersistentManifold.h>
 #include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
@@ -17,6 +20,27 @@
 
 namespace
 {
+    TEST(NativeCompoundSweepRadius, UsesAnInteriorPartWithoutFillingCompoundGaps)
+    {
+        btBoxShape box(btVector3(2, 3, 4));
+        EXPECT_NEAR(NifBullet::centeredCompoundSweepRadius(box), 1, 1e-4);
+        btCompoundShape gap;
+        gap.addChildShape(btTransform(btQuaternion::getIdentity(), {10, 0, 0}), &box);
+        gap.addChildShape(btTransform(btQuaternion::getIdentity(), {-10, 0, 0}), &box);
+        EXPECT_EQ(NifBullet::centeredCompoundSweepRadius(gap), 0);
+        btCompoundShape nested;
+        nested.addChildShape(btTransform(btQuaternion::getIdentity(), {-10, 0, 0}), &box);
+        gap.addChildShape(btTransform(btQuaternion::getIdentity(), {10, 0, 0}), &nested);
+        btVector3 beforeMin, beforeMax, afterMin, afterMax;
+        gap.getAabb(btTransform::getIdentity(), beforeMin, beforeMax);
+        EXPECT_NEAR(NifBullet::centeredCompoundSweepRadius(gap), 1, 1e-4);
+        gap.getAabb(btTransform::getIdentity(), afterMin, afterMax);
+        EXPECT_EQ(beforeMin, afterMin);
+        EXPECT_EQ(beforeMax, afterMax);
+        EXPECT_EQ(gap.getNumChildShapes(), 3);
+        EXPECT_EQ(nested.getChildShape(0), &box);
+    }
+
     using World = NifBullet::NativeDynamicsWorld;
     using Kind = World::RegistrationKind;
     using Op = World::RegistrationOperation;

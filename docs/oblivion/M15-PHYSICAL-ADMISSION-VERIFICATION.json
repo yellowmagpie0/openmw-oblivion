@@ -11808,5 +11808,261 @@
     },
     "probe": "M15-DEFENSIVE-WEAPON-BREAK-PROBE.json",
     "full_M15S4_acceptance": false
+  },
+  "native_loose_compound_sweeps": {
+    "status": "Bounded first-person keyboard NPC defensive-break contact and completed-contact physical/render restart; full M15S4 incomplete",
+    "source_sha256": {
+      "components/nifbullet/nativecompoundcollision.cpp": "eed2ca7e24b5a4114cf5dfbe002e84a631937548d473a05dbd4ad87639c6e377",
+      "components/nifbullet/nativecompoundcollision.hpp": "859a5408d11691f60dc317894d5415c2db0ea256f106df3ab7579acecf8741ae",
+      "components/nifbullet/nativedynamicsworld.hpp": "fe33c655f291d4b0f3f46291869826cc01984a7028a236f14f1086ec63198ee7",
+      "components/CMakeLists.txt": "47dd2fbafd58ef1d1c4078aaf61f55353d55840d243a1c6bb1e84f7bbde426eb",
+      "apps/openmw/mwphysics/mtphysics.cpp": "dd73ab9f107eeb66b972f8db06d7ebcab38709c4d8aab441c57e7ec356196a47",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "d530166ce2b6f89c96ea61c6267bec939db027086b1def18ba4ab3f74278fee8",
+      "apps/components_tests/nifloader/testnativedynamicsworld.cpp": "5bfc3d3f1b1ac8c1655c5cf8ae84c6db58101d4f9ddae4edb192366b8db7d71a"
+    },
+    "checks": {
+      "normal": {
+        "engine_report": {
+          "path": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-normal-02/verification.json",
+          "sha256": "bc21926a53bbecd42d53af95806e4cf2a60b3ca9965f3b9791f5fafeffd970bc"
+        },
+        "engine_receipt": {
+          "schema_version": 1,
+          "passed": true,
+          "commands": [
+            {
+              "argv": [
+                "cmake",
+                "--build",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                "--target",
+                "openmw",
+                "openmw-tests",
+                "esmtool",
+                "-j",
+                "3"
+              ],
+              "log": "engine-build.log",
+              "returncode": 0,
+              "seconds": 63.575
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                "--gtest_list_tests"
+              ],
+              "log": "engine-inventory.txt",
+              "returncode": 0,
+              "seconds": 0.165
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                "--gtest_filter=*",
+                "--gtest_repeat=1",
+                "--gtest_shuffle=0",
+                "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-loose-compound-sweep-normal-02/engine.xml"
+              ],
+              "log": "engine.log",
+              "returncode": 0,
+              "seconds": 26.884
+            }
+          ],
+          "results": {
+            "engine": {
+              "executed": 1714,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*",
+              "binary_sha256": "c1f5d2e79c34cc1d5da6f383173c94cab26ac4a28ff9e20411b0e1f4ad97c91d",
+              "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+              "xml_sha256": "0fcc439b6040e90a94121ce7e3410fa4fa845cf7ebad45ffab1a6f0eab8c27a0",
+              "inventory_sha256": "4f5378c9ba0e5be00dde0c6446e589fa7ab8d76c8f9fab838ed9ffb620b4164b",
+              "configuration": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                "CMAKE_CXX_FLAGS": "",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                "OPENMW_USE_SYSTEM_BULLET": "OFF"
+              }
+            }
+          },
+          "source_before": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+          },
+          "source_after": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+          }
+        },
+        "components_report": {
+          "path": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-normal-01/verification.json",
+          "sha256": "5b73388710dd1280012e4e497af10ae6d09e79c29a9d99405ce56feae7bc9e24"
+        },
+        "components_receipt": {
+          "executed": 2935,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "daa07ff34a0627978d66db5c7ace47f4d019a1724b2cd319cfed2cf5e39e216c",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "711d3294d9e7b8a56eac17ede96dd41c08512b126ad7a56316ef0cdfeb7f9b35",
+          "inventory_sha256": "4fb4eea872ebf9071235ae64b47644244bb5c95180ace8a7da32e456087d1f4e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components_source": {
+          "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+          "source_fingerprint": "4281f58fa3b6f4a17bb3a1b40fa3fac1768b5e634321c2aad9e1f3dbb4a24067"
+        },
+        "note": "Final test-only change reuses one worker pool across regression scenarios; production core and component tests unchanged. Sanitized01 engine assertion is retained separately, not a passing engine run."
+      },
+      "sanitized": {
+        "engine_report": {
+          "path": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-sanitized-02/verification.json",
+          "sha256": "a11bc36e53d8d44d5122b0e5051f46f1defda73519de36289b10f13b93a49dc9"
+        },
+        "engine_receipt": {
+          "schema_version": 1,
+          "passed": true,
+          "commands": [
+            {
+              "argv": [
+                "cmake",
+                "--build",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                "--target",
+                "openmw",
+                "openmw-tests",
+                "esmtool",
+                "-j",
+                "3"
+              ],
+              "log": "engine-build.log",
+              "returncode": 0,
+              "seconds": 113.769
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                "--gtest_list_tests"
+              ],
+              "log": "engine-inventory.txt",
+              "returncode": 0,
+              "seconds": 0.817
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                "--gtest_filter=*",
+                "--gtest_repeat=1",
+                "--gtest_shuffle=0",
+                "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-loose-compound-sweep-sanitized-02/engine.xml"
+              ],
+              "log": "engine.log",
+              "returncode": 0,
+              "seconds": 157.427
+            }
+          ],
+          "results": {
+            "engine": {
+              "executed": 1714,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*",
+              "binary_sha256": "76815bc16c5cc1d68b270f600d036844cf926f39a98da318bbd34b0eae9bc419",
+              "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+              "xml_sha256": "9d8bc0cd4a12ff8bd038d455ad0fb27c229d9077d6f02b047bc7a3566d13a39d",
+              "inventory_sha256": "4f5378c9ba0e5be00dde0c6446e589fa7ab8d76c8f9fab838ed9ffb620b4164b",
+              "configuration": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                "OPENMW_USE_SYSTEM_BULLET": "OFF"
+              }
+            }
+          },
+          "source_before": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+          },
+          "source_after": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+          }
+        },
+        "components_report": {
+          "path": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-sanitized-01/verification.json",
+          "sha256": "99b90cf4cb2156fd76823b1ceee6103de6c146efebc80f22222194add1745402"
+        },
+        "components_receipt": {
+          "executed": 2935,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0d751017866e296336d76227f5ec905a2b78c6f6cec5f6e2d7abb2dd5b27bb29",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "213497693112d7217946bf2e9f37b17a7006d9712ea3a47e5bdd8ba0ece31382",
+          "inventory_sha256": "433a82b5a353986e6ee42f379415b91b7924bce90bec714adbefe30195ff648a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components_source": {
+          "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+          "source_fingerprint": "4281f58fa3b6f4a17bb3a1b40fa3fac1768b5e634321c2aad9e1f3dbb4a24067"
+        },
+        "note": "Final test-only change reuses one worker pool across regression scenarios; production core and component tests unchanged. Sanitized01 engine assertion is retained separately, not a passing engine run."
+      }
+    },
+    "runtime": {
+      "normal": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/verification.json",
+          "sha256": "7648a446e0650ead00712e1c5d8f3905ea7a33835897dddd7ef350483bcffac4"
+        },
+        "binary": {
+          "sha256": "8d2f16ca74a15a579142bbc3f3bb35d7e7e64490587797e017aee1cf3c07398b",
+          "engine_report": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-normal-01/verification.json",
+          "tested_source": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "4281f58fa3b6f4a17bb3a1b40fa3fac1768b5e634321c2aad9e1f3dbb4a24067"
+          },
+          "scope": "Compound loose-item CCD candidate, complete normal component/engine inventory passed; instrumented engine verification pending."
+        }
+      },
+      "sanitized": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-sanitized-02/verification.json",
+          "sha256": "9e65ac310c745f60400143acc754718ea203c3763c93cc8f96637ca19899af8e"
+        },
+        "binary": {
+          "sha256": "ae1e3fee5982021f27afe759c51bdeffaaedbf11e1879535aa3f742821d628c6",
+          "engine_report": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-sanitized-02/verification.json",
+          "tested_source": {
+            "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+            "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+          },
+          "scope": "Full engine inventory passes after shared-pool fixture correction; full unchanged components passed in sanitized01."
+        }
+      }
+    },
+    "probe": "M15-NPC-DEFENSIVE-DROP-PROBE.json",
+    "full_M15S4_acceptance": false
   }
 }

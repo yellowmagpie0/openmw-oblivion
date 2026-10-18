@@ -7,6 +7,8 @@
 #include <apps/openmw/mwphysics/object.hpp>
 #include <components/resource/bulletshape.hpp>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 #include <apps/openmw/mwphysics/oblivionragdoll.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
@@ -1481,6 +1483,66 @@ namespace
         EXPECT_NEAR(state[0].mPose.getOrigin().z(), .5f * NifBullet::RagdollNativeLengthScale, .03);
         EXPECT_LT(std::abs(state[0].mLinearVelocity.z()), .2);
         scheduler.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeLooseCompoundCannotTunnelThroughThinTriangleFloor)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        // Reuse the pool: Bullet assigns increasing thread indices across the
+        // whole process. Each prepared frame supplies its own tested step size.
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        unsigned sequence = 0;
+        for (const bool collide : {true, false})
+            for (const float dt : {1.f / 60.f, .05f})
+                for (const float angle : {0.f, .7f})
+                {
+                    SCOPED_TRACE(collide);
+                    SCOPED_TRACE(dt);
+                    SCOPED_TRACE(angle);
+                    btTriangleMesh mesh;
+                    mesh.addTriangle({-1000, -1000, 0}, {1000, -1000, 0}, {1000, 1000, 0});
+                    mesh.addTriangle({-1000, -1000, 0}, {1000, 1000, 0}, {-1000, 1000, 0});
+                    btBvhTriangleMeshShape floorShape(&mesh, true);
+                    btCollisionObject floor;
+                    floor.setCollisionShape(&floorShape);
+                    floor.setWorldTransform(btTransform::getIdentity());
+                    scheduler.addCollisionObject(&floor, MWPhysics::CollisionType_World,
+                        collide ? MWPhysics::CollisionType_LooseObject : MWPhysics::CollisionType_Actor);
+                    const auto removeFloor = [&](btCollisionObject* value) { scheduler.removeCollisionObject(value); };
+                    std::unique_ptr<btCollisionObject, decltype(removeFloor)> floorGuard(&floor, removeFloor);
+                    NifBullet::RagdollList parts;
+                    parts.mChildren.emplace_back(NifBullet::RagdollCapsule{{0, -4, 0}, {0, 4, 0}, .08f, .08f});
+                    parts.mChildren.emplace_back(NifBullet::RagdollBox{{.6f, .15f, .06f}, .02f});
+                    mGraph.mBodies[0].mShape = std::move(parts);
+                    mGraph.mBodies[0].mLinearDamping = .1f;
+                    mGraph.mBodies[0].mAngularDamping = .1f;
+                    mGraph.mBodies[0].mFriction = .5f;
+                    const std::array poses{btTransform(btQuaternion(btVector3(1, 0, 0), angle), {0, 0, 103})};
+                    auto candidate = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+                        poses, MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+                        MWPhysics::CollisionType_AnyPhysical);
+                    ASSERT_TRUE(scheduler.commitLooseObject(*candidate));
+                    osg::ref_ptr<osg::Stats> stats = new osg::Stats("thin compound continuous collision");
+                    std::array<std::vector<MWPhysics::Simulation>, 2> jobs;
+                    for (unsigned frame = 0; frame < 300; ++frame)
+                        scheduler.applyPreparedNativeFrame({dt, dt, dt, 1}, 0, jobs[frame % 2],
+                            osg::Timer::instance()->tick(), sequence++, *stats, MWPhysics::WorldFrameData(false, {}));
+                    const auto state = scheduler.captureLooseObject(mPtr);
+                    ASSERT_EQ(state.size(), 1u);
+                    if (collide)
+                    {
+                        EXPECT_GT(state[0].mPose.getOrigin().z(), -.1);
+                        EXPECT_LT(state[0].mPose.getOrigin().z(), 6);
+                        EXPECT_LT(state[0].mLinearVelocity.length(), .2);
+                    }
+                    else
+                    {
+                        EXPECT_LT(state[0].mPose.getOrigin().z(), -100);
+                        EXPECT_EQ(mDispatcher.getNumManifolds(), 0);
+                    }
+                    scheduler.removeLooseObject(mPtr);
+                }
     }
 
     TEST_P(RagdollSchedulerTest, MixedLooseAndActorBodiesShareExactlyOneNativeDynamicsStep)

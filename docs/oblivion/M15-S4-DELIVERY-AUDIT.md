@@ -17,7 +17,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
-| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input NPC defensive drops, shield/armor breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
+| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Shield/armor breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
 weapon resistance, negative incoming damage, and remaining breakage branches.
@@ -6587,3 +6587,101 @@ and pass all **1711 cases /124 suites**, exact unfiltered inventories, no failur
 or skips. ASan leaks are disabled. Tested source fingerprint: `bc4dfa57bbb12f5fc563272a5b187f7bd3f5ebb662fc9a51d75d38f7223dbf19`.
 Actual runtime binaries retain their verified pre-launch hashes after the final
 test-fixture-only rebuilds; no gameplay source changed between courses and checks.
+
+
+## Defensive NPC drops and thin compound collision
+
+The ordinary NPC defensive-break route now has normal Player-input evidence.
+The Player unequips its own sword in the staged source and attacks unarmed;
+the NPC holds public Actor block controls until the carried slot disappears.
+No script writes damage, condition, contact outcomes or resources. The NPC's
+base Block25 selects Apprentice: fraction .125, no block Fatigue debit, incoming
+unarmed Health1.42/Fatigue1.71, and remaining Health float bits1067387453.
+Original instruction probes against executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+freeze those values before the first course. The original block/cost/wear and
+physical-sink slices have explicit reader/writer boundaries; this is not a new
+original-game run. Generic break policy and post-wear sound caller evidence
+remain in `M15-DEFENSIVE-WEAPON-BREAK-PROBE.json`.
+
+The first normal course exposed a real physical failure: the blade saved at
+z -621.521 below the floor. Read-only GDB traces show admission above the floor,
+correct group257/mask319, initial floor contact, then loss through the surface.
+An isolated stock-asset/triangle-floor reproduction also tunnels. The existing
+static collision routing is correct; discrete collision detection misses thin
+compound parts between poses, and solver position correction can cross the
+surface before final motion integration.
+
+Loose bodies now opt into compound CCD in the Bullet adapter. Actual convex
+children supply predictive contact points and lever arms. When the mass center
+lies inside a convex part, a smaller contained sphere guards the complete step,
+including solver position correction. GJK/EPA signed distance establishes that
+interior; the helper returns zero for a gap between disconnected parts. The
+adapter preserves compound geometry, mass/inertia and native gravity, damping
+and frame rules. It uses Bullet's existing penetration allowance for sweep
+clearance. No original Havok quality/CCD or exact trajectory equivalence is
+claimed.
+
+The owned regression fails on all three worker counts before the change. Its
+final form exercises two step sizes (1/60 and .05), two orientations and both
+allowed/denied floor masks in a shared worker pool. A separate component
+check verifies interior radius, nested transforms, unchanged AABB and no sphere
+across a compound gap. Twelve authored stock-blade orientations settle with zero
+saved vertical velocity through the actual production library, normally and
+under ASan/UBSan. These are fork adapter checks, separate from original-rule
+oracles and actual gameplay.
+
+Failed prototypes are retained. Child prediction alone, incomplete lever-arm
+mapping, and guards starting after the solver each leave orientation-dependent
+failures. A contained sphere alone prevents escape but leaves one persistent
+velocity case. The combined final prototype passes all twelve orientations
+without changing the .2 speed criterion. The first instrumented engine run
+passes the new cases but later exhausts Bullet's global increasing thread-index
+counter: the fixture originally created eight pools per worker-count case.
+Reusing one pool across its scenarios fixes that fixture resource failure.
+Component checks are unchanged and reused; both engine inventories are rerun.
+
+Both completed-contact gameplay saves retain one broken Rusty Iron Shortsword
+reference/body, source NPC weapon count0, correct dropper, absent owner/charge,
+serial2, action-next3 and unchanged combat RNG505908858. NPC posture is -1 at the
+committed hit and in both saves. Stored Health damage matches the original bits;
+the contact log displays Fatigue1.49625, Player spending140 ->133, and .125 block
+with no block debit. After regeneration, all nine actor-value arrays match the
+expected state. No repeated contact, sound request, allocation or resource debit
+occurs in the exact-byte fresh-process continuation. Body/cached-local agreement
+uses .01; independently published reference fields retain the established native
+masked-callback policy.
+
+The old continuation fixture removed the NPC Lua source and was correctly
+rejected for a content-fingerprint mismatch. Corrected courses retain identical
+content across epochs. The first verifier also confused absent owner `None`
+with a `"null"` FormKey string; both failed receipts and corrected expectations
+are retained. Those fixture/schema errors are separate from the below-floor bug.
+
+Actual forward-view screenshots show both actors unarmed after the break and
+restart. An additional copied-save camera inspection shows the exposed blade on
+the floor and the Rusty Iron Shortsword crosshair tooltip. That inspection changes
+only Player camera orientation; it is not ordinary mouse-look or an exact-lineage
+restart claim. Audio mixer output is retained and both post-wear Hand sound
+requests report playback; identical IDs cannot establish two separate voices
+when the same stock variant is selected.
+
+This verifies the bounded ordinary NPC defensive contacts and completed-contact
+physics restart in both builds, with floor-blade rendering in the normal camera
+diagnostic. An additional instrumented copied-save altered-pitch experiment
+produced a dark view; its cause remains unresolved and no instrumented floor-
+visibility acceptance is claimed. The main forward-view restarts still pass.
+Shield/armor and initially broken items, remaining
+mastery/effects/reactions, full input/view/FPS and in-action restart matrices, plus
+the combined named-target/block/miss/wall/stagger course remain open.
+**Full M15S4 remains incomplete.**
+
+Full component checks: **2935 cases /275 suites** normally and under ASan/UBSan,
+`S4/native-loose-compound-sweep-normal-01` and `-sanitized-01` (component result).
+Final full engine checks: **1714 cases /124 suites**, `-normal-02` and
+`-sanitized-02`; exact unfiltered inventories, zero failures/skips. ASan leak
+checking is disabled. Component fingerprint `4281f58fa3b6f4a17bb3a1b40fa3fac1768b5e634321c2aad9e1f3dbb4a24067`;
+final engine fingerprint `969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223`.
+Only the worker-pool test fixture changes between those source snapshots.
+Editable expectations, native probe reports, retained failures, current production
+comparison and actual runtime receipts are in `M15-NPC-DEFENSIVE-DROP-PROBE.json`.

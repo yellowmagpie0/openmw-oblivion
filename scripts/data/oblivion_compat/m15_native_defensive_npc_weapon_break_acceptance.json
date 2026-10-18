@@ -1,0 +1,49 @@
+{
+  "scope": "Normal-input Player unarmed strike against NPC public block control; near-broken NPC sword reaches zero and publishes actual physical/render drop, then completed-contact fresh-process restart. First-person keyboard1FPS bounded branch, not fullS4.",
+  "source": "build/oblivion-compat/m15/S4/block-sound-runtime-normal-01/staged-input.omwsave",
+  "source_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+  "staged_source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+  "fixture_changes": {
+    "player_weapon_equipped_slots": 0,
+    "npc_weapon_condition_before": -1.0,
+    "npc_weapon_condition_after": 1.000100016593933,
+    "npc_intent": "self.controls.block while carried weapon exists; self:enableAI(false); no attack/damage injection"
+  },
+  "expected": {
+    "attacker": "dynamic:player:0000000000000001",
+    "victim": "content:oblivion.esm:01fc43",
+    "weapon": "content:oblivion.esm:090615",
+    "health_damage_bits": 1067387453,
+    "fatigue_damage_bits": 1069516063,
+    "block_fraction": 0.125,
+    "block_fatigue": 0,
+    "attacker_fatigue_debit": 7,
+    "victim_posture_at_contact": -1,
+    "victim_posture_at_save": -1,
+    "npc_source_weapon_count": 0,
+    "dropped_weapon_condition": 0,
+    "dynamic_reference": "dynamic:native-reference:0000000000000001",
+    "dynamic_serial": 2,
+    "action_next": 3,
+    "combat_rng": 505908858,
+    "sound_edids": [
+      "WPNBlockHand",
+      "WPNBlockHand"
+    ],
+    "dropper": "content:oblivion.esm:01fc43",
+    "owner": null
+  },
+  "oracle_report_sha256": "a891186796e4d5d12dc82a1baa3eeb6975d5373840cf7ea863ff975bebc8d807",
+  "sink_report_sha256": "e432f887a58b4a06c7ccf59b9fd8d08dfdf3235e9dac103e524911bb30b75b58",
+  "placement": {
+    "maximum_planar_distance_from_actor": 128,
+    "maximum_absolute_height_difference": 128,
+    "require_finite_position_rotation": true
+  },
+  "physical_continuation": "Preserve exact serialized independent reference/cache/body state through loader; live physics may advance. Require one finite body and dropped reference in each output, no duplicate allocation/resources/contact on restart. Native reference/cache separation applies; no absolute reference/body equality asserted.",
+  "limits": "NPC control intent is authored through existing public Actor control API; not full autonomous defensive AI. No exact native fade timing or uninterrupted real-content trajectory equivalence. Captured PCM retained; two identical sound IDs cannot prove separate voices when same stock variant is selected.",
+  "preregistered_before_this_course": true,
+  "second_max_linear_speed": 1,
+  "continuation_policy": "Exact first output is second input. Identical Lua content is retained across epochs;300wall seconds settling before final save. Corrects normal01 content-removal fixture failure before this new course.",
+  "physics_gate": "Both outputs require the admitted body and original identity/extras/resources. Placement bounds128 and cached-body agreement.01 apply; second linear speed<=1. Root reference may differ from cached local under native masked callback policy. Normal01 below-floor failure is retained; no whole S4 acceptance."
+}

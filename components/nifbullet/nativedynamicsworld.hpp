@@ -8,6 +8,7 @@
 #include <memory>
 #include <span>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace NifBullet
@@ -54,6 +55,7 @@ namespace NifBullet
         std::vector<Owner> mNativeOwners;
         const void* mNativeSceneOwner = nullptr;
         std::vector<std::weak_ptr<PreparedRegistrationBatch::Data>> mRegistrationBatches;
+        std::vector<std::pair<btRigidBody*, btTransform>> mCompoundSweepStarts;
 
         bool hasAdmittedRegistrationBatch() const noexcept;
         void discardRegistrationProxies(PreparedRegistrationBatch::Data& data) noexcept;
@@ -67,6 +69,9 @@ namespace NifBullet
         }
 
     protected:
+        void createPredictiveContacts(btScalar timeStep) override;
+        void integrateTransforms(btScalar timeStep) override;
+
         void saveKinematicState(btScalar timeStep) override
         {
             for (int i = 0; i < m_collisionObjects.size(); ++i)

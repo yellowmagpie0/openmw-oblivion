@@ -1,8 +1,11 @@
 #include "mtphysics.hpp"
 
+#include <components/nifbullet/nativecompoundcollision.hpp>
+
 #include <cassert>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
@@ -487,6 +490,10 @@ namespace MWPhysics
             for (auto* object : mPhysics.collisionObjects())
             {
                 auto* body = btRigidBody::upcast(object);
+                // Bullet's built-in CCD skips compound roots. Opt loose items
+                // into child predictions and a contained mass-center sweep.
+                body->setCcdMotionThreshold(std::numeric_limits<float>::epsilon());
+                body->setCcdSweptSphereRadius(NifBullet::centeredCompoundSweepRadius(*body->getCollisionShape()));
                 body->setFlags(body->getFlags() | BT_DISABLE_WORLD_GRAVITY);
                 body->setGravity(btVector3(0, 0, 0));
             }
