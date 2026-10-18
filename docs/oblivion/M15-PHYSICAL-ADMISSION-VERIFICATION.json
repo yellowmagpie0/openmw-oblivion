@@ -5856,5 +5856,240 @@
       "Actual actor render/update callback ownership, ordinary-vs-special node/asset policies, native frame selector/time placement and coherent group/filter initialization are still required before automatic construction.",
       "Contact/reaction/FSM/GetUp, capsule/reference/rootmotion response, remaining melee/block/mastery/drop/effects/input/view/device/FPS/interruption and actual savequitfreshprocess acceptance remain open. Full M15S4 is not complete."
     ]
+  },
+  "outer_blend_scene_dispatch_followup": {
+    "status": "Verified base blend-collision outer dispatch is implemented and integrated into an owned settled scene entry and worker-safe engine API. Required first synchronization remains explicitly unimplemented; automatic actor ownership and full M15S4 acceptance stay open.",
+    "source": {
+      "head": "40b85f23d8a6ad43bc5271b7ceec9e26636e6a98",
+      "source_fingerprint": "0592faf0a192cc137139a242237b45c2d3db8e5fb52a30472db8f25d17240827"
+    },
+    "source_sha256": {
+      "components/esm4/physicalblenddispatch.hpp": "e79a3dfeb9989015d346a1b058ef3d5c81c0ca2c7a9155595f5bb252d27c7815",
+      "components/esm4/physicalblenddispatch.cpp": "789a8eb034a252a6ab4a5f0376a2c902b16dba37ff9f65f21cdcc45f2a4db702",
+      "components/nifbullet/actorragdollphysics.hpp": "17d813ccda7221647eec9723d64181de1de62ac163883c2af06c1105bd9a0c57",
+      "components/nifbullet/actorragdollphysics.cpp": "0aa1659a0102ca1ec4d66708cb86788fb15c9195f47aab9effa33da19ac4329a",
+      "apps/openmw/mwphysics/physicssystem.hpp": "1e3c14966e69b2d92a999e537f1ae2d5daeccd59a82b0c8e31d3cbd034dbe310",
+      "apps/openmw/mwphysics/physicssystem.cpp": "26cb7e3bacfd8ae0d56162839404b7ca5bb729bd71cacb5c8fa9cd31d02bfc90",
+      "apps/openmw/mwphysics/mtphysics.hpp": "ff021deb97f1dbcdb29761f8db50c7bef23eac09adfaa28edb3ac0b9c0a52e5e",
+      "apps/openmw/mwphysics/mtphysics.cpp": "4b3c8b0b7b664db628646a65c0e12beaf87fab1e580e6f5c8eb08b3a50ec4b43",
+      "apps/components_tests/esm4/physicalcombat.cpp": "6f67dca7ee45224bc67dbc30e9e62f1ecfdd0bd48d6f7d44b142ed4432003f40",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "3b3cc26288d67b65ce4c12a7e7f1b9e0e7e317f3385f82aabe0b80ed3cb80d67",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "088539f1901ebddf7550bd24e54ffe8dc8684d32533fdb52b28d004fbdceb6f6"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only; production/test files unchanged after full checks.",
+    "changes": [
+      "resolvePhysicalBlendNodeDispatch models complete base 88EDC0 integer gates: selector 3 skips, selector 2 defers pending 0x40, pending 0x40 otherwise precedes active bit 0, and only settled active nodes enter the separate gain handler. All uint16 flags and raw uint32 selectors remain accepted without normalization.",
+      "The pure result provides a clear-flags mask to apply only after the real handler succeeds. It does not replace the pre-handler flag word or overwrite other live handler changes.",
+      "ActorRagdollPhysics::updateNativeSettledBlendNode reads actual owned node flags before its inner handler. Outer skips invoke no scene hook, inspect no unused target/frame/gravity, and preserve body state and pending flags. Unknown nodes still reject before dispatch.",
+      "Required first synchronization rejects before any publication or pending-bit clear. No forced pose/reset substitute is installed. Successful ordinary blend handling reuses the existing live Single per-node inner path; direct inner API callers retain their declared semantics.",
+      "PhysicsSystem and PhysicsTaskScheduler expose the scene entry using the existing worker barrier, World lock and native gravity. The actual World fixture covers 0/1/2 workers with controlled inactive, pending and active snapshots, unused NaN inputs on skips, stale Ptr/node rejection, pending deferral/rejection and no duplicate controller/shared-cache advancement."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/outer-blend-scene-normal-01/verification.json",
+        "report_sha256": "dfaec2d6aa1bda7160886926a59f58d70ea2ebd1b44a9f2083b90995b001418e",
+        "results": {
+          "components": {
+            "executed": 2906,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3ef4446ccac44ce732f1a9191da7e7c46be2d6aa506a54fe577b4b8d0540c31f",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "19db5a1c307aa6686cebccf487d797afdbd2427f5600d3bc6df86446930ebe79",
+            "inventory_sha256": "7a67154ea45a99311c45977ebb48f4ec7f587f3d1c452e6ce97d17e88b1c02d6",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c82044e7598066c978fde1e7a66496ec0d946f56676d4ac5eb31c1969496035f",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "3cec83fe8b38541452616e79d3b7d99a369ef2856465bf54e8798c0019d0a8c1",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "68cc9d92d78392bcd9b101abe5a4d3410c651c79b32004a13ae9ec69f7970541"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/outer-blend-scene-sanitized-01/verification.json",
+        "report_sha256": "814c06c5041af335760a11cab216030ed5185983770c97c7960cdc01a226a1cf",
+        "results": {
+          "components": {
+            "executed": 2906,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b8f3d849a27e01fc5f94ed57420e8288b0be26eb34b1dedde42ab1e4d53ead74",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "8b8f94a1f0ac8b1b3377617cf295ce76aefa0abf0864a223f50cab945fe2004f",
+            "inventory_sha256": "f6b8cac668ca93bbe84efab6d13a82b1a1d009f937c69b64a4037e87b9f256d2",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "256a05321df8fe9ddd80dba550bb6b51a1fa05f644416fde1b2c3e7c0f0c5a06",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "16222ce0400b0de8aec14cd8576cef4ecb2a5d643c9abd6e6142134071c8d7ed",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "f3a9a715464b4fa5bc2c1762e112fa370f57dd4a6aefdadc6db63b1d00c438c8"
+      }
+    },
+    "native_comparisons": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/outer-blend-scene-corpus-01/normal-verification.json",
+        "report_sha256": "2f5d6b2b653bcaedf2ae98d1292f265c70b4ac95ca20a89cbb05930fd553ba77",
+        "result": {
+          "passed": true,
+          "cases": 393216,
+          "outer_route_counts": {
+            "0": 180224,
+            "2": 81920,
+            "1": 131072
+          },
+          "negative_controls": {
+            "omit_phase3": 49152,
+            "active_before_pending": 65536,
+            "omit_phase2_deferral": 32768,
+            "clear_pending_before_success": 65536
+          },
+          "mismatches": [],
+          "original_cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+          "probe_sha256": "b8d90541013c811233441900286fe1ca8df5f49564774dace1cdb1e84a562e19",
+          "comparator_sha256": "1ad14c2581724022cae985a3cd07955dd9fe81833777ffe4d94c983c20abf798",
+          "binary_sha256": "b162f4b6fbfe09310e3103d8ec2c4731ac728c6cf8a8dea184ccc866d0d44e60",
+          "output_sha256": "16801d741d3775f4cee6846ef33e71d8d0accbcf197a97e8321724c008a2c8d5",
+          "scope": "All raw original selector/flag inputs preserved. Pure route and successful-handler clear mask match native outer observations. Actual owned component uses one fixed Dynamic body with H0/V0 and stored requested1; gate classification matches all rows, skipped cases accept unused NaN pose/frame/gravity without hooks, Blend entries call the existing inner handler, and required-first-sync cases explicitly reject without clearing pending flags. No first synchronization implementation/success is claimed. Body transform/velocities/sleep/membership stay unchanged in this fixed read-only H0 fixture. Original outer handlers were declared stubs; no native body/clock/Havok/contact equivalence or gameplay acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/outer-blend-scene-corpus-01/sanitized-verification.json",
+        "report_sha256": "978b3ca26f97c543103f46bacee386a5548dc25b43110b1cad6f2b0773b90ed2",
+        "result": {
+          "passed": true,
+          "cases": 393216,
+          "outer_route_counts": {
+            "0": 180224,
+            "2": 81920,
+            "1": 131072
+          },
+          "negative_controls": {
+            "omit_phase3": 49152,
+            "active_before_pending": 65536,
+            "omit_phase2_deferral": 32768,
+            "clear_pending_before_success": 65536
+          },
+          "mismatches": [],
+          "original_cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+          "probe_sha256": "b8d90541013c811233441900286fe1ca8df5f49564774dace1cdb1e84a562e19",
+          "comparator_sha256": "1ad14c2581724022cae985a3cd07955dd9fe81833777ffe4d94c983c20abf798",
+          "binary_sha256": "8a1efafa9b89fcbb6d9e0897490c86079e71da7c0c9ac9febae7b98688833e93",
+          "output_sha256": "16801d741d3775f4cee6846ef33e71d8d0accbcf197a97e8321724c008a2c8d5",
+          "scope": "All raw original selector/flag inputs preserved. Pure route and successful-handler clear mask match native outer observations. Actual owned component uses one fixed Dynamic body with H0/V0 and stored requested1; gate classification matches all rows, skipped cases accept unused NaN pose/frame/gravity without hooks, Blend entries call the existing inner handler, and required-first-sync cases explicitly reject without clearing pending flags. No first synchronization implementation/success is claimed. Body transform/velocities/sleep/membership stay unchanged in this fixed read-only H0 fixture. Original outer handlers were declared stubs; no native body/clock/Havok/contact equivalence or gameplay acceptance."
+        }
+      }
+    },
+    "cases": [
+      "ESM4PhysicalBlendDispatch.OuterPhaseThreeSuppressesActiveAndPendingNodes",
+      "ESM4PhysicalBlendDispatch.OuterPendingSynchronizationPrecedesActiveAndDefersInPhaseTwo",
+      "ESM4PhysicalBlendDispatch.OuterSettledActiveBitSelectsHandlerIndependentlyOfInnerGainRoutes",
+      "ESM4PhysicalBlendDispatch.OuterSuccessfulSynchronizationMaskPreservesOtherLiveHandlerChanges",
+      "ActorRagdollPhysicsTest.SceneNodeOuterSkipsPreserveSleepingBodiesAndIgnoreUnusedInputs",
+      "ActorRagdollPhysicsTest.SceneNodeRequiredFirstSyncRejectsWithoutClearingFlagsOrResettingVelocity",
+      "ActorRagdollPhysicsTest.SceneNodeActiveDispatchPreservesTheSeparateInnerHandlerBoundary",
+      "OblivionWorld.PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval"
+    ],
+    "native_provenance": {
+      "existing_oracle": "build/oblivion-compat/m15/S4/native-blend-node-dispatch-oracle-01/verification.json",
+      "oracle_report_sha256": "72cd0dd69947b7a901b06d684c44892133239b9c3b858d0f9f684f442fb4be19",
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+      "scope": "Replay unchanged complete base 88EDC0 integer observations from all 65,536 flag words and six raw selectors. Original sync/inner handlers were explicit successful stubs. Pure route/successful-clear behavior matches all 393,216 rows. Actual owned component uses a fixed Dynamic H0/V0 body with stored requested 1: 180224 skips, 81920 inner-handler entries and 131072 required-sync rejections. The rejected sync cases preserve input flags, rather than claiming successful native sync effects. Body pose/velocities/sleep/membership remain unchanged in this read-only H0 fixture. No new original instruction execution or game run this turn."
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/outer-blend-scene-corpus-01/probe.cpp": "b8d90541013c811233441900286fe1ca8df5f49564774dace1cdb1e84a562e19",
+      "build/oblivion-compat/m15/S4/outer-blend-scene-corpus-01/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/outer-blend-scene-corpus-01/compare.py": "1ad14c2581724022cae985a3cd07955dd9fe81833777ffe4d94c983c20abf798"
+    },
+    "additional_subtype_static_audit": {
+      "report": "build/oblivion-compat/m15/S4/blend-addrotation-dispatch-static-01/report.json",
+      "report_sha256": "85abf3bfd2990a5416f69f213d24f93a089c6adf9997f72786cfdbcbce8f5d6c",
+      "result": {
+        "passed_static_checks": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "inspector_sha256": "3b0309cd659943c72451e5efd2c17157122d35da1fd44f2c44524944e3138a07",
+        "vtable": "0xa96384",
+        "rtti_name": ".?AVbhkBlendCollisionObjectAddRotation@@",
+        "dispatcher": "0x88e9f0",
+        "observations": [
+          "88E9F0 calls base88EDC0 only if collision+10 is nonnull.",
+          "Regardless of that call or its phase/flag skip, the wrapper then copies the nine-dword extra matrix at collision+28, invokes7100A0 twice using node local/parent-world matrices, and writes nine dwords to node world rotation+64.",
+          "This subtype is not equivalent to only the base outer-dispatch gate."
+        ],
+        "limits": [
+          "Static pointer/instruction inspection only, not an execution oracle or exact arithmetic/side-effect proof.",
+          "Does not establish which actor/reference roots instantiate this subtype, constructor/extra-matrix production, or runtime acceptance."
+        ]
+      },
+      "scope": "Fresh hash/RTTI/instruction inspection only. The AddRotation wrapper performs a separate world-rotation postpass after its conditional base call, including when the base skips. This is not covered by the base dispatcher implementation; actual constructor/caller and arithmetic/runtime evidence remain open."
+    },
+    "build_warning_review": "Both builds retain unchanged World-test context/dangling-else diagnostics. No diagnostic points to the new dispatcher/scene-entry code. Full logs retained.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Full component and rebuilt engine compiler/inventory checks, actual owned body and worker-configured scene-entry tests, unchanged native integer-corpus comparison and bounded subtype static inspection. Python/schema unchanged; prior 321 Python tests not repeated. No normal-input or fresh-engine gameplay/restart acceptance.",
+    "limits": [
+      "First-synchronization body/scene effects are still required. The new mask is only a success plan; the actual owned/engine scene entry rejects required synchronization without clearing 0x40 or resetting velocities.",
+      "Base bhkBlendCollisionObject dispatch only. AddRotation subtype post-composition, subtype construction/selection, ordinary nonblend collision routes and full actor asset/culling policies are not implemented by this gate.",
+      "Actual raw-selector producer, prepared physical time, native scene callback ownership and coherent group/filter initialization remain unresolved. No automatic scene driver, duplicate controller/force tick or new timer is installed.",
+      "Scene hooks execute under the World lock and cannot reenter physics. Earlier node/controller phases may already be published when a later collision phase rejects; no whole-frame rollback is claimed.",
+      "Contact/reaction/FSM/GetUp, capsule/reference/rootmotion coordination and all remaining melee/block/mastery/drop/effects/input/view/device/FPS/interruption/savequitfreshprocess courses remain open. Full M15S4 is not complete."
+    ]
   }
 }

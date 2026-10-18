@@ -604,6 +604,15 @@ namespace NifBullet
             const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
+        // Scene entry applies the outer phase/flag gates before the inner
+        // handler. Skipped nodes inspect no animated pose/frame/gravity and
+        // invoke no scene hook. A required first synchronization rejects without
+        // clearing40; its real body/scene owner must implement that boundary.
+        // Successful inner publication has the same per-node rollback contract.
+        std::optional<RagdollNativeBlendPublication> updateNativeSettledBlendNode(std::uint32_t nodeRecord,
+            const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
         // One selected-controller phase followed by blend-body publication.
         // Includes generated velocity forces and controller removal. Stage all
         // results before the scene hook; a rejected scene leaves bodies,

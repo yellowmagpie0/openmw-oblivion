@@ -3052,6 +3052,22 @@ namespace NifBullet
         return std::move(publications.front());
     }
 
+    std::optional<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeSettledBlendNode(
+        std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
+    {
+        const auto target = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+            [&](const auto& value) { return value.mNode == nodeRecord; });
+        require(target != mImpl->mBlendTargets.end(), "unknown native blend collision node");
+        const auto dispatch = ESM4::resolvePhysicalBlendNodeDispatch(target->mState.mCollisionFlags, rawUpdateSelector);
+        if (dispatch.mRoute == ESM4::PhysicalBlendNodeRoute::Skip) return std::nullopt;
+        require(dispatch.mRoute == ESM4::PhysicalBlendNodeRoute::Blend,
+            "native blend node requires first synchronization");
+        return updateNativeBlendNode(nodeRecord, animatedWorld, preparedFrameSeconds,
+            rawUpdateSelector, nativeGravityZ, publishScene);
+    }
+
     std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownControllerSetup(
         std::span<const RagdollNativeKnockdownControllerSetupRequest> requests,
         RagdollNativePassOutSettings settings)

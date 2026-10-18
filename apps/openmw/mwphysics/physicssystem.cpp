@@ -1218,6 +1218,15 @@ namespace MWPhysics
             preparedFrameSeconds, rawUpdateSelector, publishScene);
     }
 
+    std::optional<NifBullet::RagdollNativeBlendPublication> PhysicsSystem::updateActorRagdollSettledBlendNode(
+        const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+        const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
+    {
+        return mTaskScheduler->updateActorRagdollSettledBlendNode(ptr, nodeRecord, animatedWorld,
+            preparedFrameSeconds, rawUpdateSelector, publishScene);
+    }
+
     void PhysicsSystem::applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests)
     {
         mTaskScheduler->applyActorRagdollNativeForces(ptr, requests);

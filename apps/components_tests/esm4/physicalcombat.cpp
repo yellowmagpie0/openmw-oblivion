@@ -3320,6 +3320,52 @@ TEST(ESM4PhysicalCombat, PhysicalBlendDurationResolverRejectsNonfiniteConfigurat
 }
 
 
+TEST(ESM4PhysicalBlendDispatch, OuterPhaseThreeSuppressesActiveAndPendingNodes)
+{
+    const ESM4::PhysicalBlendNodeDispatch skipped{ESM4::PhysicalBlendNodeRoute::Skip, 0};
+    for (const std::uint16_t flags : {0u, 1u, 8u, 9u, 0x40u, 0x49u, 0x8001u, 0xffffu})
+        EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(flags, 3), skipped);
+}
+
+TEST(ESM4PhysicalBlendDispatch, OuterPendingSynchronizationPrecedesActiveAndDefersInPhaseTwo)
+{
+    const ESM4::PhysicalBlendNodeDispatch first{ESM4::PhysicalBlendNodeRoute::FirstSynchronization, 0x40};
+    const ESM4::PhysicalBlendNodeDispatch skipped{ESM4::PhysicalBlendNodeRoute::Skip, 0};
+    for (const std::uint16_t flags : {0x40u, 0x41u, 0x48u, 0x49u, 0xffffu})
+    {
+        for (const auto selector : {0u, 1u, 0x80000000u, 0xffffffffu})
+            EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(flags, selector), first);
+        EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(flags, 2), skipped);
+    }
+}
+
+TEST(ESM4PhysicalBlendDispatch, OuterSettledActiveBitSelectsHandlerIndependentlyOfInnerGainRoutes)
+{
+    const ESM4::PhysicalBlendNodeDispatch blend{ESM4::PhysicalBlendNodeRoute::Blend, 0};
+    const ESM4::PhysicalBlendNodeDispatch skipped{ESM4::PhysicalBlendNodeRoute::Skip, 0};
+    for (const auto selector : {0u, 1u, 2u, 0x80000000u, 0xffffffffu})
+    {
+        for (const std::uint16_t flags : {1u, 9u, 0x101u, 0x8001u})
+            EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(flags, selector), blend);
+        for (const std::uint16_t flags : {0u, 8u, 0x100u, 0x8000u})
+            EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(flags, selector), skipped);
+    }
+    // The outer dispatcher calls the handler even when its inner endpoint
+    // branch will return without driving a body.
+    EXPECT_FALSE(ESM4::resolvePhysicalBlendDispatch(0, 0, 1, 1));
+    EXPECT_FALSE(ESM4::resolvePhysicalBlendDispatch(1, 0, 1, 2));
+}
+
+TEST(ESM4PhysicalBlendDispatch, OuterSuccessfulSynchronizationMaskPreservesOtherLiveHandlerChanges)
+{
+    const auto dispatch = ESM4::resolvePhysicalBlendNodeDispatch(0x149, 0);
+    EXPECT_EQ(dispatch.mClearFlagsAfterSuccess, 0x40);
+    // A successful sync can change other live bits before the outer AND.
+    const std::uint16_t afterHandler = 0x2148;
+    EXPECT_EQ(std::uint16_t(afterHandler & ~dispatch.mClearFlagsAfterSuccess), 0x2108);
+    EXPECT_EQ(ESM4::resolvePhysicalBlendNodeDispatch(0x149, 2).mClearFlagsAfterSuccess, 0);
+}
+
 TEST(ESM4PhysicalBlendDispatch, ZeroHierarchySelectsPhysicsSyncUnlessVelocityNeedsBlending)
 {
     using Motion = ESM4::PhysicalBlendMotion;

@@ -6438,3 +6438,82 @@ namespace
         EXPECT_NEAR(child->getWorldMatrices()[0].getTrans().x(), 5, 1e-9);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, SceneNodeOuterSkipsPreserveSleepingBodiesAndIgnoreUnusedInputs)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .5f, .5f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1, 0, 0, .25f, {{.25f, .5f, .5f}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        const auto initial = actor.capture()[0];
+        const auto clock = actor.captureNativeBlendControllers()[0].mState;
+        auto states = actor.captureNativeBlendStates();
+        auto invalid = osg::Matrixf::identity(); invalid(0, 0) = std::numeric_limits<float>::quiet_NaN();
+        const float unused = std::numeric_limits<float>::quiet_NaN();
+        unsigned hooks = 0;
+        const std::array<std::pair<std::uint16_t, std::uint32_t>, 4> cases{{{8, 0}, {9, 3}, {0x49, 2}, {0x49, 3}}};
+        for (const auto& [flags, selector] : cases)
+        {
+            states[0].mCollisionFlags = flags; actor.restoreNativeBlendStates(states);
+            auto* rigid = btRigidBody::upcast(actor.collisionObjects()[0]); rigid->setActivationState(ISLAND_SLEEPING);
+            EXPECT_FALSE(actor.updateNativeSettledBlendNode(8, invalid, unused, selector, unused, [&](auto) { ++hooks; }));
+            EXPECT_EQ(hooks, 0u); EXPECT_FALSE(rigid->isActive());
+            EXPECT_EQ(actor.capture()[0].mPose, initial.mPose);
+            EXPECT_EQ(actor.capture()[0].mLinearVelocity, initial.mLinearVelocity);
+            EXPECT_EQ(actor.captureNativeBlendStates()[0].mCollisionFlags, flags);
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, clock);
+        }
+        EXPECT_THROW(actor.updateNativeSettledBlendNode(999, invalid, unused, 3, unused), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, SceneNodeRequiredFirstSyncRejectsWithoutClearingFlagsOrResettingVelocity)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 0x49, .5f, .5f};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        auto packed = actor.captureNativePackedVelocities();
+        packed[0].mVelocities.mLinear = {1, 2, 3, 4}; packed[0].mVelocities.mAngular = {5, 6, 7, 8};
+        actor.restoreNativePackedVelocities(packed);
+        auto states = actor.captureNativeBlendStates();
+        unsigned hooks = 0;
+        for (const std::uint16_t flags : {0x40u, 0x49u})
+        {
+            states[0].mCollisionFlags = flags; actor.restoreNativeBlendStates(states);
+            for (const auto selector : {0u, 1u, 0x80000000u, 0xffffffffu})
+            {
+                EXPECT_THROW(actor.updateNativeSettledBlendNode(8, osg::Matrixf::identity(), 1.f / 60,
+                    selector, 0, [&](auto) { ++hooks; }), std::invalid_argument);
+                EXPECT_EQ(actor.captureNativeBlendStates()[0].mCollisionFlags, flags);
+                EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
+                EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+            }
+        }
+        EXPECT_EQ(hooks, 0u);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, SceneNodeActiveDispatchPreservesTheSeparateInnerHandlerBoundary)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 9, 1, 0};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1, mPoses, 1, -1);
+        unsigned hooks = 0;
+        const auto result = actor.updateNativeSettledBlendNode(8, osg::Matrixf::identity(), 1.f / 60, 0, 0,
+            [&](auto values) { ++hooks; EXPECT_EQ(values.size(), 1u); EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]); });
+        ASSERT_TRUE(result); EXPECT_EQ(result->mRecord, 12u); EXPECT_FALSE(result->mSceneTarget);
+        EXPECT_EQ(actor.capture()[0].mPose.getOrigin(), btVector3(0, 0, 0));
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 6u);
+        EXPECT_EQ(hooks, 1u);
+        // Phase2 reaches the inner handler, whose H1 endpoint then skips.
+        EXPECT_FALSE(actor.updateNativeSettledBlendNode(8, osg::Matrixf::identity(), 1.f / 60, 2, 0,
+            [&](auto values) { ++hooks; EXPECT_TRUE(values.empty()); }));
+        EXPECT_EQ(hooks, 2u);
+        auto states = actor.captureNativeBlendStates(); states[0].mCollisionFlags = 8; actor.restoreNativeBlendStates(states);
+        EXPECT_FALSE(actor.updateNativeSettledBlendNode(8, osg::Matrixf::identity(), 1.f / 60, 0, 0));
+        // Direct callers of the preexisting inner boundary retain that API's
+        // semantics. Only the scene entry applies the outer active flag gate.
+        EXPECT_TRUE(actor.updateNativeBlendNode(8, osg::Matrixf::identity(), 1.f / 60, 0, 0));
+    }
+}

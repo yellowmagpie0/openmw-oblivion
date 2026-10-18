@@ -5553,3 +5553,37 @@ hashes and limits are in `node_physical_scheduler_followup` in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Actual actor scene ownership/scheduling,
 group/filter initialization, contact/reaction/FSM/GetUp and all remaining full S4
 normal-input and fresh-engine gameplay/restart acceptance remain open.
+
+
+### Outer blend-collision gates in the owned engine scene entry
+
+The verified base blend dispatcher now selects skip, first synchronization or
+the inner handler from live collision flags and raw phase. Phase 3 skips all,
+phase 2 defers pending 0x40, pending 0x40 otherwise precedes active bit 0, and settled
+inactive nodes skip. A clear-after-success mask preserves other live handler
+changes. The owned scene entry implements skips and settled blend updates;
+required first synchronization explicitly rejects without flag clearing or a
+velocity reset. Its real body/scene effects remain unfinished.
+
+PhysicsSystem and its scheduler expose that entry through their existing worker
+barrier and World lock. The real World fixture checks 0/1/2 workers with inactive,
+pending and active snapshots, unused NaN inputs on skipped routes, stale actor/
+node rejection and unchanged controller/shared-cache state. No automatic frame
+owner, selector producer or additional timer is installed.
+
+Full normal and ASan/UBSan runs each pass all 2,906 component tests in 273 suites
+and 1,637 engine tests in 122 suites, with exact inventories and no failures or
+skips. Both engines rebuild. Native integer comparison matches 393,216 unchanged
+rows per build, covering the pure rule and owned gate classification; 131,072 of
+those rows deliberately reject required synchronization, without claiming its
+successful body effects. All four negative controls reject their targeted rows.
+The fixed read-only body fixture has no World step/contact comparison. Leak
+checks are disabled; unchanged Python/schema tests are not repeated.
+
+Tested source fingerprint: `0592faf0a192cc137139a242237b45c2d3db8e5fb52a30472db8f25d17240827`. Source/binary/oracle
+hashes and limits are in `outer_blend_scene_dispatch_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Static inspection also separates the
+AddRotation subtype's postpass from the implemented base gate; subtype selection,
+math and runtime ownership remain open. First synchronization, actual scene
+scheduling/group/filter initialization, contact/reaction/FSM/GetUp and all full
+S4 normal-input and fresh-engine gameplay/restart acceptance remain open.

@@ -15563,3 +15563,31 @@ virtual+6C before virtual+68. This distinguishes their dispatch paths only:
 stubbed sync bodies do not establish a universal velocity/reset policy. Raw
 corpus/probe hashes and boundaries are recorded in `node_physical_scheduler_followup`
 in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+
+### Base blend-node dispatch rule and owned scene-entry gates
+
+The production base dispatcher now matches all 393,216 retained 88EDC0 rows in
+normal and ASan/UBSan builds. `resolvePhysicalBlendNodeDispatch` returns the
+outer route and a clear-after-success mask. Applying that mask to live flags
+preserves any other handler changes; required synchronization is not treated as
+already successful. The owned settled scene entry reads canonical flags and
+skips without target/frame/gravity reads or a scene hook. It preserves pending
+flags when synchronization is deferred or rejected. Direct inner blend APIs
+retain their separate gain/route behavior.
+
+A fixed Dynamic H0/V0 owned body with stored requested 1 exercises 180,224 skips,
+81,920 inner entries and 131,072 explicit required-sync rejections per build.
+The pure rule matches successful native outer flag clearing; the owned API does
+not claim successful first-sync body effects. Four negative controls reject
+49,152/65,536/32,768/65,536 rows respectively for omitted phase 3, active-before-
+pending order, omitted phase 2 deferral and clearing 0x40 before handler success.
+Exact code/binary/corpus hashes and scope are in `outer_blend_scene_dispatch_followup`
+in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+A separate fresh hash/RTTI static inspection identifies AddRotation vtable A96384
+and outer method 88E9F0. It conditionally invokes the base if collision object +0x10 is present,
+then performs an additional matrix postpass and writes node world rotation even
+when the base skipped. This is a subtype boundary, not a completed execution or
+arithmetic proof. It does not establish which actors/references instantiate that
+subtype. No automatic actor owner is wired using a base-only assumption.

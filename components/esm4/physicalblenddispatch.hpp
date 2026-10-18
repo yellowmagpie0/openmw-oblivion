@@ -6,6 +6,30 @@
 
 namespace ESM4
 {
+    enum class PhysicalBlendNodeRoute : std::uint8_t
+    {
+        Skip = 0,
+        FirstSynchronization = 1,
+        Blend = 2,
+    };
+
+    struct PhysicalBlendNodeDispatch
+    {
+        PhysicalBlendNodeRoute mRoute;
+        // Apply to the live flags only after the selected handler succeeds.
+        // The handler may itself change other bits; this is not a replacement
+        // flag word or a claim about those inner body/scene effects.
+        std::uint16_t mClearFlagsAfterSuccess;
+        friend bool operator==(const PhysicalBlendNodeDispatch&, const PhysicalBlendNodeDispatch&) = default;
+    };
+
+    // Complete outer bhkBlendCollisionObject dispatcher88EDC0. Selector3
+    // suppresses all collision work; selector2 defers pending40. Pending40
+    // otherwise precedes activebit0 and calls scene synchronization directly.
+    // Settled active nodes enter the separate inner gain/route handler below.
+    PhysicalBlendNodeDispatch resolvePhysicalBlendNodeDispatch(
+        std::uint16_t collisionFlags, std::uint32_t rawUpdateSelector) noexcept;
+
     enum class PhysicalBlendMotion : std::uint8_t
     {
         Dynamic = 1,

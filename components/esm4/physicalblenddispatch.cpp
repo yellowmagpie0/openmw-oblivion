@@ -5,6 +5,17 @@
 
 namespace ESM4
 {
+    PhysicalBlendNodeDispatch resolvePhysicalBlendNodeDispatch(
+        std::uint16_t collisionFlags, std::uint32_t rawUpdateSelector) noexcept
+    {
+        if (rawUpdateSelector == 3)
+            return {PhysicalBlendNodeRoute::Skip, 0};
+        if (collisionFlags & 0x40)
+            return rawUpdateSelector == 2 ? PhysicalBlendNodeDispatch{PhysicalBlendNodeRoute::Skip, 0}
+                : PhysicalBlendNodeDispatch{PhysicalBlendNodeRoute::FirstSynchronization, 0x40};
+        return {collisionFlags & 1 ? PhysicalBlendNodeRoute::Blend : PhysicalBlendNodeRoute::Skip, 0};
+    }
+
     PhysicalBlendDriveParameters resolvePhysicalBlendDriveParameters(
         float preparedFrameSeconds, float velocityGain, std::uint16_t collisionFlags)
     {
