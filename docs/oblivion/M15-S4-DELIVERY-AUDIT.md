@@ -5129,3 +5129,31 @@ Source and artifact hashes are recorded in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. This closes the conversion mismatch;
 automatic reaction/GetUp integration, solver parity and full S4 normal-input,
 view/device/FPS and fresh-process recovery acceptance remain open.
+
+
+Original07 repeats the normal-input Dog KO/recovery course with the corrected
+28-byte master/four-byte slave reader. All93 frames retain52nodes,26authored
+bodies and25authored constraints without hierarchy errors. Up to51 native
+constraints appear in one frame, including26 additional instances;3957 master
+backpointers and3957 slave backlinks validate. Auxiliary data consistently uses
+A9E038, whose actual virtualC at8F5290 returns11. One outside endpoint differs
+from the native World's fixed-body pointer. Its scene association and auxiliary
+solver/manifold semantics remain open; numeric type11 alone is not a semantic
+classification or a reason to persist these objects as authored constraints.
+
+Actual registration hooks record77 normal and52 removal requests with matching
+returns. Initial admission gains are0.3360004425048828;26 raw6 requests remove
+bodies at gains1. Twenty-five already-registered normal requests returnfalse.
+All observed signed counters, owner operation gates and queue counts are0;
+no forced-registration call occurs. This establishes immediate operations for
+this course, while other scheduling/queued contexts remain separate evidence.
+The four hardware watches repeat original06 writer PCs and removal order, with
+captured instruction windows checked against the pinned executable.
+
+The debugger detached, game and private Steam wrappers exited0, exact cloned
+inputs were restored, and executable/master/source-and-clone pristine hashes
+were reverified. Protocol, counts, hashes and limits are in
+`original07_correct_native_arrays_and_registration` in
+`M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json`. This documentation adds independent
+original evidence; the passing C++ precision checkpoint remains unchanged.
+Automatic fork reaction/GetUp and the full S4 acceptance gates remain open.

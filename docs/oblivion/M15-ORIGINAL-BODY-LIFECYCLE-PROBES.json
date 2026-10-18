@@ -1100,5 +1100,278 @@
       "fixture-ready-02.png": "270397a88996d8ffdde7ef8bb993d7698354c897df4c51f887858ad88146a3ab",
       "recovered.png": "aca3bda4999de337b98851be73da9eb6472a45cffa09d6a9e32e4d0caa04c5cd"
     }
+  },
+  "original07_correct_native_arrays_and_registration": {
+    "passed": true,
+    "scope": "Independent original-game observation only; no fork acceptance.",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "frames": 93,
+    "stable_nodes": 52,
+    "stable_bodies": 26,
+    "stable_authored_constraints": 25,
+    "hierarchy_errors": 0,
+    "native_constraint_max": 51,
+    "auxiliary_max": 26,
+    "auxiliary_distinct_pointer_addresses": 32,
+    "outside_endpoint_addresses": 1,
+    "master_count_max": 51,
+    "slave_count_max": 33,
+    "master_internal_backlinks_verified": 3957,
+    "slave_internal_backlinks_verified": 3957,
+    "auxiliary_data_snapshots_by_vtable": {
+      "0xa9e038": 1832
+    },
+    "auxiliary_data_getters": {
+      "0xa9e038": {
+        "slot_c": "0x8f5290",
+        "return_constant": 11,
+        "info20": "0x925730"
+      }
+    },
+    "watchpoints": [
+      {
+        "label": "reference-x",
+        "address": 805532484,
+        "initial": 1141709334,
+        "breakpoint_type": 7
+      },
+      {
+        "label": "main-body-world-link",
+        "address": 474975448,
+        "initial": 0,
+        "breakpoint_type": 7
+      },
+      {
+        "label": "spine-constraint-owner",
+        "address": 229494808,
+        "initial": 0,
+        "breakpoint_type": 7
+      },
+      {
+        "label": "main-body-island",
+        "address": 474975524,
+        "initial": 0,
+        "breakpoint_type": 7
+      }
+    ],
+    "writer_pcs": {
+      "main-body-island": [
+        "0x8dde3c",
+        "0x8cc199",
+        "0x8ddc5d"
+      ],
+      "main-body-world-link": [
+        "0x8cb655",
+        "0x8cbea2"
+      ],
+      "spine-constraint-owner": [
+        "0x91f009",
+        "0x8cc259",
+        "0x91ed67"
+      ]
+    },
+    "writer_windows_match_original": true,
+    "baseline_fatigue": 1.005401611328125,
+    "registration": {
+      "body-normal": {
+        "count": 77,
+        "states": {
+          "4": 51,
+          "6": 26
+        },
+        "world_nonzero": 51,
+        "counter_values": [
+          0
+        ],
+        "result_counts": {},
+        "return_pcs": {
+          "0x88f0d1": 52,
+          "0x8a0b1f": 25
+        }
+      },
+      "body-normal-return": {
+        "count": 77,
+        "states": {
+          "4": 51,
+          "6": 26
+        },
+        "world_nonzero": 51,
+        "counter_values": [
+          0
+        ],
+        "result_counts": {
+          "1": 52,
+          "0": 25
+        },
+        "return_pcs": {}
+      },
+      "body-remove": {
+        "count": 52,
+        "states": {
+          "4": 26,
+          "6": 26
+        },
+        "world_nonzero": 26,
+        "counter_values": [
+          0
+        ],
+        "result_counts": {},
+        "return_pcs": {
+          "0x89f4a4": 26,
+          "0x8a495b": 26
+        }
+      },
+      "body-remove-return": {
+        "count": 52,
+        "states": {
+          "4": 26,
+          "6": 26
+        },
+        "world_nonzero": 0,
+        "counter_values": [
+          0
+        ],
+        "result_counts": {
+          "0": 26,
+          "1": 26
+        },
+        "return_pcs": {}
+      }
+    },
+    "observed_world_gates_and_queue_counts": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "cleanup": {
+      "game_epoch_dead": true,
+      "game_exit": {
+        "code": 0
+      },
+      "restored": {
+        "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+        "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+        "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+      },
+      "pristine_source_and_clone_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "steam_shutdown": {
+      "epoch": {
+        "pid": 135401,
+        "start_ticks": 3221779,
+        "display": ":100"
+      },
+      "code": 0,
+      "stdout": "",
+      "stderr": "",
+      "epoch_dead": true
+    },
+    "evidence": "build/oblivion-compat/m15/S4/physical-recovery-original-live-07",
+    "report_sha256": "3178820ee03fffba2e1a6e12834f7141498f278fac73a0540fffd85b2aaa3430",
+    "source_parent_commit": "eb778a6f68",
+    "artifacts_sha256": {
+      "sample.py": "bb603a45313620d84dedb22c93d317c309784b31a4ab5d3156ca0c8c4b8dc742",
+      "capture.py": "b8908e3729bc53488a367463f72624f473b1fb21bf98916a55552713c6ae38ab",
+      "run-capture.py": "697bae8affb23e1fc4574b9e93e92e029e63e950d28eda2a893efda7fafccaad",
+      "inputs.json": "d878c0ae38c273a1058403dfaa2431859b510e6cb008063dffb01686e67563a7",
+      "function-identity.json": "af887fc3a51ceee64064679f7477c048605ed7ded7353d8c2dda640aa1ab7509",
+      "observed-01-precontact.json": "f320ff8249e3381b012518c852cf5ddd911c9f798be859afe611ca26347a1c50",
+      "observed-01-sample.json": "94b135792bd497552753dbcd765420604b5ef1a04ce8f6ff37bb22549f7b80d2",
+      "observed-01-gdb-command.json": "b3fbe8485e0a2067ac6b26ce9b083b17eba917ac2518375d8864df08634367d6",
+      "observed-01-gdb.log": "fadf7514e02747a96d7467aed2a9776941d8b0edf35576d6a28b86f28159baa0",
+      "observed-01-orchestrator.json": "a05779abf779caad04bbd37af0960ec2ee0cc34b651b6d9674320bae2f0938b4",
+      "fixture-ready.png": "3c0b0bc091fa41557a627cb87524b4a60492c5c0baad2491b10a74dd1f7109b5",
+      "after-observation.png": "199f7a27dca1723daecc0b6243b9b0a008ed33b1413781116322568f6a3aa886",
+      "input-log.jsonl": "585d18caf0a73f28cd04dac763e24b41ab05d4533b7f18e1dc2f75c3163568a1",
+      "cleanup-inputs.json": "e53fcec7628d4e7a1f6b902b7c7d632c6ae4606c6c7ef115c4170e4ff4f49b96",
+      "steam-shutdown.json": "2192a98fc65e2327618da85d0bd9753874896c659f33eeee840eea88d552c106",
+      "game-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "steam-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "analyze.py": "8512e55a4406080f1a638eeef81959d475ca513bbc0454039981136b5c2a8fe2"
+    },
+    "editable_protocol": {
+      "isolation": "Fresh clone of restored original06 prefix; verify pinned executable, master and pristine hashes; back up exact INI/plugins/autosave; record actual owned process epochs and private display/window PID.",
+      "fixture": "Fresh process/pristine load; same explicit50-unit front-placement recipe accepted in06; sourceStrength40/Luck50/HandToHand10/Fatigue140, targetFt1/base160/HP20, returnBase.05/mult0, AIOff, sourceyaw0/pitch30,targetyaw180.",
+      "setup_commands": [
+        "player.setangle z 0",
+        "player.setangle x 43",
+        "player.setav strength 40",
+        "player.setav luck 50",
+        "player.setav handtohand 10",
+        "player.setav fatigue 0",
+        "setgs ffatiguereturnbase 0.05",
+        "setgs ffatiguereturnmult 0",
+        "player.getav fatigue",
+        "getgs ffatiguereturnbase",
+        "getgs ffatiguereturnmult",
+        "player.placeatme 0001e5f5 1 80 0",
+        "tai"
+      ],
+      "placement_commands": [
+        "prid ff000800",
+        "moveto player 0 50 0",
+        "setangle z 180",
+        "player.setangle z 0",
+        "player.setangle x 30",
+        "player.isweaponout",
+        "getpos x",
+        "getpos y",
+        "getpos z",
+        "player.getpos x",
+        "player.getpos y",
+        "player.getpos z"
+      ],
+      "draw": "Inspect IsWeaponOut0, close console, draw F, reopen console; verify1. Inspect moveto before next command because it may close console.",
+      "target_commands": [
+        "prid ff000800",
+        "modav fatigue -159",
+        "getav fatigue",
+        "getbaseav fatigue",
+        "getknockedstate",
+        "getav health",
+        "player.isweaponout"
+      ],
+      "input": "Wait for untouched standing baseline, then one .25-wall-second mouse1 press. Predeclared capture timeout300s, orchestrator325s; no native outcome writes or forced calls.",
+      "actual_watchpoints": [
+        "ReferenceX",
+        "MainSpine0 native body World+8",
+        "Spine child authored native constraint owner+8",
+        "MainSpine0 body island+54"
+      ],
+      "array_reader": "Read body master+68/count6C as28-byte internal records and slave+74/count78 as4-byte pointers; enumerate both plus25 authored wrapper instances, deduplicate each snapshot. Verify internal master endpoint/backpointer and slave index backlinks.",
+      "data_reader": "Read each actual constraint instance+24 internal record, then data pointer at internal+C; interpret only native primary vtableA9A274. Record actual virtualC and20 target addresses/code, compare against pinned PE. Do not treat reads beyond independently confirmed vtable extent as virtuals.",
+      "registration": "Observe entry/return of actual8A48C0 normal,8A4A60 forced and8B0020 removal only for independently identified Dog wrappers. Check exact ESP return and capture actual top return PC rather than deep GDB unwind.",
+      "cleanup": "Verify debugger detached/TracerPid0, quit qqq and consume game0, restore exact cloned inputs and both pristine hashes, epoch-check and shutdown only owned private Steam, consume wrapper0, verify no remaining game/Steam/gdb."
+    },
+    "findings": [
+      "Correct enumeration reaches51 native constraints in one frame,26 beyond25 authored constraints.32 additional pointer addresses appear across the course; addresses are not asserted to be unique allocation lifetimes.3957 internal master and3957 slave backlinks validate without failures.",
+      "All1832 additional-constraint data snapshots use vtableA9E038. Its actual virtualC at8F5290 returns11; actual virtual20 at925730 is distinct from authored-data methods. Captured code windows match pinned PE. Type11 is retained as a native numeric identity; auxiliary contact/manifold semantics are not inferred solely from a guessed label.",
+      "One endpoint lies outside26 authored bodies. It has native vtableA97A98, observed motion type7 and same native World. It differs from that World fixedBody+34 pointer; scene/body association and full lifetime remain unproven.",
+      "77 normal body requests comprise26 absent-body admissions at raw4,25 already-registered requests at raw4 and26 raw6 calls that remove registered bodies when gains reach1. Both blend gains observed at admission are0.3360004425048828. All signed counters are0. No forced registration request was observed.",
+      "52 remove requests include26 empty cleanup calls nested in initial admission (return0) and26 actual raw6 removals (return1). Actual normal return values are52 true/25 false;25 already-registered requests returnfalse.",
+      "Every observed owner add/remove gate and body-add/constraint/body-remove queue count is0 at request/return; this ordinary course uses immediate operations. This does not establish every engine scheduling context.",
+      "Four hardware watches repeat original06 native body World/island and constraint owner writer PCs; exact captured writer windows match pinned PE and constraint owner clears before body World before island."
+    ],
+    "limits": [
+      "Original-game observation only; no new fork runtime/input/view/FPS/restart acceptance.",
+      "Enumeration covers native constraints attached to the26 authored bodies at sampled reaction frames; it is not an exhaustive whole-World solver or inter-frame allocation lifetime trace.",
+      "Auxiliary data/manifold semantics and outside endpoint scene association remain open. Do not add these objects to the persistent authored constraint manifest merely because they appear in the native solver arrays.",
+      "No queued request or forced-registration path was observed here; existing static4292-case queue probe remains separate evidence.",
+      "No exact native solver trajectory parity; hardware watches cover only the declared four fields. Stale inherited predeclared watchpoint text in inputs.json is superseded by the actual four hardware watchpoint records and explicit protocol here."
+    ]
   }
 }
