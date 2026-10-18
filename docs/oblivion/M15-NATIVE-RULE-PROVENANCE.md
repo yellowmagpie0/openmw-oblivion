@@ -15949,3 +15949,45 @@ publication. These cases run actual Bullet steps but no contact or normal-input
 combat/restart course. They do not establish native capsule presentation or
 Havok trajectory equivalence. All remaining S4 gameplay/fresh-process gates stay
 open. Full M15S4 is incomplete.
+
+
+### Native millisecond timer producer implemented
+
+The physical frame input now has a typed model of full original47D150/47D170:
+supplied origin tick, uint32 elapsed wrap, shared raw-counter rotation, pause
+byte,1ms floor,166ms cap, override/fraction carry and signed64 truncation with
+low32 retention. The uncapped raw elapsed tick is stored independently of the
+published interval. The multiplier is the original double representation of
+binary32 0.001f, with explicit float stores before/after scale. A literal double
+0.001 is observably different. Single/Double arithmetic is explicit; consumed
+supported-domain input validation and output overflow reject timer/counter
+changes atomically. Paused/inactive fields are preserved without consumption.
+
+Pinned full original instructions produce4 initialization cases,8,064 timer
+update cases and120 consecutive timer-to-full889810 frame rows without stubs.
+Independent input audit verifies the exact manifest product and uniqueness.
+Fresh normal and ASan/UBSan C++ comparisons each match **8,184 cases/65,832
+fields**. Replacing only the multiplier with literal double0.001 changes144
+timer cases; that negative-control failure is retained. The initial connected
+harness incorrectly assumed callee argument cleanup for889810; corrected02
+asserts its actual cdecl stack and reruns all paths. The setup failure remains.
+
+Seven new component cases cover initialization, cap/wrap, override/fraction and
+large low-word behavior, inactive inputs, atomic rejection/retry and consecutive
+native frame words. Full normal and ASan/UBSan checks each pass **2,927 tests
+in274 suites**, exact inventories, no failures/skips and no build warnings.
+Tested source fingerprint:
+`751cd91b77b037ceaa1ecde2b509df024c61d341661e747817688f00fb478e15`.
+ASan leaks are disabled. Engine/app/Python/schema are unchanged and not rerun.
+Editable inputs are in `M15-PHYSICAL-TIMER-PROBE.json`; reports, hashes and
+retained failures are in `native_physical_timer_producer_followup` in the
+verification index.
+
+This implements the timer producer rule, not its main-loop activation. Host
+tick source, pause entry/resume transitions, initialized settings and shared
+process/Engine clock ownership/publication must still connect to World and the
+prepared scheduler. No Windows timing, parser, original game process, fork
+normal-input combat/contact or restart acceptance is claimed. Actor admission,
+KF/selector/subtype/group/filter/capsule/root/morphology, full reaction/FSM/GetUp
+and all remaining S4 gameplay/fresh-process gates remain open. Full M15S4 is
+incomplete.

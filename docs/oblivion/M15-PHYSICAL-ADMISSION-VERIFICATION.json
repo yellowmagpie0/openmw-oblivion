@@ -8543,5 +8543,697 @@
       "Projectile movement/owned-body fixtures execute actual shared Bullet steps, without a contact or player/NPC normal-input combat course. They do not establish native actor capsule presentation or Havok trajectory equivalence.",
       "No contact/reaction/FSM/GetUp or view/device/FPS/fresh-process gameplay/save-restart gate is closed by these regression cases. Full M15S4 remains incomplete."
     ]
+  },
+  "native_physical_timer_producer_followup": {
+    "status": "Native timer producer implemented and independently compared; process/main-loop activation remains required. Full M15S4 incomplete.",
+    "manifest": {
+      "path": "docs/oblivion/M15-PHYSICAL-TIMER-PROBE.json",
+      "sha256": "fae3bee5edd9f4378dd95ceaab3d9d9935fa7dfb4a16436c9aedcdeb7f273da2"
+    },
+    "native_original": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/verification.json",
+      "sha256": "42b2b0bed0be78156a052445a3c026e11cabbd68ac9ca2916492b8e3d95e6145",
+      "result": {
+        "passed": true,
+        "counts": {
+          "initialize": 4,
+          "timers": 8064,
+          "frames": 120
+        },
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "manifest_sha256": "fae3bee5edd9f4378dd95ceaab3d9d9935fa7dfb4a16436c9aedcdeb7f273da2",
+        "cases_sha256": "ecacf30e912c56c8ffce16b0af08c7bd030e18e622161676b3327ee24254e63e",
+        "probe_sha256": "2a520b1ada15dfd96ac95ad800eb2b8df0e319fb7134f052a39397aeb5c0cb2b",
+        "scope": "Full original47D150 initialization,47D170 updates, and120 consecutive timer-to-full889810 frame rows, no instruction stubs. Uint32 wrap, pause byte, override/fraction arithmetic and actual shared global counter rotation. No pause entry/resume methods, host Windows timing, configuration parser or World/gameplay/restart acceptance."
+      }
+    },
+    "inventory_and_function_identity": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/inventory-verification.json",
+      "sha256": "43197f086cd30e4ddfd627822b1f5836a64819cb61403d4e1d66f80a234b8084",
+      "result": {
+        "passed": true,
+        "unique_timer_cases": 8064,
+        "unique_connected_frames": 120,
+        "initialize_cases": 4,
+        "manifest_sha256": "fae3bee5edd9f4378dd95ceaab3d9d9935fa7dfb4a16436c9aedcdeb7f273da2",
+        "cases_sha256": "ecacf30e912c56c8ffce16b0af08c7bd030e18e622161676b3327ee24254e63e",
+        "function_identity": [
+          {
+            "start": "0x47d150",
+            "size": 31,
+            "sha256": "7f13b891b109c2c8fc37ba8d85829ac809982ccc6b3ebd041b51786b7fc6ee19"
+          },
+          {
+            "start": "0x47d170",
+            "size": 230,
+            "sha256": "f94e49d5cefb66261068a4f679cdbda675b81c14409cbed3732693ce073014b0"
+          },
+          {
+            "start": "0x889810",
+            "size": 529,
+            "sha256": "99a5a02514740b062fbe23b8edc7c9c0715a4f3078a653b7eccf6582d426e454"
+          }
+        ],
+        "timer_multiplier": "double representation of binary32 0.001f =0.0010000000474974513",
+        "normal_interval_cap": "Unsigned interval0 maps to1; integer intervals above166.6666717529297 map to166. Last elapsed stores the raw uncapped elapsed tick.",
+        "scope": "Independent input inventory and code identity audit; expected output rows come from full original instructions, never C++."
+      }
+    },
+    "implementation": [
+      "PhysicalTimerState constructor models47D150 logical fields and supplied origin tick. PhysicalTimerCounters retains the two separate shared raw elapsed counters.",
+      "advancePhysicalTimer models full47D170: uint32 tick/origin/last wrap, shared-counter rotation even while paused,1ms floor,166ms cap with raw elapsed store, override/fraction sum and signed64 truncation with low32 retention, explicit stores around time scale.",
+      "The original qword multiplier is the promoted binary32 0.001f, not literal double0.001. Select Single/Double arithmetic explicitly; observed main live precision remains Single.",
+      "Finite nonnegative consumed override/scale and signed finite fractional sum within signed64 conversion are supported. Nonfinite/unsupported consumed values and nonrepresentable delta reject timer/counter mutation atomically. Inactive fields are preserved without consumption, including paused inputs.",
+      "Timer pause entry/resume transitions, host tick source, initialized runtime settings and one authoritative Engine/World clock owner remain separate. This helper does not activate the prepared scheduler."
+    ],
+    "normal_components": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-normal-01/verification.json",
+      "sha256": "b0e9fd13f86e6e5a7ca33178866237f38dd93f6c84e50352ab50b2e64b6a5e49",
+      "source": {
+        "head": "19ae88ba5e368ef4a9817ac16c8b44ae5cd7e8d4",
+        "source_fingerprint": "751cd91b77b037ceaa1ecde2b509df024c61d341661e747817688f00fb478e15"
+      },
+      "suites": 274,
+      "result": {
+        "executed": 2927,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "6c9dd41393ba5d1dd7b65baf3c018e9053bdde1df47ea9c1fd551ee07fc749a7",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "66db08c40564645431d57fabdba6f390ad72bc2d93e14772e13068bbaa43cad7",
+        "inventory_sha256": "07f9410ddd2b412f06d194ec6c049f8cf616f910ad610f6c26f92da185fb4dcd",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_components": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-sanitized-01/verification.json",
+      "sha256": "030d2696bab5e3ef62aed180e12f96ea6ae14a143463283c7324d3fa775b175e",
+      "source": {
+        "head": "19ae88ba5e368ef4a9817ac16c8b44ae5cd7e8d4",
+        "source_fingerprint": "751cd91b77b037ceaa1ecde2b509df024c61d341661e747817688f00fb478e15"
+      },
+      "suites": 274,
+      "result": {
+        "executed": 2927,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "357216942cacb3c3fee2adbcdbcbc5a6203da82f0a9b91ae242e8a990267f12d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "aad7a8128d41d738649b08e8c0d83962f1b2043281791463ece84f59630563fc",
+        "inventory_sha256": "e935f9bdc170e4561d2950689e20fd373ca91f97145c5c6bb3ecb09d34f4b725",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "comparisons": {
+      "driver": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/driver-comparison.json",
+        "sha256": "3520be2349000d433e016aaadc4608c3168a8991a3888232926f0cc82d1e1fff",
+        "result": {
+          "passed": true,
+          "cases": 8064,
+          "fields": 64512,
+          "mismatched_cases": 0,
+          "failures": [],
+          "cases_sha256": "ecacf30e912c56c8ffce16b0af08c7bd030e18e622161676b3327ee24254e63e",
+          "binary_sha256": "d1667686df5f5b703072b5e6a7332570e68d398821641cfcf4d2cbf532bbd2b1",
+          "driver_sha256": "e4a775aec6b4f592edf29e2f04611e4a1cce4a599e8e44db8b99d8d0f7d20939"
+        }
+      },
+      "sanitized-driver": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/sanitized-driver-comparison.json",
+        "sha256": "d75c63532f0e2c46121b765a67ee72bd2e5613047e216f16553182f80089ce16",
+        "result": {
+          "passed": true,
+          "cases": 8064,
+          "fields": 64512,
+          "mismatched_cases": 0,
+          "failures": [],
+          "cases_sha256": "ecacf30e912c56c8ffce16b0af08c7bd030e18e622161676b3327ee24254e63e",
+          "binary_sha256": "a7adb36ee35a7cee494c939dc78a3da7758fc32dd4776a5c15f0a816b201f697",
+          "driver_sha256": "e4a775aec6b4f592edf29e2f04611e4a1cce4a599e8e44db8b99d8d0f7d20939"
+        }
+      },
+      "connected": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/connected-comparison.json",
+        "sha256": "738496f3d27949d210aa90926d5dea21699ed40eddba3c38b35c6d655ff98bc0",
+        "result": {
+          "passed": true,
+          "cases": 120,
+          "fields": 1320,
+          "failures": [],
+          "binary_sha256": "b2817fc4cd90f3ec4216a5764de0b8eaf7be826e2fbb4192dd83827509bb2ba9",
+          "driver_sha256": "9c05b3a7e3b6cfb07a4868b0c4c3625bad2f74c2750b3eb12f31a010b5a95d50"
+        }
+      },
+      "sanitized-connected": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/sanitized-connected-comparison.json",
+        "sha256": "143274c4ecfb26613e0a43b6b2d31e9f5c56d243bfce37bad0216205d89e945b",
+        "result": {
+          "passed": true,
+          "cases": 120,
+          "fields": 1320,
+          "failures": [],
+          "binary_sha256": "bb4506bc913c512c813d238177d4c47fc21aded7a8c5f23830f028081d99486c",
+          "driver_sha256": "9c05b3a7e3b6cfb07a4868b0c4c3625bad2f74c2750b3eb12f31a010b5a95d50"
+        }
+      }
+    },
+    "comparison_total_each": {
+      "timer_updates": 8064,
+      "timer_fields": 64512,
+      "consecutive_timer_to_frame_cases": 120,
+      "connected_fields": 1320,
+      "cases": 8184,
+      "fields": 65832
+    },
+    "negative_control": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/literal-control-comparison.json",
+      "sha256": "31260656653cd6a447d869b92c49b6854a015ec5ed77158efcd3e5ab57b67cd9",
+      "result": {
+        "passed": false,
+        "cases": 8064,
+        "fields": 64512,
+        "mismatched_cases": 144,
+        "failures": [
+          {
+            "index": 1011,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                0,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1056964608,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                0,
+                1034550248,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              0,
+              1034550247,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1014,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                0,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1065353216,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                0,
+                1042938856,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              0,
+              1042938855,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1017,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                0,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1073741824,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                0,
+                1051327464,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              0,
+              1051327463,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1023,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                1061158912,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1056964608,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                1061158912,
+                1034550248,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              1061158912,
+              1034550247,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1026,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                1061158912,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1065353216,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                1061158912,
+                1042938856,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              1061158912,
+              1042938855,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1029,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                1061158912,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1073741824,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                1061158912,
+                1051327464,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              1061158912,
+              1051327463,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1035,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                3196059648,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1056964608,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                3196059648,
+                1034550248,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              3196059648,
+              1034550247,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1038,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                3196059648,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1065353216,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                3196059648,
+                1042938856,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              3196059648,
+              1042938855,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1041,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                3196059648,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 266,
+              "scale_bits": 1073741824,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                3196059648,
+                1051327464,
+                266,
+                0
+              ],
+              "shared_after": [
+                266,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              3196059648,
+              1051327463,
+              266,
+              0,
+              266,
+              33
+            ]
+          },
+          {
+            "index": 1263,
+            "input": {
+              "cw": 127,
+              "before": [
+                0,
+                0,
+                0,
+                1120272384,
+                100,
+                0
+              ],
+              "tick": 267,
+              "scale_bits": 1056964608,
+              "shared_before": [
+                33,
+                44
+              ],
+              "after": [
+                0,
+                0,
+                0,
+                1034550248,
+                267,
+                0
+              ],
+              "shared_after": [
+                267,
+                33
+              ]
+            },
+            "actual": [
+              0,
+              0,
+              0,
+              1034550247,
+              267,
+              0,
+              267,
+              33
+            ]
+          }
+        ],
+        "cases_sha256": "ecacf30e912c56c8ffce16b0af08c7bd030e18e622161676b3327ee24254e63e",
+        "binary_sha256": "663d79d59d210dd76bce6aa023a0c6a1ecf8d4d7c078def0ec6c53bcd15d55d5",
+        "driver_sha256": "e4a775aec6b4f592edf29e2f04611e4a1cce4a599e8e44db8b99d8d0f7d20939"
+      },
+      "meaning": "Replacing only double(.001f) with literal .001 changes144 of8064 timer cases; failed-control report/log retained intentionally.",
+      "source": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/literal-control.cpp",
+        "sha256": "05713564a9471f6717287da3c8b2fe51487d59adb9bbb1d37436c76eae8278fb"
+      },
+      "log": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/literal-control.log",
+        "sha256": "a05e483e1768b6f4b7c5da32202a36d7d1c510c6f8691d45bf1b101835e0f5e2"
+      }
+    },
+    "retained_failures": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-01/setup-failure.json",
+        "sha256": "0d497b153c74e6c182a72aaf597a046fa63f735ccc1017d417df7be9f9357efa",
+        "result": {
+          "passed": false,
+          "reason": "Connected full889810 assertion incorrectly expects callee to pop two arguments. Actual cdecl return leavesESP=SP+4; caller removes8 argument bytes. Timer loops finish but no complete result is published.02 corrects stack assertion and preserves full original paths."
+        }
+      }
+    ],
+    "cases": [
+      "ESM4PhysicalTimer.InitializesOriginalFieldsFromSuppliedOriginTick",
+      "ESM4PhysicalTimer.WrapsTicksFloorsZeroAndCapsIntervalWhileDroppingExcessTime",
+      "ESM4PhysicalTimer.OverrideCarriesFractionButPublishesOverrideRatherThanAccumulatedSum",
+      "ESM4PhysicalTimer.WideOverrideRetainsLowWordTruncationAndLargeFraction",
+      "ESM4PhysicalTimer.PauseIgnoresInactiveInputsAndStillRotatesSharedCounters",
+      "ESM4PhysicalTimer.InvalidConsumedInputsRejectTimerAndSharedCounterChangesAtomically",
+      "ESM4PhysicalTimer.ConsecutiveTimerFramesMatchOriginalMainPreparationWords"
+    ],
+    "production_source_sha256": {
+      "components/esm4/physicalframe.cpp": "8657d34a586c5a7d0e60682555fecc5fccefae4b8f8c61de57971cbe5c0827b8",
+      "components/esm4/physicalframe.hpp": "6113e1bfa312c0add17b7e224d2a4e08fd773107f84c1cc0de56d2e6ec592e29",
+      "apps/components_tests/esm4/physicalcombat.cpp": "4de247a428400deb7c81c860531aec47b0803bd2fc93019d9e30fad35bdc624d"
+    },
+    "drivers": {
+      "probe.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/probe.py",
+        "sha256": "2a520b1ada15dfd96ac95ad800eb2b8df0e319fb7134f052a39397aeb5c0cb2b"
+      },
+      "driver.cpp": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/driver.cpp",
+        "sha256": "e4a775aec6b4f592edf29e2f04611e4a1cce4a599e8e44db8b99d8d0f7d20939"
+      },
+      "connected.cpp": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/connected.cpp",
+        "sha256": "9c05b3a7e3b6cfb07a4868b0c4c3625bad2f74c2750b3eb12f31a010b5a95d50"
+      },
+      "compare.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/compare.py",
+        "sha256": "21bcab00aab4a38fd70b0cf2231cd8a5ed42ea5dfdd4b88718628ee99ad3fb6b"
+      },
+      "compare-connected.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/compare-connected.py",
+        "sha256": "772eefd40589866537f6c10ae5ba344c69fc6ff7fb81e1c902506e91dd125636"
+      },
+      "expected-query.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/expected-query.py",
+        "sha256": "b22f94c2e9c36bf9785fc53fc7b8b85addf73e58b2066de944629f0a06a2b73a"
+      },
+      "expected-query.log": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-oracle-02/expected-query.log",
+        "sha256": "5263679724fd28f410bb47b4048e82da835796103475526818504c6af4790576"
+      }
+    },
+    "standalone_builds": [
+      "c++ -std=c++20 -O2 -I. DRIVER components/esm4/physicalframe.cpp -o NORMAL",
+      "c++ -std=c++20 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I. DRIVER components/esm4/physicalframe.cpp -o SANITIZED"
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Both full component build logs contain no warnings/errors. Each passes2927 tests/274 suites with exact inventory, no failures/skips. ASan leak checks disabled.",
+    "limits": [
+      "No Engine/World or physics/render consumer changes in this chunk; full engine/app/Python/schema checks are not repeated. Native pause entry/resume lifecycle, configuration import/ownership, main timer publication and actual shared scheduler activation still require integration.",
+      "Original-instruction probes use the pinned executable without stubs on these functions; they do not execute Windows timing, INI parsing or a real game process. Single/Double are supported; Extended precision is not newly implemented.",
+      "Full signed64 conversion overflow/negative scale or negative override behavior is outside the admitted C++ input domain. Invalid-input atomic rejection is a supported-domain guard, not a claim that the original rejects those raw values.",
+      "Native actor owner admission, KF/selector/subtype/group/filter/capsule/root/morphology and complete contact/reaction/FSM/GetUp publication remain open, alongside all remaining normal-input/view/device/FPS/fresh-process gameplay/save-restart gates. Full M15S4 is incomplete."
+    ]
   }
 }

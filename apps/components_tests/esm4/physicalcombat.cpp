@@ -5191,3 +5191,156 @@ TEST(ESM4PhysicalCombat, HandDamageMatchesLiveNativeSinglePrecision)
     EXPECT_EQ(std::bit_cast<unsigned>(live.mHealth), 1068788350u);
     EXPECT_EQ(std::bit_cast<unsigned>(live.mFatigue), 1071265087u);
 }
+
+TEST(ESM4PhysicalTimer, InitializesOriginalFieldsFromSuppliedOriginTick)
+{
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    EXPECT_EQ(timer.mPauseCount, 0);
+    EXPECT_EQ(timer.mOverrideMilliseconds, 0);
+    EXPECT_EQ(timer.mFractionalMilliseconds, 0);
+    EXPECT_EQ(timer.mDeltaSeconds, 0);
+    EXPECT_EQ(timer.mLastElapsed, 0u);
+    EXPECT_EQ(timer.mOriginTick, 0xfffffff0u);
+}
+
+TEST(ESM4PhysicalTimer, WrapsTicksFloorsZeroAndCapsIntervalWhileDroppingExcessTime)
+{
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    ESM4::PhysicalTimerCounters counters{33, 44};
+    EXPECT_EQ(ESM4::advancePhysicalTimer(timer, counters, 0xfffffff0u, 1,
+        Nif::NativeTransformPrecision::Single), .001f);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{0, 33}));
+    ESM4::advancePhysicalTimer(timer, counters, 0x10u, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 32u);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{32, 0}));
+    ESM4::advancePhysicalTimer(timer, counters, 183u, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 199u);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mDeltaSeconds), 1042938856u);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{199, 32}));
+    ESM4::advancePhysicalTimer(timer, counters, 183u, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mDeltaSeconds, .001f);
+}
+
+TEST(ESM4PhysicalTimer, OverrideCarriesFractionButPublishesOverrideRatherThanAccumulatedSum)
+{
+    ESM4::PhysicalTimerState timer;
+    timer.mLastElapsed = 100; timer.mOverrideMilliseconds = 16.5f; timer.mFractionalMilliseconds = .75f;
+    ESM4::PhysicalTimerCounters counters;
+    ESM4::advancePhysicalTimer(timer, counters, 120, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 117u);
+    EXPECT_EQ(timer.mFractionalMilliseconds, .25f);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mDeltaSeconds), 1015491330u);
+    ESM4::advancePhysicalTimer(timer, counters, 1000, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 133u);
+    EXPECT_EQ(timer.mFractionalMilliseconds, .75f);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mDeltaSeconds), 1015491330u);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{1000, 120}));
+}
+
+TEST(ESM4PhysicalTimer, WideOverrideRetainsLowWordTruncationAndLargeFraction)
+{
+    ESM4::PhysicalTimerState timer;
+    timer.mLastElapsed = 100; timer.mOverrideMilliseconds = 0x1p32f;
+    ESM4::PhysicalTimerCounters counters;
+    ESM4::advancePhysicalTimer(timer, counters, 120, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 100u);
+    EXPECT_EQ(timer.mFractionalMilliseconds, 0x1p32f);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mDeltaSeconds), 1250103919u);
+}
+
+TEST(ESM4PhysicalTimer, PauseIgnoresInactiveInputsAndStillRotatesSharedCounters)
+{
+    ESM4::PhysicalTimerState timer;
+    timer.mPauseCount = 255; timer.mLastElapsed = 100; timer.mDeltaSeconds = 99;
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    timer.mOverrideMilliseconds = nan; timer.mFractionalMilliseconds = nan;
+    ESM4::PhysicalTimerCounters counters{33, 44};
+    EXPECT_EQ(ESM4::advancePhysicalTimer(timer, counters, 120, nan,
+        Nif::NativeTransformPrecision::Single), 0);
+    EXPECT_EQ(timer.mLastElapsed, 100u);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{120, 33}));
+    EXPECT_TRUE(std::isnan(timer.mOverrideMilliseconds));
+    timer.mPauseCount = 0; timer.mOverrideMilliseconds = 0;
+    ESM4::advancePhysicalTimer(timer, counters, 121, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 121u);
+    EXPECT_TRUE(std::isnan(timer.mFractionalMilliseconds));
+}
+
+TEST(ESM4PhysicalTimer, InvalidConsumedInputsRejectTimerAndSharedCounterChangesAtomically)
+{
+    const auto words = [](const ESM4::PhysicalTimerState& t, const ESM4::PhysicalTimerCounters& c) {
+        return std::array<unsigned, 8>{t.mPauseCount, std::bit_cast<unsigned>(t.mOverrideMilliseconds),
+            std::bit_cast<unsigned>(t.mFractionalMilliseconds), std::bit_cast<unsigned>(t.mDeltaSeconds),
+            t.mLastElapsed, t.mOriginTick, c.mElapsed, c.mPreviousElapsed};
+    };
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const float infinity = std::numeric_limits<float>::infinity();
+    ESM4::PhysicalTimerState timer(7); timer.mDeltaSeconds = 99;
+    ESM4::PhysicalTimerCounters counters{33, 44};
+    for (const float bad : {nan, infinity, -infinity, -1.f})
+    {
+        const auto before = words(timer, counters);
+        EXPECT_THROW(ESM4::advancePhysicalTimer(timer, counters, 120, bad,
+            Nif::NativeTransformPrecision::Single), std::invalid_argument);
+        EXPECT_EQ(words(timer, counters), before);
+        timer.mOverrideMilliseconds = bad;
+        const auto invalidOverride = words(timer, counters);
+        EXPECT_THROW(ESM4::advancePhysicalTimer(timer, counters, 120, 1,
+            Nif::NativeTransformPrecision::Single), std::invalid_argument);
+        EXPECT_EQ(words(timer, counters), invalidOverride);
+        timer.mOverrideMilliseconds = 0;
+    }
+    for (const auto [overrideValue, fraction, scale] : std::array<std::array<float, 3>, 4>{{
+             {0x1p63f, 0, 1}, {1, -0x1p64f, 1}, {1, nan, 1},
+             {0x1p32f, 0, std::numeric_limits<float>::max()}}})
+    {
+        timer.mOverrideMilliseconds = overrideValue; timer.mFractionalMilliseconds = fraction;
+        const auto before = words(timer, counters);
+        EXPECT_THROW(ESM4::advancePhysicalTimer(timer, counters, 120, scale,
+            Nif::NativeTransformPrecision::Single), std::invalid_argument);
+        EXPECT_EQ(words(timer, counters), before);
+    }
+    timer = ESM4::PhysicalTimerState(7);
+    const auto before = words(timer, counters);
+    EXPECT_THROW(ESM4::advancePhysicalTimer(timer, counters, 120, 1,
+        static_cast<Nif::NativeTransformPrecision>(99)), std::invalid_argument);
+    EXPECT_EQ(words(timer, counters), before);
+    ESM4::advancePhysicalTimer(timer, counters, 120, 1, Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(timer.mLastElapsed, 113u);
+    EXPECT_EQ(counters, (ESM4::PhysicalTimerCounters{113, 33}));
+}
+
+TEST(ESM4PhysicalTimer, ConsecutiveTimerFramesMatchOriginalMainPreparationWords)
+{
+    // Full original47D150 ->47D170 ->889810; no instruction stubs.
+    const std::array<std::array<unsigned, 7>, 10> rows{{
+        {4294967280u, 981668463u, 0u, 0u, 0u, 981668463u, 1023611503u},
+        {4294967281u, 981668463u, 0u, 0u, 0u, 990057071u, 1023611503u},
+        {1u, 1015222895u, 1015598704u, 1015598704u, 1u, 984245456u, 1023611503u},
+        {168u, 1042938856u, 1028470184u, 1015598704u, 3u, 1015598704u, 1023611503u},
+        {185u, 1015759766u, 1023987312u, 1015598704u, 2u, 966609280u, 1023611503u},
+        {185u, 981668463u, 0u, 0u, 0u, 984245455u, 1023611503u},
+        {218u, 1023879938u, 1023987312u, 1015598704u, 2u, 980151808u, 1023611503u},
+        {384u, 1042938856u, 1028470184u, 1015598704u, 3u, 1015598704u, 1023611503u},
+        {551u, 1042938856u, 1028470184u, 1015598704u, 3u, 1015598704u, 1023611503u},
+        {552u, 981668463u, 1015598704u, 1015598704u, 1u, 981668464u, 1023611503u},
+    }};
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    ESM4::PhysicalTimerCounters counters;
+    ESM4::PhysicalFrameClock clock;
+    ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+    for (const auto& row : rows)
+    {
+        SCOPED_TRACE(row[0]);
+        const float delta = ESM4::advancePhysicalTimer(timer, counters, row[0], 1,
+            Nif::NativeTransformPrecision::Single);
+        const auto frame = ESM4::preparePhysicalFrame(clock, settings, delta, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        EXPECT_EQ(std::bit_cast<unsigned>(delta), row[1]);
+        EXPECT_EQ(std::bit_cast<unsigned>(frame.mFrameSeconds), row[2]);
+        EXPECT_EQ(std::bit_cast<unsigned>(frame.mSubstepSeconds), row[3]);
+        EXPECT_EQ(frame.mSubstepCount, row[4]);
+        EXPECT_EQ(std::bit_cast<unsigned>(clock.mRemaining), row[5]);
+        EXPECT_EQ(std::bit_cast<unsigned>(clock.mSmoothed), row[6]);
+    }
+}

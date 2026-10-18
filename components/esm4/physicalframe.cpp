@@ -3,11 +3,63 @@
 #include <components/nif/nativetransformmath.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <stdexcept>
 
 namespace ESM4
 {
+    float advancePhysicalTimer(PhysicalTimerState& timer, PhysicalTimerCounters& counters,
+        std::uint32_t tick, float scale, Nif::NativeTransformPrecision precision)
+    {
+        const Nif::Detail::NativeTransformMath math(precision);
+        if (!math.valid()) throw std::invalid_argument("invalid native timer precision");
+        auto updated = timer;
+        const std::uint32_t elapsed = tick - timer.mOriginTick;
+        const PhysicalTimerCounters updatedCounters{elapsed, counters.mElapsed};
+        updated.mDeltaSeconds = 0.f;
+        if (timer.mPauseCount == 0)
+        {
+            if (!std::isfinite(scale) || scale < 0.f || !std::isfinite(timer.mOverrideMilliseconds)
+                || timer.mOverrideMilliseconds < 0.f)
+                throw std::invalid_argument("invalid native timer input");
+            double milliseconds;
+            if (timer.mOverrideMilliseconds != 0.f)
+            {
+                const float sum = static_cast<float>(math.add(
+                    timer.mFractionalMilliseconds, timer.mOverrideMilliseconds));
+                if (!std::isfinite(sum) || double(sum) < -0x1p63 || double(sum) >= 0x1p63)
+                    throw std::invalid_argument("unsupported native timer truncation");
+                const auto truncated = static_cast<std::int64_t>(sum);
+                const auto low = static_cast<std::uint32_t>(static_cast<std::uint64_t>(truncated));
+                // Original reloads the low word as signed, then adds2^32 under
+                // the selected x87 precision before subtracting it from sum.
+                const double unsignedLow = low <= 0x7fffffffu ? double(low)
+                    : math.add(std::bit_cast<std::int32_t>(low), 0x1p32);
+                updated.mFractionalMilliseconds = static_cast<float>(math.add(sum, -unsignedLow));
+                updated.mLastElapsed += low;
+                milliseconds = timer.mOverrideMilliseconds;
+            }
+            else
+            {
+                auto interval = elapsed - timer.mLastElapsed;
+                if (interval == 0) interval = 1;
+                else if (interval > 166) interval = 166;
+                milliseconds = interval;
+                updated.mLastElapsed = elapsed;
+            }
+            // The original double constant contains the promoted binary32
+            // value0.001f. Preserve both explicit binary32 stores around scale.
+            updated.mDeltaSeconds = static_cast<float>(math.multiply(milliseconds, double(.001f)));
+            updated.mDeltaSeconds = static_cast<float>(math.multiply(updated.mDeltaSeconds, scale));
+            if (!std::isfinite(updated.mDeltaSeconds))
+                throw std::invalid_argument("nonrepresentable native timer output");
+        }
+        timer = updated;
+        counters = updatedCounters;
+        return timer.mDeltaSeconds;
+    }
+
     PhysicalFrameResult preparePhysicalFrame(PhysicalFrameClock& clock,
         const PhysicalFrameSettings& settings, float delta, std::uint32_t rawMode, bool limitSubsteps)
     {
