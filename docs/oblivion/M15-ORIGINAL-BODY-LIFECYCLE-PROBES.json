@@ -887,5 +887,218 @@
         "sha256": "160df0a5c078db4f784229afbbe44dcebde0b4f8744686a05270383c19af16bd"
       }
     }
+  },
+  "original06_constraint_owner_followup": {
+    "status": "Independent original normal-input course and exact hardware writer identities verified; full native solver graph and fork reaction integration remain open",
+    "source_parent_commit": "671c2e4b90bdc2d6879bcae83f7edf3fbf743dec",
+    "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-06/report.json",
+    "report_sha256": "4a45934b3894eb3e82aad80db2eac1c3b3e06fe6af6a30e305ee5bd3df9a1915",
+    "observer_sha256": "f12d7f210a1c1f9ad7b079a31a6d7b0d0e26f4b6b4219a684b8dd72bf67045ff",
+    "assembler_sha256": "d7fc0258325311fa0d73d7d1a4990212a47e5d195df332aecb2b8d679243c692",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "frames": 93,
+    "controllers": 99,
+    "states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "baseline": {
+      "raw": 0,
+      "fatigue": 1.00604248046875,
+      "authored_nodes": 52,
+      "authored_bodies": 26,
+      "authored_constraints": 25,
+      "membership": {
+        "raw": 0,
+        "authored_bodies_registered": 0,
+        "authored_constraints_owned": 0
+      }
+    },
+    "authored_body_objects_retained": true,
+    "authored_constraint_objects_and_endpoints_retained": true,
+    "hierarchy_read_errors": 0,
+    "hardware_watch_count": 4,
+    "all_watchpoints_native_type": 7,
+    "hardware_writes": [
+      {
+        "kind": "main-body-world-link",
+        "stop_pc": "0x8cb655",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8dde3c",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x91f009",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8cc199",
+        "raw": 4,
+        "old_zero": false,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x8cc259",
+        "raw": 4,
+        "old_zero": false,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x91ed67",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      },
+      {
+        "kind": "main-body-world-link",
+        "stop_pc": "0x8cbea2",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8ddc5d",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      }
+    ],
+    "writer_verification": "Every32-byte near-PC window was compared with the pinned original PE section bytes. Constraint owner clears at91ED60, before body World clear8CBE9B and island clear8DDC56. Deeper GDB unwind is not trusted.",
+    "callback_identity": {
+      "native_constraint_primary_vtable": "A9A274",
+      "virtual_C": "8D9A30",
+      "static_path": [
+        "8DC1C0 dispatches master first/slave first virtualC until each list drains",
+        "8D9A30 checks constraint owner+8 and reads removing body World+8",
+        "8CB4E0(World,constraint,true) calls91ED30",
+        "91ED30 clears native constraint owner+8 and removes native master/slave entries"
+      ],
+      "scope": "Captured concrete vtable plus verified original static instructions. Callback execution was not separately breakpoint-counted in this live course."
+    },
+    "native_array_limits": {
+      "master_stride": 28,
+      "slave_pointer_stride": 4,
+      "observer_interpretation": "The observer initially read the master array as4-byte pointer entries. Only index0 is a constraint identity. Later object-like fields are not treated as listener identities; failed reconstruction retained.",
+      "known_native_instances_in_one_frame_max": 36,
+      "additional_instances_seen_across_course": 12,
+      "additional_endpoint_objects_seen": 1,
+      "master_count_total_max": 54,
+      "slave_count_total_max": 35,
+      "scope": "Partial native solver graph enumeration beyond25 authored wrapper constraints. No helper-body or auxiliary-constraint semantics inferred."
+    },
+    "editable_protocol": {
+      "isolation": "Clone restored original05 private prefix into fresh original06. Back up and restore exact INI, plugin list and autosave; verify source/clone pristine, master and executable hashes. Record owned Steam/game process start epochs and actual window PID before input.",
+      "fixture": {
+        "base": "0001E5F5",
+        "reference": "FF000800",
+        "source_strength": 40,
+        "source_luck": 50,
+        "source_handtohand": 10,
+        "source_fatigue": 140,
+        "target_fatigue": 1,
+        "target_base_fatigue": 160,
+        "target_health": 20,
+        "target_integer_fatigue_modav": -159,
+        "fatigue_return_base": 0.05,
+        "fatigue_return_mult": 0,
+        "AI_processing": false,
+        "before_observation_placement": "Target moveto player0 50 0, target yaw180; Player yaw0/pitch30. These changes precede the observer; no outcome writes during contact/recovery.",
+        "weapon_state": "Query IsWeaponOut before drawing; verify1 before observation. TAI persists across an in-process pristine reload, so verify/correct its toggle state."
+      },
+      "input": "After untouched standing raw0 baseline is recorded, deliver one normal mouse1 press held.25wall seconds. Actual source action kind is not inferred from wall duration.",
+      "observations": [
+        "Require actor/base/vtable identities before following nodes, body wrappers and authored constraints.",
+        "Capture52nodes,26authored bodies and25authored constraint identities each frame; check raw0/4/3/5/6/0 and actual GetUp readiness/completion.",
+        "Use four actual hardware watches: reference X; mainSpine0 body World+8; authored Spine child constraint owner+8; mainSpine0 body island+54.",
+        "Capture native primary constraint vtables and exact writer PCs/registers/raw stack, checking instruction bytes against pinned executable.",
+        "Future master-array observer must use28-byte internal records atbody+68 and4-byte slave pointer entries at+74. Enumerate unowned/auxiliary constraints separately; do not assume authored NIF records exhaust native solver objects."
+      ],
+      "cleanup": "Detach debugger, verify TracerPid0, quit via qqq, consume game wrapper0, restore all backed-up cloned inputs and verify pristine hashes. Shut down only epoch-checked private Steam and consume its wrapper0."
+    },
+    "retained_failures": [
+      {
+        "phase": "observed-01",
+        "reason": "No matched contact from initial.15-wall-second mouse press. Native PlaceAtMe fixture produced different actual position from original05; exact cause not asserted. Standing capture preserved; debugger explicitly interrupted/detached, pristine reloaded."
+      },
+      {
+        "kind": "missing xset",
+        "reason": "Private display autorepeat disabled through libX11 after xset executable unavailable; initialfailedbatch delivered noinput."
+      },
+      {
+        "kind": "master array reinspection",
+        "reason": "Naive4-byte pointer-array interpretation of master68 rejected by native28-byte record code. Failed incomplete reconstruction retained; unknown native constraints are not fabricated."
+      }
+    ],
+    "limits": [
+      "Original game only; no new fork runtime/input/view/FPS/save-restart gate.",
+      "No full native solver trajectory or complete auxiliary constraint/endpoint lifetime semantics.",
+      "The four hardware watches cover only referenceX, one authored body World/island and one authored constraint owner. Proxy world/filter remain sampled, not hardware watched here.",
+      "Callback route is static from captured vtable and original instructions, not separately breakpoint-counted. Deeper GDB unwind is not trusted; exact writer instruction windows/registers/stack are retained.",
+      "Master array records after first entry require correct28-byte reads in any future observer. Existing raw objects after index0 must not be treated as callbacks."
+    ],
+    "cleanup": {
+      "game_epoch_dead": true,
+      "game_exit": {
+        "code": 0
+      },
+      "restored": {
+        "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+        "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+        "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+      },
+      "pristine_source_and_clone_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "steam_shutdown": {
+      "command_code": 0,
+      "owned_epoch_dead": true,
+      "epoch": {
+        "pid": 121482,
+        "start_ticks": 2971586,
+        "display": ":100"
+      }
+    },
+    "artifacts_sha256": {
+      "inputs.json": "8352bbdc157164b5b47247234aecac7ec95b396c2b4de20f1614027ccc1b6319",
+      "sample.py": "f12d7f210a1c1f9ad7b079a31a6d7b0d0e26f4b6b4219a684b8dd72bf67045ff",
+      "function-identity.json": "267787b478d60b1fc8497b3c1e262c599ba7378d543e842ab46fb1a19f07618f",
+      "observed-01-precontact.json": "de40cd16f5ba7a863c2a8de6d19efc46c9efcff7e6503fae221a63124be0e682",
+      "observed-01-no-contact.json": "bdb931c75070bbe4fb3cb2ff7b61d1b60766fb0afbd54f3e7a84e07dcd1b3263",
+      "observed-01-gdb-command.json": "0508619008467d28ab1059ad43d21245ba2bbdd47d27889e835621808abd5bac",
+      "observed-01-orchestrator.json": "6a7e77c70a3798e24f0cf5be0964fa11d970ec980180466d0d7200f715fb7b44",
+      "observed-02-precontact.json": "751f1ff2ea916cd8570fe884f49553fb3f53d1eed55dc59eabd890f1369d0599",
+      "observed-02-sample.json": "ff8c36b82c43f0d4740fb956e712cf9aac8b409b4560416c5013be5b9d752947",
+      "observed-02-gdb-command.json": "0508619008467d28ab1059ad43d21245ba2bbdd47d27889e835621808abd5bac",
+      "observed-02-orchestrator.json": "3ea3e2cf72c1e0bb66a2c48e4ce54e30450255bc35b64eb8870e3101d0cd102e",
+      "native-array-reinspection-initial.json": "7cbc340511399f859281c777c2d55cd93014699b6d6476fd4ae77ab41d78c893",
+      "native-array-reinspection.json": "c5aafbebbdbf94c39e2b5089fb0781d571d8ed23d941e2cd6f1549efbde98e31",
+      "native-array-reinspection-final.json": "313127d67f155c9f0e860d6f2ebd9daf8058c5fcb7bae5fc71c0d61336e49958",
+      "cleanup-inputs.json": "e53fcec7628d4e7a1f6b902b7c7d632c6ae4606c6c7ef115c4170e4ff4f49b96",
+      "steam-shutdown.json": "fc018703e2a887b849386cff38e492c1bf8ec1e3b27d4b5187bd6011b650b482",
+      "game-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "steam-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "input-log.jsonl": "8dc4c8689d68c36dd7271c860f8ff698b7b15837937f0bb771e18fb31e53a711",
+      "fixture-ready-02.png": "270397a88996d8ffdde7ef8bb993d7698354c897df4c51f887858ad88146a3ab",
+      "recovered.png": "aca3bda4999de337b98851be73da9eb6472a45cffa09d6a9e32e4d0caa04c5cd"
+    }
   }
 }

@@ -2933,5 +2933,102 @@
       "scope": "Static inspection only; not additional executed cases or native simulation."
     },
     "validation_scope": "Independent executable corpus and structured documentation only. Production C++/Python code is unchanged from ab1a6921fe; its prior full suites remain the implementation checkpoint. No new fork runtime gate is closed."
+  },
+  "original06_constraint_owner_followup": {
+    "protocol": "M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json#original06_constraint_owner_followup",
+    "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-06/report.json",
+    "report_sha256": "4a45934b3894eb3e82aad80db2eac1c3b3e06fe6af6a30e305ee5bd3df9a1915",
+    "frames": 93,
+    "states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "source_parent_commit": "671c2e4b90bdc2d6879bcae83f7edf3fbf743dec",
+    "hardware_writes": [
+      {
+        "kind": "main-body-world-link",
+        "stop_pc": "0x8cb655",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8dde3c",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x91f009",
+        "raw": 4,
+        "old_zero": true,
+        "value_zero": false
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8cc199",
+        "raw": 4,
+        "old_zero": false,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x8cc259",
+        "raw": 4,
+        "old_zero": false,
+        "value_zero": false
+      },
+      {
+        "kind": "spine-constraint-owner",
+        "stop_pc": "0x91ed67",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      },
+      {
+        "kind": "main-body-world-link",
+        "stop_pc": "0x8cbea2",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      },
+      {
+        "kind": "main-body-island",
+        "stop_pc": "0x8ddc5d",
+        "raw": 6,
+        "old_zero": false,
+        "value_zero": true
+      }
+    ],
+    "callback_identity": {
+      "native_constraint_primary_vtable": "A9A274",
+      "virtual_C": "8D9A30",
+      "static_path": [
+        "8DC1C0 dispatches master first/slave first virtualC until each list drains",
+        "8D9A30 checks constraint owner+8 and reads removing body World+8",
+        "8CB4E0(World,constraint,true) calls91ED30",
+        "91ED30 clears native constraint owner+8 and removes native master/slave entries"
+      ],
+      "scope": "Captured concrete vtable plus verified original static instructions. Callback execution was not separately breakpoint-counted in this live course."
+    },
+    "native_array_limits": {
+      "master_stride": 28,
+      "slave_pointer_stride": 4,
+      "observer_interpretation": "The observer initially read the master array as4-byte pointer entries. Only index0 is a constraint identity. Later object-like fields are not treated as listener identities; failed reconstruction retained.",
+      "known_native_instances_in_one_frame_max": 36,
+      "additional_instances_seen_across_course": 12,
+      "additional_endpoint_objects_seen": 1,
+      "master_count_total_max": 54,
+      "slave_count_total_max": 35,
+      "scope": "Partial native solver graph enumeration beyond25 authored wrapper constraints. No helper-body or auxiliary-constraint semantics inferred."
+    },
+    "status": "Original native writer/identity evidence; no fork recovery or solver graph completion claim",
+    "next": "Execute the identified body/constraint removal path with native28-byte master and4-byte slave arrays, then account for runtime auxiliary constraints before automatic registration/recovery integration."
   }
 }

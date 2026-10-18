@@ -5057,3 +5057,34 @@ before the observed native body World-link clear; concrete listener identities
 and callbacks remain to be established. Production code is unchanged from
 ab1a6921fe, so its prior full normal/sanitized/Python checkpoint still applies.
 Full M15S4 and its normal-input recovery/restart acceptance remain open.
+
+
+Original06 completes a normal-input Dog KO/recovery observation with 93 frames,
+raw0/4/3/5/6/0, stable 52-node/26-body/25-authored-constraint identities and no
+hierarchy-read errors. Four verified hardware watches identify authored
+constraint-owner admission, island migration and removal. The constraint owner
+tracks the body island pointer, then clears at 91ED60 during GetUp before the
+main body's World pointer and island pointer clear. All captured writer windows
+match the pinned executable. The native constraint vtable is A9A274; its virtual C
+is 8D9A30. Captured identity plus static dispatch identifies the route through
+8CB4E0 and91ED30; deeper debugger stack unwinding is not accepted as proof.
+
+The native master array uses 28-byte internal records, while the slave array
+uses 4-byte pointers. The observer's initial master-array pointer interpretation
+is restricted to its first entry; later raw object-like fields are not listener
+identities. Partial reinspection identifies native constraint instances beyond
+the 25 authored NIF wrappers: up to 36 known instances in one frame, 12 additional
+distinct pointer addresses across the course and one endpoint outside the authored body
+graph. Native master counts total up to 54, so complete solver graph enumeration
+and auxiliary-constraint semantics remain open. The existing authored graph must
+not be presented as an exhaustive native solver graph.
+
+The initial no-contact attempt, a missing display-tool attempt and unsuccessful
+master-array reconstructions are retained. The accepted retry freshly reloads
+the pristine save and declares an explicit target offset, orientation and mouse
+hold after the initial PlaceAtMe placement differed. All game/Steam/debugger
+processes and wrappers are closed; exact cloned inputs and source/clone pristine
+hashes are restored. Protocol, identity hashes, scope and limits are in
+`M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json`. This is independent original evidence;
+automatic fork reaction/GetUp integration and every remaining full S4 normal-input,
+view/device/FPS and recovery fresh-process acceptance gate remain open.
