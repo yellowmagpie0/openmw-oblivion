@@ -124,7 +124,8 @@ namespace NifBullet
     RagdollNativeBlendPoseTargets ragdollNativeBlendPoseTargets(const RagdollNativeTargetPose& physical,
         const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags);
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
-        std::span<const RagdollBoneWorldPose> bones);
+        std::span<const RagdollBoneWorldPose> bones,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
 
     // Original torque*dt binary32 store, then torque-unit conversion to the
     // caller's world units (mass is unchanged, lengths use lengthScale).

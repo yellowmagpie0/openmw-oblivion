@@ -1001,8 +1001,9 @@ namespace NifBullet
     }
 
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
-        std::span<const RagdollBoneWorldPose> bones)
+        std::span<const RagdollBoneWorldPose> bones, Nif::NativeTransformPrecision precision)
     {
+        require(Nif::Detail::NativeTransformMath(precision).valid(), "invalid native scene arithmetic precision");
         require(!definition.mBodies.empty() && bones.size() == definition.mBodies.size(), "bone pose count");
         std::unordered_map<std::uint32_t, const osg::Matrixf*> poses;
         for (const auto& bone : bones)
@@ -1016,7 +1017,7 @@ namespace NifBullet
                 "duplicate body/bone identity");
             const auto found = poses.find(body.mNodeRecord);
             require(found != poses.end(), "missing current bone world pose");
-            const auto target = ragdollNativeSceneBodyTargetPose(*found->second, body);
+            const auto target = ragdollNativeSceneBodyTargetPose(*found->second, body, precision);
             auto pose = btTransform(btQuaternion(target.mRotation[0], target.mRotation[1],
                 target.mRotation[2], target.mRotation[3]), vector(target.mPosition));
             pose.setOrigin(pose.getOrigin() * btScalar(RagdollNativeLengthScale));

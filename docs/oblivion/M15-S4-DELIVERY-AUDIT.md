@@ -4936,3 +4936,17 @@ policy. Lower world operations and constraint followup are explicit boundaries;
 counter/override production lifetimes and full constraint policy remain open.
 The [protocol](M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json) records exact profiles,
 hashes, boundary calls, return/stack/register assertions and limits.
+
+
+Native actor admission now carries live Single arithmetic through the initial
+scene-to-body graph adapter, matching its prepared native renderer. The adapter
+accepts explicit precision and keeps Double as the existing caller default.
+Eight frozen original first-sync ordinary/bodyT cases cover graph origin/basis,
+a real Single/Double difference, preservation of the default and invalid-mode
+rejection. Both full component inventories pass2813 cases/269 suites, and both
+full engine inventories pass1628 cases/122 suites, normally and under ASan/UBSan
+with leak detection disabled. Source, selections and hashes are recorded in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This closes the initial graph-adapter precision gap recorded above. Automatic
+reaction frames, body membership through recovery, reference/proxy movement,
+GetUp playback and normal-input/view/FPS/restart acceptance remain open.

@@ -2109,5 +2109,137 @@
       },
       "scope": "Per-body admission dispatch with explicit world-operation/constraint boundaries; not a fork or native full-physics acceptance gate."
     }
+  },
+  "native_body_admission_precision_followup": {
+    "status": "Native actor initial body graph conversion selects live Single arithmetic; full M15S4 remains incomplete",
+    "source": {
+      "head": "44c20ed8381cedaa170bfdfab11d5c81c101b62f",
+      "source_fingerprint": "09e9840429ad390b087e14f171d15527d0d27da08e6e09e7c4ee54607722719e"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "b5e56a634042037e11e67c8150220ac2cb13d32c91abc3d37fcde5a28c9986c1",
+      "components/nifbullet/actorragdollphysics.cpp": "bf960a21ae63798084b3cdb24e11efb82ea703c4d3e14360e471477f5fe86c9f",
+      "apps/openmw/mwworld/oblivionphysicalpose.cpp": "067f28107b62fc70f7afba683d79df17c1f0b5e9991267612e02a931d7724a90",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "986ca68fdad5bd8e62300fee4583d098b0c1c7b58ec06cd077c8807d608217a4"
+    },
+    "changes": [
+      "ragdollBodyWorldPoses accepts explicit arithmetic precision and validates it before constructing any output.",
+      "PreparedNativeActorPhysicalPose passes Single consistently with its prepared native renderer.",
+      "The default graph conversion remains Double for existing callers.",
+      "Eight frozen original first-sync ordinary/bodyT cases now also verify graph basis and origin, assert a real Single/Double difference, and preserve the legacy default. Invalid precision rejects."
+    ],
+    "independent_expectation": "Existing full original initialization/registration/first707370 corpus02, live007F frozen stores in RagdollNativeSceneTarget.LivePrecisionMatchesOriginalFirstSyncAcrossQuaternionBranches.",
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-body-admission-precision-normal-01/verification.json",
+        "report_sha256": "186cdb6889b39700ad8049f70bc9cd834c640f784503502fd1d48d6cd4a08c35",
+        "source": {
+          "head": "44c20ed8381cedaa170bfdfab11d5c81c101b62f",
+          "source_fingerprint": "09e9840429ad390b087e14f171d15527d0d27da08e6e09e7c4ee54607722719e"
+        },
+        "results": {
+          "components": {
+            "executed": 2813,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1c8bb12600656d96a964eb2ffff8718dcd0579ddbd09489b671e4f10598df1e6",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "20b88a43f8cb1558145922f7f33afa7be753cdd1fd5ec3fb87e8891797a4c781",
+            "inventory_sha256": "c5e5022025d1d444f81c94bb1bd1c0b0b262e26b61e60c653740e8251975bfc1",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1628,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4497af3edf7eb4bbd199cf9208e1070669561a92fbec83980c382f3e27574b31",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "7d059d36a4642d95716f017ea1857601317ee4a90d12e0eeb87b2f68c955964d",
+            "inventory_sha256": "040bb8d19fbf1b3a83fb174ae6c30d7fa4fa5578f6b08973dbc9dc0ca906a555",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-body-admission-precision-sanitized-01/verification.json",
+        "report_sha256": "2aad641ca49f5939d1829c8e8e616a16ac8c5c21403f13910cc5c44977334e25",
+        "source": {
+          "head": "44c20ed8381cedaa170bfdfab11d5c81c101b62f",
+          "source_fingerprint": "09e9840429ad390b087e14f171d15527d0d27da08e6e09e7c4ee54607722719e"
+        },
+        "results": {
+          "components": {
+            "executed": 2813,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0500528a2263772bffbda7d3e9a0c1bdcd5b179d60eb31c821e2199df2a8e580",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "601254af78b2af022b6bca1ea49b5d1a094bc91a4cfd7a68862d7bf47840306f",
+            "inventory_sha256": "a90ae85e10f6f6dd9136fb5804296d780fb190fccd9abdb980c2d576f6ed1fee",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1628,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a218f9c9cff83055d8160a3ae34371db6b7d6371c7f0c8223944fe246c1b2020",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "71a84c6135775415c152b9e519851d37e20ce8ad5ae42747e3064d7c53b7fa9a",
+            "inventory_sha256": "040bb8d19fbf1b3a83fb174ae6c30d7fa4fa5578f6b08973dbc9dc0ca906a555",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        }
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "Leak detection disabled; ASan/UBSan test-process coverage only.",
+      "Bullet basis conversion and world-unit scaling remain representation boundaries; native first-sync stores are the independent expected values.",
+      "Automatic contact/reaction-frame driving, retained body world membership, reference/proxy movement, GetUp playback and recovery restart still need implementation and runtime acceptance.",
+      "No new fork normal-input visual, trajectory, FPS or restart gate is closed by these tests."
+    ]
   }
 }

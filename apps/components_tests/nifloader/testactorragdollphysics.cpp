@@ -5426,6 +5426,7 @@ namespace
                 {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
                 {0x3f792c40u, 0x405233e8u, 0x40852ed2u, 0x3e08c0a1u, 0xbf221b35u, 0xbe47c524u, 0x3f3caa3cu}},
         }};
+        bool graphPrecisionDiffers = false;
         for (std::size_t index = 0; index < cases.size(); ++index)
         {
             SCOPED_TRACE(index);
@@ -5443,7 +5444,34 @@ namespace
                 EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mPosition[i]), row.mExpected[i]);
             for (unsigned i = 0; i < 4; ++i)
                 EXPECT_EQ(std::bit_cast<std::uint32_t>(target.mRotation[i]), row.mExpected[3 + i]);
+
+            // Exercise the graph admission adapter with the same independently
+            // frozen native stores. Bullet's basis is a representation boundary;
+            // expected native quaternion/position values still come from the PE.
+            body.mRecord = 100;
+            body.mNodeRecord = 8;
+            NifBullet::ActorRagdollDefinition graph;
+            graph.mBodies.push_back(body);
+            const std::array bones{NifBullet::RagdollBoneWorldPose{8, matrix}};
+            const auto single = NifBullet::ragdollBodyWorldPoses(
+                graph, bones, Nif::NativeTransformPrecision::Single);
+            ASSERT_EQ(single.size(), 1);
+            const btQuaternion expectedRotation(std::bit_cast<float>(row.mExpected[3]),
+                std::bit_cast<float>(row.mExpected[4]), std::bit_cast<float>(row.mExpected[5]),
+                std::bit_cast<float>(row.mExpected[6]));
+            EXPECT_EQ(single[0].getBasis(), btMatrix3x3(expectedRotation));
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(single[0].getOrigin()[axis],
+                    btScalar(std::bit_cast<float>(row.mExpected[axis])) * NifBullet::RagdollNativeLengthScale);
+            const auto legacy = NifBullet::ragdollBodyWorldPoses(graph, bones);
+            const auto explicitDouble = NifBullet::ragdollBodyWorldPoses(
+                graph, bones, Nif::NativeTransformPrecision::Double);
+            ASSERT_EQ(legacy.size(), 1);
+            ASSERT_EQ(explicitDouble.size(), 1);
+            EXPECT_EQ(legacy[0], explicitDouble[0]);
+            graphPrecisionDiffers |= single[0] != legacy[0];
         }
+        EXPECT_TRUE(graphPrecisionDiffers);
     }
 
     TEST(RagdollNativeSceneTarget, PrecisionSelectionRejectsUnknownModesAndPreservesRigidAdmission)
@@ -5453,6 +5481,10 @@ namespace
         const auto identity = osg::Matrixf::identity();
         EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(identity, unknown), std::invalid_argument);
         EXPECT_THROW(NifBullet::ragdollNativeSceneBodyTargetPose(identity, body, unknown), std::invalid_argument);
+        NifBullet::ActorRagdollDefinition graph;
+        graph.mBodies.push_back(body);
+        const std::array bones{NifBullet::RagdollBoneWorldPose{body.mNodeRecord, identity}};
+        EXPECT_THROW(NifBullet::ragdollBodyWorldPoses(graph, bones, unknown), std::invalid_argument);
         for (const auto precision : {Nif::NativeTransformPrecision::Single, Nif::NativeTransformPrecision::Double})
         {
             const auto scaled = osg::Matrixf::scale(2, 2, 2);
