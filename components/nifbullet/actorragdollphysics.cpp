@@ -1,6 +1,7 @@
 #include "actorragdollphysics.hpp"
 #include <components/nif/nativetransformmath.hpp>
 #include "nativedynamicsworld.hpp"
+#include "nativecollisiondispatcher.hpp"
 #include "ragdollconecoordinates.hpp"
 #include "ragdollvelocity.hpp"
 
@@ -401,6 +402,8 @@ namespace NifBullet
                 mPublished = false;
                 return;
             }
+            if (auto* dispatcher = dynamic_cast<NativeCollisionDispatcher*>(mWorld.getDispatcher()))
+                dispatcher->unregisterOwner(mOwner);
             if (mPublished)
                 if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&mWorld))
                     native->unregisterNativeMotionOwner(mOwner);
@@ -1364,6 +1367,10 @@ namespace NifBullet
                 return false;
         try
         {
+            if (mImpl->mNativeWorld && mImpl->mInternalMasks)
+                if (auto* dispatcher = dynamic_cast<NativeCollisionDispatcher*>(world.getDispatcher()))
+                    dispatcher->registerOwner(this, static_cast<NativeDynamicsWorld&>(world),
+                        mImpl->mCollisionObjects, mImpl->mInternalFilterWords, *mImpl->mInternalMasks);
             std::vector<btCollisionObject*> routed;
             routed.reserve(mImpl->mBodies.size());
             for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
@@ -1745,6 +1752,8 @@ namespace NifBullet
                 if (auto* pair = cache->findPair(left, right))
                     cache->cleanOverlappingPair(*pair, mImpl->mWorld.getDispatcher());
         }
+        if (auto* dispatcher = dynamic_cast<NativeCollisionDispatcher*>(mImpl->mWorld.getDispatcher()))
+            dispatcher->refreshOwner(this);
         prepared.mData.reset();
     }
 

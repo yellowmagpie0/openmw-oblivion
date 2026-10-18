@@ -5334,3 +5334,17 @@ The fresh-owner wire test restores distinct group words into a differently initi
 Tested source fingerprint: `f1e8fd792f0c52e2e8942aa9b37817c38483c8b911ee2010a891dcdd34d84496`. Source/binary hashes, scope and evidence are recorded in `internal_filter_restore_persistence_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
 
 These words control the configured owned-pair policy. Global group ownership/allocation, external native World routing, automatic counter/scene and contact/reaction/GetUp integration remain open. No normal-input or fresh-engine gameplay/restart gate is closed by these backend checks; full M15S4 remains open.
+
+### Native collision routing between configured actors
+
+PhysicsSystem now uses NativeCollisionDispatcher. Published actors with configured native masks bind their complete owned body set and current packed words; absent World bodies keep their binding for later admission. Both endpoints must be configured in the same World, whose immutable native mask tables must agree. Existing Bullet collision/ignore/group-mask decisions remain in force. Generic objects and queries retain their existing routes.
+
+The dispatcher preserves supplied pair order. Full original 8A8060 body-pair wrapper execution confirms that its first and second collidable+1C words reach 8A7F70 in that order, without sorting or symmetrization, in 37,836 cases. Original initialization/CRT/predicate instructions execute without stubbed game calls; return pointer, single-byte output, stack and callee-saved registers are checked. This does not establish identical Havok/Bullet upstream pair order.
+
+Filter publication releases denied cross-owner cached algorithms immediately while preserving overlaps and unrelated generic contacts. Enabling stationary pairs recreates contacts on detection. Bindings follow the stable live vector object across word swaps and v52 composite restoration. Tests cover explicit layer29 asymmetry, conflicting World masks, deferred/absent bodies, teardown, failure after body publication and a reused World address with a retained old actor.
+
+Full normal and ASan/UBSan checks each pass 2,874 component tests in 273 suites and 1,636 engine tests in 122 suites, with exact inventories and no failures or skips. Both engines are rebuilt. A separate normal/instrumented driver updates two production actors for every native wrapper row and checks actual contacts without movement: 14,767 enabled and 23,069 denied per run; swapping arguments mismatches 726 expected results. Leak checks are disabled. Python/schema sources are unchanged; the previous 321-test Python result was not repeated.
+
+Tested source fingerprint: `470ec4565d3d09414012b59243b9dc3bce306055ed7fa659b69803770542cf3d`. Detailed source/binary/oracle hashes and boundaries are in `external_configured_actor_filter_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+Global group ownership/allocation, unconfigured capsule/static/loose-object filtering, shape-child/root and ray/query routes, automatic physical construction/counter/scene/contact/reaction/GetUp and remaining mastery/effect/input/restart courses remain open. These checks add real cross-owner collision behavior, but close no normal-input or fresh-engine gameplay acceptance gate. Full M15S4 remains open.

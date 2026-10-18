@@ -4929,5 +4929,214 @@
       "Legacy absence preserves configured live words and does not reconstruct missing filter history. Current configured owners always capture complete words.",
       "Automatic counter/scene callers, contact/reaction/GetUp and all remaining full M15S4 input/view/device/FPS/interruption/mastery/effects/drop and fresh-process recovery courses remain open."
     ]
+  },
+  "external_configured_actor_filter_followup": {
+    "status": "PhysicsSystem uses an ordered native dispatcher for pairs with two configured actor owners in one World. Generic objects, queries, group ownership, automatic physical construction/contact/recovery and complete S4 runtime acceptance remain open.",
+    "source": {
+      "head": "9f7e97fc0c27483520e19b6b8c68914293f9d5d1",
+      "source_fingerprint": "470ec4565d3d09414012b59243b9dc3bce306055ed7fa659b69803770542cf3d"
+    },
+    "source_sha256": {
+      "components/nifbullet/nativecollisiondispatcher.hpp": "79f51510ac2d09500206569f6948b052c5a1510176e310c4c1bf0990f7000ded",
+      "components/nifbullet/nativecollisiondispatcher.cpp": "696bd0535c0a6704b90e0da932429463b296450a99d18edcd6c0d9cb9d521661",
+      "components/nifbullet/actorragdollphysics.cpp": "48eb4bbe8b20e9ce7f2b3aaa25418ce826c09a7013d93938771b1403bd8b5a24",
+      "components/nifbullet/nativedynamicsworldregistration.cpp": "f9a653a02a145d3323018e4a3cb58d3e6ddef9cca87ddbda6e877c39e1637424",
+      "apps/openmw/mwphysics/physicssystem.cpp": "5aeeae797362f97d778064f1fc0451fcb528ff28d8bd6d8991373d982ccfab04",
+      "apps/components_tests/nifloader/testnativecollisiondispatcher.cpp": "05ad0e1ce2d254e6839413f1a6325132a26a237b8de66243635bfddaf13313d9",
+      "components/CMakeLists.txt": "bbb2204eb705b03a385e94a7e1e76d184e18eaa01b276568075f306d28a37da9",
+      "apps/components_tests/CMakeLists.txt": "69b46186c92c347569eceeaedbe6af59853f6323940346deb484d062913839bb"
+    },
+    "post_test_changes": [
+      "Evidence index and audit only; all tested production/test sources unchanged."
+    ],
+    "changes": [
+      "Install NativeCollisionDispatcher in PhysicsSystem. Published configured actors bind all owned body identities to their immutable mask table and stable live word-vector object, including bodies absent from World membership. Filter-vector swaps and v52 restoration automatically expose current words.",
+      "Preserve the supplied pair order and existing Bullet needsCollision/ignore/group-mask policy. Apply the native predicate only when both endpoints have configured bindings in the same World; generic objects and query routes retain existing behavior.",
+      "All bound actors in one World must agree on both native mask tables. Conflicting masks reject before World body publication; no arbitrary per-actor global mask choice is made.",
+      "Native denial releases cached algorithms/manifolds through Bullet while retaining overlaps. Filter publication refreshes denied cross-owner pairs immediately; enabled stationary pairs create contacts on subsequent detection. Unrelated generic contacts retain their manifolds.",
+      "Actor teardown, failed publication and World destruction remove borrowed bindings before their body/word/mask storage expires. Retained actors safely outlive a World, including reuse of the same World address."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/external-owner-filter-normal-01/verification.json",
+        "report_sha256": "6e0ab27c21b1cd7f9fb6767c3a8718286252799267a338821ba9667ac97e6a8a",
+        "source": {
+          "head": "9f7e97fc0c27483520e19b6b8c68914293f9d5d1",
+          "source_fingerprint": "470ec4565d3d09414012b59243b9dc3bce306055ed7fa659b69803770542cf3d"
+        },
+        "results": {
+          "components": {
+            "executed": 2874,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b898239c628d92b66a8f720b65c57249a4ad504fd37ae771ffba58683b83c0a7",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "df102b1973ae414a406fff2fbc34e86ded96e6479abda695d2d5bd354f5003b8",
+            "inventory_sha256": "61a8018f2b00cc1ce13db6b67248f2a9bd2533792c4afe5e65c0b873ecd90a3d",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1636,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a7f83b55cf46688c60d907e8f34110f572e27e3c06ad93ec315a1b4c03b3580a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ab25369b26ea69431bae071e6b65e62afd572c28f9f2e56863c09dfad96685e1",
+            "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "e669c81d1b8c8f105ba32ab0b6b98cb72327789b451756bcdbbb054d4037d57b"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/external-owner-filter-sanitized-01/verification.json",
+        "report_sha256": "838521f5f8f3af2a9a10f948c0d3ae2879bb770f281b31a16aec21f0eb819f46",
+        "source": {
+          "head": "9f7e97fc0c27483520e19b6b8c68914293f9d5d1",
+          "source_fingerprint": "470ec4565d3d09414012b59243b9dc3bce306055ed7fa659b69803770542cf3d"
+        },
+        "results": {
+          "components": {
+            "executed": 2874,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0d82bb21c1710ff7095c0d36fd9e0b6d33e5f8e6dbc29ee9d8e2a223c7d0e1a6",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "aa567284d1815a91a70a1936fdc63bdaa746b1d4d4fdf9ee73a0b86d1a9b7c5a",
+            "inventory_sha256": "c8f2c6d6a88b58e6f6c629ffd0c211fda3f4036459fd3ac234c251cdc7bc4df1",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1636,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "411cf5d1577e9585f1b0fc0437b6151173225efdf4011c1032587a460b53316c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "e7d13a1b974642af0a206071988fdb33bef7328a3385f19eaa693d54639a3b05",
+            "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "b0fa5b238e8dde48d5abde79524505cf5daecaadfe7c3fac255fe381b1ccbdd6"
+      }
+    },
+    "cases": [
+      "CrossOwnerChangesReleaseDeniedContactsAndReenableWithoutMovement",
+      "LayerTwentyNineExceptionUsesTheSuppliedPairOrder",
+      "ConflictingWorldMasksRejectBeforePublishingBodies",
+      "DeferredAndRestoredWordsStayBoundToTheirVectorObject",
+      "WorldDestructionClearsBindingsBeforeRetainedActorsDie",
+      "FailedPublicationReleasesBorrowedCollisionBindings",
+      "OrdinaryBulletMasksAndUnconfiguredGraphsRetainTheirPolicy"
+    ],
+    "native_oracle": {
+      "report": "build/oblivion-compat/m15/S4/native-body-pair-dispatch-static-01/report.json",
+      "report_sha256": "1eb06aec4b45b1fd94a1e8c5959fdc6470b931166abd17e3719e1ea761332502",
+      "passed": true,
+      "cases": 37836,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "9d4cdca8eac97ffc10dfbc8afe23c7d0a3184785e11602cb1699c4f0eaf43afd",
+      "input_corpus_sha256": "5789dbeb98a0d2696f0f356c737c7b0550c6d763370bb82e28e41e564202c546",
+      "corpus_sha256": "048b9e03efe725f7c72bd4c83dba03d03e0d86004d538dba59a7b9e72c198a57",
+      "tsv_sha256": "f0d714ee390545fd23ff2b9f8b53b63e663279a9e9448c2c44c21073530ac842",
+      "actual_paths": [
+        "Full8A83C0 initialized masks including actual981630 memset",
+        "Full8A8060 body-pair wrapper and8A7F70 predicate; no game-call stubs"
+      ],
+      "findings": [
+        "The first supplied collidable+1C is predicate argument1, and the second supplied collidable+1C is argument2, without sorting or symmetrization.",
+        "Return EAX points to the output byte; only that byte changes; ret12 and all callee-saved registers are verified."
+      ],
+      "limits": [
+        "This executes the body-pair wrapper, not the upstream Havok broadphase producer or solver. It does not prove that Bullet and Havok assign identical pair order.",
+        "Shape-child/root resolution, ray/query wrappers, global group ownership/allocation, dynamic mask mutation and gameplay are outside this probe."
+      ]
+    },
+    "actual_contact_corpus": {
+      "report": "build/oblivion-compat/m15/S4/external-owner-filter-corpus-01/report.json",
+      "report_sha256": "5eb86e6ac6d22efee922425b8b1d25a56424754d4a1050a20d5d5ceca9ec3fe9",
+      "driver_sha256": "4f15e86ec01fb5ef20698875926100689f9303a6261a46d35d3627a39391070b",
+      "results": {
+        "normal": {
+          "passed": true,
+          "cases": 37836,
+          "actual_contact_enabled": 14767,
+          "actual_contact_disabled": 23069,
+          "swapped_argument_control_mismatches": 726,
+          "binary_sha256": "32efdf97a376872f88b8ba0f8c68de93d4dfb3313d2e03fbfb72b89191c129cc",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/external-owner-filter-corpus-01/compare-normal",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-body-pair-dispatch-static-01/corpus.tsv"
+          ]
+        },
+        "sanitized": {
+          "passed": true,
+          "cases": 37836,
+          "actual_contact_enabled": 14767,
+          "actual_contact_disabled": 23069,
+          "swapped_argument_control_mismatches": 726,
+          "binary_sha256": "1055fdc80abf3919639c253fdee587a21084ee4af4a420c2be0c055e36559b28",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/external-owner-filter-corpus-01/compare-sanitized",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-body-pair-dispatch-static-01/corpus.tsv"
+          ]
+        }
+      },
+      "scope": "Each native wrapper row updates two configured single-body production actors through prepared filter publication. Dispatcher decisions and actual sphere contact presence match the independently executed ordered native body-pair wrapper, without moving either body. The fixture binds logical left/right to the actual stable Bullet pair order. This does not claim Havok and Bullet generate identical upstream pair order or trajectories."
+    },
+    "python": "No Python/schema changes. The immediately preceding v52 checkpoint passed all 321 Python tests; unchanged checks were not repeated.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "preflight": "Five changed/new translation units pass syntax compilation with the existing CMake flags in external-owner-filter-syntax-02; the final test update also passes. syntax-01 stopped before any compiler invocation because build/compile_commands.json held dependency entries only; the retained failed directory is not compiler/test evidence.",
+    "validation_scope": "Compiler/structural checks, exact complete test inventories, original full body-pair wrapper returns, and actual production actor filter publication plus Bullet contact behavior. No original-game session or normal-input fork course was launched for this chunk.",
+    "limits": [
+      "Only two configured actor endpoints in one NativeDynamicsWorld with matching immutable masks. Plain Bullet dispatchers retain prior internal-only behavior.",
+      "The original wrapper preserves supplied collidable order; this does not prove Havok and Bullet produce identical upstream pair order or trajectories. The corpus binds logical inputs to the actual stable Bullet fixture order.",
+      "Global system-group ownership/allocation, unconfigured capsule/static/loose-object routes, child/root shape selection, ray/query wrappers and live native mask mutation remain open.",
+      "Caller retains the exclusive World barrier, including queries, through preparation/admission/commit or rollback. Borrowed actor data is immutable except validated word publication; existing Bullet cleanup contracts apply.",
+      "Automatic actor construction, counter/scene callers, contact/reaction/GetUp, full mastery/drop/effects and the full input/view/device/FPS/interruption/save-quit-fresh-restart courses remain open."
+    ]
   }
 }

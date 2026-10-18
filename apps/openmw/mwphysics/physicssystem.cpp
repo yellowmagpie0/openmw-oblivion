@@ -22,6 +22,7 @@
 
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <components/nifbullet/nativedynamicsworld.hpp>
+#include <components/nifbullet/nativecollisiondispatcher.hpp>
 
 #include <LinearMath/btQuickprof.h>
 #include <LinearMath/btVector3.h>
@@ -143,7 +144,7 @@ namespace MWPhysics
         mResourceSystem->addResourceManager(mShapeManager.get());
 
         mCollisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-        mDispatcher = std::make_unique<btCollisionDispatcher>(mCollisionConfiguration.get());
+        mDispatcher = std::make_unique<NifBullet::NativeCollisionDispatcher>(mCollisionConfiguration.get());
         mBroadphase = std::make_unique<btDbvtBroadphase>();
 
         mConstraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();

@@ -1,4 +1,5 @@
 #include "nativedynamicsworld.hpp"
+#include "nativecollisiondispatcher.hpp"
 
 #include <BulletCollision/BroadphaseCollision/btBroadphaseInterface.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
@@ -51,6 +52,8 @@ namespace NifBullet
 
     NativeDynamicsWorld::~NativeDynamicsWorld()
     {
+        if (auto* dispatcher = dynamic_cast<NativeCollisionDispatcher*>(getDispatcher()))
+            dispatcher->unregisterWorld(*this);
         for (const auto& weak : mRegistrationBatches)
             if (auto data = weak.lock())
             {
