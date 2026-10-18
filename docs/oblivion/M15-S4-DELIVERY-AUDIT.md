@@ -14,7 +14,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block now prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear through the owned contact. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and zero/broken-after-wear items remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
-| 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | Armored ordinary hits, remaining unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
+| 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
@@ -6112,3 +6112,56 @@ OpenMW visibility policy. Native actor admission, complete contact/reaction/FSM/
 GetUp and all remaining view/device/FPS and in-action restart gates remain open.
 The real-content course uses the normal binary; sanitizer evidence here is the
 synthetic full inventories. Full M15S4 is incomplete.
+
+
+### Contact-selected armor impact feedback reaches live playback
+
+Committed ordinary unblocked hits no longer mute all impact sound merely
+because the victim wears armor. The already prepared wear selection carries
+its Light/Heavy material into the controller's existing once-only sound result.
+No selected item means body/weapon layers, including positive-Fatigue punches
+that skip armor selection. Material survives the Player god-mode condition-write
+guard. Creature victims now bypass NPC armor selection/RNG, matching5FFBE3;
+equipped-block playback is unchanged.
+
+The pinned executable executes **2,160 caller cases** at007F/027F/037F across
+Character/Creature, armor fraction/wear gates, absent/Light/Heavy selected entry,
+prior block sound and weapon types. Actual base/armor getters execute; selection,
+condition writer, sound-call and teardown boundaries are explicit. Existing
+independent palette and RNG oracles remain their own layers. Four World cases
+are expanded for material selection, god-mode no-write, positive hand Fatigue
+and Creature rating without NPC RNG. Full normal and ASan/UBSan engine checks
+each pass **1,690 tests in124 suites**, exact inventories, no failures/skips.
+Tested dirty fingerprint:
+`aea693de940c65f889e6102e90cfacd240fd216998816e1f3a69ba457186da05`.
+Only existing warnings in unchanged CharacterController/World-test code remain.
+ASan leaks are disabled; unchanged component/Python checks are not repeated.
+
+A valid identical staged input reproduces the old bug on9767ef4638: one actual
+shortsword hit, correct damage/wear/three RNG draws, zero impact requests/PCM
+cluster. Corrected normal processes358525/358625 are terminal and pass the same
+contact plus fresh continuation. The three Heavy/Flesh/BladeFlesh voices play
+once; actual PCM jointly matches stock clips at **0.9996168549**, with each family
+contributing well above the predeclared1% threshold. Baseline and continuation
+have no matching cluster. Nine native AV arrays and Player/target inventories
+match baseline exactly; combat seed1->415139642, weapon55.875->55.5750007629 and
+armor250.125->249.788726807 occur once, with no replay. Both images were directly
+reviewed: named Valen Dreth stands in the staged cuirass, drawn shortsword/HUD
+and dungeon render.
+
+The old fixture first fails envelope admission (T4VR21 vs T4ST27), then unknown
+legacy Active process fields. Both attempts remain retained. Valid03 repairs
+only the copied envelope, declares action-1/knocked0 initial idle fields for9
+actors and uses the typed writer to52; it injects no contact outcome and proves
+no legacy unknown-state migration gate. Its historical Health expectation was
+also wider-FPU: full original weapon+mitigation replay at previously observed
+live007F yields1062088582 rather than1062088581 at027F/037F. Both baseline and
+corrected code match the live value exactly; no arithmetic/tolerance changed.
+
+Editable inputs and all source/binary, PCM/asset, process/save and failed-attempt
+receipts are in `M15-ARMOR-HIT-FEEDBACK-PROBE.json` and
+`native_armor_hit_feedback_followup` in the verification index. This is a normal
+build, staged unblocked Heavy-armor shortsword course at1FPS. Light/unarmed/
+Creature crosses retain lower-layer checks; remaining live material/weapon,
+view/device/FPS, actor admission, reaction/FSM/GetUp, mastery/breakage/effects
+and in-action restart gates stay open. Full M15S4 is incomplete.

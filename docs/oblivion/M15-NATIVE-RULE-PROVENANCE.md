@@ -16156,3 +16156,56 @@ OpenMW visibility policy. Native actor admission, complete contact/reaction/FSM/
 GetUp and all remaining view/device/FPS and in-action restart gates remain open.
 The real-content course uses the normal binary; sanitizer evidence here is the
 synthetic full inventories. Full M15S4 is incomplete.
+
+
+### Contact-selected armor impact feedback reaches live playback
+
+Committed ordinary unblocked hits no longer mute all impact sound merely
+because the victim wears armor. The already prepared wear selection carries
+its Light/Heavy material into the controller's existing once-only sound result.
+No selected item means body/weapon layers, including positive-Fatigue punches
+that skip armor selection. Material survives the Player god-mode condition-write
+guard. Creature victims now bypass NPC armor selection/RNG, matching5FFBE3;
+equipped-block playback is unchanged.
+
+The pinned executable executes **2,160 caller cases** at007F/027F/037F across
+Character/Creature, armor fraction/wear gates, absent/Light/Heavy selected entry,
+prior block sound and weapon types. Actual base/armor getters execute; selection,
+condition writer, sound-call and teardown boundaries are explicit. Existing
+independent palette and RNG oracles remain their own layers. Four World cases
+are expanded for material selection, god-mode no-write, positive hand Fatigue
+and Creature rating without NPC RNG. Full normal and ASan/UBSan engine checks
+each pass **1,690 tests in124 suites**, exact inventories, no failures/skips.
+Tested dirty fingerprint:
+`aea693de940c65f889e6102e90cfacd240fd216998816e1f3a69ba457186da05`.
+Only existing warnings in unchanged CharacterController/World-test code remain.
+ASan leaks are disabled; unchanged component/Python checks are not repeated.
+
+A valid identical staged input reproduces the old bug on9767ef4638: one actual
+shortsword hit, correct damage/wear/three RNG draws, zero impact requests/PCM
+cluster. Corrected normal processes358525/358625 are terminal and pass the same
+contact plus fresh continuation. The three Heavy/Flesh/BladeFlesh voices play
+once; actual PCM jointly matches stock clips at **0.9996168549**, with each family
+contributing well above the predeclared1% threshold. Baseline and continuation
+have no matching cluster. Nine native AV arrays and Player/target inventories
+match baseline exactly; combat seed1->415139642, weapon55.875->55.5750007629 and
+armor250.125->249.788726807 occur once, with no replay. Both images were directly
+reviewed: named Valen Dreth stands in the staged cuirass, drawn shortsword/HUD
+and dungeon render.
+
+The old fixture first fails envelope admission (T4VR21 vs T4ST27), then unknown
+legacy Active process fields. Both attempts remain retained. Valid03 repairs
+only the copied envelope, declares action-1/knocked0 initial idle fields for9
+actors and uses the typed writer to52; it injects no contact outcome and proves
+no legacy unknown-state migration gate. Its historical Health expectation was
+also wider-FPU: full original weapon+mitigation replay at previously observed
+live007F yields1062088582 rather than1062088581 at027F/037F. Both baseline and
+corrected code match the live value exactly; no arithmetic/tolerance changed.
+
+Editable inputs and all source/binary, PCM/asset, process/save and failed-attempt
+receipts are in `M15-ARMOR-HIT-FEEDBACK-PROBE.json` and
+`native_armor_hit_feedback_followup` in the verification index. This is a normal
+build, staged unblocked Heavy-armor shortsword course at1FPS. Light/unarmed/
+Creature crosses retain lower-layer checks; remaining live material/weapon,
+view/device/FPS, actor admission, reaction/FSM/GetUp, mastery/breakage/effects
+and in-action restart gates stay open. Full M15S4 is incomplete.

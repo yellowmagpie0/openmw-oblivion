@@ -325,6 +325,7 @@ namespace MWMechanics
             return std::nullopt;
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
         std::int32_t soundWeaponType = -1;
+        std::int32_t hitArmorClass = -1;
         float preArmorDamage = 0;
         bool blockAccepted = false;
         bool weaponBlockSound = false;
@@ -346,6 +347,7 @@ namespace MWMechanics
                 blockAccepted = damage->mBlockAccepted;
                 weaponBlockSound = damage->mWeaponBlockSound;
                 result.mHitSounds = damage->mBlockSounds;
+                hitArmorClass = damage->mHitArmorClass;
                 preArmorDamage = damage->mPreArmorDamage;
                 deltas.mConditionChanges = damage->mVictimConditionChanges;
                 deltas.mRandomTransition = damage->mRandomTransition;
@@ -382,6 +384,7 @@ namespace MWMechanics
                 blockAccepted = damage->mBlockAccepted;
                 weaponBlockSound = damage->mWeaponBlockSound;
                 result.mHitSounds = damage->mBlockSounds;
+                hitArmorClass = damage->mHitArmorClass;
                 result.mWeaponConditionAfterWear = damage->mConditionAfterWear;
                 result.mArmorConditionWrites = static_cast<unsigned>(std::count_if(
                     damage->mVictimConditionChanges.begin(), damage->mVictimConditionChanges.end(),
@@ -415,18 +418,14 @@ namespace MWMechanics
                 || contact->getType() == ESM::REC_CREA4)
             && !blockAccepted)
         {
-            // Original5FFD61 supplies no armor/shield material or selector
-            // flags. Model initialization projects Creature Actor byte104 as
+            // Original5FFCE5 uses the armor selected by this contact's wear
+            // path;5FFD61 uses no material even if other armor is equipped.
+            // Model initialization projects Creature Actor byte104 as
             // canonical0/1; the TESCreature base type is not this sound input.
-            auto& inventory = contact->getClass().getInventoryStore(*contact);
-            const bool armored = std::any_of(inventory.begin(), inventory.end(), [&](const auto& item) {
-                return item.getType() == ESM::REC_ARMO && inventory.isEquipped(item);
-            });
-            if (!armored)
-                result.mHitSounds = ESM4::nativeMeleeHitSounds({soundWeaponType},
-                    contact->getType() == ESM::REC_CREA4
-                        ? std::optional<std::uint8_t>{contact->getRefData().getOblivionCanSpendFatigue() ? 1u : 0u}
-                        : std::nullopt);
+            result.mHitSounds = ESM4::nativeMeleeHitSounds({soundWeaponType, hitArmorClass},
+                contact->getType() == ESM::REC_CREA4
+                    ? std::optional<std::uint8_t>{contact->getRefData().getOblivionCanSpendFatigue() ? 1u : 0u}
+                    : std::nullopt);
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
@@ -673,6 +672,7 @@ namespace MWMechanics
         {
             std::vector<OblivionPhysicalConditionChange> mConditions;
             std::optional<OblivionCombatRandomTransition> mRandom;
+            std::int32_t mHitArmorClass = -1;
         };
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
@@ -878,7 +878,7 @@ namespace MWMechanics
         }
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
             incoming.mHealth, std::move(wear.mConditions), wear.mRandom,
-            block->mAccepted, block->mWeaponBlockSound, block->mSounds};
+            block->mAccepted, block->mWeaponBlockSound, block->mSounds, wear.mHitArmorClass};
     }
 
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
@@ -898,6 +898,10 @@ namespace MWMechanics
             std::span<const OblivionPhysicalConditionChange> prior, std::optional<float> adjustedWear)
         {
             PreparedArmorWear result{{prior.begin(), prior.end()}, {}};
+            // Original5FFBE3 bypasses NPC armor selection for Creature bases,
+            // including nonzero armor ratings supplied by their AV authority.
+            if (victim.getType() == ESM::REC_CREA4)
+                return result;
             if (absorbedFraction <= 0)
                 return result;
             const float wear = adjustedWear.value_or(
@@ -948,9 +952,10 @@ namespace MWMechanics
                 throw std::logic_error("native armor selection random preparation mismatch");
             if (!selected.mSlot)
                 return result; // All seven failed draws still belong to this contact.
+            const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
+            result.mHitArmorClass = (candidate.mBase->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0;
             if (player && world.getGodModeState())
                 return result; // Original65FF10 suppresses condition after selection has consumed its draws.
-            const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
             const auto& ref = candidate.mItem.getCellRef();
             const auto priorCondition = std::find_if(result.mConditions.begin(), result.mConditions.end(),
                 [&](const auto& change) { return change.mItem == candidate.mItem; });
@@ -1047,7 +1052,8 @@ namespace MWMechanics
         if (!wear)
             return std::nullopt;
         return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
-            incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds};
+            incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
+            wear->mHitArmorClass};
     }
 
     static float weaponContactDamage(MWBase::World& world,

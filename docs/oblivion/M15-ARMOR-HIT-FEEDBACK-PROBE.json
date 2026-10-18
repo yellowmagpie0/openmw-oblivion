@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x5ffbe3",
+  "stop": "0x5ffd69",
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "actor_types": [
+    "Character",
+    "Creature"
+  ],
+  "armor_fractions": [
+    0,
+    0.25,
+    0.85
+  ],
+  "wear_values": [
+    -0.0,
+    0.0,
+    1,
+    10
+  ],
+  "selected_armor": [
+    "none",
+    "light",
+    "heavy"
+  ],
+  "block_sound_already_played": [
+    false,
+    true
+  ],
+  "weapon_types": [
+    -1,
+    0,
+    1,
+    2,
+    3
+  ],
+  "native_calls": [
+    "Actual actor virtual+170 ->4D9B40 base getter",
+    "Actual468FF0 armor slot predicate with UpperBody fixture",
+    "Actual4B4C70 armor heavy-flag getter"
+  ],
+  "boundaries": {
+    "0x5e5a00": "Return explicitly selected armor entry, ornone. Existing independent full selection/RNG oracle remains separate.",
+    "actor virtual+2c4": "Capture armor wear request; do not mutate condition or exercise god mode here.",
+    "0x6af880": "Capture nine native sound arguments; existing independent6AFB48 palette verifies names.",
+    "0x484470": "Entry teardown omitted",
+    "0x401f20": "Entry free omitted"
+  },
+  "scope": "Native selection gate and sound-material caller arguments only. No full collision/damage/armor RNG/condition write, actual playback or game process. Creature branch must bypass NPC armor selection, independent of nonzero rating. Existing block sounds suppress additional impact sound.",
+  "runtime_intent": "Propagate the contact-selected armor class from already prepared wear through the ordinary unblocked contact and existing once-only controller sound publication. Wearing any armor alone must not mute body/weapon layers.",
+  "runtime_preregistration": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/preregistered-acceptance.json",
+  "runtime_base": "build/oblivion-compat/m15/S4/native-armor-contact-offscreen-01/input-recipe.json",
+  "runtime_expected_layers": [
+    "PHYArmorHitHeavy",
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "runtime_source_sha256": "e39ed54c4b3a98fd380aa1d794bf351093beaaf56587956b6d3fd900ace4048a",
+  "runtime_setup": "Private historical save: correct SAVE.T4VR21 to match unchanged T4ST27, then use typed migration writer to52 with declared idle process_action=-1 and process_knocked_state=0 for9 previously unknown Active actors. Preserve initial AV arrays, condition and RNG; not legacy unknown-state migration acceptance.",
+  "pcm_acceptance": {
+    "joint_template_minimum_correlation": 0.9,
+    "each_family_minimum_explained_energy": 0.01,
+    "candidate_minimum_individual_correlation": 0.2,
+    "families": [
+      "PHYArmorHitHeavy",
+      "PHYDamageFlesh",
+      "WPNHitBladeFlesh"
+    ]
+  },
+  "precision_control": {
+    "entry": "0x484f80",
+    "then": [
+      "0x5ff712",
+      "0x5ff7bd"
+    ],
+    "weapon_type": 0,
+    "base_damage": 5,
+    "maximum_condition": 56,
+    "condition": 55.875,
+    "float_av": {
+      "0": 40,
+      "7": 50,
+      "10": 140,
+      "14": 10,
+      "16": 10
+    },
+    "base_fatigue": 140,
+    "bonus": 0,
+    "armor_rating": 3,
+    "expected_live_controlword": 127,
+    "expected_weapon_damage_bits": 1062506497,
+    "expected_health_damage_bits": 1062088582,
+    "wider_controlwords": [
+      639,
+      895
+    ],
+    "wider_weapon_damage_bits": 1062506496,
+    "wider_health_damage_bits": 1062088581,
+    "scope": "Full original weapon entry and mitigation prefix with declared input-reader boundaries; wider historical fixture expectation is superseded at the previously observed live007F precision."
+  }
+}

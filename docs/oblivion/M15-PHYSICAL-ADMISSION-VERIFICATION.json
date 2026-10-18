@@ -9975,5 +9975,438 @@
       "Original focus/loading pause-source identity, scene-complex command lifecycle, native actor owner admission and complete contact/reaction/FSM/GetUp integration remain open.",
       "No new nonlethal contact/block/recovery, alternate view/device/FPS, or windup/block/recovery fresh-process acceptance. Full M15S4 remains incomplete."
     ]
+  },
+  "native_armor_hit_feedback_followup": {
+    "implementation": "Carry the actual contact-selected armor class through prepared wear/damage into the existing once-only controller sound result. Remove the any-equipped-armor mute. No selection means ordinary body/weapon layers; selection retains Light/Heavy material even when god mode suppresses condition writes. Creature victims bypass NPC armor selection/RNG as original5FFBE3 does. Equipped block sound handling is unchanged.",
+    "manifest": {
+      "path": "docs/oblivion/M15-ARMOR-HIT-FEEDBACK-PROBE.json",
+      "sha256": "3c0da028c3dd1f7027f50dedb7629e011f5804da4731ec8c01951e51caf18830"
+    },
+    "reports": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-normal-01/verification.json",
+        "sha256": "5ac7b05814f2682423c7ba82d999e0cec51411a77738b66e5cd815bce4f8c1d1",
+        "source": {
+          "head": "9767ef4638e6a9097f056c9e214bc041a0f9d9a8",
+          "source_fingerprint": "aea693de940c65f889e6102e90cfacd240fd216998816e1f3a69ba457186da05"
+        },
+        "suites": 124,
+        "result": {
+          "executed": 1690,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "7c1d4962497d6bb142e898a39a1fb63522f5889595dcc1783bb631dd0f0d93f6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c501c3fa9029ed062c7a000b0593b83074076c7ec8688ae15501f4389e515ea2",
+          "inventory_sha256": "c48b6217a4e3d1732a88bb29e051b7521382260e7445296e1f69d1552eff87c9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "sanitized": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-sanitized-01/verification.json",
+        "sha256": "f3c281172450130970e24f3a58fe4cf2933a4b560f042bfb579e27353b365aa2",
+        "source": {
+          "head": "9767ef4638e6a9097f056c9e214bc041a0f9d9a8",
+          "source_fingerprint": "aea693de940c65f889e6102e90cfacd240fd216998816e1f3a69ba457186da05"
+        },
+        "suites": 124,
+        "result": {
+          "executed": 1690,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "87b34b838a0cf00e76ade00461bbf1a131da07b50084a856319590fd6a615c82",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "7881209c32cb68903296d2d68eadae392914e24749ae835da69af6a4d33ee76e",
+          "inventory_sha256": "c48b6217a4e3d1732a88bb29e051b7521382260e7445296e1f69d1552eff87c9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "expanded_tests": [
+      "OblivionWorldTest.CreatureVictimContactOwnsHealthFatigueAndRestoredForce",
+      "OblivionWorldTest.PlayerGodModePreservesArmorButPublishesOwnedSelectionRandomState",
+      "OblivionWorldTest.OrdinaryWeaponArmorWearPublishesConditionsAndRandomStateOnce",
+      "OblivionWorldTest.UnarmedKnockedContactsPrepareArmorWearAndCommitResourcesRandomAndConditionOnce"
+    ],
+    "oracle": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-oracle-03/verification.json",
+        "sha256": "1af04f41f09f1e3e7e42b445f62bd1cb079b55c9a8465c62860cd52f48f8233c"
+      },
+      "result": {
+        "passed": true,
+        "cases": 2160,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "manifest_sha256": "3c0da028c3dd1f7027f50dedb7629e011f5804da4731ec8c01951e51caf18830",
+        "probe_sha256": "1965eaa169f6eb3c96590764cb3fc3f9b9ceaff09ff8726633f19baecab0434c",
+        "cases_sha256": "bcf76c4a925c8b8eececaab84a4091e2c05688a242fd1a2afe25d81c16ab48c0",
+        "wear_virtual_targets": [
+          "0x5f3870"
+        ],
+        "scope": "Native selection gate and sound-material caller arguments only. No full collision/damage/armor RNG/condition write, actual playback or game process. Creature branch must bypass NPC armor selection, independent of nonzero rating. Existing block sounds suppress additional impact sound."
+      },
+      "bounds": "Actual5FFBE3..5FFD69 with real base/armor-flag getters; selected-entry lookup, condition writer, teardown/free and6AF880 sound call are declared boundaries. No complete original contact/RNG/playback claim.01/02 retain earlier equivalent manifests;03 binds final source manifest."
+    },
+    "precision_control": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-precision-oracle-01/verification.json",
+        "sha256": "07b6b451d8b46ad8a0730071614748d166a8db3bac44bb9a403223a29d54d202"
+      },
+      "result": {
+        "passed": true,
+        "rows": [
+          {
+            "cw": 127,
+            "weapon_damage_bits": 1062506497,
+            "weapon_damage": 0.8303223252296448,
+            "health_damage_bits": 1062088582,
+            "health_damage": 0.8054126501083374
+          },
+          {
+            "cw": 639,
+            "weapon_damage_bits": 1062506496,
+            "weapon_damage": 0.830322265625,
+            "health_damage_bits": 1062088581,
+            "health_damage": 0.8054125905036926
+          },
+          {
+            "cw": 895,
+            "weapon_damage_bits": 1062506496,
+            "weapon_damage": 0.830322265625,
+            "health_damage_bits": 1062088581,
+            "health_damage": 0.8054125905036926
+          }
+        ],
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "6b5121f55f916534cbbfb4d1871b3632b114ec4c0fc48194dfd7044757ab3bfa",
+        "input": {
+          "weapon_damage_word": 5,
+          "weapon_max_condition": 56,
+          "instance_condition": 55.875,
+          "current_float_av": {
+            "0": 40,
+            "7": 50,
+            "10": 140,
+            "14": 10,
+            "16": 10
+          },
+          "base_fatigue": 140,
+          "attack_bonus": 0,
+          "armor_rating": 3,
+          "maximum_armor_fraction": 0.85
+        },
+        "scope": "Full original484F80 ->547070, then native5FF712..5FF7BD mitigation. Declared float/integer AV, damage/max/condition readers and armor query boundaries. CW007F is the previously observed live main precision; wider words are sensitivity only. No game process or physical contact/condition sink here."
+      },
+      "interpretation": "Historical fixture expected wider CW027F/037F damage1062088581. At previously observed live007F, complete original weapon entry gives1062506497 and mitigation1062088582. Both baseline9767ef4638 and corrected build match this current expectation; no arithmetic changed and no tolerance added."
+    },
+    "baseline": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-baseline-03/baseline-verification.json",
+        "sha256": "773f69a48a52a23b50964d091241ea734d05b01aa5e701c9faa989e3d966df99"
+      },
+      "result": {
+        "passed": true,
+        "baseline_binary_sha256": "8e69e6461aa731ec00c486b814f8f370d5d2f3c7dec4332e638e0c0976c2cf07",
+        "source_sha256": "e39ed54c4b3a98fd380aa1d794bf351093beaaf56587956b6d3fd900ace4048a",
+        "contact_line": "[10:32:02.125 V] M15 melee hit committed: actor=dynamic:player:0000000000000001 id=1 fatigue_cost=7.8 before=140 after=132.2 action=3 health_damage=0.805413 fatigue_damage=0 block_fraction=0 block_fatigue=0 weapon_condition_write=55.575 victim=content:oblivion.esm:01fc43 armor_condition_writes=1 combat_random_draws=3",
+        "impact_requests": 0,
+        "scope": "Valid staged idle armed actor against IronCuirass: one actual normal-input committed hit, expected damage/wear/RNG and zero impact sound requests. Reproduces missing feedback on9767ef4638; not a full gameplay acceptance."
+      },
+      "audio": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-baseline-03/first/impact-audio-verification.json",
+        "sha256": "3db5a5777b043e524b7035ba1f8a7f210f6fa8fd7599e655b73c9229ecd6d64e"
+      }
+    },
+    "runtime": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/verification.json",
+        "sha256": "babf5c116816d41509c433a8471271734555ac8747c4e6c2137b1142451ac76d"
+      },
+      "result": {
+        "passed": true,
+        "epochs": [
+          {
+            "pid": 358525,
+            "start_ticks": 7989555,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "72657024556ce62e7a5b916ed72adf56d7698ec573bfa797d00a893359ee2f0f"
+          },
+          {
+            "pid": 358625,
+            "start_ticks": 7998998,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "72657024556ce62e7a5b916ed72adf56d7698ec573bfa797d00a893359ee2f0f"
+          }
+        ],
+        "input_sha256": "e39ed54c4b3a98fd380aa1d794bf351093beaaf56587956b6d3fd900ace4048a",
+        "save_sha256": [
+          "924ad7003e70e8a59f9c8bb2532957d1a8c0b7a0c0af58c9326ec574aaba888e",
+          "cb965fddf070ae4c9604a417a8436e592d704c221eaf680e3c74b8b3c20aed05"
+        ],
+        "binary_sha256": "72657024556ce62e7a5b916ed72adf56d7698ec573bfa797d00a893359ee2f0f",
+        "native_actor_value_arrays_matching_baseline": 9,
+        "expected_health_damage_bits": 1062088582,
+        "expected_weapon_condition_bits": 1113476301,
+        "expected_armor_condition_bits": 1132055018,
+        "sounds": [
+          "PHYArmorHitHeavy",
+          "PHYDamageFlesh",
+          "WPNHitBladeFlesh"
+        ],
+        "scope": "Normal shortsword hit against staged equipped IronCuirass, restrained native NPC. Compare old silent impact baseline with selected Heavy/body/blade sound publication, then fresh-process no replay. Not ordinary equip, hostility, reaction/GetUp, or high-FPS acceptance."
+      },
+      "audio_first": {
+        "passed": true,
+        "expected_clusters": 1,
+        "clusters": [
+          {
+            "time": 35.0685,
+            "joint_correlation": 0.9996168548690282,
+            "family_explained_energy": {
+              "PHYArmorHitHeavy": 0.36635739899519504,
+              "PHYDamageFlesh": 0.1500854472019455,
+              "WPNHitBladeFlesh": 0.32888756123936547
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_03.wav": 222877.1626374267,
+              "phy_armorhit_h_02.wav": 263745.0700649366,
+              "phy_dmgflesh_04.wav": 150239.92614237528
+            },
+            "accepted": true
+          }
+        ],
+        "candidate_groups": [
+          {
+            "time": 35.0685,
+            "joint_correlation": 0.9996168548690282,
+            "family_explained_energy": {
+              "PHYArmorHitHeavy": 0.36635739899519504,
+              "PHYDamageFlesh": 0.1500854472019455,
+              "WPNHitBladeFlesh": 0.32888756123936547
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_03.wav": 222877.1626374267,
+              "phy_armorhit_h_02.wav": 263745.0700649366,
+              "phy_dmgflesh_04.wav": 150239.92614237528
+            },
+            "accepted": true
+          }
+        ],
+        "individual_peaks": [
+          {
+            "asset": "wpn_hit_bladeflesh_01.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_02.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_03.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                35.181,
+                0.6399251190822621
+              ]
+            ]
+          },
+          {
+            "asset": "phy_armorhit_h_01.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": []
+          },
+          {
+            "asset": "phy_armorhit_h_02.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": [
+              [
+                35.161,
+                0.7110494559023753
+              ]
+            ]
+          },
+          {
+            "asset": "phy_armorhit_h_03.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": [
+              [
+                35.1295,
+                0.252288836846214
+              ]
+            ]
+          },
+          {
+            "asset": "phy_armorhit_h_04.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": []
+          },
+          {
+            "asset": "phy_armorhit_h_05.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": [
+              [
+                35.104083333333335,
+                0.40800131833942194
+              ]
+            ]
+          },
+          {
+            "asset": "phy_armorhit_h_06.wav",
+            "family": "PHYArmorHitHeavy",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_01.wav",
+            "family": "PHYDamageFlesh",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_02.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                35.669333333333334,
+                0.33693745055880536
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_03.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                35.0985,
+                0.33190719985482925
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_04.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                35.181,
+                0.4244536551751677
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_05.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                35.654,
+                0.34220946354504467
+              ]
+            ]
+          }
+        ],
+        "pcm_sha256": "a07c0c5924870d50a6b536e2115ca928e2b0d57ac6b4708536223a563d98a5d2",
+        "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+      },
+      "audio_second": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second/impact-audio-verification.json",
+        "sha256": "379c88c869aabbea3ba52c35f050f3d1cd7d2cf28d85b183321756e59eceb039"
+      },
+      "assets": {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/sound-assets.json",
+        "sha256": "38c022485e36529a09cd3c9af6f33fc7629da047073950cd8647a8dab2f32d0e"
+      },
+      "visual": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/first/weapon-victim-after-hit.png",
+          "sha256": "32e3043623792955519e76afd37a4527db7cda9c4099ebfaf149135e82bf1f78",
+          "review": "Directly inspected: named Valen Dreth standing in staged IronCuirass; drawn first-person Rusty Iron Shortsword and dungeon/HUD render. No stagger/GetUp assertion."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second/weapon-victim-continuation.png",
+          "sha256": "9937a804eecb9315e787e249a4a6e3556ae08f43b88aa5f953c499eb1a2feeda",
+          "review": "Directly inspected: named Valen Dreth standing in staged IronCuirass; drawn first-person Rusty Iron Shortsword and dungeon/HUD render. No stagger/GetUp assertion."
+        }
+      ],
+      "scope": "Normal-input unblocked shortsword contact against staged restrained IronCuirass NPC at declared1FPS, then fresh-process continuation. Nine native AV arrays and Player/target inventories match silent baseline exactly; fixed native damage/condition/RNG checks also pass. Actual three-layer PCM correlation0.9996168549, no matching baseline or replay cluster."
+    },
+    "runtime_artifact_sha256": {
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/first.json": "351cb539324aad4a4512292d921c51425b632a7f8bd445afddf023fae35a1503",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second.json": "f26e77e109a0ff508ac15d02654dc0ffcebcd4e85126b88ba8bd415fb887c8c0",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/launcher.py": "9efbdd3416876d8df485e4c72195e065f038d59d831a1e588725ab4b4d63936a",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/epoch-monitor.py": "419c097fd272fd4c14ede7de8b0db1f78d2297638431f616808a055c97be9921",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/verify.py": "ffe373ca020fd5f3acab1120599a052a420e015948504319c8e7692fa507687c",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/analyse-impact.py": "ef962c35385e295284ae0715daafdb48eb339e83b03b0b9e3825e9beaec0b2cc",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/preregistered-acceptance.json": "5ca75b77b0c4abe2f03e24b0d1e6f366089d8eb4f3887a75486fc1305ecacf32",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/preregistered-acceptance-wider-precision.json": "14c0eb72365eeb4361a117db12faf18f2e5b399f26e51dae2031afb1bf4b1857",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/input-envelope-repair.json": "4268416d14aefc72a5b5a1a405236e957995e78e5f89b867dbd6892b28dbe45b",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/first/scenario.json": "f517f56ee23bac41c11ebd1e2b3a562cb6c2b269d0fbe448a2facd7549abf5a7",
+      "build/oblivion-compat/m15/S4/native-armor-hit-feedback-runtime-03/second/scenario.json": "cea31437a380266bb80e861d282142d2b8a991b29c26daa6adbc4744c3347f1b"
+    },
+    "retained_setup_failures": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-baseline-01",
+        "reason": "Historical fixture SAVE.T4VR21 disagrees with T4ST27. Rejected before gameplay; retained and stopped."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-baseline-02",
+        "reason": "Corrected envelope admits parsing but legacy Active process action/knocked values remain unknown; current binding rejects. Stopped exact process/runner, retained failure.03 uses declared idle initialization, typed upgrade to52; not legacy unknown-state migration acceptance."
+      }
+    ],
+    "fixture_initialization": "Same copied input for baseline and corrected code. Correct header byte at104774, then initialize9 previously unknown Active process fields to action-1/knocked0 and promote via typed writer. Initial AV arrays, condition/RNG are preserved; no damage/contact outcome injected.",
+    "source_sha256": {
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "d1cafb45a0c1f77c8d176c4ef4e54c0a767126119d8a518307b32a40e890e4cd",
+      "apps/openmw/mwmechanics/oblivionmelee.hpp": "e91ee13904aac138de0732f79aa802f721272b3852056f1878e14b9e15ad72ae",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "0fba0b8514a0f24284d56e778b51b4d5abc95c8405430da980e8702a6d946e27"
+    },
+    "openmw_executables": {
+      "build/openmw": "72657024556ce62e7a5b916ed72adf56d7698ec573bfa797d00a893359ee2f0f",
+      "build/m15-sanitize/openmw": "b7bd2132f40c6d4928ed3ccf4904bae5ea70dc37e9e88860146ef5d11f3ca507"
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Existing unused context/dangling else in unchanged World test locations15857/19898; normal existing CharacterController unpersistAnimationState maybe-uninitialized. No warning points to new material logic/assertions. ASan leak checks disabled.",
+    "unchanged_checks": "No component or Python implementation changed; preceding full2930-component normal/sanitizer checks retained, not repeated. Both full engine modes rebuild openmw/openmw-tests/esmtool.",
+    "source_identity": "Both helpers completed before final manifest/docs publication or commit. Dirty fingerprint records tested C++ bytes. Final manifest adds explicit setup/audio/precision receipts after those tests and is consumed by the final original caller probe.",
+    "limits": [
+      "Real-content course is normal build, staged restrained NPC and equipped gear at1FPS; not normal-equipping, hostility, alternate slots/materials/weapons/views/devices/FPS, physical reactions or in-action restart acceptance.",
+      "Light/god-mode/positive-Fatigue/unarmed and Creature material/RNG behavior is covered at native caller and World query layers, not new live PCM courses for each cross.",
+      "Complete native actor admission, contact reactions/FSM/GetUp, defensive/mastery/breakage/effects and all remaining S4 gates remain open. Full M15S4 is incomplete."
+    ]
   }
 }

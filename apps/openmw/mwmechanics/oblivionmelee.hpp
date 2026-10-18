@@ -105,6 +105,7 @@ namespace MWMechanics
         bool mBlockAccepted = false;
         bool mWeaponBlockSound = false;
         std::optional<std::array<std::string_view, 3>> mBlockSounds{};
+        std::int32_t mHitArmorClass = -1; // Native contact-selected material, independent of condition writes.
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
@@ -127,6 +128,7 @@ namespace MWMechanics
         bool mBlockAccepted = false;
         bool mWeaponBlockSound = false;
         std::optional<std::array<std::string_view, 3>> mBlockSounds{};
+        std::int32_t mHitArmorClass = -1;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

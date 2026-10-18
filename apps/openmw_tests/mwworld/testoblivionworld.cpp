@@ -6839,6 +6839,19 @@ namespace
             EXPECT_NEAR(weapon->mHealth, 3.241875f, .000001f);
             EXPECT_EQ(item->getCellRef().getNativeItemCondition(), 100);
             EXPECT_EQ(snapshot(), equipped);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 25));
+            ASSERT_GT(MWMechanics::oblivionArmorRating(world, victim), 0);
+            const auto protectedCreature = snapshot();
+            const auto protectedHit = MWMechanics::resolveOblivionOrdinaryWeaponContact(
+                world, player, victim, *item, 0, false);
+            ASSERT_TRUE(protectedHit);
+            EXPECT_EQ(protectedHit->mHitArmorClass, -1);
+            EXPECT_FALSE(protectedHit->mRandomTransition); // Original5FFBE3 Creature branch never selects NPC armor.
+            EXPECT_TRUE(protectedHit->mVictimConditionChanges.empty());
+            EXPECT_EQ(snapshot(), protectedCreature);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 0));
             ASSERT_TRUE(service.beginBlocking(reference.mFormKey));
             EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false));
             EXPECT_TRUE(service.endBlocking(reference.mFormKey));
@@ -8516,6 +8529,7 @@ namespace
         const auto before = snapshot().serializeBinary();
         const auto ordinary = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
         ASSERT_TRUE(ordinary); ASSERT_EQ(ordinary->mVictimConditionChanges.size(), 1u);
+        EXPECT_EQ(ordinary->mHitArmorClass, 1);
         EXPECT_EQ(ordinary->mVictimConditionChanges[0].mCondition, 44.015625f);
         EXPECT_EQ(snapshot().serializeBinary(), before);
         ASSERT_TRUE(world.toggleGodMode());
@@ -8523,6 +8537,7 @@ namespace
         ASSERT_TRUE(guarded); EXPECT_EQ(guarded->mHealth, 12.46875f);
         EXPECT_EQ(guarded->mConditionAfterWear, 994.f); // NPC weapon still wears.
         EXPECT_TRUE(guarded->mVictimConditionChanges.empty());
+        EXPECT_EQ(guarded->mHitArmorClass, 1); // Material selection survives the condition-write god guard.
         ASSERT_TRUE(guarded->mRandomTransition);
         // Full original5FFBF9..5FFC6D/65FF10 caller probe02: draws precede god guard.
         EXPECT_EQ(guarded->mRandomTransition->mExpectedState, 1u);
@@ -8557,6 +8572,15 @@ namespace
         const auto belowOne = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
         ASSERT_TRUE(belowOne); EXPECT_TRUE(belowOne->mVictimConditionChanges.empty());
         ASSERT_TRUE(belowOne->mRandomTransition); EXPECT_EQ(snapshot().serializeBinary(), low);
+        armor.mGeneralFlags &= ~ESM4::Armor::TES4_HeavyArmor;
+        store.getWritable<ESM4::Armor>().insertStatic(armor, armorBase);
+        service.restore(initial, store); // Seed1 selects UpperBody before the god guard.
+        const auto lightBefore = snapshot().serializeBinary();
+        const auto light = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+        ASSERT_TRUE(light);
+        EXPECT_EQ(light->mHitArmorClass, 0);
+        EXPECT_TRUE(light->mVictimConditionChanges.empty());
+        EXPECT_EQ(snapshot().serializeBinary(), lightBefore);
     }
 
     TEST(OblivionWorldTest, OrdinaryWeaponArmorWearPublishesConditionsAndRandomStateOnce)
@@ -8643,6 +8667,7 @@ namespace
             ASSERT_TRUE(prepared);
             EXPECT_EQ(std::bit_cast<std::uint32_t>(prepared->mHealth), 1095204864u); //12.46875
             EXPECT_EQ(prepared->mConditionAfterWear, 994.f);
+            EXPECT_EQ(prepared->mHitArmorClass, 1); // Original5FFCE5 selected Heavy, not any equipped item.
             ASSERT_EQ(prepared->mVictimConditionChanges.size(), 1u);
             EXPECT_EQ(prepared->mVictimConditionChanges[0].mItem, target);
             EXPECT_EQ(std::bit_cast<std::uint32_t>(prepared->mVictimConditionChanges[0].mCondition), 1110446080u); //44.015625
@@ -8764,11 +8789,13 @@ namespace
                 EXPECT_EQ(snapshot().serializeBinary(), before); // Preparation cannot consume RNG or wear.
                 if (!knocked)
                 {
+                    EXPECT_EQ(prepared->mHitArmorClass, -1); // Positive hand Fatigue skips armor material selection.
                     EXPECT_TRUE(prepared->mVictimConditionChanges.empty());
                     EXPECT_FALSE(prepared->mRandomTransition);
                     continue;
                 }
                 ASSERT_EQ(prepared->mVictimConditionChanges.size(), 1u);
+                EXPECT_EQ(prepared->mHitArmorClass, 1);
                 EXPECT_EQ(prepared->mVictimConditionChanges[0].mItem, item);
                 EXPECT_EQ(std::bit_cast<std::uint32_t>(prepared->mVictimConditionChanges[0].mCondition), 1107460096u);
                 ASSERT_TRUE(prepared->mRandomTransition);
