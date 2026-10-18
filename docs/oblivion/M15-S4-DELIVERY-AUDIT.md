@@ -5290,3 +5290,13 @@ filter routing, ordered registration publisher, saved registration fields or
 new gameplay/restart acceptance. Current save version remains 50. Automatic
 contact/reaction/GetUp and full M15S4 normal-input, view/device/FPS, interruption
 and fresh-process recovery gates remain open.
+
+### Prepared ordered World registration batches
+
+NativeDynamicsWorld now prepares complete owner resource batches and preserves ordered body and constraint removals and additions. Admission reserves capacity across every pending owner and creates provisional proxies while keeping old handles, membership and contacts intact. Failed admission and discarded tokens reclaim provisional resources and allow retry. Commit validates the complete source before releasing registrations, attaches reserved proxies without Bullet allocations in the supported fixtures, and advances native motion routing. Owner and World destruction invalidate retained handles safely, including reused identities and addresses.
+
+Full normal and ASan/UBSan component runs each pass 2,853 tests in 271 suites with exact inventories and no failures or skips. The sanitizer corpus driver also links instrumented Bullet. Both corpus runs exercise 14,144 completed native-derived graph plans, including 124 remove/re-add cases and 12,648 ordered physical operations; 256 bounded planner cases do not publish a physical result. Rollback retains old contacts, removed bodies release contacts, and selected contacts return on detection. Corpus operations use ordinary Bullet groups, so this is not native filter parity.
+
+Tested source fingerprint: `53ec5125cb87b29953ce27608cc829a780346f6aa2d56f859f826b5179581209`. Detailed hashes and boundaries are in `prepared_world_registration_batch_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Engine and Python checks were not repeated for this World primitive.
+
+The actor graph adapter, composite filter publication, owned counter/remembered-World state, external collision routing and persistence remain open. Save version remains 50. No new normal-input fork course or restart acceptance is claimed; full M15S4 remains open.

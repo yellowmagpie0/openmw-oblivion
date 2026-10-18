@@ -158,6 +158,7 @@ add_component_dir (nifbullet
     actorragdoll
     actorragdollphysics
     nativedynamicsworld
+    nativedynamicsworldregistration
     ragdollconecoordinates
     ragdollbonepose
     ragdollvelocity

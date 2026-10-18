@@ -4211,5 +4211,163 @@
       "Automatic contact/FSM/GetUp and every remaining full M15S4 acceptance gate remain open.",
       "Borrowed non-Native Worlds retain the existing requirement to outlive their graph; explicit expired-World rejection uses NativeDynamicsWorld lifetime leases."
     ]
+  },
+  "prepared_world_registration_batch_followup": {
+    "status": "Production NativeDynamicsWorld prepared ordered physical batch; actor planner/filter/counter publication and runtime acceptance remain open",
+    "source": {
+      "head": "2009df203d9edd236b15447ebf57f37d7df5e21f",
+      "source_fingerprint": "53ec5125cb87b29953ce27608cc829a780346f6aa2d56f859f826b5179581209"
+    },
+    "source_sha256": {
+      "components/nifbullet/nativedynamicsworld.hpp": "5d1a11cd92b246415431db6f6d0f99f3e1f658df13200dd81384d7eb2dbfe449",
+      "components/nifbullet/nativedynamicsworldregistration.cpp": "7c038038ce481f85bfcb17d63e3442910aaac63ef1cec731c46ab0294166c5c4",
+      "apps/components_tests/nifloader/testnativedynamicsworld.cpp": "bcae98e363448f9a403153a68aadce4f82773237a842b478a940ea2dda0f1e58",
+      "components/CMakeLists.txt": "6980ea566e086801f1b16575fd27541d8bc25b236ac719bf3371e53cdc30648c",
+      "apps/components_tests/CMakeLists.txt": "c5f4a4ff118d20b4c191b4f6a9f50f6100d8a96b5958dc52a6972965e86a6f4f"
+    },
+    "changes": [
+      "Prepare complete owner resources and validate ordered body/constraint operations before any World mutation; snapshot original proxies, shapes, poses, bounds, flags, gravity, source routing generation and all incident constraints.",
+      "Admission reserves the sum of all pending owner additions and creates provisional proxies without changing live body handles, membership or existing cached contacts. Throwing/null proxy admission rolls back and permits retry.",
+      "Commit validates the source and reserved cohort capacity before releasing anything, removes incident constraints before bodies, attaches admitted proxies in operation order, then advances native motion routing. Repeated remove/re-add effects survive unchanged final membership. Supported fixture commits perform zero Bullet allocator calls.",
+      "Owner unregister and World destruction destroy provisional proxies before client resources disappear; stale handles reject identity/address reuse. Simulation and collision detection reject while batches are admitted; the caller must also exclude queries with the World barrier."
+    ],
+    "component_cases": [
+      "LateProxyFailureAndDiscardPreserveExactLiveContactsAndPermitRetry",
+      "CohortAdmissionSumsCapacityAndRollsBackALaterOwnerFailure",
+      "RepeatedReadmissionPreservesBodyAndConstraintIdentities",
+      "BodyFlagsAndGravityFollowExplicitGroupBulletAdmission",
+      "SourceBodyBoundsAndIncidentConstraintsInvalidatePreparation",
+      "InvalidResourcesOrderingAndLinkedCollisionConstraintsReject",
+      "OwnerUnregisterDiscardsProxiesBeforeBodiesDieAndInvalidatesReusedIdentity",
+      "OwnerRemovalDoesNotInvalidateAnotherOwnersArrayIndices",
+      "WorldDestructionCleansProvisionalProxiesAndRejectsAddressReuse"
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/prepared-world-batch-normal-01/verification.json",
+        "report_sha256": "1d71df0d4a345adb5659d0b8d4a50987b84d57a52bccac0eb5d434d42b8457ee",
+        "source": {
+          "head": "2009df203d9edd236b15447ebf57f37d7df5e21f",
+          "source_fingerprint": "53ec5125cb87b29953ce27608cc829a780346f6aa2d56f859f826b5179581209"
+        },
+        "results": {
+          "components": {
+            "executed": 2853,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a8dfdf96d30b62c1ea2fb686608a60cda2d66fadc361653563ee827af736d4d7",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "c9e2089b9d6788c7fdc9f6e2268e9338fa525b295f04ed4eed7038ba8029e79f",
+            "inventory_sha256": "711711660c7e3207fec0fcc93a1bd8cc0d36ccf5e90c357e7e80ec944d59860b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 271
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/prepared-world-batch-sanitized-01/verification.json",
+        "report_sha256": "879bd6c1b056c7d1cb1abd87074249754d625b8121d6dd1bd98ae3a15237cb73",
+        "source": {
+          "head": "2009df203d9edd236b15447ebf57f37d7df5e21f",
+          "source_fingerprint": "53ec5125cb87b29953ce27608cc829a780346f6aa2d56f859f826b5179581209"
+        },
+        "results": {
+          "components": {
+            "executed": 2853,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "93f67230d3a7d52996e58f6706e90f5b78eecb3edcdadbcd2b57d5fc7e51f8b3",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "357ba6f05c6e25c2b220e954dc3f5c9c2515f1e37618ff1db4b39ab98f1ab09b",
+            "inventory_sha256": "2fc25d66f4726295650b052fc6bddcb1d506cf45fe99eaebfeac18da603c955f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 271
+        }
+      }
+    },
+    "corpus_report": "build/oblivion-compat/m15/S4/prepared-world-batch-corpus-01/report.json",
+    "corpus_report_sha256": "0a24ce6a9a3e01f803b6f9bab7e072b48f3840873ccc7437cee7bb773f940610",
+    "corpus": {
+      "passed": true,
+      "scope": "Physical World operations generated from the already independently verified completed native graph plans. Bullet group1/mask-1 is deliberately used; synthetic corpus packed filters are outside the supported internal-mask layer domain. This checks ordered physical membership, stable resource identities, rollback preserving old handles/manifolds, and remove/re-add contact invalidation. It is not native physical filter parity, a production actor graph adapter, or runtime acceptance.",
+      "source_sha256": {
+        "components/nifbullet/nativedynamicsworld.hpp": "5d1a11cd92b246415431db6f6d0f99f3e1f658df13200dd81384d7eb2dbfe449",
+        "components/nifbullet/nativedynamicsworldregistration.cpp": "7c038038ce481f85bfcb17d63e3442910aaac63ef1cec731c46ab0294166c5c4",
+        "components/esm4/physicalregistration.cpp": "8b8afbf4d9d477669f7bf2d270fe460cde0de2a28a4108c2407b145dc4c134a0"
+      },
+      "driver_sha256": "3d78b675b75e3e0fd6b167bf55886ef0967c4743f70545b27ace709026892508",
+      "inputs_sha256": "c0ce8e4bf894f59e18a45607b90a137ebe123f69aea6d331c2af465cc01fe15a",
+      "expected_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+      "native_corpus_sha256": "5abf575188020c585e764005f5337e96ceffa1612a385cb6329e8d99ee94ddc4",
+      "runs": {
+        "normal": {
+          "passed": true,
+          "completed_physical_plans": 14144,
+          "readmission_cases": 124,
+          "ordered_physical_operations": 12648,
+          "bounded_guard_cases_without_physical_publication": 256,
+          "stdout_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+          "binary_sha256": "27479adf38575b55cfcbd483f64a39b7d00921f4c55f3fe09ff959c74fd22b04",
+          "linked_libraries_sha256": {
+            "build/_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17": "f2067dc7f0fa02fcc306acebd08862bacb4f2c46c356735554b2ffd6e9fa7171",
+            "build/_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17": "492e6641d1049800971122a26a16d772dd9cc7832728b1577d111c81ddcefae9",
+            "build/_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17": "9596a5c8e8320b6db5a28d859df60c012480a6136a4f948c7ea5d41b6a51ac7c"
+          },
+          "instrumentation": "ordinary driver and Bullet shared libraries"
+        },
+        "sanitized": {
+          "passed": true,
+          "completed_physical_plans": 14144,
+          "readmission_cases": 124,
+          "ordered_physical_operations": 12648,
+          "bounded_guard_cases_without_physical_publication": 256,
+          "stdout_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+          "binary_sha256": "9ce460f4c97a774ffd7eeeb945e870adb211021291ce43432b31383f3ee36946",
+          "linked_libraries_sha256": {
+            "build/m15-sanitize/_deps/bullet-build/src/BulletDynamics/libBulletDynamics.a": "5c11aeb02388b4797ceec84214c6973c80f2c0f6d2cc3e87c3c20577284b0e37",
+            "build/m15-sanitize/_deps/bullet-build/src/BulletCollision/libBulletCollision.a": "90e9aa723173d81ba9c9cee7bbb8c9681929a8cc41fb7987ae71eac65a246539",
+            "build/m15-sanitize/_deps/bullet-build/src/LinearMath/libLinearMath.a": "6a6006ec945aef3a83374e5198fabd43833959e4c8861823e0e74a2e0350c1be"
+          },
+          "instrumentation": "ASan/UBSan driver and instrumented Bullet static libraries; leak checks disabled"
+        }
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "not_rerun": [
+      "Engine targets/tests (previous internal-filter checkpoint remains historical; the executable has not been rebuilt for this new World implementation).",
+      "Python (no schema changes; save version remains50).",
+      "Original game (reuses independently checked native graph plans; no new instruction observation).",
+      "Normal-input fork gameplay and fresh-process recovery courses."
+    ],
+    "limits": [
+      "Requires an existing NativeDynamicsWorld native motion owner and a caller-held exclusive World barrier. No linked-body collision-reference constraints; configured native mask policy uses addConstraint(..., false).",
+      "Ordinary Bullet proxy creation/cleanup contracts apply: injected failures occur before a failing proxy is returned; previously returned proxies are reclaimed. This is not a general Bullet allocator out-of-memory proof.",
+      "Raw World operations only: the retained actor planner adapter, composite internal filter publication, actual counter/remembered owner state, external World filter routing and persistence still need integration.",
+      "All automatic contact/FSM/GetUp and remaining full M15S4 acceptance gates remain open."
+    ]
   }
 }

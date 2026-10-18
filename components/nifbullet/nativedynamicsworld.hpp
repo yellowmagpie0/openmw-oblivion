@@ -20,6 +20,27 @@ namespace NifBullet
     public:
         struct Lifetime { bool mAlive = true; };
 
+        enum class RegistrationKind { AddBody, RemoveBody, AddConstraint, RemoveConstraint };
+        struct RegistrationOperation
+        {
+            RegistrationKind mKind;
+            btRigidBody* mBody = nullptr;
+            btTypedConstraint* mConstraint = nullptr;
+            int mGroup = 0, mMask = 0;
+        };
+        class PreparedRegistrationBatch
+        {
+        public:
+            ~PreparedRegistrationBatch();
+            PreparedRegistrationBatch(const PreparedRegistrationBatch&) = delete;
+            PreparedRegistrationBatch& operator=(const PreparedRegistrationBatch&) = delete;
+        private:
+            friend class NativeDynamicsWorld;
+            struct Data;
+            explicit PreparedRegistrationBatch(std::shared_ptr<Data> data);
+            std::shared_ptr<Data> mData;
+        };
+
     private:
         struct Owner
         {
@@ -27,10 +48,16 @@ namespace NifBullet
             std::function<void(float)> mStep;
             std::vector<btCollisionObject*> mBodies;
             std::shared_ptr<const char> mGeneration;
+            std::weak_ptr<const char> mPendingRegistration = {};
         };
         const std::shared_ptr<Lifetime> mLifetime = std::make_shared<Lifetime>();
         std::vector<Owner> mNativeOwners;
         const void* mNativeSceneOwner = nullptr;
+        std::vector<std::weak_ptr<PreparedRegistrationBatch::Data>> mRegistrationBatches;
+
+        bool hasAdmittedRegistrationBatch() const noexcept;
+        void discardRegistrationProxies(PreparedRegistrationBatch::Data& data) noexcept;
+        void discardOwnerRegistrationBatches(const void* identity) noexcept;
 
         bool isNativeBody(const btCollisionObject* body) const
         {
@@ -65,7 +92,30 @@ namespace NifBullet
         // Independent identity for detached graphs; retained handles cannot
         // match a new World constructed at the same address.
         std::weak_ptr<const Lifetime> lifetimeIdentity() const noexcept { return mLifetime; }
-        ~NativeDynamicsWorld() override { mLifetime->mAlive = false; }
+        ~NativeDynamicsWorld() override;
+
+        int stepSimulation(btScalar timeStep, int maxSubSteps = 1,
+            btScalar fixedTimeStep = btScalar(1.) / btScalar(60.)) override;
+        void performDiscreteCollisionDetection() override;
+
+        // Complete owned resources and ordered physical operations for an
+        // existing native motion owner. No linked-body collision references:
+        // the native internal mask policy controls those pairs separately.
+        // Preparation validates membership, endpoint order and source bodies.
+        std::unique_ptr<PreparedRegistrationBatch> prepareRegistrationBatch(const void* identity,
+            std::span<btRigidBody* const> bodies, std::span<btTypedConstraint* const> constraints,
+            std::span<const RegistrationOperation> operations);
+        // Admission allocates provisional proxies and reserves summed capacity
+        // for every admitted owner. Live handles/contacts remain unchanged.
+        // Hold the exclusive World barrier: no steps, detection or queries
+        // until every admitted batch commits or rolls back.
+        void admitRegistrationBatch(PreparedRegistrationBatch& prepared);
+        bool validateRegistrationBatch(const PreparedRegistrationBatch& prepared) const noexcept;
+        void rollbackRegistrationBatch(PreparedRegistrationBatch& prepared) noexcept;
+        // Validate before releasing any old registration. Publication reuses
+        // admitted proxies, performs no allocations and updates native routing.
+        // Uses Bullet's existing nonthrowing removal/cleanup contract.
+        bool commitRegistrationBatch(PreparedRegistrationBatch& prepared) noexcept;
 
         // Engine wrapper binding, analogous to original889BB0's World+2B0
         // backreference. This is ownership presence, not simulation enablement.
@@ -183,6 +233,7 @@ namespace NifBullet
 
         void unregisterNativeMotionOwner(const void* identity) noexcept
         {
+            discardOwnerRegistrationBatches(identity);
             std::erase_if(mNativeOwners, [&](const Owner& owner) { return owner.mIdentity == identity; });
         }
     };
