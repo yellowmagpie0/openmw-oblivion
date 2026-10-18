@@ -5622,6 +5622,44 @@ namespace
             EXPECT_EQ(std::bit_cast<std::uint32_t>(single(3, i)), expected[9 + i]);
     }
 
+    TEST_F(ActorRagdollPhysicsTest, NativePhysicalFramePublishesOriginalSinglePrecisionBodyTScene)
+    {
+        // Original full707370/89EA70 fixture19, live007F. The exactly
+        // representable physical quaternion survives Bullet's basis boundary.
+        const std::array<std::uint32_t, 3> origin{0x40a0a3d7u, 0x40c00000u, 0x40e00000u};
+        const std::array<std::uint32_t, 3> offset{0xbf9d70a4u, 0x4091eb85u, 0x410e6666u};
+        const std::array<std::uint32_t, 12> expected{0x33800000u, 0xbf7fffffu, 0x0u,
+            0x3f7fffffu, 0x33800000u, 0x0u, 0x0u, 0x0u, 0x3f800000u,
+            0x42861a03u, 0x424a6989u, 0xc154c54bu};
+        auto& body = mGraph.mBodies[0];
+        body.mNodeRecord = 8;
+        body.mUsesRigidBodyTransform = true;
+        body.mRotation = osg::Quat(std::bit_cast<float>(0x3f3504f3u), 0, 0,
+            std::bit_cast<float>(0x3f3504f3u));
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 1, 0, 0};
+        btVector3 position;
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            body.mTranslation[axis] = std::bit_cast<float>(offset[axis]);
+            position[axis] = btScalar(std::bit_cast<float>(origin[axis])) * NifBullet::RagdollNativeLengthScale;
+        }
+        mPoses[0] = btTransform(btQuaternion(.5, .5, .5, .5), position);
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, NifBullet::RagdollNativeLengthScale,
+            mPoses, 1, -1);
+        const std::array bones{NifBullet::RagdollBoneWorldPose{8, osg::Matrixf::identity()}};
+        ESM4::PhysicalBlendTimeCache cache;
+        const auto result = actor.updateNativePhysicalFrame(bones, {}, 0.f, cache, 1.f / 60, 0, 0);
+        ASSERT_EQ(result.size(), 1u);
+        ASSERT_TRUE(result[0].mSceneTarget);
+        const auto& matrix = *result[0].mSceneTarget;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(matrix(column, row)), expected[row * 3 + column]);
+        for (unsigned axis = 0; axis < 3; ++axis)
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(matrix(3, axis)), expected[9 + axis]);
+        EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+    }
+
     TEST(RagdollNativePhysicsScene, InvalidPrecisionRejectsAtEveryPublicConversionBoundary)
     {
         const auto invalid = static_cast<Nif::NativeTransformPrecision>(99);
@@ -5630,6 +5668,9 @@ namespace
         EXPECT_THROW(NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, ordinary, invalid), std::invalid_argument);
         EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativePose(physical, invalid), std::invalid_argument);
         EXPECT_THROW(NifBullet::ragdollNativeToWorldPosition({}, invalid), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollBoneWorldFromNativeBlendPose(physical, invalid), std::invalid_argument);
+        EXPECT_THROW(NifBullet::ragdollNativeBlendPoseTargets(
+            physical, osg::Matrixf::identity(), .5f, 8, invalid), std::invalid_argument);
     }
 }
 
@@ -5674,6 +5715,11 @@ namespace
                 {0x3e800000u, 0xbf000000u, 0x3e000000u}, {0x3f3504f3u, 0x0u, 0x0u, 0x3f3504f3u},
                 {0x3f792c40u, 0x405233e8u, 0x40852ed2u, 0x3e08c0a1u, 0xbf221b35u, 0xbe47c524u, 0x3f3caa3cu}},
         }};
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher{&configuration};
+        btDbvtBroadphase broadphase;
+        btSequentialImpulseConstraintSolver solver;
+        NifBullet::NativeDynamicsWorld world{&dispatcher, &broadphase, &solver, &configuration};
         bool graphPrecisionDiffers = false;
         for (std::size_t index = 0; index < cases.size(); ++index)
         {
@@ -5718,6 +5764,25 @@ namespace
             ASSERT_EQ(explicitDouble.size(), 1);
             EXPECT_EQ(legacy[0], explicitDouble[0]);
             graphPrecisionDiffers |= single[0] != legacy[0];
+
+            // The combined native frame must select the same live arithmetic,
+            // rather than returning to the legacy conversion on its next sync.
+            auto& ownedBody = graph.mBodies[0];
+            ownedBody.mMass = 2;
+            ownedBody.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            ownedBody.mShape = NifBullet::RagdollSphere{.5f};
+            ownedBody.mBlend = NifBullet::RagdollBlendDefinition{30, 1, 1, 1};
+            const std::array initial{btTransform::getIdentity()};
+            NifBullet::ActorRagdollPhysics actor(graph, world, NifBullet::RagdollNativeLengthScale,
+                initial, 1, -1);
+            ESM4::PhysicalBlendTimeCache cache;
+            EXPECT_EQ(actor.updateNativePhysicalFrame(bones, {}, 0.f, cache, 1.f / 60, 0, 0).size(), 1u);
+            const auto restored = actor.capture();
+            ASSERT_EQ(restored.size(), 1u);
+            EXPECT_EQ(restored[0].mPose.getBasis(), btMatrix3x3(expectedRotation));
+            for (unsigned axis = 0; axis < 3; ++axis)
+                EXPECT_EQ(restored[0].mPose.getOrigin()[axis],
+                    btScalar(std::bit_cast<float>(row.mExpected[axis])) * NifBullet::RagdollNativeLengthScale);
         }
         EXPECT_TRUE(graphPrecisionDiffers);
     }

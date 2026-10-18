@@ -5109,3 +5109,23 @@ limits are in `native_body_removal_cascade_followup` in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Production code is unchanged, and
 automatic fork reaction/GetUp plus the remaining full S4 acceptance gates stay
 open.
+
+
+The combined native physical frame now selects the observed live007F Single
+arithmetic throughout scene/body conversion. Initial graph admission already
+selected Single, but the following compound frame could switch back to the
+legacy Double path. Eight frozen original first-sync fixtures reproduced that
+mismatch before the fix. They now pass through actual owned Bullet bodies and
+the compound frame; a separate frozen original reverse-bodyT fixture checks
+exact scene publication. Existing low-level helper defaults retain Double.
+
+Full normal and ASan/UBSan checks each pass 2824 component tests in 269 suites
+and 1634 engine tests in 122 suites, with exact inventories, no failures/skips
+and unchanged tested source fingerprint
+`50bb7ca741e67c0b940e1e5464a74bee014e74225079921c9ae46d60b146f8d4`.
+Sanitizer leak checks are disabled. The failed red reproduction is retained.
+Source and artifact hashes are recorded in
+`native_physical_frame_precision_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. This closes the conversion mismatch;
+automatic reaction/GetUp integration, solver parity and full S4 normal-input,
+view/device/FPS and fresh-process recovery acceptance remain open.

@@ -898,9 +898,10 @@ namespace NifBullet
         return nativeSceneMatrix(pose, false, precision);
     }
 
-    osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose)
+    osg::Matrixf ragdollBoneWorldFromNativeBlendPose(
+        const RagdollNativeTargetPose& pose, Nif::NativeTransformPrecision precision)
     {
-        return nativeSceneMatrix(pose, true, Nif::NativeTransformPrecision::Double);
+        return nativeSceneMatrix(pose, true, precision);
     }
 
     RagdollNativeKeyframedStepResult ragdollNativeKeyframedMotionStep(const osg::Vec3f& currentCenterOfMass,
@@ -1023,14 +1024,15 @@ namespace NifBullet
     }
 
     RagdollNativeBlendPoseTargets ragdollNativeBlendPoseTargets(const RagdollNativeTargetPose& physical,
-        const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags)
+        const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags,
+        Nif::NativeTransformPrecision precision)
     {
-        const auto animated = ragdollNativeBlendSceneTargetPose(animatedWorld);
+        const auto animated = ragdollNativeBlendSceneTargetPose(animatedWorld, precision);
         const auto drive = ragdollNativeBlendTargetPose(physical, animated, hierarchyGain);
         auto scene = drive;
         if (!(collisionFlags & 0x100))
             scene.mPosition = animated.mPosition;
-        return {drive, ragdollBoneWorldFromNativeBlendPose(scene)};
+        return {drive, ragdollBoneWorldFromNativeBlendPose(scene, precision)};
     }
 
     ActorRagdollDefinition ragdollDefinitionWithNativeLinkedBlendState(
@@ -2018,8 +2020,9 @@ namespace NifBullet
         std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
         std::uint32_t rawUpdateSelector, float nativeGravityZ,
         const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene,
-        std::span<const NativeForce> forces)
+        std::span<const NativeForce> forces, Nif::NativeTransformPrecision precision)
     {
+        require(Nif::Detail::NativeTransformMath(precision).valid(), "invalid native frame arithmetic precision");
         require(std::isfinite(nativeGravityZ), "invalid native blend gravity");
         ESM4::resolvePhysicalBlendDriveParameters(preparedFrameSeconds, 0, 0);
         struct Pending
@@ -2095,14 +2098,14 @@ namespace NifBullet
                 // scene setter; this adapter has not admitted that path.
                 require(!(update.mCollisionFlags & 0x20) || (update.mCollisionFlags & 0x40),
                     "unadmitted native World-driven scene synchronization");
-                physical = ragdollNativeSceneBodyTargetPose(update.mAnimatedWorld, found->mSceneOffset);
+                physical = ragdollNativeSceneBodyTargetPose(update.mAnimatedWorld, found->mSceneOffset, precision);
                 shapePose = btTransform(btQuaternion(physical.mRotation[0], physical.mRotation[1],
                     physical.mRotation[2], physical.mRotation[3]), vector(physical.mPosition) * mImpl->mLengthScale);
                 centerPose = shapePose * found->mCenterFrame;
                 validatePose(centerPose);
                 change.mPose = centerPose;
             }
-            const auto scenePhysical = ragdollNativeSceneTargetFromBodyPose(physical, found->mSceneOffset);
+            const auto scenePhysical = ragdollNativeSceneTargetFromBodyPose(physical, found->mSceneOffset, precision);
             const auto forced = std::find_if(forces.rbegin(), forces.rend(),
                 [&](const auto& force) { return force.mOwned == &*found; });
             auto linear = forced == forces.rend() ? body.getLinearVelocity() : forced->mLinear;
@@ -2134,11 +2137,11 @@ namespace NifBullet
             }
             RagdollNativeBlendPublication publication{update.mRecord, flags, std::nullopt};
             if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PhysicsToScene)
-                publication.mSceneTarget = ragdollBoneWorldFromNativePose(scenePhysical);
+                publication.mSceneTarget = ragdollBoneWorldFromNativePose(scenePhysical, precision);
             else if (dispatch->mRoute == ESM4::PhysicalBlendRoute::PoseAndVelocity)
             {
                 const auto targets = ragdollNativeBlendPoseTargets(scenePhysical, update.mAnimatedWorld,
-                    update.mHierarchyGain, flags);
+                    update.mHierarchyGain, flags, precision);
                 if (rawUpdateSelector == 0)
                     publication.mSceneTarget = targets.mSceneTarget;
                 const auto parameters = ESM4::resolvePhysicalBlendDriveParameters(
@@ -2864,7 +2867,7 @@ namespace NifBullet
                     target->mState.mCollisionFlags});
         }
         auto publications = updateNativeBlendsImpl(updates, preparedFrameSeconds,
-            rawUpdateSelector, nativeGravityZ, publishScene, forces);
+            rawUpdateSelector, nativeGravityZ, publishScene, forces, Nif::NativeTransformPrecision::Single);
         // The body bridge already published every target's final gains, flags
         // and requested motion. Publish the staged controller lists/cache once;
         // invoking the blend-controller bridge here would tick them twice.

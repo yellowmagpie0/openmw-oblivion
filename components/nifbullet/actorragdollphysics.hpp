@@ -110,7 +110,8 @@ namespace NifBullet
     osg::Matrixf ragdollBoneWorldFromNativePose(const RagdollNativeTargetPose& pose,
         Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     // Original mixed renderer uses8B1DD0 instead of ordinary47C600 stores.
-    osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose);
+    osg::Matrixf ragdollBoneWorldFromNativeBlendPose(const RagdollNativeTargetPose& pose,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
 
     struct RagdollNativeBlendPoseTargets
     {
@@ -122,7 +123,8 @@ namespace NifBullet
     // scene position uses the animated target unless flag0x100 selects mixed.
     // Both targets are prepared before any caller-owned scene/body publication.
     RagdollNativeBlendPoseTargets ragdollNativeBlendPoseTargets(const RagdollNativeTargetPose& physical,
-        const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags);
+        const osg::Matrixf& animatedWorld, float hierarchyGain, std::uint16_t collisionFlags,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
     std::vector<btTransform> ragdollBodyWorldPoses(const ActorRagdollDefinition& definition,
         std::span<const RagdollBoneWorldPose> bones,
         Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
@@ -503,7 +505,8 @@ namespace NifBullet
         // One selected-controller phase followed by blend-body publication.
         // Includes generated velocity forces and controller removal. Stage all
         // results before the scene hook; a rejected scene leaves bodies,
-        // controllers, activation and the shared clock cache unchanged.
+        // controllers, activation and the shared clock cache unchanged. Scene
+        // conversions use the observed live007F single-precision arithmetic.
         std::vector<RagdollNativeBlendPublication> updateNativePhysicalFrame(
             std::span<const RagdollBoneWorldPose> bones,
             std::span<const RagdollNativeControllerReference> controllerOrder,
@@ -615,7 +618,8 @@ namespace NifBullet
             std::span<const RagdollNativeBlendUpdate> updates, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene,
-            std::span<const NativeForce> forces = {});
+            std::span<const NativeForce> forces = {},
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Double);
         std::vector<RagdollNativeBlendPublication> updateNativeBlendControllersImpl(
             std::span<const RagdollNativeBlendControllerTarget> targets,
             std::span<const RagdollBoneWorldPose> completeBones, float inputTime,

@@ -3111,5 +3111,143 @@
       }
     },
     "validation_scope": "Executable corpus and structured documentation only. No product C++/Python code changed, no new fork runtime gate and no native solver/statistics or trajectory parity claim."
+  },
+  "native_physical_frame_precision_followup": {
+    "status": "Combined native physical frames use observed live Single scene/body arithmetic; full M15S4 remains incomplete",
+    "source": {
+      "head": "31074b57b294091e37eaa79644142e50ba56cf06",
+      "source_fingerprint": "50bb7ca741e67c0b940e1e5464a74bee014e74225079921c9ae46d60b146f8d4"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "ec082bcb3426dbc5280b586f6d1cc1888d503e6653f271f6e42ad74b672fdd29",
+      "components/nifbullet/actorragdollphysics.cpp": "baff85d75defd06de6caace0bbf5c4a4da92cfd2da696f7e43863bfb980474f5",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "d65e2ea2d812b569c4639f16e8cf2eead7c27df5270b77f0145d0be841270391"
+    },
+    "changes": [
+      "Thread explicit precision through native body/scene synchronization, reverse bodyT offset, mixed blend targets and renderer publication.",
+      "updateNativePhysicalFrame explicitly selects Single; existing low-level/default Double conversions remain compatible.",
+      "Extend eight frozen original first-sync rows through owned Bullet bodies and the combined frame; add frozen original fixture19 reverse bodyT scene publication and invalid-precision checks."
+    ],
+    "independent_expectations": [
+      "Existing native-body-admission-precision-oracle-02 full original initialization/registration/first707370 frozen live007F cases.",
+      "Existing physical-scene-live-precision-oracle-02 original707370/89EA70 fixture19 exact scene matrix."
+    ],
+    "red_reproduction": {
+      "report": "build/oblivion-compat/m15/S4/native-physical-frame-precision-red-01/verification.json",
+      "sha256": "c0aeb84b89dcd6ac6ec8592d8ed53cea43138f3b24278e4726eb97159b7ff57d",
+      "filter": "RagdollNativeSceneTarget.LivePrecisionMatchesOriginalFirstSyncAcrossQuaternionBranches",
+      "finding": "Original helper and initial graph assertions passed while the new combined-frame assertions failed before the implementation change; failed attempt retained."
+    },
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-physical-frame-precision-normal-01/verification.json",
+        "report_sha256": "9f721cf376251c33d3f294fdd45fbd72dd394f64392c3c5b28656a308b2d94bb",
+        "source": {
+          "head": "31074b57b294091e37eaa79644142e50ba56cf06",
+          "source_fingerprint": "50bb7ca741e67c0b940e1e5464a74bee014e74225079921c9ae46d60b146f8d4"
+        },
+        "results": {
+          "components": {
+            "executed": 2824,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8a312e5ebfc0677fa7c95b7b67efb11a1b87210554760b33ce068a2ba2db42d2",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "5601b29eea11b57a38beaf65d250b099f842f1eb5ae6b7505644e58e3f461a1a",
+            "inventory_sha256": "493f76c18d97939860f57517c9540bee2a18d4e2e2ce1660a59e5a280f057087",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0ea2920d1eaed384df6bc3cfbe9f146d39f6ae623f0fc82dc7d2adf853c35c53",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "1202f39a35a8da0367e007c64d1425cbb1e68fabcd722375a963095a83682505",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-physical-frame-precision-sanitized-01/verification.json",
+        "report_sha256": "59aa35df6a4bd90ffeb47d295c0d6495567dceba480987000e8bd8c0605f7451",
+        "source": {
+          "head": "31074b57b294091e37eaa79644142e50ba56cf06",
+          "source_fingerprint": "50bb7ca741e67c0b940e1e5464a74bee014e74225079921c9ae46d60b146f8d4"
+        },
+        "results": {
+          "components": {
+            "executed": 2824,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c58ed5c05f864d0e354f898594d75ce6e734913e1eceea51cd92cf64b6a0caa1",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "fbce22a9695cee46684392a3e393904338598c506b802c10e02452018d0b1db5",
+            "inventory_sha256": "916e3f067713a80da3d3297706551f4b9c3bbbd795293711f9ed422eed673927",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0569027a84553927f34d75df4e67b24f25d0564e9793e40d552140751b4ee750",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "e75a2627e89088f02750b9299ee9f20d9810056be37eaf4eb2a1106ba320f724",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        }
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "python": "No Python source/schema changes; prior315-test persistence checkpoint is unchanged.",
+    "limits": [
+      "Exact scene conversion regressions and full C++ checks, not solver trajectory parity or normal-input fork acceptance.",
+      "Automatic reaction/GetUp integration and all remaining full S4 acceptance gates remain open."
+    ]
   }
 }
