@@ -393,6 +393,36 @@ namespace SceneUtil
                 require(valid(), "NIF settled collision provider changed the bound hierarchy");
                 require(flags && *flags == expected, "NIF first synchronization did not settle collision flags");
             }
+            if (collision.mExtraRotation)
+            {
+                require(parent, "NIF collision rotation postpass requires a native parent");
+                // Original88E9F0 reads author local after the base handler,
+                // rather than multiplying the base handler's world rotation.
+                const auto composed = Nif::tryMultiplyNativeMatrices(
+                    parent->mRotation, node.getControllerTransform().mRotation, mPrecision);
+                require(composed.has_value(), "invalid NIF collision rotation composition");
+                const auto rotation = Nif::tryMultiplyNativeMatrices(*composed, *collision.mExtraRotation, mPrecision);
+                require(rotation.has_value(), "invalid NIF extra collision rotation");
+                auto next = frame.mWorld;
+                next.mRotation = *rotation;
+                NifOsg::MatrixTransform::TraversalMatrix nextOwn(
+                    osg::Matrixd(next.toMatrix()) * inverse(parentMatrix));
+                std::vector<NifOsg::MatrixTransform::TraversalMatrix> nextChildren;
+                nextChildren.reserve(entry.mChildren.size());
+                const auto inverseNext = inverse(osg::Matrixd(next.toMatrix()));
+                for (const auto child : entry.mChildren)
+                    nextChildren.emplace_back(osg::Matrixd(mNodes[child].mWorld.toMatrix()) * inverseNext);
+                frame.mWorld = next;
+                entry.mWorld = next;
+                node.setTraversalMatrix(nextOwn);
+                entry.mPublished = nextOwn;
+                for (std::size_t i = 0; i < nextChildren.size(); ++i)
+                {
+                    mNodes[entry.mChildren[i]].mTransform->setTraversalMatrix(nextChildren[i]);
+                    mNodes[entry.mChildren[i]].mPublished = nextChildren[i];
+                }
+                invalidateSkeletons(path);
+            }
             if (callbacks.mProjected) callbacks.mProjected(node, frame, flags);
             return {frame, flags};
         }

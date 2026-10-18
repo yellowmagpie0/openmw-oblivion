@@ -5649,3 +5649,38 @@ native controller/KF ordering,
 AddRotation, selector/time producers, coherent group/filter/capsule/root
 coordination, contacts/reaction/FSM/GetUp and all normal-input and fresh-process
 gameplay/save-restart gates remain open. Full M15S4 is not complete.
+
+
+### AddRotation reaches the owned NIF collision projection
+
+The collision result can now supply the subtype's extra matrix. The traversal
+executes its two native matrix products after base writeback/synchronization,
+using current author locals, and publishes the completed world rotation before
+children. It preserves locals, position/scale, flags and the base change mask.
+Skipped, deferred and absent-body base routes still execute the postpass.
+
+Full corrected normal and ASan/UBSan checks each pass all 2,917 component tests
+in 273 suites and 1,637 engine tests in 122 suites, with exact inventories and
+no failures/skips. Both engines rebuild. Initial 01 fixtures failed explicit
+retirement-before-rebinding requirements; their failures are retained and the
+fixtures are corrected before full 02. Production code is unchanged between
+those two attempts. Six new unit cases cover exact matrix stores/precision,
+invalid/overflow inputs, skipped-base postpasses, post-writeback local reads,
+child rebasing/composition and missing-parent/invalid-extra boundaries.
+
+Fresh full original handlers pass 720 active/pending cases alongside the prior
+720 skip/bypass cases. Owned-body/NIF comparisons each pass 720 canonical cases
+and 26,160 checks; declared scene fields are exact, body XYZ error is zero and
+body basis error stays within the predeclared 1e-6. Independent controls reject
+postpass omission and stale-local reads. Original no-World/active-island and
+precision domains remain bounded; no contact step or gameplay acceptance is
+proved. Body position fourth-word production remains open. ASan leak checks
+are disabled; unchanged Python/schema tests are not repeated.
+
+Tested source fingerprint: `59df612c3567a8b54ba69d0717010578a8fdb29a0030617cf7811ab775fffb48`. Exact hashes and limits are in
+`addrotation_scene_postpass_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Actual subtype construction and live
+extra-matrix production, automatic actor traversal, KF/controller ordering,
+selector/frame producers, group/filter/capsule/root coordination, contacts/
+reaction/FSM/GetUp and all normal-input and fresh-process gameplay/save-restart
+gates remain open. Full M15S4 is not complete.

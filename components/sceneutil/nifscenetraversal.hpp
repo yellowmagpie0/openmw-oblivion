@@ -50,6 +50,13 @@ namespace SceneUtil
         {
             std::optional<std::uint16_t> mFlags;
             std::optional<Nif::NiTransform> mPhysicalTarget;
+            // AddRotation subtype postpass snapshot, taken after base dispatch.
+            // Runs even if that dispatch skipped or there is no body. Requires
+            // a native parent; recomposes parent R * current author local R *
+            // this extra R after base writeback/sync and before children. Only
+            // cached/drawing rotation changes; locals, position, scale and the
+            // base handler's change mask stay untouched.
+            std::optional<Nif::Matrix3> mExtraRotation = std::nullopt;
         };
         struct Callbacks
         {

@@ -15657,3 +15657,43 @@ composition, local writeback and drawing output. Exact code/binary/corpus hashes
 and limits are in `owned_scene_collision_result_followup` in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Automatic actor ownership, AddRotation,
 clock/selector producers and full gameplay/restart acceptance remain open.
+
+
+### AddRotation postpass after the actual base collision phase
+
+The owned NIF collision result now carries an optional extra rotation snapshot.
+After base dispatch/writeback/synchronization, the traversal uses original
+7100A0 arithmetic to store parent rotation times current author-local rotation,
+then stores that result times the extra rotation. It reads author locals after
+bit 8 writeback, rather than multiplying the base handler's world rotation.
+Only cached/drawing rotation changes. Author locals, position/scale, actual
+flags and the base change-mask report remain intact. Children consume the
+completed rotation; base skips, pending deferral and absent-body results still
+run this postpass. A native parent and invertible projection are required.
+
+The existing 720-case full-wrapper skip corpus remains unchanged. Fresh full
+original 88E9F0/88EDC0/88F3D0 or 89EAE0 probes pass another 720 cases across
+60 matrix triples, three x87 precision words and flags 1/9/41/49. Initial world
+and subsequent child composition execute original 53D7A0. The native body is
+a fixed plain Dynamic sphere2, request1 and H0/V0, with no World and an already
+active island. Only critical sections are positive boundary stubs. No game
+process/input, original child-controller traversal or contact step is claimed.
+
+Actual owned-body/NIF comparisons in normal and ASan/UBSan builds each pass
+720 selected cases and 26,160 checks: all 480 canonical Single/Double skip rows
+and all 240 live-Single full-handler rows. Declared local/world/child words and
+flags/hooks match exactly. Body XYZ maximum error is zero; basis maximum error
+is 1.9708068177415328e-7 under the predeclared 1e-6 tolerance. Packed velocities,
+mode/request, skipped-body sleep/pose, drawing/cache agreement and teardown are
+additional driver assertions. Native omission and stale-local controls alter
+708 and 177 node/child rotations while retaining other captured state.
+
+Initial controls changed caller stack layout and exposed a different fourth
+body position word in 360 pending cases. Their all-four-word preservation check
+fails and is retained. Corrected controls keep the exact wrapper stack and
+mutate only the declared postpass branch/input; all four words now preserve.
+The fourth-word producer remains open; no spatial threshold/domain was relaxed.
+Hashes, precision domains, retained attempts and limits are in
+`addrotation_scene_postpass_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Automatic actor ownership, subtype
+construction/producer coupling and full gameplay/restart acceptance remain open.

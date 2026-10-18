@@ -1673,3 +1673,99 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, ExtraCollisionRotationRunsAfterSkippedBaseAndFeedsChildCachesWithoutLocalWrites)
+    {
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0}; placement.mScale = 2;
+        mRoot->setScale(1.5f);
+        Nif::Matrix3 extra;
+        extra.mValues[0][0] = extra.mValues[1][1] = 0;
+        extra.mValues[0][1] = -1; extra.mValues[1][0] = 1;
+        for (const auto flags : {std::optional<std::uint16_t>{}, std::optional<std::uint16_t>(8),
+                 std::optional<std::uint16_t>(0x49), std::optional<std::uint16_t>(9)})
+        {
+            Binding binding(*mRoot, placement);
+            Binding::Callbacks callbacks;
+            callbacks.mCollision = [&](const Node& node, const auto&) {
+                return &node == mRoot ? Binding::CollisionResult{flags, std::nullopt, extra} : Binding::CollisionResult{};
+            };
+            callbacks.mProjected = [&](Node& node, const auto& frame, auto actualFlags) {
+                if (&node != mRoot) return;
+                EXPECT_EQ(actualFlags, flags); EXPECT_EQ(frame.mWorldChangeMask, 0u);
+                EXPECT_EQ(frame.mLocal.mScale, 1.5f); EXPECT_EQ(frame.mWorld.mScale, 3);
+                EXPECT_EQ(frame.mWorld.mTranslation, osg::Vec3f(120, 0, 0));
+            };
+            binding.updateObjectLocal(mStamp, 1, placement, callbacks);
+            EXPECT_EQ(mRoot->getControllerTransform().mTranslation, osg::Vec3f(10, 0, 0));
+            EXPECT_TRUE(mRoot->getControllerTransform().mRotation.isIdentity());
+            EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation, osg::Vec3f(120, 15, 0));
+            EXPECT_EQ(binding.cachedWorld(*mLeaf).mTranslation, osg::Vec3f(120, 21, 0));
+            EXPECT_NEAR(mLeaf->getWorldMatrices()[0].getTrans().x(), 120, 1e-9);
+            EXPECT_NEAR(mLeaf->getWorldMatrices()[0].getTrans().y(), 21, 1e-9);
+            ASSERT_TRUE(binding.retire());
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, ExtraCollisionRotationReadsAuthorLocalAfterBaseWritebackAndRetainsBasePosition)
+    {
+        Nif::Matrix3 extra;
+        extra.mValues[1][1] = extra.mValues[2][2] = 0;
+        extra.mValues[1][2] = -1; extra.mValues[2][1] = 1;
+        auto desired = Nif::NiTransform::getIdentity(); desired.mTranslation = {200, 0, 0};
+        desired.mRotation.mValues[0][0] = desired.mRotation.mValues[1][1] = 0;
+        desired.mRotation.mValues[0][1] = -1; desired.mRotation.mValues[1][0] = 1;
+        for (const std::uint16_t flags : {1, 9})
+        {
+            mRoot->setTranslation({10, 0, 0}); mRoot->setRotation(Nif::Matrix3{});
+            Binding binding(*mRoot, Nif::NiTransform::getIdentity());
+            Binding::Callbacks callbacks;
+            callbacks.mCollision = [&](const Node& node, const auto&) {
+                return &node == mRoot ? Binding::CollisionResult{flags, desired, extra} : Binding::CollisionResult{};
+            };
+            callbacks.mProjected = [&](Node& node, const auto& frame, auto actualFlags) {
+                if (&node != mRoot) return;
+                EXPECT_EQ(actualFlags, std::optional(flags)); EXPECT_EQ(frame.mWorldChangeMask, 3u);
+                EXPECT_EQ(frame.mWorld.mTranslation, desired.mTranslation);
+                // Before this child's own update, rebasing retains its old cache.
+                EXPECT_NEAR(mChild->getWorldMatrices()[0].getTrans().x(), 15, 1e-9);
+                EXPECT_NEAR(mChild->getWorldMatrices()[0].getTrans().y(), 0, 1e-9);
+            };
+            binding.updateObjectLocal(mStamp, 1, Nif::NiTransform::getIdentity(), callbacks);
+            const auto world = binding.cachedWorld(*mRoot);
+            EXPECT_EQ(world.mTranslation, desired.mTranslation);
+            EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), flags & 8 ? 200 : 10);
+            EXPECT_EQ(mRoot->getControllerTransform().mRotation.isIdentity(), !(flags & 8));
+            EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation, flags & 8 ? osg::Vec3f(200, 5, 0) : osg::Vec3f(205, 0, 0));
+            EXPECT_EQ(world.mRotation.mValues[1][0], flags & 8 ? 1 : 0);
+            EXPECT_EQ(world.mRotation.mValues[0][0], flags & 8 ? 0 : 1);
+            EXPECT_EQ(world.mRotation.mValues[2][1], 1);
+            ASSERT_TRUE(binding.retire());
+        }
+    }
+
+    TEST_F(NifSceneTraversalTest, ExtraCollisionRotationRejectsMissingParentAndInvalidMatrixAfterBasePhase)
+    {
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node& node, const auto&) {
+            return &node == mRoot ? Binding::CollisionResult{8, std::nullopt, Nif::Matrix3{}} : Binding::CollisionResult{};
+        };
+        {
+            Binding reference(*mRoot);
+            EXPECT_THROW(reference.update(mStamp, 1, callbacks), std::invalid_argument);
+            EXPECT_EQ(reference.cachedWorld(*mRoot).mTranslation.x(), 10);
+            ASSERT_TRUE(reference.retire());
+        }
+        Binding binding(*mRoot, Nif::NiTransform::getIdentity());
+        Nif::Matrix3 invalid; invalid.mValues[0][0] = std::numeric_limits<float>::quiet_NaN();
+        callbacks.mCollision = [&](const Node& node, const auto&) {
+            return &node == mRoot ? Binding::CollisionResult{8, std::nullopt, invalid} : Binding::CollisionResult{};
+        };
+        EXPECT_THROW(binding.updateObjectLocal(mStamp, 1, Nif::NiTransform::getIdentity(), callbacks), std::invalid_argument);
+        EXPECT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 10);
+        EXPECT_TRUE(binding.cachedWorld(*mRoot).mRotation.isIdentity());
+        EXPECT_TRUE(mRoot->getControllerTransform().mRotation.isIdentity());
+        EXPECT_TRUE(binding.isValid());
+    }
+}

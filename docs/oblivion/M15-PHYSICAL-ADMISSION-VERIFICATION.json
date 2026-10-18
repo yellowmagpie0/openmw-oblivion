@@ -6581,5 +6581,302 @@
       "Base blend dispatch only; AddRotation postpass/producer and live subtype selection are not implemented by this callback. Native separate scene scale, morphology, group/filter/capsule/root coordination remain open.",
       "Python/schema unchanged and not rerun. Leak checks disabled. Full normal-input, device/view/FPS/interruption and actual fresh-engine gameplay/save-restart acceptance remain open. M15S4 is not complete."
     ]
+  },
+  "addrotation_scene_postpass_followup": {
+    "status": "AddRotation postpass now executes in the owned NIF collision-result path, after base pose/writeback and before children. Its actual actor subtype construction, extra-matrix producer and automatic World/Animation owner remain open; full M15S4 is incomplete.",
+    "source": {
+      "head": "1887ef3b203ffe15fa1013954cedafc74293c4ca",
+      "source_fingerprint": "59df612c3567a8b54ba69d0717010578a8fdb29a0030617cf7811ab775fffb48"
+    },
+    "source_sha256": {
+      "components/nif/nativetransform.hpp": "3af4da04505239e8c114d514e47ae1866d814df7c915768dffc970c258e34140",
+      "components/nif/nativetransform.cpp": "72ccf23a823a5b498d67947e417b5e598af643ddd016c1c6c0451e5152ee077e",
+      "components/sceneutil/nifscenetraversal.hpp": "55d372ad1c5817f68b72e8aae7fc98e9cefdc54001161d2a3c4ba332ae9a1097",
+      "components/sceneutil/nifscenetraversal.cpp": "79cc1cccfe71926729efca38a6e4193ea87ce0666647954893bb7c2abccfae26",
+      "apps/components_tests/nifloader/testnativetransform.cpp": "5a8e4033e6f10eb08f7cf0ab24d8b3161b37f61e0b8366e91c8c21eb4eb003d7",
+      "apps/components_tests/sceneutil/nifscenetraversal.cpp": "22c302e6abbb99e911ab96f4fe156162580b42920112342a6fab0aabf863e972"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only; source/tests unchanged after full checks.",
+    "changes": [
+      "Nif::tryMultiplyNativeMatrices implements the existing 7100A0 row/column products with per-element binary32 stores and explicit Single/Double intermediate precision. Finite arbitrary matrices are accepted without orthogonalization; used invalid inputs, invalid precision and stored overflow reject without input writes. Existing NiTransform composition remains unchanged.",
+      "NifSceneTraversal::CollisionResult carries an optional extra rotation snapshot. After base dispatch/writeback/synchronization, multiply native parent rotation by the current author-local rotation, store the intermediate matrix, then multiply by extra rotation. Ignore the base handler world rotation when recomposing this subtype postpass.",
+      "The postpass runs even for base skips, deferred pending flags or absent-body results. Publish only world/drawing rotation; preserve author locals, cached position/scale, actual flags and the base change-mask report. Rebase child drawing handles before visiting children; subsequent child composition consumes the completed rotation.",
+      "No automatic subtype selection, body admission, extra-matrix clock/producer or duplicate controller evaluation is added. A native parent is required when an extra snapshot is supplied; nonfinite or noninvertible projection input rejects after the already completed base phase."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/addrotation-scene-normal-02/verification.json",
+        "report_sha256": "f203ee9159a64f896d1cbfdd449caafced49adc33c0e9d3922cee0e07563fe42",
+        "results": {
+          "components": {
+            "executed": 2917,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "186388addbd37e266dcb89e23629ca950dbad6dd163571288d9cecabd77eeb41",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e5452358b29f006dc1069edae1924a9054ec96111733dc80949ba7373d6bf820",
+            "inventory_sha256": "400f4d14fa210cdedce11c0b979908aef955d45a09873fca31463ccf4c4f44ac",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "08c993431f567ad61232fe5bda4f075f05ee1c57a382b65705169f1a2801d22d",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "6af3a3ffacfee95d1f7983abebcb26ca4f3d86d4d142b788a0ccf9cf9bf9ba9c",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "1d937af33f95119550341c387158e293a64321d87066c279ab972365716186b8"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/addrotation-scene-sanitized-02/verification.json",
+        "report_sha256": "a6764ff3874c14a784355bcb06588513b860b459a83942821492b42a572b793c",
+        "results": {
+          "components": {
+            "executed": 2917,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "806593e64057d2391e7fefd98e61c79fee0706f3e1de7b9c5855817c89eed74d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "23efd615bbdfbda7c804ac67d97aec0f6079579116551f5c4d9138d33a0b75cf",
+            "inventory_sha256": "de615269fe33269b76b4cd4d63edab590170f7b2144727e45c21bc697e120b1c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ca0e30472a3a9a19c8b15e39557b41b6f7f9aeba0e5231ef89406d4e51392944",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "805740f0d1dc2b202d4a271b7895663ec5c64137fc7ab846ebbfae23fbb0682b",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "ae8d4603b6d907ecac50051b35754d70cbfefd845becb98c31ee9d7fc891337c"
+      }
+    },
+    "native_comparisons": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/normal-verification.json",
+        "report_sha256": "6a0f029a74049b67d267fdfe581c5b4c534b517ccb0060c2b0b3de835b6c33dc",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "skip_cases": 480,
+          "full_single_cases": 240,
+          "checks": 26160,
+          "mismatches": [],
+          "maximum_body_position_error": 0,
+          "maximum_body_basis_error": 1.9708068177415328e-07,
+          "body_position_tolerance": 0.001,
+          "body_basis_tolerance": 1e-06,
+          "original_sources": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/cases.json": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-full-oracle-04/cases.json": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c"
+          },
+          "probe_sha256": "83a9a32c2db617a9876f1a88b2c3b8dd99d0405eead0791abc00bd173dba22eb",
+          "comparator_sha256": "a0af5ec980a77ef1c2b4c7b2b929647c07c4c12ffc53f562a4b85127f9133785",
+          "domain_sha256": "6a933fd4cf9efd54fbf2f515d4b56713b165221eb17df2fbeaf77a35ae492da1",
+          "binary_sha256": "801f50ebc21bcb102dc21cd330491f202a88ce38aa39453b23c87f8cd15de29d",
+          "output_sha256": "13f51af4adc0c705b7eeaf5bf37b5bff2fecfd72df756efcf3f6559b9e8c50b6",
+          "scope": "Actual owned body and NifSceneTraversal complete collision/AddRotation path. All480 canonical skip/bypass rows at Single/Double, and all240 full active/pending rows at live Single. Exact declared node local/world/child words, flags/hooks. Fixed Dynamic H0/V0/request1 body; exact all packed velocity bits and mode/request retention, skip sleep/pose, drawing/cache agreement and complete teardown are separate driver invariants. Full original handlers execute with only critical-section boundaries; original no-World/already-active island and fixed plain-body domain. No actual automatic actor ownership, World step/contact or game-input/restart acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/sanitized-verification.json",
+        "report_sha256": "2eb37195f334f074826dc5a5261f6d16f5f58eb3ac1afa0ebbab57cd11ec4aa3",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "skip_cases": 480,
+          "full_single_cases": 240,
+          "checks": 26160,
+          "mismatches": [],
+          "maximum_body_position_error": 0,
+          "maximum_body_basis_error": 1.9708068177415328e-07,
+          "body_position_tolerance": 0.001,
+          "body_basis_tolerance": 1e-06,
+          "original_sources": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/cases.json": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-full-oracle-04/cases.json": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c"
+          },
+          "probe_sha256": "83a9a32c2db617a9876f1a88b2c3b8dd99d0405eead0791abc00bd173dba22eb",
+          "comparator_sha256": "a0af5ec980a77ef1c2b4c7b2b929647c07c4c12ffc53f562a4b85127f9133785",
+          "domain_sha256": "6a933fd4cf9efd54fbf2f515d4b56713b165221eb17df2fbeaf77a35ae492da1",
+          "binary_sha256": "3bc268d98288cf91b0baf7f25f50db709534d842e070974570def3f32dfc3c7a",
+          "output_sha256": "13f51af4adc0c705b7eeaf5bf37b5bff2fecfd72df756efcf3f6559b9e8c50b6",
+          "scope": "Actual owned body and NifSceneTraversal complete collision/AddRotation path. All480 canonical skip/bypass rows at Single/Double, and all240 full active/pending rows at live Single. Exact declared node local/world/child words, flags/hooks. Fixed Dynamic H0/V0/request1 body; exact all packed velocity bits and mode/request retention, skip sleep/pose, drawing/cache agreement and complete teardown are separate driver invariants. Full original handlers execute with only critical-section boundaries; original no-World/already-active island and fixed plain-body domain. No actual automatic actor ownership, World step/contact or game-input/restart acceptance."
+        }
+      }
+    },
+    "original_instruction_evidence": {
+      "blend-addrotation-postpass-oracle-01": {
+        "report": "build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/verification.json",
+        "report_sha256": "a3fa3624e736b33af2ace167517cd8639ebf84799dc093ebd028e2deca4d8592",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "4139897755f9426e3ebd4ed011dd89d82d12bc0817a30d1bd9afd5eaa8aea504",
+          "cases_sha256": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+          "scope": "Complete original AddRotation wrapper88E9F0 and two actual7100A0 products with no stubs. Sixty deterministic parent/local/extra rigid matrix triples, three x87 precision words, absent-body bypass, phase3 skip, settled inactive skip and phase2 pending defer. Assert inner handlers never execute; exact return/ESP/callee-saved/FPCW, author locals, position/scale, parent and collision object retained. Capture world rotation fields only. No active base-handler arithmetic, extra-matrix producer, null-parent admission, game/engine ownership or runtime acceptance."
+        }
+      },
+      "blend-addrotation-full-oracle-04": {
+        "report": "build/oblivion-compat/m15/S4/blend-addrotation-full-oracle-04/verification.json",
+        "report_sha256": "59b422a3ba07691f0de1f7412e275ffa2e70d272c36205741e0fec87eb917a9b",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "fef9280a76748a2ebcacaf15b5e289f9cbf38ed96749d600f1e404e438bc4af6",
+          "cases_sha256": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c",
+          "scope": "Full original88E9F0 AddRotation wrapper with actual base88EDC0 and inner88F3D0 or pending89EAE0, followed by actual two7100A0 matrix products. Sixty matrix triples, three x87 words, flags1/9/41/49; Dynamic sphere2 body, stored request1, H0/V0, no World and already active island. Initial world and subsequent controllerless child composition computed by original53D7A0; child composition consumes the completed AddRotation world rotation. Only internal Windows critical-section enter/leave boundaries are no-ops; all game pose/matrix/writeback handlers execute. Exact return/ESP/callee-saved/FPCW, velocity retention, parent retention and inner target selection checked. Capture local/world13 words and body pose including the native motion rotation columns transposed into row order. No native World/contact/automatic game/engine owner or input acceptance."
+        }
+      },
+      "blend-addrotation-no-postpass-control-02": {
+        "report": "build/oblivion-compat/m15/S4/blend-addrotation-no-postpass-control-02/verification.json",
+        "report_sha256": "f447ed21f043983fb6f269bc3387ceb4c9d0c016d040e49aa2ee138deb6ad8b7",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "525bb9f781fe36ce615ed435ddaa216b4e7956ef72e696dfe990b200b1832959",
+          "cases_sha256": "d3117fe1234776843e2dec906c64fafc8daf0c8f64bcdf4501d7bf5045465e81",
+          "scope": "Declared omission control: execute the original wrapper/base call stack, then jump from88EA03 to its original epilogue88EA59, omitting only the rotation postpass. Full original base/inner pose handlers execute with exactly the positive fixture stack layout. Sixty matrix triples, three x87 words, flags1/9/41/49; Dynamic sphere2 body, stored request1, H0/V0, no World and already active island. Initial world and subsequent controllerless child composition computed by original53D7A0; child composition consumes the completed AddRotation world rotation. Only internal Windows critical-section enter/leave boundaries are no-ops; all game pose/matrix/writeback handlers execute. Exact return/ESP/callee-saved/FPCW, velocity retention, parent retention and inner target selection checked. Capture local/world13 words and body pose including the native motion rotation columns transposed into row order. No native World/contact/automatic game/engine owner or input acceptance."
+        }
+      },
+      "blend-addrotation-stale-local-control-02": {
+        "report": "build/oblivion-compat/m15/S4/blend-addrotation-stale-local-control-02/verification.json",
+        "report_sha256": "c2dceb6613e7a7c64139d1664545eb77e1d38dc7e794b95911aac7fbaebf45f3",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "739915db3563f961e19f55a9a0dc24edd278f8a9d241afc8e966510571efbd8d",
+          "cases_sha256": "13321bab7bc891310f751591cbc4f8f2b2eaf0ee6998e2c24389d00da920e276",
+          "scope": "Declared stale-local input control: execute the exact original wrapper/base stack, supply pre-base author locals at88EA03 only for postpass matrix input, then restore the completed local stores after return. All game arithmetic and body handlers execute original instructions. Sixty matrix triples, three x87 words, flags1/9/41/49; Dynamic sphere2 body, stored request1, H0/V0, no World and already active island. Initial world and subsequent controllerless child composition computed by original53D7A0; child composition consumes the completed AddRotation world rotation. Only internal Windows critical-section enter/leave boundaries are no-ops; all game pose/matrix/writeback handlers execute. Exact return/ESP/callee-saved/FPCW, velocity retention, parent retention and inner target selection checked. Capture local/world13 words and body pose including the native motion rotation columns transposed into row order. No native World/contact/automatic game/engine owner or input acceptance."
+        }
+      }
+    },
+    "negative_controls": {
+      "report": "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/controls-verification.json",
+      "report_sha256": "6a40982cb77b05b1791ce8a4deddaaa1926d0ffe66d71dd8df178648baee8f4a",
+      "result": {
+        "passed": true,
+        "cases": 720,
+        "source_sha256": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c",
+        "controls": {
+          "omit_postpass": {
+            "rotation_mismatches": 708,
+            "child_world_mismatches": 708,
+            "cases_sha256": "d3117fe1234776843e2dec906c64fafc8daf0c8f64bcdf4501d7bf5045465e81",
+            "report": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-no-postpass-control-02/verification.json",
+            "report_sha256": "f447ed21f043983fb6f269bc3387ceb4c9d0c016d040e49aa2ee138deb6ad8b7"
+          },
+          "use_pre_base_author_local": {
+            "rotation_mismatches": 177,
+            "child_world_mismatches": 177,
+            "cases_sha256": "13321bab7bc891310f751591cbc4f8f2b2eaf0ee6998e2c24389d00da920e276",
+            "report": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-stale-local-control-02/verification.json",
+            "report_sha256": "c2dceb6613e7a7c64139d1664545eb77e1d38dc7e794b95911aac7fbaebf45f3"
+          }
+        },
+        "retained_initial_controls": "The01 direct-base/split-call controls changed the native caller stack and exposed a different fourth transform-position word in360 pending cases. The initial controls.py all-four-lane-preservation assertion failed. Canonical02 controls keep the exact wrapper stack and mutate only the declared postpass branch/input; all four body position words are now preserved. Spatial XYZ tolerances and positive comparator domain were never changed.",
+        "inspector_sha256": "677d1b9bd908e9a10e00bef891c96a48ac360e22510941a5d2770fa7a3f13897",
+        "scope": "Independent original-instruction controls; no production invocation. Omitting wrapper postpass changes708 node/child rotations, stale author-local snapshot changes177 bit8 writeback cases. Final flags, author locals, body pose and retained world position/scale remain identical. Controlled stale-local fixture explicitly supplies pre-base locals only during postpass, then restores completed local stores."
+      }
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/probe.cpp": "83a9a32c2db617a9876f1a88b2c3b8dd99d0405eead0791abc00bd173dba22eb",
+      "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/compare.py": "a0af5ec980a77ef1c2b4c7b2b929647c07c4c12ffc53f562a4b85127f9133785",
+      "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/predeclared-domain.json": "6a933fd4cf9efd54fbf2f515d4b56713b165221eb17df2fbeaf77a35ae492da1",
+      "build/oblivion-compat/m15/S4/addrotation-scene-corpus-01/controls-02.py": "677d1b9bd908e9a10e00bef891c96a48ac360e22510941a5d2770fa7a3f13897"
+    },
+    "cases": [
+      "NifNativeTransform.MatrixProductsRetainOriginalAddRotationStoreBoundaries",
+      "NifNativeTransform.MatrixProductsRejectNonfiniteInputsAndStoredOverflowWithoutInputWrites",
+      "NifNativeTransform.MatrixProductsKeepSingleMantissaRoundingAndWideIntermediateExponents",
+      "NifSceneTraversalTest.ExtraCollisionRotationRunsAfterSkippedBaseAndFeedsChildCachesWithoutLocalWrites",
+      "NifSceneTraversalTest.ExtraCollisionRotationReadsAuthorLocalAfterBaseWritebackAndRetainsBasePosition",
+      "NifSceneTraversalTest.ExtraCollisionRotationRejectsMissingParentAndInvalidMatrixAfterBasePhase"
+    ],
+    "retained_attempts": [
+      "Full normal/sanitized01 each run 2917 component cases: 2914 pass, three new scene fixtures fail because they rebind nodes without explicit retirement. Corrected those fixtures to call retire before reuse; production source is unchanged between 01/02. Full 02 each passes all 2917 components and 1637 engine tests.",
+      "Original full-handler01 captures 144 cases;02 adds original child composition;03 expands to 720;04 additionally captures the native body matrix columns. All pass; final hashes identify 04.",
+      "Initial omission/stale-local controls01 use different native call stacks and expose a different fourth body transform-position word in 360 pending cases. The first controls.py preservation assertion fails. Canonical controls02 keep the exact original wrapper stack and mutate only postpass branch/input; all four position words, quaternion/basis, flags and author stores now preserve exactly. Positive comparison domain/tolerances were never changed."
+    ],
+    "scope": "All 480 canonical Single/Double skip/bypass rows from the 720-case wrapper corpus, plus all 240 live-Single active/pending rows from the 720-case full-handler corpus. Compare declared local/world/child fields as exact float bits and flags/hooks exactly. Body XYZ tolerance .001 and basis 1e-6 were declared before comparison; observed maximum errors 0 and1.9708068177415328e-7. Exact packed velocity bits, mode/request, skip sleep/pose, drawing/cache agreement and complete teardown are separate driver invariants. Full handlers use a fixed Dynamic sphere2/plain body, request 1,H0/V0, no original World and an already active island; only Windows critical sections are positive boundary stubs. Original child expectation executes53D7A0 composition, without an original child controller traversal.",
+    "future_admission_input": {
+      "report": "build/oblivion-compat/m15/S4/blend-addrotation-rigid-transfer-oracle-01/verification.json",
+      "report_sha256": "a88bb682685ff01438e3ef379ae062ea03f7fc708d51141c82717f63a77068cc",
+      "result": {
+        "passed": true,
+        "cases": 384,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "7063d4ef12631d87f512f4596fdff5cc507489544544a418be8e55c2d594d552",
+        "cases_sha256": "d77c1fee1d57b995632289fe0f38b8f646e5f55ffc4e072faadef442af42367b",
+        "scope": "Full original438730 spine collision replacement caller, real AddRotation constructor88E7C0, base transfer88E880 and node install435CE0. Three declared boundaries: named lookup virtual58 returns fixture nodes; allocation returns fresh4C storage; Windows interlocked increment/decrement executes fixture arithmetic. Base collisions hold nonnull plain/BodyT wrappers and preallocated native property arrays. Actual897670/8BC7B0/8BC750/75FA90 remove/rebind the collision property and reference storage; motion bytes, packed velocities and wrapper reference counts remain exact. Tables2/6 are supplied motion fixtures, not constructor execution. Reference counts avoid final destruction; property capacity avoids array growth. Actual NiRTTI distinguishes base blend from ordinary collisions. Distinct per-node gains/flags/request/counter inputs; capture flags/request/counter/extra rotation after replacement, absent nodes and ineligible types. Full return/callee-saved/FPCW verified. This is not live root/name lookup, native World/property-array growth, final destruction, high-level actor ownership or game input."
+      },
+      "scope": "384 bounded original caller profiles, 288 replacements. Nonnull plain/BodyT wrappers, supplied motion tables 2/6, preallocated HK property capacity 1 and no World. Actual property removal/rebinding and pointer-reference storage execute; body/HK identities, 256 captured motion bytes including velocities and wrapper reference count 10 survive. Source gains transfer; new flags 0x41/request 8/counter 0/extra identity. Named lookup, Ni allocation and interlocked primitives remain boundaries. BodyT offset bytes are not read by this transfer probe. This is next-work evidence; actual C++ actor subtype admission/selection is not implemented by the current projection change."
+    },
+    "warning_review": "Full logs retained. Rebuilt World fixture emits unchanged unused context/dangling-else diagnostics; no new matrix/postpass source warning.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "The postpass is integrated with actual owned-body collision callbacks and real NIF cache/drawing publication, but actual actor subtype construction/selection and the live extra-matrix producer remain separate required work.",
+      "No automatic actor Animation/World traversal or selector/time producer is installed. Actual KF/controller ordering, morphology, root/reference/capsule coordination and coherent group/filter setup remain open.",
+      "Body transform-position fourth-word initialization/producer is not established. Spatial comparison covers XYZ and basis; all eight velocity lanes are covered. Corrected controls preserve the fourth position word without defining a generic initializer.",
+      "Original fixtures have no World and active islands; no contact/broadphase/island equivalence or physical step is claimed. Supplied extra rotations require a native parent and invertible renderer projection; original null-parent behavior is not admitted.",
+      "A later postpass failure does not roll back completed body/base/controller phases. Legacy callbacks with no extra snapshot retain existing behavior. No new reference publication permission is inferred from the rotation change.",
+      "Python/schema unchanged and not rerun; ASan leaks disabled. Contact/reaction/FSM/GetUp and all normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart acceptance remain open. Full M15S4 is not complete."
+    ]
   }
 }

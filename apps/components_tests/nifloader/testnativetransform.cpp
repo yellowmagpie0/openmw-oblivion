@@ -177,3 +177,86 @@ namespace
     }
 
 }
+
+namespace
+{
+    Nif::Matrix3 matrixFromBits(const std::array<std::uint32_t, 9>& source)
+    {
+        Nif::Matrix3 result;
+        for (unsigned i = 0; i < 9; ++i) result.mValues[i / 3][i % 3] = std::bit_cast<float>(source[i]);
+        return result;
+    }
+
+    std::array<std::uint32_t, 9> matrixBits(const Nif::Matrix3& source)
+    {
+        std::array<std::uint32_t, 9> result;
+        for (unsigned i = 0; i < 9; ++i) result[i] = std::bit_cast<std::uint32_t>(source.mValues[i / 3][i % 3]);
+        return result;
+    }
+
+    TEST(NifNativeTransform, MatrixProductsRetainOriginalAddRotationStoreBoundaries)
+    {
+        struct Case
+        {
+            Nif::NativeTransformPrecision mPrecision;
+            std::array<std::uint32_t, 9> mParent, mLocal, mExtra, mExpected;
+        };
+        // Complete original88E9F0 with its two7100A0 products; captured before
+        // C++ comparison in blend-addrotation-postpass-oracle-01.
+        const std::array<Case, 2> cases{{
+            {Nif::NativeTransformPrecision::Single,
+             {1051138986u,3203013790u,1062455504u,3175607395u,3210860452u,3203386077u,1064413299u,1038507052u,3198081370u},
+             {1042608974u,1062165941u,1058035636u,1059562395u,1051586122u,3207386224u,3208447962u,1056225561u,3203633362u},
+             {1059384368u,3206035379u,1056329134u,3203276221u,3209546500u,3200112804u,1058762940u,1014509758u,3209387688u},
+             {3208256036u,1037633297u,3207442187u,1058434851u,1058762741u,3205032292u,1052108156u,3209271172u,3204509764u}},
+            {Nif::NativeTransformPrecision::Double,
+             {3190376768u,3197543518u,1064368902u,3203504658u,3209725108u,3198994344u,1063105499u,3204447656u,3146318873u},
+             {3211746399u,3190183166u,3198249166u,1051845140u,3206090732u,3208178912u,3180443832u,3209228767u,1058901901u},
+             {1040473589u,1039068319u,3212580568u,1053446281u,1063755075u,1042472959u,1063834512u,3201417277u,1032919873u},
+             {1057868522u,3210027092u,3157614371u,1062542537u,1057870182u,3156624901u,1013901070u,3144388864u,1065351324u}}
+        }};
+        for (const auto& row : cases)
+        {
+            const auto parent = matrixFromBits(row.mParent), local = matrixFromBits(row.mLocal), extra = matrixFromBits(row.mExtra);
+            const auto first = Nif::tryMultiplyNativeMatrices(parent, local, row.mPrecision);
+            ASSERT_TRUE(first);
+            const auto second = Nif::tryMultiplyNativeMatrices(*first, extra, row.mPrecision);
+            ASSERT_TRUE(second); EXPECT_EQ(matrixBits(*second), row.mExpected);
+            EXPECT_EQ(matrixBits(parent), row.mParent); EXPECT_EQ(matrixBits(local), row.mLocal);
+            EXPECT_EQ(matrixBits(extra), row.mExtra);
+        }
+    }
+
+    TEST(NifNativeTransform, MatrixProductsRejectNonfiniteInputsAndStoredOverflowWithoutInputWrites)
+    {
+        const Nif::Matrix3 identity;
+        for (unsigned axis = 0; axis < 9; ++axis)
+            for (const float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+            {
+                auto invalid = identity; invalid.mValues[axis / 3][axis % 3] = value;
+                const auto before = matrixBits(invalid);
+                EXPECT_FALSE(Nif::tryMultiplyNativeMatrices(invalid, identity));
+                EXPECT_FALSE(Nif::tryMultiplyNativeMatrices(identity, invalid));
+                EXPECT_EQ(matrixBits(invalid), before);
+            }
+        auto large = identity, twice = identity;
+        large.mValues[0][0] = std::numeric_limits<float>::max(); twice.mValues[0][0] = 2;
+        EXPECT_FALSE(Nif::tryMultiplyNativeMatrices(large, twice));
+        EXPECT_FALSE(Nif::tryMultiplyNativeMatrices(identity, identity, static_cast<Nif::NativeTransformPrecision>(255)));
+    }
+
+    TEST(NifNativeTransform, MatrixProductsKeepSingleMantissaRoundingAndWideIntermediateExponents)
+    {
+        Nif::Matrix3 left, right;
+        left.mValues[0][0] = left.mValues[0][1] = left.mValues[0][2] = 1;
+        right.mValues[0][0] = 1; right.mValues[1][0] = right.mValues[2][0] = 0x1p-24f;
+        const auto single = Nif::tryMultiplyNativeMatrices(left, right, Nif::NativeTransformPrecision::Single);
+        const auto wider = Nif::tryMultiplyNativeMatrices(left, right);
+        ASSERT_TRUE(single); ASSERT_TRUE(wider);
+        EXPECT_EQ(single->mValues[0][0], 1); EXPECT_EQ(wider->mValues[0][0], 1 + 0x1p-23f);
+        left.mValues[0][0] = left.mValues[0][1] = std::numeric_limits<float>::max();
+        right.mValues[0][0] = 2; right.mValues[1][0] = -2; right.mValues[2][0] = 1;
+        const auto cancelled = Nif::tryMultiplyNativeMatrices(left, right, Nif::NativeTransformPrecision::Single);
+        ASSERT_TRUE(cancelled); EXPECT_EQ(cancelled->mValues[0][0], 1);
+    }
+}

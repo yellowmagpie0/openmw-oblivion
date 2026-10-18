@@ -33,6 +33,25 @@ namespace Nif
         return true;
     }
 
+    std::optional<Matrix3> tryMultiplyNativeMatrices(
+        const Matrix3& left, const Matrix3& right, NativeTransformPrecision precision) noexcept
+    {
+        const Detail::NativeTransformMath math(precision);
+        if (!math.valid()) return std::nullopt;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+                if (!std::isfinite(left.mValues[row][column]) || !std::isfinite(right.mValues[row][column]))
+                    return std::nullopt;
+        Matrix3 result;
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+                if (!tryStoreNativeTransformFloat(math.dot(left.mValues[row][0], right.mValues[0][column],
+                        left.mValues[row][1], right.mValues[1][column], left.mValues[row][2], right.mValues[2][column]),
+                        result.mValues[row][column]))
+                    return std::nullopt;
+        return result;
+    }
+
     std::optional<NiTransform> tryComposeNativeTransform(
         const NiTransform& parent, const NiTransform& local, NativeTransformPrecision precision) noexcept
     {

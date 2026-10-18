@@ -13,6 +13,12 @@ namespace Nif
     // Failure leaves destination unchanged.
     bool tryStoreNativeTransformFloat(double value, float& destination) noexcept;
 
+    // Original7100A0 matrix product, with a binary32 store for each result
+    // element. No orthogonalization, scale or translation work. Unsupported
+    // nonfinite inputs/results reject without changing either input.
+    std::optional<Matrix3> tryMultiplyNativeMatrices(const Matrix3& left, const Matrix3& right,
+        NativeTransformPrecision precision = NativeTransformPrecision::Double) noexcept;
+
     // Original NiTransform composition, including binary32 matrix/vector,
     // scaled-vector and translation stores. Separate scale may be zero or
     // negative. Unsupported nonfinite inputs/results return empty without
