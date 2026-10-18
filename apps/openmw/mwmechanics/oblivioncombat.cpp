@@ -1992,9 +1992,6 @@ namespace MWMechanics
             else
                 npcView = std::make_unique<PreparedNonPlayerView>(ptr, values, findActorBase(values.mBase), life);
         };
-        prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
-        if (receiving)
-            prepareView(victim, *receiving, &*receivingLife, victimView);
         std::vector<PreparedPhysicalContact::Impl::Condition> conditions;
         conditions.reserve(deltas.mConditionChanges.size());
         std::vector<PreparedPhysicalContact::Impl::Unequip> unequips;
@@ -2047,10 +2044,20 @@ namespace MWMechanics
                 // Do not publish a god-mode break consequence when wear is suppressed.
                 if (found->mApply && request.mBreakDisposition == OblivionWeaponBreakDisposition::Unequip)
                     unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight)});
+                // Original5F5C84: a blocking weapon that reaches zero returns
+                // true from condition mutation, then5F4AE0(false) withdraws
+                // posture6. Publish that action with wear/equipment/resources;
+                // existing deferred equipment observers release the render binding.
+                if (found->mApply && request.mOwner == victim && receiving
+                    && receiving->mProcessAction == 6)
+                    receiving->mProcessAction = -1;
             }
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
         }
+        prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
+        if (receiving)
+            prepareView(victim, *receiving, &*receivingLife, victimView);
         auto data = std::make_unique<PreparedPhysicalContact::Impl>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
         data->mOwner = this;

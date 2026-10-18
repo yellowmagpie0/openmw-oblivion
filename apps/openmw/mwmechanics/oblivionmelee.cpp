@@ -693,6 +693,22 @@ namespace MWMechanics
             std::vector<OblivionPhysicalConditionChange> mConditions{};
         };
 
+        OblivionWeaponBreakDisposition weaponBreakDisposition(MWBase::World& world,
+            const OblivionCombatService& service, const MWWorld::Ptr& actor, const ESM4::Weapon& weapon)
+        {
+            const bool player = actor == world.getPlayerPtr();
+            const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            const auto* values = service.findActorValues(key);
+            if (!values) throw std::logic_error("native weapon break has no actor authority");
+            // Original5F39D3: only an active, weapon-out process requests an
+            // equipment consequence. Undrawn/low-process wear still commits.
+            if (values->mProcess != ESM4::ActorValueProcess::Active
+                || actor.getClass().getCreatureStats(actor).getDrawState() != DrawState::Weapon)
+                return OblivionWeaponBreakDisposition::None;
+            return player || (weapon.mFlags & ESM4::Rec_Persistent)
+                ? OblivionWeaponBreakDisposition::Unequip : OblivionWeaponBreakDisposition::Drop;
+        }
+
         std::optional<PreparedBlock> prepareOrdinaryBlock(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
             float remaining, std::int32_t attackerWeaponType, std::span<const ESM4::GameSetting* const> settings)
@@ -796,10 +812,22 @@ namespace MWMechanics
                 }
                 else
                     condition = ESM4::nativeConditionAfterWear(current, costs.mBlockingItemWear);
-                if (condition && *condition == 0)
-                    return std::nullopt; // Prepared break/unequip/drop consequences are still required.
                 if (condition)
-                    result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, item, *condition));
+                {
+                    auto change = captureOblivionPhysicalConditionChange(victim, item, *condition);
+                    if (*condition == 0)
+                    {
+                        if (shield) return std::nullopt; // Armor/shield break consequences remain separate.
+                        change.mBreakDisposition = weaponBreakDisposition(world, service, victim, *weapon);
+                        if (change.mBreakDisposition == OblivionWeaponBreakDisposition::None)
+                            return std::nullopt; // Undrawn broken-blocking-item state is not admitted here.
+                        // Original5FF914 re-reads the carried weapon after
+                        // blocking wear. Both unequip and drop leave it empty.
+                        const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType, -1);
+                        result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
+                    }
+                    result.mConditions.push_back(std::move(change));
+                }
             }
             return result;
         }
@@ -1035,19 +1063,7 @@ namespace MWMechanics
                 : double(ref.getCharge()) + ref.getChargeIntRemainder();
             condition = ESM4::nativeConditionAfterWear(current, ESM4::weaponWear(weapon->mData.damage, durability));
             if (condition && *condition == 0)
-            {
-                const auto key = attacker == player ? ESM::FormKey::dynamic("player", 1)
-                    : attacker.getCellRef().getFormKey();
-                const auto* values = service->findActorValues(key);
-                // Original5F39D3: only an active, weapon-out process requests
-                // an equipment consequence. Undrawn/low-process wear still commits.
-                if (values->mProcess == ESM4::ActorValueProcess::Active
-                    && attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon)
-                {
-                    breakDisposition = attacker == player || (weapon->mFlags & ESM4::Rec_Persistent)
-                        ? OblivionWeaponBreakDisposition::Unequip : OblivionWeaponBreakDisposition::Drop;
-                }
-            }
+                breakDisposition = weaponBreakDisposition(world, *service, attacker, *weapon);
         }
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);

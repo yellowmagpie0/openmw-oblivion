@@ -1,0 +1,40 @@
+{
+  "scope": "Normal-input Player held keyboard block against one production-policy NPC sword strike. Near-broken Player weapon must reach zero, unequip without a drop, withdraw posture atomically, use post-wear Blade+Hand block sounds, then fresh-process continuation without replay. First-person1FPS bounded branch, not full S4.",
+  "source": "build/oblivion-compat/m15/S4/block-sound-runtime-normal-01/staged-input.omwsave",
+  "source_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+  "source_schema_version": 46,
+  "staged_source_sha256": "53cd69d954b0620e0f3ce51a10c9b4e4cd70c530a000670f0601156ce67dd738",
+  "fixture_changes": {
+    "player_weapon_condition_before": 55.875,
+    "player_weapon_condition_after": 1.000100016593933,
+    "no_injected_contact_or_damage": true
+  },
+  "expected": {
+    "actor": "content:oblivion.esm:01fc43",
+    "player": "dynamic:player:0000000000000001",
+    "weapon": "content:oblivion.esm:090615",
+    "player_health_damage_bits": 1065087139,
+    "opponent_weapon_condition_bits": 1113509069,
+    "blocking_weapon_condition": 0,
+    "blocking_weapon_count": 1,
+    "blocking_weapon_equipped_slots": 0,
+    "posture_at_contact": -1,
+    "posture_at_save": -1,
+    "dynamic_serial": 1,
+    "action_next": 3,
+    "combat_rng": 505908858,
+    "sound_edids": [
+      "WPNBlockBlade",
+      "WPNBlockHand"
+    ]
+  },
+  "resource_expected_source": "../block-sound-runtime-normal-01/verification.json and ../equipped-block-runtime-oracle-02/report.json; changing defender instance condition does not change block fraction/damage.",
+  "sound_native_caller_source": "../native-defensive-wear-review-01/post-wear-sound-report.json",
+  "minimum_normalized_stock_mixture_correlation": 0.75,
+  "minimum_component_gain_fraction": 0.2,
+  "analysis_rate": 12000,
+  "maximum_relative_voice_start_samples": 300,
+  "stock_assets": "stock-assets.json",
+  "audio_method": "Two-template matched filter using independently read native static attenuation, mean-corrected joint correlation and positive component gains. Candidate anchors from individual stock correlations>=.2 with local maxima and2-sample jitter; relative voice offset searched within25ms. All valid above.75 events cluster within1s; exactly one before restart and zero after.",
+  "limits": "Does not establish every defensive item/mastery/effect branch, exact native animation fade duration, other controls/views/FPS or full S4."
+}

@@ -11631,5 +11631,182 @@
     "acceptance_correction": "Original corpus has64 of512 contexts with mask0 and reference/local difference above.01. Current production functions match all512 original contexts bit exact, normal and sanitized. Replace absolute reference/cache equality with exact independent persistence and native masked publication coverage; retain body/cache.01 tolerance and placement bounds. This is a correction to acceptance semantics after the original failed assertion, not a preregistered pass.",
     "case": "Four successive.006-unit physical steps publish no reference callback; cumulative local/reference difference exceeds.01. Binary save/load restores body, cached local and unchanged reference independently; next stationary traversal preserves reference, and a later.02-unit step publishes position only.",
     "runtime_limits": "Existing normal and instrumented exact-lineage physical courses use the collision-routing chunk binaries3489f3ef... and01a43350..., whose gameplay code is unchanged by this test-only follow-up. Normal copied-save camera inspection proves exposed blade/scabbard policy; no instrumented floor-facing image or exact real-content uninterrupted trajectory equivalence is claimed. Remaining defensive/mastery/effect/input/reaction and complete S4 gates stay open."
+  },
+  "native_defensive_weapon_break": {
+    "status": "Bounded retained Player defensive-break gameplay/restart and ordinary NPC owned physical drop integration; full S4 remains incomplete",
+    "checks": {
+      "normal": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-normal-05/verification.json",
+          "sha256": "82677b0b1ba95fdeebafa9a36a530cdb374b43b6dc71fd49baa12b23ecbddac3"
+        },
+        "receipt": {
+          "schema_version": 1,
+          "passed": true,
+          "commands": [
+            {
+              "argv": [
+                "cmake",
+                "--build",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                "--target",
+                "openmw",
+                "openmw-tests",
+                "esmtool",
+                "-j",
+                "3"
+              ],
+              "log": "engine-build.log",
+              "returncode": 0,
+              "seconds": 265.666
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                "--gtest_list_tests"
+              ],
+              "log": "engine-inventory.txt",
+              "returncode": 0,
+              "seconds": 0.265
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                "--gtest_filter=*",
+                "--gtest_repeat=1",
+                "--gtest_shuffle=0",
+                "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-weapon-break-normal-05/engine.xml"
+              ],
+              "log": "engine.log",
+              "returncode": 0,
+              "seconds": 26.128
+            }
+          ],
+          "results": {
+            "engine": {
+              "executed": 1711,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*",
+              "binary_sha256": "b25f0d494a7054f27dd575a624e1a47096b1662580419490033893e1c50775a2",
+              "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+              "xml_sha256": "2eac670f7936b58fafb148ba6d4fbdc43d485645fbaad877615c2cb7918f7d28",
+              "inventory_sha256": "66a55739dcc96b8852cab50dbdaf705b534d9d6211798f4dddf30c33d1da3435",
+              "configuration": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                "CMAKE_CXX_FLAGS": "",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                "OPENMW_USE_SYSTEM_BULLET": "OFF"
+              }
+            }
+          },
+          "source_before": {
+            "head": "c85be43d224b784c0d11141ffa3fa39a76b161f2",
+            "source_fingerprint": "bc4dfa57bbb12f5fc563272a5b187f7bd3f5ebb662fc9a51d75d38f7223dbf19"
+          },
+          "source_after": {
+            "head": "c85be43d224b784c0d11141ffa3fa39a76b161f2",
+            "source_fingerprint": "bc4dfa57bbb12f5fc563272a5b187f7bd3f5ebb662fc9a51d75d38f7223dbf19"
+          }
+        },
+        "gameplay_executable": {
+          "path": "build/openmw",
+          "sha256": "155e95744fa692e53dbfa08918b920ddb134ccf1dcc2faa8882a6db0bc8b0c4d"
+        },
+        "runtime_report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-runtime-normal-01/verification.json",
+          "sha256": "9ce0b46f96903b42a77b34b2f8cfd69aea89eb684041e458b37e7d5e9bb1e4b8"
+        }
+      },
+      "sanitized": {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-sanitized-05/verification.json",
+          "sha256": "f382b6d6646f5900b638a0c90caf965682656edbabe05336b1f28825dc6f0007"
+        },
+        "receipt": {
+          "schema_version": 1,
+          "passed": true,
+          "commands": [
+            {
+              "argv": [
+                "cmake",
+                "--build",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                "--target",
+                "openmw",
+                "openmw-tests",
+                "esmtool",
+                "-j",
+                "3"
+              ],
+              "log": "engine-build.log",
+              "returncode": 0,
+              "seconds": 384.249
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                "--gtest_list_tests"
+              ],
+              "log": "engine-inventory.txt",
+              "returncode": 0,
+              "seconds": 0.466
+            },
+            {
+              "argv": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                "--gtest_filter=*",
+                "--gtest_repeat=1",
+                "--gtest_shuffle=0",
+                "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-weapon-break-sanitized-05/engine.xml"
+              ],
+              "log": "engine.log",
+              "returncode": 0,
+              "seconds": 157.336
+            }
+          ],
+          "results": {
+            "engine": {
+              "executed": 1711,
+              "inventory_matches": true,
+              "failed": 0,
+              "skipped": 0,
+              "filter": "*",
+              "binary_sha256": "6f90e6f396e04fa5bd8d87b239355c93d62c3d20455755a4bf14ed8636a638ec",
+              "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+              "xml_sha256": "6a34acbca865bf234d7cdb9b88c4ec06a6e8e718ea311cac6a3f8a253a675386",
+              "inventory_sha256": "66a55739dcc96b8852cab50dbdaf705b534d9d6211798f4dddf30c33d1da3435",
+              "configuration": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                "OPENMW_USE_SYSTEM_BULLET": "OFF"
+              }
+            }
+          },
+          "source_before": {
+            "head": "c85be43d224b784c0d11141ffa3fa39a76b161f2",
+            "source_fingerprint": "bc4dfa57bbb12f5fc563272a5b187f7bd3f5ebb662fc9a51d75d38f7223dbf19"
+          },
+          "source_after": {
+            "head": "c85be43d224b784c0d11141ffa3fa39a76b161f2",
+            "source_fingerprint": "bc4dfa57bbb12f5fc563272a5b187f7bd3f5ebb662fc9a51d75d38f7223dbf19"
+          }
+        },
+        "gameplay_executable": {
+          "path": "build/m15-sanitize/openmw",
+          "sha256": "d0537cf24be3e90bbe3e4653dd4fac52e802f9e99ff5b6640cdb9e4f17eb4dbf"
+        },
+        "runtime_report": {
+          "path": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-runtime-sanitized-01/verification.json",
+          "sha256": "b73762b66ab895ed30394b2b01b9a33f6041e0e31524d1f0e28d65825e4d4d99"
+        }
+      }
+    },
+    "probe": "M15-DEFENSIVE-WEAPON-BREAK-PROBE.json",
+    "full_M15S4_acceptance": false
   }
 }

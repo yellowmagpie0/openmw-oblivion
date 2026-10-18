@@ -1536,6 +1536,9 @@ namespace MWMechanics
                                 << " victim=" << (contact->mVictim.isEmpty() ? "none"
                                     : contact->mVictim == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1).serialize()
                                     : contact->mVictim.getCellRef().getFormKey().serialize())
+                                << " victim_action=" << (contact->mVictim.isEmpty() ? -1
+                                    : service->getProcessAction(contact->mVictim == world->getPlayerPtr()
+                                        ? ESM::FormKey::dynamic("player", 1) : contact->mVictim.getCellRef().getFormKey()))
                                 << " armor_condition_writes=" << contact->mArmorConditionWrites
                                 << " combat_random_draws=" << contact->mRandomDraws;
     }
