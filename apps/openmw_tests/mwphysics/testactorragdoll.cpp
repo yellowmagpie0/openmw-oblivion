@@ -721,8 +721,10 @@ namespace
         snapshot.mBodies[1].mNativePackedVelocity->mLinear = {1, 2, 3, 8};
         snapshot.mBodies[1].mNativePackedVelocity->mAngular = {4, 5, 6, -0.f};
         snapshot.mBodies[1].mLinearVelocity = {1, 2, 3}; snapshot.mBodies[1].mAngularVelocity = {4, 5, 6};
-        (*snapshot.mNativeBlends)[0] = {6, 0xf123, 0xffffffffu, -2.f, 3.f};
-        (*snapshot.mNativeBlends)[1] = {12, 8, 1, -0.f, 0.f};
+        (*snapshot.mNativeBlends)[0] = {6, 0xf123, 0xffffffffu, -2.f, 3.f,
+            ESM4::RuntimeRagdollBlendRegistration{17, true}};
+        (*snapshot.mNativeBlends)[1] = {12, 8, 1, -0.f, 0.f,
+            ESM4::RuntimeRagdollBlendRegistration{-9, false}};
         scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
         EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
         scheduler.removeActorRagdoll(mPtr);

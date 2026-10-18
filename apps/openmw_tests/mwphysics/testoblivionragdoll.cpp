@@ -1,4 +1,5 @@
 #include <apps/openmw/mwphysics/oblivionragdoll.hpp>
+#include <components/nifbullet/nativedynamicsworld.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
 #include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
@@ -596,4 +597,64 @@ namespace
             }
         }
     }
+    TEST_F(NativeRagdollSnapshotTest, OwnedBlendRegistrationSurvivesWireAndFreshOwnerBeforeNextRequest)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration config;
+            btCollisionDispatcher dispatcher{&config};
+            btDbvtBroadphase broadphase;
+            btSequentialImpulseConstraintSolver solver;
+            NifBullet::NativeDynamicsWorld world{&dispatcher,&broadphase,&solver,&config};
+        } first, second;
+        for (auto& body : mGraph.mBodies)
+        {
+            body.mBlend = NifBullet::RagdollBlendDefinition{body.mRecord+100,1,1,1};
+            body.mInfoFilter.mLayer = 8;
+        }
+        NifBullet::RagdollInternalCollisionFilter filters;
+        filters.mSystemGroup = 1; filters.mMasks.mLayerMasks.fill(0xffffffffu);
+        filters.mMasks.mBoneMasks.fill(0xffffffffu);
+        std::vector<btTransform> poses; for (const auto& body : mBodies) poses.push_back(body.mPose);
+        NifBullet::ActorRagdollPhysics uninterrupted(mGraph,first.world,1,poses,1,-1,nullptr,&filters);
+        auto states = uninterrupted.captureNativeBlendStates();
+        states[0].mRegistrationCounter = std::numeric_limits<std::int32_t>::max();
+        states[1].mRegistrationCounter = std::numeric_limits<std::int32_t>::min();
+        states[0].mHasRememberedWorldOwner = states[1].mHasRememberedWorldOwner = true;
+        uninterrupted.restoreNativeBlendStates(states);
+        const auto snapshot = MWPhysics::captureNativeActorRagdollSnapshot(uninterrupted,mBase,mModel,mGraph);
+        ASSERT_TRUE(snapshot.mNativeBlends);
+        for (const auto& blend : *snapshot.mNativeBlends) ASSERT_TRUE(blend.mRegistration);
+        const auto bytes = save(snapshot).serializeBinary();
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(decoded.mVersion,51u);
+        const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
+        NifBullet::ActorRagdollPhysics resumed(mGraph,second.world,1,poses,1,-1,nullptr,&filters);
+        MWPhysics::restoreNativeActorRagdollSnapshot(resumed,loaded,mBase,mModel,mGraph);
+        auto restored = resumed.captureNativeBlendStates();
+        EXPECT_EQ(restored[0].mRegistrationCounter,std::numeric_limits<std::int32_t>::max());
+        EXPECT_EQ(restored[1].mRegistrationCounter,std::numeric_limits<std::int32_t>::min());
+        EXPECT_TRUE(restored[0].mHasRememberedWorldOwner); EXPECT_TRUE(restored[1].mHasRememberedWorldOwner);
+        const std::array<std::uint32_t,1> requests{24};
+        auto a = uninterrupted.prepareNativeRegistrationRequests(requests,false);
+        auto b = resumed.prepareNativeRegistrationRequests(requests,false);
+        EXPECT_EQ(a->plan().mEvents,b->plan().mEvents);
+        EXPECT_EQ(a->plan().mGraph,b->plan().mGraph);
+        EXPECT_EQ(a->plan().mReturnsTrue,(std::vector<unsigned char>{0}));
+        uninterrupted.admitNativeRegistration(*a); resumed.admitNativeRegistration(*b);
+        ASSERT_TRUE(uninterrupted.commitNativeRegistration(*a)); ASSERT_TRUE(resumed.commitNativeRegistration(*b));
+        EXPECT_EQ(first.world.getNumCollisionObjects(),2); EXPECT_EQ(second.world.getNumCollisionObjects(),2);
+        EXPECT_EQ(MWPhysics::captureNativeActorRagdollSnapshot(resumed,mBase,mModel,mGraph),
+            MWPhysics::captureNativeActorRagdollSnapshot(uninterrupted,mBase,mModel,mGraph));
+        auto legacy = loaded;
+        for (auto& blend : *legacy.mNativeBlends) blend.mRegistration.reset();
+        const auto legacyBlends = MWPhysics::restoreNativeActorRagdollBlendStates(legacy,mBase,mModel,mGraph);
+        ASSERT_TRUE(legacyBlends);
+        for (const auto& blend : *legacyBlends)
+        {
+            EXPECT_EQ(blend.mRegistrationCounter,0);
+            EXPECT_FALSE(blend.mHasRememberedWorldOwner);
+        }
+    }
+
 }

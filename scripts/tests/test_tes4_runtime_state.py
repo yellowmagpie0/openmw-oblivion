@@ -2722,6 +2722,61 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 state_io.encode_payload(state)
 
 
+    def test_blend_registration_v51_wire_and_legacy_absence(self):
+        state = self.blend_ragdoll_state(); state_io._upgrade_power_melee_phases(state); state["schema_version"] = 50
+        legacy = state_io.encode_payload(state)
+        fields = struct.pack("<IHIff", 12, 0xf123, 0xffffffff, -0., -2.)
+        self.assertEqual(legacy.count(fields), 1)
+        offset = legacy.index(fields) + len(fields)
+        expected = bytearray(legacy); struct.pack_into("<I", expected, len(state_io.MAGIC), 51)
+        expected[offset:offset] = b"\x00"; state["schema_version"] = 51
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertNotIn("registration", state_io.decode_payload(expected)["native_actor_ragdolls"][0]["native_blends"][0])
+        state["native_actor_ragdolls"][0]["native_blends"][0]["registration"] = {
+            "counter": -0x80000000, "remembered_world_owner": True}
+        expected[offset:offset+1] = bytes([1,0,0,0,0x80,1])
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertEqual(state_io.decode_payload(expected)["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        for index in (offset, offset+5):
+            corrupt = bytearray(expected); corrupt[index] = 2
+            with self.subTest(index=index), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(corrupt)
+        for cut in range(offset, offset+6):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(expected[:cut])
+        state["schema_version"] = 50
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_actor_ragdolls"][0]["native_blends"][0]["registration"]
+        self.assertEqual(state_io.encode_payload(state), legacy)
+
+    def test_blend_registration_signed_bounds_and_presence(self):
+        state = self.blend_ragdoll_state(); state_io._upgrade_power_melee_phases(state); state["schema_version"] = 51
+        blend = state["native_actor_ragdolls"][0]["native_blends"][0]
+        for counter in (-0x80000000, -1, 0, 1, 0x7fffffff):
+            for owner in (False, True):
+                blend["registration"] = {"counter": counter, "remembered_world_owner": owner}
+                self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        for registration in (None, {}, {"counter": 1}, {"counter": True, "remembered_world_owner": False},
+                {"counter": 0x80000000, "remembered_world_owner": False},
+                {"counter": -0x80000001, "remembered_world_owner": False},
+                {"counter": 0, "remembered_world_owner": 1}):
+            blend["registration"] = registration
+            with self.subTest(registration=registration), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+
+    def test_blend_registration_rejects_incomplete_owned_set(self):
+        state = self.blend_ragdoll_state(); state_io._upgrade_power_melee_phases(state); state["schema_version"] = 51
+        pose = state["native_actor_ragdolls"][0]
+        body = copy.deepcopy(pose["bodies"][0]); body["record"] = 24; body["node_record"] = 20
+        pose["bodies"].append(body)
+        second = copy.deepcopy(pose["native_blends"][0]); second["body_record"] = 24
+        pose["native_blends"].append(second)
+        pose["native_blends"][0]["registration"] = {"counter": 1, "remembered_world_owner": True}
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        second["registration"] = {"counter": 2, "remembered_world_owner": False}
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_actor_ragdolls"], state["native_actor_ragdolls"])
+
+
 class SaveEnvelopeAdmissionTests(unittest.TestCase):
     @staticmethod
     def record(name, body):
@@ -2798,6 +2853,7 @@ class SaveEnvelopeAdmissionTests(unittest.TestCase):
         native = self.envelope(with_profile=False)
         self.assertEqual(state_io._find_runtime_record(profile + native)[3],
                          state_io.encode_payload(make_state()))
+
 
 
 if __name__ == "__main__":

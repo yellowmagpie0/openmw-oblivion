@@ -10,11 +10,11 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <limits>
 
 namespace
 {
     using Actor = NifBullet::ActorRagdollPhysics;
-    using Context = NifBullet::RagdollNativeRegistrationContext;
     using Event = ESM4::PhysicalRegistrationEventKind;
     class RegistrationFaultBroadphase : public btDbvtBroadphase
     {
@@ -37,7 +37,6 @@ namespace
         NifBullet::ActorRagdollDefinition mDefinition;
         std::array<btTransform, 2> mPoses;
         NifBullet::RagdollInternalCollisionFilter mMasks;
-        const std::array<Context, 2> mContexts{{{12, 0, false, false}, {24, 0, false, false}}};
         const std::array<std::uint32_t, 2> mRequests{24, 12};
         OrderedRagdollRegistrationTest()
         {
@@ -102,7 +101,7 @@ namespace
         const auto* oldContact = contact(b,&outside); ASSERT_NE(oldContact,nullptr);
         const auto oldWords = value->captureInternalCollisionFilters();
         auto oldFilter = value->prepareInternalCollisionFilters(oldWords);
-        auto token = value->prepareNativeRegistrationRequests(mRequests,mContexts);
+        auto token = value->prepareNativeRegistrationRequests(mRequests,false);
         EXPECT_EQ(token->plan().mReturnsTrue,(std::vector<unsigned char>{1,1}));
         EXPECT_TRUE(token->plan().mGraph.mBodies[1].mHasRememberedWorldOwner);
         EXPECT_EQ(token->plan().mGraph.mBodies[1].mPackedFilter,0x14008u);
@@ -129,6 +128,10 @@ namespace
         EXPECT_FALSE(a->checkCollideWith(b)); EXPECT_FALSE(b->checkCollideWith(a));
         EXPECT_FALSE(value->commitInternalCollisionFilters(*oldFilter));
         EXPECT_TRUE(token->plan().mGraph.mConstraints[0].mRegistered);
+        const auto committedStates = value->captureNativeBlendStates();
+        EXPECT_TRUE(committedStates[0].mHasRememberedWorldOwner);
+        EXPECT_TRUE(committedStates[1].mHasRememberedWorldOwner);
+        EXPECT_EQ(committedStates[1].mRegistrationCounter,0);
         mWorld.performDiscreteCollisionDetection();
         EXPECT_EQ(contact(a,b),nullptr); EXPECT_NE(contact(b,&outside),nullptr);
     }
@@ -138,10 +141,11 @@ namespace
         for (int mode=0; mode<2; ++mode)
         {
             auto value = actor(); onlyB(*value);
-            auto contexts = mContexts;
-            contexts[1].mCounter = mode==0 ? 1 : 0; contexts[1].mRegistrationOverride = mode==1;
+            auto states = value->captureNativeBlendStates();
+            states[1].mRegistrationCounter = mode==0 ? 1 : 0;
+            value->restoreNativeBlendStates(states);
             const auto* original = value->collisionObjects()[1]->getBroadphaseHandle();
-            auto token = value->prepareNativeRegistrationRequests(mRequests,contexts);
+            auto token = value->prepareNativeRegistrationRequests(mRequests,mode==1);
             EXPECT_FALSE(std::any_of(token->plan().mEvents.begin(),token->plan().mEvents.end(),
                 [](const auto& e){return e.mKind==Event::BodyRemoved;}));
             value->admitNativeRegistration(*token); ASSERT_TRUE(value->commitNativeRegistration(*token));
@@ -152,7 +156,7 @@ namespace
         mDefinition.mBodies[1].mAssociatedConstraints = {25};
         auto value = actor(); value->setWorldRegistrationSelection({{}, {}});
         const std::array<std::uint32_t,1> request{12};
-        auto token = value->prepareNativeRegistrationRequests(request,mContexts);
+        auto token = value->prepareNativeRegistrationRequests(request,false);
         value->admitNativeRegistration(*token); ASSERT_TRUE(value->commitNativeRegistration(*token));
         EXPECT_EQ(value->captureWorldRegistrationSelection(),(NifBullet::RagdollWorldRegistration{{12},{}}));
     }
@@ -160,8 +164,8 @@ namespace
     TEST_F(OrderedRagdollRegistrationTest, LaterOwnerFailureRollsBackWithoutPublishingEarlierOwner)
     {
         auto first=actor(), second=actor(); onlyB(*first); onlyB(*second);
-        auto a=first->prepareNativeRegistrationRequests(mRequests,mContexts);
-        auto b=second->prepareNativeRegistrationRequests(mRequests,mContexts);
+        auto a=first->prepareNativeRegistrationRequests(mRequests,false);
+        auto b=second->prepareNativeRegistrationRequests(mRequests,false);
         first->admitNativeRegistration(*a); mBroadphase.mFailAt=mBroadphase.mCreates+2;
         EXPECT_THROW(second->admitNativeRegistration(*b),std::runtime_error);
         EXPECT_EQ(mWorld.getNumCollisionObjects(),2); EXPECT_EQ(mWorld.getNumConstraints(),0);
@@ -178,11 +182,16 @@ namespace
     TEST_F(OrderedRagdollRegistrationTest, StaleBlendPoseMembershipAndIgnoreStateRejectBeforeRelease)
     {
         auto value=actor(); onlyB(*value);
-        auto token=value->prepareNativeRegistrationRequests(mRequests,mContexts);
+        auto token=value->prepareNativeRegistrationRequests(mRequests,false);
         auto blends=value->captureNativeBlendStates(); const auto original=blends;
         blends[1].mGains={.5f,.5f}; value->restoreNativeBlendStates(blends);
         EXPECT_FALSE(value->validateNativeRegistration(*token));
         EXPECT_THROW(value->admitNativeRegistration(*token),std::invalid_argument);
+        value->restoreNativeBlendStates(original); ASSERT_TRUE(value->validateNativeRegistration(*token));
+        blends = original; blends[1].mRegistrationCounter = 1;
+        value->restoreNativeBlendStates(blends); EXPECT_FALSE(value->validateNativeRegistration(*token));
+        blends = original; blends[1].mHasRememberedWorldOwner = true;
+        value->restoreNativeBlendStates(blends); EXPECT_FALSE(value->validateNativeRegistration(*token));
         value->restoreNativeBlendStates(original); ASSERT_TRUE(value->validateNativeRegistration(*token));
         value->admitNativeRegistration(*token);
         auto* a=value->collisionObjects()[0]; auto* b=value->collisionObjects()[1];
@@ -202,12 +211,9 @@ namespace
     TEST_F(OrderedRagdollRegistrationTest, MalformedInputsAndTraversalBoundsLeavePublishedOwnerUntouched)
     {
         auto value=actor(); onlyB(*value); const auto before=value->captureWorldRegistrationSelection();
-        EXPECT_THROW(value->prepareNativeRegistrationRequests(mRequests,{}),std::invalid_argument);
-        auto contexts=mContexts; std::swap(contexts[0],contexts[1]);
-        EXPECT_THROW(value->prepareNativeRegistrationRequests(mRequests,contexts),std::invalid_argument);
         const std::array<std::uint32_t,1> unknown{999};
-        EXPECT_THROW(value->prepareNativeRegistrationRequests(unknown,mContexts),std::invalid_argument);
-        EXPECT_THROW(value->prepareNativeRegistrationRequests(mRequests,mContexts,1),std::length_error);
+        EXPECT_THROW(value->prepareNativeRegistrationRequests(unknown,false),std::invalid_argument);
+        EXPECT_THROW(value->prepareNativeRegistrationRequests(mRequests,false,1),std::length_error);
         EXPECT_EQ(value->captureWorldRegistrationSelection(),before);
         EXPECT_EQ(mWorld.getNumCollisionObjects(),1);
         mDefinition.mBodies[0].mAssociatedConstraints={999};
@@ -220,8 +226,8 @@ namespace
         std::unique_ptr<Actor::PreparedNativeRegistration> admitted, prepared;
         {
             auto value=actor(); onlyB(*value);
-            admitted=value->prepareNativeRegistrationRequests(mRequests,mContexts);
-            prepared=value->prepareNativeRegistrationRequests(mRequests,mContexts);
+            admitted=value->prepareNativeRegistrationRequests(mRequests,false);
+            prepared=value->prepareNativeRegistrationRequests(mRequests,false);
             value->admitNativeRegistration(*admitted);
         }
         EXPECT_EQ(mWorld.getNumCollisionObjects(),0); EXPECT_EQ(mWorld.getNumConstraints(),0);
@@ -229,8 +235,39 @@ namespace
         auto world=std::make_unique<NifBullet::NativeDynamicsWorld>(&mDispatcher,&mBroadphase,&mSolver,&mConfiguration);
         auto value=std::make_unique<Actor>(mDefinition,*world,1,mPoses,1,-1,nullptr,&mMasks);
         onlyB(*value);
-        admitted=value->prepareNativeRegistrationRequests(mRequests,mContexts); value->admitNativeRegistration(*admitted);
+        admitted=value->prepareNativeRegistrationRequests(mRequests,false); value->admitNativeRegistration(*admitted);
         world.reset(); EXPECT_FALSE(value->validateNativeRegistration(*admitted));
         value.reset(); admitted.reset();
     }
+    TEST_F(OrderedRagdollRegistrationTest, FreshInitializationIsOnceAndRestorePreservesSignedCountersAndRememberedOwner)
+    {
+        auto value = actor();
+        auto initial = value->captureNativeBlendStates();
+        for (const auto& state : initial)
+        {
+            EXPECT_EQ(state.mRegistrationCounter,0);
+            EXPECT_FALSE(state.mHasRememberedWorldOwner);
+        }
+        value->setWorldRegistrationSelection({{24},{}});
+        auto states = initial;
+        states[0].mRegistrationCounter = std::numeric_limits<std::int32_t>::min();
+        states[0].mHasRememberedWorldOwner = true;
+        states[1].mRegistrationCounter = std::numeric_limits<std::int32_t>::max();
+        states[1].mHasRememberedWorldOwner = true;
+        value->restoreNativeBlendStates(states);
+        const std::array<std::uint32_t,1> request{24};
+        auto token = value->prepareNativeRegistrationRequests(request,false);
+        value->admitNativeRegistration(*token);
+        value->rollbackNativeRegistration(*token);
+        auto after = value->captureNativeBlendStates();
+        EXPECT_EQ(after[0].mRegistrationCounter,std::numeric_limits<std::int32_t>::min());
+        EXPECT_TRUE(after[0].mHasRememberedWorldOwner);
+        value->admitNativeRegistration(*token); ASSERT_TRUE(value->commitNativeRegistration(*token));
+        after = value->captureNativeBlendStates();
+        EXPECT_EQ(after[0].mRegistrationCounter,std::numeric_limits<std::int32_t>::min());
+        EXPECT_EQ(after[1].mRegistrationCounter,std::numeric_limits<std::int32_t>::max());
+        EXPECT_TRUE(after[0].mHasRememberedWorldOwner); EXPECT_TRUE(after[1].mHasRememberedWorldOwner);
+        EXPECT_EQ(value->captureWorldRegistrationSelection(),(NifBullet::RagdollWorldRegistration{{24},{}}));
+    }
+
 }

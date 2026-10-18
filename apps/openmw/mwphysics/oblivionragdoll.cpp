@@ -108,7 +108,8 @@ namespace MWPhysics
             result.mNativeBlends->reserve(blends->size());
             for (const auto& blend : *blends)
                 result.mNativeBlends->push_back({blend.mBodyRecord, blend.mCollisionFlags,
-                    blend.mRequestedMotion, blend.mGains.mHierarchy, blend.mGains.mVelocity});
+                    blend.mRequestedMotion, blend.mGains.mHierarchy, blend.mGains.mVelocity,
+                    ESM4::RuntimeRagdollBlendRegistration{blend.mRegistrationCounter, blend.mHasRememberedWorldOwner}});
             std::sort(result.mNativeBlends->begin(), result.mNativeBlends->end(), [](const auto& a, const auto& b) {
                 return a.mBodyRecord < b.mBodyRecord;
             });
@@ -229,7 +230,9 @@ namespace MWPhysics
                 throw std::invalid_argument("native blend target does not match the winning body");
             const auto& blend = *found->second;
             result.push_back({blend.mBodyRecord, blend.mCollisionFlags,
-                {blend.mHierarchyGain, blend.mVelocityGain}, blend.mRequestedMotion});
+                {blend.mHierarchyGain, blend.mVelocityGain}, blend.mRequestedMotion,
+                blend.mRegistration ? blend.mRegistration->mCounter : 0,
+                blend.mRegistration && blend.mRegistration->mHasRememberedWorldOwner});
         }
         return result;
     }

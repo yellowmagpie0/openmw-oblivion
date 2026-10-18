@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 50
+CURRENT_VERSION = 51
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1277,8 +1277,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             body_records = {body["record"] for body in bodies}
             previous_blend = -1
             for blend in blends:
-                if not isinstance(blend, dict) or set(blend) != {
-                        "body_record", "collision_flags", "requested_motion", "hierarchy_gain", "velocity_gain"}:
+                blend_fields = {"body_record", "collision_flags", "requested_motion", "hierarchy_gain", "velocity_gain"}
+                if (not isinstance(blend, dict) or not blend_fields <= set(blend)
+                        or not set(blend) <= blend_fields | {"registration"}):
                     raise RuntimeStateError("Invalid TES4 native blend snapshot")
                 record, flags, request = blend["body_record"], blend["collision_flags"], blend["requested_motion"]
                 if (type(record) is not int or record not in body_records or record <= previous_blend
@@ -1288,6 +1289,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 previous_blend = record
                 native_float(blend["hierarchy_gain"])
                 native_float(blend["velocity_gain"])
+                if ("registration" in blend) != ("registration" in blends[0]):
+                    raise RuntimeStateError("Incomplete TES4 blend registration state")
+                if "registration" in blend:
+                    registration = blend["registration"]
+                    if (version < 51 or not isinstance(registration, dict)
+                            or set(registration) != {"counter", "remembered_world_owner"}
+                            or type(registration["counter"]) is not int
+                            or not -0x80000000 <= registration["counter"] <= 0x7fffffff
+                            or type(registration["remembered_world_owner"]) is not bool):
+                        raise RuntimeStateError("Invalid TES4 blend registration state or version")
         if "native_controllers" in entry:
             controls = entry["native_controllers"]
             if (version < 35 or "native_blends" not in entry or "native_motion" not in bodies[0]
@@ -2028,10 +2039,21 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     count = reader.count()
                     if count > len(entry["bodies"]):
                         raise RuntimeStateError("Excessive TES4 native blend count")
-                    entry["native_blends"] = [{"body_record": reader.unpack("<I"),
-                        "collision_flags": reader.unpack("<H"), "requested_motion": reader.unpack("<I"),
-                        "hierarchy_gain": reader.unpack("<f"), "velocity_gain": reader.unpack("<f")}
-                        for _ in range(count)]
+                    entry["native_blends"] = []
+                    for _ in range(count):
+                        blend = {"body_record": reader.unpack("<I"),
+                            "collision_flags": reader.unpack("<H"), "requested_motion": reader.unpack("<I"),
+                            "hierarchy_gain": reader.unpack("<f"), "velocity_gain": reader.unpack("<f")}
+                        if version >= 51:
+                            has_registration = reader.unpack("<B")
+                            if has_registration > 1:
+                                raise RuntimeStateError("Invalid TES4 blend registration presence flag")
+                            if has_registration:
+                                counter, owner = reader.unpack("<i"), reader.unpack("<B")
+                                if owner > 1:
+                                    raise RuntimeStateError("Invalid TES4 remembered World owner flag")
+                                blend["registration"] = {"counter": counter, "remembered_world_owner": bool(owner)}
+                        entry["native_blends"].append(blend)
             if version >= 35:
                 def boolean():
                     value = reader.unpack("<B")
@@ -2499,6 +2521,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         writer.pack("<I", blend["requested_motion"])
                         writer.pack("<f", blend["hierarchy_gain"])
                         writer.pack("<f", blend["velocity_gain"])
+                        if version >= 51:
+                            writer.pack("<B", int("registration" in blend))
+                            if "registration" in blend:
+                                registration = blend["registration"]
+                                writer.pack("<i", registration["counter"])
+                                writer.pack("<B", int(registration["remembered_world_owner"]))
             if version >= 35:
                 writer.pack("<B", int("native_controllers" in entry))
                 if "native_controllers" in entry:

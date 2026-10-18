@@ -5310,3 +5310,15 @@ Full normal and ASan/UBSan runs each pass 2,859 component tests in 272 suites an
 Tested source fingerprint: `bb4232da5b9de427f811e28ab6e8d1697875eab83f385a3f699a1a5a825b432f`. `ordered_actor_registration_publication_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json` records source/binary/evidence hashes and exact boundaries.
 
 Authoritative counter/remembered-World ownership, external World filter routing, saved fields and automatic caller/scene/reaction/GetUp integration remain open. Save version remains 50. No new normal-input or fresh-process gameplay acceptance is claimed, and full M15S4 remains open.
+
+### Owned blend registration state and version51 persistence
+
+Mapped blend state now owns its signed32 registration counter and remembered desired-World presence. The request publisher reads those fields directly, accepts one explicit resolved global override, stages final owned state with World/filter/selection changes and rejects stale counter/owner inputs. The external per-body context mirror is removed. Full original fresh constructors independently establish zero/null initialization in 24 cases; another 120 derived-clone profiles execute with a declared base-copy boundary. Clone initialization is distinct from continuation restore.
+
+Runtime version51 stores optional per-blend registration state with strict presence/boolean bytes, signed counters and complete mapped-set validation in C++ and Python. Known zero remains distinct from legacy absence, and unsupported downgrade writes reject. Snapshot adapters preserve actual fields through prepared restoration. The fresh-owner wire test preserves both signed extremes and remembered owners, then produces the same next registration plan as the uninterrupted owner; legacy missing history uses verified constructor defaults, without claiming that absent history has been recovered.
+
+Full normal and ASan/UBSan checks each pass 2,862 component tests in 272 suites and 1,635 engine tests in 122 suites. All 318 Python tests pass. Exact inventories have no failures or skips, and both engines were rebuilt. The owned actor publisher also passes 14,144 normalized native-derived plans per configuration, including 124 readmissions and 1,596 changed internal pair decisions; 256 bounded prefixes do not publish a physical result. A separate codec check passes 12 fixtures through 24 fresh normal/instrumented C++ processes, with Python-to-C++-to-Python byte equality. Leak checks are disabled.
+
+Tested source fingerprint: `ea52a190a9629e220b81f059b1edd26cec19ed5bbf8ff8d2e9b9f078603c22e5`. Detailed source/binary/probe hashes, normalization, retained setup failures and boundaries are in `owned_blend_registration_persistence_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+Automatic counter callers and scene requests, internal packed-filter/group persistence, external World routing and automatic contact/reaction/GetUp remain open. These checks do not establish a fresh-engine gameplay/restart course or close the remaining full M15S4 acceptance gates.

@@ -1753,7 +1753,7 @@ namespace NifBullet
         std::unique_ptr<NativeDynamicsWorld::PreparedRegistrationBatch> mBatch;
         std::unique_ptr<PreparedInternalCollisionFilters> mFilters;
         ESM4::PhysicalRegistrationGraphPlan mPlan;
-        std::vector<Impl::BlendTarget> mExpectedBlends;
+        std::vector<Impl::BlendTarget> mExpectedBlends, mNextBlends;
         std::vector<unsigned char> mBodies, mConstraints;
         Impl::ActivationGroups mGroups;
         bool mAdmitted = false, mConsumed = false;
@@ -1775,10 +1775,10 @@ namespace NifBullet
 
     std::unique_ptr<ActorRagdollPhysics::PreparedNativeRegistration>
     ActorRagdollPhysics::prepareNativeRegistrationRequests(std::span<const std::uint32_t> bodyRecords,
-        std::span<const RagdollNativeRegistrationContext> contexts, std::size_t operationLimit) const
+        bool registrationOverride, std::size_t operationLimit) const
     {
         require(mImpl->worldAlive() && mImpl->mPublished && mImpl->mNativeWorld && mImpl->mInternalMasks
-                && mImpl->mPendingRegistration.expired() && contexts.size() == mImpl->mBodies.size(),
+                && mImpl->mPendingRegistration.expired(),
             "unavailable ordered native registration");
         require(mImpl->mSelectedBodies == mImpl->mRegisteredBodies
                 && mImpl->mSelectedConstraints == mImpl->mRegisteredConstraints,
@@ -1797,18 +1797,18 @@ namespace NifBullet
         for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
         {
             const auto& owned = mImpl->mBodies[i];
-            const auto& context = contexts[i];
-            require(context.mBodyRecord == owned.mRecord, "native registration context order");
             ESM4::PhysicalRegistrationBody body;
             body.mRegistered = mImpl->mRegisteredBodies[i];
             body.mPackedFilter = mImpl->mInternalFilterWords[i];
-            body.mHasRememberedWorldOwner = context.mHasRememberedWorldOwner;
             body.mAssociatedConstraints = mImpl->mAssociatedConstraints[i];
             const auto target = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
                 [&](const auto& value) { return value.mState.mBodyRecord == owned.mRecord; });
             if (target != mImpl->mBlendTargets.end())
+            {
                 body.mBlend = ESM4::PhysicalBodyBlendRegistration{target->mState.mGains.mHierarchy,
-                    target->mState.mGains.mVelocity, context.mCounter, context.mRegistrationOverride};
+                    target->mState.mGains.mVelocity, target->mState.mRegistrationCounter, registrationOverride};
+                body.mHasRememberedWorldOwner = target->mState.mHasRememberedWorldOwner;
+            }
             graph.mBodies.push_back(std::move(body)); bodies.push_back(owned.mBody.get());
         }
         for (std::size_t i = 0; i < mImpl->mConstraints.size(); ++i)
@@ -1826,6 +1826,15 @@ namespace NifBullet
             requests.push_back(std::size_t(found - mImpl->mBodies.begin()));
         }
         data->mPlan = ESM4::preparePhysicalRegistrationGraph(graph, requests, operationLimit);
+        data->mNextBlends = data->mExpectedBlends;
+        for (auto& target : data->mNextBlends)
+        {
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == target.mState.mBodyRecord; });
+            const auto& final = data->mPlan.mGraph.mBodies[std::size_t(found - mImpl->mBodies.begin())];
+            target.mState.mRegistrationCounter = final.mBlend->mCounter;
+            target.mState.mHasRememberedWorldOwner = final.mHasRememberedWorldOwner;
+        }
         std::vector<RagdollInternalBodyFilter> filters;
         for (std::size_t i = 0; i < bodies.size(); ++i)
         {
@@ -1886,6 +1895,8 @@ namespace NifBullet
             if (a.mNode != b.mNode || a.mState.mBodyRecord != b.mState.mBodyRecord
                 || a.mState.mCollisionFlags != b.mState.mCollisionFlags
                 || a.mState.mRequestedMotion != b.mState.mRequestedMotion
+                || a.mState.mRegistrationCounter != b.mState.mRegistrationCounter
+                || a.mState.mHasRememberedWorldOwner != b.mState.mHasRememberedWorldOwner
                 || a.mState.mGains.mHierarchy != b.mState.mGains.mHierarchy
                 || a.mState.mGains.mVelocity != b.mState.mGains.mVelocity) return false;
         }
@@ -1924,6 +1935,7 @@ namespace NifBullet
         std::copy(data.mConstraints.begin(), data.mConstraints.end(), mImpl->mRegisteredConstraints.begin());
         mImpl->mSelectedBodies.swap(data.mBodies); mImpl->mSelectedConstraints.swap(data.mConstraints);
         mImpl->commitActivationGroups(std::move(data.mGroups));
+        mImpl->mBlendTargets.swap(data.mNextBlends);
         mImpl->mRegistrationGeneration.swap(data.mNext);
         mImpl->mPendingRegistration.reset(); data.mAdmitted = false; data.mConsumed = true;
         return true;

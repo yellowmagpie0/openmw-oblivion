@@ -3761,3 +3761,54 @@ TEST(ESM4RuntimeState, WorldRegistrationRejectsMalformedRecordSetsAndOlderVersio
     pose.mWorldRegistration.reset();
     EXPECT_NO_THROW(state.serializeBinary());
 }
+
+TEST(ESM4RuntimeState, BlendRegistrationVersionFiftyOneHasExplicitWireAndRejectsCorruptBooleans)
+{
+    auto state = packedRagdollState(); state.mVersion = 50;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    pose.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+    pose.mNativeBlends = std::vector<ESM4::RuntimeRagdollBlendState>{{12, 0xf123, 0xffffffffu, -0.f, -2.f}};
+    const auto legacy = state.serializeBinary();
+    const std::vector<std::uint8_t> fields{12,0,0,0, 0x23,0xf1, 0xff,0xff,0xff,0xff,
+        0,0,0,0x80, 0,0,0,0xc0};
+    const auto found = std::search(legacy.begin(),legacy.end(),fields.begin(),fields.end());
+    ASSERT_NE(found,legacy.end()); const auto offset = std::size_t(found-legacy.begin())+fields.size();
+    state.mVersion = 51;
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 51;
+    expected.insert(expected.begin()+offset,0);
+    EXPECT_EQ(state.serializeBinary(),expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.begin()->second.mNativeBlends->front().mRegistration);
+    pose.mNativeBlends->front().mRegistration = ESM4::RuntimeRagdollBlendRegistration{
+        std::numeric_limits<std::int32_t>::min(),true};
+    expected.erase(expected.begin()+offset);
+    const std::array<std::uint8_t,6> registration{1,0,0,0,0x80,1};
+    expected.insert(expected.begin()+offset,registration.begin(),registration.end());
+    EXPECT_EQ(state.serializeBinary(),expected);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls,state.mNativeActorRagdolls);
+    EXPECT_NE(state.canonicalJson().find("\"registration\":{\"counter\":-2147483648,\"remembered_world_owner\":true}"),std::string::npos);
+    for (auto index : {offset,offset+5})
+    {
+        auto corrupt = expected; corrupt[index] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt),std::runtime_error);
+    }
+    for (std::size_t cut=offset;cut<offset+registration.size();++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({expected.begin(),expected.begin()+cut}),std::runtime_error);
+    state.mVersion = 50; EXPECT_THROW(state.serializeBinary(),std::runtime_error);
+    pose.mNativeBlends->front().mRegistration.reset(); EXPECT_EQ(state.serializeBinary(),legacy);
+}
+
+TEST(ESM4RuntimeState, BlendRegistrationIsCompleteAndPreservesBothSignedExtremes)
+{
+    auto state = packedRagdollState(); state.mVersion = 51;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    pose.mBodies[0].mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+    auto second = pose.mBodies.front(); second.mRecord = 24; second.mNodeRecord = 20;
+    pose.mBodies.push_back(second);
+    pose.mNativeBlends = std::vector<ESM4::RuntimeRagdollBlendState>{
+        {12,1,8,1,1,ESM4::RuntimeRagdollBlendRegistration{std::numeric_limits<std::int32_t>::max(),false}},
+        {24,1,8,1,1}};
+    EXPECT_THROW(state.serializeBinary(),std::runtime_error);
+    pose.mNativeBlends->back().mRegistration = ESM4::RuntimeRagdollBlendRegistration{-1,true};
+    const auto bytes = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeActorRagdolls,state.mNativeActorRagdolls);
+}

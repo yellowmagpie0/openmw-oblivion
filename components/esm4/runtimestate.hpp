@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 50;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 51;
 
     struct RuntimeContentIdentity
     {
@@ -371,6 +371,15 @@ namespace ESM4
         friend bool operator==(const RuntimeRagdollBody&, const RuntimeRagdollBody&) = default;
     };
 
+    // v51: owned state of the mapped blend collision object. A missing
+    // value is legacy data, not an inferred continuation counter.
+    struct RuntimeRagdollBlendRegistration
+    {
+        std::int32_t mCounter = 0;
+        bool mHasRememberedWorldOwner = false;
+        friend bool operator==(const RuntimeRagdollBlendRegistration&, const RuntimeRagdollBlendRegistration&) = default;
+    };
+
     // v34: stored requests are independent of the current logical body mode.
     struct RuntimeRagdollBlendState
     {
@@ -379,6 +388,7 @@ namespace ESM4
         std::uint32_t mRequestedMotion = 0;
         float mHierarchyGain = 0;
         float mVelocityGain = 0;
+        std::optional<RuntimeRagdollBlendRegistration> mRegistration = std::nullopt;
         friend bool operator==(const RuntimeRagdollBlendState&, const RuntimeRagdollBlendState&) = default;
     };
 

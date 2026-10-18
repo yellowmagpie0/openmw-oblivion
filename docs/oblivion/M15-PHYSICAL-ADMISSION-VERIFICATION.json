@@ -4529,5 +4529,227 @@
       "Gameplay still needs automatic contact/reaction/GetUp and all remaining full S4 melee/mastery/effects/drop, normal-input view/device/FPS/interruption and fresh-process recovery gates.",
       "Python and original-game probes were not rerun; there are no schema or native-rule changes."
     ]
+  },
+  "owned_blend_registration_persistence_followup": {
+    "status": "Mapped blend state owns registration counter and remembered desired-World presence; current runtime version51 persists and restores them. Automatic counter callers/scene wiring, filter persistence and complete S4 runtime acceptance remain open.",
+    "source": {
+      "head": "830dfdad829fbc625cabb7d970d1c1f0fd976198",
+      "source_fingerprint": "ea52a190a9629e220b81f059b1edd26cec19ed5bbf8ff8d2e9b9f078603c22e5"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "0f4df84e05fadcf0f96de8d59c6a50790b499416cf725bd9087bd681b1d081b3",
+      "components/nifbullet/actorragdollphysics.cpp": "51847ff5922270964e7b3995f2fd2fa8d6696a6f0e26b25e211b351e696744f7",
+      "components/esm4/runtimestate.hpp": "c8a33896b44973933c99dfcfc79ec6f3941cf2ab3c0abd4c9953556073e278e7",
+      "components/esm4/runtimestate.cpp": "9cdbc90fa74dd093f5cc281028da5b273bb0af154407758f04dfe1d5817b9eb7",
+      "scripts/tes4_runtime_state.py": "6ab7c29a8a8ad77ed8ff30f1ee67245a91ca53604141de67a55753b8bd79c06f",
+      "apps/openmw/mwphysics/oblivionragdoll.cpp": "3d499d201f8ff7dcd6a32ab2d0b316e10c7b799b6290ad46ec47b09141585fef",
+      "apps/components_tests/nifloader/testorderedragdollregistration.cpp": "0bd1c686f85b0cd19372e3c430096386b5c3703f06598d6c28fa4addd96d22f5",
+      "apps/components_tests/esm4/runtimestate.cpp": "94dc129a26a9e057c0cd365d49391df29fc44ff3bd44c0c787d818ed3ddcb657",
+      "apps/openmw_tests/mwphysics/testoblivionragdoll.cpp": "71a515018faf376b63cef133ab6385e2dbef6f153da29e7297b8cde3b8986034",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "e5daced99efe0ce0c1895f852889858f79389753f7f3f345f3cfdd55aba6647e",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "7112e71547e36fb6b3d2b9dd3a9ee67d60e349af361c3db8adbd90c8403995b9",
+      "scripts/tests/test_tes4_runtime_state.py": "4d02379b558db0d72b0f071c8d2e7e82ea95cd72cbb6b071267601854647b99a"
+    },
+    "post_test_changes": [
+      "Evidence index and delivery audit only. Production and test sources unchanged after the checks."
+    ],
+    "native_initialization": {
+      "report": "build/oblivion-compat/m15/S4/native-blend-lifetime-static-02/report.json",
+      "report_sha256": "d667ab67d2c7cd6363cc73e3da6f9fbd708c5178b0f010ca7b2a114b7824db3b",
+      "driver_sha256": "5ae7abb69490bc14b1b42289c836759437a26e022c07abd7bc46fdf23ac03517",
+      "executable_metadata_sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "results": {
+        "passed": true,
+        "profiles": 144,
+        "constructor_profiles": 24,
+        "derived_clone_boundary_profiles": 120,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "49cbf3c56a2cbee9eb5732c149ba2f160dc6427479b4c144a53a4ba5d3b44720",
+        "paths": [
+          "Full88EB60 fresh constructor through897600/711C50/7005D0",
+          "Full88EBD0 attached constructor, null node and existing backlink; through897640/711D90/7005D0",
+          "88EC10 derived clone allocation, fresh object initialization and post-base-copy derived fields"
+        ],
+        "boundaries": [
+          "Windows InterlockedIncrement import executes fixture integer increment/ret4. All fresh-constructor executable callees otherwise execute.",
+          "Attached nonnull node fixture already points back at the new collision object; the node setter branch is not covered.",
+          "Clone allocation returns isolated fixture storage. 89E930 NiCollisionObject base copy is a declared no-op boundary; derived initialization and copies execute, but a complete native clone graph or owner lifetime is not proved."
+        ],
+        "findings": [
+          "Fresh blend collision objects initialize remembered World owner+20 to null and counter+24 to zero once, independently of prefilled storage. Requested motion+1C is8 and constructor gains are0/1.",
+          "Derived clone initializes counter to zero, copies source owner+20 and gains after base-copy boundary, and leaves source counter unchanged. This is not continuation/save restoration."
+        ],
+        "limits": [
+          "No general caller/scene/World owner lifetime, counter increment/decrement caller semantics or native save reconstruction is established.",
+          "No game process was launched; no fork gameplay/restart acceptance."
+        ]
+      },
+      "expected_fresh_fields": {
+        "remembered_world_owner_at_collision_0x20": 0,
+        "counter_at_collision_0x24": 0
+      },
+      "retained_attempt": "native-blend-lifetime-static-01 executed the same144 cases successfully but its summary incorrectly declared240 clone-boundary profiles; the actual count is120. Directory02 derives counts from rows and preserves the same corpus hash."
+    },
+    "changes": [
+      "RagdollNativeBlendState owns signed32 registration counter and remembered desired-World presence. Fresh initial values are zero/false, verified from original constructors; continuation restore copies actual saved values.",
+      "Remove the external per-body context parameter/type. prepareNativeRegistrationRequests reads current owned mapped counters/owner bits and takes one explicit resolved global override. The prepared transaction stages resulting mapped states alongside World/filter/group/selection publication and rejects stale counter or remembered-owner changes.",
+      "Version51 adds a per-blend optional registration record with an explicit presence byte, signed32 counter and strict boolean owner byte. C++/Python codecs preserve known zero separately from legacy absence, reject partial mapped sets and reject downgrade writes that would lose state.",
+      "Snapshot adapters capture actual owned fields and restore them with the existing prepared/group restoration transaction before the next request. Legacy absence uses verified fresh-constructor zero/false; missing legacy history is not reconstructed or claimed equivalent to an uninterrupted counter history."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/owned-blend-registration-normal-02/verification.json",
+        "report_sha256": "dd70be42e7296e8d1a9ab62425bd33fd7921c2a23c9dee7e2c50b1fadf033e10",
+        "source": {
+          "head": "830dfdad829fbc625cabb7d970d1c1f0fd976198",
+          "source_fingerprint": "ea52a190a9629e220b81f059b1edd26cec19ed5bbf8ff8d2e9b9f078603c22e5"
+        },
+        "results": {
+          "components": {
+            "executed": 2862,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "da83b4e51ec6b63aff4b5ff6ae0889e55bc2faea50a942ec0d49a39658826ca4",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ae4d4f7ada4d879529bb39b9672d70173ab23eb79fc05c247152a7c8c8fe2802",
+            "inventory_sha256": "6aa1676e9dda074ed02bd3a19d4b31809c6ba1e9dcff0187b1d384a030d402c7",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1635,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "60ba7a65455f112686524cb90882640d5cd0c9e9ebf33d79c8b408f2ae54a3f9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "6cb7dd5c15d28af80a8db4f0adbcc2cd0e67c3cb0b8b6aebcfe2ca84b84f8659",
+            "inventory_sha256": "c2cd27a0cc4f8bea1bbc2f334f94feddf6e177570e575b03cb336b89124043ff",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 318,
+            "passed": true,
+            "log_sha256": "23d9144bcbb334d4aef84a548c8b3a3315a7cd6babf330f6509496c284b6a5ee"
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "3534e558adb9806939fe341de34e45e989fb506af7521007afff9165aaadbd06"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/owned-blend-registration-sanitized-02/verification.json",
+        "report_sha256": "9ff03ac0468ef2bae60bf66569011eed694dafa99465518b9ec6d1a167a1440b",
+        "source": {
+          "head": "830dfdad829fbc625cabb7d970d1c1f0fd976198",
+          "source_fingerprint": "ea52a190a9629e220b81f059b1edd26cec19ed5bbf8ff8d2e9b9f078603c22e5"
+        },
+        "results": {
+          "components": {
+            "executed": 2862,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8fade8a04b3d7e17cc24c3145c2028c8297213ee9fa1d2e1c7f91e7a28001550",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "4fb2d4e52af8d3415627549ba681362216bd61fac69cbc1e43f082d63a4ba982",
+            "inventory_sha256": "1d15604822867f81af1db63cb7fe5d47a75320ab8ada616d08c4851b8041e053",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1635,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "26abdac158698f8cbe21d21cc999bea6e8c54adfec1c1336ce2d964173f9d6d1",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "48f2a389836712d6687c04126278036b57e8679bf1afe6e338561a0d69d3ae6b",
+            "inventory_sha256": "c2cd27a0cc4f8bea1bbc2f334f94feddf6e177570e575b03cb336b89124043ff",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "75ec03e22c46238b327f2f0b9134abcd2d9b6e14c86aaa2c92d5cb70a90b3b8a"
+      }
+    },
+    "component_cases": [
+      "FreshInitializationIsOnceAndRestorePreservesSignedCountersAndRememberedOwner",
+      "BlendRegistrationVersionFiftyOneHasExplicitWireAndRejectsCorruptBooleans",
+      "BlendRegistrationIsCompleteAndPreservesBothSignedExtremes"
+    ],
+    "engine_case": "OwnedBlendRegistrationSurvivesWireAndFreshOwnerBeforeNextRequest",
+    "python_cases": [
+      "test_blend_registration_v51_wire_and_legacy_absence",
+      "test_blend_registration_signed_bounds_and_presence",
+      "test_blend_registration_rejects_incomplete_owned_set"
+    ],
+    "owned_actor_corpus": {
+      "report": "build/oblivion-compat/m15/S4/owned-actor-corpus-01/report.json",
+      "report_sha256": "ebe6fd7767a39afba7211afca3670c7aff1e5a97b73d11d434fba24037cf18d0",
+      "plans_each": 14144,
+      "readmissions_each": 124,
+      "changed_pair_decisions_each": 1596,
+      "bounded_guards_each": 256
+    },
+    "codec_processes": {
+      "report": "build/oblivion-compat/m15/S4/owned-blend-codec-02/report.json",
+      "report_sha256": "904afa54c3d2ef36201c62bc4d21fb65103809d70cb14a0b7764f05f980a37ab",
+      "cases": 12,
+      "fresh_cpp_processes": 24,
+      "scope": "Python encode -> fresh normal/instrumented C++ binary deserialize, canonical JSON and exact binary reserialize -> Python reencode identical bytes. Signed bounds, owner booleans, v50 legacy and v51 explicit/absent state. This is codec/process evidence, not a fresh engine gameplay/restart course."
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "retained_failed_checks": {
+      "normal": "build/oblivion-compat/m15/S4/owned-blend-registration-normal-01/verification.json",
+      "sanitized": "build/oblivion-compat/m15/S4/owned-blend-registration-sanitized-01/verification.json",
+      "reason": "Both configurations passed2862 component tests but failed4 existing engine snapshot comparisons: fixtures replaced complete blend rows with pre-v51 five-field aggregates, dropping registration to legacy absence. Corrected fixtures use explicit nondefault counters and owner flags; production restore keeps known-state capture distinct from missing legacy history."
+    },
+    "retained_preflights": [
+      "Initial direct Python preflight misplaced three new tests in the envelope test class; corrected placement exposed the need to upgrade the old melee fixture before testing version51. Corrected targeted tests pass. Full checks use the corrected sources.",
+      "owned-blend-codec-01/failure.json records a comparison-harness import-path failure before any C++ execution. Corrected codec02 passes all12 cases in24 fresh C++ processes."
+    ],
+    "limits": [
+      "One resolved desired NativeDynamicsWorld; remembered-owner presence rebinds to that graph World. No arbitrary foreign-World identity or general native caller lifetime rule is inferred.",
+      "The native clone probe executes derived initialization/copies with a declared base-copy boundary. It is not full native graph cloning or continuation restore.",
+      "Counter increment/decrement rule helpers already exist, but actual semantic callers, scene-before-registration dispatch and automatic contact/reaction/GetUp integration still need wiring.",
+      "Internal packed filter words/group ownership and external World filter routing still need persistence/integration. Counter persistence alone does not close the complete recovery restart gate.",
+      "Fresh-owner binary continuation and fresh codec processes are distinct from a fresh engine normal-input gameplay course. Every remaining full M15S4 input/view/device/FPS/interruption/mastery/effects/drop/restart gate remains open."
+    ]
   }
 }

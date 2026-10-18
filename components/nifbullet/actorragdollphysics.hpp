@@ -303,16 +303,10 @@ namespace NifBullet
         ESM4::PhysicalBlendGains mGains;
         // Original collision+1C, independent of actual body motion.
         std::uint32_t mRequestedMotion = 8;
-    };
-
-    // Caller-resolved state belonging to the actual mapped blend/World owner.
-    // Gains come from this graph's current owned blend targets. These fields
-    // have no inferred defaults and are not yet persisted by this layer.
-    struct RagdollNativeRegistrationContext
-    {
-        std::uint32_t mBodyRecord;
-        std::int32_t mCounter;
-        bool mRegistrationOverride, mHasRememberedWorldOwner;
+        // Fresh original88EB60/88EBD0 initialize these once. Continuation
+        // restore preserves them; clone construction is a separate operation.
+        std::int32_t mRegistrationCounter = 0;
+        bool mHasRememberedWorldOwner = false;
     };
 
     struct RagdollWorldRegistration
@@ -425,7 +419,7 @@ namespace NifBullet
             ~PreparedNativeRegistration();
             PreparedNativeRegistration(const PreparedNativeRegistration&) = delete;
             PreparedNativeRegistration& operator=(const PreparedNativeRegistration&) = delete;
-            // Retained after commit for the caller's own state publication.
+            // Retained after commit for inspection of the owned transition.
             const ESM4::PhysicalRegistrationGraphPlan& plan() const noexcept;
         private:
             friend class ActorRagdollPhysics;
@@ -435,12 +429,13 @@ namespace NifBullet
         };
         // Published NativeDynamicsWorld and configured internal mask policy.
         // Use retained authored association order and current mapped gains,
-        // plus complete body-ordered explicit counter/owner contexts. Repeated
+        // plus this graph's owned mapped counters/remembered owner state and
+        // the explicit resolved global override. Repeated
         // requests remain ordered; no closure or final-set shortcut is used.
         // One desired World, all wrappers present, native gates/queues zero.
         std::unique_ptr<PreparedNativeRegistration> prepareNativeRegistrationRequests(
             std::span<const std::uint32_t> bodyRecords,
-            std::span<const RagdollNativeRegistrationContext> contexts,
+            bool registrationOverride,
             std::size_t operationLimit = 4096) const;
         bool validateNativeRegistration(const PreparedNativeRegistration& prepared) const noexcept;
         // Exclusive World barrier through admission/commit/rollback, including

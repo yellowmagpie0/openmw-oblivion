@@ -730,6 +730,8 @@ namespace ESM4
             std::optional<std::uint32_t> previousBlend;
             for (const auto& blend : *mNativeBlends)
             {
+                if (blend.mRegistration.has_value() != mNativeBlends->front().mRegistration.has_value())
+                    throw std::runtime_error("Incomplete TES4 blend registration state");
                 const auto body = std::lower_bound(mBodies.begin(), mBodies.end(), blend.mBodyRecord,
                     [](const RuntimeRagdollBody& value, std::uint32_t record) { return value.mRecord < record; });
                 if ((previousBlend && blend.mBodyRecord <= *previousBlend)
@@ -1121,6 +1123,10 @@ namespace ESM4
                 throw std::runtime_error("TES4 logical ragdoll motion requires runtime-state version33");
             if (mVersion < 34 && pose.mNativeBlends)
                 throw std::runtime_error("TES4 native blend snapshots require runtime-state version34");
+            if (mVersion < 51 && pose.mNativeBlends
+                && std::any_of(pose.mNativeBlends->begin(), pose.mNativeBlends->end(),
+                    [](const auto& blend) { return blend.mRegistration.has_value(); }))
+                throw std::runtime_error("TES4 blend registration state requires runtime-state version51");
             if (mVersion < 35 && pose.mNativeControllers)
                 throw std::runtime_error("TES4 ragdoll controllers require runtime-state version35");
             if (mVersion < 50 && pose.mWorldRegistration)
@@ -2105,6 +2111,15 @@ namespace ESM4
                             writer.integer(blend.mRequestedMotion);
                             writer.floating(blend.mHierarchyGain);
                             writer.floating(blend.mVelocityGain);
+                            if (mVersion >= 51)
+                            {
+                                writer.integer<std::uint8_t>(blend.mRegistration.has_value());
+                                if (blend.mRegistration)
+                                {
+                                    writer.integer(blend.mRegistration->mCounter);
+                                    writer.integer<std::uint8_t>(blend.mRegistration->mHasRememberedWorldOwner);
+                                }
+                            }
                         }
                     }
                 }
@@ -2987,6 +3002,19 @@ namespace ESM4
                             blend.mRequestedMotion = reader.integer<std::uint32_t>();
                             blend.mHierarchyGain = reader.float32();
                             blend.mVelocityGain = reader.float32();
+                            if (result.mVersion >= 51)
+                            {
+                                const auto hasRegistration = reader.integer<std::uint8_t>();
+                                if (hasRegistration > 1)
+                                    throw std::runtime_error("Invalid TES4 blend registration presence flag");
+                                if (hasRegistration)
+                                {
+                                    const auto counter = reader.integer<std::int32_t>();
+                                    const auto owner = reader.integer<std::uint8_t>();
+                                    if (owner > 1) throw std::runtime_error("Invalid TES4 remembered World owner flag");
+                                    blend.mRegistration = RuntimeRagdollBlendRegistration{counter, owner != 0};
+                                }
+                            }
                             pose.mNativeBlends->push_back(blend);
                         }
                     }
@@ -3946,6 +3974,10 @@ namespace ESM4
                             << ",\"hierarchy_gain\":";
                         scalar(blend.mHierarchyGain);
                         stream << ",\"velocity_gain\":"; scalar(blend.mVelocityGain);
+                        if (blend.mRegistration)
+                            stream << ",\"registration\":{\"counter\":" << blend.mRegistration->mCounter
+                                << ",\"remembered_world_owner\":"
+                                << (blend.mRegistration->mHasRememberedWorldOwner ? "true" : "false") << '}';
                         stream << '}';
                     }
                     stream << ']';

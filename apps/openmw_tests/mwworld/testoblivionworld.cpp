@@ -588,7 +588,8 @@ namespace
             EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr)[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), keyModeSnapshot);
             ASSERT_TRUE(keyModeSnapshot.mNativeBlends); ASSERT_EQ(keyModeSnapshot.mNativeBlends->size(), 1u);
-            (*keyModeSnapshot.mNativeBlends)[0] = {12, 0xf123, 0xffffffffu, -0.f, -2.f};
+            (*keyModeSnapshot.mNativeBlends)[0] = {12, 0xf123, 0xffffffffu, -0.f, -2.f,
+                ESM4::RuntimeRagdollBlendRegistration{-17, true}};
             physics.restoreActorRagdollSnapshot(ptr, keyModeSnapshot, base, path.value());
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), keyModeSnapshot);
             ASSERT_TRUE(keyModeSnapshot.mNativeControllers);
