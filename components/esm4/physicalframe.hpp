@@ -21,6 +21,12 @@ namespace ESM4
         friend bool operator==(const PhysicalTimerState&, const PhysicalTimerState&) = default;
     };
 
+    // Full original47D120/47D0F0 nested transitions. Only the outer
+    // transition rebases tick fields; preserve raw uint8/uint32 wrapping.
+    // Host time sampling and balanced pause-source ownership are external.
+    void pausePhysicalTimer(PhysicalTimerState& timer, std::uint32_t tick) noexcept;
+    void resumePhysicalTimer(PhysicalTimerState& timer, std::uint32_t tick) noexcept;
+
     // Original shared counters rotate even when this timer is paused. These
     // are not the capped/overridden interval or the physical frame remainder.
     struct PhysicalTimerCounters

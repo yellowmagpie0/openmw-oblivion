@@ -5947,3 +5947,40 @@ normal-input combat/contact or restart acceptance is claimed. Actor admission,
 KF/selector/subtype/group/filter/capsule/root/morphology, full reaction/FSM/GetUp
 and all remaining S4 gameplay/fresh-process gates remain open. Full M15S4 is
 incomplete.
+
+
+### Native timer pause/resume transition rules verified
+
+Full original47D120/47D0F0 now have typed pausePhysicalTimer/resumePhysicalTimer
+counterparts. Pause increments the raw byte and rebases both tick fields only
+from zero; resume ignores zero, otherwise decrements and rebases only when
+reaching zero. Both use uint32 subtraction and preserve all float payloads and
+shared counters. Raw byte255 pause wraps to0 without rebasing; this preserves
+the original raw rule, while a runtime owner still needs balanced pause sources.
+
+Full original paths cover4,096 unique transition inputs across all256 byte
+values, both operations, wrapped/extreme ticks and inactive float payloads.
+Only the actual GetTickCount import is supplied;16 transition cases reach it.
+A13-action nested pause/update/resume cycle reaches the import4 times. Its first
+resumed update publishes the166ms cap, followed by an ordinary16ms update.
+The two tick-field rebases do not justify assuming a simple frozen clock that
+excludes the pause gap. Fresh normal and ASan/UBSan C++ comparisons each match
+**4,109 cases/32,872 fields** against these original outputs.
+
+Three new component cases cover outer/nested transitions, byte wrapping and
+unmatched resume, unchanged float payloads and the complete native cycle words.
+Full normal and ASan/UBSan checks each pass **2,930 tests in274 suites**, exact
+inventories, no failures/skips and no build warnings. Tested source fingerprint:
+`0cde71180751f77a6938388ffa6fce17beb73b80a75622465cb61ee96d1be7e1`.
+ASan leaks are disabled. Editable inputs are in
+`M15-PHYSICAL-TIMER-LIFECYCLE-PROBE.json`; exact code/binary/source hashes,
+import counts and reports are in `native_physical_timer_lifecycle_followup` in
+the verification index.
+
+The helpers accept host ticks; they do not map Engine focus/loading events,
+manage pause-source ownership or activate the process-frame clock. Engine/World/
+renderer/physics consumers are unchanged, so their full builds/suites are not
+repeated. Initialized settings, main-loop frame publication/prepared scheduling,
+actor admission and complete native reactions remain open. No real game process,
+host timing, contact or normal-input gameplay/restart acceptance is claimed.
+All remaining M15S4 gameplay/fresh-process gates stay open. Full M15S4 is incomplete.

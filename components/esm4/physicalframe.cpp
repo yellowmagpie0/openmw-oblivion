@@ -9,6 +9,28 @@
 
 namespace ESM4
 {
+    void pausePhysicalTimer(PhysicalTimerState& timer, std::uint32_t tick) noexcept
+    {
+        const auto previous = timer.mPauseCount;
+        timer.mPauseCount = static_cast<std::uint8_t>(previous + 1);
+        if (previous == 0)
+        {
+            timer.mLastElapsed = tick - timer.mLastElapsed;
+            timer.mOriginTick = tick - timer.mOriginTick;
+        }
+    }
+
+    void resumePhysicalTimer(PhysicalTimerState& timer, std::uint32_t tick) noexcept
+    {
+        if (timer.mPauseCount == 0) return;
+        --timer.mPauseCount;
+        if (timer.mPauseCount == 0)
+        {
+            timer.mLastElapsed = tick - timer.mLastElapsed;
+            timer.mOriginTick = tick - timer.mOriginTick;
+        }
+    }
+
     float advancePhysicalTimer(PhysicalTimerState& timer, PhysicalTimerCounters& counters,
         std::uint32_t tick, float scale, Nif::NativeTransformPrecision precision)
     {

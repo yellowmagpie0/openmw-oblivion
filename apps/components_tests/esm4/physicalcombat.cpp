@@ -5344,3 +5344,82 @@ TEST(ESM4PhysicalTimer, ConsecutiveTimerFramesMatchOriginalMainPreparationWords)
         EXPECT_EQ(std::bit_cast<unsigned>(clock.mSmoothed), row[6]);
     }
 }
+
+TEST(ESM4PhysicalTimer, NestedPauseResumeRebasesOnlyOuterTransitions)
+{
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    timer.mLastElapsed = 16; timer.mDeltaSeconds = .016f;
+    timer.mOverrideMilliseconds = 16.5f; timer.mFractionalMilliseconds = -.25f;
+    ESM4::pausePhysicalTimer(timer, 4);
+    EXPECT_EQ(timer.mPauseCount, 1);
+    EXPECT_EQ(timer.mLastElapsed, 0xfffffff4u);
+    EXPECT_EQ(timer.mOriginTick, 20u);
+    ESM4::pausePhysicalTimer(timer, 14);
+    EXPECT_EQ(timer.mPauseCount, 2);
+    EXPECT_EQ(timer.mLastElapsed, 0xfffffff4u);
+    EXPECT_EQ(timer.mOriginTick, 20u);
+    ESM4::resumePhysicalTimer(timer, 164);
+    EXPECT_EQ(timer.mPauseCount, 1);
+    EXPECT_EQ(timer.mLastElapsed, 0xfffffff4u);
+    ESM4::resumePhysicalTimer(timer, 184);
+    EXPECT_EQ(timer.mPauseCount, 0);
+    EXPECT_EQ(timer.mLastElapsed, 196u);
+    EXPECT_EQ(timer.mOriginTick, 164u);
+    EXPECT_EQ(timer.mDeltaSeconds, .016f);
+    EXPECT_EQ(timer.mOverrideMilliseconds, 16.5f);
+    EXPECT_EQ(timer.mFractionalMilliseconds, -.25f);
+}
+
+TEST(ESM4PhysicalTimer, RawPauseByteWrapAndUnmatchedResumePreserveOriginalSemantics)
+{
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    timer.mLastElapsed = 0xfffffffau; timer.mPauseCount = 255;
+    timer.mOverrideMilliseconds = std::bit_cast<float>(0x7fc01234u);
+    timer.mFractionalMilliseconds = -0.f;
+    timer.mDeltaSeconds = std::numeric_limits<float>::infinity();
+    ESM4::pausePhysicalTimer(timer, 16);
+    EXPECT_EQ(timer.mPauseCount, 0);
+    EXPECT_EQ(timer.mLastElapsed, 0xfffffffau);
+    EXPECT_EQ(timer.mOriginTick, 0xfffffff0u);
+    ESM4::resumePhysicalTimer(timer, 0x80000000u);
+    EXPECT_EQ(timer.mPauseCount, 0);
+    EXPECT_EQ(timer.mLastElapsed, 0xfffffffau);
+    EXPECT_EQ(timer.mOriginTick, 0xfffffff0u);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mOverrideMilliseconds), 0x7fc01234u);
+    EXPECT_EQ(std::bit_cast<unsigned>(timer.mFractionalMilliseconds), 0x80000000u);
+    EXPECT_TRUE(std::isinf(timer.mDeltaSeconds));
+}
+
+TEST(ESM4PhysicalTimer, ConnectedPauseCycleRetainsOriginalResumedIntervalAndCounterWords)
+{
+    // Full original transitions and updates; only GetTickCount supplies a tick.
+    const std::array<std::array<unsigned, 10>, 13> rows{{
+        {2u, 0u, 0u, 0u, 0u, 1015222895u, 16u, 4294967280u, 16u, 0u},
+        {0u, 4u, 1u, 0u, 0u, 1015222895u, 4294967284u, 20u, 16u, 0u},
+        {0u, 14u, 2u, 0u, 0u, 1015222895u, 4294967284u, 20u, 16u, 0u},
+        {2u, 134u, 2u, 0u, 0u, 0u, 4294967284u, 20u, 114u, 16u},
+        {1u, 164u, 1u, 0u, 0u, 0u, 4294967284u, 20u, 114u, 16u},
+        {2u, 174u, 1u, 0u, 0u, 0u, 4294967284u, 20u, 154u, 114u},
+        {1u, 184u, 0u, 0u, 0u, 0u, 196u, 164u, 154u, 114u},
+        {2u, 185u, 0u, 0u, 0u, 1042938856u, 21u, 164u, 21u, 154u},
+        {2u, 201u, 0u, 0u, 0u, 1015222895u, 37u, 164u, 37u, 21u},
+        {1u, 204u, 0u, 0u, 0u, 1015222895u, 37u, 164u, 37u, 21u},
+        {0u, 224u, 1u, 0u, 0u, 1015222895u, 187u, 60u, 37u, 21u},
+        {1u, 234u, 0u, 0u, 0u, 1015222895u, 47u, 174u, 37u, 21u},
+        {2u, 235u, 0u, 0u, 0u, 1013276738u, 61u, 174u, 61u, 37u},
+    }};
+    ESM4::PhysicalTimerState timer(0xfffffff0u);
+    ESM4::PhysicalTimerCounters counters;
+    for (const auto& row : rows)
+    {
+        SCOPED_TRACE(row[1]);
+        if (row[0] == 0) ESM4::pausePhysicalTimer(timer, row[1]);
+        else if (row[0] == 1) ESM4::resumePhysicalTimer(timer, row[1]);
+        else ESM4::advancePhysicalTimer(timer, counters, row[1], 1, Nif::NativeTransformPrecision::Single);
+        const std::array<unsigned, 8> actual{timer.mPauseCount,
+            std::bit_cast<unsigned>(timer.mOverrideMilliseconds), std::bit_cast<unsigned>(timer.mFractionalMilliseconds),
+            std::bit_cast<unsigned>(timer.mDeltaSeconds), timer.mLastElapsed, timer.mOriginTick,
+            counters.mElapsed, counters.mPreviousElapsed};
+        for (unsigned i = 0; i < actual.size(); ++i) EXPECT_EQ(actual[i], row[i + 2]);
+    }
+}

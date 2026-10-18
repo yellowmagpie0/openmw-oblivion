@@ -9235,5 +9235,187 @@
       "Full signed64 conversion overflow/negative scale or negative override behavior is outside the admitted C++ input domain. Invalid-input atomic rejection is a supported-domain guard, not a claim that the original rejects those raw values.",
       "Native actor owner admission, KF/selector/subtype/group/filter/capsule/root/morphology and complete contact/reaction/FSM/GetUp publication remain open, alongside all remaining normal-input/view/device/FPS/fresh-process gameplay/save-restart gates. Full M15S4 is incomplete."
     ]
+  },
+  "native_physical_timer_lifecycle_followup": {
+    "status": "Raw native timer pause/resume implemented and independently verified. Main-loop pause-source ownership and activation remain required; full M15S4 incomplete.",
+    "manifest": {
+      "path": "docs/oblivion/M15-PHYSICAL-TIMER-LIFECYCLE-PROBE.json",
+      "sha256": "7be8f903e747456677e8aed84f62365a01306d0960e6dedcb2adf37aa31cdc4e"
+    },
+    "original_instruction_probe": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/verification.json",
+      "sha256": "21f7c800950be66caafb5e1774c6221a46e62aadd7599a9e1fd02e469ad2f872",
+      "result": {
+        "passed": true,
+        "transition_cases": 4096,
+        "cycle_actions": 13,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "manifest_sha256": "7be8f903e747456677e8aed84f62365a01306d0960e6dedcb2adf37aa31cdc4e",
+        "cases_sha256": "1eb9ae415547c7effb87e71371c7cb8f38f311d00cf1516138a95a5ba0c045aa",
+        "probe_sha256": "e3006762b87c7d6bfebf34f09ca003220a6f4d04b39f087e9df9c2b028893ec2",
+        "scope": "Full original transition/init/update paths. Only GetTickCount import supplied; exact conditional call count captured. Complete raw pause-byte domain including wrapping, uint32 anchor arithmetic and inactive float payload preservation. No main-loop focus/loading identification, host timing, game process or restart acceptance."
+      }
+    },
+    "input_and_import_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/inventory-verification.json",
+      "sha256": "0778c0e5b47da77ac01b66fb50867be0d49d2ee45d8c99ad181e460c878e51ae",
+      "result": {
+        "passed": true,
+        "unique_transition_cases": 4096,
+        "cycle_actions": 13,
+        "host_tick_import_calls": 16,
+        "cycle_host_tick_import_calls": 4,
+        "function_identity": [
+          {
+            "start": "0x47d0f0",
+            "size": 37,
+            "sha256": "0718bcd14dedc6161cc62ff5441c4ab51678f94b39a6efd281282727443f8307"
+          },
+          {
+            "start": "0x47d120",
+            "size": 38,
+            "sha256": "27b54e6ab06ece5d5dca91ada3f2b3f3c7fd20b9562299de223abdb417e2d05f"
+          }
+        ],
+        "manifest_sha256": "7be8f903e747456677e8aed84f62365a01306d0960e6dedcb2adf37aa31cdc4e",
+        "cases_sha256": "1eb9ae415547c7effb87e71371c7cb8f38f311d00cf1516138a95a5ba0c045aa",
+        "inactive_float_payloads_unchanged": true
+      }
+    },
+    "implementation": [
+      "pausePhysicalTimer increments the raw nesting byte with wrapping; only a previous zero rebases lastElapsed=tick-lastElapsed and origin=tick-origin.",
+      "resumePhysicalTimer ignores zero, otherwise decrements; only reaching zero rebases both fields. Neither transition consumes or alters override/fraction/delta float fields or shared update counters.",
+      "Host tick sampling and balanced pause-source ownership remain external. Raw byte255 pause wraps to0 without rebasing; unmatched resume0 is a no-op, preserving original raw semantics."
+    ],
+    "native_observation": "The retained13-action wrap/nesting/update cycle first resumes with lastElapsed196/origin164 at tick184. Update tick185 stores elapsed21 and publishes the166ms cap; the next16ms update is ordinary. Replacing this with a presumed frozen-clock/excluded-pause calculation would differ from the full original path.",
+    "normal_components": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-normal-01/verification.json",
+      "sha256": "1fc37ba5619c36de59ef35c701e29f234b7bb02696e40b9c5e8ff28aef7dd751",
+      "source": {
+        "head": "9646a6c544664498c0c525e8b921450c41bf695f",
+        "source_fingerprint": "0cde71180751f77a6938388ffa6fce17beb73b80a75622465cb61ee96d1be7e1"
+      },
+      "suites": 274,
+      "result": {
+        "executed": 2930,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "4fdd80d15a1173bdaf5eefa47d7cc1607e212374f5ff07c45e762af8e4616c7d",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "15073b77567b79184722d87982f433dcf486ca15524ee064d4f67317a334ba44",
+        "inventory_sha256": "4d3f8c123cfabe2c1acb65b24e462724e1992c9cf37c9991494a916aed7df8e1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_components": {
+      "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-sanitized-01/verification.json",
+      "sha256": "d47e6affa145ed3cb39512b984514501fb38c704ba76020cd503e4bc047a6ec1",
+      "source": {
+        "head": "9646a6c544664498c0c525e8b921450c41bf695f",
+        "source_fingerprint": "0cde71180751f77a6938388ffa6fce17beb73b80a75622465cb61ee96d1be7e1"
+      },
+      "suites": 274,
+      "result": {
+        "executed": 2930,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3c3f7db833237b07e8c67cc8807d50203ee8a36ae5bbed79c17ce7962792755a",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "b1e808d5bcfd671d8f4e219d3c6125a4ff6f4b3d64b8b30c325a1459b7999a19",
+        "inventory_sha256": "4deb455f5b90faf56518eb23ca65e13a3ed8e634c62aa49f52ec2c316fef1241",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "comparisons": {
+      "driver": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/driver-comparison.json",
+        "sha256": "33ccc1ab79242a5234ad1988a2d75d54925e5f6492fbf58daaffa3f210ec2ced",
+        "result": {
+          "passed": true,
+          "cases": 4109,
+          "fields": 32872,
+          "failures": [],
+          "mismatched_cases": 0,
+          "binary_sha256": "034cf14d990e6696fd2156409b1354d9d5587fe78252cf607cf8c078cd4d7267",
+          "driver_sha256": "728dab508ebc14ee667b261df88d0d7de4015de8928e2701b1539fecd741350b",
+          "cases_sha256": "1eb9ae415547c7effb87e71371c7cb8f38f311d00cf1516138a95a5ba0c045aa"
+        }
+      },
+      "sanitized-driver": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/sanitized-driver-comparison.json",
+        "sha256": "a1ef077a788be8336586bf0b67ac5828b926060376cc7ae2da2a6d2b75953367",
+        "result": {
+          "passed": true,
+          "cases": 4109,
+          "fields": 32872,
+          "failures": [],
+          "mismatched_cases": 0,
+          "binary_sha256": "4a63c6741d2023b7f23f631302d2b594d3a7877cca5f1ebd97fa24f685623543",
+          "driver_sha256": "728dab508ebc14ee667b261df88d0d7de4015de8928e2701b1539fecd741350b",
+          "cases_sha256": "1eb9ae415547c7effb87e71371c7cb8f38f311d00cf1516138a95a5ba0c045aa"
+        }
+      }
+    },
+    "scope_each_comparison": {
+      "transition_cases": 4096,
+      "connected_cycle_actions": 13,
+      "cases": 4109,
+      "fields": 32872
+    },
+    "cases": [
+      "ESM4PhysicalTimer.NestedPauseResumeRebasesOnlyOuterTransitions",
+      "ESM4PhysicalTimer.RawPauseByteWrapAndUnmatchedResumePreserveOriginalSemantics",
+      "ESM4PhysicalTimer.ConnectedPauseCycleRetainsOriginalResumedIntervalAndCounterWords"
+    ],
+    "production_source_sha256": {
+      "components/esm4/physicalframe.cpp": "943716caa7ba7ec036d76047c5beb2034271ee4b0cb70ee7a5e49c3225e0d947",
+      "components/esm4/physicalframe.hpp": "642d03092e953c8df61ab0994994f20bff5b9cc13ebd022b9b3a70b5a1a72ccc",
+      "apps/components_tests/esm4/physicalcombat.cpp": "1a1dd2e9cb0972cbeff9876054df2927f07f38508279188495d1aa0d27a2eb68"
+    },
+    "drivers": {
+      "probe.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/probe.py",
+        "sha256": "e3006762b87c7d6bfebf34f09ca003220a6f4d04b39f087e9df9c2b028893ec2"
+      },
+      "driver.cpp": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/driver.cpp",
+        "sha256": "728dab508ebc14ee667b261df88d0d7de4015de8928e2701b1539fecd741350b"
+      },
+      "compare.py": {
+        "path": "build/oblivion-compat/m15/S4/native-timer-lifecycle-oracle-01/compare.py",
+        "sha256": "aeb4b94fb63e06d3ac2ae62a92107f02dd1e2192527e02d8e590c13bf0d4841f"
+      }
+    },
+    "standalone_builds": [
+      "c++ -std=c++20 -O2 -I. DRIVER components/esm4/physicalframe.cpp -o NORMAL",
+      "c++ -std=c++20 -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -I. DRIVER components/esm4/physicalframe.cpp -o SANITIZED"
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Both full component build logs contain no warnings/errors;2930 tests/274 suites each, exact inventories and no failures/skips. ASan leak checks disabled.",
+    "limits": [
+      "Only the actual GetTickCount import is supplied by the instruction probe; all original transition and connected timer instructions execute.16 imports occur across4096 transition cases and4 in the13-action cycle. This is not a host Windows timing or focus/loading event observation.",
+      "The public helpers accept a supplied tick. They model field semantics, not host import side effects. The caller must decide when to sample time and own balanced pause sources.",
+      "Engine/World/renderer/physics consumers are unchanged and not activated here. Their full app/engine/Python/schema checks are not repeated. Main-loop pause event mapping, initialized settings, process-frame clock ownership/publication and prepared scheduler activation remain open.",
+      "Actor admission, KF/selector/subtype/group/filter/capsule/root/morphology, complete contact/reaction/FSM/GetUp publication and all remaining normal-input/view/device/FPS/fresh-process gameplay/save-restart gates remain open. Full M15S4 is incomplete."
+    ]
   }
 }
