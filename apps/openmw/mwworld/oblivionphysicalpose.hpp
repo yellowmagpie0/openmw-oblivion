@@ -44,6 +44,8 @@ namespace MWWorld
     // Owns staged renderer callbacks/binding and an unpublished physical graph.
     // Snapshot restore and controller setup can fail here without taking live
     // renderer/capsule ownership. A consumed or expired candidate cannot revive.
+    // Native admission retains the movement capsule independently of the
+    // retained graph's body/constraint World registration selection.
     class PreparedNativeActorPhysicalPose
     {
         struct Data;

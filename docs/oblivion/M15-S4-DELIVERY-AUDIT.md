@@ -5348,3 +5348,15 @@ Full normal and ASan/UBSan checks each pass 2,874 component tests in 273 suites 
 Tested source fingerprint: `470ec4565d3d09414012b59243b9dc3bce306055ed7fa659b69803770542cf3d`. Detailed source/binary/oracle hashes and boundaries are in `external_configured_actor_filter_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
 
 Global group ownership/allocation, unconfigured capsule/static/loose-object filtering, shape-child/root and ray/query routes, automatic physical construction/counter/scene/contact/reaction/GetUp and remaining mastery/effect/input/restart courses remain open. These checks add real cross-owner collision behavior, but close no normal-input or fresh-engine gameplay acceptance gate. Full M15S4 remains open.
+
+### Preserve the movement capsule during native graph admission
+
+PreparedNativeActorPhysicalPose now explicitly selects the existing Retain policy. Both native World facade overloads and detached resource commits preserve the already admitted movement capsule while independently owning the retained graph. The generic PhysicsSystem default remains Suspend. An empty graph body/constraint World selection does not remove the capsule.
+
+Reinspection validates hashes and raw fields from the retained original03 and original07 normal-input Dog courses: 94 samples each across raw 0/4/3/5/6/0 preserve controller, proxy, native object, actual ahkWorld link, broadphase word and filter. Original03 additionally observes zero proxy World-link/filter hardware writes during its declared contact-to-recovery interval; original07 supplies sampled fields only. This is reinspection of existing captures, not a newly launched game or a universal collision-response/movement rule.
+
+The strengthened native World integration checks cover workers 0/1/2. They preserve actual movement actor/object/proxy/UID, group/mask/flags and transform through native admission, saved-pose restoration, release and failure/competing-candidate paths. A real PhysicsSystem ray still hits the capsule after every graph body leaves the World. The explicit generic Suspend/Retain cases continue to pass. Full normal and ASan/UBSan engine runs each pass all 1,636 tests in 122 suites with exact inventories and no failures or skips. Both engines are rebuilt; leak checking is disabled. Unchanged component, Python/schema and predicate/corpus checks were not repeated.
+
+Tested source fingerprint: `b82914ef8fe0ecb703566f68535e3e5f379cc88f7b66857ddaaf344b2d541536`. Source/binary hashes, raw capture provenance and limits are in `native_facade_capsule_retention_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+Automatic native construction still needs the actual frame/controller/animation-target adapter and coherent group/filter initialization. Semantic capsule response/movement, contact/reaction/FSM/GetUp and all remaining full S4 acceptance courses remain open. No normal-input fork or fresh-engine gameplay/restart gate is closed here; full M15S4 remains open.

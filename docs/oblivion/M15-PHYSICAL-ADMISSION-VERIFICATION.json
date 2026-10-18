@@ -5138,5 +5138,179 @@
       "Caller retains the exclusive World barrier, including queries, through preparation/admission/commit or rollback. Borrowed actor data is immutable except validated word publication; existing Bullet cleanup contracts apply.",
       "Automatic actor construction, counter/scene callers, contact/reaction/GetUp, full mastery/drop/effects and the full input/view/device/FPS/interruption/save-quit-fresh-restart courses remain open."
     ]
+  },
+  "native_facade_capsule_retention_followup": {
+    "status": "Native physical resource admission explicitly retains the already admitted movement capsule. Automatic construction, frame/controller/contact/recovery and complete M15S4 gameplay acceptance remain open.",
+    "source": {
+      "head": "42147bdee57517e7b150f5b91a259e61480df6d1",
+      "source_fingerprint": "b82914ef8fe0ecb703566f68535e3e5f379cc88f7b66857ddaaf344b2d541536"
+    },
+    "source_sha256": {
+      "apps/openmw/mwworld/oblivionphysicalpose.cpp": "45a29c12692caa43c402d0d716f55ff62394f8ebb3569fefea8c53c77e471e70",
+      "apps/openmw/mwworld/oblivionphysicalpose.hpp": "79f2a3b8ed976b9283770f0ef68db33870eccf855e1f3e7bcf8e7f1c299850c7",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "ad9f2f12d3a51aada976927caa64e69024cc1f96f5722f6fb2c52b391105be68"
+    },
+    "post_test_changes": [
+      "Verification index and delivery audit only; production and test sources unchanged after checks."
+    ],
+    "changes": [
+      "PreparedNativeActorPhysicalPose now selects the existing Retain capsule policy explicitly instead of inheriting the generic Suspend default. Both native World admission overloads and detached resource commits share this path.",
+      "Native resource ownership does not take over the movement capsule. Body/constraint World selection may be empty without replacing or removing that capsule. The generic PhysicsSystem default remains Suspend.",
+      "Strengthen both native facade integration fixtures: preserve the movement actor, collision object, broadphase handle and UID across native admission/release; with the canonical rendered source also preserve group, mask, flags and exact transform.",
+      "For workers0/1/2, remove every retained graph body from World membership and use a real PhysicsSystem ray to verify that the independent capsule remains the actor target. Restore body selection and compare live snapshot/cache; preparation, failed restore, saved-pose readmission, consumed/competing candidates and release retain capsule identity. Existing explicit generic Suspend/Retain tests continue."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-capsule-retention-normal-01/verification.json",
+        "report_sha256": "fa69c349df658a30ae285405ad443d8660de49b594182e28a5db9de2eb536740",
+        "source": {
+          "head": "42147bdee57517e7b150f5b91a259e61480df6d1",
+          "source_fingerprint": "b82914ef8fe0ecb703566f68535e3e5f379cc88f7b66857ddaaf344b2d541536"
+        },
+        "result": {
+          "executed": 1636,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "98e35a902c0b4db8ce352d0da24c0f5318f4828ddd196d8b9ef9911aee46a737",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "419b2298a1e76ceca6284a20311b7a45735accc155b5f966d7deb2ecac25a56d",
+          "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 122,
+        "openmw_sha256": "39f960e05d3d8ecc78b30ce34a81235c342d29714e5b87096085ba92c27cee4a"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-capsule-retention-sanitized-01/verification.json",
+        "report_sha256": "54cb6dd949fbd70ea9788a561f87ee7ed71ee4e07afd79fd748e98ae242d156c",
+        "source": {
+          "head": "42147bdee57517e7b150f5b91a259e61480df6d1",
+          "source_fingerprint": "b82914ef8fe0ecb703566f68535e3e5f379cc88f7b66857ddaaf344b2d541536"
+        },
+        "result": {
+          "executed": 1636,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8ad67531853bfa0b658bcb739acf28ee1c3815a8c010ba92da5e83d63f615544",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "aa8b68c8b5069244cf2b30a97af601ace33018e424e78bf74d331def2124f15e",
+          "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 122,
+        "openmw_sha256": "1a42c98e2a42cc5d92a000053fbdcb50f0235c0ca205ea5825ef0b6845c69085"
+      }
+    },
+    "engine_cases": [
+      "OblivionWorld.PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval",
+      "OblivionWorldTest.NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSavedAuthority"
+    ],
+    "native_evidence_reinspection": {
+      "report": "build/oblivion-compat/m15/S4/native-capsule-retention-evidence-01/report.json",
+      "report_sha256": "83a55269d5f3c37d84815ae4077ce8a8d5bcb75b30e30b7a19021f37463e9816",
+      "result": {
+        "passed": true,
+        "source_sha256": "c2d44fe34cc19f8927fbb0ee0be89c1f6856afbe2e918b3ba948ba96c6a30ccd",
+        "observations": [
+          {
+            "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-03/report.json",
+            "report_sha256": "a6b0802622ddadd0825968c292ae7b3459f4b0f9182e157f46aa241a45d7e152",
+            "raw_sample": "build/oblivion-compat/m15/S4/physical-recovery-original-live-03/observed-03-sample.json",
+            "raw_sample_sha256": "c6ff71ea491614618a553ce408f0ca62d891ee3bebb736d5c0a94eab7e305a06",
+            "sample_count": 94,
+            "counts_by_raw_state": {
+              "0": 2,
+              "4": 3,
+              "3": 76,
+              "5": 1,
+              "6": 12
+            },
+            "stable_controller": 464720528,
+            "stable_proxy": 468499968,
+            "stable_phantom": 469886096,
+            "stable_world": 406041472,
+            "stable_broadphase_handle": 461,
+            "stable_filter": "0x1720014",
+            "hardware_watches": {
+              "proxy-world-link": {
+                "address": 469886104,
+                "writes": 0
+              },
+              "proxy-filter": {
+                "address": 469886144,
+                "writes": 0
+              }
+            }
+          },
+          {
+            "report": "build/oblivion-compat/m15/S4/physical-recovery-original-live-07/report.json",
+            "report_sha256": "3178820ee03fffba2e1a6e12834f7141498f278fac73a0540fffd85b2aaa3430",
+            "raw_sample": "build/oblivion-compat/m15/S4/physical-recovery-original-live-07/observed-01-sample.json",
+            "raw_sample_sha256": "94b135792bd497552753dbcd765420604b5ef1a04ce8f6ff37bb22549f7b80d2",
+            "sample_count": 94,
+            "counts_by_raw_state": {
+              "0": 3,
+              "4": 3,
+              "3": 75,
+              "5": 1,
+              "6": 12
+            },
+            "stable_controller": 405686096,
+            "stable_proxy": 467178288,
+            "stable_phantom": 466800848,
+            "stable_world": 404974432,
+            "stable_broadphase_handle": 461,
+            "stable_filter": "0x16a0014",
+            "hardware_watches": {
+              "proxy-world-link": {
+                "watched": false
+              },
+              "proxy-filter": {
+                "watched": false
+              }
+            }
+          }
+        ],
+        "scope": "Reinspection of two already retained original normal-input Dog fatigue-knockout/recovery captures. This run launches no game and creates no new gameplay observation. Both retain the same actual controller/proxy/native object, verified World link, broadphase word and filter across sampled0/4/3/5/6/0. Original03 also has zero proxy World-link/filter hardware writes across its declared contact-to-recovery interval.",
+        "decision": "Owning the native physical graph must not implicitly replace or suspend the already admitted movement capsule. Select the existing Retain policy in the native resource facade; leave semantic controller/movement/response transitions to their actual callers.",
+        "limits": [
+          "Bounded original Dog observations; no universal collision response, movement, contact or gameplay parity claim.",
+          "Original07 proxy fields are frame samples, not hardware watches; original03 supplies the recorded inter-frame World-link/filter watches.",
+          "Does not prove the normal-input fork KO/GetUp or fresh-process recovery gate. Automatic native construction/group allocation and reaction callers remain open."
+        ]
+      }
+    },
+    "preflight": {
+      "native-capsule-retention-syntax-01": "Facade compiles; expanded test initially needs complete Bullet proxy/shape headers. Retained failed log; no full test run started on that version.",
+      "native-capsule-retention-syntax-02": "Final test compiles after explicit Bullet header includes."
+    },
+    "unchanged_checks": "Components, Python/schema and native collision predicate/corpus are unchanged and were not rerun solely for this engine facade correction. Previous full component and Python evidence remains historical with its exact source scope.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Structural/compiler and full engine inventory checks, actual capsule ray membership/identity and native facade restoration/resource lifecycle. Reinspect existing independent original-game captures; this chunk launches no new game and closes no normal-input or fresh-engine gameplay gate.",
+    "limits": [
+      "Original evidence is two bounded stock Dog courses. Stable World/broadphase/filter state and the original03 hardware watches do not establish every collision response or movement policy for all actor families.",
+      "Retaining the capsule at graph admission leaves semantic controller, movement, response, root motion and FSM/GetUp transitions to their actual callers. This change does not implement those callers.",
+      "Automatic native physical actor construction still requires coherent frame sampling/controller advancement and group/filter initialization before enabling it in the scene path.",
+      "Global group ownership/allocation, capsule/static/loose-object native filter routes, actual contact/reaction integration, mastery/drop/effects and all remaining full S4 view/device/FPS/interruption/savequitfreshrestart courses remain open."
+    ]
   }
 }

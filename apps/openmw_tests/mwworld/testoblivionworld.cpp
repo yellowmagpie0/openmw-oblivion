@@ -76,6 +76,8 @@
 #include <osgDB/Registry>
 #include "apps/openmw/mwphysics/actor.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
+#include <BulletCollision/BroadphaseCollision/btBroadphaseProxy.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include "apps/openmw/mwphysics/oblivionragdoll.hpp"
 #include "apps/openmw/mwworld/oblivionphysicalpose.hpp"
 #include <components/sceneutil/skeleton.hpp>
@@ -1032,6 +1034,9 @@ namespace
             placement.mScale = 2.f;
             placement.mTranslation = {100, 20, 30};
             const auto originalBone = physicalBone->getMatrix();
+            const auto* nativeCapsuleProxy = capsule->getCollisionObject()->getBroadphaseHandle();
+            ASSERT_NE(nativeCapsuleProxy, nullptr);
+            const auto nativeCapsuleId = nativeCapsuleProxy->getUid();
             const std::array<std::uint32_t, 1> linkedFilters{0x1108};
             auto linkedGains = ESM4::InitialPhysicalBlendGainTable;
             linkedGains[17] = {.53125f, .875f};
@@ -1061,7 +1066,9 @@ namespace
             EXPECT_EQ(animation.mPhysicalRebuilds, 0u);
             ASSERT_TRUE(animation.hasPhysicalPose());
             ASSERT_TRUE(physics.hasActorRagdoll(ptr));
-            EXPECT_TRUE(capsule->isCollisionSuspended());
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nativeCapsuleProxy);
+            EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle()->getUid(), nativeCapsuleId);
             EXPECT_FLOAT_EQ(physics.actorRagdollDefinition(ptr).mBodies[0].mMass, 4.f);
             EXPECT_FLOAT_EQ(std::get<NifBullet::RagdollSphere>(
                 physics.actorRagdollDefinition(ptr).mBodies[0].mShape).mRadius, 1.f);
@@ -1083,6 +1090,8 @@ namespace
             EXPECT_FALSE(animation.hasPhysicalPose());
             EXPECT_FALSE(physics.hasActorRagdoll(ptr));
             EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nativeCapsuleProxy);
+            EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle()->getUid(), nativeCapsuleId);
             EXPECT_EQ(physicalBone->getMatrix(), originalBone);
             EXPECT_FLOAT_EQ(renderedGraph.mBodies[0].mMass, 2.f);
             // World admission consumes its owned DEFAULT table. Down consumes
@@ -1095,6 +1104,9 @@ namespace
             fixture.mWorld.loadOblivionPhysicalBlendConfiguration(14, worldConfigured);
             fixture.mWorld.beginOblivionActorPhysicalPose(animation, ptr, renderedGraph, placement, linkedFilters,
                 MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &internalFilter);
+            EXPECT_FALSE(capsule->isCollisionSuspended());
+            ASSERT_EQ(capsule->getCollisionObject()->getBroadphaseHandle(), nativeCapsuleProxy);
+            EXPECT_EQ(capsule->getCollisionObject()->getBroadphaseHandle()->getUid(), nativeCapsuleId);
             EXPECT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mHierarchy, .53125f);
             EXPECT_EQ(physics.captureActorRagdollBlendStates(ptr)[0].mGains.mVelocity, .875f);
             const auto beforeWorldHitPose = physics.captureActorRagdoll(ptr)[0].mPose;
@@ -23508,6 +23520,39 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         SourceAnimation foreign(other, parent, &fixture.mResources, model);
         auto& physics = world.initializePhysics(new osg::Group);
         physics.addActor(actor, VFS::Path::toNormalized(model));
+        const auto* movementActor = physics.getActor(actor);
+        ASSERT_NE(movementActor, nullptr);
+        const auto* capsuleObject = movementActor->getCollisionObject();
+        const auto* capsuleProxy = capsuleObject->getBroadphaseHandle();
+        ASSERT_NE(capsuleProxy, nullptr);
+        const auto capsuleId = capsuleProxy->getUid();
+        const auto capsuleGroup = capsuleProxy->m_collisionFilterGroup;
+        const auto capsuleMask = capsuleProxy->m_collisionFilterMask;
+        const auto capsulePose = capsuleObject->getWorldTransform();
+        const auto capsuleFlags = capsuleObject->getCollisionFlags();
+        const auto retainedMovement = [&] {
+            ASSERT_EQ(physics.getActor(actor), movementActor);
+            EXPECT_EQ(movementActor->getCollisionObject(), capsuleObject);
+            EXPECT_FALSE(movementActor->isCollisionSuspended());
+            const auto* currentProxy = capsuleObject->getBroadphaseHandle();
+            ASSERT_NE(currentProxy, nullptr);
+            EXPECT_EQ(currentProxy, capsuleProxy);
+            EXPECT_EQ(currentProxy->getUid(), capsuleId);
+            EXPECT_EQ(currentProxy->m_collisionFilterGroup, capsuleGroup);
+            EXPECT_EQ(currentProxy->m_collisionFilterMask, capsuleMask);
+            EXPECT_EQ(capsuleObject->getCollisionFlags(), capsuleFlags);
+            EXPECT_EQ(capsuleObject->getWorldTransform(), capsulePose);
+        };
+        const auto capsuleRay = [&] {
+            btVector3 minimum, maximum;
+            capsuleObject->getCollisionShape()->getAabb(capsulePose, minimum, maximum);
+            const auto center = (minimum + maximum) * .5;
+            return physics.castRay({float(center.x()), float(center.y()), float(maximum.z() + 10)},
+                {float(center.x()), float(center.y()), float(minimum.z() - 10)}, {}, {},
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World);
+        };
+        ASSERT_TRUE(capsuleRay().mHit);
+        EXPECT_EQ(capsuleRay().mHitObject, actor);
         const auto key = actor.getCellRef().getFormKey();
         auto& combat = *world.getOblivionCombatService();
         const auto values = *combat.findActorValues(key);
@@ -23549,6 +23594,7 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         EXPECT_THROW(begin(foreign, filters), std::invalid_argument);
         EXPECT_THROW(begin(animation, {}), std::invalid_argument);
         absent();
+        retainedMovement();
         EXPECT_FALSE(combat.actorRagdoll(key));
         // Geometry/body staging and renderer publication retain the selected
         // controllers; admission must not call a fallible rebuild hook.
@@ -23557,7 +23603,15 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         animation.mRejectControllerRebuild = false;
         EXPECT_TRUE(animation.hasPhysicalPose());
         EXPECT_TRUE(physics.hasActorRagdoll(actor));
-        EXPECT_TRUE(physics.getActor(actor)->isCollisionSuspended());
+        retainedMovement();
+        // The native retained graph may be absent from the World while the
+        // independent movement capsule remains the actual ray target.
+        const auto nativeSelection = physics.captureActorRagdollWorldRegistrationSelection(actor);
+        physics.setActorRagdollWorldRegistrationSelection(actor, {});
+        retainedMovement();
+        ASSERT_TRUE(capsuleRay().mHit);
+        EXPECT_EQ(capsuleRay().mHitObject, actor);
+        physics.setActorRagdollWorldRegistrationSelection(actor, nativeSelection);
         auto cached = combat.actorRagdoll(key);
         ASSERT_TRUE(cached);
         EXPECT_EQ(*cached, physics.captureActorRagdollSnapshot(actor, npc.mFormKey, model));
@@ -23566,15 +23620,18 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         world.endOblivionActorPhysicalPose(animation, actor);
         world.endOblivionActorPhysicalPose(animation, actor);
         absent();
+        retainedMovement();
         EXPECT_FALSE(combat.actorRagdoll(key));
         // A retained pose is restored against this exact newly admitted asset.
         cached->mBodies[0].mPosition = {100, 200, 300};
         ASSERT_TRUE(combat.syncActorRagdoll(key, std::nullopt, cached));
         begin(animation, filters);
+        retainedMovement();
         EXPECT_EQ(combat.actorRagdoll(key), cached);
         EXPECT_EQ(physics.captureActorRagdollSnapshot(actor, npc.mFormKey, model), *cached);
         world.endOblivionActorPhysicalPose(animation, actor);
         absent();
+        retainedMovement();
         auto wrong = cached;
         wrong->mAssetHash[0] = wrong->mAssetHash[0] == 'a' ? 'b' : 'a';
         ASSERT_TRUE(combat.syncActorRagdoll(key, std::nullopt, wrong));
@@ -23585,6 +23642,7 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         animation.mRejectControllerRebuild = false;
         absent();
         EXPECT_EQ(combat.actorRagdoll(key), wrong);
+        retainedMovement();
         ASSERT_TRUE(combat.syncActorRagdoll(key, wrong, std::nullopt));
         // Detached preparation cannot add ray targets or take the capsule.
         const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
@@ -23605,18 +23663,21 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
             detached->restoreSnapshot(*cached, npc.mFormKey, model);
             EXPECT_EQ(detached->captureSnapshot(npc.mFormKey, model), *cached);
             absent();
+            retainedMovement();
         }
         absent();
         {
             auto admitted = prepareNative();
             auto competitor = prepareNative();
             ASSERT_TRUE(admitted->commit());
+            retainedMovement();
             EXPECT_FALSE(admitted->isValid());
             EXPECT_FALSE(admitted->commit());
             EXPECT_FALSE(competitor->isValid());
             EXPECT_FALSE(competitor->commit());
             EXPECT_THROW(admitted->captureSnapshot(npc.mFormKey, model), std::invalid_argument);
             MWWorld::endNativeActorPhysicalPose(physics, animation, actor);
+            retainedMovement();
             EXPECT_FALSE(competitor->isValid());
             EXPECT_FALSE(competitor->commit());
             absent();
