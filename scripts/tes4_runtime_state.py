@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 52
+CURRENT_VERSION = 53
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1182,21 +1182,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         for field in ("stop_key", "start_key", "key_time", "result"):
             native_float(cache[field])
 
-    ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
-    if version < 31 and ragdolls:
-        raise RuntimeStateError("TES4 actor ragdolls require version31")
-    ragdoll_actors: set[str] = set()
-    for entry in ragdolls:
-        fields = {"actor", "base", "model", "asset_hash", "bodies"}
-        if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration", "internal_filters"}):
-            raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
-        actor, base = entry["actor"], entry["base"]
-        native_key(actor)
-        native_key(base)
-        if actor in ragdoll_actors or actor not in native_keys or actor not in phases or value_bases.get(actor) != base:
-            raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
-        ragdoll_actors.add(actor)
+    def validate_physical_bodies(entry: dict[str, Any]) -> list[dict[str, Any]]:
         model = entry["model"]
         if (not isinstance(model, str) or not model or len(model) > 4096
                 or any(ord(c) < 32 or ord(c) >= 127 or c in "\\:" or "A" <= c <= "Z" for c in model)
@@ -1254,6 +1240,57 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             determinant = r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6])
             if abs(determinant - 1.) > 1e-4:
                 raise RuntimeStateError("Improper TES4 ragdoll rotation")
+        return bodies
+
+    loose_weapons = check_collection(state.get("native_loose_weapons", []), "native loose weapon list")
+    if version < 53 and loose_weapons:
+        raise RuntimeStateError("TES4 loose weapon physics requires version53")
+    loose_keys: set[str] = set()
+    for entry in loose_weapons:
+        fields = {"reference", "base", "model", "asset_hash", "physical_scale", "scene_collision_flags", "body"}
+        if (not isinstance(entry, dict) or not fields <= set(entry)
+                or not set(entry) <= fields | {"root_local"}):
+            raise RuntimeStateError("Invalid TES4 loose weapon snapshot")
+        key, base = entry["reference"], entry["base"]
+        native_key(key)
+        native_key(base)
+        if (key in loose_keys or key not in legacy_refs or legacy_refs[key]["base"] != base
+                or key in native_keys or key == player["reference"]):
+            raise RuntimeStateError("Duplicate, dangling, actor or mismatched TES4 loose weapon owner")
+        loose_keys.add(key)
+        validate_physical_bodies({**entry, "bodies": [entry["body"]]})
+        if ("native_packed_velocity" not in entry["body"] or entry["body"].get("native_motion") != 1
+                or native_float(entry["physical_scale"]) <= 0):
+            raise RuntimeStateError("Incomplete or invalid TES4 loose weapon physics")
+        flags = entry["scene_collision_flags"]
+        if type(flags) is not int or not 0 <= flags <= 0xffff:
+            raise RuntimeStateError("Invalid TES4 loose weapon collision flags")
+        if "root_local" in entry:
+            root = entry["root_local"]
+            if (not isinstance(root, dict) or set(root) != {"rotation", "position", "scale"}
+                    or native_float(root["scale"]) <= 0):
+                raise RuntimeStateError("Invalid TES4 loose weapon root")
+            validate_physical_bodies({**entry, "bodies": [{"record": 0, "node_record": 0,
+                "rotation": root["rotation"], "position": root["position"],
+                "linear_velocity": [0., 0., 0.], "angular_velocity": [0., 0., 0.]}]})
+
+    ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
+    if version < 31 and ragdolls:
+        raise RuntimeStateError("TES4 actor ragdolls require version31")
+    ragdoll_actors: set[str] = set()
+    for entry in ragdolls:
+        fields = {"actor", "base", "model", "asset_hash", "bodies"}
+        if (not isinstance(entry, dict) or not fields <= set(entry)
+                or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration", "internal_filters"}):
+            raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
+        actor, base = entry["actor"], entry["base"]
+        native_key(actor)
+        native_key(base)
+        if actor in ragdoll_actors or actor not in native_keys or actor not in phases or value_bases.get(actor) != base:
+            raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
+        ragdoll_actors.add(actor)
+        bodies = validate_physical_bodies(entry)
+        nodes = {body["node_record"] for body in bodies}
         if "world_registration" in entry:
             registration = entry["world_registration"]
             if (version < 50 or not isinstance(registration, dict)
@@ -2150,6 +2187,27 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             result["native_crime"] = crime_io.read(reader, version=version)
         except (ValueError, TypeError, KeyError, OverflowError) as error:
             raise RuntimeStateError(str(error)) from error
+    if version >= 53:
+        result["native_loose_weapons"] = []
+        for _ in range(reader.count()):
+            entry = {field: reader.string() for field in ("reference", "base", "model", "asset_hash")}
+            entry["physical_scale"] = reader.unpack("<f")
+            entry["scene_collision_flags"] = reader.unpack("<H")
+            body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
+            for field, size in (("rotation", 9), ("position", 3), ("linear_velocity", 3), ("angular_velocity", 3)):
+                body[field] = [reader.unpack("<f") for _ in range(size)]
+            body["native_packed_velocity"] = {field: [reader.unpack("<f") for _ in range(4)]
+                                              for field in ("linear", "angular")}
+            body["native_motion"] = reader.unpack("<B")
+            entry["body"] = body
+            root = reader.unpack("<B")
+            if root > 1:
+                raise RuntimeStateError("Invalid TES4 loose weapon root marker")
+            if root:
+                entry["root_local"] = {"rotation": [reader.unpack("<f") for _ in range(9)],
+                                       "position": [reader.unpack("<f") for _ in range(3)],
+                                       "scale": reader.unpack("<f")}
+            result["native_loose_weapons"].append(entry)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -2611,6 +2669,28 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 39: writer.pack("<B", int(bow["player_hold_latched"]))
     if version >= 42:
         crime_io.write(writer, state.get("native_crime", crime_io.empty_state()), version=version)
+    if version >= 53:
+        weapons = sorted(state.get("native_loose_weapons", []), key=lambda item: item["reference"])
+        writer.pack("<I", len(weapons))
+        for entry in weapons:
+            for field in ("reference", "base", "model", "asset_hash"):
+                writer.string(entry[field])
+            writer.pack("<f", entry["physical_scale"])
+            writer.pack("<H", entry["scene_collision_flags"])
+            body = entry["body"]
+            writer.pack("<I", body["record"])
+            writer.pack("<I", body["node_record"])
+            for field in ("rotation", "position", "linear_velocity", "angular_velocity"):
+                for value in body[field]: writer.pack("<f", value)
+            for field in ("linear", "angular"):
+                for value in body["native_packed_velocity"][field]: writer.pack("<f", value)
+            writer.pack("<B", body["native_motion"])
+            writer.pack("<B", int("root_local" in entry))
+            if "root_local" in entry:
+                root = entry["root_local"]
+                for field in ("rotation", "position"):
+                    for value in root[field]: writer.pack("<f", value)
+                writer.pack("<f", root["scale"])
     return writer.finish()
 
 
@@ -2728,6 +2808,12 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     state.setdefault("native_actor_ragdolls", [])
 
 
+def _upgrade_loose_weapons(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 53 and state.get("native_loose_weapons"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry native loose weapon physics")
+    state.setdefault("native_loose_weapons", [])
+
+
 def _upgrade_bow_states(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 38 and state.get("native_bow_states"):
         raise RuntimeStateError("Legacy TES4 save cannot carry owned bow playback")
@@ -2783,6 +2869,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_reference_item_extras(state)
     _upgrade_drop_relations(state)
     _upgrade_actor_knockback(state)
+    _upgrade_loose_weapons(state)
     _upgrade_bow_states(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
@@ -2857,6 +2944,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_reference_item_extras(result)
     _upgrade_drop_relations(result)
     _upgrade_actor_knockback(result)
+    _upgrade_loose_weapons(result)
     _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())

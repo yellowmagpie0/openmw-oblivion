@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 52;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 53;
 
     struct RuntimeContentIdentity
     {
@@ -457,6 +457,30 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
     };
+    // v53: one native loose WEAP body, independent of actor life/AV authority.
+    // Model/hash/record identity is checked against the winning asset on admission.
+    struct RuntimeLooseWeaponRoot
+    {
+        std::array<float, 9> mRotation{1, 0, 0, 0, 1, 0, 0, 0, 1};
+        std::array<float, 3> mPosition{};
+        float mScale = 1;
+        friend bool operator==(const RuntimeLooseWeaponRoot&, const RuntimeLooseWeaponRoot&) = default;
+    };
+
+    struct RuntimeLooseWeapon
+    {
+        ESM::FormKey mBase;
+        std::string mModel;
+        std::string mAssetHash; // Same opaque NIF hash encoding as RuntimeActorRagdoll.
+        RuntimeRagdollBody mBody;
+        // Shape/mass admission scale can differ from the current visible scale.
+        float mPhysicalScale = 1;
+        std::uint16_t mSceneCollisionFlags = 0;
+        // Absent until the first scene root publication; preserve that distinction.
+        std::optional<RuntimeLooseWeaponRoot> mRootLocal;
+        void validate() const;
+        friend bool operator==(const RuntimeLooseWeapon&, const RuntimeLooseWeapon&) = default;
+    };
     struct RuntimeActorLife
     {
         ESM::FormKey mActor;
@@ -591,6 +615,8 @@ namespace ESM4
         std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
+        // v53: retained loose weapons, including currently unloaded cells.
+        std::map<ESM::FormKey, RuntimeLooseWeapon> mNativeLooseWeapons;
         // v36: scheduler-wide physical clock cache, independent of actor ownership.
         // Renderer-global Ni controller caching belongs to a different authority.
         std::optional<PhysicalBlendTimeCache> mNativePhysicalBlendTimeCache = std::nullopt;

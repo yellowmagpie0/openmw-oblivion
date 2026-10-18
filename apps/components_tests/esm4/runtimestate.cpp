@@ -1570,7 +1570,7 @@ namespace
                 + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
-                + (version >= 42 ? 36 : 0);
+                + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -3291,7 +3291,7 @@ TEST(ESM4RuntimeState, Crime42RejectsUnissuedOrPendingCommittedCausesAndMalforme
 
 TEST(ESM4RuntimeState, FractionalBounty43PreservesNativeAmountsAndEveryLegacyInt32Exactly)
 {
-    auto state = makeState(); state.mPhysicalActions.mNext = 10;
+    auto state = makeState(); state.mVersion = 43; state.mPhysicalActions.mNext = 10;
     state.mNativeCrime = Testing::crimeFixture();
     for (double amount : {0.5, 0.25, -0.25, -0.0, 16777217.0, 2147483647.0, -2147483648.0})
     {
@@ -3863,4 +3863,119 @@ TEST(ESM4RuntimeState, InternalFilterRecordsMustCoverEveryBodyInCanonicalOrderAn
     }
     pose.mInternalFilters = valid;
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorRagdolls,state.mNativeActorRagdolls);
+}
+
+namespace
+{
+    ESM4::RuntimeState looseWeaponState()
+    {
+        auto state = makeState(); state.mVersion = 53;
+        state.mReferences.front().mKey = ESM::FormKey::dynamic("dropped-item", 1);
+        ESM4::RuntimeLooseWeapon weapon;
+        weapon.mBase = state.mReferences.front().mBase;
+        weapon.mModel = "meshes/weapons/iron/shortsword.nif";
+        weapon.mAssetHash = "00112233445566778899aabbccddeeff";
+        weapon.mPhysicalScale = 1.25f;
+        weapon.mSceneCollisionFlags = 0x010d;
+        weapon.mBody.mRecord = 12; weapon.mBody.mNodeRecord = 8;
+        weapon.mBody.mPosition = {1.25f, -2, 64};
+        weapon.mBody.mLinearVelocity = {3, 4, -5};
+        weapon.mBody.mAngularVelocity = {-.5f, .25f, -0.f};
+        weapon.mBody.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{{1, 2, 3, -0.f}, {4, 5, 6, .125f}};
+        weapon.mBody.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+        weapon.mRootLocal.emplace(); weapon.mRootLocal->mPosition = {2, 3, 4}; weapon.mRootLocal->mScale = .75f;
+        state.mNativeLooseWeapons.emplace(state.mReferences.front().mKey, weapon);
+        return state;
+    }
+
+    std::vector<std::uint8_t> looseWeaponGoldenSuffix()
+    {
+        // Literal schema53 suffix, also checked by the Python save inspector.
+        constexpr std::string_view hex =
+        "010000002500000064796e616d69633a64726f707065642d6974656d3a303030303030303030303030303030311b0000"
+        "00636f6e74656e743a6f626c6976696f6e2e65736d3a303030323030220000006d65736865732f776561706f6e732f69"
+        "726f6e2f73686f727473776f72642e6e6966200000003030313132323333343435353636373738383939616162626363"
+        "6464656566660000a03f0d010c000000080000000000803f0000000000000000000000000000803f0000000000000000"
+        "000000000000803f0000a03f000000c00000804200004040000080400000a0c0000000bf0000803e000000800000803f"
+        "000000400000404000000080000080400000a0400000c0400000003e01010000803f0000000000000000000000000000"
+        "803f0000000000000000000000000000803f0000004000004040000080400000403f";
+        std::vector<std::uint8_t> bytes;
+        const auto digit = [](char c) { return c <= '9' ? c - '0' : c - 'a' + 10; };
+        for (std::size_t i = 0; i < hex.size(); i += 2)
+            bytes.push_back(static_cast<std::uint8_t>((digit(hex[i]) << 4) | digit(hex[i+1])));
+        return bytes;
+    }
+}
+
+TEST(ESM4RuntimeState, LooseWeaponVersionFiftyThreeHasLiteralWireAndLegacyAbsence)
+{
+    const auto state = looseWeaponState();
+    auto old = state; old.mVersion = 52; old.mNativeLooseWeapons.clear();
+    const auto legacy = old.serializeBinary();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeLooseWeapons.empty());
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 53;
+    const auto offset = expected.size(); const auto suffix = looseWeaponGoldenSuffix();
+    expected.insert(expected.end(), suffix.begin(), suffix.end());
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto restored = ESM4::RuntimeState::deserializeBinary(expected);
+    EXPECT_EQ(restored.mNativeLooseWeapons, state.mNativeLooseWeapons);
+    EXPECT_EQ(restored.serializeBinary(), expected);
+    const auto& body = restored.mNativeLooseWeapons.begin()->second.mBody;
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(body.mAngularVelocity[2]), 0x80000000u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(body.mNativePackedVelocity->mLinear[3]), 0x80000000u);
+    EXPECT_NE(restored.canonicalJson().find("\"native_loose_weapons\":[{\"reference\":\"dynamic:dropped-item:"), std::string::npos);
+    EXPECT_NE(restored.canonicalJson().find("\"angular_velocity\":[-0.5,0.25,-0.0]"), std::string::npos);
+    auto withoutRoot = state; withoutRoot.mNativeLooseWeapons.begin()->second.mRootLocal.reset();
+    auto absent = expected; absent.resize(absent.size()-52); absent.back() = 0;
+    EXPECT_EQ(withoutRoot.serializeBinary(), absent);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(absent).mNativeLooseWeapons.begin()->second.mRootLocal);
+    old.mVersion = 53;
+    auto empty = legacy; empty[std::string_view("OMW4STATE").size()] = 53; empty.insert(empty.end(), 4, 0);
+    EXPECT_EQ(old.serializeBinary(), empty);
+    auto duplicate = expected; duplicate[offset] = 2;
+    duplicate.insert(duplicate.end(), suffix.begin()+4, suffix.end());
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(duplicate), std::runtime_error);
+    for (std::size_t cut = offset; cut < expected.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({expected.begin(), expected.begin()+cut}), std::runtime_error);
+    auto bad = expected; bad[bad.size()-53] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    bad = expected; bad[bad.size()-54] = 6;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, LooseWeaponRejectsInvalidIdentityMotionAndGeometry)
+{
+    const auto state = looseWeaponState();
+    auto invalid = state; invalid.mVersion = 52;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mReferences.clear(); EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeLooseWeapons.begin()->second.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mPlayer.mReference = invalid.mNativeLooseWeapons.begin()->first;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    for (int mutation = 0; mutation < 12; ++mutation)
+    {
+        invalid = state; auto& weapon = invalid.mNativeLooseWeapons.begin()->second;
+        switch (mutation)
+        {
+            case 0: weapon.mModel = "meshes/../weapon.nif"; break;
+            case 1: weapon.mAssetHash[0] = 'A'; break;
+            case 2: weapon.mBody.mNodeRecord = 0xffffffffu; break;
+            case 3: weapon.mBody.mNativePackedVelocity.reset(); break;
+            case 4: weapon.mBody.mNativeMotion.reset(); break;
+            case 5: weapon.mBody.mNativeMotion = ESM4::RuntimeRagdollMotion::Keyframed; break;
+            case 6: weapon.mPhysicalScale = 0; break;
+            case 7: weapon.mBody.mRotation[0] = -1; break;
+            case 8: weapon.mBody.mLinearVelocity[0] = std::numeric_limits<float>::infinity(); break;
+            case 9: weapon.mBody.mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN(); break;
+            case 10: weapon.mRootLocal->mRotation[4] = 2; break;
+            case 11: weapon.mRootLocal->mScale = -1; break;
+        }
+        EXPECT_THROW(invalid.serializeBinary(), std::runtime_error) << mutation;
+    }
+    auto actor = packedRagdollState(); actor.mVersion = 53;
+    auto weapon = state.mNativeLooseWeapons.begin()->second;
+    weapon.mBase = actor.mReferences.front().mBase;
+    actor.mNativeLooseWeapons.emplace(actor.mReferences.front().mKey, weapon);
+    EXPECT_THROW(actor.serializeBinary(), std::runtime_error);
 }

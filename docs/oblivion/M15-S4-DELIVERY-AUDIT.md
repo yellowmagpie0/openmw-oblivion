@@ -6278,3 +6278,38 @@ is proven, while full drop/restart acceptance fails. Persist and restore native
 loose-body/render state, then repeat the falling-item restart course. Defensive
 weapon/shield/armor breaks, mastery/effects, complete actor admission and native reactions/FSM/GetUp, remaining weapon/view/device/FPS and
 in-action restart cases stay open. **Full M15S4 is incomplete.**
+
+
+## Loose-weapon save contract — schema53 checkpoint
+
+Runtime schema53 adds a separate stable-reference map for native loose weapons.
+It carries the normalized model and opaque NIF hash, body/node identity, rigid
+world pose, spatial and exact four-lane native velocities, dynamic motion,
+admitted physical scale, scene collision flags and optional cached local root.
+Actor ragdoll ownership still requires its own native values/life authority.
+The new collection follows crime state; versions1..52 keep their existing wire
+layout and do not invent lost physical state. Both C++ and Python codecs enforce
+these contracts, including signed-zero lanes and absent-root state.
+
+All **2934 component cases /274 suites** pass normally and under ASan/UBSan,
+with exact unfiltered inventory/XML agreement, no failures or skips. All **324
+Python cases** pass. Evidence: `S4/native-loose-weapon-schema53-normal-02` and
+`-sanitized-02`. Tested dirty-source fingerprint:
+`1c0ec2a2bd471f009621773d18275c94fc567cf843dbb798bf8399e2d57ebfa0`.
+ASan leak checks are disabled. The first full attempts are retained: two old
+clock/crime wire tests assumed crime ended the payload; corrected tests account
+for the schema53 tail and explicitly pin the schema43 fixture.
+
+Both codecs match a literal new wire suffix, reject malformed/truncated or
+duplicate snapshots, and preserve legacy absence. The save-rewrite test preserves
+opaque records and source bytes; invalid legacy-labeled physical state leaves
+the destination untouched. Receipts are under `native_loose_weapon_schema53` in
+the verification index. Later evidence documentation does not change tested code.
+
+This is **codec and validation evidence only**. World does not yet capture this
+map or restore physical/render ownership from it. The previous falling-weapon
+restart failure remains open: generic static insertion and the returning
+scabbard still require the scene-load bridge. Capture loaded bodies, retain
+unloaded snapshots, stage restored bodies and the physical model before scene
+publication, then repeat the airborne fresh-process course. No engine or new
+runtime acceptance is claimed. **Full M15S4 remains incomplete.**

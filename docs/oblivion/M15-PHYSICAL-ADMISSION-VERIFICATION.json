@@ -11250,5 +11250,72 @@
       "Player/quest retained breaks remain covered by prior work; defensive breaks, mastery/effects, complete actor admission and native reactions/FSM/GetUp remain open. Full M15S4 is incomplete.",
       "ASan leak checking is disabled. Both real-content sanitizer processes are checked separately from synthetic inventories. No new PCM waveform analysis is claimed. Unchanged Python implementation/suites were not rerun."
     ]
+  },
+  "native_loose_weapon_schema53": {
+    "status": "Typed schema53 save contract verified; live capture and scene restoration remain unimplemented. Full M15S4 and the falling-weapon restart gate remain incomplete.",
+    "source_parent_commit": "703d74a95dcca8d4ce63a22b96c585ee27e3b338",
+    "tested_dirty_source_fingerprint": "1c0ec2a2bd471f009621773d18275c94fc567cf843dbb798bf8399e2d57ebfa0",
+    "source_files": [
+      {
+        "path": "components/esm4/runtimestate.hpp",
+        "sha256": "30c492940fa9f2a6cd44cacb271ca6be21b994d39b69b679d2e20e6991ec069d"
+      },
+      {
+        "path": "components/esm4/runtimestate.cpp",
+        "sha256": "2ad59e0434a4a792b225bdf77fde2efb8e81479aeb65a8b28892cee30f1e0066"
+      },
+      {
+        "path": "scripts/tes4_runtime_state.py",
+        "sha256": "e51e4fe6981bb232e2481af628640621b789d3cba7e821f2b975491ef2342f80"
+      },
+      {
+        "path": "apps/components_tests/esm4/runtimestate.cpp",
+        "sha256": "21fd329a8fefbf5691c0430750ccbd235f52577af7c38c0b669a1694e56add91"
+      },
+      {
+        "path": "scripts/tests/test_tes4_runtime_state.py",
+        "sha256": "da3e8a031f78e5a18a30e8cd73284e907179b3321e331b16e805659aa4a7ed31"
+      }
+    ],
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-schema53-normal-02/verification.json",
+      "sha256": "0bfcb612e4085547b016f630f82964340bbb2ec2ccc936b136f6e2bda39bb03d"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-schema53-sanitized-02/verification.json",
+      "sha256": "f888221df97ffce29975673f33d510b8dcfe8f96f5b8a78b96ab859ed010fb43"
+    },
+    "verification": {
+      "components_normal": 2934,
+      "components_sanitized": 2934,
+      "component_suites": 274,
+      "python": 324,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "contract": [
+      "Separate stable reference to loose-WEAP map; actor ragdoll AV/life invariants remain enforced.",
+      "Normalized model and opaque NIF hash, body/node identity, rigid world pose, spatial and exact packed native velocities, dynamic motion, admitted physical scale, scene collision flags and optional cached local root.",
+      "Version53 appends the collection after crime state. Versions1..52 keep their existing wire layout and contain no inferred loose-body snapshot.",
+      "Both codecs match a literal wire suffix and reject malformed identity, motion, geometry, duplicate owners, invalid root presence and truncation. Save rewriting preserves opaque records and source bytes; invalid legacy-labeled physical state leaves the target untouched."
+    ],
+    "retained_failed_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-loose-weapon-schema53-normal-01/verification.json",
+        "sha256": "f9bf43d8d49b623f7eccc6a089bffcea245ea4c8f2b122fd5c87bd1290ea0e91"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-loose-weapon-schema53-sanitized-01/verification.json",
+        "sha256": "c2f66e524a23bd6d33bf783c954b18601d8f05d34d384b74dd37e355a21dd37f"
+      }
+    ],
+    "failed_attempt_explanation": "The two first full component runs pass the new cases but fail historical clock/crime tests that assume crime ends the payload. Corrected02 includes the new empty collection in the clock offset and pins the schema43 literal crime test to schema43.",
+    "limits": [
+      "Codec/validation evidence only; no engine or real-content runtime run is claimed for this chunk.",
+      "World still does not capture this map or restore native loose-body/render ownership on load. Previous scabbard/static-body restart failure remains valid.",
+      "Next: capture loaded bodies, retain unloaded snapshots, stage asset-validated physical/render restoration before scene publication, then rerun the airborne save/fresh-process course."
+    ]
   }
 }

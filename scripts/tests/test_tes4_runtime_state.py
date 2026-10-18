@@ -151,6 +151,100 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+
+    def loose_weapon_state(self):
+        state = self.ownership_state(); state["schema_version"] = 53
+        state["native_loose_weapons"] = [{
+            "reference": state["references"][0]["key"], "base": state["references"][0]["base"],
+            "model": "meshes/weapons/iron/shortsword.nif", "asset_hash": "00112233445566778899aabbccddeeff",
+            "physical_scale": 1.25, "scene_collision_flags": 0x010d,
+            "body": {"record": 12, "node_record": 8, "rotation": [1.,0.,0.,0.,1.,0.,0.,0.,1.],
+                "position": [1.25,-2.,64.], "linear_velocity": [3.,4.,-5.], "angular_velocity": [-.5,.25,-0.],
+                "native_packed_velocity": {"linear": [1.,2.,3.,-0.], "angular": [4.,5.,6.,.125]}, "native_motion": 1},
+            "root_local": {"rotation": [1.,0.,0.,0.,1.,0.,0.,0.,1.], "position": [2.,3.,4.], "scale": .75}}]
+        return state
+
+    def test_loose_weapon53_literal_wire_legacy_absence_and_corruption(self):
+        state = self.loose_weapon_state()
+        old = copy.deepcopy(state); old["schema_version"] = 52; del old["native_loose_weapons"]
+        legacy = state_io.encode_payload(old)
+        self.assertNotIn("native_loose_weapons", state_io.decode_payload(legacy))
+        prefix = bytearray(legacy); prefix[len(state_io.MAGIC)] = 53
+        suffix = bytes.fromhex(
+        "010000002500000064796e616d69633a64726f707065642d6974656d3a303030303030303030303030303030311b0000"
+        "00636f6e74656e743a6f626c6976696f6e2e65736d3a303030323030220000006d65736865732f776561706f6e732f69"
+        "726f6e2f73686f727473776f72642e6e6966200000003030313132323333343435353636373738383939616162626363"
+        "6464656566660000a03f0d010c000000080000000000803f0000000000000000000000000000803f0000000000000000"
+        "000000000000803f0000a03f000000c00000804200004040000080400000a0c0000000bf0000803e000000800000803f"
+        "000000400000404000000080000080400000a0400000c0400000003e01010000803f0000000000000000000000000000"
+        "803f0000000000000000000000000000803f0000004000004040000080400000403f")
+        expected = bytes(prefix) + suffix
+        self.assertEqual(state_io.encode_payload(state), expected)
+        restored = state_io.decode_payload(expected)
+        self.assertEqual(state_io.encode_payload(restored), expected)
+        self.assertEqual(restored["native_loose_weapons"], state["native_loose_weapons"])
+        self.assertEqual(math.copysign(1, restored["native_loose_weapons"][0]["body"]["angular_velocity"][2]), -1)
+        self.assertEqual(math.copysign(1, restored["native_loose_weapons"][0]["body"]["native_packed_velocity"]["linear"][3]), -1)
+        del state["native_loose_weapons"][0]["root_local"]
+        absent = expected[:-53] + b"\0"
+        self.assertEqual(state_io.encode_payload(state), absent)
+        self.assertNotIn("root_local", state_io.decode_payload(absent)["native_loose_weapons"][0])
+        old["schema_version"] = 53
+        self.assertEqual(state_io.encode_payload(old), bytes(prefix) + bytes(4))
+        for cut in range(len(prefix), len(expected)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(expected[:cut])
+        duplicate = bytes(prefix) + b"\2\0\0\0" + suffix[4:] * 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(duplicate)
+        for offset, value in ((-53, 2), (-54, 6)):
+            bad = bytearray(expected); bad[offset] = value
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+
+    def test_loose_weapon53_save_rewrite_preserves_snapshot_and_opaque_records(self):
+        state = self.loose_weapon_state()
+        legacy = copy.deepcopy(state); legacy["schema_version"] = 52; del legacy["native_loose_weapons"]
+        payload = state_io.encode_payload(legacy)
+        body = struct.pack("<4sII", b"VERS", 4, 52) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
+        tail = struct.pack("<4sIII", b"TEST", 12, 0, 0) + struct.pack("<4sI", b"DATA", 4) + b"keep"
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)/"source.omwsave"; target = Path(directory)/"target.omwsave"
+            source.write_bytes(record + tail)
+            state_io.write_save(source, target, legacy)
+            self.assertEqual(state_io.load_save(target)["native_loose_weapons"], [])
+            state_io.write_save(source, target, state)
+            self.assertEqual(state_io.load_save(target)["native_loose_weapons"], state["native_loose_weapons"])
+            self.assertTrue(target.read_bytes().endswith(tail))
+            self.assertEqual(source.read_bytes(), record + tail)
+            before = target.read_bytes()
+            invalid = copy.deepcopy(state); invalid["schema_version"] = 52
+            with self.assertRaises(state_io.RuntimeStateError): state_io.write_save(source, target, invalid)
+            self.assertEqual(target.read_bytes(), before)
+
+    def test_loose_weapon53_rejects_invalid_identity_motion_geometry(self):
+        original = self.loose_weapon_state()
+        for path, value in (
+            (("schema_version",), 52), (("references",), []),
+            (("native_loose_weapons",0,"base"), "content:oblivion.esm:000007"),
+            (("native_loose_weapons",0,"reference"), original["player"]["reference"]),
+            (("native_loose_weapons",0,"model"), "meshes/../weapon.nif"),
+            (("native_loose_weapons",0,"asset_hash"), "A"*32),
+            (("native_loose_weapons",0,"physical_scale"), 0),
+            (("native_loose_weapons",0,"scene_collision_flags"), 65536),
+            (("native_loose_weapons",0,"body","native_motion"), 6),
+            (("native_loose_weapons",0,"body","rotation",0), -1),
+            (("native_loose_weapons",0,"body","linear_velocity",0), math.inf),
+            (("native_loose_weapons",0,"body","native_packed_velocity","angular",3), math.nan),
+            (("native_loose_weapons",0,"root_local","scale"), -1),
+            (("native_loose_weapons",0,"root_local","rotation",4), 2)):
+            state = copy.deepcopy(original); target = state
+            for part in path[:-1]: target = target[part]
+            target[path[-1]] = value
+            with self.subTest(path=path), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for field in ("native_packed_velocity", "native_motion"):
+            state = copy.deepcopy(original); del state["native_loose_weapons"][0]["body"][field]
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def ownership_state(self):
         state = make_state()
         state["ai_rng_state"] = 1

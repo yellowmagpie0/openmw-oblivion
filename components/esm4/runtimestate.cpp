@@ -629,76 +629,103 @@ namespace ESM4
         }
     }
 
+    namespace
+    {
+        std::set<std::uint32_t> validatePhysicalBodies(const ESM::FormKey& base, const std::string& model,
+            const std::string& assetHash, const std::vector<RuntimeRagdollBody>& bodies)
+        {
+            if (base.isNull() || model.empty() || model.size() > 4096
+                || model.front() == '/' || model.back() == '/'
+                || model.find("//") != std::string::npos
+                || std::any_of(model.begin(), model.end(), [](unsigned char c) {
+                    return c < 32 || c >= 127 || c == '\\' || c == ':' || (c >= 'A' && c <= 'Z');
+                }))
+                throw std::runtime_error("Invalid TES4 ragdoll model identity");
+            for (std::size_t start = 0; start < model.size();)
+            {
+                const auto end = model.find('/', start);
+                const auto component = std::string_view(model).substr(start,
+                    end == std::string::npos ? model.size() - start : end - start);
+                if (component == "." || component == "..")
+                    throw std::runtime_error("Noncanonical TES4 ragdoll model path");
+                if (end == std::string::npos)
+                    break;
+                start = end + 1;
+            }
+            if (assetHash.size() != 32 || std::any_of(assetHash.begin(), assetHash.end(), [](char c) {
+                    return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f');
+                }) || bodies.empty() || bodies.size() > sMaximumCollectionSize)
+                throw std::runtime_error("Invalid TES4 ragdoll asset hash or body count");
+            std::optional<std::uint32_t> previous;
+            std::set<std::uint32_t> nodes;
+            for (const auto& body : bodies)
+            {
+                if (body.mNativePackedVelocity.has_value() != bodies.front().mNativePackedVelocity.has_value())
+                    throw std::runtime_error("Incomplete TES4 packed ragdoll snapshot");
+                if (body.mNativeMotion.has_value() != bodies.front().mNativeMotion.has_value())
+                    throw std::runtime_error("Incomplete TES4 ragdoll motion snapshot");
+                if (body.mNativeMotion && (!body.mNativePackedVelocity
+                    || (*body.mNativeMotion != RuntimeRagdollMotion::Dynamic
+                        && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed)))
+                    throw std::runtime_error("Invalid TES4 logical ragdoll motion snapshot");
+                if (body.mNativePackedVelocity)
+                    for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                        for (float value : vector)
+                            if (!std::isfinite(value))
+                                throw std::runtime_error("Nonfinite TES4 packed ragdoll velocity");
+                if ((previous && body.mRecord <= *previous)
+                    || body.mRecord > std::numeric_limits<std::int32_t>::max()
+                    || body.mNodeRecord > std::numeric_limits<std::int32_t>::max()
+                    || !nodes.insert(body.mNodeRecord).second)
+                    throw std::runtime_error("Invalid TES4 ragdoll body identity or order");
+                previous = body.mRecord;
+                for (float component : body.mRotation)
+                    if (!std::isfinite(component))
+                        throw std::runtime_error("Nonfinite TES4 ragdoll rotation");
+                for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                    for (float component : vector)
+                        if (!std::isfinite(component))
+                            throw std::runtime_error("Nonfinite TES4 ragdoll position or velocity");
+                const auto& r = body.mRotation;
+                for (unsigned row = 0; row < 3; ++row)
+                    for (unsigned other = row; other < 3; ++other)
+                    {
+                        double dot = 0;
+                        for (unsigned column = 0; column < 3; ++column)
+                            dot += double(r[row * 3 + column]) * r[other * 3 + column];
+                        if (std::abs(dot - (row == other ? 1.0 : 0.0)) > 1e-4)
+                            throw std::runtime_error("Nonrigid TES4 ragdoll rotation");
+                    }
+                const double determinant = double(r[0]) * (double(r[4]) * r[8] - double(r[5]) * r[7])
+                    - double(r[1]) * (double(r[3]) * r[8] - double(r[5]) * r[6])
+                    + double(r[2]) * (double(r[3]) * r[7] - double(r[4]) * r[6]);
+                if (std::abs(determinant - 1.0) > 1e-4)
+                    throw std::runtime_error("Improper TES4 ragdoll rotation");
+            }
+            return nodes;
+        }
+    }
+
+    void RuntimeLooseWeapon::validate() const
+    {
+        validatePhysicalBodies(mBase, mModel, mAssetHash, {mBody});
+        if (!mBody.mNativePackedVelocity || mBody.mNativeMotion != RuntimeRagdollMotion::Dynamic
+            || !std::isfinite(mPhysicalScale) || mPhysicalScale <= 0)
+            throw std::runtime_error("Incomplete or invalid TES4 loose weapon physics");
+        if (mRootLocal)
+        {
+            RuntimeRagdollBody root;
+            root.mRotation = mRootLocal->mRotation;
+            root.mPosition = mRootLocal->mPosition;
+            validatePhysicalBodies(mBase, mModel, mAssetHash, {root});
+            if (!std::isfinite(mRootLocal->mScale) || mRootLocal->mScale <= 0)
+                throw std::runtime_error("Invalid TES4 loose weapon root scale");
+        }
+    }
+
     void RuntimeActorRagdoll::validate() const
     {
-        if (mBase.isNull() || mModel.empty() || mModel.size() > 4096
-            || mModel.front() == '/' || mModel.back() == '/'
-            || mModel.find("//") != std::string::npos
-            || std::any_of(mModel.begin(), mModel.end(), [](unsigned char c) {
-                return c < 32 || c >= 127 || c == '\\' || c == ':' || (c >= 'A' && c <= 'Z');
-            }))
-            throw std::runtime_error("Invalid TES4 ragdoll model identity");
-        for (std::size_t start = 0; start < mModel.size();)
-        {
-            const auto end = mModel.find('/', start);
-            const auto component = std::string_view(mModel).substr(start,
-                end == std::string::npos ? mModel.size() - start : end - start);
-            if (component == "." || component == "..")
-                throw std::runtime_error("Noncanonical TES4 ragdoll model path");
-            if (end == std::string::npos)
-                break;
-            start = end + 1;
-        }
-        if (mAssetHash.size() != 32 || std::any_of(mAssetHash.begin(), mAssetHash.end(), [](char c) {
-                return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f');
-            }) || mBodies.empty() || mBodies.size() > sMaximumCollectionSize)
-            throw std::runtime_error("Invalid TES4 ragdoll asset hash or body count");
-        std::optional<std::uint32_t> previous;
-        std::set<std::uint32_t> nodes;
-        for (const auto& body : mBodies)
-        {
-            if (body.mNativePackedVelocity.has_value() != mBodies.front().mNativePackedVelocity.has_value())
-                throw std::runtime_error("Incomplete TES4 packed ragdoll snapshot");
-            if (body.mNativeMotion.has_value() != mBodies.front().mNativeMotion.has_value())
-                throw std::runtime_error("Incomplete TES4 ragdoll motion snapshot");
-            if (body.mNativeMotion && (!body.mNativePackedVelocity
-                || (*body.mNativeMotion != RuntimeRagdollMotion::Dynamic
-                    && *body.mNativeMotion != RuntimeRagdollMotion::Keyframed)))
-                throw std::runtime_error("Invalid TES4 logical ragdoll motion snapshot");
-            if (body.mNativePackedVelocity)
-                for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
-                    for (float value : vector)
-                        if (!std::isfinite(value))
-                            throw std::runtime_error("Nonfinite TES4 packed ragdoll velocity");
-            if ((previous && body.mRecord <= *previous)
-                || body.mRecord > std::numeric_limits<std::int32_t>::max()
-                || body.mNodeRecord > std::numeric_limits<std::int32_t>::max()
-                || !nodes.insert(body.mNodeRecord).second)
-                throw std::runtime_error("Invalid TES4 ragdoll body identity or order");
-            previous = body.mRecord;
-            for (float component : body.mRotation)
-                if (!std::isfinite(component))
-                    throw std::runtime_error("Nonfinite TES4 ragdoll rotation");
-            for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
-                for (float component : vector)
-                    if (!std::isfinite(component))
-                        throw std::runtime_error("Nonfinite TES4 ragdoll position or velocity");
-            const auto& r = body.mRotation;
-            for (unsigned row = 0; row < 3; ++row)
-                for (unsigned other = row; other < 3; ++other)
-                {
-                    double dot = 0;
-                    for (unsigned column = 0; column < 3; ++column)
-                        dot += double(r[row * 3 + column]) * r[other * 3 + column];
-                    if (std::abs(dot - (row == other ? 1.0 : 0.0)) > 1e-4)
-                        throw std::runtime_error("Nonrigid TES4 ragdoll rotation");
-                }
-            const double determinant = double(r[0]) * (double(r[4]) * r[8] - double(r[5]) * r[7])
-                - double(r[1]) * (double(r[3]) * r[8] - double(r[5]) * r[6])
-                + double(r[2]) * (double(r[3]) * r[7] - double(r[4]) * r[6]);
-            if (std::abs(determinant - 1.0) > 1e-4)
-                throw std::runtime_error("Improper TES4 ragdoll rotation");
-        }
+        const auto nodes = validatePhysicalBodies(mBase, mModel, mAssetHash, mBodies);
         if (mWorldRegistration)
         {
             const auto canonical = [](const std::vector<std::uint32_t>& records) {
@@ -1120,6 +1147,17 @@ namespace ESM4
         if (mVersion < 23 && !mNativeAnimationClocks.empty())
             throw std::runtime_error("TES4 animation clocks require runtime-state version23");
         checkSize(mNativeActorKnockback.size(), "native actor knockback list");
+        checkSize(mNativeLooseWeapons.size(), "native loose weapon list");
+        if (mVersion < 53 && !mNativeLooseWeapons.empty())
+            throw std::runtime_error("TES4 loose weapon physics requires runtime-state version53");
+        for (const auto& [reference, weapon] : mNativeLooseWeapons)
+        {
+            weapon.validate();
+            const auto owner = actorBases.find(reference);
+            if (reference.isNull() || owner == actorBases.end() || owner->second != weapon.mBase
+                || nativeActors.contains(reference) || reference == mPlayer.mReference)
+                throw std::runtime_error("Dangling, actor or mismatched TES4 loose weapon owner");
+        }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
             throw std::runtime_error("TES4 actor ragdolls require runtime-state version31");
@@ -2236,6 +2274,35 @@ namespace ESM4
         }
         if (mVersion >= 42)
             Detail::CrimeBinaryWriter<BinaryWriter>{writer, mVersion}.write(mNativeCrime);
+        if (mVersion >= 53)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeLooseWeapons.size()));
+            for (const auto& [reference, weapon] : mNativeLooseWeapons)
+            {
+                writeKey(writer, reference);
+                writeKey(writer, weapon.mBase);
+                writer.string(weapon.mModel);
+                writer.string(weapon.mAssetHash);
+                writer.floating(weapon.mPhysicalScale);
+                writer.integer(weapon.mSceneCollisionFlags);
+                const auto& body = weapon.mBody;
+                writer.integer(body.mRecord);
+                writer.integer(body.mNodeRecord);
+                for (float value : body.mRotation) writer.floating(value);
+                for (const auto& vector : {body.mPosition, body.mLinearVelocity, body.mAngularVelocity})
+                    for (float value : vector) writer.floating(value);
+                for (const auto& vector : {body.mNativePackedVelocity->mLinear, body.mNativePackedVelocity->mAngular})
+                    for (float value : vector) writer.floating(value);
+                writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*body.mNativeMotion));
+                writer.integer<std::uint8_t>(weapon.mRootLocal.has_value());
+                if (weapon.mRootLocal)
+                {
+                    for (float value : weapon.mRootLocal->mRotation) writer.floating(value);
+                    for (float value : weapon.mRootLocal->mPosition) writer.floating(value);
+                    writer.floating(weapon.mRootLocal->mScale);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -3179,6 +3246,41 @@ namespace ESM4
         }
         if (result.mVersion >= 42)
             Detail::CrimeBinaryReader<BinaryReader>{reader, result.mVersion}.read(result.mNativeCrime);
+        if (result.mVersion >= 53)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto reference = readKey(reader);
+                RuntimeLooseWeapon weapon;
+                weapon.mBase = readKey(reader);
+                weapon.mModel = reader.string();
+                weapon.mAssetHash = reader.string();
+                weapon.mPhysicalScale = reader.float32();
+                weapon.mSceneCollisionFlags = reader.integer<std::uint16_t>();
+                auto& body = weapon.mBody;
+                body.mRecord = reader.integer<std::uint32_t>();
+                body.mNodeRecord = reader.integer<std::uint32_t>();
+                for (float& value : body.mRotation) value = reader.float32();
+                for (auto* vector : {&body.mPosition, &body.mLinearVelocity, &body.mAngularVelocity})
+                    for (float& value : *vector) value = reader.float32();
+                body.mNativePackedVelocity.emplace();
+                for (auto* vector : {&body.mNativePackedVelocity->mLinear, &body.mNativePackedVelocity->mAngular})
+                    for (float& value : *vector) value = reader.float32();
+                body.mNativeMotion = static_cast<RuntimeRagdollMotion>(reader.integer<std::uint8_t>());
+                const auto root = reader.integer<std::uint8_t>();
+                if (root > 1) throw std::runtime_error("Invalid TES4 loose weapon root marker");
+                if (root)
+                {
+                    weapon.mRootLocal.emplace();
+                    for (float& value : weapon.mRootLocal->mRotation) value = reader.float32();
+                    for (float& value : weapon.mRootLocal->mPosition) value = reader.float32();
+                    weapon.mRootLocal->mScale = reader.float32();
+                }
+                if (!result.mNativeLooseWeapons.emplace(std::move(reference), std::move(weapon)).second)
+                    throw std::runtime_error("Duplicate TES4 loose weapon reference");
+            }
+        }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -4157,6 +4259,50 @@ namespace ESM4
             stream << ",\"native_crime\":";
             const auto quote = [](std::string_view value) { return '"' + escapeJson(value) + '"'; };
             Detail::CrimeJsonWriter<decltype(quote)>{stream, quote}.write(mNativeCrime);
+        }
+        if (mVersion >= 53)
+        {
+            const auto scalar = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            const auto vector = [&](const auto& values) {
+                stream << '[';
+                for (std::size_t i = 0; i < values.size(); ++i)
+                { if (i) stream << ','; scalar(values[i]); }
+                stream << ']';
+            };
+            stream << ",\"native_loose_weapons\":[";
+            bool first = true;
+            for (const auto& [reference, weapon] : mNativeLooseWeapons)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"reference\":\"" << escapeJson(reference.serialize())
+                    << "\",\"base\":\"" << escapeJson(weapon.mBase.serialize())
+                    << "\",\"model\":\"" << escapeJson(weapon.mModel)
+                    << "\",\"asset_hash\":\"" << weapon.mAssetHash << "\",\"physical_scale\":";
+                scalar(weapon.mPhysicalScale);
+                stream << ",\"scene_collision_flags\":" << weapon.mSceneCollisionFlags;
+                const auto& body = weapon.mBody;
+                stream << ",\"body\":{\"record\":" << body.mRecord << ",\"node_record\":" << body.mNodeRecord
+                    << ",\"rotation\":"; vector(body.mRotation);
+                stream << ",\"position\":"; vector(body.mPosition);
+                stream << ",\"linear_velocity\":"; vector(body.mLinearVelocity);
+                stream << ",\"angular_velocity\":"; vector(body.mAngularVelocity);
+                stream << ",\"native_packed_velocity\":{\"linear\":"; vector(body.mNativePackedVelocity->mLinear);
+                stream << ",\"angular\":"; vector(body.mNativePackedVelocity->mAngular);
+                stream << "},\"native_motion\":" << static_cast<unsigned>(*body.mNativeMotion) << '}';
+                if (weapon.mRootLocal)
+                {
+                    stream << ",\"root_local\":{\"rotation\":"; vector(weapon.mRootLocal->mRotation);
+                    stream << ",\"position\":"; vector(weapon.mRootLocal->mPosition);
+                    stream << ",\"scale\":"; scalar(weapon.mRootLocal->mScale);
+                    stream << '}';
+                }
+                stream << '}';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();
