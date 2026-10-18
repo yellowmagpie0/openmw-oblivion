@@ -5300,3 +5300,13 @@ Full normal and ASan/UBSan component runs each pass 2,853 tests in 271 suites wi
 Tested source fingerprint: `53ec5125cb87b29953ce27608cc829a780346f6aa2d56f859f826b5179581209`. Detailed hashes and boundaries are in `prepared_world_registration_batch_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Engine and Python checks were not repeated for this World primitive.
 
 The actor graph adapter, composite filter publication, owned counter/remembered-World state, external collision routing and persistence remain open. Save version remains 50. No new normal-input fork course or restart acceptance is claimed; full M15S4 remains open.
+
+### Ordered native registration publication in retained actors
+
+ActorRagdollPhysics now retains authored body-associated constraint order and prepares native registration requests using its actual owned blend gains, current filters/membership and explicit caller counter/override/remembered-World contexts. It stages the ordered World batch and final internal filter replacements together. Validation checks both against the same source before releasing anything; commit publishes actual World changes, mask decisions, activation groups and logical selection under the exclusive barrier. Old contacts, handles and filters survive failed/discarded admission. The public standalone filter guards remain strict.
+
+Full normal and ASan/UBSan runs each pass 2,859 component tests in 272 suites and 1,634 engine tests in 122 suites, without skips or failures. Both engines were rebuilt. The actual actor corpus publisher passes 14,144 completed native-derived plans per configuration, including 124 remove/re-add cases and 1,596 changed internal pair decisions. Another 256 bounded plans reject before admission. Original synthetic low-word layers0x30..32 are explicitly normalized to supported layer8/bone indices while preserving upper words and graph inputs; this is not native physical filter parity. The sanitizer driver links instrumented components and Bullet, with leak checks disabled.
+
+Tested source fingerprint: `bb4232da5b9de427f811e28ab6e8d1697875eab83f385a3f699a1a5a825b432f`. `ordered_actor_registration_publication_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json` records source/binary/evidence hashes and exact boundaries.
+
+Authoritative counter/remembered-World ownership, external World filter routing, saved fields and automatic caller/scene/reaction/GetUp integration remain open. Save version remains 50. No new normal-input or fresh-process gameplay acceptance is claimed, and full M15S4 remains open.

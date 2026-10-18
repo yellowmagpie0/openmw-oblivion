@@ -6,6 +6,7 @@
 #include "ragdollvelocity.hpp"
 
 #include <components/esm4/physicalblendsettings.hpp>
+#include <components/esm4/physicalregistration.hpp>
 #include <components/esm4/physicalvelocitycontroller.hpp>
 #include <components/esm4/physicalsceneworld.hpp>
 #include <components/nif/nativetransform.hpp>
@@ -304,6 +305,16 @@ namespace NifBullet
         std::uint32_t mRequestedMotion = 8;
     };
 
+    // Caller-resolved state belonging to the actual mapped blend/World owner.
+    // Gains come from this graph's current owned blend targets. These fields
+    // have no inferred defaults and are not yet persisted by this layer.
+    struct RagdollNativeRegistrationContext
+    {
+        std::uint32_t mBodyRecord;
+        std::int32_t mCounter;
+        bool mRegistrationOverride, mHasRememberedWorldOwner;
+    };
+
     struct RagdollWorldRegistration
     {
         std::vector<std::uint32_t> mBodies;
@@ -407,6 +418,39 @@ namespace NifBullet
         // invalidate algorithms only for pairs whose native mask decision
         // changed, using World's normal nonthrowing cleanup contract.
         bool commitInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept;
+
+        class PreparedNativeRegistration
+        {
+        public:
+            ~PreparedNativeRegistration();
+            PreparedNativeRegistration(const PreparedNativeRegistration&) = delete;
+            PreparedNativeRegistration& operator=(const PreparedNativeRegistration&) = delete;
+            // Retained after commit for the caller's own state publication.
+            const ESM4::PhysicalRegistrationGraphPlan& plan() const noexcept;
+        private:
+            friend class ActorRagdollPhysics;
+            struct Data;
+            explicit PreparedNativeRegistration(std::unique_ptr<Data> data);
+            std::unique_ptr<Data> mData;
+        };
+        // Published NativeDynamicsWorld and configured internal mask policy.
+        // Use retained authored association order and current mapped gains,
+        // plus complete body-ordered explicit counter/owner contexts. Repeated
+        // requests remain ordered; no closure or final-set shortcut is used.
+        // One desired World, all wrappers present, native gates/queues zero.
+        std::unique_ptr<PreparedNativeRegistration> prepareNativeRegistrationRequests(
+            std::span<const std::uint32_t> bodyRecords,
+            std::span<const RagdollNativeRegistrationContext> contexts,
+            std::size_t operationLimit = 4096) const;
+        bool validateNativeRegistration(const PreparedNativeRegistration& prepared) const noexcept;
+        // Exclusive World barrier through admission/commit/rollback, including
+        // queries. Admission preserves old membership, filters and contacts.
+        void admitNativeRegistration(PreparedNativeRegistration& prepared);
+        void rollbackNativeRegistration(PreparedNativeRegistration& prepared) noexcept;
+        // Prevalidate all owners before committing any. Publish actual ordered
+        // World changes, final internal filters, activation groups and logical
+        // selection together. External World filter routing is separate.
+        bool commitNativeRegistration(PreparedNativeRegistration& prepared) noexcept;
 
         // Borrowed identities for engine collision routing; ownership stays here.
         std::span<btCollisionObject* const> collisionObjects() const;
@@ -634,6 +678,9 @@ namespace NifBullet
         void stepNativeKeyframedMotion(float frameSeconds);
 
     private:
+        bool validateInternalCollisionFilters(const PreparedInternalCollisionFilters& prepared,
+            const std::shared_ptr<const char>& allowedPending) const noexcept;
+        void publishInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept;
         struct NativeControllerFrame;
         struct NativeForce;
         NativeControllerFrame prepareNativeControllerFrame(

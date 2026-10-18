@@ -4369,5 +4369,165 @@
       "Raw World operations only: the retained actor planner adapter, composite internal filter publication, actual counter/remembered owner state, external World filter routing and persistence still need integration.",
       "All automatic contact/FSM/GetUp and remaining full M15S4 acceptance gates remain open."
     ]
+  },
+  "ordered_actor_registration_publication_followup": {
+    "post_test_changes": [
+      "Evidence index and delivery audit only; production and test sources remain unchanged after the checks."
+    ],
+    "status": "Retained actor graph publishes ordered native registration and final internal filter decisions atomically under the World barrier; authoritative counter/owner integration and persistence remain open",
+    "source": {
+      "head": "0a09828145fbd588b703fa73ab92bacca94b9b18",
+      "source_fingerprint": "bb4232da5b9de427f811e28ab6e8d1697875eab83f385a3f699a1a5a825b432f"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "2ebf9eb5ce88a6431a3e8701858863aa92b5e8358b73859a01843132614e0232",
+      "components/nifbullet/actorragdollphysics.cpp": "c3b445fba977755098f3e5bd12b45ac4f41c14aea9fce44bfd6e0bfcd2478ae0",
+      "apps/components_tests/nifloader/testorderedragdollregistration.cpp": "5c1c1676eaa4617a3171d0d192a8b9dcb12dab0d20c0ffff911bd707960bf94e",
+      "apps/components_tests/CMakeLists.txt": "2713b4009cc83af372f4f6fa6f08c4cb4727023b633e0d0331322ac03db1a1af"
+    },
+    "changes": [
+      "Retain each authored body-associated constraint list as source-ordered indices, preserving shared/repeated references and rejecting unknown, ambiguous and nonincident associations.",
+      "prepareNativeRegistrationRequests uses actual current owned mapped blend gains, current membership and internal filter words, retained source associations and complete explicit caller counter/override/remembered-World contexts. It invokes the existing independent-oracle-verified immutable planner. No context defaults are inferred.",
+      "Translate lower body-removal request events into incident constraint removals before the body; retain all ordered remove/re-add operations. Stage NativeDynamicsWorld provisional proxies, final internal mask replacements, activation groups and logical selection.",
+      "Validate source body/proxy/membership state, filter/registration generations, ignore lists and full owned blend snapshots together. Admission preserves old contacts/filters/selection; late failure and discard roll back. Commit publishes the prevalidated World/filter/selection transition without weakening public stale guards.",
+      "Prepared plan remains inspectable after commit so the actual caller can publish its own resolved owner state. Tokens may outlive owner and World destruction."
+    ],
+    "component_cases": [
+      "CompositePublicationRetainsReadmissionAndAppliesInheritedInternalFilter",
+      "ExplicitCounterAndOverridePreventGainRemovalAndListsStayDirected",
+      "LaterOwnerFailureRollsBackWithoutPublishingEarlierOwner",
+      "StaleBlendPoseMembershipAndIgnoreStateRejectBeforeRelease",
+      "MalformedInputsAndTraversalBoundsLeavePublishedOwnerUntouched",
+      "PreparedAndAdmittedHandlesOutliveActorAndWorld"
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/ordered-actor-publication-normal-01/verification.json",
+        "report_sha256": "55d4cfa4691f01fd5059891aec49b50b4933978b1363bc3f6dbd2760042b5cc1",
+        "source": {
+          "head": "0a09828145fbd588b703fa73ab92bacca94b9b18",
+          "source_fingerprint": "bb4232da5b9de427f811e28ab6e8d1697875eab83f385a3f699a1a5a825b432f"
+        },
+        "results": {
+          "components": {
+            "executed": 2859,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "a579f9d28fee1355b251425016ef46852242318bf4535fb78ddba471e5cc59f5",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "59e1d8d41288b4708aaf2a2cdc011d88f28be53222b43f0f36c2ab01d6a8b967",
+            "inventory_sha256": "6d31c0e0ea4ece292173ac6bf2aae033b9438cbb189e7f18325b1bea7c8fa872",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3a962942102635d581c0e450fbfd1a6c803820c0adb47911a708fea9746192a6",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "d91bb87a4e8551be38e08ab7636667fa70f524200184c32401a88a672ded5caf",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "d9c6aa8b0c30bc53abf66857e929363d7f63d862abaecca564c21c54bde8cd56"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/ordered-actor-publication-sanitized-01/verification.json",
+        "report_sha256": "182aecabfdda18dba5999af269321cbb45dac9fec8b547e7f31c71b578c6e1a8",
+        "source": {
+          "head": "0a09828145fbd588b703fa73ab92bacca94b9b18",
+          "source_fingerprint": "bb4232da5b9de427f811e28ab6e8d1697875eab83f385a3f699a1a5a825b432f"
+        },
+        "results": {
+          "components": {
+            "executed": 2859,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1c4661f7e8d5c9fb1b1e4599c0b1b707304a88ab0f9decfd355f16d1df06e2c7",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "d01ce46d6a20f794fcbe472ce82b351f0ec9a88f2f009f30865690fdefdc665b",
+            "inventory_sha256": "277d4efbcdcddbcc12c6967712e41efc0492ed0d4c3c22c038cf09a0affe603a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c8ba9b2005ebdc6cc5c1e12d9236481acddc4900e88a8fdf99f3f75b4f8adafe",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c0b3c02b6fc2f07265da1f20816082ae4f6ddd492a17baa85260816746a1176f",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "ee292ea8d2eeccdf9ee56141e96248dc5925ac73dbf24ff6164ebdd67a6440b3"
+      }
+    },
+    "corpus_report": "build/oblivion-compat/m15/S4/ordered-actor-corpus-02/report.json",
+    "corpus_report_sha256": "cc4ba7cf3355e84778255a1c4b8e18e9e282755bd047ee4fb8e4dd8b368ddb76",
+    "corpus_counts": {
+      "completed_actor_plans_each": 14144,
+      "readmission_cases_each": 124,
+      "changed_internal_pair_decisions_each": 1596,
+      "bounded_guard_cases_each": 256
+    },
+    "normalization": "Original synthetic low words0x30..32 exceed the verified internal layer domain. For each body i, use layer8 and bone i: (original_word & 0xffff0000) | (i<<8) | 8. Keep all upper words, graph associations, gains, counter/override/remembered state and requests. The explicit fixture policy allows all layers and disables every equal-group bone pair. For textual comparison only, restore each body's original low word in final words and BodyAdded event words. This is a declared supported filter fixture, not native physical filter parity.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "reviewed_build_warnings": [
+      "Both engine builds report existing unused context and dangling-else warnings in unchanged apps/openmw_tests/mwworld/testoblivionworld.cpp at15723 and19764. No compiler warnings in changed production/tests."
+    ],
+    "native_rule_provenance": "Reuse the already independently verified native-associated-registration-static-04 corpus and preparePhysicalRegistrationGraph rule. No new original-game probe or newly inferred native counter/owner lifetime rule.",
+    "validation_scope": "Actual retained actor/Bullet publication plus full normal/instrumented component and engine builds/tests. Structural/compiler and semantic physical checks pass; no new normal-input gameplay or fresh-process restart acceptance.",
+    "limits": [
+      "Published NativeDynamicsWorld, configured native internal mask policy, one desired World, wrappers present and native operation gates/queues zero. Hold the exclusive barrier including queries and prevalidate all owners before committing any.",
+      "Counter, override and remembered-World fields are explicit caller-owned contexts. Authoritative ownership, constructor/load initialization, automatic counter/scene requests and persistence are not implemented by this layer. Save version remains50.",
+      "Internal mask policy only. Per-admission native packed words are retained in the plan, but external World collision group/routing and group allocation are separate required integration; Bullet groups remain the graph's configured group/mask.",
+      "Gameplay still needs automatic contact/reaction/GetUp and all remaining full S4 melee/mastery/effects/drop, normal-input view/device/FPS/interruption and fresh-process recovery gates.",
+      "Python and original-game probes were not rerun; there are no schema or native-rule changes."
+    ]
   }
 }

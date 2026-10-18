@@ -371,6 +371,7 @@ namespace NifBullet
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
         std::vector<std::uint32_t> mConstraintRecords;
         std::vector<std::pair<std::size_t, std::size_t>> mConstraintEndpoints;
+        std::vector<std::vector<std::size_t>> mAssociatedConstraints;
         std::vector<unsigned char> mRegisteredBodies, mRegisteredConstraints;
         std::vector<unsigned char> mSelectedBodies, mSelectedConstraints;
         std::optional<RagdollCollisionFilter> mInternalMasks;
@@ -1261,6 +1262,23 @@ namespace NifBullet
             constraint->setLimit(hinge->mMin, hinge->mMax);
             mImpl->mConstraints.push_back(std::move(constraint));
         }
+        // Preserve source list order, shared references and repetitions. Do
+        // not synthesize a body's associated list from incident endpoints.
+        for (std::size_t i = 0; i < definition.mBodies.size(); ++i)
+        {
+            auto& associated = mImpl->mAssociatedConstraints.emplace_back();
+            for (const auto record : definition.mBodies[i].mAssociatedConstraints)
+            {
+                const auto found = std::find(mImpl->mConstraintRecords.begin(), mImpl->mConstraintRecords.end(), record);
+                require(found != mImpl->mConstraintRecords.end(), "unknown associated constraint");
+                require(std::count(mImpl->mConstraintRecords.begin(), mImpl->mConstraintRecords.end(), record) == 1,
+                    "ambiguous associated constraint identity");
+                const auto index = std::size_t(found - mImpl->mConstraintRecords.begin());
+                const auto [a, b] = mImpl->mConstraintEndpoints[index];
+                require(a == i || b == i, "nonincident associated constraint");
+                associated.push_back(index);
+            }
+        }
         if (internalFilter)
         {
             mImpl->mInternalMasks = internalFilter->mMasks;
@@ -1672,10 +1690,16 @@ namespace NifBullet
 
     bool ActorRagdollPhysics::validateInternalCollisionFilters(const PreparedInternalCollisionFilters& prepared) const noexcept
     {
+        return validateInternalCollisionFilters(prepared, {});
+    }
+
+    bool ActorRagdollPhysics::validateInternalCollisionFilters(const PreparedInternalCollisionFilters& prepared,
+        const std::shared_ptr<const char>& allowedPending) const noexcept
+    {
         const auto* data = prepared.mData.get();
         if (!data || data->mLifetime.expired() || data->mOwner != this || data->mImpl != mImpl.get()
             || data->mLifetime.lock() != mImpl->mLifetime || !mImpl->worldAlive()
-            || !mImpl->mPendingRegistration.expired()
+            || mImpl->mPendingRegistration.lock() != allowedPending
             || data->mExpectedFilters.lock() != mImpl->mInternalFilterGeneration
             || data->mExpectedRegistration.lock() != mImpl->mRegistrationGeneration) return false;
         for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
@@ -1692,6 +1716,12 @@ namespace NifBullet
     bool ActorRagdollPhysics::commitInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept
     {
         if (!validateInternalCollisionFilters(prepared)) return false;
+        publishInternalCollisionFilters(prepared);
+        return true;
+    }
+
+    void ActorRagdollPhysics::publishInternalCollisionFilters(PreparedInternalCollisionFilters& prepared) noexcept
+    {
         auto& data = *prepared.mData;
         for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
             static_cast<RagdollRigidBody&>(*mImpl->mBodies[i].mBody).replaceCollisionIgnores(data.mReplacementIgnores[i]);
@@ -1711,6 +1741,191 @@ namespace NifBullet
                     cache->cleanOverlappingPair(*pair, mImpl->mWorld.getDispatcher());
         }
         prepared.mData.reset();
+    }
+
+    struct ActorRagdollPhysics::PreparedNativeRegistration::Data
+    {
+        ActorRagdollPhysics* mOwner = nullptr;
+        Impl* mImpl = nullptr;
+        std::weak_ptr<const char> mLifetime, mExpected;
+        std::shared_ptr<const char> mNext = std::make_shared<const char>();
+        NativeDynamicsWorld* mWorld = nullptr;
+        std::unique_ptr<NativeDynamicsWorld::PreparedRegistrationBatch> mBatch;
+        std::unique_ptr<PreparedInternalCollisionFilters> mFilters;
+        ESM4::PhysicalRegistrationGraphPlan mPlan;
+        std::vector<Impl::BlendTarget> mExpectedBlends;
+        std::vector<unsigned char> mBodies, mConstraints;
+        Impl::ActivationGroups mGroups;
+        bool mAdmitted = false, mConsumed = false;
+    };
+
+    ActorRagdollPhysics::PreparedNativeRegistration::PreparedNativeRegistration(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+
+    ActorRagdollPhysics::PreparedNativeRegistration::~PreparedNativeRegistration()
+    {
+        if (mData->mAdmitted && !mData->mLifetime.expired())
+            mData->mOwner->rollbackNativeRegistration(*this);
+    }
+
+    const ESM4::PhysicalRegistrationGraphPlan& ActorRagdollPhysics::PreparedNativeRegistration::plan() const noexcept
+    {
+        return mData->mPlan;
+    }
+
+    std::unique_ptr<ActorRagdollPhysics::PreparedNativeRegistration>
+    ActorRagdollPhysics::prepareNativeRegistrationRequests(std::span<const std::uint32_t> bodyRecords,
+        std::span<const RagdollNativeRegistrationContext> contexts, std::size_t operationLimit) const
+    {
+        require(mImpl->worldAlive() && mImpl->mPublished && mImpl->mNativeWorld && mImpl->mInternalMasks
+                && mImpl->mPendingRegistration.expired() && contexts.size() == mImpl->mBodies.size(),
+            "unavailable ordered native registration");
+        require(mImpl->mSelectedBodies == mImpl->mRegisteredBodies
+                && mImpl->mSelectedConstraints == mImpl->mRegisteredConstraints,
+            "inconsistent published native registration");
+        auto data = std::make_unique<PreparedNativeRegistration::Data>();
+        data->mOwner = const_cast<ActorRagdollPhysics*>(this); data->mImpl = mImpl.get();
+        data->mLifetime = mImpl->mLifetime; data->mExpected = mImpl->mRegistrationGeneration;
+        data->mWorld = static_cast<NativeDynamicsWorld*>(&mImpl->mWorld);
+        data->mExpectedBlends = mImpl->mBlendTargets;
+        ESM4::PhysicalRegistrationGraph graph;
+        std::vector<btRigidBody*> bodies;
+        std::vector<btTypedConstraint*> constraints;
+        std::unordered_set<std::uint32_t> constraintRecords;
+        for (const auto record : mImpl->mConstraintRecords)
+            require(constraintRecords.insert(record).second, "ambiguous native constraint identity");
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+        {
+            const auto& owned = mImpl->mBodies[i];
+            const auto& context = contexts[i];
+            require(context.mBodyRecord == owned.mRecord, "native registration context order");
+            ESM4::PhysicalRegistrationBody body;
+            body.mRegistered = mImpl->mRegisteredBodies[i];
+            body.mPackedFilter = mImpl->mInternalFilterWords[i];
+            body.mHasRememberedWorldOwner = context.mHasRememberedWorldOwner;
+            body.mAssociatedConstraints = mImpl->mAssociatedConstraints[i];
+            const auto target = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+                [&](const auto& value) { return value.mState.mBodyRecord == owned.mRecord; });
+            if (target != mImpl->mBlendTargets.end())
+                body.mBlend = ESM4::PhysicalBodyBlendRegistration{target->mState.mGains.mHierarchy,
+                    target->mState.mGains.mVelocity, context.mCounter, context.mRegistrationOverride};
+            graph.mBodies.push_back(std::move(body)); bodies.push_back(owned.mBody.get());
+        }
+        for (std::size_t i = 0; i < mImpl->mConstraints.size(); ++i)
+        {
+            const auto [a, b] = mImpl->mConstraintEndpoints[i];
+            graph.mConstraints.push_back({a, b, bool(mImpl->mRegisteredConstraints[i])});
+            constraints.push_back(mImpl->mConstraints[i].get());
+        }
+        std::vector<std::size_t> requests;
+        for (const auto record : bodyRecords)
+        {
+            const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == record; });
+            require(found != mImpl->mBodies.end(), "unknown native registration request body");
+            requests.push_back(std::size_t(found - mImpl->mBodies.begin()));
+        }
+        data->mPlan = ESM4::preparePhysicalRegistrationGraph(graph, requests, operationLimit);
+        std::vector<RagdollInternalBodyFilter> filters;
+        for (std::size_t i = 0; i < bodies.size(); ++i)
+        {
+            const auto& body = data->mPlan.mGraph.mBodies[i];
+            data->mBodies.push_back(body.mRegistered);
+            filters.push_back({mImpl->mBodies[i].mRecord, body.mPackedFilter});
+        }
+        for (const auto& constraint : data->mPlan.mGraph.mConstraints)
+            data->mConstraints.push_back(constraint.mRegistered);
+        data->mGroups = mImpl->prepareActivationGroups(data->mConstraints);
+        data->mFilters = prepareInternalCollisionFilters(filters);
+        using Kind = NativeDynamicsWorld::RegistrationKind;
+        using Event = ESM4::PhysicalRegistrationEventKind;
+        std::vector<NativeDynamicsWorld::RegistrationOperation> operations;
+        auto selectedConstraints = mImpl->mRegisteredConstraints;
+        for (const auto& event : data->mPlan.mEvents)
+        {
+            if (event.mKind == Event::BodyRemoved)
+            {
+                // The trace marks the lower removal request before its nested
+                // incident effects. Bullet must release those joints first.
+                for (std::size_t i = 0; i < constraints.size(); ++i)
+                {
+                    const auto [a, b] = mImpl->mConstraintEndpoints[i];
+                    if (selectedConstraints[i] && (a == event.mIndex || b == event.mIndex))
+                    {
+                        operations.push_back({Kind::RemoveConstraint, nullptr, constraints[i]});
+                        selectedConstraints[i] = 0;
+                    }
+                }
+                operations.push_back({Kind::RemoveBody, bodies[event.mIndex]});
+            }
+            else if (event.mKind == Event::BodyAdded)
+                operations.push_back({Kind::AddBody, bodies[event.mIndex], nullptr,
+                    mImpl->mCollisionGroup, mImpl->mCollisionMask});
+            else if (event.mKind == Event::ConstraintAdded)
+            {
+                operations.push_back({Kind::AddConstraint, nullptr, constraints[event.mIndex]});
+                selectedConstraints[event.mIndex] = 1;
+            }
+        }
+        data->mBatch = data->mWorld->prepareRegistrationBatch(this, bodies, constraints, operations);
+        return std::unique_ptr<PreparedNativeRegistration>(new PreparedNativeRegistration(std::move(data)));
+    }
+
+    bool ActorRagdollPhysics::validateNativeRegistration(const PreparedNativeRegistration& prepared) const noexcept
+    {
+        const auto& data = *prepared.mData;
+        if (data.mConsumed || data.mOwner != this || data.mImpl != mImpl.get() || data.mLifetime.expired()
+            || data.mLifetime.lock() != mImpl->mLifetime || !mImpl->worldAlive() || !mImpl->mPublished
+            || data.mExpected.lock() != mImpl->mRegistrationGeneration
+            || !validateInternalCollisionFilters(*data.mFilters, data.mAdmitted ? data.mNext : nullptr)
+            || !data.mWorld->validateRegistrationBatch(*data.mBatch)
+            || data.mExpectedBlends.size() != mImpl->mBlendTargets.size()) return false;
+        for (std::size_t i = 0; i < data.mExpectedBlends.size(); ++i)
+        {
+            const auto& a = data.mExpectedBlends[i]; const auto& b = mImpl->mBlendTargets[i];
+            if (a.mNode != b.mNode || a.mState.mBodyRecord != b.mState.mBodyRecord
+                || a.mState.mCollisionFlags != b.mState.mCollisionFlags
+                || a.mState.mRequestedMotion != b.mState.mRequestedMotion
+                || a.mState.mGains.mHierarchy != b.mState.mGains.mHierarchy
+                || a.mState.mGains.mVelocity != b.mState.mGains.mVelocity) return false;
+        }
+        return true;
+    }
+
+    void ActorRagdollPhysics::admitNativeRegistration(PreparedNativeRegistration& prepared)
+    {
+        require(validateNativeRegistration(prepared), "stale ordered native registration");
+        auto& data = *prepared.mData;
+        if (data.mAdmitted) return;
+        data.mWorld->admitRegistrationBatch(*data.mBatch);
+        data.mAdmitted = true; mImpl->mPendingRegistration = data.mNext;
+    }
+
+    void ActorRagdollPhysics::rollbackNativeRegistration(PreparedNativeRegistration& prepared) noexcept
+    {
+        auto& data = *prepared.mData;
+        if (!data.mAdmitted || data.mOwner != this || data.mLifetime.expired()
+            || data.mLifetime.lock() != mImpl->mLifetime) return;
+        if (mImpl->worldAlive()) data.mWorld->rollbackRegistrationBatch(*data.mBatch);
+        if (mImpl->mPendingRegistration.lock() == data.mNext) mImpl->mPendingRegistration.reset();
+        data.mAdmitted = false;
+    }
+
+    bool ActorRagdollPhysics::commitNativeRegistration(PreparedNativeRegistration& prepared) noexcept
+    {
+        if (!validateNativeRegistration(prepared) || !prepared.mData->mAdmitted) return false;
+        auto& data = *prepared.mData;
+        if (!data.mWorld->commitRegistrationBatch(*data.mBatch)) return false;
+        // Both tokens were validated together against the old registration.
+        // Publish this transaction's own transition without weakening any
+        // public stale-filter guard or revalidating after irreversible release.
+        publishInternalCollisionFilters(*data.mFilters);
+        std::copy(data.mBodies.begin(), data.mBodies.end(), mImpl->mRegisteredBodies.begin());
+        std::copy(data.mConstraints.begin(), data.mConstraints.end(), mImpl->mRegisteredConstraints.begin());
+        mImpl->mSelectedBodies.swap(data.mBodies); mImpl->mSelectedConstraints.swap(data.mConstraints);
+        mImpl->commitActivationGroups(std::move(data.mGroups));
+        mImpl->mRegistrationGeneration.swap(data.mNext);
+        mImpl->mPendingRegistration.reset(); data.mAdmitted = false; data.mConsumed = true;
         return true;
     }
 
