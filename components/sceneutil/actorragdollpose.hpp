@@ -86,6 +86,18 @@ namespace SceneUtil
         void applyWorldBones(std::span<const NifBullet::RagdollBoneWorldPose> poses,
             const Nif::NiTransform& objectWorld);
 
+        // Actual live child-slot preorder, independent of body/record order.
+        std::vector<std::uint32_t> bodyNodeOrder() const;
+        // One settled native actor frame after animation callbacks. Missing
+        // scene targets keep animated locals; bit0 gates physical reads and
+        // bit8 alone authorizes local writeback. Pending0x40 needs its separate
+        // first-synchronization owner. All projections are prepared before any
+        // write. Return exact native world bones; traversal projections preserve
+        // world-only writes independently of author/controller locals.
+        std::vector<NifBullet::RagdollBoneWorldPose> applyNativeFrame(
+            std::span<const NifBullet::RagdollNativeBlendPublication> publications,
+            const Nif::NiTransform& objectWorld);
+
     private:
         struct Impl;
         std::unique_ptr<Impl> mImpl;

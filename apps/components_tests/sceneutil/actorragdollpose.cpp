@@ -67,6 +67,100 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPoseTest, NativeFrameWorldOnlyProjectionPreservesLocalsAndUsesPhysicalParent)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        const auto before = binding.captureLocalPose();
+        auto invalid = osg::Matrixf::identity(); invalid(0, 0) = std::numeric_limits<float>::quiet_NaN();
+        const std::array<NifBullet::RagdollNativeBlendPublication, 2> frame{{
+            {30, 0, invalid}, {12, 1, osg::Matrixf::translate(120, 0, 0)}}};
+        const auto result = binding.applyNativeFrame(frame, placement);
+        ASSERT_EQ(result.size(), 2u);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(121, 2, 0));
+        EXPECT_EQ(result[1].mPose.getTrans(), osg::Vec3f(120, 0, 0));
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10, 0, 0));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(1, 0, 0));
+        EXPECT_EQ(osg::computeLocalToWorld({mRoot.get(), mPelvis.get()}).getTrans(), osg::Vec3d(120, 0, 0));
+        EXPECT_EQ(osg::computeLocalToWorld({mRoot.get(), mPelvis.get(), mConnector.get(), mHand.get()}).getTrans(), osg::Vec3d(121, 2, 0));
+        EXPECT_EQ(binding.captureWorldBones(placement)[0].mPose.getTrans(), osg::Vec3f(111, 2, 0));
+        binding.restoreLocalPose(before);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        EXPECT_FALSE(mPelvis->getTraversalMatrix().getMatrix());
+        EXPECT_FALSE(mHand->getTraversalMatrix().getMatrix());
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativeFrameLocalWritebackUsesUpdatedParentsAndValidatesBeforeWrites)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        std::array<NifBullet::RagdollNativeBlendPublication, 2> frame{{
+            {30, 9, osg::Matrixf::translate(120, 5, 0)}, {12, 9, osg::Matrixf::translate(120, 0, 0)}}};
+        const auto result = binding.applyNativeFrame(frame, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(120, 5, 0));
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(20, 0, 0));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(0, 3, 0));
+        EXPECT_EQ(mPelvis->mScale, 1); EXPECT_EQ(mHand->mScale, 1);
+        const auto before = binding.captureLocalPose();
+        frame[1].mSceneTarget = osg::Matrixf::translate(130, 0, 0);
+        frame[0].mSceneTarget = osg::Matrixf::scale(2, 2, 2);
+        EXPECT_THROW(binding.applyNativeFrame(frame, placement), std::invalid_argument);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        frame[0] = frame[1];
+        EXPECT_THROW(binding.applyNativeFrame(frame, placement), std::invalid_argument);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        frame[0].mRecord = 999;
+        EXPECT_THROW(binding.applyNativeFrame(frame, placement), std::invalid_argument);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        frame[0] = {30, 0x40, std::nullopt};
+        EXPECT_THROW(binding.applyNativeFrame(frame, placement), std::invalid_argument);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        placement.mScale = 2;
+        frame = {{{30, 9, osg::Matrixf::translate(120, 5, 0)},
+            {12, 9, osg::Matrixf::translate(120, 0, 0)}}};
+        binding.applyNativeFrame(frame, placement);
+        EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3d(10, 0, 0));
+        EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3d(0, .5, 0));
+        EXPECT_EQ(mPelvis->mScale, 1); EXPECT_EQ(mHand->mScale, 1);
+    }
+
+    TEST_F(ActorRagdollPoseTest, BodyControllerOrderTracksLiveChildSlotsRatherThanRecords)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> peer = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        peer->setName("Peer"); peer->setUserValue("recordIndex", 4u); mRoot->addChild(peer);
+        auto body = mGraph.mBodies.front(); body.mRecord = 99; body.mNodeRecord = 4; body.mBone = "Peer";
+        mGraph.mBodies.insert(mGraph.mBodies.begin(), body);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        EXPECT_EQ(binding.bodyNodeOrder(), (std::vector<std::uint32_t>{8, 28, 4}));
+        mRoot->removeChild(peer); mRoot->insertChild(0, peer);
+        EXPECT_EQ(binding.bodyNodeOrder(), (std::vector<std::uint32_t>{4, 8, 28}));
+    }
+
+    TEST_F(ActorRagdollPoseTest, NativeFrameWithoutPhysicalTargetsPublishesAnimationAndRejectsOtherRootSpaces)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        const std::array<NifBullet::RagdollNativeBlendPublication, 1> animated{{{12, 1, std::nullopt}}};
+        const auto result = binding.applyNativeFrame(animated, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(111, 2, 0));
+        EXPECT_EQ(osg::computeLocalToWorld({mRoot.get(), mPelvis.get(), mConnector.get(), mHand.get()}).getTrans(), osg::Vec3d(111, 2, 0));
+        const auto before = binding.captureLocalPose();
+        placement.mTranslation.x() = std::numeric_limits<float>::infinity();
+        EXPECT_THROW(binding.applyNativeFrame(animated, placement), std::invalid_argument);
+        EXPECT_TRUE(binding.matchesLocalPose(before));
+        placement.mTranslation = {100, 0, 0};
+        binding.applyWorldBones(desired(), placement);
+        EXPECT_FALSE(mPelvis->getTraversalMatrix().getMatrix());
+        EXPECT_FALSE(mConnector->getTraversalMatrix().getMatrix());
+        EXPECT_FALSE(mHand->getTraversalMatrix().getMatrix());
+        SceneUtil::ActorRagdollPoseBinding ordinary(mGraph, *mRoot);
+        EXPECT_THROW(ordinary.applyNativeFrame({}, Nif::NiTransform::getIdentity()), std::invalid_argument);
+    }
+
     TEST_F(ActorRagdollPoseTest, BodyTGraphAndControllerPublishScenePoseWithoutApplyingOffsetTwice)
     {
         mPelvis->setTranslation({0, 0, 0});

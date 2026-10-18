@@ -219,6 +219,49 @@ namespace
     }
 
 
+    TEST_F(PhysicalPoseAnimationTest, NativeFramePublicationUsesSampledLocalsAndRestoresRejectedProjections)
+    {
+        auto placement = Nif::NiTransform::getIdentity();
+        EXPECT_THROW(mAnimation->publishNativePhysicalFrame({}, placement), std::logic_error);
+        auto prepared = mAnimation->prepareNativePhysicalPose(mGraph, placement,
+            MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        ASSERT_TRUE(mAnimation->commitPhysicalPose(*prepared));
+        EXPECT_EQ(mAnimation->physicalBodyNodeOrder(), (std::vector<std::uint32_t>{8}));
+        auto sampled = mAnimation->samplePhysicalAnimationTarget(placement, mVisitor);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        std::array<NifBullet::RagdollNativeBlendPublication, 1> publications{{
+            {12, 9, osg::Matrixf::translate(10, 20, 30)}}};
+        auto result = mAnimation->publishNativePhysicalFrame(publications, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(10, 20, 30));
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(10, 20, 30));
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        // A missing KF translation channel inherits the preceding animated
+        // local, never the last physically written local or drawing projection.
+        mAnimation->mWriter->mWriteTranslation = false;
+        sampled = mAnimation->samplePhysicalAnimationTarget(placement, mVisitor);
+        EXPECT_EQ(sampled[0].mPose.getTrans(), osg::Vec3f(1, 2, 3));
+        result = mAnimation->publishNativePhysicalFrame({}, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+        publications[0] = {12, 1, osg::Matrixf::translate(50, 60, 70)};
+        result = mAnimation->publishNativePhysicalFrame(publications, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(50, 60, 70));
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+        const auto matrix = mBone->getMatrix();
+        const auto projection = mBone->getTraversalMatrix();
+        publications[0] = {12, 9, osg::Matrixf::scale(2, 2, 2)};
+        EXPECT_THROW(mAnimation->publishNativePhysicalFrame(publications, placement), std::invalid_argument);
+        EXPECT_EQ(mBone->getMatrix(), matrix);
+        EXPECT_EQ(mBone->getTraversalMatrix(), projection);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 2u);
+        mAnimation->samplePhysicalAnimationTarget(placement, mVisitor);
+        result = mAnimation->publishNativePhysicalFrame({}, placement);
+        EXPECT_EQ(result[0].mPose.getTrans(), osg::Vec3f(1, 2, 3));
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 3u);
+        mAnimation->endPhysicalPose();
+        EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix());
+    }
+
     TEST_F(PhysicalPoseAnimationTest, NativePreparationAndAnimatedSamplingRetainOriginalCompositionBits)
     {
         const std::array<std::uint32_t, 9> rotation{0x3f3b0df5u,0x3f1d8dc8u,0x3e974e6du,

@@ -5360,3 +5360,44 @@ The strengthened native World integration checks cover workers 0/1/2. They prese
 Tested source fingerprint: `b82914ef8fe0ecb703566f68535e3e5f379cc88f7b66857ddaaf344b2d541536`. Source/binary hashes, raw capture provenance and limits are in `native_facade_capsule_retention_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
 
 Automatic native construction still needs the actual frame/controller/animation-target adapter and coherent group/filter initialization. Semantic capsule response/movement, contact/reaction/FSM/GetUp and all remaining full S4 acceptance courses remain open. No normal-input fork or fresh-engine gameplay/restart gate is closed here; full M15S4 remains open.
+
+
+### Settled native actor frame renderer publication
+
+ActorRagdollPoseBinding now publishes settled NativeObjectLocal frames using
+updated parent world caches and verified live Single arithmetic. Bit0 gates
+physical target reads, bit8 controls author local R/T writeback, and missing
+targets preserve animation locals. World-only physical writes install drawing
+projections while leaving controller locals intact. All target validation and
+projection allocation finish before any write. Exact native world bones are
+returned separately from controller-local composition. Pending0x40 first
+synchronization remains caller-owned.
+
+Animation applies those frames against its latest sampled animated checkpoint,
+without reevaluating callbacks or advancing clocks. Missing KF channels retain
+previous animation values. Rejected frames restore physical locals, NIF caches
+and drawing handles. Checkpoints retain frame-handle ownership; explicit dynamic
+snapshots clear this binding's frame projections. Controller body-node order
+comes from current live child slots rather than record order.
+
+Full normal and ASan/UBSan checks each pass all 2,878 component tests in 273
+suites and 1,637 engine tests in 122 suites, with exact inventories and no
+failures or skips. Both engines are rebuilt; leak checks are disabled. A separate
+renderer driver replays 256 settled live007F rows from the retained original
+node corpus: local and returned world fields match bitwise in both builds.
+Drawing matrices match exactly with signed zeros equivalent. The initial strict
+drawing comparison is retained: its only differences were 96 signed zeros in
+48 rows. The replay reconstructs one node with its recorded parent as placement;
+it does not replay the original multi-node traversal or execute a new game.
+
+Tested source fingerprint: `2a872a045ceabbe383ed6a180cd2befd125a1ef1514488f14df2dcf5e8266a1d`. Source/binary/corpus
+hashes and boundaries are in `native_actor_frame_renderer_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Python/schema sources are unchanged;
+the previous 321 Python tests were not repeated.
+
+Automatic runtime traversal remains open: a child's animation world target must
+use its parent's already updated physical cache, so the existing whole-frame API
+with precomposed targets cannot simply be wired in. No approximate coordinator
+or automatic construction is enabled here. Native frame/controller/contact/FSM/
+GetUp, global group/filter ownership and all remaining full S4 gameplay and
+fresh-engine restart gates remain open.

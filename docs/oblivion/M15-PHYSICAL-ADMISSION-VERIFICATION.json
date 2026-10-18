@@ -5312,5 +5312,221 @@
       "Automatic native physical actor construction still requires coherent frame sampling/controller advancement and group/filter initialization before enabling it in the scene path.",
       "Global group ownership/allocation, capsule/static/loose-object native filter routes, actual contact/reaction integration, mastery/drop/effects and all remaining full S4 view/device/FPS/interruption/savequitfreshrestart courses remain open."
     ]
+  },
+  "native_actor_frame_renderer_followup": {
+    "status": "Settled native actor frame renderer publication is implemented. Automatic per-node runtime traversal and full M15S4 gameplay/restart acceptance remain open.",
+    "source": {
+      "head": "23482d5d5b463a35a88b774d659eb040481a10db",
+      "source_fingerprint": "2a872a045ceabbe383ed6a180cd2befd125a1ef1514488f14df2dcf5e8266a1d"
+    },
+    "source_sha256": {
+      "components/sceneutil/actorragdollpose.hpp": "8ebc7e0e536fa12de7cc1791e0da65567cb452fcfc77b54f0d2f6b9b90b9d3e3",
+      "components/sceneutil/actorragdollpose.cpp": "a59a79424722ccfd2075ed6d9090a16dbdd368cc76a018015638f3ff19e9bd12",
+      "apps/components_tests/sceneutil/actorragdollpose.cpp": "ec4533c7c3bfaf55b5eb8c93075c31bddedf2b44cdf40090e5e4f3794f3f9c44",
+      "apps/openmw/mwrender/animation.hpp": "3bfe135884d2856b5103263ba1e098f3142cdbd96441370baf9c8c8714484139",
+      "apps/openmw/mwrender/animation.cpp": "64ded5c880ee5c6dbb863e0a67014197bc61a4a8e32c548855b4244d4f11ad02",
+      "apps/openmw_tests/mwrender/testphysicalpose.cpp": "d61d48a1fad956ef656a3ea8e6c38a0281d8952a4dbd1acaaa15fadd7885a55d"
+    },
+    "post_test_changes": [
+      "Verification index and delivery audit only; production/test sources unchanged after the full helpers."
+    ],
+    "changes": [
+      "ActorRagdollPoseBinding reports actual live child-slot body-node preorder rather than body/NIF record order.",
+      "NativeObjectLocal frame publication composes every retained node from updated parent caches with verified Single arithmetic. Active bit0 gates physical target reads; bit8 authorizes only local R/T writes; missing targets preserve animation locals. Caller must resolve pending0x40 first synchronization separately.",
+      "Prepare all projections and exact world results before writes. Return rigid world bones in definition body order while preserving separate native scale and controller locals. Renderer projection uses actual external OSG ancestors independently of explicit native placement.",
+      "Frame projection ownership participates in local checkpoint equality/capture/restore. Explicit dynamic snapshots retire the binding-owned frame handles, preventing stale world-only projections over new physical locals.",
+      "Animation publishes against its latest sampled animated checkpoint without ticking callbacks or clocks again; rejected frames restore previous physical locals, cached NIF components and projection handles. Missing KF channels inherit prior animation values rather than physical writeback."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-renderer-normal-01/verification.json",
+        "report_sha256": "9a356e27d1a45591e6f791d3c81c9cf4bdcd3dcd41b63e855309481c21935ee8",
+        "source": {
+          "head": "23482d5d5b463a35a88b774d659eb040481a10db",
+          "source_fingerprint": "2a872a045ceabbe383ed6a180cd2befd125a1ef1514488f14df2dcf5e8266a1d"
+        },
+        "results": {
+          "components": {
+            "executed": 2878,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "81b74933538af9e028da93ea0e9a9d761824dd18bb9d7ee316db96d0d10cb4ad",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "134d36e3bd94a18eadc88f5e8d86991a5594519f0c43966dc368b2170eb041d9",
+            "inventory_sha256": "7e7169ba489e5c94dcd26635abe2d61341499b20623572f511c0703521c65e9b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "860598eac9faff626cbd0491e35b8e16c825c32ac16e4bd0a8b7cb4593f2918d",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "6151649d0a0d7394960920a1b9475d5a54294802bf4521ac901617ba69cd6882",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "b366b30586f92a682a3da90dbed07c7050905fd81c805d333c32d895abb29bdf"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-renderer-sanitized-01/verification.json",
+        "report_sha256": "89e542e423b18e1d314c82a4bdbbabe01b967cc492245658f4012471888a5ac9",
+        "source": {
+          "head": "23482d5d5b463a35a88b774d659eb040481a10db",
+          "source_fingerprint": "2a872a045ceabbe383ed6a180cd2befd125a1ef1514488f14df2dcf5e8266a1d"
+        },
+        "results": {
+          "components": {
+            "executed": 2878,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "75e234d13c35c817574a5bef1f0aab55fafc67e0059b591b6b09bbed55f7010b",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "aabd1b88be055f96ab551e14e1c476118732686734d3db32cb6d2f02d79af15a",
+            "inventory_sha256": "75d6cd2b163790c41178d42f3dd9091706ea63bf05831562af51ca6574eb4ba2",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9e89e9555524a5d76428b95365d2a926e04be9505e15779446eb145d4c1e7828",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "4626d4dc5a2b296a11e19a1d1b708ec70ae98528fe88230b8ab2a496d878c327",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "22095c9154b437968325347445321ccf7a787a194696aab9ce9c4c8095b54b0c"
+      }
+    },
+    "native_renderer_replay": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/normal-verification.json",
+        "report_sha256": "b7c1d27c7b976d206c6ce09de338739f8cfd0216712b818cc387f1610c61832b",
+        "result": {
+          "passed": true,
+          "executed": 256,
+          "input_rows": 768,
+          "selection": "FPCW007F settled rows only, no transform normalization; target scale slot deliberately omitted because native body target is rigid R/T. Reconstructed one-node actor hierarchy with recorded parent as native placement; original multi-node topology is not replayed.",
+          "case_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+          "probe_sha256": "c0200d8763b21c2f730b5558f4aea26f3381cd0dfc729b028f971116e52cb863",
+          "binary_sha256": "aa240504b1ab717229a9b73a80af06aa632eb011f8213e9a64cc62373611407e",
+          "inputs_sha256": "b9ab15e145a162a5743948b3194800d3a8316106672b263c692c7a5a7ce20984",
+          "stdout_sha256": "85f09145cb512e71fdd8b9cfad84b79d49c1dc4f6c1bff85ce2f6ab981c0aa42",
+          "returncode": 0,
+          "errors": [],
+          "limits": [
+            "Replays existing pinned original-executable observations; no new game/original instructions executed.",
+            "New renderer local R/T/scale and exact returned world R/T compared bitwise; final OSG drawing matrix compares exact binary32 values with signed zeros equivalent. Initial corpus-01 found only 96 drawing signed-zero differences, with no native local/cache mismatch; OSG double projection/multiplication may replace -0 with +0.",
+            "Does not test runtime traversal/controller scheduling, animation hierarchy interleaving or normal-input gameplay acceptance."
+          ]
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/sanitized-verification.json",
+        "report_sha256": "18a9d0fa0c44d20399552310efabe697d197ec3b7686d2740e1ee2a086cb5cdf",
+        "result": {
+          "passed": true,
+          "executed": 256,
+          "input_rows": 768,
+          "selection": "FPCW007F settled rows only, no transform normalization; target scale slot deliberately omitted because native body target is rigid R/T. Reconstructed one-node actor hierarchy with recorded parent as native placement; original multi-node topology is not replayed.",
+          "case_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+          "probe_sha256": "c0200d8763b21c2f730b5558f4aea26f3381cd0dfc729b028f971116e52cb863",
+          "binary_sha256": "5ebf7a91243e5c1a88f793811fd1d59cc3f20d58ba67a36d7ca14c2e9c2c109b",
+          "inputs_sha256": "b9ab15e145a162a5743948b3194800d3a8316106672b263c692c7a5a7ce20984",
+          "stdout_sha256": "85f09145cb512e71fdd8b9cfad84b79d49c1dc4f6c1bff85ce2f6ab981c0aa42",
+          "returncode": 0,
+          "errors": [],
+          "limits": [
+            "Replays existing pinned original-executable observations; no new game/original instructions executed.",
+            "New renderer local R/T/scale and exact returned world R/T compared bitwise; final OSG drawing matrix compares exact binary32 values with signed zeros equivalent. Initial corpus-01 found only 96 drawing signed-zero differences, with no native local/cache mismatch; OSG double projection/multiplication may replace -0 with +0.",
+            "Does not test runtime traversal/controller scheduling, animation hierarchy interleaving or normal-input gameplay acceptance."
+          ]
+        }
+      }
+    },
+    "component_cases": [
+      "ActorRagdollPoseTest.NativeFrameWorldOnlyProjectionPreservesLocalsAndUsesPhysicalParent",
+      "ActorRagdollPoseTest.NativeFrameLocalWritebackUsesUpdatedParentsAndValidatesBeforeWrites",
+      "ActorRagdollPoseTest.BodyControllerOrderTracksLiveChildSlotsRatherThanRecords",
+      "ActorRagdollPoseTest.NativeFrameWithoutPhysicalTargetsPublishesAnimationAndRejectsOtherRootSpaces"
+    ],
+    "engine_cases": [
+      "PhysicalPoseAnimationTest.NativeFramePublicationUsesSampledLocalsAndRestoresRejectedProjections"
+    ],
+    "replay_driver_sha256": {
+      "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/probe.cpp": "c0200d8763b21c2f730b5558f4aea26f3381cd0dfc729b028f971116e52cb863",
+      "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/build.py": "4a2b8c34840fde6f5acdd4fdd2b5c7a387922db7c14f5dff750cc404bdf3fc36",
+      "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/compare.py": "7cd263f3b9b96c912a0a83af0042b0d179cb1f7575c925105893d633e1f2df77",
+      "build/oblivion-compat/m15/S4/native-frame-renderer-corpus-02/inputs.txt": "b9ab15e145a162a5743948b3194800d3a8316106672b263c692c7a5a7ce20984"
+    },
+    "native_provenance": {
+      "existing_rule_record": "docs/oblivion/M15-SETTLED-NODE-LIVE-PRECISION-VERIFICATION.json",
+      "rule_record_sha256": "07c5f733100670afdd41ff0db0df665b220c55e369c979a15d47e78abf8190a1",
+      "corpus": "build/oblivion-compat/m15/S4/unselected-child-live-flags-oracle-01/cases.json",
+      "corpus_sha256": "17abe7856ac260503d29a65dbca974a93b37a6cbe5904d299e32e681e061b928",
+      "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "scope": "Replay existing original-executable expected results only. Select 256 settled live007F rows from 768, with no transform normalization. Reconstruct a one-node actor with recorded parent as placement; original multi-node topologies are not replayed. Native local and returned world fields bit-exact; OSG drawing values exact with signed zeros equivalent. No new game or original instruction execution."
+    },
+    "build_warning_review": "Normal rebuild warnings refer to unchanged CharacterController::unpersistAnimationState and unchanged World-test context/conditional assertions. Component build has no warnings; no diagnostic points to the six changed source/test files.",
+    "retained_preflight": {
+      "native-frame-renderer-corpus-01": "All native local/cache fields match; the overly strict bitwise drawing comparison reports 96 signed-zero differences across48 rows. Preserve initial artifacts. Fresh corpus-02 compares only drawing signed zeros as equal, retaining bit-exact native comparisons.",
+      "syntax": "Final sceneutil production/test syntax checks passed. Earlier facade coordinator experiment was removed before full checks; it is not shipped or claimed."
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "unchanged_checks": "Python/schema and original pure native formula implementations unchanged. Previous 321 Python tests are historical; no unchanged rerun solely for evidence.",
+    "validation_scope": "Full structural/compiler component and engine checks, scene/renderer semantic fixtures, and replay of pinned native transform expectations. No normal-input fork/original game or fresh-engine save/restart course executed.",
+    "limits": [
+      "Settled NativeObjectLocal publication only; pending0x40 first synchronization requires its owner. Body bone scale must remain within the existing physical admission domain relative to placement.",
+      "Exact native world caches are returned separately. captureWorldBones remains a composition of controller locals and cannot replace native world queries after world-only publication.",
+      "Requires exclusive scene update ownership. Matrix/cache/projection rollback is supported; arbitrary external callback state rollback is not provided.",
+      "Automatic traversal must interleave own controllers, updated parent world caches and per-node physical dispatch. The existing all-body API with precomposed animation world targets is insufficient for mixed parent/child gains; no approximate coordinator is installed.",
+      "Automatic native construction/frame/contact/FSM/GetUp, coherent global group/filter ownership, remaining mastery/drop/effects/input and full S4 view/device/FPS/interruption/savequitfreshrestart acceptance remain open."
+    ]
   }
 }

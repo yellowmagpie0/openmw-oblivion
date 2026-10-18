@@ -2259,6 +2259,32 @@ namespace MWRender
         mPhysicalPose->applyWorldBones(poses, objectWorld);
     }
 
+    std::vector<std::uint32_t> Animation::physicalBodyNodeOrder() const
+    {
+        if (!mPhysicalPose)
+            throw std::logic_error("native physical renderer is not bound");
+        return mPhysicalPose->bodyNodeOrder();
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> Animation::publishNativePhysicalFrame(
+        std::span<const NifBullet::RagdollNativeBlendPublication> publications,
+        const Nif::NiTransform& objectWorld)
+    {
+        if (!mPhysicalPose || !mPhysicalAnimatedTargets || !mPhysicalAnimatedLocal)
+            throw std::logic_error("native physical frame requires sampled animated targets");
+        const auto previous = mPhysicalPose->captureLocalPose();
+        try
+        {
+            mPhysicalPose->restoreLocalPose(*mPhysicalAnimatedLocal);
+            return mPhysicalPose->applyNativeFrame(publications, objectWorld);
+        }
+        catch (...)
+        {
+            mPhysicalPose->restoreLocalPose(previous);
+            throw;
+        }
+    }
+
     void Animation::endPhysicalPose()
     {
         if (!mPhysicalPose)

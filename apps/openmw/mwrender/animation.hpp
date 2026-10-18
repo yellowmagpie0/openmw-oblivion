@@ -46,6 +46,7 @@ namespace NifBullet
 {
     struct ActorRagdollDefinition;
     struct RagdollBoneWorldPose;
+    struct RagdollNativeBlendPublication;
 }
 
 namespace SceneUtil
@@ -606,6 +607,13 @@ namespace MWRender
             const Nif::NiTransform& objectWorld, osg::NodeVisitor& frameVisitor);
         std::vector<NifBullet::RagdollBoneWorldPose> capturePhysicalPose(const Nif::NiTransform& objectWorld) const;
         void applyPhysicalPose(std::span<const NifBullet::RagdollBoneWorldPose> poses,
+            const Nif::NiTransform& objectWorld);
+        std::vector<std::uint32_t> physicalBodyNodeOrder() const;
+        // Publish against the most recently sampled animated locals. Preserve
+        // native inactive/world-only/local-write distinctions; return this
+        // frame's exact native world bones independently of controller locals.
+        std::vector<NifBullet::RagdollBoneWorldPose> publishNativePhysicalFrame(
+            std::span<const NifBullet::RagdollNativeBlendPublication> publications,
             const Nif::NiTransform& objectWorld);
         void endPhysicalPose();
         bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }

@@ -135,6 +135,7 @@ namespace SceneUtil
         };
         std::shared_ptr<const char> mAuthority;
         std::vector<Node> mNodes;
+        bool mNativeFrameProjection = false;
     };
 
     struct ActorRagdollPoseBinding::Impl
@@ -151,6 +152,7 @@ namespace SceneUtil
             std::uint32_t mNodeRecord;
             std::size_t mNode;
             std::string mBone;
+            std::uint32_t mBodyRecord = 0;
         };
         osg::observer_ptr<osg::Group> mRoot;
         osg::observer_ptr<osg::Group> mAssetRoot;
@@ -160,6 +162,7 @@ namespace SceneUtil
         std::vector<Body> mBodies;
         std::optional<Body> mReferenceSource;
         RootSpace mRootSpace;
+        bool mNativeFrameProjection = false;
 
         Impl(const NifBullet::ActorRagdollDefinition& definition, osg::Group& root, RootSpace rootSpace)
             : mRoot(&root), mSourceHash(definition.mSourceHash), mRootSpace(rootSpace)
@@ -219,7 +222,7 @@ namespace SceneUtil
                         && (!body.mBone.empty() || definition.mReferenceRoot == body.mNodeRecord)
                         && mNodes[found->second].mTransform->getName() == body.mBone,
                     "ragdoll renderer target identity mismatch");
-                mBodies.push_back({body.mNodeRecord, found->second, body.mBone});
+                mBodies.push_back({body.mNodeRecord, found->second, body.mBone, body.mRecord});
             }
             if (const auto& source = definition.mReferenceCollisionSource)
             {
@@ -392,6 +395,109 @@ namespace SceneUtil
 
     ActorRagdollPoseBinding::~ActorRagdollPoseBinding() = default;
 
+    std::vector<std::uint32_t> ActorRagdollPoseBinding::bodyNodeOrder() const
+    {
+        mImpl->validateHierarchy();
+        std::vector<std::pair<std::vector<unsigned>, std::uint32_t>> ordered;
+        ordered.reserve(mImpl->mBodies.size());
+        for (const auto& body : mImpl->mBodies)
+        {
+            const auto& path = mImpl->mNodes[body.mNode].mPath;
+            std::vector<unsigned> slots;
+            for (std::size_t i = 1; i < path.size(); ++i)
+            {
+                const auto* parent = path[i - 1]->asGroup();
+                require(parent != nullptr, "invalid native controller traversal path");
+                const auto slot = parent->getChildIndex(path[i].get());
+                require(slot < parent->getNumChildren(), "detached native controller traversal child");
+                slots.push_back(slot);
+            }
+            ordered.emplace_back(std::move(slots), body.mNodeRecord);
+        }
+        std::sort(ordered.begin(), ordered.end());
+        std::vector<std::uint32_t> result;
+        result.reserve(ordered.size());
+        for (const auto& [slots, record] : ordered) result.push_back(record);
+        return result;
+    }
+
+    std::vector<NifBullet::RagdollBoneWorldPose> ActorRagdollPoseBinding::applyNativeFrame(
+        std::span<const NifBullet::RagdollNativeBlendPublication> publications,
+        const Nif::NiTransform& objectWorld)
+    {
+        require(mImpl->mRootSpace == RootSpace::NativeObjectLocal, "native actor frame requires native object space");
+        const auto placement = nativePlacement(objectWorld);
+        auto local = mImpl->locals();
+        std::unordered_map<std::size_t, const NifBullet::RagdollNativeBlendPublication*> selected;
+        for (const auto& publication : publications)
+        {
+            const auto body = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& value) { return value.mBodyRecord == publication.mRecord; });
+            require(body != mImpl->mBodies.end(), "unknown native renderer body publication");
+            require(selected.emplace(body->mNode, &publication).second, "duplicate native renderer body publication");
+            require(!(publication.mCollisionFlags & 0x40), "unsettled native renderer first synchronization");
+        }
+        std::vector<Nif::NiTransform> world;
+        std::vector<bool> writeLocal(local.size(), false);
+        std::vector<NifOsg::MatrixTransform::TraversalMatrix> projections;
+        world.reserve(local.size()); projections.reserve(local.size());
+        for (std::size_t i = 0; i < local.size(); ++i)
+        {
+            const auto& entry = mImpl->mNodes[i];
+            const auto& parent = entry.mParent ? world[*entry.mParent] : placement;
+            const auto found = selected.find(i);
+            const auto* publication = found == selected.end() ? nullptr : found->second;
+            const bool physical = publication && publication->mSceneTarget && (publication->mCollisionFlags & 1);
+            // Inactive publications deliberately do not inspect their target.
+            const auto desired = physical ? worldPose(*publication->mSceneTarget) : Nif::NiTransform::getIdentity();
+            const auto frame = NifBullet::ragdollBoneFrame(local[i], desired, &parent,
+                physical ? publication->mCollisionFlags : 0, Nif::NativeTransformPrecision::Single);
+            local[i] = frame.mLocal; world.push_back(frame.mWorld);
+            writeLocal[i] = physical && (publication->mCollisionFlags & 8);
+
+            osg::Matrixd drawingParent;
+            if (entry.mParent)
+                drawingParent = world[*entry.mParent].toMatrix();
+            else
+            {
+                // Native placement and rendering scaffolding are separate.
+                // Only drawing projection uses the actual OSG ancestor path.
+                osg::NodePath path;
+                std::unordered_set<const osg::Node*> seen{entry.mTransform.get()};
+                const osg::Node* node = entry.mTransform.get();
+                while (node->getNumParents())
+                {
+                    require(node->getNumParents() == 1, "ambiguous native actor drawing placement");
+                    node = node->getParent(0);
+                    require(seen.insert(node).second, "cyclic native actor drawing placement");
+                    path.insert(path.begin(), const_cast<osg::Node*>(node));
+                }
+                drawingParent = osg::computeLocalToWorld(path);
+            }
+            osg::Matrixd inverse;
+            require(inverse.invert(drawingParent), "singular native actor drawing placement");
+            projections.emplace_back(osg::Matrixd(frame.mWorld.toMatrix()) * inverse);
+        }
+        std::vector<NifBullet::RagdollBoneWorldPose> result;
+        result.reserve(mImpl->mBodies.size());
+        for (const auto& body : mImpl->mBodies)
+            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale)});
+        mImpl->validateHierarchy();
+        for (std::size_t i = 0; i < local.size(); ++i)
+        {
+            auto& node = *mImpl->mNodes[i].mTransform;
+            if (writeLocal[i])
+            {
+                node.setRotation(local[i].mRotation);
+                node.setTranslation(local[i].mTranslation);
+            }
+            node.setTraversalMatrix(projections[i]);
+        }
+        mImpl->mNativeFrameProjection = true;
+        if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get())) skeleton->invalidateBoneMatrices();
+        return result;
+    }
+
     bool ActorRagdollPoseBinding::isValid() const noexcept
     {
         return mImpl->isValid();
@@ -401,7 +507,8 @@ namespace SceneUtil
     {
         const auto* state = pose.mState.get();
         if (!state || state->mAuthority != mImpl->mLocalAuthority || !isValid()
-            || state->mNodes.size() != mImpl->mNodes.size())
+            || state->mNodes.size() != mImpl->mNodes.size()
+            || state->mNativeFrameProjection != mImpl->mNativeFrameProjection)
             return false;
         for (std::size_t i = 0; i < state->mNodes.size(); ++i)
         {
@@ -428,6 +535,7 @@ namespace SceneUtil
         mImpl->locals();
         auto state = std::make_shared<ActorRagdollLocalPose::State>();
         state->mAuthority = mImpl->mLocalAuthority;
+        state->mNativeFrameProjection = mImpl->mNativeFrameProjection;
         state->mNodes.reserve(mImpl->mNodes.size());
         for (const auto& entry : mImpl->mNodes)
         {
@@ -463,6 +571,7 @@ namespace SceneUtil
             node.setMatrix(saved.mMatrix);
             node.setTraversalMatrix(saved.mTraversalMatrix);
         }
+        mImpl->mNativeFrameProjection = pose.mState->mNativeFrameProjection;
         if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get()))
             skeleton->invalidateBoneMatrices();
     }
@@ -532,6 +641,13 @@ namespace SceneUtil
             auto& node = *mImpl->mNodes[body.mNode].mTransform;
             node.setRotation(local[body.mNode].mRotation);
             node.setTranslation(local[body.mNode].mTranslation);
+        }
+        // An explicit dynamic snapshot retires this binding's frame-only
+        // drawing handles. Never leave an old world-only pose over new locals.
+        if (mImpl->mNativeFrameProjection)
+        {
+            for (auto& entry : mImpl->mNodes) entry.mTransform->clearTraversalMatrix();
+            mImpl->mNativeFrameProjection = false;
         }
         if (auto* skeleton = dynamic_cast<Skeleton*>(mImpl->mRoot.get()))
             skeleton->invalidateBoneMatrices();
