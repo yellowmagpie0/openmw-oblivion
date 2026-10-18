@@ -96,6 +96,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/pathgriddata.cpp
     esm4/firstpersonview.cpp
     esm4/physicalcombat.cpp
+    esm4/physicalregistration.cpp
     esm4/actorstats.cpp
     esm4/actorclock.cpp
     esm4/actorvalues.cpp

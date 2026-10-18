@@ -260,6 +260,7 @@ add_component_dir (esm4
     physicalvelocitycontroller
     physicalsceneworld
     physicalblenddispatch
+    physicalregistration
     physicalframe
     actorstats
     actorclock

@@ -5206,3 +5206,26 @@ Provenance, editable matrix and check hashes are in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Neither ordered metadata nor the
 counter oracle is an automatic admission/reaction/GetUp executor. Full S4
 normal-input and fresh-process recovery acceptance remain open.
+
+
+Typed physical registration rules now reproduce the verified body admission and
+blend-counter decisions. Body plans distinguish removal, addition, remembered-
+owner intent, gain suppression and the native return value; true is not treated
+as World-operation success. Counter steps wrap32 bits before signed tests,
+retain scene flags and request normal registration with resolved body/filter/
+owner context. Invalid enums and nonfinite mapped gains reject. The functions
+publish no scene, World or ownership state.
+
+A standalone normal and ASan/UBSan comparison passes1968 supported original
+body-admission profiles and all9216 original counter profiles. Another432 rows
+verify the declared rejection of nonfinite mapped gains. Expected values come
+from preserved original-instruction corpora, not production helpers. Both full
+component configurations pass2833 tests in270 suites without skips/failures;
+leak checks are disabled. Tested source fingerprint:
+`056560ada67d61fc22158b41a5c7109b5efa48831c6b49029a48d46321cd395c`.
+
+Hashes and scope are in `typed_native_registration_rules_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Recursive directed graph admission,
+counter ownership/persistence, automatic contact/reaction/GetUp and all full S4
+normal-input/restart acceptance gates remain open. This component-only chunk
+adds no engine caller or Python/schema change.

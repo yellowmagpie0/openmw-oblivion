@@ -3590,5 +3590,165 @@
       "Counter helper execution does not identify caller ownership/lifetime, assign a semantic name to BA7A8C or execute downstream scene/physics effects.",
       "Full S4 automatic reaction/GetUp, input/view/device/FPS and fresh-process acceptance remain open."
     ]
+  },
+  "typed_native_registration_rules_followup": {
+    "status": "Typed normal-body registration and counter decisions match independent native corpora; graph executor and automatic reactions remain open",
+    "source": {
+      "head": "421b7936e8b2f47d980ad9deb01a47034e1199f8",
+      "source_fingerprint": "056560ada67d61fc22158b41a5c7109b5efa48831c6b49029a48d46321cd395c"
+    },
+    "source_sha256": {
+      "components/esm4/physicalregistration.hpp": "980f3a7106aaa944818cdd3f283df2df49eb0e041fc06bbc058d9a3d678c2977",
+      "components/esm4/physicalregistration.cpp": "c602519514b226a762712743bb83da3e71a0c7bd9974154989fb9e40408b6a7c",
+      "apps/components_tests/esm4/physicalregistration.cpp": "ddae6db581db345e43ad9c57121c806cf775a3bdd7e895bbda8314908fab2a76",
+      "components/CMakeLists.txt": "e92713a0715adb8c2bc9cd3411787c50b2879f9c15f0eefeb958066cd9cdbe5b",
+      "apps/components_tests/CMakeLists.txt": "bd983f30ba25bf244ebf553e8eb73223d747cf1764b4f3384c705a8975b8eafd"
+    },
+    "changes": [
+      "resolvePhysicalBodyRegistration stages removal/addition, remembered-owner intent, gain suppression and the native boolean return from explicitly resolved membership and optional actual mapped blend metadata.",
+      "The native true result is distinct from World-operation success: gain-suppressed absent bodies also return true. Only additions lead to associated constraint traversal; existing same-World membership is a no-op.",
+      "resolvePhysicalBlendCounterStep wraps32 bits before signed tests, preserves original scene flag/update selection, and requests normal registration only with resolved body/filter/remembered-owner context. Scene work precedes a requested body registration in the native path.",
+      "Invalid enums and nonfinite mapped gains reject. Plain unmapped bodies do not consume blend fields. No World, scene, ownership or queue state is mutated by these rules."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-registration-rules-normal-01/verification.json",
+        "sha256": "294d53d6d3b75d0399ad4422596d4300efb02d06d3147ffd15dc06454caa380b",
+        "source": {
+          "head": "421b7936e8b2f47d980ad9deb01a47034e1199f8",
+          "source_fingerprint": "056560ada67d61fc22158b41a5c7109b5efa48831c6b49029a48d46321cd395c"
+        },
+        "results": {
+          "components": {
+            "executed": 2833,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "aad6223daa0893ef3f4f71b3bcce6ee1fb0c5acf893bd266deb243d3bea5215b",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "9989bb03f89c53d63eff9801405cadf83cdcdf82052b63a883793e561b06e662",
+            "inventory_sha256": "d12dca8efa5f44673ce8217880695631d378a05edce8a3c9824159f76ca37276",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 270
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-registration-rules-sanitized-01/verification.json",
+        "sha256": "fce22f00e66383698eda1bbfb7f338ee002f9fd975df23ef800bbf05bf6e9d94",
+        "source": {
+          "head": "421b7936e8b2f47d980ad9deb01a47034e1199f8",
+          "source_fingerprint": "056560ada67d61fc22158b41a5c7109b5efa48831c6b49029a48d46321cd395c"
+        },
+        "results": {
+          "components": {
+            "executed": 2833,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "63e00d37be1a2d4351aa61a144055904f51aa7f41f5cf2f244ae0cab0f70acfd",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "db889e0a52c11d8457a279eebb4e6538d97528c62cd08ca6c971bd966dd18076",
+            "inventory_sha256": "1109c63ca76eebc58c970222efab58fe8f6742e715b0358e73d916930117f1f4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 270
+      }
+    },
+    "independent_comparison": {
+      "report": "build/oblivion-compat/m15/S4/native-registration-rules-compare-01/report.json",
+      "report_sha256": "69fbac553664215dac952d76884cb60125874b8b9719c27ac64c478d0532b56c",
+      "driver_sha256": "dc332cb8b0905d36de2266af03fa211e842889ab276ae1f82f0d7998732f59ea",
+      "comparator_sha256": "ac386917a59c61c5ef0711551d10ab9b2fbfddd21f32e9040c1201344bab4a7d",
+      "results": {
+        "passed": true,
+        "native_body_comparisons": 1968,
+        "nonfinite_mapped_blend_rejections": 432,
+        "native_counter_comparisons": 9216,
+        "total_rows": 11616,
+        "source_sha256": {
+          "components/esm4/physicalregistration.hpp": "980f3a7106aaa944818cdd3f283df2df49eb0e041fc06bbc058d9a3d678c2977",
+          "components/esm4/physicalregistration.cpp": "c602519514b226a762712743bb83da3e71a0c7bd9974154989fb9e40408b6a7c",
+          "apps/components_tests/esm4/physicalregistration.cpp": "ddae6db581db345e43ad9c57121c806cf775a3bdd7e895bbda8314908fab2a76",
+          "components/CMakeLists.txt": "e92713a0715adb8c2bc9cd3411787c50b2879f9c15f0eefeb958066cd9cdbe5b",
+          "apps/components_tests/CMakeLists.txt": "bd983f30ba25bf244ebf553e8eb73223d747cf1764b4f3384c705a8975b8eafd"
+        },
+        "inputs_sha256": "ceb3baa09f50024b75d7ab7280ade21850cf61a203df55e989bdf1b4667089a7",
+        "expected_sha256": "b650ddd7d9fc1209d61080366eb26b36c11b6135968e93211ac432a313dfb23b",
+        "runs": {
+          "normal": {
+            "passed": true,
+            "rows": 11616,
+            "binary_sha256": "fe71a67207e177783d8fc9aaed1daef4a204eb3600c907a7de288d0242f8b199",
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion",
+              "-O2",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-registration-rules-compare-01/compare.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/components/esm4/physicalregistration.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-registration-rules-compare-01/compare-normal"
+            ],
+            "stdout_sha256": "b650ddd7d9fc1209d61080366eb26b36c11b6135968e93211ac432a313dfb23b"
+          },
+          "sanitized": {
+            "passed": true,
+            "rows": 11616,
+            "binary_sha256": "9e4122ab7db45e1c25cde8f86af374e4ffe13d14595c3d7d63599847d5ec21dc",
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion",
+              "-O1",
+              "-g",
+              "-fsanitize=address,undefined",
+              "-fno-omit-frame-pointer",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-registration-rules-compare-01/compare.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/components/esm4/physicalregistration.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-registration-rules-compare-01/compare-sanitized"
+            ],
+            "stdout_sha256": "b650ddd7d9fc1209d61080366eb26b36c11b6135968e93211ac432a313dfb23b"
+          }
+        },
+        "boundaries": "Standalone product rule driver compared with preserved independent original instruction outputs. No native solver or engine caller runs. The432 mapped nonfinite cases intentionally reject rather than copy native unordered behavior."
+      },
+      "native_inputs": [
+        "native-body-registration-static-01/corpus.json:2400 original profiles;1968 supported comparisons and432 explicit nonfinite mapped rejections.",
+        "native-blend-counter-static-01/corpus.json:9216 original helper profiles."
+      ]
+    },
+    "validation_scope": "Full component checks and standalone normal/ASanUBSan comparisons; no fresh engine build, engine caller or Python/schema change.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "Native lower World/constraint operations and optional low-velocity sleep behavior were boundaries in the original admission corpus.",
+      "These rules do not implement recursive directed graph admission, native queue phases, counter caller/lifetime ownership, saved counter state or automatic contact/FSM/GetUp.",
+      "No new normal-input, view/device/FPS, solver trajectory or fresh-process fork gate. Full M15S4 remains incomplete."
+    ]
   }
 }
