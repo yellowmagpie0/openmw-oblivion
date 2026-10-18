@@ -1423,6 +1423,22 @@ namespace MWPhysics
         return result;
     }
 
+    NifBullet::RagdollWorldRegistration PhysicsTaskScheduler::captureActorRagdollWorldRegistrationSelection(
+        const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.captureWorldRegistrationSelection();
+    }
+
+    void PhysicsTaskScheduler::setActorRagdollWorldRegistrationSelection(
+        const MWWorld::Ptr& ptr, const NifBullet::RagdollWorldRegistration& selection)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.setWorldRegistrationSelection(selection);
+    }
+
     NifBullet::ActorRagdollDefinition PhysicsTaskScheduler::actorRagdollDefinition(const MWWorld::Ptr& ptr)
     {
         waitForWorkers();
@@ -1666,13 +1682,16 @@ namespace MWPhysics
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto& owner = actorRagdoll(ptr).mPhysics;
         const auto* world = dynamic_cast<const NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        const auto registered = owner.captureWorldRegistrationSelection();
         std::vector<NifBullet::RagdollNativeWorldSceneRequest> prepared(requests.begin(), requests.end());
         for (auto& request : prepared)
         {
-            // The current owned body is registered in this borrowed World.
-            // Presence of the scheduler's RAII wrapper binding resolves+2B0.
-            request.mInput.mHasWorld = true;
-            request.mInput.mHasAuthority = world && world->hasNativeSceneOwner(this);
+            // Retained ownership alone no longer proves the body's World link.
+            // The RAII wrapper binding resolves+2B0 only for registered bodies.
+            request.mInput.mHasWorld = owner.isPublished()
+                && std::find(registered.mBodies.begin(), registered.mBodies.end(), request.mRecord)
+                    != registered.mBodies.end();
+            request.mInput.mHasAuthority = request.mInput.mHasWorld && world && world->hasNativeSceneOwner(this);
         }
         return owner.synchronizeNativeWorldScenes(prepared, beforePublish);
     }

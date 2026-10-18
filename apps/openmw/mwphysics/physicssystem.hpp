@@ -63,6 +63,7 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollInternalCollisionFilter;
     struct RagdollBodyState;
+    struct RagdollWorldRegistration;
     struct RagdollBonePoseWriteback;
     struct RagdollNativePackedVelocityState;
     struct RagdollNativeWorldSceneRequest;
@@ -372,6 +373,11 @@ namespace MWPhysics
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        // Retain the physical owner and movement capsule while changing only
+        // its caller-resolved body/constraint World registration selection.
+        NifBullet::RagdollWorldRegistration captureActorRagdollWorldRegistrationSelection(const MWWorld::Ptr& ptr);
+        void setActorRagdollWorldRegistrationSelection(
+            const MWWorld::Ptr& ptr, const NifBullet::RagdollWorldRegistration& selection);
         // Main-thread borrowed references; the returned vector owns no actors.
         // Waits for queued physics before reading the complete current owner set.
         std::vector<MWWorld::Ptr> actorRagdollOwners();

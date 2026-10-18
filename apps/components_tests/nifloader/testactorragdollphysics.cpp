@@ -2250,7 +2250,8 @@ namespace
         EXPECT_THROW(world.registerNativeMotionOwner(nullptr, bodies, step), std::invalid_argument);
         EXPECT_THROW(world.registerNativeMotionOwner(&actor, bodies, step), std::invalid_argument);
         EXPECT_THROW(world.registerNativeMotionOwner(&identity, bodies, step), std::invalid_argument);
-        EXPECT_THROW(world.registerNativeMotionOwner(&identity, {}, step), std::invalid_argument);
+        EXPECT_NO_THROW(world.registerNativeMotionOwner(&identity, {}, step));
+        world.unregisterNativeMotionOwner(&identity);
         EXPECT_THROW(world.registerNativeMotionOwner(&identity, bodies, {}), std::invalid_argument);
         btSphereShape shape(.25); btRigidBody foreign(1, nullptr, &shape, {1, 1, 1});
         const std::array<btCollisionObject*, 1> foreignBodies{&foreign};
@@ -5021,6 +5022,199 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRetainsObjectsControllersAndPackedState)
+    {
+        addHinge(); defineOwnedHitBlends(mGraph);
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 4, 7);
+        auto* first = btRigidBody::upcast(graph.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(graph.collisionObjects()[1]);
+        auto* joint = world.getConstraint(0);
+        const std::array requests{NifBullet::RagdollNativeVelocitySetupRequest{8, {1, -2, 3, 0}, .2f}};
+        graph.prepareNativeVelocityControllers(requests);
+        auto savedBlends = graph.captureNativeBlendControllers();
+        savedBlends[0].mState.mClock = {3, 4, 7};
+        savedBlends[0].mState.mCachedGains = {.75f, .6f};
+        restoreOwnedHitBlendControllers(graph, savedBlends);
+        auto savedPacked = graph.captureNativePackedVelocities();
+        savedPacked[0].mVelocities = {{1, -2, 3, -0.f}, {.1f, .2f, .3f, 7}};
+        graph.restoreNativePackedVelocities(savedPacked);
+        first->applyCentralForce({3, 4, 5});
+        second->forceActivationState(ISLAND_SLEEPING);
+        const auto spatial = graph.capture();
+        const auto packed = graph.captureNativePackedVelocities();
+        const auto blends = graph.captureNativeBlendControllers();
+        const auto velocities = graph.captureNativeVelocityControllers();
+        const auto modes = graph.captureNativeMotionModes();
+        const auto checkRetained = [&] {
+            for (std::size_t i = 0; i < spatial.size(); ++i)
+            {
+                EXPECT_EQ(graph.capture()[i].mPose, spatial[i].mPose);
+                EXPECT_EQ(graph.captureNativePackedVelocities()[i].mVelocities, packed[i].mVelocities);
+                EXPECT_EQ(std::bit_cast<std::uint32_t>(graph.captureNativePackedVelocities()[i].mVelocities.mLinear[3]),
+                    std::bit_cast<std::uint32_t>(packed[i].mVelocities.mLinear[3]));
+                EXPECT_EQ(graph.captureNativeBlendControllers()[i].mState, blends[i].mState);
+            }
+            EXPECT_EQ(graph.captureNativeVelocityControllers()[0].mState, velocities[0].mState);
+            EXPECT_EQ(graph.captureNativeMotionModes(), modes);
+            EXPECT_EQ(first->getTotalForce(), btVector3(3, 4, 5));
+            EXPECT_EQ(second->getActivationState(), ISLAND_SLEEPING);
+            EXPECT_EQ(graph.collisionObjects()[0], first);
+            EXPECT_EQ(graph.collisionObjects()[1], second);
+        };
+        graph.setWorldRegistrationSelection({{24}, {}});
+        EXPECT_TRUE(graph.isPublished());
+        EXPECT_EQ(world.getNumCollisionObjects(), 1); EXPECT_EQ(world.getNumConstraints(), 0);
+        EXPECT_EQ(first->getBroadphaseHandle(), nullptr);
+        ASSERT_NE(second->getBroadphaseHandle(), nullptr);
+        EXPECT_EQ(second->getBroadphaseHandle()->m_collisionFilterGroup, 4);
+        EXPECT_EQ(second->getBroadphaseHandle()->m_collisionFilterMask, 7);
+        checkRetained();
+        graph.setWorldRegistrationSelection({});
+        EXPECT_TRUE(graph.isPublished());
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        world.stepSimulation(.1, 0);
+        checkRetained();
+        graph.setWorldRegistrationSelection({{24, 12}, {25}});
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), (NifBullet::RagdollWorldRegistration{{12, 24}, {25}}));
+        EXPECT_EQ(world.getNumCollisionObjects(), 2); EXPECT_EQ(world.getNumConstraints(), 1);
+        EXPECT_EQ(world.getConstraint(0), joint);
+        checkRetained();
+        // Destruction must also remove a sparse selection, including an owner
+        // whose first body and every constraint are already absent.
+        graph.setWorldRegistrationSelection({{24}, {}});
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionStagesAndRejectsInvalidSetsBeforePublication)
+    {
+        addHinge();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred);
+        graph.setWorldRegistrationSelection({});
+        ASSERT_TRUE(graph.publish(world));
+        EXPECT_TRUE(graph.isPublished()); EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        const std::array<NifBullet::RagdollWorldRegistration, 5> bad{{
+            {{999}, {}}, {{12, 12}, {}}, {{12}, {25}}, {{12, 24}, {999}}, {{12, 24}, {25, 25}}}};
+        for (const auto& selection : bad)
+        {
+            EXPECT_THROW(graph.setWorldRegistrationSelection(selection), std::invalid_argument);
+            EXPECT_EQ(graph.captureWorldRegistrationSelection(), NifBullet::RagdollWorldRegistration{});
+            EXPECT_EQ(world.getNumCollisionObjects(), 0); EXPECT_EQ(world.getNumConstraints(), 0);
+        }
+        graph.setWorldRegistrationSelection({{24}, {}});
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(graph.collisionObjects()[0]->getBroadphaseHandle(), nullptr);
+        EXPECT_NE(graph.collisionObjects()[1]->getBroadphaseHandle(), nullptr);
+        graph.setWorldRegistrationSelection({{12, 24}, {25}});
+        EXPECT_EQ(world.getNumCollisionObjects(), 2); EXPECT_EQ(world.getNumConstraints(), 1);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRollsBackBodiesAndConstraintsAddedBeforeFailure)
+    {
+        addHinge();
+        ThrowingNativeBodyWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1);
+        auto* joint = world.getConstraint(0);
+        graph.setWorldRegistrationSelection({{24}, {}});
+        const auto* oldProxy = graph.collisionObjects()[1]->getBroadphaseHandle();
+        const auto previous = graph.captureWorldRegistrationSelection();
+        const auto checkPrevious = [&] {
+            EXPECT_EQ(graph.captureWorldRegistrationSelection(), previous);
+            EXPECT_EQ(world.getNumCollisionObjects(), 1); EXPECT_EQ(world.getNumConstraints(), 0);
+            EXPECT_EQ(graph.collisionObjects()[0]->getBroadphaseHandle(), nullptr);
+            EXPECT_EQ(graph.collisionObjects()[1]->getBroadphaseHandle(), oldProxy);
+        };
+        world.mFailBody = world.mBodyAttempts + 1;
+        EXPECT_THROW(graph.setWorldRegistrationSelection((NifBullet::RagdollWorldRegistration{{12, 24}, {25}})), std::runtime_error);
+        checkPrevious();
+        world.mFailBody = 0; world.mFailConstraint = true;
+        EXPECT_THROW(graph.setWorldRegistrationSelection((NifBullet::RagdollWorldRegistration{{12, 24}, {25}})), std::runtime_error);
+        checkPrevious();
+        world.mFailConstraint = false;
+        graph.setWorldRegistrationSelection({{12, 24}, {25}});
+        EXPECT_EQ(world.getConstraint(0), joint);
+        EXPECT_EQ(world.getNumCollisionObjects(), 2);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRoutesOnlyRegisteredKeyframesAndAllowsAbsentPoseWrites)
+    {
+        addHinge();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1);
+        const std::array modes{NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed},
+            NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Keyframed}};
+        graph.setNativeMotionModes(modes);
+        auto packed = graph.captureNativePackedVelocities();
+        for (auto& state : packed) state.mVelocities.mLinear = {1, 0, 0, 0};
+        graph.restoreNativePackedVelocities(packed);
+        graph.setWorldRegistrationSelection({{12}, {}});
+        const auto before = graph.capture();
+        world.stepSimulation(.1, 0);
+        EXPECT_GT(graph.capture()[0].mPose.getOrigin().x(), before[0].mPose.getOrigin().x());
+        EXPECT_EQ(graph.capture()[1].mPose, before[1].mPose);
+        const std::array poses{NifBullet::RagdollNativeScenePoseRequest{24, osg::Matrixf::translate(40, 0, 0)}};
+        graph.synchronizeNativeForcedPoses(poses);
+        EXPECT_EQ(graph.collisionObjects()[1]->getBroadphaseHandle(), nullptr);
+        EXPECT_GT(graph.capture()[1].mPose.getOrigin().x(), 1);
+        graph.restoreNativePackedVelocities(packed);
+        graph.setWorldRegistrationSelection({{24}, {}});
+        const auto switched = graph.capture();
+        world.stepSimulation(.1, 0);
+        EXPECT_EQ(graph.capture()[0].mPose, switched[0].mPose);
+        EXPECT_GT(graph.capture()[1].mPose.getOrigin().x(), switched[1].mPose.getOrigin().x());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRebuildsActivationGroupsFromRegisteredConstraints)
+    {
+        addHinge();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1);
+        auto* first = btRigidBody::upcast(graph.collisionObjects()[0]);
+        auto* second = btRigidBody::upcast(graph.collisionObjects()[1]);
+        graph.setWorldRegistrationSelection({{12, 24}, {}});
+        first->forceActivationState(ISLAND_SLEEPING); second->forceActivationState(ISLAND_SLEEPING);
+        graph.applyImpulse(0, {1, 0, 0}, mPoses[0].getOrigin());
+        EXPECT_TRUE(first->isActive()); EXPECT_FALSE(second->isActive());
+        graph.setWorldRegistrationSelection({{12, 24}, {25}});
+        first->forceActivationState(ISLAND_SLEEPING); second->forceActivationState(ISLAND_SLEEPING);
+        graph.applyImpulse(0, {1, 0, 0}, mPoses[0].getOrigin());
+        EXPECT_TRUE(first->isActive()); EXPECT_TRUE(second->isActive());
+        graph.setWorldRegistrationSelection({{24}, {}});
+        first->forceActivationState(ISLAND_SLEEPING); second->forceActivationState(ISLAND_SLEEPING);
+        graph.applyImpulse(1, {1, 0, 0}, mPoses[1].getOrigin());
+        EXPECT_FALSE(first->isActive()); EXPECT_TRUE(second->isActive());
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, NativeRoutingRetainsEmptyOwnersAndRejectsInvalidReplacementBeforeSwap)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1);
+        btSphereShape shape(.25);
+        btRigidBody external(1, nullptr, &shape, {1, 1, 1});
+        btRigidBody absent(1, nullptr, &shape, {1, 1, 1});
+        world.addRigidBody(&external);
+        int identity = 0, unknown = 0;
+        unsigned steps = 0;
+        world.registerNativeMotionOwner(&identity, {}, [&](float) { ++steps; });
+        world.stepSimulation(.01, 0); EXPECT_EQ(steps, 0u);
+        world.replaceNativeMotionOwnerBodies(&identity, {&external});
+        for (const std::vector<btCollisionObject*>& invalid : std::array<std::vector<btCollisionObject*>, 4>{
+                std::vector<btCollisionObject*>{nullptr}, {&external, &external}, {&absent}, {graph.collisionObjects()[0]}})
+        {
+            EXPECT_THROW(world.replaceNativeMotionOwnerBodies(&identity, invalid), std::invalid_argument);
+            const auto previous = steps;
+            world.stepSimulation(.01, 0); EXPECT_EQ(steps, previous + 1);
+        }
+        EXPECT_THROW(world.replaceNativeMotionOwnerBodies(nullptr, {&external}), std::invalid_argument);
+        EXPECT_THROW(world.replaceNativeMotionOwnerBodies(&unknown, {&external}), std::invalid_argument);
+        world.replaceNativeMotionOwnerBodies(&identity, {});
+        const auto previous = steps;
+        world.stepSimulation(.01, 0); EXPECT_EQ(steps, previous);
+        world.unregisterNativeMotionOwner(&identity);
+        world.removeRigidBody(&external);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, DeferredGraphKeepsBodiesAndRestoredStateOutOfLiveWorld)
     {
         NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
@@ -5168,6 +5362,7 @@ namespace
         world->~NativeWorld();
         EXPECT_FALSE(current->isPublished());
         EXPECT_EQ(current->collisionObjects()[0]->getBroadphaseHandle(), nullptr);
+        EXPECT_THROW(current->setWorldRegistrationSelection({}), std::invalid_argument);
         current.reset(); // No access to the destroyed World.
     }
 

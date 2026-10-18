@@ -2350,6 +2350,68 @@ namespace
 
 namespace
 {
+    TEST_P(RagdollSchedulerTest, RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mSourceHash = std::string(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 7;
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto* body = world.getCollisionObjectArray()[0];
+        auto* identity = scheduler.getUserPointer(body);
+        const auto registered = scheduler.captureActorRagdollWorldRegistrationSelection(mPtr);
+        EXPECT_EQ(registered, (NifBullet::RagdollWorldRegistration{{12}, {}}));
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("retained physical World membership");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[0], osg::Timer::instance()->tick(), 0,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        // Selection joins the outstanding movement frame before unregistering.
+        scheduler.setActorRagdollWorldRegistrationSelection(mPtr, {});
+        EXPECT_TRUE(scheduler.hasActorRagdoll(mPtr));
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_EQ(scheduler.getUserPointer(body), identity);
+        EXPECT_EQ(scheduler.actorRagdollOwners(), std::vector{mPtr});
+        const auto base = ESM::FormKey::content("actors.esm", 100);
+        const std::string model = "characters/_male/skeleton.nif";
+        const auto snapshot = scheduler.captureActorRagdollSnapshot(mPtr, base, model);
+        NifBullet::RagdollNativeWorldSceneRequest request{};
+        request.mRecord = 12;
+        request.mInput.mHasWorld = request.mInput.mHasAuthority = true;
+        request.mInput.mCurrentRotation = request.mInput.mTargetRotation = {0, 0, 0, 1};
+        request.mInput.mTargetPosition = {10, 0, 0, 0};
+        request.mInput.mFrameSeconds = .1f;
+        const std::array requests{request};
+        EXPECT_TRUE(scheduler.synchronizeActorRagdollWorldScenes(mPtr, requests).empty());
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        for (unsigned frame = 1; frame < 31; ++frame)
+        {
+            time += 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                *stats, MWPhysics::WorldFrameData(false, {}));
+        }
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        scheduler.restoreActorRagdollSnapshot(mPtr, snapshot, base, model);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        scheduler.setActorRagdollWorldRegistrationSelection(mPtr, registered);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], body);
+        EXPECT_EQ(scheduler.getUserPointer(body), identity);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        const auto resumedPosition = scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin();
+        time += 1.f / 60.f;
+        scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 31,
+            *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_NE(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin(), resumedPosition);
+        scheduler.setActorRagdollWorldRegistrationSelection(mPtr, {});
+        scheduler.removeActorRagdoll(mPtr);
+        EXPECT_FALSE(scheduler.hasActorRagdoll(mPtr));
+        EXPECT_EQ(scheduler.getUserPointer(body), nullptr);
+        EXPECT_THROW(scheduler.setActorRagdollWorldRegistrationSelection(mPtr, registered), std::invalid_argument);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
     TEST_P(RagdollSchedulerTest, FirstScenePoseUsesLivePositionStoresBeforeBulletPublication)
     {
         const std::array<std::array<std::uint32_t, 2>, 8> cases{{

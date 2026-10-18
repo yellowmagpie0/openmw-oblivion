@@ -2255,5 +2255,172 @@
       "Automatic contact/reaction-frame driving, retained body world membership, reference/proxy movement, GetUp playback and recovery restart still need implementation and runtime acceptance.",
       "No new fork normal-input visual, trajectory, FPS or restart gate is closed by these tests."
     ]
+  },
+  "retained_world_registration_followup": {
+    "status": "Retained sparse/empty World registration mechanism verified; full native reaction/recovery integration remains open",
+    "source": {
+      "head": "f747892d6fb1bd2e78f5a34442a09c7d0402b7e3",
+      "source_fingerprint": "32db367a3365a95a3d530728fb3d603ee90c357eed3ef7196b7f8fcbb811397c"
+    },
+    "source_sha256": {
+      "components/nifbullet/nativedynamicsworld.hpp": "409803e1a562a443626335c2b25e1e5872f8396efc3468a80c9c13defeab8a37",
+      "components/nifbullet/actorragdollphysics.hpp": "9f1a4b0b514fceda59888da5c2495fef774ef0bb47483d218a8d5cd4f5e638ad",
+      "components/nifbullet/actorragdollphysics.cpp": "ad0bd98eb7d8d41081abfb0a00552954156c72975d796f0e47e7fffd819b80a4",
+      "apps/openmw/mwphysics/mtphysics.hpp": "4d272bc8a5da3b0d24fa46e85882ea518c28edc294c844297cc72402472bd121",
+      "apps/openmw/mwphysics/mtphysics.cpp": "24adce52bd8b2e7693aa8069d6484f89ce54aa27cc3059bc261073be720b4f2e",
+      "apps/openmw/mwphysics/physicssystem.hpp": "0c48a6678649ba8a31aa8ee5c918dcc86d2b5c3acf6a806cc070e4425debaad9",
+      "apps/openmw/mwphysics/physicssystem.cpp": "45d1a04f3d4e66b314c3b4108203a766aa8e7ca396b5f2f32c26776631cdb3f4",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "57a0ec90e186fb3a26c0f07f14980d095ac2e5c545129a08fc5055ca470b0257",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "dfe0898c4d515450bd7c0065358d6e8f23d4678aec3f990a15a45407c4a14725",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "835cbd7b0da17b1543b47b53ad9d385a1742081c3a84da3e2875f4da2e746d63"
+    },
+    "independent_requirement": {
+      "protocol": "M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json",
+      "course": "original05 untouched standing baseline and main-body hardware registration writes; committedf747892d6f"
+    },
+    "changes": [
+      "Complete caller-resolved body/constraint record selections can be staged before graph admission or changed on a live owned graph. Constraints require selected endpoints; invalid/duplicate/unknown IDs reject before changes.",
+      "Resource ownership survives partial or empty World membership. Per-member flags replace registration prefix counts; object, shape, constraint, controller and packed state identities remain owned.",
+      "Prepare selection, activation topology and routing storage before World writes. Add bodies/constraints before releasing old members; failed additions/routing roll back newly attempted members. Final routing swap, nonthrowing cleanup and owned flag publication follow.",
+      "Native motion routing permits empty retained owners and validates replacement bodies before swapping. World callbacks skip empty owners; native dynamic and keyframed World steps skip absent bodies. AABB refresh guards absent proxies.",
+      "Owned activation groups follow selected constraints. Scheduler World-scene inputs require actual selected body membership in addition to the owned World wrapper.",
+      "PhysicsSystem/Scheduler expose selection changes under worker barriers and the collision World lock; movement capsule ownership is preserved."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/retained-world-registration-normal-01/verification.json",
+        "report_sha256": "6b246046f6219544f3436c18b742181219429d1ca1e21a1a76d7deacd7b3d7fa",
+        "source": {
+          "head": "f747892d6fb1bd2e78f5a34442a09c7d0402b7e3",
+          "source_fingerprint": "32db367a3365a95a3d530728fb3d603ee90c357eed3ef7196b7f8fcbb811397c"
+        },
+        "results": {
+          "components": {
+            "executed": 2819,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "44d4e0186888cc9568df3f12cb7ef90de21b3ce1760522194154e8c3f05212b0",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "40399a2ddc4617376ae3f0e52b0256c2bb609c2fbc088fad3bb5959df575d4bb",
+            "inventory_sha256": "3356e59a208eeaa706236afa6df4d97201900c149c20da79dbf0ebf81d7841f7",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1631,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "845ef352ba58df923711c235ad364a0a1d1ce14db29a7227c548c588181e736b",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "2cf0bf863185154f7a5476b8beb4aa63d31b989ad47fa5bdd1b368948373c364",
+            "inventory_sha256": "4dbaa48ab1009ebddbf32d3c4304d5d02664fa04b24cd3888845d3c667298bab",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        },
+        "worker_cases": [
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/0",
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/1",
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/2"
+        ]
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/retained-world-registration-sanitized-01/verification.json",
+        "report_sha256": "8173c68a0f2890fd9c8fd85d96b42041a5246aff50b49fc35b38fef3765e830c",
+        "source": {
+          "head": "f747892d6fb1bd2e78f5a34442a09c7d0402b7e3",
+          "source_fingerprint": "32db367a3365a95a3d530728fb3d603ee90c357eed3ef7196b7f8fcbb811397c"
+        },
+        "results": {
+          "components": {
+            "executed": 2819,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9ee0d909302d827585124ea531a927593bd9b2e5c60e1df4ca1d75debdc54bdb",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "90f367d69640f0823906764664224a61f2253881e11c54ef6b1efa949daf7ed0",
+            "inventory_sha256": "50d37905a89cc8381c5673ed3b52686135c8df35f9d921cdbb2b406c241f42c9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1631,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "860b068c8f0c6eaded3c738842e5d7bb41908c04145b9f3597763ebf960b11c1",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "021799eb43791e2bdabec16b430417332396e656306da09faacbb8e9aadd68af",
+            "inventory_sha256": "4dbaa48ab1009ebddbf32d3c4304d5d02664fa04b24cd3888845d3c667298bab",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        },
+        "worker_cases": [
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/0",
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/1",
+          "RetainedRegistrationWaitsForWorkersAndKeepsAbsentSnapshotsAndRouting/2"
+        ]
+      }
+    },
+    "component_cases": [
+      "RegistrationSelectionRetainsObjectsControllersAndPackedState",
+      "RegistrationSelectionStagesAndRejectsInvalidSetsBeforePublication",
+      "RegistrationSelectionRollsBackBodiesAndConstraintsAddedBeforeFailure",
+      "RegistrationSelectionRoutesOnlyRegisteredKeyframesAndAllowsAbsentPoseWrites",
+      "RegistrationSelectionRebuildsActivationGroupsFromRegisteredConstraints",
+      "NativeRoutingRetainsEmptyOwnersAndRejectsInvalidReplacementBeforeSwap"
+    ],
+    "expanded_existing_cases": [
+      "NativeWorldRejectsDuplicateForeignAndMissingOwnerRegistrations empty-owner contract",
+      "DeferredGraphRejectsReusedWorldAddressAndSurvivesWorldDestruction expired selection rejection",
+      "NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSavedAuthority retains capsule and graph while remote body ray membership changes, zero/one/two workers"
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "This API consumes an explicit resolved selection; it does not implement native blend gain/counter/constraint callback policy or automatic contact/GetUp transitions.",
+      "Registration selection is not yet encoded in RuntimeActorRagdoll save DTOs. Existing pose/controller restore preserves the live registration selection. Full recovery save/restart remains open.",
+      "World removal uses the same nonthrowing cleanup contract as owned graph destruction. Strong rollback covers throwing additions and routing validation.",
+      "Original05 full/empty uniform Dog recovery does not establish partial HIT or every actor/effect branch.",
+      "No new fork normal-input visual, trajectory, input/view/FPS or fresh-process recovery gate is closed. ASan/UBSan runs have leak detection disabled."
+    ]
   }
 }

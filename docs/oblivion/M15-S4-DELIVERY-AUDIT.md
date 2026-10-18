@@ -4967,3 +4967,27 @@ directed constraint edges, timing and cleanup are in the
 allocation question for this Dog. Partial HIT/constraint callback ordering,
 other actors and full fork reaction/recovery acceptance remain open; the
 occluded captures close no visual gate.
+
+
+The physics backend now retains graph ownership across explicit partial and
+empty World registration selections. Bodies, constraints, controllers, packed
+velocities and modes survive removal and re-admission. New members and routing
+storage are prepared before old registrations are released; throwing additions
+roll back without removing prior members. Native motion routing supports empty
+owners, World steps and AABB refresh skip absent bodies, activation groups follow
+selected constraints, and scheduler World-scene guards require body membership.
+PhysicsSystem/Scheduler selection operations join workers and keep movement
+capsule ownership unchanged.
+All2819 component cases/269 suites and1631 engine cases/122 suites pass normally
+and under ASan/UBSan with leak detection disabled. Six component cases cover
+retention, sparse/empty selections, invalid identities/endpoints, failed body and
+constraint additions, routing, activation and absent pose writes. Scheduler
+tests exercise0/1/2workers, snapshots and World-scene denial; the existing native
+admission World test also verifies capsule retention and changing body-ray
+membership. Source, hashes and exact inventories are in the
+[verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
+This is the registration mechanism required by original05. Native partial HIT
+and constraint-callback policy, the automatic reaction/GetUp caller and compound
+contact publication remain open. Registration selection is not yet in save DTOs;
+pose/controller restore preserves its live selection. Full recovery restart and
+normal-input/view/FPS gates remain open.

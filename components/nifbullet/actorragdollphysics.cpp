@@ -344,7 +344,10 @@ namespace NifBullet
         std::vector<std::vector<std::size_t>> mActivationGroups;
         std::vector<btCollisionObject*> mCollisionObjects;
         std::vector<std::unique_ptr<btTypedConstraint>> mConstraints;
-        std::size_t mRegisteredBodies = 0, mRegisteredConstraints = 0;
+        std::vector<std::uint32_t> mConstraintRecords;
+        std::vector<std::pair<std::size_t, std::size_t>> mConstraintEndpoints;
+        std::vector<unsigned char> mRegisteredBodies, mRegisteredConstraints;
+        std::vector<unsigned char> mSelectedBodies, mSelectedConstraints;
         int mCollisionGroup = 0, mCollisionMask = 0;
         bool mDisableLinkedCollisions = true;
         bool mPublished = false, mNativeWorld = false;
@@ -360,20 +363,67 @@ namespace NifBullet
         {
             if (!worldAlive())
             {
-                mRegisteredBodies = mRegisteredConstraints = 0;
+                std::fill(mRegisteredBodies.begin(), mRegisteredBodies.end(), 0);
+                std::fill(mRegisteredConstraints.begin(), mRegisteredConstraints.end(), 0);
                 mPublished = false;
                 return;
             }
             if (mPublished)
                 if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&mWorld))
                     native->unregisterNativeMotionOwner(mOwner);
-            while (mRegisteredConstraints)
-                mWorld.removeConstraint(mConstraints[--mRegisteredConstraints].get());
-            while (mRegisteredBodies)
-                mWorld.removeRigidBody(mBodies[--mRegisteredBodies].mBody.get());
+            for (std::size_t i = mRegisteredConstraints.size(); i-- > 0;)
+                if (mRegisteredConstraints[i])
+                {
+                    mWorld.removeConstraint(mConstraints[i].get());
+                    mRegisteredConstraints[i] = 0;
+                }
+            for (std::size_t i = mRegisteredBodies.size(); i-- > 0;)
+                if (mRegisteredBodies[i])
+                {
+                    mWorld.removeRigidBody(mBodies[i].mBody.get());
+                    mRegisteredBodies[i] = 0;
+                }
             mPublished = false;
         }
         const void* mOwner = nullptr;
+
+        struct ActivationGroups
+        {
+            std::vector<std::size_t> mBodyGroups;
+            std::vector<std::vector<std::size_t>> mGroups;
+        };
+        ActivationGroups prepareActivationGroups(std::span<const unsigned char> constraints) const
+        {
+            ActivationGroups result;
+            result.mBodyGroups.resize(mBodies.size());
+            std::iota(result.mBodyGroups.begin(), result.mBodyGroups.end(), 0);
+            const auto root = [&](std::size_t i) {
+                while (result.mBodyGroups[i] != i)
+                    i = result.mBodyGroups[i];
+                return i;
+            };
+            for (std::size_t i = 0; i < constraints.size(); ++i)
+                if (constraints[i])
+                {
+                    const auto [a, b] = mConstraintEndpoints[i];
+                    result.mBodyGroups[root(b)] = root(a);
+                }
+            result.mGroups.resize(mBodies.size());
+            for (std::size_t i = 0; i < mBodies.size(); ++i)
+            {
+                const auto group = root(i);
+                result.mGroups[group].push_back(i);
+            }
+            for (std::size_t i = 0; i < mBodies.size(); ++i)
+                result.mBodyGroups[i] = root(i);
+            return result;
+        }
+        void commitActivationGroups(ActivationGroups&& groups) noexcept
+        {
+            for (std::size_t i = 0; i < mBodies.size(); ++i)
+                mBodies[i].mActivationGroup = groups.mBodyGroups[i];
+            mActivationGroups.swap(groups.mGroups);
+        }
 
         void setMotion(Body& owned, RagdollNativeMotion motion)
         {
@@ -399,7 +449,8 @@ namespace NifBullet
         void activateGroup(std::size_t group)
         {
             for (const auto index : mActivationGroups[group])
-                mBodies[index].mBody->activate(true);
+                if (!mPublished || mRegisteredBodies[index])
+                    mBodies[index].mBody->activate(true);
         }
 
         Impl(btDynamicsWorld& world, float scale) : mWorld(world), mLengthScale(scale) {}
@@ -1150,6 +1201,8 @@ namespace NifBullet
         {
             require(input.mBodyA < mImpl->mBodies.size() && input.mBodyB < mImpl->mBodies.size()
                 && input.mBodyA != input.mBodyB, "invalid joint endpoints");
+            mImpl->mConstraintRecords.push_back(input.mRecord);
+            mImpl->mConstraintEndpoints.emplace_back(input.mBodyA, input.mBodyB);
             if (input.mMalleable)
             {
                 coefficient(input.mTau);
@@ -1225,6 +1278,10 @@ namespace NifBullet
         }
         // Every owned body, constraint and filter is prepared before any
         // registration. Deferred callers may prepare resource state first.
+        mImpl->mRegisteredBodies.resize(mImpl->mBodies.size(), 0);
+        mImpl->mRegisteredConstraints.resize(mImpl->mConstraints.size(), 0);
+        mImpl->mSelectedBodies.resize(mImpl->mBodies.size(), 1);
+        mImpl->mSelectedConstraints.resize(mImpl->mConstraints.size(), 1);
         if (publication == Publication::Immediate)
             (void)publish(world);
     }
@@ -1251,20 +1308,26 @@ namespace NifBullet
                 return false;
         try
         {
-            for (auto& body : mImpl->mBodies)
+            std::vector<btCollisionObject*> routed;
+            routed.reserve(mImpl->mBodies.size());
+            for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
             {
+                if (!mImpl->mSelectedBodies[i]) continue;
+                auto& body = mImpl->mBodies[i];
                 // A virtual World may publish its proxy and then throw.
                 // Include the currently attempted body in rollback.
-                ++mImpl->mRegisteredBodies;
+                mImpl->mRegisteredBodies[i] = 1;
                 world.addRigidBody(body.mBody.get(), mImpl->mCollisionGroup, mImpl->mCollisionMask);
+                routed.push_back(body.mBody.get());
             }
-            for (auto& constraint : mImpl->mConstraints)
+            for (std::size_t i = 0; i < mImpl->mConstraints.size(); ++i)
             {
-                ++mImpl->mRegisteredConstraints;
-                world.addConstraint(constraint.get(), mImpl->mDisableLinkedCollisions);
+                if (!mImpl->mSelectedConstraints[i]) continue;
+                mImpl->mRegisteredConstraints[i] = 1;
+                world.addConstraint(mImpl->mConstraints[i].get(), mImpl->mDisableLinkedCollisions);
             }
             if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&world))
-                native->registerNativeMotionOwner(this, mImpl->mCollisionObjects,
+                native->registerNativeMotionOwner(this, routed,
                     [this](float frame) { stepNativeKeyframedMotion(frame); });
             mImpl->mPublished = true;
         }
@@ -1276,6 +1339,110 @@ namespace NifBullet
             throw;
         }
         return true;
+    }
+
+    RagdollWorldRegistration ActorRagdollPhysics::captureWorldRegistrationSelection() const
+    {
+        RagdollWorldRegistration result;
+        for (std::size_t i = 0; i < mImpl->mBodies.size(); ++i)
+            if (mImpl->mSelectedBodies[i]) result.mBodies.push_back(mImpl->mBodies[i].mRecord);
+        for (std::size_t i = 0; i < mImpl->mConstraints.size(); ++i)
+            if (mImpl->mSelectedConstraints[i]) result.mConstraints.push_back(mImpl->mConstraintRecords[i]);
+        return result;
+    }
+
+    void ActorRagdollPhysics::setWorldRegistrationSelection(const RagdollWorldRegistration& selection)
+    {
+        require(mImpl->worldAlive(), "expired physical World registration");
+        const auto select = [](const auto& records, std::size_t count, const auto& recordAt) {
+            std::vector<unsigned char> result(count, 0);
+            std::unordered_set<std::uint32_t> unique;
+            for (std::size_t i = 0; i < count; ++i)
+                require(unique.insert(recordAt(i)).second, "ambiguous registration record identity");
+            for (const auto record : records)
+            {
+                std::size_t index = 0;
+                while (index < count && recordAt(index) != record) ++index;
+                require(index < count && !result[index], "unknown or duplicate registration record");
+                result[index] = 1;
+            }
+            return result;
+        };
+        auto bodies = select(selection.mBodies, mImpl->mBodies.size(),
+            [&](std::size_t i) { return mImpl->mBodies[i].mRecord; });
+        auto constraints = select(selection.mConstraints, mImpl->mConstraints.size(),
+            [&](std::size_t i) { return mImpl->mConstraintRecords[i]; });
+        for (std::size_t i = 0; i < constraints.size(); ++i)
+            if (constraints[i])
+            {
+                const auto [a, b] = mImpl->mConstraintEndpoints[i];
+                require(bodies[a] && bodies[b], "unregistered constraint endpoint");
+            }
+        auto groups = mImpl->prepareActivationGroups(constraints);
+        if (!mImpl->mPublished)
+        {
+            mImpl->commitActivationGroups(std::move(groups));
+            mImpl->mSelectedBodies.swap(bodies);
+            mImpl->mSelectedConstraints.swap(constraints);
+            return;
+        }
+
+        std::vector<btCollisionObject*> routed;
+        std::vector<std::size_t> addedBodies, addedConstraints;
+        routed.reserve(bodies.size());
+        addedBodies.reserve(bodies.size());
+        addedConstraints.reserve(constraints.size());
+        for (std::size_t i = 0; i < bodies.size(); ++i)
+        {
+            auto* body = mImpl->mBodies[i].mBody.get();
+            require(mImpl->mRegisteredBodies[i] || !body->getBroadphaseHandle(),
+                "body registered outside its physical owner");
+            if (bodies[i]) routed.push_back(body);
+        }
+        try
+        {
+            for (std::size_t i = 0; i < bodies.size(); ++i)
+                if (bodies[i] && !mImpl->mRegisteredBodies[i])
+                {
+                    // Include a virtual World that inserts and then throws.
+                    addedBodies.push_back(i);
+                    mImpl->mWorld.addRigidBody(mImpl->mBodies[i].mBody.get(),
+                        mImpl->mCollisionGroup, mImpl->mCollisionMask);
+                }
+            for (std::size_t i = 0; i < constraints.size(); ++i)
+                if (constraints[i] && !mImpl->mRegisteredConstraints[i])
+                {
+                    addedConstraints.push_back(i);
+                    mImpl->mWorld.addConstraint(mImpl->mConstraints[i].get(), mImpl->mDisableLinkedCollisions);
+                }
+            if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&mImpl->mWorld))
+                native->replaceNativeMotionOwnerBodies(this, std::move(routed));
+        }
+        catch (...)
+        {
+            for (auto i = addedConstraints.rbegin(); i != addedConstraints.rend(); ++i)
+                mImpl->mWorld.removeConstraint(mImpl->mConstraints[*i].get());
+            for (auto i = addedBodies.rbegin(); i != addedBodies.rend(); ++i)
+                mImpl->mWorld.removeRigidBody(mImpl->mBodies[*i].mBody.get());
+            throw;
+        }
+        // Successful routing is followed only by nonthrowing World cleanup and
+        // owned buffer publication. Keep previous registrations until all
+        // potentially failing additions and routing validation have succeeded.
+        const auto removeOld = [&]() noexcept {
+            for (std::size_t i = constraints.size(); i-- > 0;)
+                if (mImpl->mRegisteredConstraints[i] && !constraints[i])
+                    mImpl->mWorld.removeConstraint(mImpl->mConstraints[i].get());
+            for (std::size_t i = bodies.size(); i-- > 0;)
+                if (mImpl->mRegisteredBodies[i] && !bodies[i])
+                    mImpl->mWorld.removeRigidBody(mImpl->mBodies[i].mBody.get());
+        };
+        removeOld();
+        std::copy(bodies.begin(), bodies.end(), mImpl->mRegisteredBodies.begin());
+        std::copy(constraints.begin(), constraints.end(), mImpl->mRegisteredConstraints.begin());
+        mImpl->commitActivationGroups(std::move(groups));
+        mImpl->mSelectedBodies.swap(bodies);
+        mImpl->mSelectedConstraints.swap(constraints);
     }
 
     std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const
@@ -1428,7 +1595,8 @@ namespace NifBullet
             body.setCenterOfMassTransform(pose);
             body.clearForces();
             body.activate(true);
-            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive() && body.getBroadphaseHandle())
+                mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 
@@ -1716,7 +1884,8 @@ namespace NifBullet
                 body.setAngularVelocity(btVector3(0, 0, 0));
                 change.mOwned->mNativeAngularW = 0.f;
             }
-            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive() && body.getBroadphaseHandle())
+                mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 
@@ -1909,7 +2078,8 @@ namespace NifBullet
             {
                 body.setCenterOfMassTransform(*change.mPose);
                 body.setInterpolationWorldTransform(*change.mPose);
-                if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
+                if (mImpl->mPublished && mImpl->worldAlive() && body.getBroadphaseHandle())
+                    mImpl->mWorld.updateSingleAabb(&body);
             }
             if (change.mVelocities)
             {
@@ -2683,7 +2853,8 @@ namespace NifBullet
         {
             auto& owned = mImpl->mBodies[i];
             // Sleeping islands and KEY bodies do not consume dynamic deltas.
-            if (owned.mMotion != RagdollNativeMotion::Dynamic || !owned.mBody->isActive())
+            if (owned.mMotion != RagdollNativeMotion::Dynamic || !owned.mBody->isActive()
+                || (mImpl->mPublished && !owned.mBody->getBroadphaseHandle()))
                 continue;
             const auto output = ragdollNativePackedVelocityStep(states[i].mVelocities,
                 owned.mLimits, frameSeconds, nativeLinearDeltas[i]);
@@ -2723,7 +2894,8 @@ namespace NifBullet
         for (auto& owned : mImpl->mBodies)
         {
             const auto& body = *owned.mBody;
-            if (owned.mMotion != RagdollNativeMotion::Keyframed || !body.isActive())
+            if (owned.mMotion != RagdollNativeMotion::Keyframed || !body.isActive()
+                || (mImpl->mPublished && !body.getBroadphaseHandle()))
                 continue;
             const auto physical = body.getWorldTransform() * owned.mCenterFrame.inverse();
             const auto rotation = physical.getRotation();
@@ -2768,7 +2940,8 @@ namespace NifBullet
             // For kinematic bodies Bullet retains the previous transform here
             // and copies our capped velocities into interpolation state.
             body.setCenterOfMassTransform(change.mPose);
-            if (mImpl->mPublished && mImpl->worldAlive()) mImpl->mWorld.updateSingleAabb(&body);
+            if (mImpl->mPublished && mImpl->worldAlive() && body.getBroadphaseHandle())
+                mImpl->mWorld.updateSingleAabb(&body);
         }
     }
 

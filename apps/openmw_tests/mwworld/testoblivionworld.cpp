@@ -23678,6 +23678,15 @@ TEST(OblivionWorldTest, NativePhysicalAdmissionJoinsRenderedGeometryCapsuleAndSa
         EXPECT_TRUE(remoteRay().mHit);
         EXPECT_EQ(remoteRay().mHitObject, actor);
         EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(actor), (std::vector(keyframed.begin(), keyframed.end())));
+        const auto registration = physics.captureActorRagdollWorldRegistrationSelection(actor);
+        physics.setActorRagdollWorldRegistrationSelection(actor, {});
+        EXPECT_TRUE(physics.hasActorRagdoll(actor));
+        EXPECT_FALSE(physics.getActor(actor)->isCollisionSuspended());
+        EXPECT_NE(physics.getActor(actor)->getCollisionObject()->getBroadphaseHandle(), nullptr);
+        EXPECT_FALSE(remoteRay().mHit);
+        EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(actor), (std::vector(keyframed.begin(), keyframed.end())));
+        physics.setActorRagdollWorldRegistrationSelection(actor, registration);
+        EXPECT_TRUE(remoteRay().mHit);
         physics.removeActorRagdoll(actor);
         absent();
         EXPECT_FALSE(remoteRay().mHit);

@@ -192,6 +192,10 @@ namespace MWPhysics
             const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
         void removeActorRagdoll(const MWWorld::Ptr& ptr);
         bool hasActorRagdoll(const MWWorld::Ptr& ptr);
+        // Both operations join queued workers and lock the collision World.
+        NifBullet::RagdollWorldRegistration captureActorRagdollWorldRegistrationSelection(const MWWorld::Ptr& ptr);
+        void setActorRagdollWorldRegistrationSelection(
+            const MWWorld::Ptr& ptr, const NifBullet::RagdollWorldRegistration& selection);
         // Main-thread borrowed references; the returned vector owns no actors.
         // Waits for queued physics before reading the complete current owner set.
         std::vector<MWWorld::Ptr> actorRagdollOwners();

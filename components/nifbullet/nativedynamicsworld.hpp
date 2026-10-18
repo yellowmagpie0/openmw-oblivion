@@ -53,7 +53,8 @@ namespace NifBullet
         void internalSingleStepSimulation(btScalar timeStep) override
         {
             for (const auto& owner : mNativeOwners)
-                owner.mStep(static_cast<float>(timeStep));
+                if (!owner.mBodies.empty())
+                    owner.mStep(static_cast<float>(timeStep));
             btDiscreteDynamicsWorld::internalSingleStepSimulation(timeStep);
         }
 
@@ -88,7 +89,7 @@ namespace NifBullet
         void registerNativeMotionOwner(const void* identity, std::span<btCollisionObject* const> bodies,
             std::function<void(float)> step)
         {
-            if (!identity || !step || bodies.empty()
+            if (!identity || !step
                 || std::any_of(mNativeOwners.begin(), mNativeOwners.end(),
                     [&](const Owner& owner) { return owner.mIdentity == identity; }))
                 throw std::invalid_argument("Invalid native motion owner");
@@ -103,6 +104,30 @@ namespace NifBullet
             }
             Owner owner{identity, std::move(step), {bodies.begin(), bodies.end()}};
             mNativeOwners.push_back(std::move(owner));
+        }
+
+        // The caller prepares the vector before changing World membership.
+        // Validate all new members before a nonallocating routing swap. Empty
+        // selections retain the owner but receive no simulation callback.
+        void replaceNativeMotionOwnerBodies(const void* identity, std::vector<btCollisionObject*> bodies)
+        {
+            const auto found = std::find_if(mNativeOwners.begin(), mNativeOwners.end(),
+                [&](const Owner& owner) { return owner.mIdentity == identity; });
+            if (!identity || found == mNativeOwners.end())
+                throw std::invalid_argument("Invalid native motion owner replacement");
+            for (std::size_t i = 0; i < bodies.size(); ++i)
+            {
+                auto* body = bodies[i];
+                if (!body || !btRigidBody::upcast(body)
+                    || std::find(bodies.begin(), bodies.begin() + i, body) != bodies.begin() + i
+                    || m_collisionObjects.findLinearSearch(body) == m_collisionObjects.size()
+                    || std::any_of(mNativeOwners.begin(), mNativeOwners.end(), [&](const Owner& owner) {
+                        return owner.mIdentity != identity
+                            && std::find(owner.mBodies.begin(), owner.mBodies.end(), body) != owner.mBodies.end();
+                    }))
+                    throw std::invalid_argument("Invalid native motion owner replacement body");
+            }
+            found->mBodies.swap(bodies);
         }
 
         void unregisterNativeMotionOwner(const void* identity) noexcept

@@ -296,6 +296,13 @@ namespace NifBullet
         std::uint32_t mRequestedMotion = 8;
     };
 
+    struct RagdollWorldRegistration
+    {
+        std::vector<std::uint32_t> mBodies;
+        std::vector<std::uint32_t> mConstraints;
+        friend bool operator==(const RagdollWorldRegistration&, const RagdollWorldRegistration&) = default;
+    };
+
     // Owns collision shapes, rigid bodies and constraints. The borrowed world
     // must outlive the instance for ordinary Bullet worlds. Native worlds use
     // lifetime identities; retained graphs safely discard after World destruction.
@@ -318,12 +325,23 @@ namespace NifBullet
         ActorRagdollPhysics& operator=(const ActorRagdollPhysics&) = delete;
 
         // Deferred construction requires NativeDynamicsWorld and creates no
-        // broadphase bodies, constraints or native motion registration.
+        // broadphase bodies, constraints or native motion owner.
         // Explicit publication is once-only; foreign/replaced World identities
         // reject. Any throwing admission removes every partial registration.
         // Caller publishes its logical owner only after this succeeds.
         bool publish(btDynamicsWorld& world);
+        // Published resource ownership survives an empty registration selection.
         bool isPublished() const noexcept;
+
+        // Complete caller-resolved body/constraint record sets. Constraints
+        // require both selected endpoints. Deferred graphs stage the selection;
+        // published graphs add new members before releasing old registrations.
+        // Failed additions/routing preserve the previous selection and members.
+        // World removals follow the same nonthrowing cleanup contract as destruction.
+        // Bodies, shapes, constraints, controllers and packed state retain identity.
+        // This does not infer native gain/counter/constraint callback policy.
+        void setWorldRegistrationSelection(const RagdollWorldRegistration& selection);
+        RagdollWorldRegistration captureWorldRegistrationSelection() const;
 
         // Borrowed identities for engine collision routing; ownership stays here.
         std::span<btCollisionObject* const> collisionObjects() const;

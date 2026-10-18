@@ -1048,6 +1048,18 @@ namespace MWPhysics
         return mTaskScheduler->actorRagdollDefinition(ptr);
     }
 
+    NifBullet::RagdollWorldRegistration PhysicsSystem::captureActorRagdollWorldRegistrationSelection(
+        const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureActorRagdollWorldRegistrationSelection(ptr);
+    }
+
+    void PhysicsSystem::setActorRagdollWorldRegistrationSelection(
+        const MWWorld::Ptr& ptr, const NifBullet::RagdollWorldRegistration& selection)
+    {
+        mTaskScheduler->setActorRagdollWorldRegistrationSelection(ptr, selection);
+    }
+
     std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureActorRagdoll(const MWWorld::Ptr& ptr)
     {
         return mTaskScheduler->captureActorRagdoll(ptr);
