@@ -5035,3 +5035,25 @@ Automatic contact-driven reaction/FSM/GetUp integration, partial HIT policy,
 reference and capsule movement, every S4 mastery/effect branch, normal-input
 recovery, first/third person and device/FPS coverage, and real recovery save/quit/
 fresh-process continuation remain open. Full M15S4 is not delivered.
+
+
+A new 4292-case original-instruction corpus executes the complete rigid-body and
+constraint admission/removal wrappers, both constraint queue drains and native
+reference retain/release helpers. Admission uses World-owner+1C; removal uses
++20. Body pending bits suppress subsequent requests, including an opposite
+request; queued constraints retain once per request. Immediate and drained
+constraint admission also require every non-null endpoint to have a non-null
+simulation-island pointer. The constraint admission drain waits for the body-add
+queue to empty; a retry of the same pending queue is covered. Removal return
+bytes distinguish a requested operation from a successful lower World removal.
+
+The exact matrix, hashes, boundaries, retained initial 4224-case pass and limits
+are in `native_world_queue_instruction_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Lower native World operations remain
+explicit boundaries. Mixed-phase scheduling, capacity flushes, rigid-body queue
+drains, native body-removal cascades and actual fork reaction integration are
+not established by this corpus. Static inspection identifies listener dispatch
+before the observed native body World-link clear; concrete listener identities
+and callbacks remain to be established. Production code is unchanged from
+ab1a6921fe, so its prior full normal/sanitized/Python checkpoint still applies.
+Full M15S4 and its normal-input recovery/restart acceptance remain open.

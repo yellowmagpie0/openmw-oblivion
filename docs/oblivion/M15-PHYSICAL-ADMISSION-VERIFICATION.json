@@ -2735,5 +2735,203 @@
         ]
       }
     }
+  },
+  "native_world_queue_instruction_followup": {
+    "status": "Native World wrapper queue branches and constraint drains independently verified; automatic reaction policy and native body-removal cascade remain open",
+    "source_parent_commit": "ab1a6921fedb8e8c889dacc716d17c4b6a783fa5",
+    "report": "build/oblivion-compat/m15/S4/native-world-registration-queues-static-02/report.json",
+    "report_sha256": "637998165e01c07abedc90011d86d5ea3f2eb49bada0789f6c759f77c92a353a",
+    "probe_sha256": "a64a3efc2b77f7be91560e79c4503493c94ab2384c6a9c2e962c9495d7da7e21",
+    "executable_metadata_sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "results": {
+      "passed": true,
+      "profiles": 4292,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "0d78962fab06937f39ab8dab773ee8de1e8df424a38a25ef32acb6b4ecc8deb8",
+      "native_paths": [
+        "full88C210 rigid-body admission wrapper",
+        "full88B430 rigid-body removal wrapper",
+        "full88C330 constraint admission wrapper",
+        "full88B600 constraint removal wrapper",
+        "full88A120 constraint admission flush",
+        "full88A440 constraint removal flush",
+        "actual8BC720/8BC730 native reference increments/decrements"
+      ],
+      "boundaries": [
+        "World virtual58 supplies declared synthetic World or null",
+        "8994E0/8996C0 body World operation boundaries record requests; removal returns declared boolean",
+        "8988A0/8988F0 constraint World operation boundaries record requests and synthetic owner-link effects; no native solver/world simulation",
+        "Small queue lengths0/1/2; capacity/overflow flushes, rigid-body queue drains, phantom routing, World-internal deferred operations and native removal cascades excluded"
+      ],
+      "findings": [
+        "Admission queues use unsigned owner+1C; removal queues use unsigned owner+20. Body requests require wrapper+18 pending bits0x30 clear; queued add/remove sets0x10/0x20 and retains once. A wrapperless body or already pending body is skipped, so these wrappers do not implement last-request-wins.",
+        "Constraint requests share pointer/count queue+40/+44, retain a managed native object once per queued request, and carry no wrapper pending-bit deduplication. Independent queue phases are required; this corpus does not infer mixed-phase conflict resolution.",
+        "Immediate constraint addition requires native owner+8 null and each non-null endpoint island+54 non-null. A null endpoint is accepted by this gate.",
+        "Constraint add flush returns without draining while body-add count+2C is nonzero. After body queue drains it checks owner/islands, attempts eligible adds, releases every queued reference and clears/counts the queue. Constraint remove flush only attempts entries with nonzero owner, releases references and clears queue.",
+        "Rigid-body removal wrapper returns the lower boolean only for an actual immediate operation; pending/wrapperless cases report true when World exists. Constraint removal wrapper reports true with a World independently of the lower removal boolean."
+      ],
+      "limits": [
+        "Repeated-constraint and pending-body opposite-request sequences are synthetic queue-phase fixtures, not an inference about callers that enable both batch gates",
+        "No production implementation comparison yet",
+        "Not full native body-removal cascade or admission/removal capacity scheduler",
+        "No native simulation, fork automatic reactions or runtime acceptance"
+      ]
+    },
+    "interpretation_note": "The raw report phrase Independent queue phases are required describes a harness/use limitation. This corpus does not establish the real game caller phase schedule or mixed admission/removal conflict resolution.",
+    "editable_protocol": {
+      "identity": "Hash-check pinned original PE before mapping all raw sections at their declared addresses; no game instructions replaced.",
+      "body_requests": {
+        "operations": [
+          "88C210 admission",
+          "88B430 removal"
+        ],
+        "World_available": [
+          false,
+          true
+        ],
+        "relevant_unsigned_gate": [
+          0,
+          1,
+          4294967295
+        ],
+        "wrapper_pending_bits": [
+          0,
+          16,
+          32,
+          48
+        ],
+        "wrapper_present": [
+          false,
+          true
+        ],
+        "native_reference_management_word4": [
+          0,
+          1
+        ],
+        "preexisting_queue_count": [
+          0,
+          1
+        ],
+        "lower_removal_boolean": [
+          false,
+          true
+        ],
+        "body_type_byte2C": 1,
+        "initial_native_reference_count6": 5,
+        "initial_wrapper_other_flag_bits": 2147500032,
+        "cases": 768
+      },
+      "constraint_requests": {
+        "operations": [
+          "88C330 admission then88A120 drain",
+          "88B600 removal then88A440 drain"
+        ],
+        "World_available": [
+          false,
+          true
+        ],
+        "relevant_unsigned_gate": [
+          0,
+          1,
+          4294967295
+        ],
+        "native_owner_present": [
+          false,
+          true
+        ],
+        "each_endpoint": [
+          "null",
+          "present with null island+54",
+          "present with nonnull island+54"
+        ],
+        "native_reference_management_word4": [
+          0,
+          1
+        ],
+        "preexisting_queue_count": [
+          0,
+          1
+        ],
+        "lower_removal_boolean": [
+          false,
+          true
+        ],
+        "body_add_queue_pending": [
+          false,
+          true
+        ],
+        "initial_native_reference_count6": 5,
+        "retry": "For an admission drain blocked on body-add count, clear that count and retry the same pending constraint queue.",
+        "cases": 3456
+      },
+      "repeated_constraint_requests": {
+        "operations": [
+          "admit",
+          "remove"
+        ],
+        "unsigned_gate": [
+          1,
+          4294967295
+        ],
+        "managed_reference": [
+          false,
+          true
+        ],
+        "repeats": [
+          2,
+          3
+        ],
+        "initial_owner_present": [
+          false,
+          true
+        ],
+        "lower_removal_boolean": [
+          false,
+          true
+        ],
+        "endpoints": "both present with islands",
+        "cases": 64
+      },
+      "pending_body_sequences": {
+        "first_operation": [
+          "admit",
+          "remove"
+        ],
+        "managed_reference": [
+          false,
+          true
+        ],
+        "sequence": [
+          "first",
+          "opposite",
+          "first",
+          "opposite"
+        ],
+        "both_gates": 1,
+        "cases": 4
+      },
+      "checks": [
+        "Every call must reach the return sentinel with exact ESP and callee-saved registers.",
+        "Compare exact lower operation call order, queue pointer/count/contents, pending flags and reference counts.",
+        "Constraint drain checks owner/island eligibility, blocked-body-queue retry, reference release and cleared queue slots.",
+        "Only body-removal/constraint-removal wrapper return bytes are asserted; admission-wrapper return values are not given invented boolean semantics."
+      ]
+    },
+    "retained_prior_attempt": {
+      "report": "build/oblivion-compat/m15/S4/native-world-registration-queues-static-01/report.json",
+      "passed_profiles": 4224,
+      "reason": "Initial passing matrix retained before adding repeated-constraint and opposite-body-request sequences."
+    },
+    "static_followup": {
+      "files_root": "build/oblivion-compat/m15/S4/native-world-registration-queues-static-01",
+      "findings": [
+        "Full8996C0 invokes8CCA80 broadphase removal, World/body listener dispatch8DC410/8DC1C0, then8CBE90 World-link clear.",
+        "8DC410 traverses World+D0/D4 listeners via virtual8 and is not independently identified as a direct constraint-removal helper.",
+        "8DC1C0 traverses body+AC/B0 listeners, then repeatedly dispatches virtualC through body+68/6C and+74/78 until each list count reaches zero, followed by+B8/BC virtual14 callbacks.",
+        "The concrete objects/vtables in those body lists must be identified before modeling their effect. No constraint-cascade rule is inferred solely from these offsets."
+      ],
+      "scope": "Static inspection only; not additional executed cases or native simulation."
+    },
+    "validation_scope": "Independent executable corpus and structured documentation only. Production C++/Python code is unchanged from ab1a6921fe; its prior full suites remain the implementation checkpoint. No new fork runtime gate is closed."
   }
 }
