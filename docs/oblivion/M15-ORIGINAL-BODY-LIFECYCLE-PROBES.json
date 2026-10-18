@@ -1,0 +1,419 @@
+{
+  "schema_version": 1,
+  "checkpoint_date": "2026-10-17",
+  "source_parent_commit": "295ae021dcf024c120e4bfc81cd8291e8d636143",
+  "status": "Independent original observation passed; native membership policy and fork recovery integration remain open",
+  "scope": "Independent original normal-input native body-lifecycle observation. Not fork recovery or visual acceptance.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+  "editable_protocol": {
+    "isolation": [
+      "Clone the restored private 03 prefix into a new private prefix; preserve original and cloned pristine save hashes.",
+      "Back up INI, Plugins.txt and autosave before enabling only Oblivion.esm. Record Steam/game process start epochs and wrapper exits.",
+      "Use private Xvfb displays. Query the actual visible Oblivion window before focusing or delivering input."
+    ],
+    "setup": [
+      "Load quicksave through the original console. Wait for and inspect the loaded scene before issuing setup commands.",
+      "Set Player angle Z=0, X=43, Strength=40, Luck=50, HandToHand=10, Fatigue=0; verify actual Fatigue=140.",
+      "Set fFatigueReturnBase=.05 and fFatigueReturnMult=0, and query both.",
+      "Spawn Dog base0001E5F5 at distance80 with placeatme; toggle AI processing off and verify the console reports Off.",
+      "Close console, draw fists, reopen console and select the spawned Dog. Verify referenceFF000800.",
+      "Issue integer modav fatigue -159. Verify target Fatigue1, baseFatigue160, Health20 and GetKnockedState0.",
+      "Set Player angle Z=45, X=20. Start the passive observer, wait for readiness, close console and press mouse1 once."
+    ],
+    "observation": [
+      "Observe actual contact, native reaction frames, controller frames, GetUp IDLE/slot and actual completion without forced native calls or outcome writes.",
+      "Traverse the full root: require NiAVObject NiRTTI ancestry before reading collision+A8 and NiNode ancestry before children+B0/count+B6.",
+      "For each collision wrapper require bhkNiCollisionObject ancestry, then read body+10; require bhkRigidBody ancestry before native object+8.",
+      "Capture native body world link+8, packed filter+30, raw broadphase word+28 and motion object+50; decode only recognized actual virtual+8 motion getter instructions.",
+      "For blend wrappers record hierarchy gain+14 and requested motion+1C. Treat raw word+C and float+18 as uninterpreted storage.",
+      "Compare node paths, wrapper/native-body identities, motion-object identities, filters and world links in every sampled frame.",
+      "Retain character-proxy world-link/filter hardware watchpoints. Body world links are sampled, not hardware watched.",
+      "Capture raw3 and recovered views; assess visual visibility separately from memory assertions."
+    ],
+    "cleanup": [
+      "Quit through the original console and consume the game wrapper; shut down only the owned private Steam and consume its wrapper.",
+      "Restore INI, plugins and autosave exactly; verify original and cloned pristine saves retain their declared hash.",
+      "Preserve failed attempts and debugger logs. Do not overwrite an earlier run or infer process ownership from a remembered PID."
+    ]
+  },
+  "fixture": {
+    "source": "03 successful course recipe",
+    "base": "0001E5F5",
+    "reference": "FF000800",
+    "player_strength": 40,
+    "player_luck": 50,
+    "player_handtohand": 10,
+    "player_fatigue": 140,
+    "target_health": 20,
+    "target_fatigue": 1,
+    "target_base_fatigue": 160,
+    "integer_target_modav_fatigue": -159,
+    "return_base": 0.05,
+    "return_mult": 0,
+    "AI_processing": false,
+    "initial_camera_z_x": [
+      0,
+      43
+    ],
+    "contact_camera_z_x": [
+      45,
+      20
+    ],
+    "actual_contact": "One normal mouse1 press after console close, observed-01.",
+    "initial_sample_fatigue": -0.6472625732421875
+  },
+  "counts": {
+    "frames": 94,
+    "controller_frames": 93,
+    "states": [
+      0,
+      4,
+      3,
+      5,
+      6,
+      0
+    ],
+    "frame_counts": {
+      "0": 2,
+      "4": 3,
+      "3": 76,
+      "5": 1,
+      "6": 12
+    },
+    "nodes_each_frame": 52,
+    "body_count": 26,
+    "hierarchy_read_errors": 0
+  },
+  "observations": {
+    "initial_before_Down": "All26 existing bhkRigidBody wrappers and underlying native body objects: requested6, actual6, hierarchy1, body world link null. This sample is after the admitted contact callback, before Down; not pristine pre-hit state.",
+    "down_and_incapacitation": "All26 retain their collision/body wrapper/native-body identities and packed filters. Native actual motion is2 forBip01 Spine0 and4 forother25, requested1, non-null ahkWorld links. First observed at frame2 raw4, hierarchy.3360004425048828.",
+    "recovery": "At frame88 raw6, hierarchy1, requested6 andactual6; all26 body world links null again before raw6 animation completion/finalraw0.",
+    "retained_objects": "Collision wrappers, bhkRigidBody wrappers and underlying native body objects identical inall94frames. All26 final keyframed motion object pointers differ from their initial ones; do not assume motion-object identity is retained.",
+    "character_proxy": "Actual retained bhkCharacterController/ahkCharacterProxy: same non-null ahkWorld link, unchanged packedfilter, zero hardware world-link/filter writes through declared interval.",
+    "broadphase_words": "Initial body words+28 all0. Dynamic words distinct1CF..1E8. After bodyworldlinksclear, words remain nonzero and include duplicates; do not use their value alone as registration evidence."
+  },
+  "transitions": [
+    {
+      "frame": 0,
+      "raw": 0,
+      "actor_manager_time": 4.0370001792907715,
+      "actual_motion_counts": {
+        "6": 26
+      },
+      "body_nonzero_world_links": 0,
+      "hierarchy_gains": [
+        1.0
+      ]
+    },
+    {
+      "frame": 1,
+      "raw": 4,
+      "actor_manager_time": 4.203000068664551,
+      "actual_motion_counts": {
+        "6": 26
+      },
+      "body_nonzero_world_links": 0,
+      "hierarchy_gains": [
+        1.0
+      ]
+    },
+    {
+      "frame": 2,
+      "raw": 4,
+      "actor_manager_time": 4.36899995803833,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.3360004425048828
+      ]
+    },
+    {
+      "frame": 3,
+      "raw": 4,
+      "actor_manager_time": 4.506999969482422,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.0
+      ]
+    },
+    {
+      "frame": 4,
+      "raw": 3,
+      "actor_manager_time": 4.672999858856201,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.0
+      ]
+    },
+    {
+      "frame": 80,
+      "raw": 5,
+      "actor_manager_time": 17.28801727294922,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.0
+      ]
+    },
+    {
+      "frame": 81,
+      "raw": 6,
+      "actor_manager_time": 17.454017639160156,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.0
+      ]
+    },
+    {
+      "frame": 82,
+      "raw": 6,
+      "actor_manager_time": 17.620018005371094,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.1660003662109375
+      ]
+    },
+    {
+      "frame": 83,
+      "raw": 6,
+      "actor_manager_time": 17.78601837158203,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.332000732421875
+      ]
+    },
+    {
+      "frame": 84,
+      "raw": 6,
+      "actor_manager_time": 17.95201873779297,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.4980010986328125
+      ]
+    },
+    {
+      "frame": 85,
+      "raw": 6,
+      "actor_manager_time": 18.118019104003906,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.66400146484375
+      ]
+    },
+    {
+      "frame": 86,
+      "raw": 6,
+      "actor_manager_time": 18.284019470214844,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.8300018310546875
+      ]
+    },
+    {
+      "frame": 87,
+      "raw": 6,
+      "actor_manager_time": 18.45001983642578,
+      "actual_motion_counts": {
+        "2": 1,
+        "4": 25
+      },
+      "body_nonzero_world_links": 26,
+      "hierarchy_gains": [
+        0.996002197265625
+      ]
+    },
+    {
+      "frame": 88,
+      "raw": 6,
+      "actor_manager_time": 18.61602020263672,
+      "actual_motion_counts": {
+        "6": 26
+      },
+      "body_nonzero_world_links": 0,
+      "hierarchy_gains": [
+        1.0
+      ]
+    },
+    {
+      "frame": 93,
+      "raw": 0,
+      "actor_manager_time": 19.446022033691406,
+      "actual_motion_counts": {
+        "6": 26
+      },
+      "body_nonzero_world_links": 0,
+      "hierarchy_gains": [
+        1.0
+      ]
+    }
+  ],
+  "dynamic_types_by_bone": {
+    "Bip01 Spine0": 2,
+    "Bip01 Spine": 4,
+    "Bip01 Spine1": 4,
+    "Bip01 Spine2": 4,
+    "Bip01 Spine3": 4,
+    "Bip01 Neck": 4,
+    "Bip01 Neck2": 4,
+    "Bip01 Head": 4,
+    "Bip01 L UpperArm": 4,
+    "Bip01 L Forearm": 4,
+    "Bip01 L Hand": 4,
+    "Bip01 R UpperArm": 4,
+    "Bip01 R Forearm": 4,
+    "Bip01 R Hand": 4,
+    "Bip01 L Thigh": 4,
+    "Bip01 L Calf": 4,
+    "Bip01 L Foot": 4,
+    "Bip01 L Toe0": 4,
+    "Bip01 R Thigh": 4,
+    "Bip01 R Calf": 4,
+    "Bip01 R Foot": 4,
+    "Bip01 R Toe0": 4,
+    "Bip01 Tail": 4,
+    "Bip01 Tail1": 4,
+    "Bip01 Tail2": 4,
+    "Bip01 Tail3": 4
+  },
+  "motion_getter_original_instructions": {
+    "0x911780": {
+      "type": 6,
+      "instruction_prefix": "b806000000c3"
+    },
+    "0x92aa60": {
+      "type": 2,
+      "instruction_prefix": "b802000000c3"
+    },
+    "0x8eaac0": {
+      "type": 4,
+      "instruction_prefix": "b804000000c3"
+    }
+  },
+  "selected_getup": [
+    {
+      "form_id": "0x91fb7",
+      "slot": 5
+    }
+  ],
+  "static_dispatch_audit": {
+    "collision_body_motion_dispatch": "88F040 reads requested+1C and actual motion virtual+8; a needed change dispatches body wrapper virtual+9C.",
+    "observed_body_vtable": "A5605C, virtual+9C=8A3420, virtual+58=89D940.",
+    "world_getter": "89F570 tail-dispatches virtual+58. Actual89D940 returns wrapper+8 native-body+8 world link or null. These calls do not remove a body.",
+    "layer_gate": "8A3420 masks packed filter+30 with3F. Layer8 calls8A9AB0 with requested motion,1,0; other layers also have actual-type and535AC0 floating-result gates.",
+    "lower_motion_dispatch": "8A9AB0 queues operation4 through898820 when body world+88 is nonzero, otherwise calls8CD4E0. General membership effects are not established by this bounded inspection.",
+    "limit": "Do not equate requested/actual motion6 with universal world removal. Exact per-body registration and constraint policy remain to be traced."
+  },
+  "cleanup": {
+    "game_epoch_dead": true,
+    "game_exit": {
+      "code": 0
+    },
+    "restored": {
+      "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+      "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+      "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+    },
+    "pristine_source_and_clone_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "steam_exit": {
+    "code": 0
+  },
+  "retained_failures": [],
+  "limits": [
+    "Body world links are sampled at the reaction boundary; only the character-proxy world link/filter have hardware watchpoints. Inter-frame body changes are not excluded.",
+    "No forced native calls or outcome/body/controller writes. Initial stats, GMSTs, Dog spawn, AI toggle and camera are declared setup.",
+    "Visual raw3/recovered captures are partly occluded by fists/frame; no unequivocal prone/fullstanding gate, pixel, trajectory or FPS parity.",
+    "One controlled Dog course does not establish all actors, collision layers, nonblend bodies or effect branches.",
+    "Native group registration must be implemented without destroying retained bodies/controllers/caches; exact per-body policy still needs native setter/registration audit before generalizing."
+  ],
+  "artifacts": {
+    "report.json": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/report.json",
+      "sha256": "ac717bd3ac6d74ca6e1cd2f8c2a19767ebe38a96113c1208e961f4a3eb2fbbae"
+    },
+    "observed-01-sample.json": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/observed-01-sample.json",
+      "sha256": "8c83cffa12fde1490a35f3a1a6d03b05da2444bbed11f85b0df3bfa0ce620fec"
+    },
+    "sample.py": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/sample.py",
+      "sha256": "a3150df3f1a3dbc1ffbf1bd70ba521703ca303620785b73ae9447d28702a8024"
+    },
+    "extend-body-observer.py": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/extend-body-observer.py",
+      "sha256": "68d92c85e74bf1555dd1a30d2c9b2c3c8e3cfa0a3a71b71b4d9601ad2c6d82fd"
+    },
+    "assemble-report.py": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/assemble-report.py",
+      "sha256": "18b68a00ca190839aa0176240fb5a3d44d28e9c314332407c1b293c87ee02b7e"
+    },
+    "inputs.json": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/inputs.json",
+      "sha256": "0a5233eb1f5fa55fe81d4c7257b4d998ca1b679798ca7a2a3c38d1c9a6799abc"
+    },
+    "cleanup-inputs.json": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/cleanup-inputs.json",
+      "sha256": "e53fcec7628d4e7a1f6b902b7c7d632c6ae4606c6c7ef115c4170e4ff4f49b96"
+    },
+    "body-vtable.json": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/body-vtable.json",
+      "sha256": "e507abd4639059c247bb2a040863910f48a0e7fe8cc23bcba7a922dbf399509f"
+    },
+    "body-motion-setter.txt": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/body-motion-setter.txt",
+      "sha256": "091f6f891719bc18763f67d1aaaf179d5d271b9a00e3a66ee31fe41acb64168d"
+    },
+    "body-wrapper-virtual58.txt": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/body-wrapper-virtual58.txt",
+      "sha256": "72e47a4ef5da1d323b5e9114caf03d21e4f5acebbc5788c0f5af9b2b44b03732"
+    },
+    "native-motion-setter.txt": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/native-motion-setter.txt",
+      "sha256": "59e653857bcee1a92425a3b5e20eba19b770b41995b7c04fb87ba705eac5561a"
+    },
+    "native-motion-change.txt": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/native-motion-change.txt",
+      "sha256": "f92cdc90e8d34d985e25b07e170e946cbe56026ed657e0736ee1c4336197597a"
+    }
+  }
+}

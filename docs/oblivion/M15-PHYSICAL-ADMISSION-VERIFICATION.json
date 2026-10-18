@@ -2062,5 +2062,44 @@
       "Automatic contact/RNG/reaction-frame publication, native reference/proxy policy, GetUp playback and full input/view/FPS/restart gates remain open.",
       "Native scene-to-body admission still uses the default Double adapter. No new normal-input fork KO/GetUp acceptance is claimed."
     ]
+  },
+  "original_body_lifecycle_followup": {
+    "protocol": "M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json",
+    "protocol_sha256": "85cb8e66877728bdc6ae3e008fbf121b93868ff84893ccd9684737f260a68be2",
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/report.json",
+      "sha256": "ac717bd3ac6d74ca6e1cd2f8c2a19767ebe38a96113c1208e961f4a3eb2fbbae"
+    },
+    "counts": {
+      "frames": 94,
+      "controller_frames": 93,
+      "states": [
+        0,
+        4,
+        3,
+        5,
+        6,
+        0
+      ],
+      "frame_counts": {
+        "0": 2,
+        "4": 3,
+        "3": 76,
+        "5": 1,
+        "6": 12
+      },
+      "nodes_each_frame": 52,
+      "body_count": 26,
+      "hierarchy_read_errors": 0
+    },
+    "scope": "Independent original normal-input native body-lifecycle observation. Not fork recovery or visual acceptance.",
+    "integration_requirement": "Retain body objects while independently managing world membership; the observed layer8 Dog bodies leave the world at full hierarchy gain during raw6, before animation completion.",
+    "limits": [
+      "Body world links are sampled at the reaction boundary; only the character-proxy world link/filter have hardware watchpoints. Inter-frame body changes are not excluded.",
+      "No forced native calls or outcome/body/controller writes. Initial stats, GMSTs, Dog spawn, AI toggle and camera are declared setup.",
+      "Visual raw3/recovered captures are partly occluded by fists/frame; no unequivocal prone/fullstanding gate, pixel, trajectory or FPS parity.",
+      "One controlled Dog course does not establish all actors, collision layers, nonblend bodies or effect branches.",
+      "Native group registration must be implemented without destroying retained bodies/controllers/caches; exact per-body policy still needs native setter/registration audit before generalizing."
+    ]
   }
 }

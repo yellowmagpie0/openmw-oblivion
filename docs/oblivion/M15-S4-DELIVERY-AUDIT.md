@@ -4905,3 +4905,22 @@ after resource publication. Physics registration still has its own fallible
 routing/world-registration rollback. First-frame visible projection, compound
 contact/RNG/reaction publication, native proxy/reference movement, GetUp
 playback and full recovery/input/view/FPS/restart acceptance remain open.
+
+
+An original normal-input course now follows all 26 collision bodies over 94
+reaction samples and 93 controller samples through raw0/4/3/5/6/0. Collision
+wrappers, body wrappers and underlying body objects keep their identities.
+At the first sample, after contact but before Down, all bodies have motion6
+and null world links. During incapacitation they have motion2/4 and non-null
+`ahkWorld` links. When GetUp hierarchy gain reaches1 in raw6, all return to
+motion6 and null world links before animation completion. Their motion objects
+change identity; their body objects survive. The character proxy retains its
+world link/filter with zero hardware-watch writes over the observed interval.
+The wrapper motion setter's world calls are independently resolved as getters,
+so they must not be implemented as removals. General per-body membership and
+constraint policy still need tracing. A pre-contact baseline is also needed
+before claiming these objects existed in untouched standing state.
+The [editable protocol](M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json) records hashes,
+transitions, exact setup, cleanup and limits. The occluded captures close no
+visual gate. This is original-game evidence; automatic fork reaction admission,
+frame driving, GetUp playback and full M15S4 runtime acceptance remain open.
