@@ -471,11 +471,12 @@ namespace MWPhysics
     {
     public:
         LooseObject(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
-            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask)
+            btDynamicsWorld& world, float lengthScale, std::span<const btTransform> poses, int group, int mask,
+            float physicalScale)
             : PtrHolder(ptr, {})
             , mDefinition(definition)
             , mLengthScale(lengthScale)
-            , mReferenceScale(ptr.getCellRef().getScale())
+            , mReferenceScale(physicalScale)
             , mSceneCollisionFlags(definition.mBodies.front().mCollisionFlags)
             , mPhysics(mDefinition, world, lengthScale, poses, group, mask, static_cast<PtrHolder*>(this),
                 nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred)
@@ -591,6 +592,17 @@ namespace MWPhysics
         std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding,
         LooseObjectSceneInitialization sceneInitialization)
     {
+        if (ptr.isEmpty()) throw std::invalid_argument("loose physics requires a live reference");
+        return prepareLooseObjectImpl(ptr, definition, lengthScale, poses, group, mask,
+            std::move(sceneBinding), sceneInitialization, ptr.getCellRef().getScale());
+    }
+
+    std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> PhysicsTaskScheduler::prepareLooseObjectImpl(
+        const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+        float lengthScale, std::span<const btTransform> poses, int group, int mask,
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding,
+        LooseObjectSceneInitialization sceneInitialization, float physicalScale)
+    {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
@@ -606,7 +618,7 @@ namespace MWPhysics
         if (sceneInitialization == LooseObjectSceneInitialization::PendingReference
             && (lengthScale != NifBullet::RagdollNativeLengthScale || !definition.mReferenceRoot))
             throw std::invalid_argument("pending loose scene initialization requires a native reference root");
-        auto object = std::make_unique<LooseObject>(ptr, definition, *world, lengthScale, poses, group, mask);
+        auto object = std::make_unique<LooseObject>(ptr, definition, *world, lengthScale, poses, group, mask, physicalScale);
         if (sceneInitialization == LooseObjectSceneInitialization::PendingReference)
         {
             object->mSceneCollisionFlags |= 0x40;
@@ -630,6 +642,97 @@ namespace MWPhysics
         impl->mExpectedScale = ptr.getCellRef().getScale();
         impl->mNode = staged.extract(staged.begin());
         return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(impl)));
+    }
+
+    namespace
+    {
+        // Reuse only the asset/body conversion adapter. This transient DTO is
+        // never inserted into actor authority or serialized as an actor owner.
+        ESM4::RuntimeActorRagdoll looseWeaponPhysicalSnapshot(const ESM4::RuntimeLooseWeapon& snapshot)
+        {
+            ESM4::RuntimeActorRagdoll result;
+            result.mBase = snapshot.mBase;
+            result.mModel = snapshot.mModel;
+            result.mAssetHash = snapshot.mAssetHash;
+            result.mBodies = {snapshot.mBody};
+            return result;
+        }
+    }
+
+    std::unique_ptr<PhysicsTaskScheduler::PreparedLooseObject> PhysicsTaskScheduler::prepareLooseObjectSnapshot(
+        const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,
+        const ESM4::RuntimeLooseWeapon& snapshot, const ESM::FormKey& base, std::string_view model,
+        int group, int mask, std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
+    {
+        snapshot.validate();
+        if (definition.mBodies.size() != 1
+            || (snapshot.mRootLocal && definition.mReferenceRoot != definition.mBodies.front().mNodeRecord)
+            || ((snapshot.mSceneCollisionFlags ^ definition.mBodies.front().mCollisionFlags) & ~0x4cu))
+            throw std::invalid_argument("loose snapshot scene flags do not match the native asset");
+        const auto physical = looseWeaponPhysicalSnapshot(snapshot);
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, snapshot.mPhysicalScale);
+        // Resolve model/hash/body identities and every value before allocating
+        // a candidate. Saved poses already use world units, including bodyT.
+        const auto poses = restoreNativeActorRagdoll(physical, base, model, scaled);
+        std::vector<btTransform> transforms;
+        transforms.reserve(poses.size());
+        for (const auto& body : poses) transforms.push_back(body.mPose);
+        auto prepared = prepareLooseObjectImpl(ptr, scaled, NifBullet::RagdollNativeLengthScale,
+            transforms, group, mask, std::move(sceneBinding), LooseObjectSceneInitialization::SuppliedPhysicalPose,
+            snapshot.mPhysicalScale);
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        if (!validatePreparedLooseObjectLocked(*prepared))
+            throw std::invalid_argument("loose snapshot candidate changed before restoration");
+        auto& object = *prepared->mImpl->mNode.mapped();
+        restoreNativeActorRagdollSnapshot(object.mPhysics, physical, base, model, object.mDefinition);
+        object.mSceneCollisionFlags = snapshot.mSceneCollisionFlags;
+        if (snapshot.mRootLocal)
+        {
+            auto root = Nif::NiTransform::getIdentity();
+            for (unsigned row = 0; row < 3; ++row)
+            {
+                for (unsigned column = 0; column < 3; ++column)
+                    root.mRotation.mValues[row][column] = snapshot.mRootLocal->mRotation[row*3+column];
+                root.mTranslation[row] = snapshot.mRootLocal->mPosition[row];
+            }
+            root.mScale = snapshot.mRootLocal->mScale;
+            object.mRootLocal = root;
+        }
+        return prepared;
+    }
+
+    ESM4::RuntimeLooseWeapon PhysicsTaskScheduler::captureLooseObjectSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mLooseObjects.find(ptr.mRef);
+        if (found == mLooseObjects.end()) throw std::invalid_argument("reference has no loose physics");
+        const auto& object = *found->second;
+        if (object.mLengthScale != NifBullet::RagdollNativeLengthScale || !object.validSceneBinding(true))
+            throw std::invalid_argument("loose snapshot requires its native units and current scene binding");
+        const auto physical = captureNativeActorRagdollSnapshot(object.mPhysics, base, model, object.mDefinition);
+        ESM4::RuntimeLooseWeapon result;
+        result.mBase = physical.mBase;
+        result.mModel = physical.mModel;
+        result.mAssetHash = physical.mAssetHash;
+        result.mBody = physical.mBodies.front();
+        result.mPhysicalScale = object.mReferenceScale;
+        result.mSceneCollisionFlags = object.mSceneCollisionFlags;
+        if (object.mRootLocal)
+        {
+            result.mRootLocal.emplace();
+            for (unsigned row = 0; row < 3; ++row)
+            {
+                for (unsigned column = 0; column < 3; ++column)
+                    result.mRootLocal->mRotation[row*3+column] = object.mRootLocal->mRotation.mValues[row][column];
+                result.mRootLocal->mPosition[row] = object.mRootLocal->mTranslation[row];
+            }
+            result.mRootLocal->mScale = object.mRootLocal->mScale;
+        }
+        result.validate();
+        return result;
     }
 
     bool PhysicsTaskScheduler::validatePreparedLooseObjectLocked(const PreparedLooseObject& object) const

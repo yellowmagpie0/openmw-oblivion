@@ -11317,5 +11317,77 @@
       "World still does not capture this map or restore native loose-body/render ownership on load. Previous scabbard/static-body restart failure remains valid.",
       "Next: capture loaded bodies, retain unloaded snapshots, stage asset-validated physical/render restoration before scene publication, then rerun the airborne save/fresh-process course."
     ]
+  },
+  "native_loose_snapshot_bridge": {
+    "status": "Detached native loose-body snapshot capture/restoration verified. World cache, scene-load integration and falling-item fresh-process acceptance remain open.",
+    "source_parent_commit": "b95a43eabf04e2e5d7559fbf4ed3a0b5c8fb62ea",
+    "tested_dirty_source_fingerprint": "15ed51dc704ed9519a9a69ee0c44b5b4564740c8b488fc37948423924353c3b3",
+    "source_files": [
+      {
+        "path": "apps/openmw/mwphysics/mtphysics.cpp",
+        "sha256": "ac2246aab291665d7093076ba4a252b4eafb83b90c86ecaf624d5703bafffbc6"
+      },
+      {
+        "path": "apps/openmw/mwphysics/mtphysics.hpp",
+        "sha256": "a8169fc53046fdd76d71158328389f04ce4945d3069a1aaa646430a1a148b8a7"
+      },
+      {
+        "path": "apps/openmw/mwphysics/physicssystem.cpp",
+        "sha256": "602164cdd02887455d01eb87f79d7860118280736f408c26c8b4d65daf737b1c"
+      },
+      {
+        "path": "apps/openmw/mwphysics/physicssystem.hpp",
+        "sha256": "d419eff04f6b69af11aaea6b1e6652ff59ac1a34c7ab6975e32be179467f0e58"
+      },
+      {
+        "path": "apps/openmw_tests/mwphysics/testactorragdoll.cpp",
+        "sha256": "873d0d1d9a18aff88b0c9787f2d790ad02c0d1f0fe043b6d171bb4026a6b4e9b"
+      }
+    ],
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-snapshot-bridge-normal-02/verification.json",
+      "sha256": "e4e200ec2cc15712aa4661245d6ce3e0f696c65d8522ef8e8aa6741211c74d98"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-snapshot-bridge-sanitized-01/verification.json",
+      "sha256": "708adb1c911b150de223dd4f7d6083c60ae57f368665ae3cd800ecfa537d7380"
+    },
+    "verification": {
+      "engine_normal": 1701,
+      "engine_sanitized": 1701,
+      "suites": 124,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false,
+      "worker_counts": [
+        0,
+        1,
+        2
+      ]
+    },
+    "covered": [
+      "Native-unit capture includes body pose/spatial and packed velocities, logical motion, admitted physical scale, scene flags and optional cached root.",
+      "Restoration validates the supplied asset/base/model/body/node identities, rejects unsupported scene flags or root mappings, rebuilds scaled properties and restores private state before collision publication.",
+      "The binary save DTO round trip resumes eight airborne physics steps with exact matching linear/angular velocities and position within .002 game units of uninterrupted continuation.",
+      "Shape bounds and inverse mass remain exactly equal when the admitted scale is 1.25 and current visible scale is .75; cached root state survives.",
+      "Cancellation, stale visible scale, changed asset/base/model/body/node, unsupported flags/root, failed World insertion/retry and cleared preparation ownership publish no unwanted body."
+    ],
+    "retained_failed_attempt": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-snapshot-bridge-normal-01/verification.json",
+      "sha256": "dcf11e5ec2b78620a4118b7e314fa4c208b6666f67ca4b71f8ae7fe553139a14"
+    },
+    "failed_attempt_explanation": "All prior cases and new rejection/rollback cases pass; three worker variants of the airborne fixture omit required Player race/class save identities. Corrected02 supplies those fields and adds shape/mass comparisons; production code is unchanged.",
+    "known_codec_ordering_followup": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-weapon-order-baseline-01/verification.json",
+      "sha256": "a3a0ccb0e165382d81f6637e1b96bdffa9bb5c0520edaf3283b350559f15607f"
+    },
+    "full_drop_restart_acceptance": false,
+    "limits": [
+      "Synthetic one-body physics fixtures and complete engine regression only. No new real-content or fresh-process runtime course is claimed.",
+      "These APIs are not yet called by World capture or loaded-item scene insertion. The returning-scabbard/static-body reload failure remains open.",
+      "The binary fixture uses the production native-reference namespace. A separately retained two-namespace reproduction exposes a Python owner-order mismatch and is queued for correction.",
+      "Components/Python implementation is unchanged in this chunk; their prior schema53 verification is not presented as a fresh run."
+    ]
   }
 }

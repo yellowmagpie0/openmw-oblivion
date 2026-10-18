@@ -149,6 +149,14 @@ namespace MWPhysics
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
             std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {},
             LooseObjectSceneInitialization sceneInitialization = LooseObjectSceneInitialization::SuppliedPhysicalPose);
+        // Restore an asset-validated native snapshot while both body and
+        // scene binding are still detached. Definition properties are unscaled.
+        std::unique_ptr<PreparedLooseObject> prepareLooseObjectSnapshot(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, const ESM4::RuntimeLooseWeapon& snapshot,
+            const ESM::FormKey& base, std::string_view model, int collisionGroup, int collisionMask,
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
+        ESM4::RuntimeLooseWeapon captureLooseObjectSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
         bool validatePreparedLooseObject(const PreparedLooseObject& object);
         bool commitLooseObject(PreparedLooseObject& object);
         bool hasLooseObject(const MWWorld::Ptr& ptr);
@@ -330,6 +338,11 @@ namespace MWPhysics
         class WorkersSync;
         class ActorRagdoll;
         class LooseObject;
+        std::unique_ptr<PreparedLooseObject> prepareLooseObjectImpl(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding,
+            LooseObjectSceneInitialization sceneInitialization, float physicalScale);
         void clearLooseObjects();
         bool validatePreparedLooseObjectLocked(const PreparedLooseObject& object) const;
         bool validatePreparedActorRagdollLocked(const PreparedActorRagdoll& object) const;

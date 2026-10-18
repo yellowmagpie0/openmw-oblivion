@@ -882,6 +882,26 @@ namespace MWPhysics
         return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(data)));
     }
 
+    std::unique_ptr<PreparedLooseObject> PhysicsSystem::prepareLooseObjectSnapshot(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, const ESM4::RuntimeLooseWeapon& snapshot,
+        const ESM::FormKey& base, std::string_view model, int group, int mask,
+        std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding)
+    {
+        if (mObjects.contains(ptr.mRef) || mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
+            throw std::invalid_argument("loose physics reference already has static or actor collision");
+        auto data = std::make_unique<PreparedLooseObject::Data>();
+        data->mOwner = this;
+        data->mIdentity = mLoosePreparationOwner;
+        data->mPtr = ptr;
+        data->mPhysical = mTaskScheduler->prepareLooseObjectSnapshot(ptr, definition, snapshot, base, model,
+            group, mask, std::move(sceneBinding));
+        return std::unique_ptr<PreparedLooseObject>(new PreparedLooseObject(std::move(data)));
+    }
+
+    ESM4::RuntimeLooseWeapon PhysicsSystem::captureLooseObjectSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    { return mTaskScheduler->captureLooseObjectSnapshot(ptr, base, model); }
+
     bool PhysicsSystem::validatePreparedLooseObject(const PreparedLooseObject& prepared)
     {
         const auto* data = prepared.mData.get();

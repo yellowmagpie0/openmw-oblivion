@@ -1508,6 +1508,141 @@ namespace
         scheduler.removeLooseObject(mPtr);
     }
 
+    TEST_P(RagdollSchedulerTest, TypedLooseSnapshotRestoresPrivateBodyAndContinuesAirborneMotion)
+    {
+        constexpr float dt = 1.f / 60.f;
+        const auto base = ESM::FormKey::content("loose.esm", 2);
+        const auto key = ESM::FormKey::dynamic("native-reference", 1);
+        const std::string model = "meshes/weapons/loose.nif";
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        mGraph.mSourceHash.assign(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 8;
+        mGraph.mBodies[0].mCollisionFlags = 0x0d;
+        mGraph.mBodies[0].mBoneBind.makeIdentity();
+        mGraph.mBodies[0].mLinearDamping = .1f;
+        mGraph.mReferenceRoot = 8;
+        mPtr.getCellRef().setScale(1.25f);
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(mGraph, 1.25f);
+        mPoses[0].setOrigin(btVector3(1, 2, 10000));
+        MWPhysics::PhysicsTaskScheduler scheduler(dt, &world, nullptr);
+        auto admitted = scheduler.prepareLooseObject(mPtr, scaled, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*admitted));
+        const auto initialInverseMass = btRigidBody::upcast(world.getCollisionObjectArray()[0])->getInvMass();
+        btVector3 initialMinimum, initialMaximum;
+        world.getCollisionObjectArray()[0]->getCollisionShape()->getAabb(
+            btTransform::getIdentity(), initialMinimum, initialMaximum);
+        EXPECT_FALSE(scheduler.captureLooseObjectSnapshot(mPtr, base, model).mRootLocal);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("typed loose save continuation");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        const auto advance = [&](unsigned start, unsigned stop) {
+            for (unsigned frame = start; frame < stop; ++frame)
+            {
+                time += dt;
+                scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                    *stats, MWPhysics::WorldFrameData(false, {}));
+            }
+        };
+        advance(0, 8);
+        const auto root = scheduler.captureLooseObjectRootFrame(mPtr, osg::Matrixf::translate(1, 2, 10000));
+        scheduler.commitLooseObjectRootFrame(mPtr, root);
+        // Native visible SetScale does not resize an admitted shape/mass.
+        mPtr.getCellRef().setScale(.75f);
+        const auto saved = scheduler.captureLooseObjectSnapshot(mPtr, base, model);
+        ASSERT_TRUE(saved.mRootLocal);
+        EXPECT_FLOAT_EQ(saved.mPhysicalScale, 1.25f);
+        EXPECT_FLOAT_EQ(saved.mRootLocal->mScale, 1.25f);
+        EXPECT_LT(saved.mBody.mLinearVelocity[2], 0);
+        ESM4::RuntimeState state;
+        state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        state.mPlayer.mCell = ESM::FormKey::content("loose.esm", 3);
+        state.mPlayer.mRace = ESM::FormKey::content("loose.esm", 4);
+        state.mPlayer.mClass = ESM::FormKey::content("loose.esm", 5);
+        state.mNextDynamicSerial = 2;
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = key; reference.mBase = base; reference.mCell = state.mPlayer.mCell;
+        state.mReferences.push_back(reference);
+        state.mNativeLooseWeapons.emplace(key, saved);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeLooseWeapons.at(key);
+        advance(8, 16);
+        const auto uninterrupted = scheduler.captureLooseObject(mPtr).front();
+        scheduler.removeLooseObject(mPtr);
+        auto restored = scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, decoded, base, model, 1, -1);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+        EXPECT_TRUE(scheduler.actorRagdollOwners().empty());
+        restored.reset(); // Cancelling a fully restored candidate publishes nothing.
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        restored = scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, decoded, base, model, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*restored));
+        EXPECT_EQ(scheduler.captureLooseObjectSnapshot(mPtr, base, model), decoded);
+        EXPECT_EQ(btRigidBody::upcast(world.getCollisionObjectArray()[0])->getInvMass(), initialInverseMass);
+        btVector3 restoredMinimum, restoredMaximum;
+        world.getCollisionObjectArray()[0]->getCollisionShape()->getAabb(
+            btTransform::getIdentity(), restoredMinimum, restoredMaximum);
+        EXPECT_EQ(restoredMinimum, initialMinimum);
+        EXPECT_EQ(restoredMaximum, initialMaximum);
+        advance(16, 24);
+        const auto resumed = scheduler.captureLooseObject(mPtr).front();
+        EXPECT_NEAR(resumed.mPose.getOrigin().z(), uninterrupted.mPose.getOrigin().z(), .002);
+        EXPECT_EQ(resumed.mLinearVelocity, uninterrupted.mLinearVelocity);
+        EXPECT_EQ(resumed.mAngularVelocity, uninterrupted.mAngularVelocity);
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        scheduler.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, TypedLooseSnapshotRejectsStaleAssetsAndRollsBackFailedPublication)
+    {
+        const auto base = ESM::FormKey::content("loose.esm", 2);
+        const std::string model = "meshes/weapons/loose.nif";
+        LooseAdmissionFailureWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.mFailAfterInsertion = false;
+        mGraph.mSourceHash.assign(16, 'a');
+        mGraph.mBodies[0].mNodeRecord = 8;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        auto admitted = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*admitted));
+        const auto saved = scheduler.captureLooseObjectSnapshot(mPtr, base, model);
+        scheduler.removeLooseObject(mPtr);
+        for (unsigned mutation = 0; mutation < 7; ++mutation)
+        {
+            auto bad = saved;
+            if (mutation == 0) bad.mAssetHash[0] = 'f';
+            if (mutation == 1) ++bad.mBody.mRecord;
+            if (mutation == 2) ++bad.mBody.mNodeRecord;
+            if (mutation == 3) bad.mBase = ESM::FormKey::content("loose.esm", 9);
+            if (mutation == 4) bad.mModel = "meshes/another.nif";
+            if (mutation == 5) bad.mSceneCollisionFlags ^= 0x100;
+            if (mutation == 6) bad.mRootLocal.emplace(); // No native reference-root mapping.
+            EXPECT_THROW(scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, bad, base, model, 1, -1), std::exception)
+                << mutation;
+            EXPECT_EQ(world.getNumCollisionObjects(), 0);
+            EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+        }
+        auto restored = scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, saved, base, model, 1, -1);
+        mPtr.getCellRef().setScale(.75f);
+        EXPECT_FALSE(scheduler.validatePreparedLooseObject(*restored));
+        EXPECT_FALSE(scheduler.commitLooseObject(*restored));
+        restored.reset();
+        mPtr.getCellRef().setScale(1.f);
+        restored = scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, saved, base, model, 1, -1);
+        world.mFailAfterInsertion = true;
+        EXPECT_THROW(scheduler.commitLooseObject(*restored), std::runtime_error);
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        EXPECT_TRUE(scheduler.looseObjectOwners().empty());
+        EXPECT_TRUE(scheduler.validatePreparedLooseObject(*restored));
+        world.mFailAfterInsertion = false;
+        ASSERT_TRUE(scheduler.commitLooseObject(*restored));
+        EXPECT_EQ(scheduler.captureLooseObjectSnapshot(mPtr, base, model), saved);
+        scheduler.removeLooseObject(mPtr);
+        restored = scheduler.prepareLooseObjectSnapshot(mPtr, mGraph, saved, base, model, 1, -1);
+        scheduler.releaseSharedStates();
+        EXPECT_FALSE(scheduler.validatePreparedLooseObject(*restored));
+        EXPECT_FALSE(scheduler.commitLooseObject(*restored));
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
     TEST_P(RagdollSchedulerTest, LooseAdmissionFailureRemovesRoutingAndPhysicsBeforeRetry)
     {
         LooseAdmissionFailureWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);

@@ -92,6 +92,7 @@ namespace NifBullet
 namespace ESM4
 {
     struct RuntimeActorRagdoll;
+    struct RuntimeLooseWeapon;
     struct PhysicalBlendTimeCache;
     struct PhysicalFrameResult;
 }
@@ -325,6 +326,14 @@ namespace MWPhysics
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
             std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {},
             LooseObjectSceneInitialization sceneInitialization = LooseObjectSceneInitialization::SuppliedPhysicalPose);
+        // Restore an asset-validated native snapshot while both body and
+        // scene binding are still detached. Definition properties are unscaled.
+        std::unique_ptr<PreparedLooseObject> prepareLooseObjectSnapshot(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, const ESM4::RuntimeLooseWeapon& snapshot,
+            const ESM::FormKey& base, std::string_view model, int collisionGroup, int collisionMask,
+            std::shared_ptr<const MWRender::LooseObjectSceneBinding> sceneBinding = {});
+        ESM4::RuntimeLooseWeapon captureLooseObjectSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
         bool validatePreparedLooseObject(const PreparedLooseObject& prepared);
         bool commitLooseObject(PreparedLooseObject& prepared);
         bool hasLooseObject(const MWWorld::Ptr& ptr);

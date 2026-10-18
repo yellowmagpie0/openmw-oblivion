@@ -6313,3 +6313,39 @@ scabbard still require the scene-load bridge. Capture loaded bodies, retain
 unloaded snapshots, stage restored bodies and the physical model before scene
 publication, then repeat the airborne fresh-process course. No engine or new
 runtime acceptance is claimed. **Full M15S4 remains incomplete.**
+
+
+## Detached loose-body restoration — physics checkpoint
+
+PhysicsSystem and the scheduler can capture a typed native loose-weapon snapshot
+and prepare its restored body privately. Restoration checks the supplied asset,
+base/model and body/node identities, scene flags and reference-root mapping,
+then rebuilds shape/mass with the saved admission scale and restores pose,
+velocities and cached root before collision publication. Current visible scale
+remains independent. Cancellation and rejected publication leave no owned body.
+
+All **1701 engine cases /124 suites** pass normally and under ASan/UBSan, with
+exact unfiltered inventory/XML agreement, no failures or skips. Evidence:
+`S4/native-loose-snapshot-bridge-normal-02` and `-sanitized-01`. Tested dirty-source
+fingerprint:
+`15ed51dc704ed9519a9a69ee0c44b5b4564740c8b488fc37948423924353c3b3`.
+ASan leak checks are disabled. The retained normal-01 failure omits required
+Player race/class identities in the new save fixture; corrected02 supplies them
+and adds shape/mass comparisons without changing production code.
+
+The new synthetic one-body cases run with 0/1/2 workers. After a binary DTO round
+trip, eight resumed airborne steps match uninterrupted linear/angular velocity
+exactly and position within .002 game units. Shape bounds and inverse mass match
+exactly with admission scale 1.25 and visible scale .75. Cached-root state,
+cancellation, stale asset/reference rejection, failed insertion/retry and cleared
+preparation ownership are checked. Receipts and boundaries are under
+`native_loose_snapshot_bridge` in the verification index.
+
+World does not yet capture these bodies or call this admission path on load.
+The prior real-content scabbard/static-body restart failure remains open. Also
+retained is a separate failing Python two-owner ordering reproduction: serialized
+key sorting differs from C++ FormKey ordering for namespace prefixes (`a`, `a-`).
+Correct that codec edge case, wire retained World state and physical scene
+admission, then repeat the airborne fresh-process course. No fresh runtime or
+component/Python verification is claimed for this physics chunk.
+**Full M15S4 remains incomplete.**
