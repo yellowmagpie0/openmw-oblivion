@@ -4924,3 +4924,15 @@ The [editable protocol](M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json) records hashes,
 transitions, exact setup, cleanup and limits. The occluded captures close no
 visual gate. This is original-game evidence; automatic fork reaction admission,
 frame driving, GetUp playback and full M15S4 runtime acceptance remain open.
+
+
+The native per-body admission branch is now independently executed in 2400
+profiles across both x87 precision modes. Full8A48C0, actual extra-map lookup,
+NiRTTI ancestry and generic world dispatch execute. Both blend gains at least1,
+signed counter+24<=0 and globalBA7909=0 select deferred admission/removal while
+retaining the desired world owner. Other cases retain or change registration
+through the generic dispatcher. Motion type alone does not determine this
+policy. Lower world operations and constraint followup are explicit boundaries;
+counter/override production lifetimes and full constraint policy remain open.
+The [protocol](M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json) records exact profiles,
+hashes, boundary calls, return/stack/register assertions and limits.

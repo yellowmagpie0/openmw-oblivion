@@ -415,5 +415,88 @@
       "path": "build/oblivion-compat/m15/S4/physical-recovery-original-live-04/native-motion-change.txt",
       "sha256": "f92cdc90e8d34d985e25b07e170e946cbe56026ed657e0736ee1c4336197597a"
     }
+  },
+  "admission_instruction_followup": {
+    "passed": true,
+    "profiles": 2400,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "115d764268cf7b31030710734493ce9da3672404347f48025da3ea0ed132427e",
+    "native_path": [
+      "full8A48C0 blend-aware body admission",
+      "actual47F990 native extra-map lookup",
+      "actual88EA80 NiRTTI getter/ancestry",
+      "actual89F470 generic membership dispatcher",
+      "actual89D940 world getter",
+      "actual8B0020 removal dispatcher"
+    ],
+    "boundaries": [
+      "88B430 removal records call and clears synthetic body world link",
+      "88C210 addition records call and sets synthetic body world link",
+      "8A47C0 constraint followup records call, no constraints executed",
+      "B2EB00=0 excludes optional small-velocity deactivation branch",
+      "Synthetic extra map, wrapper/body/world objects; no native physics simulation"
+    ],
+    "finding": "Mapped bhkBlendCollisionObject with both gains at least1 (unordered also passes original comparisons), signed counter+24<=0 and BA7909=0 defers admission, removes a currently registered body via virtual+60, stores desired world owner+20 and returns true. Otherwise actual89F470 retains same-world membership or requests removal/addition and constraint followup. This is per body and does not follow motion type alone.",
+    "limits": [
+      "Does not establish production values or lifetime semantics of counter+24 or globalBA7909",
+      "Does not establish full constraint admission/removal or failed world operations",
+      "Original single-Dog observation agrees with gain1 departure; untouched standing baseline and fork runtime integration remain open"
+    ],
+    "editable_probe_manifest": {
+      "entry": "8A48C0",
+      "body_wrapper_vtable": "A5605C",
+      "collision_wrapper_vtable": "A9643C",
+      "hierarchy_and_velocity_binary32": [
+        "00000000",
+        "3F7FFFFF",
+        "3F800000",
+        "3F800001",
+        "7FC00000"
+      ],
+      "signed_counter24": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "global_BA7909": [
+        0,
+        1
+      ],
+      "initial_membership": [
+        "absent",
+        "same world",
+        "other world"
+      ],
+      "native_extra_map_present": [
+        false,
+        true
+      ],
+      "x87_control_words": [
+        "027F",
+        "037F"
+      ],
+      "assertions": [
+        "Full function return, stack cleanup and callee-saved registers",
+        "Ordered removal/addition/constraint boundary calls",
+        "Resulting synthetic world link and remembered world owner+20",
+        "Exact true/false function result"
+      ],
+      "scope": "Original instructions supply branch/dispatch expectations; lower physics membership mutations are declared synthetic boundaries, independently corroborated for the Dog by live04."
+    },
+    "artifacts": {
+      "probe.py": {
+        "path": "build/oblivion-compat/m15/S4/native-body-registration-static-01/probe.py",
+        "sha256": "e38add455e4381c316781941af152891f96a73eb25b748cd69301fdaa6f20cf4"
+      },
+      "corpus.json": {
+        "path": "build/oblivion-compat/m15/S4/native-body-registration-static-01/corpus.json",
+        "sha256": "115d764268cf7b31030710734493ce9da3672404347f48025da3ea0ed132427e"
+      },
+      "report.json": {
+        "path": "build/oblivion-compat/m15/S4/native-body-registration-static-01/report.json",
+        "sha256": "a558e5ae505ac5ab5278fe10b5ece9a55265d76e67435f1217ce8169e92d49d1"
+      }
+    }
   }
 }
