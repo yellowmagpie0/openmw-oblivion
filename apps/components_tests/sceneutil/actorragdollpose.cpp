@@ -1,5 +1,6 @@
 #include <components/sceneutil/actorragdollpose.hpp>
 #include <components/sceneutil/skeleton.hpp>
+#include <components/sceneutil/clone.hpp>
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/nifbullet/actorragdoll.hpp>
 #include <components/misc/osguservalues.hpp>
@@ -13,6 +14,8 @@
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 #include <osg/MatrixTransform>
+#include <osg/Geode>
+#include <osg/Geometry>
 #include <limits>
 #include <stdexcept>
 #include <cstring>
@@ -66,6 +69,47 @@ namespace
             return {{28, osg::Matrixf::translate(120, 5, 0)}, {8, osg::Matrixf::translate(120, 0, 0)}};
         }
     };
+
+    TEST_F(ActorRagdollPoseTest, ClonedStaticDrawableSharingPreservesPrivatePhysicalPoseAuthority)
+    {
+        osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        geode->addDrawable(geometry); mHand->addChild(geode);
+        const auto initialHand = mHand->getMatrix(), initialPelvis = mPelvis->getMatrix();
+        // SceneManager's ordinary clone policy copies the hierarchy and keeps
+        // plain Drawable geometry shared with its cached template.
+        SceneUtil::CopyOp copy;
+        osg::ref_ptr<SceneUtil::Skeleton> instance = static_cast<SceneUtil::Skeleton*>(mRoot->clone(copy));
+        ASSERT_NE(instance, mRoot); ASSERT_EQ(geometry->getNumParents(), 2u);
+        ASSERT_NE(copy.getClonedNode(mHand), mHand.get());
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *instance);
+        ASSERT_TRUE(binding.isValid());
+        binding.applyWorldBones(desired(), mObjectWorld);
+        const auto world = binding.captureWorldBones(mObjectWorld);
+        ASSERT_EQ(world.size(), 2u);
+        EXPECT_EQ(world[0].mPose.getTrans(), osg::Vec3f(120, 5, 0));
+        EXPECT_EQ(world[1].mPose.getTrans(), osg::Vec3f(120, 0, 0));
+        EXPECT_EQ(mHand->getMatrix(), initialHand); EXPECT_EQ(mPelvis->getMatrix(), initialPelvis);
+        EXPECT_EQ(geometry->getNumParents(), 2u);
+    }
+
+    TEST_F(ActorRagdollPoseTest, SharedPhysicalTransformsAndCyclesStillRejectBeforePoseWrites)
+    {
+        const auto initialHand = mHand->getMatrix(), initialPelvis = mPelvis->getMatrix();
+        osg::ref_ptr<osg::Group> other = new osg::Group;
+        other->addChild(mHand);
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot)), std::invalid_argument);
+        other->removeChild(mHand);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        other->addChild(mConnector);
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_THROW(binding.applyWorldBones(desired(), mObjectWorld), std::invalid_argument);
+        other->removeChild(mConnector);
+        mHand->addChild(mPelvis);
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *mRoot)), std::invalid_argument);
+        mHand->removeChild(mPelvis);
+        EXPECT_EQ(mHand->getMatrix(), initialHand); EXPECT_EQ(mPelvis->getMatrix(), initialPelvis);
+    }
 
     TEST_F(ActorRagdollPoseTest, NativeFrameWorldOnlyProjectionPreservesLocalsAndUsesPhysicalParent)
     {

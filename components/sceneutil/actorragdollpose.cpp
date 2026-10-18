@@ -188,6 +188,10 @@ namespace SceneUtil
             const auto walk = [&](auto&& self, osg::Node& node,
                                   std::vector<osg::observer_ptr<osg::Node>> path,
                                   std::optional<std::size_t> parent) -> void {
+                // SceneManager clones hierarchy nodes but shares ordinary
+                // Drawable leaves with the cached asset. Drawables cannot own
+                // a physical transform or contribute an ancestor pose path.
+                if (node.asDrawable()) return;
                 std::string assetHash;
                 // Separately loaded equipment/parts have independent record indices.
                 if (&node != &root && &node != mAssetRoot.get()
