@@ -46,6 +46,11 @@ namespace SceneUtil
             bool mNeedsUpdate;
             bool mRigid;
         };
+        struct CollisionResult
+        {
+            std::optional<std::uint16_t> mFlags;
+            std::optional<Nif::NiTransform> mPhysicalTarget;
+        };
         struct Callbacks
         {
             std::function<std::optional<std::uint16_t>(const NifOsg::MatrixTransform&)> mCollisionFlags;
@@ -90,6 +95,16 @@ namespace SceneUtil
             // Supply exactly one physical provider when active; pending40 does
             // not read either. mProjected still receives the actual flags.
             std::function<std::optional<Nif::NiTransform>(const NifOsg::MatrixTransform&)> mPhysicalTarget;
+            // Complete collision dispatch owned by the caller, after own
+            // controllers and native composition. Return actual live flags
+            // and an optional renderer target. No target retains animated
+            // world/locals, including pending synchronization deferred by the
+            // raw update phase. The traversal does not dispatch/reset/clear it
+            // again. Targets require settled active flags. Mutually exclusive
+            // with the five legacy collision callbacks above; mProjected and
+            // mReferenceUpdate still run. Do not change scene locals/hierarchy.
+            // Body effects may already be published if later projection fails.
+            std::function<CollisionResult(const NifOsg::MatrixTransform&, const Nif::NiTransform&)> mCollision;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,

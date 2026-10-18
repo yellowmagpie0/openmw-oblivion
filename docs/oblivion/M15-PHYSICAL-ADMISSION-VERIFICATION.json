@@ -6368,5 +6368,218 @@
       "Scene hooks cannot reenter physics. Per-collision staging does not promise whole-traversal rollback. Python/schema unchanged and prior 321 Python tests not repeated.",
       "No original game or fresh engine gameplay/save-restart course was launched for this chunk. Contact/reaction/FSM/GetUp and all remaining M15S4 normal-input/end-to-end acceptance remain open."
     ]
+  },
+  "owned_scene_collision_result_followup": {
+    "status": "NifSceneTraversal consumes a complete owned collision result without independently redispatching deferred pending synchronization. Actual automatic actor scene ownership and full M15S4 acceptance remain open.",
+    "source": {
+      "head": "9a4f74daac15ddd7956e2225996879b83ba7423a",
+      "source_fingerprint": "74f21549a38791898829e6fafbc03a3de9d22f41ddac5900deff96ad3a70c3a1"
+    },
+    "source_sha256": {
+      "components/sceneutil/nifscenetraversal.hpp": "aef93ba57bf58c16239e656dc95ac312649933d0b17b92d7f53cbcb8289342a4",
+      "components/sceneutil/nifscenetraversal.cpp": "71853c3bc407239dff13faf6bfa901ed6791a859046d84642951aa153c1d5a97",
+      "apps/components_tests/sceneutil/nifscenetraversal.cpp": "98a0505f06a4cea047b1e49106349c111d6754cb62897c13be126946a7c629f3",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "d9bdc1327910c0e6be8a717e4b05035ffabb438cab5477975cae56c0944f26e6"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only; production/test files unchanged after full checks.",
+    "changes": [
+      "NifSceneTraversal::Callbacks::mCollision supplies actual live collision flags and an optional renderer target after own callbacks and native world composition. It owns collision dispatch including first synchronization and raw phase skips. No target preserves animated world/locals even if pending 0x40 remains set.",
+      "A supplied target requires settled active flags. Missing collision, inactive nodes and deferred pending nodes cannot smuggle a renderer target into projection. Caller results do not rewrite actual flags to suppress traversal behavior.",
+      "Complete ownership rejects coexistence with the five legacy collision hooks before controllers, parent/cache changes or collision dispatch. Existing legacy callback behavior remains covered by the full suite. Projection/reference hooks still receive actual flags.",
+      "A real coupled ActorRagdollPhysics/NifSceneTraversal course visits pending selectors 2/3, successful selector 0 synchronization, then an independently moved settled body. It checks sleeping skips, success-only flag clear, packed velocities/motion/request/controller retention, native parent/child cache composition, bit8 author writeback and final OSG drawing pose."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/owned-collision-result-normal-01/verification.json",
+        "report_sha256": "6588d56a2e36d93e05f75edfec02ed383238f577d31478eb2865b9d670908777",
+        "results": {
+          "components": {
+            "executed": 2911,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "410604c2bdf110fe3c6ccfe98b47d49de7d1d4523da1d535e496710ac743d21e",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e68e3d86a5dd26b54eb2b80d71829e2153a457074b6e6bacabaef3f82e6c75b7",
+            "inventory_sha256": "25300d858e8bfab0ed40c515c6c366ab342a6d38d309d6c9087b425a5ae0ab74",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "fd29bdf947353afc65354278a72886d2c24597e1569c6f2c8075f6169b0a8e52",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "4c60f183071f45f60a125ebaeca1d7edce9b12164b658b09948d964a0efe0e7d",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "3d4b2cadfd758541acd56fde07fce72d04b872330b4dad37be31eff90e9a21bd"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/owned-collision-result-sanitized-01/verification.json",
+        "report_sha256": "42677104ef1dac36aa0770dcfd9e317a2b655610693384806a4eb7e68554e7d9",
+        "results": {
+          "components": {
+            "executed": 2911,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "82c636da9b0bf3855c835b1e61967cf17e9a4cd02977544c40ad5b2bfd27ac93",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5003a30a5bab8cd118c2b529f8cc5b8493759f9333f5b8808b0c7e6f0dbdb855",
+            "inventory_sha256": "2671429c3c557a4bf050178b67c25050fb22f87894df8cf98c1987b9bb59ca4b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "67fbd6febac16b89bb81eebd3fa93e106fa78aee88934099d49310d38a80b51a",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c5ca7c50b0217744f68281e1b255153f437ed9a61d1294315a38736b4a263c42",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "7b97a2ca83ab87ce291c5c183d33f0e0bb104210f6c375efa2809c1ae0aa1f8e"
+      }
+    },
+    "native_comparisons": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/owned-collision-result-corpus-01/normal-verification.json",
+        "report_sha256": "dae8b470056217e29cc08c3aad8deb6d280f776daf014886c9cd6410fa2426cb",
+        "result": {
+          "passed": true,
+          "cases": 393216,
+          "outer_route_counts": {
+            "0": 180224,
+            "2": 81920,
+            "1": 131072
+          },
+          "negative_controls": {
+            "omit_phase3": 49152,
+            "active_before_pending": 65536,
+            "omit_phase2_deferral": 32768,
+            "clear_pending_before_success": 65536
+          },
+          "mismatches": [],
+          "original_cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+          "probe_sha256": "6097269cc9dabd916b7229cd7185be5855a7141b3374897b25fefe892421206d",
+          "comparator_sha256": "57db7d4ba5c2c88829a9f516b496b137132757b7de7c1037c96adff81be9ad6e",
+          "binary_sha256": "62be3df6ad80ae070c35231c9b7e9e52ab8d0b645b248b2fabe0e0667b54fcbf",
+          "output_sha256": "88d78c4d79d619e849a3eb7dbd402cb665490453b8fec8682841b29691ff2d39",
+          "scope": "All393216 unchanged native outer selector/flag rows through actual owned body update and NifSceneTraversal authoritative collision callback. Compare gate classification, success flags, hook count and projected actual flags exactly. Fixed Dynamic H0/V0 body, stored request1, identity scene/body poses and nonzero packed velocities; driver requires unchanged all velocity bits/mode/request/pose/membership, correct skip sleep and identity locals/native cache/drawing. Required sync now succeeds, deferrals retain40 without generic fallback. Original corpus inner handlers were declared successful stubs: this compares outer route/flags only, not original body/Havok/scene arithmetic, contacts, automatic World ownership or gameplay acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/owned-collision-result-corpus-01/sanitized-verification.json",
+        "report_sha256": "e001d22fe5d8afd1976002b7c915e2cf68e0d7170c15265fa41dfe25b4ba5f3a",
+        "result": {
+          "passed": true,
+          "cases": 393216,
+          "outer_route_counts": {
+            "0": 180224,
+            "2": 81920,
+            "1": 131072
+          },
+          "negative_controls": {
+            "omit_phase3": 49152,
+            "active_before_pending": 65536,
+            "omit_phase2_deferral": 32768,
+            "clear_pending_before_success": 65536
+          },
+          "mismatches": [],
+          "original_cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+          "probe_sha256": "6097269cc9dabd916b7229cd7185be5855a7141b3374897b25fefe892421206d",
+          "comparator_sha256": "57db7d4ba5c2c88829a9f516b496b137132757b7de7c1037c96adff81be9ad6e",
+          "binary_sha256": "399625555e996274a697ac8576e39ab5803103721d96ca66e6a8b81350f5e930",
+          "output_sha256": "88d78c4d79d619e849a3eb7dbd402cb665490453b8fec8682841b29691ff2d39",
+          "scope": "All393216 unchanged native outer selector/flag rows through actual owned body update and NifSceneTraversal authoritative collision callback. Compare gate classification, success flags, hook count and projected actual flags exactly. Fixed Dynamic H0/V0 body, stored request1, identity scene/body poses and nonzero packed velocities; driver requires unchanged all velocity bits/mode/request/pose/membership, correct skip sleep and identity locals/native cache/drawing. Required sync now succeeds, deferrals retain40 without generic fallback. Original corpus inner handlers were declared successful stubs: this compares outer route/flags only, not original body/Havok/scene arithmetic, contacts, automatic World ownership or gameplay acceptance."
+        }
+      }
+    },
+    "cases": [
+      "NifSceneTraversalTest.OwnedCollisionRetainsDeferredPendingFlagsWithoutRetryingSynchronization",
+      "NifSceneTraversalTest.OwnedCollisionTargetsUseTheUpdatedParentAndKeepActiveNoTargetLocals",
+      "NifSceneTraversalTest.OwnedCollisionRejectsAmbiguousCallbacksBeforeControllersAndInvalidTargetsBeforeProjection",
+      "ActorRagdollPhysicsTest.OwnedSceneCollisionDefersThenSynchronizesBeforeProjectingSettledBodies"
+    ],
+    "native_scope": "Replay unchanged 393216 complete original 88EDC0 outer-dispatch observations, all uint16 flags and six raw uint32 selectors. Original successful sync/inner boundary stubs are retained, so comparisons establish outer gate/flag behavior, not original body or renderer arithmetic. The current actual owner now successfully synchronizes 131072 pending cases; 180224 outer skips and 81920 inner-handler entries remain distinct. Every case traverses the actual NIF callback/cache/projection boundary. Fixed Dynamic H0/V0/request 1, identity matrices, nonzero/signedzero packed velocities; body mode/request/pose/membership, all velocity bits and skipped-body sleeping state are driver invariants.",
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/owned-collision-result-corpus-01/probe.cpp": "6097269cc9dabd916b7229cd7185be5855a7141b3374897b25fefe892421206d",
+      "build/oblivion-compat/m15/S4/owned-collision-result-corpus-01/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/owned-collision-result-corpus-01/compare.py": "57db7d4ba5c2c88829a9f516b496b137132757b7de7c1037c96adff81be9ad6e"
+    },
+    "native_original_report": "build/oblivion-compat/m15/S4/native-blend-node-dispatch-oracle-01/verification.json",
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "additional_subtype_replacement_input": {
+      "report": "build/oblivion-compat/m15/S4/blend-addrotation-replacement-oracle-03/verification.json",
+      "report_sha256": "4002fb406909b59a48e2ca2fc95b3298488c4a6c6925fc61f64cfd3c45f8ad5e",
+      "result": {
+        "passed": true,
+        "cases": 96,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "a8d5046d87414e0c53f61391307b641e353c9971f540ca46fc4918f833c4ab2f",
+        "cases_sha256": "f8350f47296a7b44398619fd52a5de898ce73d42c0847f1e31a38ce4a7fb3e3d",
+        "scope": "Full original438730 spine collision replacement caller, real AddRotation constructor88E7C0, base transfer88E880 and node install435CE0. Three declared boundaries: named lookup virtual58 returns fixture nodes; allocation returns fresh4C storage; Windows interlocked increment/decrement executes fixture arithmetic. Base collisions have no rigid bodies, reference counts avoid final destruction. Actual NiRTTI distinguishes base blend from ordinary collisions. Distinct per-node gains/flags/request/counter inputs; capture flags/request/counter/extra rotation after replacement, absent nodes and ineligible types. Full return/callee-saved/FPCW verified. This is not live root/name lookup, nonnull body transfer, final destruction, high-level actor ownership or game input."
+      },
+      "captured_replacements": 72,
+      "captured_initial_flags": 65,
+      "captured_requested_motion": 8,
+      "captured_counter": 0,
+      "scope": "Next-work input only. The actual replacement caller now executes with named lookup/allocation/interlocked boundaries and no attached bodies; eligible nodes replace, missing/nonblend nodes retain old objects. All 72 replacements preserve source gains but initialize flags41/request8/counter0/extra identity. This is construction, not continuation restoration. Retained01 first failed the harness ESP assertion because 438730 returns with ret4;02 corrects that assertion after instruction inspection;03 adds distinct per-node flags/gains/request/counter inputs and verifies retained nodes. No new AddRotation production support."
+    },
+    "warnings": "Full logs reviewed; no new source diagnostic. Full engine binaries rebuilt and their complete tests run in both configurations.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "This adds the complete collision callback boundary and validates it against actual owned physics, but does not install an Animation/World automatic owner, selector producer, frame clock or constructor/contact/reaction/GetUp route.",
+      "Own renderer callbacks run as before. Actual native KF interpolation ordering and controller ownership remain separate unresolved work. No generic pure-animation local checkpoint restoration was added.",
+      "Collision owner effects may already be published when later renderer projection rejects. Earlier controller/node phases remain published; no whole-frame/body-renderer transaction is claimed.",
+      "Base blend dispatch only; AddRotation postpass/producer and live subtype selection are not implemented by this callback. Native separate scene scale, morphology, group/filter/capsule/root coordination remain open.",
+      "Python/schema unchanged and not rerun. Leak checks disabled. Full normal-input, device/view/FPS/interruption and actual fresh-engine gameplay/save-restart acceptance remain open. M15S4 is not complete."
+    ]
   }
 }

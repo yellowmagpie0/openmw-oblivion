@@ -68,6 +68,81 @@ namespace
         }
     };
 
+    TEST_F(NifSceneTraversalTest, OwnedCollisionRetainsDeferredPendingFlagsWithoutRetryingSynchronization)
+    {
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        Binding binding(*mRoot, placement);
+        unsigned controllers = 0, dispatches = 0, projections = 0;
+        for (auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+            node->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++controllers; }));
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node&, const Nif::NiTransform&) {
+            ++dispatches; return Binding::CollisionResult{0x49, std::nullopt};
+        };
+        callbacks.mProjected = [&](Node&, const auto&, auto flags) {
+            ++projections; EXPECT_EQ(flags, std::optional<std::uint16_t>(0x49));
+        };
+        binding.updateObjectLocal(mStamp, 1, placement, callbacks);
+        EXPECT_EQ(controllers, 3u); EXPECT_EQ(dispatches, 3u); EXPECT_EQ(projections, 3u);
+        EXPECT_EQ(binding.cachedWorld(*mRoot).mTranslation.x(), 110);
+        EXPECT_EQ(binding.cachedWorld(*mChild).mTranslation.x(), 115);
+        EXPECT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 117);
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 10);
+        EXPECT_EQ(mChild->getControllerTransform().mTranslation.x(), 5);
+        EXPECT_EQ(mLeaf->getControllerTransform().mTranslation.x(), 2);
+    }
+
+    TEST_F(NifSceneTraversalTest, OwnedCollisionTargetsUseTheUpdatedParentAndKeepActiveNoTargetLocals)
+    {
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        Binding binding(*mRoot, placement);
+        std::vector<float> inputs;
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node& node, const Nif::NiTransform& animated) {
+            inputs.push_back(animated.mTranslation.x());
+            auto desired = Nif::NiTransform::getIdentity(); desired.mTranslation = {150, 0, 0};
+            return &node == mRoot ? Binding::CollisionResult{9, desired}
+                : &node == mChild ? Binding::CollisionResult{9, std::nullopt} : Binding::CollisionResult{};
+        };
+        binding.updateObjectLocal(mStamp, 1, placement, callbacks);
+        EXPECT_EQ(inputs, (std::vector<float>{110, 155, 157}));
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 50);
+        EXPECT_EQ(mChild->getControllerTransform().mTranslation.x(), 5);
+        EXPECT_EQ(binding.cachedWorld(*mLeaf).mTranslation.x(), 157);
+        EXPECT_NEAR(mLeaf->getWorldMatrices()[0].getTrans().x(), 157, 1e-9);
+    }
+
+    TEST_F(NifSceneTraversalTest, OwnedCollisionRejectsAmbiguousCallbacksBeforeControllersAndInvalidTargetsBeforeProjection)
+    {
+        Binding binding(*mRoot);
+        unsigned controllers = 0, dispatches = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++controllers; }));
+        const auto original = binding.cachedWorld(*mRoot);
+        for (unsigned legacy = 0; legacy < 5; ++legacy)
+        {
+            Binding::Callbacks callbacks;
+            callbacks.mCollision = [&](const Node&, const auto&) { ++dispatches; return Binding::CollisionResult{}; };
+            if (legacy == 0) callbacks.mCollisionFlags = [](const Node&) { return std::optional<std::uint16_t>(9); };
+            if (legacy == 1) callbacks.mPhysicalWorld = [](const Node&) { return Nif::NiTransform::getIdentity(); };
+            if (legacy == 2) callbacks.mPhysicalTarget = [](const Node&) { return std::optional<Nif::NiTransform>{}; };
+            if (legacy == 3) callbacks.mCollisionUpdate = [](const Node&, const auto&) {};
+            if (legacy == 4) callbacks.mFirstSynchronization = [](const Node&, const auto&, auto) {};
+            EXPECT_THROW(binding.update(mStamp, 1, callbacks), std::invalid_argument);
+        }
+        EXPECT_EQ(controllers, 0u); EXPECT_EQ(dispatches, 0u);
+        for (const auto flags : {std::optional<std::uint16_t>{}, std::optional<std::uint16_t>(8),
+                 std::optional<std::uint16_t>(0x49)})
+        {
+            Binding::Callbacks callbacks;
+            callbacks.mCollision = [&](const Node&, const auto&) {
+                return Binding::CollisionResult{flags, Nif::NiTransform::getIdentity()};
+            };
+            EXPECT_THROW(binding.update(mStamp, 1, callbacks), std::invalid_argument);
+            EXPECT_EQ(binding.cachedWorld(*mRoot).mTranslation, original.mTranslation);
+            EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 10);
+        }
+    }
+
     TEST_F(NifSceneTraversalTest, DeferredAdmissionLeavesCallbacksLiveAndRetirementPreservesCurrentLocals)
     {
         auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};

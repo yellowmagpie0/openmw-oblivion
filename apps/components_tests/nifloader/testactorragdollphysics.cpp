@@ -6571,3 +6571,93 @@ namespace
         EXPECT_TRUE(actor.updateNativeBlendNode(8, osg::Matrixf::identity(), 1.f / 60, 0, 0));
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, OwnedSceneCollisionDefersThenSynchronizesBeforeProjectingSettledBodies)
+    {
+        auto& definition = mGraph.mBodies.front(); definition.mNodeRecord = 8;
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 0x49, 0, 0};
+        definition.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1, 0, 0, .25f, {{.25f, 0, 0}}};
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, NifBullet::RagdollNativeLengthScale, mPoses, 1, -1);
+        auto states = actor.captureNativeBlendStates(); states[0].mRequestedMotion = 1;
+        actor.restoreNativeBlendStates(states);
+        auto packed = actor.captureNativePackedVelocities();
+        packed[0].mVelocities.mLinear = {1, 2, 3, 4}; packed[0].mVelocities.mAngular = {5, 6, 7, 8};
+        actor.restoreNativePackedVelocities(packed);
+        const auto controller = actor.captureNativeBlendControllers()[0].mState;
+        using Node = NifOsg::MatrixTransform;
+        using Binding = SceneUtil::NifSceneTraversal;
+        osg::ref_ptr<Node> root = new Node(Nif::NiTransform::getIdentity());
+        osg::ref_ptr<Node> child = new Node(Nif::NiTransform::getIdentity());
+        root->setTranslation({10, 0, 0}); child->setTranslation({5, 0, 0}); root->addChild(child);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        Binding traversal(*root, placement);
+        unsigned selector = 2, rootDispatches = 0, sceneTargets = 0;
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node& node, const Nif::NiTransform& animated) {
+            if (&node != root) return Binding::CollisionResult{};
+            ++rootDispatches;
+            // Native scene scale is separate from the quaternion/position
+            // input. Preserve it in the renderer's composition, not this setter.
+            auto matrix = animated.mRotation.toOsgMatrix(); matrix.setTrans(animated.mTranslation);
+            const float unused = std::numeric_limits<float>::quiet_NaN();
+            const auto publication = actor.updateNativeBlendSceneNode(8, matrix, unused, selector, unused);
+            Binding::CollisionResult result{actor.captureNativeBlendStates()[0].mCollisionFlags, std::nullopt};
+            if (publication && publication->mSceneTarget)
+            {
+                ++sceneTargets;
+                auto target = Nif::NiTransform::getIdentity();
+                target.mTranslation = publication->mSceneTarget->getTrans();
+                for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+                    target.mRotation.mValues[r][c] = (*publication->mSceneTarget)(c, r);
+                result.mPhysicalTarget = target;
+            }
+            return result;
+        };
+        auto* rigid = btRigidBody::upcast(actor.collisionObjects()[0]);
+        rigid->setActivationState(ISLAND_SLEEPING);
+        const auto before = actor.capture()[0];
+        osg::FrameStamp stamp;
+        for (const auto phase : {2u, 3u})
+        {
+            selector = phase; traversal.updateObjectLocal(stamp, phase, placement, callbacks);
+            EXPECT_EQ(actor.captureNativeBlendStates()[0].mCollisionFlags, 0x49u);
+            EXPECT_EQ(actor.capture()[0].mPose, before.mPose); EXPECT_FALSE(rigid->isActive());
+            EXPECT_EQ(traversal.cachedWorld(*root).mTranslation.x(), 110);
+            EXPECT_EQ(traversal.cachedWorld(*child).mTranslation.x(), 115);
+        }
+        selector = 0; traversal.updateObjectLocal(stamp, 4, placement, callbacks);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mCollisionFlags, 9u);
+        EXPECT_EQ(actor.captureNativeBlendStates()[0].mRequestedMotion, 1u);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, controller);
+        EXPECT_NEAR(actor.capture()[0].mPose.getOrigin().x(), 110, 1e-4);
+        EXPECT_EQ(root->getControllerTransform().mTranslation.x(), 10);
+        EXPECT_EQ(sceneTargets, 0u);
+        auto moved = rigid->getWorldTransform(); moved.setOrigin(btVector3(200, 0, 0));
+        rigid->setCenterOfMassTransform(moved);
+        // A settled H0 route uses frame/gravity, unlike the pending path.
+        callbacks.mCollision = [&](const Node& node, const Nif::NiTransform& animated) {
+            if (&node != root) return Binding::CollisionResult{};
+            ++rootDispatches;
+            auto matrix = animated.mRotation.toOsgMatrix(); matrix.setTrans(animated.mTranslation);
+            const auto publication = actor.updateNativeBlendSceneNode(8, matrix, 1.f / 60, selector, 0);
+            if (!publication || !publication->mSceneTarget) throw std::runtime_error("missing settled body target");
+            ++sceneTargets;
+            auto target = Nif::NiTransform::getIdentity(); target.mTranslation = publication->mSceneTarget->getTrans();
+            for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+                target.mRotation.mValues[r][c] = (*publication->mSceneTarget)(c, r);
+            return Binding::CollisionResult{publication->mCollisionFlags, target};
+        };
+        traversal.updateObjectLocal(stamp, 5, placement, callbacks);
+        EXPECT_EQ(rootDispatches, 4u); EXPECT_EQ(sceneTargets, 1u);
+        EXPECT_NEAR(traversal.cachedWorld(*root).mTranslation.x(), 200, 1e-3);
+        EXPECT_NEAR(traversal.cachedWorld(*child).mTranslation.x(), 205, 1e-3);
+        EXPECT_NEAR(root->getControllerTransform().mTranslation.x(), 100, 1e-3);
+        EXPECT_NEAR(child->getWorldMatrices()[0].getTrans().x(), 205, 1e-3);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, controller);
+    }
+}

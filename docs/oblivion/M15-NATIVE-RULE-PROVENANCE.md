@@ -15627,3 +15627,33 @@ hook runs after validation and before body/flag writes; invalid input or hook
 rejection preserves pose, flags and sleeping state. Automatic actor ownership,
 World/contact equivalence, AddRotation and gameplay/restart acceptance remain
 separate open gates.
+
+
+### Owned collision results preserve deferred blend phases in NIF traversal
+
+The complete `NifSceneTraversal::Callbacks::mCollision` callback returns actual
+live flags and an optional renderer target after own callbacks and composition.
+The caller owns dispatch and synchronization. A deferred pending bit therefore
+stays visible to projection/reference observers without invoking the generic
+first-sync fallback again. Active nodes without a target retain animated locals
+and caches. Targets require settled active flags; combining complete ownership
+with any legacy collision hook rejects before callbacks or scene publication.
+
+Full normal and ASan/UBSan comparison each matches all 393,216 unchanged original
+88EDC0 outer observations through the actual owned body and NIF traversal: flags,
+route, hook count and projected flags are exact. Required synchronization now
+succeeds in 131,072 cases, with 180,224 outer skips and 81,920 inner entries.
+The fixed Dynamic H0/V0/request 1 identity fixture preserves all packed velocity
+bits, body mode/request/pose/membership and skipped-body sleep, as well as scene
+locals/native cache/drawing values. All four existing negative controls differ.
+Original inner handlers were successful boundary stubs; this corpus does not
+prove body/Havok/renderer arithmetic or contact equivalence. No original process
+or fresh game-input course was launched.
+
+A coupled scene/body unit course covers pending phases 2/3, successful phase 0
+synchronization, then settled body projection into the parent/child hierarchy.
+It verifies packed velocity and controller retention, actual flags, native cache
+composition, local writeback and drawing output. Exact code/binary/corpus hashes
+and limits are in `owned_scene_collision_result_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Automatic actor ownership, AddRotation,
+clock/selector producers and full gameplay/restart acceptance remain open.

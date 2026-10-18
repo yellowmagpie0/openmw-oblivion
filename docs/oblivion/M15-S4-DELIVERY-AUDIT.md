@@ -5621,3 +5621,31 @@ See `blend_node_first_synchronization_followup` in
 Automatic scene/controller scheduling, subtype handling, group/filter/capsule/
 root coordination, contact/reaction/FSM/GetUp and all remaining full M15S4
 normal-input and fresh-process gameplay/save-restart gates remain open.
+
+
+### Complete collision ownership crosses the NIF projection boundary
+
+The NIF traversal now accepts one complete collision result: actual flags and
+an optional renderer target. It preserves pending-phase deferral without
+invoking generic synchronization again, keeps active no-target locals, and
+passes unchanged actual flags to observers. Ambiguous complete/legacy callback
+ownership rejects before own callbacks; targets require settled active flags.
+The existing legacy paths retain their behavior.
+
+Full normal and ASan/UBSan checks each pass all 2,911 component tests in 273
+suites and 1,637 engine tests in 122 suites, with exact inventories and no
+failures/skips. Both engines rebuild. A coupled owned-body/NIF scene course
+checks defer, sync and subsequent settled projection through child caches and
+OSG drawing output while preserving existing physical controller state. The
+exhaustive 393,216-row original outer corpus also matches route/final flags/hook count/
+projected flags in both builds. Its native inner stubs do not prove body or
+renderer arithmetic; fixed-body invariants are asserted by the current driver.
+Leak checks are disabled; unchanged Python/schema tests are not rerun.
+
+Tested source fingerprint: `74f21549a38791898829e6fafbc03a3de9d22f41ddac5900deff96ad3a70c3a1`. Exact hashes and scope are in
+`owned_scene_collision_result_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. The collision-result boundary is implemented. Automatic actor traversal,
+native controller/KF ordering,
+AddRotation, selector/time producers, coherent group/filter/capsule/root
+coordination, contacts/reaction/FSM/GetUp and all normal-input and fresh-process
+gameplay/save-restart gates remain open. Full M15S4 is not complete.

@@ -317,23 +317,39 @@ namespace SceneUtil
             const auto world = parent ? Nif::tryComposeNativeTransform(*parent, local, mPrecision)
                                       : std::optional<Nif::NiTransform>(local);
             require(world.has_value(), "invalid NIF scene composition");
-            if (callbacks.mCollisionUpdate)
+            CollisionResult collision;
+            if (callbacks.mCollision)
             {
-                callbacks.mCollisionUpdate(node, *world);
-                require(valid(), "NIF collision update changed the bound hierarchy");
+                collision = callbacks.mCollision(node, *world);
+                require(valid(), "NIF collision dispatch changed the bound hierarchy");
+                require(!collision.mPhysicalTarget
+                        || (collision.mFlags && (*collision.mFlags & 1) && !(*collision.mFlags & 0x40)),
+                    "NIF collision target requires settled active flags");
             }
-            auto flags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
+            else
+            {
+                if (callbacks.mCollisionUpdate)
+                {
+                    callbacks.mCollisionUpdate(node, *world);
+                    require(valid(), "NIF collision update changed the bound hierarchy");
+                }
+                collision.mFlags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
+            }
+            auto flags = collision.mFlags;
             require(valid(), "NIF collision provider changed the bound hierarchy");
             const bool pending = flags && (*flags & 0x40);
-            require(!pending || bool(callbacks.mFirstSynchronization), "missing pending NIF first synchronization");
+            require(!pending || bool(callbacks.mCollision) || bool(callbacks.mFirstSynchronization),
+                "missing pending NIF first synchronization");
             NifBullet::RagdollBonePoseWriteback frame{local, *world, 0};
             bool physicalTarget = false;
             if (!pending && flags && (*flags & 1))
             {
-                require(bool(callbacks.mPhysicalWorld) != bool(callbacks.mPhysicalTarget),
+                require(bool(callbacks.mCollision)
+                        || bool(callbacks.mPhysicalWorld) != bool(callbacks.mPhysicalTarget),
                     "missing or ambiguous active NIF physical pose source");
-                const auto desired = callbacks.mPhysicalTarget ? callbacks.mPhysicalTarget(node)
-                    : std::optional(callbacks.mPhysicalWorld(node));
+                const auto desired = callbacks.mCollision ? collision.mPhysicalTarget
+                    : callbacks.mPhysicalTarget ? callbacks.mPhysicalTarget(node)
+                                               : std::optional(callbacks.mPhysicalWorld(node));
                 require(valid(), "NIF physical provider changed the bound hierarchy");
                 if (desired)
                 {
@@ -365,7 +381,7 @@ namespace SceneUtil
                 mNodes[entry.mChildren[i]].mPublished = children[i];
             }
             invalidateSkeletons(path);
-            if (pending)
+            if (pending && !callbacks.mCollision)
             {
                 // Original897510 first publishes the animated node world,
                 // invokes reset/scene-to-body and clears40. It returns without
@@ -648,6 +664,9 @@ namespace SceneUtil
         require(mode == Mode::Full || bool(callbacks.mNodeFlags) || mImpl->mNodes[0].mSelectiveFlags.has_value(),
             "missing NIF selected update policy");
         require(!mImpl->mUpdating, "reentrant NIF scene traversal");
+        require(!callbacks.mCollision || (!callbacks.mCollisionFlags && !callbacks.mPhysicalWorld
+                    && !callbacks.mFirstSynchronization && !callbacks.mCollisionUpdate && !callbacks.mPhysicalTarget),
+            "ambiguous NIF collision dispatch ownership");
         require(bool(nativeParentWorld) == mImpl->mNativeParentWorld.has_value(),
             "NIF traversal native parent space mismatch");
         if (nativeParentWorld)
