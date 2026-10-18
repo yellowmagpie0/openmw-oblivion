@@ -6454,3 +6454,55 @@ bounded ordinary attacking-NPC course. Exact real-content uninterrupted
 trajectory equivalence, defensive breaks, mastery/effects, other views/devices/
 FPS, all named interruptions and the combined gameplay gate remain open.
 **Full M15S4 remains incomplete.**
+
+
+## Preserve native reference/cache separation across restart
+
+The preceding instrumented .016 reference/body difference is **not a proved
+save defect**. The absolute reference/cache equality assertion was invalid.
+Reinspection of the hash-verified original registered-root corpus finds **64
+of512 contexts** where no reference callback fires and local/reference
+translation differs by more than .01. Native traversal compares each desired
+pose with the previous local, while reference fields retain the last selected
+callback. Small per-frame motions can accumulate beyond that threshold.
+The original failed assertion is retained and explicitly superseded.
+
+A fresh normal and ASan/UBSan comparison of the current production functions
+matches all **512 original cases bit exact**, including node local/world, mask
+and reference float lanes. This reuses the existing original-executable corpus;
+it is not a new original-game run. Evidence: `S4/native-loose-reference-policy-audit-01`
+and `native-loose-reference-policy-compare-01`. The original executable remains
+SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+The new World regression makes four successive .006-unit steps with no reference
+callback, saves the resulting distinct reference/cached-local/body state, and
+binary-restores it through actual model/body readmission. Exact cached state
+and stored reference fields survive; a stationary traversal preserves reference
+fields, then a .02-unit step publishes position only. **1708 engine cases /124
+suites** pass normally and under ASan/UBSan, exact unfiltered inventories, no
+failures/skips. Evidence: `S4/native-loose-reference-cache-normal-01` and
+`-sanitized-01`; fingerprint
+`234dee25779f3631c0e6e1fc77b4be9777da6a84cae750b71cdc59d379857776`.
+ASan leaks are disabled. Gameplay code is unchanged in this follow-up.
+
+Corrected02 acceptance of the existing normal and instrumented physical courses
+checks body/cached-root agreement with the original .01 tolerance and preserves
+the independently published reference policy. Placement bounds, resources, item
+identity and no-replay checks are unchanged. Both bounded courses pass. The
+instrumented sword settles at z -106.735 with speed about .00003; its reference
+z -106.751 remains a distinct native publication. This corrects an expectation
+after observing the failed check; it is not presented as a preregistered pass.
+No exact real-content uninterrupted trajectory comparison is claimed.
+
+The corrected persistent-exterior audit also rejects eight private negative
+controls: changed base or one-ULP position, wrong physical cell/world/coordinates,
+missing reference/parent Persistent flags and interior target. Original files
+remain unchanged. Editable audit/verifier sources, expectations and receipts are
+in `M15-NATIVE-LOOSE-RESTART-PROBE.json` and the verification index under
+`native_loose_reference_cache_persistence`. The earlier failed harness and
+invalid equality assertions remain in their evidence directories.
+
+The bounded ordinary attacking-NPC physical/render restart gap is resolved.
+Defensive breaks, mastery/effects, native reactions, remaining input/view/FPS
+and in-action restart matrices, plus the combined gameplay gate remain open.
+**Full M15S4 remains incomplete.**

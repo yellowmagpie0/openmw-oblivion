@@ -24483,3 +24483,64 @@ TEST(OblivionWorldTest, LegacyNativeDropsBootstrapPhysicalModelsWithoutInventing
     loaded.getCellRef().setCount(0); world.retainOblivionPhysicalState();
     EXPECT_FALSE(world.captureOblivionRuntimeState().mNativeLooseWeapons.contains(key));
 }
+
+TEST(OblivionWorldTest, NativeLooseWeaponSavePreservesSubthresholdReferenceAndCachedRootIndependently)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, false, true);
+    auto& world = fixture.mWorld;
+    auto& physics = *fixture.mPhysics;
+    auto plan = fixture.prepare(); const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    const auto key = reference.getCellRef().getFormKey();
+    MWWorld::synchronizeLooseWeaponPoses(world, physics);
+    const auto stored = reference.getRefData().getPosition();
+    auto bodies = physics.captureLooseObject(reference);
+    const auto velocities = physics.captureLooseObjectPackedVelocities(reference);
+    // Original registered-root traversal compares each new physical pose with
+    // the previous local, not the last published reference. Several individually
+    // subthreshold movements may therefore accumulate beyond .01 in the REFR.
+    for (unsigned frame = 0; frame < 4; ++frame)
+    {
+        bodies[0].mPose.getOrigin().setX(bodies[0].mPose.getOrigin().x() + .006);
+        physics.restoreLooseObject(reference, bodies, velocities);
+        const auto initial = physics.captureLooseObjectRootPose(reference);
+        const auto next = physics.captureLooseObjectRootFrame(reference, initial);
+        ASSERT_EQ(next.mWorldChangeMask, 0u);
+        MWWorld::synchronizeLooseWeaponPoses(world, physics);
+        EXPECT_EQ(reference.getRefData().getPosition().asVec3(), stored.asVec3());
+        for (unsigned axis = 0; axis < 3; ++axis)
+            EXPECT_EQ(reference.getRefData().getPosition().rot[axis], stored.rot[axis]);
+    }
+    world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto& snapshot = saved.mNativeLooseWeapons.at(key); ASSERT_TRUE(snapshot.mRootLocal);
+    EXPECT_GT(std::abs(snapshot.mRootLocal->mPosition[0] - stored.pos[0]), .01f);
+    const auto savedReference = std::find_if(saved.mReferences.begin(), saved.mReferences.end(),
+        [&](const auto& value) { return value.mKey == key; });
+    ASSERT_NE(savedReference, saved.mReferences.end());
+    EXPECT_EQ(savedReference->mPosition.asVec3(), stored.asVec3());
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    detachNativeLooseWeaponForReadmission(fixture, reference);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto loaded = world.getWorldModel().getDynamicNativePtr(key); ASSERT_FALSE(loaded.isEmpty());
+    ASSERT_TRUE(world.restoreOblivionLooseWeaponScene(loaded, *fixture.mObjects, physics,
+        loaded.getClass().getCorrectedModel(loaded), Misc::Convert::makeOsgQuat(loaded.getRefData().getPosition())));
+    const auto restored = world.captureOblivionRuntimeState();
+    EXPECT_EQ(restored.mNativeLooseWeapons, saved.mNativeLooseWeapons);
+    EXPECT_EQ(loaded.getRefData().getPosition().asVec3(), stored.asVec3());
+    for (unsigned axis = 0; axis < 3; ++axis)
+        EXPECT_EQ(loaded.getRefData().getPosition().rot[axis], stored.rot[axis]);
+    MWWorld::synchronizeLooseWeaponPoses(world, physics);
+    EXPECT_EQ(loaded.getRefData().getPosition().asVec3(), stored.asVec3());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeLooseWeapons, saved.mNativeLooseWeapons);
+    // A later individual step above the native threshold publishes position.
+    bodies = physics.captureLooseObject(loaded);
+    bodies[0].mPose.getOrigin().setX(bodies[0].mPose.getOrigin().x() + .02);
+    physics.restoreLooseObject(loaded, bodies, velocities);
+    const auto target = physics.captureLooseObjectRootPose(loaded);
+    const auto frame = physics.captureLooseObjectRootFrame(loaded, target);
+    ASSERT_EQ(frame.mWorldChangeMask, 1u);
+    MWWorld::synchronizeLooseWeaponPoses(world, physics);
+    EXPECT_EQ(loaded.getRefData().getPosition().asVec3(), frame.mWorld.mTranslation);
+    for (unsigned axis = 0; axis < 3; ++axis)
+        EXPECT_EQ(loaded.getRefData().getPosition().rot[axis], stored.rot[axis]);
+}

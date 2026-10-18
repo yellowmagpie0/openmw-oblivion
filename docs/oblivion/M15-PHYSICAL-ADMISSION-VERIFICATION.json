@@ -11459,7 +11459,7 @@
     "limits": "Fresh process retained weapon identity and downward motion but weapon fell through floor. Static world masks exclude the World category used by loose bodies. Full drop/restart and M15S4 acceptance remain false."
   },
   "native_loose_collision_routing": {
-    "status": "Collision routing corrected; ordinary attacking-NPC physical weapon drop/restart passes bounded normal checks. Instrumented body settles, but reference/body save coherence fails the .01 translation tolerance. Full M15S4 remains incomplete.",
+    "status": "Collision routing corrected. The initially reported instrumented reference/cache equality failure is an invalid native invariant; see the independent original-policy and persistence follow-up. Full M15S4 incomplete.",
     "source_parent_commit": "719f5161f02b206d04e8cd7a805e80af39484770",
     "tested_dirty_source_fingerprint": "1c7e892709cf61f65621224db64c23ce1f6d901fdac918a0e1fadf377c0fb1b8",
     "source_files": [
@@ -11563,6 +11563,73 @@
       "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/continuation-setup.json",
       "sha256": "15db06399ad639eda78eb9433ed433e9ffe9a134c53d34955a7fa09edb4f8234"
     },
-    "limits": "Normal visual evidence uses a copied-save camera fixture, not ordinary mouse look. Sanitized02 reuses the terminal actual first epoch/output from sanitized01 and starts a new continuation epoch with longer wall settling, unchanged binary/save and bounds. No exact real-content uninterrupted trajectory equivalence or complete drop/mastery/defensive/effect/interruption matrix is claimed. Only editable manifests and documentation follow the frozen C++ checks."
+    "limits": "Normal visual evidence uses a copied-save camera fixture, not ordinary mouse look. Sanitized02 reuses the terminal actual first epoch/output from sanitized01 and starts a new continuation epoch with longer wall settling, unchanged binary/save and bounds. No exact real-content uninterrupted trajectory equivalence or complete drop/mastery/defensive/effect/interruption matrix is claimed. Only editable manifests and documentation follow the frozen C++ checks.",
+    "followup": "native_loose_reference_cache_persistence"
+  },
+  "native_loose_reference_cache_persistence": {
+    "status": "Reference/cache persistence proven under native masked callback policy; bounded ordinary attacking-NPC physical restart checks pass normally and with instrumented continuation. Full M15S4 incomplete.",
+    "source_parent_commit": "9a358253398349ea05515c49d7b6c3ff70bf25b6",
+    "tested_dirty_source_fingerprint": "234dee25779f3631c0e6e1fc77b4be9777da6a84cae750b71cdc59d379857776",
+    "production_gameplay_code_changed": false,
+    "test_source": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "6805a6f3aa1f4840ade843b7818a6f5c7bf3011d3eb34e424a99fac8e60b386b"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-cache-normal-01/verification.json",
+      "sha256": "26ddf7205a12a064c3dd6dfa3e4b2960430b2c8e839ed8fa5add5041b3192bc7"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-cache-sanitized-01/verification.json",
+      "sha256": "f716e5a8c84fa60b80fb3f029c615e465929206386258ac581c2b79997d706d2"
+    },
+    "verification": {
+      "engine_normal": 1708,
+      "engine_sanitized": 1708,
+      "suites": 124,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "original_policy_reinspection": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-audit-01/verification.json",
+      "sha256": "63c337c6363de273461f9682426eb679ec5a60a5e0144a11fde51cc1461e165a"
+    },
+    "current_native_comparison_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-compare-01/normal-verification.json",
+      "sha256": "ad48241eb8231a75a9dd55296930a82bee40a88f1d02af862f64e6011e73882d"
+    },
+    "current_native_comparison_sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-compare-01/sanitized-verification.json",
+      "sha256": "e610ad6b68b441f1ead6bca4273ee044c7582c1a97cfa1aed1ffe029204137cc"
+    },
+    "normal_physical_acceptance": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-02/physical-verification-02.json",
+      "sha256": "e16491db42c717483ba138a064bfcf5a3bfdfbdb67f7ae8a7e82e73a451dac29"
+    },
+    "sanitized_physical_acceptance": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/physical-verification-02.json",
+      "sha256": "16e379fcb99b3c47f439c6b07253600a8efd3bd62e1aee68fa127a85a93ca314"
+    },
+    "sanitized_resources": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/verification.json",
+      "sha256": "880e38254439d162a103171bf35faf00e8543bb2ea110552b556929ce67a6a49"
+    },
+    "corrected_content_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/extra-content-reference-audit.json",
+      "sha256": "64d2ead760d713d0deefb4c8225a5b4a455c397874647169c7f62c5703d4806f"
+    },
+    "content_audit_negative_controls": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/extra-content-negative-controls.json",
+      "sha256": "681008e6d1c86e395ac1d1fffc07d46260b150ff9dbc9a16b1cecd2cb1678294"
+    },
+    "retained_invalid_reference_equality_assertion": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/physical-reference-coherence-failure.json",
+      "sha256": "a9f59cc30141c415020743dfeda8f2966c7dc7c99ce37e0b557dcc50833fdb27"
+    },
+    "acceptance_correction": "Original corpus has64 of512 contexts with mask0 and reference/local difference above.01. Current production functions match all512 original contexts bit exact, normal and sanitized. Replace absolute reference/cache equality with exact independent persistence and native masked publication coverage; retain body/cache.01 tolerance and placement bounds. This is a correction to acceptance semantics after the original failed assertion, not a preregistered pass.",
+    "case": "Four successive.006-unit physical steps publish no reference callback; cumulative local/reference difference exceeds.01. Binary save/load restores body, cached local and unchanged reference independently; next stationary traversal preserves reference, and a later.02-unit step publishes position only.",
+    "runtime_limits": "Existing normal and instrumented exact-lineage physical courses use the collision-routing chunk binaries3489f3ef... and01a43350..., whose gameplay code is unchanged by this test-only follow-up. Normal copied-save camera inspection proves exposed blade/scabbard policy; no instrumented floor-facing image or exact real-content uninterrupted trajectory equivalence is claimed. Remaining defensive/mastery/effect/input/reaction and complete S4 gates stay open."
   }
 }

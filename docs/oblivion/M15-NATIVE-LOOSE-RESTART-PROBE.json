@@ -203,5 +203,97 @@
       "sha256": "15db06399ad639eda78eb9433ed433e9ffe9a134c53d34955a7fa09edb4f8234"
     },
     "limits": "Normal visual evidence uses a copied-save camera fixture, not ordinary mouse look. Sanitized02 reuses the terminal actual first epoch/output from sanitized01 and starts a new continuation epoch with longer wall settling, unchanged binary/save and bounds. No exact real-content uninterrupted trajectory equivalence or complete drop/mastery/defensive/effect/interruption matrix is claimed. Only editable manifests and documentation follow the frozen C++ checks."
-  }
+  },
+  "current_physical_acceptance": {
+    "scope": "Natural normal-input NPC break followed by exact-byte fresh-process physical restart; supplements inherited resource, identity and placement recipe.",
+    "preregistered_before_runtime": false,
+    "base": "content:oblivion.esm:090615",
+    "model": "meshes/weapons/iron/shortsword.nif",
+    "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+    "record": 7,
+    "node_record": 20,
+    "motion": 1,
+    "physical_scale": 1,
+    "scene_collision_flags": 1,
+    "first_airborne_required": true,
+    "first_downward_linear_z_less_than": 0,
+    "second_max_linear_speed": 1,
+    "same_identity_extras_action_rng_and_inherited_placement_bounds_required": true,
+    "runtime_visual_review_required": true,
+    "limits": "This single drop course does not close directional/mastery, defensive breakage, effects, other inputs/views/FPS or complete M15S4.",
+    "body_cached_root_translation_tolerance": 0.01,
+    "reference_pose_policy": "Reference fields preserve the last native masked callback, independently of body and cached local. No reference-to-local absolute bound is a native invariant.",
+    "correction_evidence": "../native-loose-reference-policy-audit-01/verification.json",
+    "correction_reason": "Existing original-executable corpus has64 mask-zero cases where cached local/reference differ by more than.01. Preserve original body/cached-root.01 tolerance; replace false reference-equality assertion with independent native callback/persistence coverage."
+  },
+  "original_physical_acceptance_status": "Superseded reference/local equality assertion; preserved with original failed receipt. Body/cache tolerance and placement bounds remain unchanged.",
+  "reference_cache_followup": {
+    "status": "Reference/cache persistence proven under native masked callback policy; bounded ordinary attacking-NPC physical restart checks pass normally and with instrumented continuation. Full M15S4 incomplete.",
+    "source_parent_commit": "9a358253398349ea05515c49d7b6c3ff70bf25b6",
+    "tested_dirty_source_fingerprint": "234dee25779f3631c0e6e1fc77b4be9777da6a84cae750b71cdc59d379857776",
+    "production_gameplay_code_changed": false,
+    "test_source": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "6805a6f3aa1f4840ade843b7818a6f5c7bf3011d3eb34e424a99fac8e60b386b"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-cache-normal-01/verification.json",
+      "sha256": "26ddf7205a12a064c3dd6dfa3e4b2960430b2c8e839ed8fa5add5041b3192bc7"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-cache-sanitized-01/verification.json",
+      "sha256": "f716e5a8c84fa60b80fb3f029c615e465929206386258ac581c2b79997d706d2"
+    },
+    "verification": {
+      "engine_normal": 1708,
+      "engine_sanitized": 1708,
+      "suites": 124,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "original_policy_reinspection": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-audit-01/verification.json",
+      "sha256": "63c337c6363de273461f9682426eb679ec5a60a5e0144a11fde51cc1461e165a"
+    },
+    "current_native_comparison_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-compare-01/normal-verification.json",
+      "sha256": "ad48241eb8231a75a9dd55296930a82bee40a88f1d02af862f64e6011e73882d"
+    },
+    "current_native_comparison_sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-reference-policy-compare-01/sanitized-verification.json",
+      "sha256": "e610ad6b68b441f1ead6bca4273ee044c7582c1a97cfa1aed1ffe029204137cc"
+    },
+    "normal_physical_acceptance": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-02/physical-verification-02.json",
+      "sha256": "e16491db42c717483ba138a064bfcf5a3bfdfbdb67f7ae8a7e82e73a451dac29"
+    },
+    "sanitized_physical_acceptance": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/physical-verification-02.json",
+      "sha256": "16e379fcb99b3c47f439c6b07253600a8efd3bd62e1aee68fa127a85a93ca314"
+    },
+    "sanitized_resources": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/verification.json",
+      "sha256": "880e38254439d162a103171bf35faf00e8543bb2ea110552b556929ce67a6a49"
+    },
+    "corrected_content_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/extra-content-reference-audit.json",
+      "sha256": "64d2ead760d713d0deefb4c8225a5b4a455c397874647169c7f62c5703d4806f"
+    },
+    "content_audit_negative_controls": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/extra-content-negative-controls.json",
+      "sha256": "681008e6d1c86e395ac1d1fffc07d46260b150ff9dbc9a16b1cecd2cb1678294"
+    },
+    "retained_invalid_reference_equality_assertion": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/physical-reference-coherence-failure.json",
+      "sha256": "a9f59cc30141c415020743dfeda8f2966c7dc7c99ce37e0b557dcc50833fdb27"
+    },
+    "acceptance_correction": "Original corpus has64 of512 contexts with mask0 and reference/local difference above.01. Current production functions match all512 original contexts bit exact, normal and sanitized. Replace absolute reference/cache equality with exact independent persistence and native masked publication coverage; retain body/cache.01 tolerance and placement bounds. This is a correction to acceptance semantics after the original failed assertion, not a preregistered pass.",
+    "case": "Four successive.006-unit physical steps publish no reference callback; cumulative local/reference difference exceeds.01. Binary save/load restores body, cached local and unchanged reference independently; next stationary traversal preserves reference, and a later.02-unit step publishes position only.",
+    "runtime_limits": "Existing normal and instrumented exact-lineage physical courses use the collision-routing chunk binaries3489f3ef... and01a43350..., whose gameplay code is unchanged by this test-only follow-up. Normal copied-save camera inspection proves exposed blade/scabbard policy; no instrumented floor-facing image or exact real-content uninterrupted trajectory equivalence is claimed. Remaining defensive/mastery/effect/input/reaction and complete S4 gates stay open."
+  },
+  "persistent_exterior_audit_source": "from pathlib import Path\nimport json,hashlib,zlib,struct,sys,math\nroot=Path(__file__).resolve().parents[5];sys.path.insert(0,str(root))\nfrom scripts.tes4_runtime_state import load_save\np=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parent\nsource=load_save(p/'staged-input.omwsave');original={v['key'] for v in source['references']}\nstates=[load_save(p/phase/'userdata/saves/M15Review/Quicksave.omwsave') for phase in ('first','second')]\nextras=[{v['key']:v for v in s['references'] if v['key'] not in original and not v['key'].startswith('dynamic:')} for s in states]\nwanted=set().union(*(set(int(k.rsplit(':',1)[1],16) for k in group) for group in extras))\nmaster=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');data=master.read_bytes()\nassert hashlib.sha256(data).hexdigest()=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nfound={};cells={}\ndef walk(start,end,cell=None,world=None):\n pos=start\n while pos<end:\n  tag=data[pos:pos+4];size=struct.unpack_from('<I',data,pos+4)[0]\n  if tag==b'GRUP':\n   label,typ=struct.unpack_from('<II',data,pos+8);walk(pos+20,pos+size,label if typ==6 else cell,label if typ==1 else world);pos+=size;continue\n  flags,form=struct.unpack_from('<II',data,pos+8)\n  if tag==b'CELL' or (form in wanted and tag in (b'REFR',b'ACHR',b'ACRE')):\n   body=data[pos+20:pos+20+size]\n   if flags&0x40000:\n    length=struct.unpack_from('<I',body)[0];body=zlib.decompress(body[4:]);assert len(body)==length\n   q=0;fields={};extended=None\n   while q<len(body):\n    st=body[q:q+4];n=struct.unpack_from('<H',body,q+4)[0];q+=6\n    if st==b'XXXX':extended=struct.unpack_from('<I',body,q)[0];q+=n;continue\n    if extended is not None:n=extended;extended=None\n    fields[st]=body[q:q+n];q+=n\n   assert q==len(body)\n   if tag==b'CELL':\n    cells[form]={'world':world,'flags':flags,'interior':bool(fields[b'DATA'][0]&1),'coordinates':struct.unpack('<ii',fields[b'XCLC'][:8]) if b'XCLC' in fields else None}\n   else:\n    assert cell is not None\n    found[form]={'base':struct.unpack('<I',fields[b'NAME'])[0],'cell':cell,'world':world,'flags':flags,'tag':tag.decode(),'position':struct.unpack('<6f',fields[b'DATA'])}\n  pos+=20+size\n assert pos==end\nwalk(0,len(data));assert found.keys()==wanted\nrows=[];resolved=[]\nfor phase,group in zip(('first','second'),extras):\n for key,ref in group.items():\n  assert key.startswith('content:oblivion.esm:')\n  native=found[int(key.rsplit(':',1)[1],16)]\n  assert ref['base']==f\"content:oblivion.esm:{native['base']:06x}\"\n  if ref['cell']!=f\"content:oblivion.esm:{native['cell']:06x}\":\n   assert native['tag']=='REFR' and native['flags']&0x400\n   parent=cells[native['cell']];assert parent['flags']&0x400 and not parent['interior']\n   assert ref['cell'].startswith('content:oblivion.esm:')\n   target_id=int(ref['cell'].rsplit(':',1)[1],16);target=cells[target_id]\n   assert native['world'] is not None and parent['world']==native['world']==target['world']\n   assert not target['interior'] and not target['flags']&0x400\n   assert all(math.isfinite(x) for x in native['position'])\n   assert ref['position'][:3]==list(native['position'][:3])\n   physical_cell=tuple(math.floor(v/4096) for v in native['position'][:2]);assert target['coordinates']==physical_cell\n   resolved.append({'phase':phase,'reference':key,'base':ref['base'],'world':f\"content:oblivion.esm:{native['world']:06x}\",'persistent_storage_cell':f\"content:oblivion.esm:{native['cell']:06x}\",'saved_physical_cell':ref['cell'],'coordinates':physical_cell,'unchanged_master_position':native['position'][:3]})\n rows.append({'count':len(group),'identity_base_cell_sha256':hashlib.sha256(json.dumps(sorted((k,r['base'],r['cell']) for k,r in group.items()),separators=(',',':')).encode()).hexdigest()})\nr={'passed':True,'master_sha256':hashlib.sha256(data).hexdigest(),'counts':rows,'persistent_exterior_references':resolved,'scope':'Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim.'}\n(p/'extra-content-reference-audit.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r))\n",
+  "persistent_exterior_negative_control_source": "from pathlib import Path\nimport copy,json,hashlib,struct,sys\np=Path(__file__).resolve().parent;script=p/'audit-extra-content-02.py';code=script.read_text();start=code.index('rows=[];resolved=[]');stop=code.index(\"r={'passed':True\");env={'__file__':str(script),'__name__':'__audit_diagnostic__'};sys.argv=[str(script)];exec(code[:start],env)\noriginal=copy.deepcopy(env['extras']);original_found=copy.deepcopy(env['found']);original_cells=copy.deepcopy(env['cells']);key='content:oblivion.esm:054fe3';form=0x54fe3;target=0xd312;parent=0x9f19\n# All changes below affect only private parsed diagnostic data, never game/master/save files.\nwrong_cell=next(k for k,v in original_cells.items() if v['world']==0x9f18 and not v['interior'] and not v['flags']&0x400 and v['coordinates']!=(12,17))\ndef ref_change(k,v):env['extras'][1][key][k]=v\ndef bad_position():\n r=env['extras'][1][key];b=struct.unpack('<I',struct.pack('<f',r['position'][0]))[0];r['position'][0]=struct.unpack('<f',struct.pack('<I',b+1))[0]\ncases=[('wrong_base',lambda:ref_change('base','content:oblivion.esm:000034')),('same_world_wrong_cell_coordinates',lambda:ref_change('cell',f'content:oblivion.esm:{wrong_cell:06x}')),('position_changed_by_one_float_ulp',bad_position),('wrong_target_world',lambda:env['cells'][target].update(world=0x123456)),('missing_reference_persistent_flag',lambda:env['found'][form].update(flags=0)),('missing_parent_persistent_flag',lambda:env['cells'][parent].update(flags=0)),('interior_target',lambda:env['cells'][target].update(interior=True)),('wrong_target_coordinates',lambda:env['cells'][target].update(coordinates=(12,18)))]\nrows=[]\nfor name,mutate in cases:\n env.update(extras=copy.deepcopy(original),found=copy.deepcopy(original_found),cells=copy.deepcopy(original_cells));mutate()\n try:exec(code[start:stop],env)\n except AssertionError:rows.append({'case':name,'rejected':True})\n else:raise AssertionError('audit accepted invalid input: '+name)\nr={'passed':True,'cases':len(rows),'rows':rows,'audit_source_sha256':hashlib.sha256(script.read_bytes()).hexdigest(),'scope':'Negative controls on private parsed audit data; unchanged master and save files. Persistent-exterior resolution cannot admit changed base/position, wrong cell/world/coordinates, missing persistent flags or interior target. Not engine tests or gameplay.'};(p/'extra-content-negative-controls.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r))\n",
+  "corrected_physical_verifier_source": "from pathlib import Path\nimport json,sys,math,hashlib\np=Path(__file__).resolve().parent;root=p.parents[4];sys.path.insert(0,str(root))\nfrom scripts.tes4_runtime_state import load_save\nspec=json.loads((p/'physical-acceptance-02.json').read_text());resource=json.loads((p/'verification.json').read_text());assert resource['passed']\nreference=resource['dynamic_reference'];rows=[]\nfor phase in ('first','second'):\n path=p/phase/'userdata/saves/M15Review/Quicksave.omwsave';s=load_save(path)\n assert len(s['native_loose_weapons'])==1\n v=s['native_loose_weapons'][0];assert v['reference']==reference\n for k in ('base','model','asset_hash','physical_scale','scene_collision_flags'):assert v[k]==spec[k],(phase,k,v[k])\n b=v['body'];assert b['record']==spec['record'] and b['node_record']==spec['node_record'] and b['native_motion']==spec['motion']\n r=next(r for r in s['references'] if r['key']==reference)\n root_pose=v['root_local'];assert root_pose is not None and root_pose['scale']==1\n tolerance=spec['body_cached_root_translation_tolerance']\n assert max(abs(a-c) for a,c in zip(b['position'],root_pose['position']))<=tolerance\n # The native reference callback selects fields independently of the cached local.\n assert all(math.isfinite(x) for x in b['position']+b['linear_velocity']+b['angular_velocity'])\n rows.append({'phase':phase,'body_position':b['position'],'linear_velocity':b['linear_velocity'],'angular_velocity':b['angular_velocity'],'native_packed_velocity':b['native_packed_velocity'],'reference_position':r['position'],'root_local':root_pose,'snapshot':v,'save_sha256':hashlib.sha256(path.read_bytes()).hexdigest()})\nassert rows[0]['linear_velocity'][2]<spec['first_downward_linear_z_less_than']\nassert math.sqrt(sum(x*x for x in rows[1]['linear_velocity']))<=spec['second_max_linear_speed'],rows[1]\nassert rows[0]['body_position']!=rows[1]['body_position']\nr={'passed':True,'scope':spec['scope'],'same_reference_asset_body_and_extras':True,'moving_first_save':True,'fresh_process_lands_and_settles':True,'body_cached_root_positions_agree':True,'reference_pose_policy':spec['reference_pose_policy'],'reference_policy_evidence':spec['correction_evidence'],'native_reference_cache_persistence_test':'pending','inherited_resource_and_placement_verification':True,'physical_acceptance_sha256':hashlib.sha256((p/'physical-acceptance-02.json').read_bytes()).hexdigest(),'rows':rows,'runtime_visual_review':'pending','full_drop_restart_acceptance':False,'full_M15S4_acceptance':False,'limits':spec['limits']}\n(p/'physical-verification-02.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n"
 }
