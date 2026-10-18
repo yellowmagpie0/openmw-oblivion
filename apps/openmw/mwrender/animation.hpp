@@ -13,11 +13,13 @@
 #include <components/sceneutil/animblendrules.hpp>
 #include <components/sceneutil/controller.hpp>
 #include <components/sceneutil/nodecallback.hpp>
+#include <components/sceneutil/nifscenetraversal.hpp>
 #include <components/sceneutil/textkeymap.hpp>
 #include <components/sceneutil/util.hpp>
 #include <components/vfs/pathutil.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <optional>
 #include <span>
@@ -235,6 +237,9 @@ namespace MWRender
             const Placement& objectWorld, osg::NodeVisitor& frameVisitor);
 
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mPhysicalPose;
+        struct NativeSceneState;
+        std::shared_ptr<NativeSceneState> mNativeScene;
+        void rebindNativeScenePtr(const MWWorld::Ptr& ptr);
         std::unique_ptr<SceneUtil::ActorRagdollLocalPose> mPhysicalAnimatedLocal;
         bool mPhysicalAnimatedTargets = false;
         std::uint64_t mPhysicalPoseGeneration = 0;
@@ -569,6 +574,42 @@ namespace MWRender
             bool isValid() const noexcept;
             std::span<const NifBullet::RagdollBoneWorldPose> initialBones() const;
         };
+        struct NativeSceneFrame
+        {
+            Nif::NiTransform mPlacement = Nif::NiTransform::getIdentity();
+            // Asset-scoped record identity, after this node's ordinary
+            // callbacks and composition. The caller owns physical clocks,
+            // controller phase, collision dispatch and subtype state.
+            std::function<SceneUtil::NifSceneTraversal::CollisionResult(
+                std::uint32_t, const Nif::NiTransform&)> mCollision;
+        };
+        using NativeSceneFrameSource = std::function<NativeSceneFrame(
+            const MWWorld::Ptr&, const osg::FrameStamp&, unsigned)>;
+        class PreparedNativeScene
+        {
+            std::shared_ptr<NativeSceneState> mState;
+            explicit PreparedNativeScene(std::shared_ptr<NativeSceneState> state);
+            friend class Animation;
+        public:
+            ~PreparedNativeScene();
+            PreparedNativeScene(const PreparedNativeScene&) = delete;
+            PreparedNativeScene& operator=(const PreparedNativeScene&) = delete;
+            bool isValid() const noexcept;
+            std::span<const NifBullet::RagdollBoneWorldPose> initialBones() const;
+        };
+        // Stage native cache ownership and the root update callback without
+        // detaching resident/selected controllers or changing scene matrices.
+        // After commit, normal OSG update traversal obtains one frame from the
+        // source and performs per-node native collision projection. The source
+        // supplies current placement and resolved timing; no timer is invented.
+        // Current ordinary NIF hierarchy policy applies. No source/owner release
+        // or topology changes are permitted inside frame/controller callbacks.
+        std::unique_ptr<PreparedNativeScene> prepareNativeScene(
+            const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& placement,
+            NativeSceneFrameSource source);
+        bool commitNativeScene(PreparedNativeScene& prepared) noexcept;
+        void endNativeScene();
+        bool hasNativeScene() const { return mNativeScene != nullptr; }
         // Stage binding, local checkpoint and exact callback chains without
         // detaching anything. Commit only on this renderer's update thread.
         std::unique_ptr<PreparedPhysicalPose> preparePhysicalPose(
@@ -616,7 +657,7 @@ namespace MWRender
             std::span<const NifBullet::RagdollNativeBlendPublication> publications,
             const Nif::NiTransform& objectWorld);
         void endPhysicalPose();
-        bool hasPhysicalPose() const { return mPhysicalPose != nullptr; }
+        bool hasPhysicalPose() const { return mPhysicalPose != nullptr || mNativeScene != nullptr; }
         // Current controller/physical locals, independent of file bind poses
         // and optional drawing traversal projections. Exact native node names.
         std::optional<Nif::NiTransform> captureNativeNodeWorldPose(

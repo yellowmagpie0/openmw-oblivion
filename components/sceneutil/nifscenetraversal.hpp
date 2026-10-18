@@ -12,6 +12,7 @@ namespace osg
     class FrameStamp;
     class Node;
     class NodeVisitor;
+    class Group;
 }
 namespace NifOsg { class MatrixTransform; }
 
@@ -129,6 +130,13 @@ namespace SceneUtil
         static std::unique_ptr<NifSceneTraversal> prepareObjectLocal(NifOsg::MatrixTransform& objectRoot,
             const Nif::NiTransform& nativeParentWorld,
             Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+        // Renderer-only Group/Skeleton containing one or more ordinary NIF
+        // roots. Placement applies independently to each native root. Full
+        // traversal only; no singular reference-root callback or selective
+        // policy is inferred for this rendering container.
+        static std::unique_ptr<NifSceneTraversal> prepareObjectLocalContainer(osg::Group& container,
+            const Nif::NiTransform& nativeParentWorld,
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
         bool commitPrepared() noexcept;
         // Release only still-owned drawing handles, including after hierarchy
         // damage. Preserve current author locals and foreign replacements.
@@ -158,6 +166,11 @@ namespace SceneUtil
             Mode mode = Mode::Full);
         void updateObjectLocal(const osg::FrameStamp& stamp, unsigned traversalNumber,
             const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks = {}, Mode mode = Mode::Full);
+        // Called by an installed root update callback. The outer OSG visitor
+        // has already evaluated this root's StateSet; evaluate its node chain
+        // and all descendant properties exactly once in the native traversal.
+        void updateObjectLocalFromVisitor(osg::NodeVisitor& outer,
+            const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks = {});
         // Native Full(time, false): compose/project every node and perform
         // physical/reference callbacks without evaluating any own/property or
         // drawing callbacks. Generation supplies time zero. Unlike Selected/
@@ -191,9 +204,11 @@ namespace SceneUtil
     private:
         NifSceneTraversal(NifOsg::MatrixTransform& objectRoot, const Nif::NiTransform& nativeParentWorld,
             Nif::NativeTransformPrecision precision, bool deferred);
+        NifSceneTraversal(osg::Group& container, const Nif::NiTransform& nativeParentWorld,
+            Nif::NativeTransformPrecision precision);
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
             const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
-            const Nif::NiTransform* nativeParentWorld = nullptr);
+            const Nif::NiTransform* nativeParentWorld = nullptr, bool rootPropertiesUpdated = false);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

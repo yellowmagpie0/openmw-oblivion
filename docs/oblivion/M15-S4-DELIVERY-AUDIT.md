@@ -5684,3 +5684,42 @@ extra-matrix production, automatic actor traversal, KF/controller ordering,
 selector/frame producers, group/filter/capsule/root coordination, contacts/
 reaction/FSM/GetUp and all normal-input and fresh-process gameplay/save-restart
 gates remain open. Full M15S4 is not complete.
+
+
+### Native scene ownership in normal renderer updates
+
+Animation can now prepare and commit a native scene owner that runs through
+ordinary OSG update traversal. Resident and selected callbacks remain live;
+partial controllers start with previous physical author locals. Each frame
+obtains current placement and a collision dispatcher from an explicit caller
+source, then evaluates each node before collision projection and children.
+Root StateSet callbacks run once, with descendant properties preserved. An
+ordinary Group/Skeleton forest applies one native placement independently to
+its roots. Asset-scoped binding excludes foreign part record collisions.
+Prepared identities/callback chains and live owner guards reject stale use;
+teardown preserves foreign callbacks/projections and current author locals.
+
+Corrected full normal and ASan/UBSan checks each pass all **2,917 component
+tests in 273 suites** and **1,645 engine tests in 122 suites**, with exact
+inventories and no failures/skips. Eight new engine cases include an actual
+OSG/owned-Bullet-body course through selector 2/3 deferral, first synchronization
+and later physical pose continuation, retaining packed velocities and request.
+Initial full01 attempts each have one forest-fixture failure: its second root
+was not declared as a physical target. Only that declaration changes for02;
+production code is unchanged. Initial failures remain retained. Leak checks
+are disabled; unchanged Python/schema checks are not repeated.
+
+Fresh normal/sanitized regression comparisons each pass the retained 720 native
+cases and 26,160 checks, with identical declared scene output and the existing
+body tolerances. No new original-game probe, contact step, normal game input or
+restart course is claimed. Tested source fingerprint: `02dca996945e4f527d7b367ba519020f4a01c865cc34c8b6cec8734d8e8a33db`.
+Exact hashes and limits are in `native_renderer_scene_owner_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+This delivers the renderer driver boundary. World admission still uses generic
+AnimatedTargets; automatic construction and authoritative frame/selector sources
+must be integrated. Actual KF ordering, subtype/extra-rotation producers, special
+node/attachment policies and live migration/morphology remain open, alongside
+group/filter/capsule/root coordination, contacts/reaction/FSM/GetUp and every
+remaining normal-input and fresh-process gameplay/save-restart gate. Full M15S4
+is not complete.

@@ -6878,5 +6878,213 @@
       "A later postpass failure does not roll back completed body/base/controller phases. Legacy callbacks with no extra snapshot retain existing behavior. No new reference publication permission is inferred from the rotation change.",
       "Python/schema unchanged and not rerun; ASan leaks disabled. Contact/reaction/FSM/GetUp and all normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart acceptance remain open. Full M15S4 is not complete."
     ]
+  },
+  "native_renderer_scene_owner_followup": {
+    "status": "Normal OSG renderer traversal can own ordinary native scene collision projection while retaining live callbacks. Actual World actor admission and authoritative frame/selector production remain open. Full M15S4 is incomplete.",
+    "source": {
+      "head": "ae259120c04e1dd5d0786b911a056b9dd115d5de",
+      "source_fingerprint": "02dca996945e4f527d7b367ba519020f4a01c865cc34c8b6cec8734d8e8a33db"
+    },
+    "source_sha256": {
+      "apps/openmw/mwrender/animation.cpp": "4a5b195765d069db6817aeae8b8ce3714f1985e7fcd8635940012e9e9fda8ec8",
+      "apps/openmw/mwrender/animation.hpp": "3a52ff9d17e59b7463f9ed9411f608e26652006da6663156911935b00e412911",
+      "apps/openmw_tests/mwrender/testphysicalpose.cpp": "d3f5f288f63686d94ee4634b95cf9a3f88419f04cef34d677ccbffc0b055eac8",
+      "components/sceneutil/actorragdollpose.cpp": "2a84a79e396b631fe7f844963e5fee1182392bb9b2b83e7b13afe1eecae66e67",
+      "components/sceneutil/actorragdollpose.hpp": "f7819a8cf4b564bf0c158d869fd81cf1a0f8044904b55c4e65b3c481283a9b11",
+      "components/sceneutil/nifscenetraversal.cpp": "9cb15a1967298f2004ae8b90042156c09c59a4589f7c14307d1daec9271de427",
+      "components/sceneutil/nifscenetraversal.hpp": "462e674ff3dc60f99334e7ab14b4e8e89dc369838c808bb316a482465285beb0"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only; implementation/tests unchanged after both full helpers returned terminal success.",
+    "changes": [
+      "Animation stages and commits a native root update callback, read-only asset binding and NIF cache ownership without detaching resident/selected controllers or restoring generic pure-animation checkpoints. Ordinary osgUtil::UpdateVisitor execution invokes one caller-provided frame source, then per-node own callbacks, composition and complete collision publication before children.",
+      "The frame source receives the current actor Ptr, OSG frame stamp and traversal number. Explicit updatePtr rebinds the live owner; release/rebind during an owned update rejects. This API does not invent physical timing, raw selectors, controller-force phases or subtype state.",
+      "NifSceneTraversal supports an ordinary Group/Skeleton forest with independent native roots sharing one supplied native placement. Container Selected/Rigid/reference-root modes reject. The outer update visitor already evaluates root StateSet callbacks; the explicit traversal skips only that property evaluation while preserving descendant property/node callbacks.",
+      "Asset-scoped node lookup exposes only bound physical nodes and their ancestors, excluding foreign equipment/parts even with colliding record indices. Preparation detects changed callback chains, identity, locals, source handles and hierarchy before publication. Retirement releases only owned projection storage and its callback wrapper, preserving live author locals and foreign replacements."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-normal-02/verification.json",
+        "report_sha256": "06b8bcb00f5c599db663aa003e5e98101ac1afcad06cbee8ace9409ed7e1891e",
+        "results": {
+          "components": {
+            "executed": 2917,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "999916892ec02690c9b1a20a1abc107f172925a54a4a40f1c93c9b3bc6a4eb10",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "901479d1e73e2f7ee4f0189855f7b0caf7f0bb5ee3121e57d3cb12a48f11265d",
+            "inventory_sha256": "093eef2b8d5f575679b5cb8b65702f9cfb2bbffc46f8a99b578c91996dfb8a6f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1645,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8ef61dd238811b4782a81776c48b8d91e8faef5b34a5aeb2fad1b5e9f804ec06",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f3dad7461494a218dba731cb12ca4e35130c6a89f46d2e75988fa76723288441",
+            "inventory_sha256": "c12c96c2a46f579004043f32759444432fe80a6b7c7a6b1c5d46ca03050dcd28",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "a5ea97fd24b34ba09742705e800a0c4a3119e37a50288c5d466aa0e2a232ce0d"
+      },
+      "asan_ubsan": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-sanitized-02/verification.json",
+        "report_sha256": "b3ffc94ff9dc6ad5ab4ec44bb551998bb6a6776404a3eedf20996d835aeac1a4",
+        "results": {
+          "components": {
+            "executed": 2917,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e51dba0c3b575c44af9fa64643cd6822aefa7da75eb2b34b32a77d73e820acbc",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "a4c0590c9bcce3c64834f2bcd94cb980d266a1927f9df5cdb29522c596e340ce",
+            "inventory_sha256": "d35ef61af86a50d30631abf0285a2b8ab5f3860969c42a4f376f6519d7ae4ba5",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1645,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1afb06fa5cf9e3e33d018d100da92719d0af2bfde36b4ef916bfb2794f2728d5",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "042a9c498f0c98a897fa360812bc53cae0675e8b9baf15ddf439f921dd1699ca",
+            "inventory_sha256": "c12c96c2a46f579004043f32759444432fe80a6b7c7a6b1c5d46ca03050dcd28",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "14261285a98feecfcbf3feec2875d686401bd74e25171c62dabfb85806458765"
+      }
+    },
+    "regression_corpus": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-regression-corpus-01/normal-verification.json",
+        "report_sha256": "f36b379904eb1f936135d5170665ef2434daf79b521a9411b3494d29bf1275ee",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "skip_cases": 480,
+          "full_single_cases": 240,
+          "checks": 26160,
+          "mismatches": [],
+          "maximum_body_position_error": 0,
+          "maximum_body_basis_error": 1.9708068177415328e-07,
+          "body_position_tolerance": 0.001,
+          "body_basis_tolerance": 1e-06,
+          "original_sources": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/cases.json": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-full-oracle-04/cases.json": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c"
+          },
+          "probe_sha256": "83a9a32c2db617a9876f1a88b2c3b8dd99d0405eead0791abc00bd173dba22eb",
+          "comparator_sha256": "a0af5ec980a77ef1c2b4c7b2b929647c07c4c12ffc53f562a4b85127f9133785",
+          "domain_sha256": "6a933fd4cf9efd54fbf2f515d4b56713b165221eb17df2fbeaf77a35ae492da1",
+          "binary_sha256": "e70559bb3f2d83d50936e8ca59dddeedf499b0bb1e89af9de2d338831cddd6a8",
+          "output_sha256": "13f51af4adc0c705b7eeaf5bf37b5bff2fecfd72df756efcf3f6559b9e8c50b6",
+          "scope": "Actual owned body and NifSceneTraversal complete collision/AddRotation path. All480 canonical skip/bypass rows at Single/Double, and all240 full active/pending rows at live Single. Exact declared node local/world/child words, flags/hooks. Fixed Dynamic H0/V0/request1 body; exact all packed velocity bits and mode/request retention, skip sleep/pose, drawing/cache agreement and complete teardown are separate driver invariants. Full original handlers execute with only critical-section boundaries; original no-World/already-active island and fixed plain-body domain. No actual automatic actor ownership, World step/contact or game-input/restart acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-regression-corpus-01/sanitized-verification.json",
+        "report_sha256": "ea85adf1ea004437b789fdf28016350bd623a90005abf417550b2e9188c607dd",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "skip_cases": 480,
+          "full_single_cases": 240,
+          "checks": 26160,
+          "mismatches": [],
+          "maximum_body_position_error": 0,
+          "maximum_body_basis_error": 1.9708068177415328e-07,
+          "body_position_tolerance": 0.001,
+          "body_basis_tolerance": 1e-06,
+          "original_sources": {
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/cases.json": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-addrotation-full-oracle-04/cases.json": "f33139f4dc2f0e13e963b31482dab178a0b9670d99a3b040c1897daee296605c"
+          },
+          "probe_sha256": "83a9a32c2db617a9876f1a88b2c3b8dd99d0405eead0791abc00bd173dba22eb",
+          "comparator_sha256": "a0af5ec980a77ef1c2b4c7b2b929647c07c4c12ffc53f562a4b85127f9133785",
+          "domain_sha256": "6a933fd4cf9efd54fbf2f515d4b56713b165221eb17df2fbeaf77a35ae492da1",
+          "binary_sha256": "dab33a27177cf59100dabda5c29df481717220a2d44a226ff1753d7e7e27a66e",
+          "output_sha256": "13f51af4adc0c705b7eeaf5bf37b5bff2fecfd72df756efcf3f6559b9e8c50b6",
+          "scope": "Actual owned body and NifSceneTraversal complete collision/AddRotation path. All480 canonical skip/bypass rows at Single/Double, and all240 full active/pending rows at live Single. Exact declared node local/world/child words, flags/hooks. Fixed Dynamic H0/V0/request1 body; exact all packed velocity bits and mode/request retention, skip sleep/pose, drawing/cache agreement and complete teardown are separate driver invariants. Full original handlers execute with only critical-section boundaries; original no-World/already-active island and fixed plain-body domain. No actual automatic actor ownership, World step/contact or game-input/restart acceptance."
+        }
+      }
+    },
+    "cases": [
+      "PhysicalPoseAnimationTest.NativeScenePreparationCommitsLiveCallbacksAndRetiresWithoutRebuilding",
+      "PhysicalPoseAnimationTest.NativeSceneKeepsPreviousPhysicalLocalsAcrossPartialCallbacksAndSelectionRebuild",
+      "PhysicalPoseAnimationTest.NativeSceneForestUsesAssetScopedRecordsAndOnePlacementForIndependentRoots",
+      "PhysicalPoseAnimationTest.NativeScenePreparationRejectsStaleIdentityAndCallbackChangesBeforePublication",
+      "PhysicalPoseAnimationTest.NativeSceneRejectsReentrantReleaseAndInvalidPlacementBeforeBoneCallbacks",
+      "PhysicalPoseAnimationTest.NativeSceneReleasePreservesForeignCallbacksAndProjectionStorage",
+      "PhysicalPoseAnimationTest.NativeScenePreparedAndPublishedHandlesRemainSafeAfterAnimationDestruction",
+      "PhysicalPoseAnimationTest.NativeSceneNormalUpdateTraversalsDriveOwnedBodyDeferralSyncAndPhysicalContinuation"
+    ],
+    "retained_attempts": [
+      {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-normal-01/verification.json",
+        "report_sha256": "d87c2ca3486dd28291afc99dd8f5e52becfe0adb0faa9159fbdf822f6b18715e",
+        "result": "All2917 component cases pass. Full1645 engine cases execute:1644 pass, forest fixture fails because record9 was not declared as a physical target. Corrected only that fixture to declare its second target; production code unchanged between01/02."
+      },
+      {
+        "report": "build/oblivion-compat/m15/S4/native-scene-owner-sanitized-01/verification.json",
+        "report_sha256": "ba870cb8ef0c157a679244b7cde03346e3b54215e3b4433a711f9b84eac79518",
+        "result": "All2917 component cases pass. Full1645 engine cases execute:1644 pass, forest fixture fails because record9 was not declared as a physical target. Corrected only that fixture to declare its second target; production code unchanged between01/02."
+      }
+    ],
+    "warning_review": "Initial broad rebuild retains existing AnimationQueueEntry maybe-uninitialized and World fixture unused-context/dangling-else diagnostics. No new scene-owner source warning. Full logs retained.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "The normal renderer update course uses real OSG callbacks and an owned Bullet world/body, covering selector2/3 deferral, first synchronization, velocity/request retention and subsequent physical author-local continuation. It does not perform a contact step, launch a game or prove native Havok equivalence.",
+      "World PreparedNativeActorPhysicalPose still uses the previous generic AnimatedTargets owner; automatic actor construction, resource admission, snapshot routing and production frame providers are not wired to this new native owner. The test supplies timing/selectors explicitly; live winning settings/raw mode/selector producers remain required.",
+      "Only the existing ordinary NIF hierarchy policy is admitted. Special node policies, arbitrary renderer attachment transforms and live morphology/hierarchy refresh remain open. Controller callbacks stay live, but native KF interpolation/ordering and subtype construction/extra-rotation production are not independently closed by these tests.",
+      "The720-case regression reuses unchanged retained original instruction corpora and drivers; production arithmetic was unchanged between its fresh comparison and the fixture-only correction. Exact declared scene words/flags/hooks remain equal; body XYZ error0 and basis error1.9708068177415328e-7 remain within predeclared tolerances. Original no-World/active-island/precision-domain limitations remain.",
+      "Explicit actor Ptr rebinding is implemented; live cell migration still needs World/service and runtime coverage. Generic physical-pose sample/batch/snapshot methods are not made native-owner APIs by this change. Frame/controller callbacks must not change topology or release owners. Later failures do not roll back completed callback/body phases.",
+      "ASan leaks disabled. Python/schema unchanged and not rerun. Coherent group/filter/capsule/root/reference coordination, contact/reaction/FSM/GetUp and full normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart gates remain open. Full M15S4 is not complete."
+    ]
   }
 }

@@ -15697,3 +15697,36 @@ Hashes, precision domains, retained attempts and limits are in
 `addrotation_scene_postpass_followup` in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Automatic actor ownership, subtype
 construction/producer coupling and full gameplay/restart acceptance remain open.
+
+
+### Native scene driver through ordinary renderer traversal
+
+The new Animation native owner retains resident/selected callbacks and invokes
+NifSceneTraversal from the normal OSG root update callback. It consumes an
+explicit frame source; it does not derive a physical clock from legacy engine
+dt or assign meaning to an unresolved selector. Physical nodes and their
+ancestors are identified through the existing asset-scoped binding. Ordinary
+Group/Skeleton forests share native placement without inventing a singular
+native reference root. Root StateSet evaluation remains owned by the outer
+OSG visitor; descendant properties and current node chains evaluate once.
+
+Eight new engine cases cover staged publication, live callbacks and partial
+physical-local continuation, asset scope/independent roots, stale preparations,
+reentrant release, foreign replacement storage and destruction. An actual OSG
+update/Bullet-body course covers deferred selectors2/3, first synchronization
+and settled projection without manually sampling the scene. Full corrected
+normal and ASan/UBSan inventories each pass2917 component and1645 engine cases.
+Initial01 forest fixtures expected an undeclared physical node; declaring the
+second target fixes only the test. Both failed full attempts remain retained.
+
+Fresh comparisons reuse the unchanged original AddRotation corpora: each build
+passes720 cases/26160 checks with output SHA256
+`13f51af4adc0c705b7eeaf5bf37b5bff2fecfd72df756efcf3f6559b9e8c50b6`.
+This is a regression check, not new native instruction or runtime evidence.
+Existing no-World/active-island and precision-domain limits remain. Exact hashes,
+source fingerprint `02dca996945e4f527d7b367ba519020f4a01c865cc34c8b6cec8734d8e8a33db` and scope are recorded in
+`native_renderer_scene_owner_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. World admission remains on the older
+generic renderer path. Automatic actor construction, winning frame/selector
+producers, native KF ordering, subtype ownership, contact steps and complete
+gameplay/restart acceptance remain open. ASan leaks are disabled.

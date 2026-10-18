@@ -600,6 +600,7 @@ namespace MWRender
 
     void Animation::updatePtr(const MWWorld::Ptr& ptr)
     {
+        rebindNativeScenePtr(ptr);
         mPtr = ptr;
     }
 
@@ -1915,6 +1916,193 @@ namespace MWRender
             && source.mReactionRootRecord == mNativeReactionRootRecord;
     }
 
+    struct Animation::NativeSceneState
+    {
+        struct Chain
+        {
+            osg::ref_ptr<osg::Node> mNode;
+            std::vector<osg::ref_ptr<osg::Callback>> mCallbacks;
+        };
+        struct Update : osg::NodeCallback
+        {
+            std::weak_ptr<NativeSceneState> mState;
+            explicit Update(const std::shared_ptr<NativeSceneState>& state) : mState(state) {}
+            void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
+            {
+                // The explicit native traversal evaluates the live nested root
+                // chain with child traversal suppressed, then visits children.
+                if (SceneUtil::NifSceneTraversal::updateMode(visitor))
+                {
+                    traverse(node, visitor);
+                    return;
+                }
+                const auto state = mState.lock();
+                if (!state) { traverse(node, visitor); return; }
+                const auto* stamp = visitor->getFrameStamp();
+                if (!state->current() || state->mUpdating || !stamp
+                    || visitor->getVisitorType() != osg::NodeVisitor::UPDATE_VISITOR
+                    || !std::isfinite(stamp->getSimulationTime()) || !std::isfinite(stamp->getReferenceTime()))
+                    throw std::invalid_argument("stale, reentrant or invalid native renderer frame");
+                struct Reset
+                {
+                    NativeSceneState& mState;
+                    ~Reset()
+                    {
+                        mState.mUpdating = false;
+                        if (mState.mClosed) mState.mTraversal->retire();
+                    }
+                } reset{*state};
+                state->mUpdating = true;
+                const auto source = state->mSource;
+                auto frame = source(state->mActor, *stamp, visitor->getTraversalNumber());
+                if (!state->current()) throw std::invalid_argument("native renderer owner changed during frame preparation");
+                SceneUtil::NifSceneTraversal::Callbacks callbacks;
+                callbacks.mCollision = [state, collision = std::move(frame.mCollision)](
+                    const NifOsg::MatrixTransform& target, const Nif::NiTransform& animated) {
+                    if (!state->current()) throw std::invalid_argument("native renderer source changed during traversal");
+                    const auto record = state->mBinding->nodeRecord(target);
+                    return record && collision ? collision(*record, animated)
+                                               : SceneUtil::NifSceneTraversal::CollisionResult{};
+                };
+                state->mTraversal->updateObjectLocalFromVisitor(*visitor, frame.mPlacement, callbacks);
+            }
+        };
+        Animation* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        osg::ref_ptr<osg::Group> mRoot;
+        MWWorld::Ptr mActor;
+        std::uint64_t mGeneration;
+        NativeSceneFrameSource mSource;
+        std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mBinding;
+        std::unique_ptr<SceneUtil::NifSceneTraversal> mTraversal;
+        osg::ref_ptr<Update> mCallback;
+        ActiveControllersVector mExternal;
+        std::vector<Chain> mChains;
+        std::vector<NifBullet::RagdollBoneWorldPose> mBones;
+        bool mPublished = false, mUpdating = false, mClosed = false;
+
+        bool ownerMatches() const noexcept
+        {
+            return !mIdentity.expired() && mOwner->mObjectRoot == mRoot && mOwner->mPtr == mActor
+                && mOwner->mPtr.isInCell() == mActor.isInCell()
+                && (!mActor.isInCell() || mOwner->mPtr.getCell() == mActor.getCell())
+                && mOwner->mPhysicalPoseGeneration == mGeneration;
+        }
+        bool prepared() const noexcept
+        {
+            if (mPublished || mClosed || !ownerMatches() || mOwner->hasPhysicalPose()
+                || mOwner->mActiveControllers != mExternal || !mBinding->isValid() || !mTraversal->isValid()) return false;
+            for (const auto& chain : mChains)
+            {
+                const osg::Callback* current = chain.mNode->getUpdateCallback();
+                for (const auto& expected : chain.mCallbacks)
+                {
+                    if (current != expected) return false;
+                    current = current->getNestedCallback();
+                }
+                if (current) return false;
+            }
+            return true;
+        }
+        bool current() const noexcept
+        {
+            return mPublished && !mClosed && ownerMatches() && mOwner->mNativeScene.get() == this
+                && mRoot->getUpdateCallback() == mCallback && mBinding->isValid() && mTraversal->isValid();
+        }
+        void close() noexcept
+        {
+            if (mClosed) return;
+            mClosed = true;
+            if (mPublished)
+            {
+                mRoot->removeUpdateCallback(mCallback);
+                mCallback->setNestedCallback(nullptr);
+            }
+            if (!mUpdating && mTraversal) mTraversal->retire();
+        }
+        ~NativeSceneState() { close(); }
+    };
+
+    Animation::PreparedNativeScene::PreparedNativeScene(std::shared_ptr<NativeSceneState> state)
+        : mState(std::move(state)) {}
+    Animation::PreparedNativeScene::~PreparedNativeScene() = default;
+    bool Animation::PreparedNativeScene::isValid() const noexcept { return mState && mState->prepared(); }
+    std::span<const NifBullet::RagdollBoneWorldPose> Animation::PreparedNativeScene::initialBones() const
+    {
+        if (!isValid()) throw std::invalid_argument("consumed, stale or expired native scene preparation");
+        return mState->mBones;
+    }
+    std::unique_ptr<Animation::PreparedNativeScene> Animation::prepareNativeScene(
+        const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& placement,
+        NativeSceneFrameSource source)
+    {
+        if (hasPhysicalPose() || !mObjectRoot || !source)
+            throw std::invalid_argument("native scene preparation requires an unbound renderer and frame source");
+        if (mPhysicalPoseGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("physical renderer preparation generation exhausted");
+        auto state = std::make_shared<NativeSceneState>();
+        state->mOwner = this; state->mIdentity = mNativePhysicalSourceIdentity;
+        state->mRoot = mObjectRoot; state->mActor = mPtr; state->mGeneration = mPhysicalPoseGeneration;
+        state->mSource = std::move(source); state->mExternal = mActiveControllers;
+        state->mBinding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        state->mBones = state->mBinding->captureWorldBones(placement);
+        if (auto* native = dynamic_cast<NifOsg::MatrixTransform*>(mObjectRoot.get()))
+            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocal(*native, placement);
+        else
+            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocalContainer(*mObjectRoot, placement);
+        struct Chains : osg::NodeVisitor
+        {
+            NativeSceneState& mState;
+            explicit Chains(NativeSceneState& state) : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mState(state)
+            { setNodeMaskOverride(~0u); }
+            void apply(osg::Node& node) override
+            {
+                if (std::any_of(mState.mChains.begin(), mState.mChains.end(),
+                        [&](const auto& chain) { return chain.mNode == &node; })) return;
+                NativeSceneState::Chain chain; chain.mNode = &node;
+                for (osg::Callback* callback = node.getUpdateCallback(); callback; callback = callback->getNestedCallback())
+                {
+                    if (std::find(chain.mCallbacks.begin(), chain.mCallbacks.end(), callback) != chain.mCallbacks.end())
+                        throw std::invalid_argument("cyclic native renderer callback chain");
+                    chain.mCallbacks.emplace_back(callback);
+                }
+                mState.mChains.push_back(std::move(chain));
+                traverse(node);
+            }
+        } chains(*state);
+        mObjectRoot->accept(chains);
+        state->mCallback = new NativeSceneState::Update(state);
+        return std::unique_ptr<PreparedNativeScene>(new PreparedNativeScene(std::move(state)));
+    }
+    bool Animation::commitNativeScene(PreparedNativeScene& prepared) noexcept
+    {
+        if (!prepared.isValid() || prepared.mState->mOwner != this) return false;
+        auto state = prepared.mState;
+        if (!state->mTraversal->commitPrepared()) return false;
+        state->mCallback->setNestedCallback(mObjectRoot->getUpdateCallback());
+        mObjectRoot->setUpdateCallback(state->mCallback);
+        state->mPublished = true;
+        state->mGeneration = ++mPhysicalPoseGeneration;
+        mNativeScene = std::move(state);
+        mNativeScene->mChains.clear();
+        mNativeScene->mExternal.clear();
+        return true;
+    }
+    void Animation::rebindNativeScenePtr(const MWWorld::Ptr& ptr)
+    {
+        if (!mNativeScene) return;
+        if (mNativeScene->mUpdating) throw std::logic_error("native scene cannot rebind during its update");
+        mNativeScene->mActor = ptr;
+    }
+    void Animation::endNativeScene()
+    {
+        if (!mNativeScene) return;
+        if (mNativeScene->mUpdating) throw std::logic_error("native scene cannot release during its update");
+        mNativeScene->close();
+        mNativeScene.reset();
+    }
+
     struct Animation::PreparedPhysicalPose::Data
     {
         struct Chain
@@ -1948,7 +2136,7 @@ namespace MWRender
         if (owner.mObjectRoot != data->mRoot || owner.mPtr != data->mActor
             || owner.mPtr.isInCell() != data->mActor.isInCell()
             || (owner.mPtr.isInCell() && owner.mPtr.getCell() != data->mActor.getCell())
-            || owner.mPhysicalPose
+            || owner.hasPhysicalPose()
             || owner.mPhysicalPoseGeneration != data->mGeneration
             || owner.mActiveControllers != data->mExternal
             || !data->mBinding || !data->mBinding->matchesLocalPose(*data->mLocal))
@@ -1982,7 +2170,7 @@ namespace MWRender
         const NifBullet::ActorRagdollDefinition& definition, const Placement& objectWorld,
         PhysicalPoseAnimation animation, bool nativeObjectLocal)
     {
-        if (mPhysicalPose)
+        if (hasPhysicalPose())
             throw std::logic_error("physical renderer pose already bound");
         if (animation != PhysicalPoseAnimation::Frozen && animation != PhysicalPoseAnimation::AnimatedTargets)
             throw std::invalid_argument("invalid physical animation mode");
@@ -2287,6 +2475,7 @@ namespace MWRender
 
     void Animation::endPhysicalPose()
     {
+        if (mNativeScene) { endNativeScene(); return; }
         if (!mPhysicalPose)
             return;
         std::exception_ptr failure;
@@ -2419,6 +2608,7 @@ namespace MWRender
 
     void Animation::setObjectRoot(const std::string& model, bool forceskeleton, bool baseonly, bool isCreature)
     {
+        endNativeScene();
         detachOblivionArrow();
         mNativeReactionNodeRecords.clear();
         mNativeReactionModelRootName.clear();
@@ -2892,6 +3082,7 @@ namespace MWRender
 
     void Animation::removeFromSceneImpl()
     {
+        if (mNativeScene) { mNativeScene->close(); mNativeScene.reset(); }
         detachOblivionArrow();
         mNativeReactionNodeRecords.clear();
         mNativeReactionModelRootName.clear();

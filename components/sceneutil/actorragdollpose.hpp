@@ -14,6 +14,7 @@ namespace osg
 {
     class Group;
 }
+namespace NifOsg { class MatrixTransform; }
 
 namespace SceneUtil
 {
@@ -66,6 +67,10 @@ namespace SceneUtil
         // Borrowed asset/record/name/path identities only. No allocations or
         // transform writes; suitable for a prepared scene publication guard.
         bool isValid() const noexcept;
+        // Original asset-scoped identity only. Foreign equipment/parts return
+        // empty even when their local record indices coincide. Stale bindings
+        // reject the lookup without dereferencing expired scene objects.
+        std::optional<std::uint32_t> nodeRecord(const NifOsg::MatrixTransform& node) const noexcept;
         bool matchesLocalPose(const ActorRagdollLocalPose& pose) const noexcept;
 
         ActorRagdollLocalPose captureLocalPose() const;

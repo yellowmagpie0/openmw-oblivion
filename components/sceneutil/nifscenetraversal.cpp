@@ -79,7 +79,8 @@ namespace SceneUtil
             std::vector<InitialLocal> mLocals;
             std::vector<NifOsg::MatrixTransform::TraversalMatrix> mProjections;
         };
-        osg::observer_ptr<NifOsg::MatrixTransform> mRoot;
+        osg::observer_ptr<osg::Group> mRoot;
+        bool mContainer;
         Nif::NativeTransformPrecision mPrecision;
         std::vector<Node> mNodes;
         std::vector<Group> mGroups;
@@ -90,13 +91,15 @@ namespace SceneUtil
         bool mRetired = false;
         bool mUpdating = false;
 
-        Impl(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision,
-            const Nif::NiTransform* nativeParentWorld = nullptr, bool deferred = false)
-            : mRoot(&root), mPrecision(precision)
+        Impl(osg::Group& root, Nif::NativeTransformPrecision precision,
+            const Nif::NiTransform* nativeParentWorld = nullptr, bool deferred = false, bool container = false)
+            : mRoot(&root), mContainer(container), mPrecision(precision)
             , mNativeParentWorld(nativeParentWorld ? std::optional(*nativeParentWorld) : std::nullopt)
         {
             require(precision == Nif::NativeTransformPrecision::Single
                     || precision == Nif::NativeTransformPrecision::Double, "unknown NIF scene precision");
+            require(!container || (nativeParentWorld && (typeid(root) == typeid(osg::Group)
+                    || typeid(root) == typeid(Skeleton))), "unsupported NIF scene container");
             std::unordered_set<const osg::Node*> visited;
             std::vector<InitialLocal> locals;
             const auto walk = [&](auto&& self, osg::Node& node, std::optional<std::size_t> parent) -> void {
@@ -131,7 +134,8 @@ namespace SceneUtil
                 {
                     require(group == &root || group->getNumParents() == 1, "shared NIF scene group");
                     require(typeid(node) == typeid(NifOsg::MatrixTransform)
-                            || typeid(node) == typeid(osg::Group) || typeid(node) == typeid(osg::Geode),
+                            || typeid(node) == typeid(osg::Group) || typeid(node) == typeid(osg::Geode)
+                            || (container && &node == &root && typeid(node) == typeid(Skeleton)),
                         "unsupported NIF scene group policy");
                     Group saved{group, {}};
                     for (unsigned i = 0; i < group->getNumChildren(); ++i)
@@ -142,6 +146,7 @@ namespace SceneUtil
                 }
             };
             walk(walk, root, {});
+            require(!mNodes.empty(), "empty NIF scene container");
             auto initialPlacement = placement();
             // Complete all validation/allocation before changing the graph.
             std::vector<NifOsg::MatrixTransform::TraversalMatrix> prepared;
@@ -261,6 +266,7 @@ namespace SceneUtil
                 mNodes[i].mPublished = mPreparation->mProjections[i];
             }
             invalidateSkeletons(mPreparation->mPlacement.mPath);
+            if (auto* skeleton = dynamic_cast<Skeleton*>(mRoot.get())) skeleton->invalidateBoneMatrices();
             mPublished = true;
             mPreparation.reset();
             return true;
@@ -301,9 +307,15 @@ namespace SceneUtil
 
         void reanchor(const Placement& placement)
         {
-            mRoot->setTraversalMatrix(osg::Matrixd(mNodes[0].mWorld.toMatrix()) * inverse(placement.mWorld));
-            mNodes[0].mPublished = mRoot->getTraversalMatrix();
+            const auto inversePlacement = inverse(placement.mWorld);
+            for (auto& entry : mNodes)
+                if (!entry.mParent)
+                {
+                    entry.mTransform->setTraversalMatrix(osg::Matrixd(entry.mWorld.toMatrix()) * inversePlacement);
+                    entry.mPublished = entry.mTransform->getTraversalMatrix();
+                }
             invalidateSkeletons(placement.mPath);
+            if (auto* skeleton = dynamic_cast<Skeleton*>(mRoot.get())) skeleton->invalidateBoneMatrices();
         }
 
         Projection project(std::size_t index, const Callbacks& callbacks, const osg::Matrixd& external,
@@ -435,11 +447,13 @@ namespace SceneUtil
         Placement& mPlacement;
         Mode mMode;
         const bool mUpdateControllers;
+        const bool mRootPropertiesUpdated;
         bool mRunProperties = true;
         bool mRunningControllers = false;
-        Visitor(Impl& binding, const Callbacks& callbacks, Placement& placement, Mode mode, bool updateControllers)
+        Visitor(Impl& binding, const Callbacks& callbacks, Placement& placement, Mode mode, bool updateControllers,
+            bool rootPropertiesUpdated)
             : mBinding(binding), mCallbacks(callbacks), mPlacement(placement), mMode(mode)
-            , mUpdateControllers(updateControllers)
+            , mUpdateControllers(updateControllers), mRootPropertiesUpdated(rootPropertiesUpdated)
         {
             setTraversalMode(TRAVERSE_ALL_CHILDREN);
             setNodeMaskOverride(~0u);
@@ -468,7 +482,7 @@ namespace SceneUtil
             if (mMode != Mode::Full && found != mBinding.mIndices.end())
             {
                 const auto flags = nodeFlags(static_cast<NifOsg::MatrixTransform&>(node));
-                if (found->second != 0)
+                if (mBinding.mNodes[found->second].mParent)
                 {
                     if (!(flags & 2)) return;
                     if (flags & 0x10) mMode = Mode::Rigid;
@@ -485,7 +499,8 @@ namespace SceneUtil
                 } restore{*this, getTraversalMode()};
                 mRunningControllers = true;
                 setTraversalMode(TRAVERSE_NONE);
-                if (mRunProperties) handle_callbacks(node.getStateSet());
+                if (mRunProperties && !(mRootPropertiesUpdated && &node == mBinding.mRoot.get()))
+                    handle_callbacks(node.getStateSet());
                 // Native47C930 reads the node's controller list after property
                 // controllers; a property callback may replace that list.
                 osg::ref_ptr<osg::Callback> currentCallback(node.getUpdateCallback());
@@ -552,10 +567,18 @@ namespace SceneUtil
     NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, const Nif::NiTransform& nativeParentWorld,
         Nif::NativeTransformPrecision precision, bool deferred)
         : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, deferred)) {}
+    NifSceneTraversal::NifSceneTraversal(osg::Group& root, const Nif::NiTransform& nativeParentWorld,
+        Nif::NativeTransformPrecision precision)
+        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, true, true)) {}
     std::unique_ptr<NifSceneTraversal> NifSceneTraversal::prepareObjectLocal(NifOsg::MatrixTransform& root,
         const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision)
     {
         return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision, true));
+    }
+    std::unique_ptr<NifSceneTraversal> NifSceneTraversal::prepareObjectLocalContainer(osg::Group& root,
+        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision)
+    {
+        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision));
     }
     bool NifSceneTraversal::commitPrepared() noexcept { return mImpl->commitPrepared(); }
     bool NifSceneTraversal::retire() noexcept { return mImpl->retire(); }
@@ -571,6 +594,7 @@ namespace SceneUtil
         const std::function<SelectiveUpdatePolicy(const NifOsg::MatrixTransform&)>& policy,
         bool inheritedTransform)
     {
+        require(!mImpl->mContainer, "NIF container has no singular selective policy");
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
         require(bool(policy), "missing NIF selective policy resolver");
         require(!mImpl->mUpdating, "reentrant NIF scene policy preparation");
@@ -653,7 +677,10 @@ namespace SceneUtil
         const osg::NodeVisitor* visitor, const osg::Node* node) noexcept
     {
         const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
-        return native && native->mBinding.mRoot.get() == node ? native->mBinding.mNativeParentWorld : std::nullopt;
+        if (!native) return std::nullopt;
+        const auto found = native->mBinding.mIndices.find(node);
+        return found != native->mBinding.mIndices.end() && !native->mBinding.mNodes[found->second].mParent
+            ? native->mBinding.mNativeParentWorld : std::nullopt;
     }
     std::optional<NifSceneTraversal::Mode> NifSceneTraversal::updateMode(const osg::NodeVisitor* visitor) noexcept
     {
@@ -680,16 +707,27 @@ namespace SceneUtil
     {
         updateImpl(stamp, traversalNumber, callbacks, false, Mode::Full, false, &nativeParentWorld);
     }
+    void NifSceneTraversal::updateObjectLocalFromVisitor(osg::NodeVisitor& outer,
+        const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks)
+    {
+        const auto* stamp = outer.getFrameStamp();
+        require(outer.getVisitorType() == osg::NodeVisitor::UPDATE_VISITOR && stamp
+                && std::isfinite(stamp->getSimulationTime()) && std::isfinite(stamp->getReferenceTime()),
+            "NIF scene ownership requires a finite update frame");
+        updateImpl(*stamp, outer.getTraversalNumber(), callbacks, false, Mode::Full, true, &nativeParentWorld, true);
+    }
     void NifSceneTraversal::refreshReferenceRootCache()
     {
         updateImpl(osg::FrameStamp{}, 0, {}, true, Mode::Full, false);
     }
     void NifSceneTraversal::updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
         const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
-        const Nif::NiTransform* nativeParentWorld)
+        const Nif::NiTransform* nativeParentWorld, bool rootPropertiesUpdated)
     {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
         require(mImpl->mPublished, "unpublished NIF scene traversal");
+        require(!mImpl->mContainer || (!rootOnly && mode == Mode::Full && !callbacks.mReferenceUpdate),
+            "NIF container requires independent Full root traversal");
         require(mode == Mode::Full || mode == Mode::Selected || mode == Mode::Rigid, "unknown NIF update mode");
         require(mode == Mode::Full || bool(callbacks.mNodeFlags) || mImpl->mNodes[0].mSelectiveFlags.has_value(),
             "missing NIF selected update policy");
@@ -702,9 +740,11 @@ namespace SceneUtil
         if (nativeParentWorld)
         {
             // Validate before changing the retained parent or drawing handles.
-            const auto world = Nif::tryComposeNativeTransform(*nativeParentWorld,
-                mImpl->mRoot->getControllerTransform(), mImpl->mPrecision);
-            require(world.has_value(), "invalid NIF native parent composition");
+            for (const auto& entry : mImpl->mNodes)
+                if (!entry.mParent)
+                    require(Nif::tryComposeNativeTransform(*nativeParentWorld,
+                        entry.mTransform->getControllerTransform(), mImpl->mPrecision).has_value(),
+                        "invalid NIF native parent composition");
             inverse(osg::Matrixd(nativeParentWorld->toMatrix()));
         }
         struct Reset
@@ -713,7 +753,7 @@ namespace SceneUtil
             ~Reset() { mUpdating = false; }
         } reset{mImpl->mUpdating};
         mImpl->mUpdating = true;
-        osg::ref_ptr<NifOsg::MatrixTransform> root;
+        osg::ref_ptr<osg::Group> root;
         require(mImpl->mRoot.lock(root), "expired NIF scene root");
         // NodeVisitor's NodePath is borrowed. A callback can detach this root
         // and release its ancestors before the final placement guard rejects
@@ -725,7 +765,7 @@ namespace SceneUtil
             mImpl->project(0, callbacks, placement.mWorld, placement.mPath);
         else
         {
-            Impl::Visitor visitor(*mImpl, callbacks, placement, mode, updateControllers);
+            Impl::Visitor visitor(*mImpl, callbacks, placement, mode, updateControllers, rootPropertiesUpdated);
             visitor.setFrameStamp(new osg::FrameStamp(stamp));
             visitor.setTraversalNumber(traversalNumber);
             for (auto* node : placement.mPath) visitor.pushOntoNodePath(node);

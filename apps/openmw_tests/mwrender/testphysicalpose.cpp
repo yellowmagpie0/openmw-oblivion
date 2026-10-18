@@ -6,6 +6,13 @@
 #include <components/sceneutil/skeleton.hpp>
 #include <components/sceneutil/keyframe.hpp>
 
+#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
+#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+
 #include <gtest/gtest.h>
 #include <osgUtil/UpdateVisitor>
 #include <array>
@@ -31,6 +38,7 @@ namespace
         double mObservedSimulationTime = 0;
         unsigned mObservedTraversal = 0;
         unsigned mObservedPathLength = 0;
+        osg::Vec3f mObservedLocalBefore;
         void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
         {
             ++mWrites;
@@ -41,6 +49,7 @@ namespace
             if (mReadParent)
                 mObservedParentX = dynamic_cast<osg::MatrixTransform*>(node->getParent(0))->getMatrix().getTrans().x();
             auto& transform = *dynamic_cast<NifOsg::MatrixTransform*>(node);
+            mObservedLocalBefore = transform.getControllerTransform().mTranslation;
             if (mWriteTranslation)
                 transform.setTranslation(mInvalidTranslation
                     ? osg::Vec3f(std::numeric_limits<float>::quiet_NaN(), 0, 0) : mTranslation);
@@ -742,5 +751,254 @@ namespace
         EXPECT_NO_THROW(mAnimation->endPhysicalPose());
         traverse();
         EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+    }
+}
+
+namespace
+{
+    class NativeRootProperty : public osg::StateSet::Callback
+    {
+    public:
+        unsigned mVisits = 0;
+        void operator()(osg::StateSet*, osg::NodeVisitor*) override { ++mVisits; }
+    };
+
+    TEST_F(PhysicalPoseAnimationTest, NativeScenePreparationCommitsLiveCallbacksAndRetiresWithoutRebuilding)
+    {
+        osg::ref_ptr<SceneCounter> rootCallback = new SceneCounter;
+        osg::ref_ptr<NativeRootProperty> rootProperty = new NativeRootProperty, boneProperty = new NativeRootProperty;
+        mRoot->setUpdateCallback(rootCallback);
+        mRoot->getOrCreateStateSet()->setUpdateCallback(rootProperty);
+        mBone->getOrCreateStateSet()->setUpdateCallback(boneProperty);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        unsigned frames = 0, nodes = 0;
+        mFrameStamp->setSimulationTime(4.5); mFrameStamp->setReferenceTime(10);
+        mVisitor.setTraversalNumber(17);
+        auto source = [&](const MWWorld::Ptr& actor, const osg::FrameStamp& stamp, unsigned traversal) {
+            ++frames; EXPECT_TRUE(actor.isEmpty()); EXPECT_EQ(stamp.getSimulationTime(), 4.5); EXPECT_EQ(traversal, 17u);
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [&](std::uint32_t record, const Nif::NiTransform& animated) {
+                ++nodes; EXPECT_EQ(record, 8u); EXPECT_EQ(animated.mTranslation, osg::Vec3f(101, 2, 3));
+                auto target = Nif::NiTransform::getIdentity(); target.mTranslation = {140, 0, 0};
+                return SceneUtil::NifSceneTraversal::CollisionResult{9, target};
+            };
+            return frame;
+        };
+        const auto builds = mAnimation->mControllerBuilds;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, source);
+        auto competing = mAnimation->prepareNativeScene(mGraph, placement, source);
+        auto generic = mAnimation->preparePhysicalPose(mGraph, placement);
+        ASSERT_TRUE(prepared->isValid()); EXPECT_EQ(prepared->initialBones().size(), 1u);
+        EXPECT_EQ(mRoot->getUpdateCallback(), rootCallback); EXPECT_EQ(mBone->getUpdateCallback(), mAnimation->mWriter);
+        EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix()); EXPECT_EQ(frames, 0u);
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(competing->isValid()); EXPECT_FALSE(generic->isValid());
+        EXPECT_TRUE(mAnimation->hasNativeScene()); EXPECT_TRUE(mAnimation->hasPhysicalPose());
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        traverse();
+        EXPECT_EQ(frames, 1u); EXPECT_EQ(nodes, 1u); EXPECT_EQ(rootProperty->mVisits, 1u);
+        EXPECT_EQ(boneProperty->mVisits, 1u); EXPECT_EQ(rootCallback->mVisits, 1u);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 1u); EXPECT_EQ(mAnimation->mWriter->mObservedSimulationTime, 4.5);
+        EXPECT_EQ(mAnimation->mWriter->mObservedTraversal, 17u);
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation, osg::Vec3f(40, 0, 0));
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 140, 1e-9);
+        mAnimation->endPhysicalPose();
+        EXPECT_FALSE(mAnimation->hasPhysicalPose()); EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix());
+        EXPECT_EQ(mRoot->getUpdateCallback(), rootCallback); EXPECT_EQ(mBone->getUpdateCallback(), mAnimation->mWriter);
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        traverse();
+        EXPECT_EQ(frames, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 2u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneKeepsPreviousPhysicalLocalsAcrossPartialCallbacksAndSelectionRebuild)
+    {
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        bool target = true;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, [&](const auto&, const auto&, unsigned) {
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [&](auto, const auto&) {
+                auto desired = Nif::NiTransform::getIdentity(); desired.mTranslation = {140, 0, 0};
+                return SceneUtil::NifSceneTraversal::CollisionResult{9, target ? std::optional(desired) : std::nullopt};
+            };
+            return frame;
+        });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        traverse();
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 40);
+        target = false; mAnimation->mWriter->mWriteTranslation = false; mAnimation->mWriter->mWriteRotation = false;
+        mAnimation->rebuildControllers();
+        traverse();
+        EXPECT_EQ(mAnimation->mWriter->mObservedLocalBefore.x(), 40);
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 40);
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 140, 1e-9);
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 2u);
+        EXPECT_THROW(mAnimation->samplePhysicalAnimationTarget(placement, mVisitor), std::logic_error);
+        mAnimation->endNativeScene();
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneForestUsesAssetScopedRecordsAndOnePlacementForIndependentRoots)
+    {
+        osg::ref_ptr<NifOsg::MatrixTransform> other = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        other->setName("Other"); other->setTranslation({2, 0, 0}); other->setUserValue("recordIndex", 9u);
+        auto otherBody = mGraph.mBodies.front();
+        otherBody.mRecord = 13; otherBody.mNodeRecord = 9; otherBody.mBone = "Other";
+        mGraph.mBodies.push_back(otherBody);
+        osg::ref_ptr<osg::Group> foreignAsset = new osg::Group;
+        foreignAsset->setUserValue(Misc::OsgUserValues::sFileHash, std::string("foreign-part"));
+        osg::ref_ptr<NifOsg::MatrixTransform> foreign = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        foreign->setName("Pelvis"); foreign->setTranslation({7, 0, 0}); foreign->setUserValue("recordIndex", 8u);
+        foreignAsset->addChild(foreign); mRoot->addChild(other); mRoot->addChild(foreignAsset);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        std::vector<std::uint32_t> records;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, [&](const auto&, const auto&, unsigned) {
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [&](std::uint32_t record, const auto&) {
+                records.push_back(record); return SceneUtil::NifSceneTraversal::CollisionResult{};
+            };
+            return frame;
+        });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared)); traverse();
+        EXPECT_EQ(records, (std::vector<std::uint32_t>{8, 9}));
+        EXPECT_NEAR(other->getWorldMatrices()[0].getTrans().x(), 102, 1e-9);
+        EXPECT_NEAR(foreign->getWorldMatrices()[0].getTrans().x(), 107, 1e-9);
+        mAnimation->endNativeScene();
+        EXPECT_FALSE(other->getTraversalMatrix().getMatrix()); EXPECT_FALSE(foreign->getTraversalMatrix().getMatrix());
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeScenePreparationRejectsStaleIdentityAndCallbackChangesBeforePublication)
+    {
+        unsigned frames = 0;
+        auto source = [&](const auto&, const auto&, unsigned) { ++frames; return MWRender::Animation::NativeSceneFrame{}; };
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(), source);
+        mBone->setUserValue("recordIndex", 99u);
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(mAnimation->commitNativeScene(*prepared));
+        mBone->setUserValue("recordIndex", 8u);
+        auto second = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(), source);
+        osg::ref_ptr<SceneCounter> tail = new SceneCounter; mBone->addUpdateCallback(tail);
+        EXPECT_FALSE(second->isValid()); EXPECT_FALSE(mAnimation->commitNativeScene(*second));
+        EXPECT_EQ(frames, 0u); EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix());
+        EXPECT_EQ(mBone->getUpdateCallback(), mAnimation->mWriter);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneRejectsReentrantReleaseAndInvalidPlacementBeforeBoneCallbacks)
+    {
+        bool reenter = true, invalid = false;
+        unsigned frames = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(), [&](const auto&, const auto&, unsigned) {
+            ++frames;
+            if (reenter) mAnimation->endNativeScene();
+            MWRender::Animation::NativeSceneFrame frame;
+            if (invalid) frame.mPlacement.mScale = 0;
+            return frame;
+        });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        EXPECT_THROW(traverse(), std::logic_error); EXPECT_TRUE(mAnimation->hasNativeScene());
+        EXPECT_EQ(mAnimation->mWriter->mWrites, 0u);
+        reenter = false; invalid = true;
+        EXPECT_THROW(traverse(), std::invalid_argument); EXPECT_EQ(mAnimation->mWriter->mWrites, 0u);
+        invalid = false; traverse();
+        EXPECT_EQ(frames, 3u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        mAnimation->endNativeScene();
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneReleasePreservesForeignCallbacksAndProjectionStorage)
+    {
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [](const auto&, const auto&, unsigned) { return MWRender::Animation::NativeSceneFrame{}; });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared)); traverse();
+        const NifOsg::MatrixTransform::TraversalMatrix foreign(osg::Matrixd(mBone->getMatrix()));
+        mBone->setTraversalMatrix(foreign);
+        osg::ref_ptr<SceneCounter> replacement = new SceneCounter; mRoot->setUpdateCallback(replacement);
+        mAnimation->endNativeScene();
+        EXPECT_EQ(mRoot->getUpdateCallback(), replacement);
+        EXPECT_TRUE(mBone->getTraversalMatrix().sharesStorageWith(foreign));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeScenePreparedAndPublishedHandlesRemainSafeAfterAnimationDestruction)
+    {
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [](const auto&, const auto&, unsigned) { return MWRender::Animation::NativeSceneFrame{}; });
+        auto stale = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [](const auto&, const auto&, unsigned) { return MWRender::Animation::NativeSceneFrame{}; });
+        auto writer = mAnimation->mWriter;
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared)); traverse();
+        mAnimation.reset();
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(stale->isValid());
+        EXPECT_THROW(stale->initialBones(), std::invalid_argument);
+        EXPECT_FALSE(mBone->getTraversalMatrix().getMatrix());
+        traverse(); EXPECT_EQ(writer->mWrites, 2u);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, NativeSceneNormalUpdateTraversalsDriveOwnedBodyDeferralSyncAndPhysicalContinuation)
+    {
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btSequentialImpulseConstraintSolver solver;
+        btDiscreteDynamicsWorld world(&dispatcher, &broadphase, &solver, &configuration);
+        world.setGravity(btVector3(0, 0, 0));
+        auto& definition = mGraph.mBodies[0];
+        definition.mMass = 2; definition.mInertia = {1,0,0,0,1,0,0,0,1};
+        definition.mLinearDamping = definition.mAngularDamping = 2;
+        definition.mFriction = .6f; definition.mRestitution = .2f;
+        definition.mShape = NifBullet::RagdollSphere{.5f};
+        definition.mBlend = NifBullet::RagdollBlendDefinition{30, 0x49, 0, 0};
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        NifBullet::ActorRagdollPhysics* actor = nullptr;
+        unsigned selector = 2, frames = 0, collisions = 0;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, [&](const auto&, const auto&, unsigned) {
+            ++frames;
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [&](std::uint32_t record, const Nif::NiTransform& animated) {
+                ++collisions;
+                EXPECT_EQ(record, 8u);
+                auto matrix = animated.mRotation.toOsgMatrix(); matrix.setTrans(animated.mTranslation);
+                const auto publication = actor->updateNativeBlendSceneNode(record, matrix, 1.f / 60, selector, 0);
+                SceneUtil::NifSceneTraversal::CollisionResult result{
+                    actor->captureNativeBlendStates()[0].mCollisionFlags, std::nullopt};
+                if (publication && publication->mSceneTarget)
+                {
+                    auto target = Nif::NiTransform::getIdentity(); target.mTranslation = publication->mSceneTarget->getTrans();
+                    for (unsigned r = 0; r < 3; ++r) for (unsigned c = 0; c < 3; ++c)
+                        target.mRotation.mValues[r][c] = (*publication->mSceneTarget)(c, r);
+                    result.mPhysicalTarget = target;
+                }
+                return result;
+            };
+            return frame;
+        });
+        const auto poses = NifBullet::ragdollBodyWorldPoses(mGraph, prepared->initialBones(), Nif::NativeTransformPrecision::Single);
+        NifBullet::ActorRagdollPhysics owned(mGraph, world, NifBullet::RagdollNativeLengthScale, poses, 1, -1);
+        actor = &owned;
+        auto states = owned.captureNativeBlendStates(); states[0].mRequestedMotion = 1; owned.restoreNativeBlendStates(states);
+        auto packed = owned.captureNativePackedVelocities();
+        packed[0].mVelocities.mLinear = {1,2,3,4}; packed[0].mVelocities.mAngular = {5,6,7,8};
+        owned.restoreNativePackedVelocities(packed);
+        auto* rigid = btRigidBody::upcast(owned.collisionObjects()[0]); rigid->setActivationState(ISLAND_SLEEPING);
+        const auto before = owned.capture()[0];
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        for (const unsigned phase : {2u, 3u})
+        {
+            selector = phase; traverse();
+            EXPECT_EQ(owned.captureNativeBlendStates()[0].mCollisionFlags, 0x49);
+            EXPECT_EQ(owned.capture()[0].mPose, before.mPose); EXPECT_FALSE(rigid->isActive());
+            EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 101, 1e-5);
+        }
+        selector = 0; traverse();
+        EXPECT_EQ(owned.captureNativeBlendStates()[0].mCollisionFlags, 9);
+        EXPECT_NEAR(owned.capture()[0].mPose.getOrigin().x(), 101, 1e-4);
+        EXPECT_EQ(owned.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
+        EXPECT_EQ(owned.captureNativeBlendStates()[0].mRequestedMotion, 1u);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto moved = rigid->getWorldTransform(); moved.setOrigin(btVector3(200, 0, 0)); rigid->setCenterOfMassTransform(moved);
+        traverse(); traverse();
+        EXPECT_EQ(frames, 5u); EXPECT_EQ(collisions, 5u); EXPECT_EQ(mAnimation->mWriter->mWrites, 5u);
+        EXPECT_NEAR(mBone->getWorldMatrices()[0].getTrans().x(), 200, 1e-3);
+        EXPECT_NEAR(mAnimation->mWriter->mObservedLocalBefore.x(), 100, 1e-3);
+        EXPECT_EQ(owned.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
+        mAnimation->endNativeScene();
     }
 }

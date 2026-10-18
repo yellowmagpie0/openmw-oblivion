@@ -502,6 +502,13 @@ namespace SceneUtil
     {
         return mImpl->isValid();
     }
+    std::optional<std::uint32_t> ActorRagdollPoseBinding::nodeRecord(const NifOsg::MatrixTransform& node) const noexcept
+    {
+        if (!mImpl->isValid()) return std::nullopt;
+        const auto found = std::find_if(mImpl->mNodes.begin(), mImpl->mNodes.end(),
+            [&](const auto& entry) { return entry.mTransform.get() == &node; });
+        return found == mImpl->mNodes.end() ? std::nullopt : std::optional(found->mNodeRecord);
+    }
 
     bool ActorRagdollPoseBinding::matchesLocalPose(const ActorRagdollLocalPose& pose) const noexcept
     {
