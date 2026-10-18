@@ -4,6 +4,9 @@
 #include <osg/Group>
 #include <apps/openmw/mwphysics/mtphysics.hpp>
 #include <apps/openmw/mwphysics/ptrholder.hpp>
+#include <apps/openmw/mwphysics/object.hpp>
+#include <components/resource/bulletshape.hpp>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <apps/openmw/mwphysics/oblivionragdoll.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <apps/openmw/mwworld/livecellref.hpp>
@@ -1422,6 +1425,62 @@ namespace
         EXPECT_EQ(world.getNumCollisionObjects(), 1);
         EXPECT_EQ(scheduler.getUserPointer(identity), nullptr);
         EXPECT_EQ(world.getNumConstraints(), 0);
+    }
+
+    TEST_P(RagdollSchedulerTest, NativeLooseBodyCollidesWithProductionStaticObjectMask)
+    {
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.setGravity(btVector3(0, 0, 0));
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        auto floorReference = mReference;
+        floorReference.mPos.pos[2] = -5;
+        MWWorld::LiveCellRef<ESM::Static> floorRef(floorReference, &mBase);
+        osg::ref_ptr<Resource::BulletShape> floorShape = new Resource::BulletShape;
+        floorShape->mCollisionShape.reset(new btBoxShape(btVector3(1000, 1000, 5)));
+        MWPhysics::Object floor(MWWorld::Ptr(&floorRef), Resource::makeInstance(floorShape), {},
+            MWPhysics::CollisionType_World, &scheduler);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        const auto* floorProxy = world.getCollisionObjectArray()[0]->getBroadphaseHandle();
+        EXPECT_EQ(floorProxy->m_collisionFilterMask & MWPhysics::CollisionType_World, 0);
+        EXPECT_NE(floorProxy->m_collisionFilterMask & MWPhysics::CollisionType_LooseObject, 0);
+        auto poses = mPoses;
+        poses[0].setOrigin(btVector3(0, 0, 40));
+        auto prepared = scheduler.prepareLooseObject(mPtr, mGraph, NifBullet::RagdollNativeLengthScale,
+            poses, MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+            MWPhysics::CollisionType_AnyPhysical);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        ASSERT_EQ(world.getNumCollisionObjects(), 2);
+        const auto* looseBody = world.getCollisionObjectArray()[1];
+        const auto* looseProxy = looseBody->getBroadphaseHandle();
+        EXPECT_NE(looseProxy->m_collisionFilterGroup & MWPhysics::CollisionType_World, 0);
+        EXPECT_EQ(looseProxy->m_collisionFilterGroup & MWPhysics::CollisionType_Actor, 0);
+        // Existing world-only selection rays still find the loose item; actor-only
+        // door/trigger queries cannot mistake the item for an actor.
+        const btVector3 from(0, 0, 60), to(0, 0, 20);
+        btCollisionWorld::ClosestRayResultCallback worldRay(from, to);
+        worldRay.m_collisionFilterGroup = MWPhysics::CollisionType_AnyPhysical;
+        worldRay.m_collisionFilterMask = MWPhysics::CollisionType_World;
+        world.rayTest(from, to, worldRay);
+        EXPECT_EQ(worldRay.m_collisionObject, looseBody);
+        btCollisionWorld::ClosestRayResultCallback actorRay(from, to);
+        actorRay.m_collisionFilterGroup = MWPhysics::CollisionType_AnyPhysical;
+        actorRay.m_collisionFilterMask = MWPhysics::CollisionType_Actor;
+        world.rayTest(from, to, actorRay);
+        EXPECT_FALSE(actorRay.hasHit());
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("production static floor routing");
+        std::array<std::vector<MWPhysics::Simulation>, 2> frames;
+        float time = 0;
+        for (unsigned frame = 0; frame < 180; ++frame)
+        {
+            time += 1.f / 60.f;
+            scheduler.applyQueuedMovements(time, frames[frame % 2], osg::Timer::instance()->tick(), frame,
+                *stats, MWPhysics::WorldFrameData(false, {}));
+        }
+        const auto state = scheduler.captureLooseObject(mPtr);
+        ASSERT_EQ(state.size(), 1);
+        EXPECT_NEAR(state[0].mPose.getOrigin().z(), .5f * NifBullet::RagdollNativeLengthScale, .03);
+        EXPECT_LT(std::abs(state[0].mLinearVelocity.z()), .2);
+        scheduler.removeLooseObject(mPtr);
     }
 
     TEST_P(RagdollSchedulerTest, MixedLooseAndActorBodiesShareExactlyOneNativeDynamicsStep)

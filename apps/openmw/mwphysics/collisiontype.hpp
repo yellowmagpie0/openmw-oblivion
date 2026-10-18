@@ -12,10 +12,13 @@ namespace MWPhysics
         CollisionType_HeightMap = 1 << 3,
         CollisionType_Projectile = 1 << 4,
         CollisionType_Water = 1 << 5,
-        CollisionType_Default
-        = CollisionType_World | CollisionType_HeightMap | CollisionType_Actor | CollisionType_Door,
+        // Loose bodies retain World membership for existing world queries. The extra
+        // bit lets static geometry admit them without admitting other static geometry.
+        CollisionType_LooseObject = 1 << 8,
+        CollisionType_Default = CollisionType_World | CollisionType_HeightMap | CollisionType_Actor
+            | CollisionType_Door | CollisionType_LooseObject,
         CollisionType_AnyPhysical = CollisionType_World | CollisionType_HeightMap | CollisionType_Actor
-            | CollisionType_Door | CollisionType_Projectile | CollisionType_Water,
+            | CollisionType_Door | CollisionType_Projectile | CollisionType_Water | CollisionType_LooseObject,
         CollisionType_CameraOnly = 1 << 6,
         CollisionType_VisualOnly = 1 << 7
     };

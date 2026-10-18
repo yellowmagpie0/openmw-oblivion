@@ -11457,5 +11457,112 @@
     },
     "runtime_failure": "build/oblivion-compat/m15/S4/native-npc-melee-break-reload-runtime-normal-01/physical-restart-failed-01.json",
     "limits": "Fresh process retained weapon identity and downward motion but weapon fell through floor. Static world masks exclude the World category used by loose bodies. Full drop/restart and M15S4 acceptance remain false."
+  },
+  "native_loose_collision_routing": {
+    "status": "Collision routing corrected; ordinary attacking-NPC physical weapon drop/restart passes bounded normal checks. Instrumented body settles, but reference/body save coherence fails the .01 translation tolerance. Full M15S4 remains incomplete.",
+    "source_parent_commit": "719f5161f02b206d04e8cd7a805e80af39484770",
+    "tested_dirty_source_fingerprint": "1c7e892709cf61f65621224db64c23ce1f6d901fdac918a0e1fadf377c0fb1b8",
+    "source_files": [
+      {
+        "path": "apps/openmw/mwphysics/collisiontype.hpp",
+        "sha256": "27726f029b1816456fb5408d29a6dc5cb8639c5120ce81c670663c7e09882a3e"
+      },
+      {
+        "path": "apps/openmw/mwphysics/object.cpp",
+        "sha256": "936bc176c28cdf5164e8584188e18f24d42572e80f7437105da9f0d4a5e07305"
+      },
+      {
+        "path": "apps/openmw/mwworld/oblivionweapondrop.cpp",
+        "sha256": "cac43815c4a672c17f44e77729facc8e822f81aa71605ef637f26f561e2a262a"
+      },
+      {
+        "path": "apps/openmw_tests/mwphysics/testactorragdoll.cpp",
+        "sha256": "96fe58a34ea405925e3899c3519f7794b9eac405100b3cf86fd3409b22e05616"
+      },
+      {
+        "path": "scripts/data/oblivion_compat/oblivion_m15_native_loose_weapon_break.json",
+        "sha256": "b265d74f2e0a81a03ce9f2c5e58fcb6b3ee5358c0d1164162a3cc1277cd933e8"
+      },
+      {
+        "path": "scripts/data/oblivion_compat/oblivion_m15_native_loose_weapon_continuation.json",
+        "sha256": "bfcc476d2dd8d80e884bf5b6d8a739c02b4eab5529de401c1bf595cc330644a3"
+      },
+      {
+        "path": "scripts/data/oblivion_compat/m15_native_loose_weapon_restart_acceptance.json",
+        "sha256": "69bc4ec974783dbaaa7f8802709f0ee6385d9b3733a4f671f7733b60d8d6e2e3"
+      }
+    ],
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-static-mask-normal-01/verification.json",
+      "sha256": "c4b6148f2d01f78abb1592c41a0a93dee575ef6860668ca719d58bd7d143622e"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-static-mask-sanitized-01/verification.json",
+      "sha256": "f41e769e51ccf78acfca6150f8ca143b02a8b574063cc5860a0825e9c6c4423c"
+    },
+    "verification": {
+      "engine_normal": 1707,
+      "engine_sanitized": 1707,
+      "suites": 124,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "baseline": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-static-mask-baseline-01/verification.json",
+      "sha256": "b00a220025434b90e67a427a7c078a8fcd2d862796590694ce70e5b86ddedabe"
+    },
+    "runtime_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-02/verification.json",
+      "sha256": "5adf0f7b42ad7ea00a4f1ef4eb40d11605abd1d3f210f1e032b5c3fb97c14ce6"
+    },
+    "physical_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-02/physical-verification.json",
+      "sha256": "ad78d83809e75e57336a7e76060b0a3151a049df183d59d245273961d15583f7"
+    },
+    "runtime_sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/verification.json",
+      "sha256": "880e38254439d162a103171bf35faf00e8543bb2ea110552b556929ce67a6a49"
+    },
+    "physical_sanitized_failure": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/physical-reference-coherence-failure.json",
+      "sha256": "a9f59cc30141c415020743dfeda8f2966c7dc7c99ce37e0b557dcc50833fdb27"
+    },
+    "persistent_exterior_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/extra-content-reference-audit.json",
+      "sha256": "64d2ead760d713d0deefb4c8225a5b4a455c397874647169c7f62c5703d4806f"
+    },
+    "parent_group_audit_failure": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/parent-cell-audit-failed-01.json",
+      "sha256": "490e1eb07bd04ac7243d6e4eaf07e3c6480de73a1de4b784f0abcc3a4f7bcc20"
+    },
+    "normal_visual": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-visual-normal-01/visual-review.json",
+      "sha256": "b84056e20cae09df87dabbf52dde7ce444e6d4aae61bd42cb3a247e051a4b826"
+    },
+    "causal_comparison": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-02/causal-first-state-comparison.json",
+      "sha256": "b3a9789ce0378f4fc26fbe15e434b9728fae80dd65742b291644d215a20ca082"
+    },
+    "retained_failures": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-npc-melee-break-reload-runtime-normal-01/physical-restart-failed-01.json",
+        "sha256": "62f59e4f7b307d86837e2acead288ac0364ba98291eb82925132f918e5a0b45f"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-normal-01/preflight-failure.json",
+        "sha256": "04e8b49596df2fe5c4a1ba45f658d20827f73259d659cc21f37dbaad772026c6"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-01/physical-settling-failure.json",
+        "sha256": "abc1de57c526a7d9f21d058d98b2ab55e41d23b1b951b3b76cf409b7c00c03e4"
+      }
+    ],
+    "sanitized_continuation_setup": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-floor-runtime-sanitized-02/continuation-setup.json",
+      "sha256": "15db06399ad639eda78eb9433ed433e9ffe9a134c53d34955a7fa09edb4f8234"
+    },
+    "limits": "Normal visual evidence uses a copied-save camera fixture, not ordinary mouse look. Sanitized02 reuses the terminal actual first epoch/output from sanitized01 and starts a new continuation epoch with longer wall settling, unchanged binary/save and bounds. No exact real-content uninterrupted trajectory equivalence or complete drop/mastery/defensive/effect/interruption matrix is claimed. Only editable manifests and documentation follow the frozen C++ checks."
   }
 }

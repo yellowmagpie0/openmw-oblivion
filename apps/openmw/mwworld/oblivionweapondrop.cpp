@@ -131,7 +131,8 @@ namespace MWWorld
         std::unique_ptr<MWPhysics::PreparedLooseObject> body;
         if (saved)
             body = physics.prepareLooseObjectSnapshot(ptr, definition, *saved, *baseKey, model.value(),
-                MWPhysics::CollisionType_World, MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+                MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
         else
         {
             const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, scale);
@@ -145,7 +146,8 @@ namespace MWWorld
             }
             const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
             body = physics.prepareLooseObject(ptr, scaled, NifBullet::RagdollNativeLengthScale, poses,
-                MWPhysics::CollisionType_World, MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
+                MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
         }
         bool modelPublished = false, bodyPublished = false;
         try
@@ -517,7 +519,8 @@ namespace MWWorld
             const auto& e = data->mEntries[i];
             admissions.push_back({*e.mCell, references[i], objects, physics, std::string(e.mCarried.mBody.mPose.mModel.value()),
                 rotations[i], MWRender::Mask_Object, *e.mCarried.mReferenceDefinition,
-                NifBullet::RagdollNativeLengthScale, poses[i], MWPhysics::CollisionType_World,
+                NifBullet::RagdollNativeLengthScale, poses[i],
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
                 MWPhysics::CollisionType_AnyPhysical});
         }
         data->mAdmission = world.getWorldModel().prepareLooseWeaponAdmissions(admissions);

@@ -36,7 +36,8 @@ namespace MWPhysics
                 | btCollisionObject::CF_NO_CONTACT_RESPONSE);
         }
         mTaskScheduler->addCollisionObject(mCollisionObject.get(), queryOnly ? 0 : collisionType,
-            queryOnly ? 0 : CollisionType_Actor | CollisionType_HeightMap | CollisionType_Projectile);
+            queryOnly ? 0 : CollisionType_Actor | CollisionType_HeightMap | CollisionType_Projectile
+                | CollisionType_LooseObject);
     }
 
     Object::~Object()

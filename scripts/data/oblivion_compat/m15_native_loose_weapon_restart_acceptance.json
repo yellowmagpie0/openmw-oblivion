@@ -1,0 +1,19 @@
+{
+  "scope": "Natural normal-input NPC break followed by exact-byte fresh-process physical restart; supplements inherited resource, identity and placement recipe.",
+  "preregistered_before_runtime": true,
+  "base": "content:oblivion.esm:090615",
+  "model": "meshes/weapons/iron/shortsword.nif",
+  "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+  "record": 7,
+  "node_record": 20,
+  "motion": 1,
+  "physical_scale": 1,
+  "scene_collision_flags": 1,
+  "first_airborne_required": true,
+  "first_downward_linear_z_less_than": 0,
+  "second_max_linear_speed": 1,
+  "reference_root_body_translation_tolerance": 0.01,
+  "same_identity_extras_action_rng_and_inherited_placement_bounds_required": true,
+  "runtime_visual_review_required": true,
+  "limits": "This single drop course does not close directional/mastery, defensive breakage, effects, other inputs/views/FPS or complete M15S4."
+}
