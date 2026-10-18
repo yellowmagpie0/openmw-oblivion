@@ -8,6 +8,7 @@
 #include "../mwbase/luamanager.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/looseobjectscenebinding.hpp"
+#include "../mwrender/objects.hpp"
 #include "../mwrender/vismask.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwphysics/collisiontype.hpp"
@@ -18,6 +19,9 @@
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/misc/convert.hpp>
+#include <components/misc/resourcehelpers.hpp>
+#include <components/resource/niffilemanager.hpp>
+#include <components/resource/resourcesystem.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
@@ -28,6 +32,143 @@
 
 namespace MWWorld
 {
+    void World::validateOblivionLooseWeaponState(const ESM4::RuntimeState& state) const
+    {
+        for (const auto& [key, snapshot] : state.mNativeLooseWeapons)
+        {
+            const auto* base = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
+            if (!base || Misc::ResourceHelpers::correctMeshPath(base->mModel.getNormalized()).value() != snapshot.mModel)
+                throw std::runtime_error("native loose weapon snapshot does not match its winning WEAP/model");
+        }
+    }
+
+    void World::captureOblivionLooseWeaponState(ESM4::RuntimeState& state) const
+    {
+        state.mNativeLooseWeapons = mOblivionLooseWeaponStates ? *mOblivionLooseWeaponStates : NativeLooseWeaponStates{};
+        if (!mPhysics) return;
+        for (const auto& ptr : mPhysics->looseObjectOwners())
+        {
+            const auto binding = mPhysics->captureLooseObjectSceneBinding(ptr);
+            // Generic low-level admissions have no native scene authority.
+            // They remain separate from production native weapon publication.
+            if (!binding) continue;
+            const auto key = ptr.getCellRef().getFormKey();
+            if (ptr.getCellRef().getCount() <= 0 || ptr.mRef->isDeleted())
+            {
+                state.mNativeLooseWeapons.erase(key);
+                continue;
+            }
+            if (ptr.getType() != ESM::REC_WEAP4 || !ptr.isInCell() || key.isNull()
+                || !ptr.getCellRef().getNativeReference()
+                || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr)
+                throw std::logic_error("native loose weapon save has no live registered WEAP reference");
+            const auto* base = ptr.get<ESM4::Weapon>()->mBase;
+            const auto baseKey = mStore.get<ESM4::Weapon>().findFormKey(base->mId);
+            const auto model = ptr.getClass().getCorrectedModel(ptr);
+            if (!baseKey || mStore.get<ESM4::Weapon>().search(base->mId) != base || model.empty())
+                throw std::runtime_error("native loose weapon save cannot resolve its winning base/model");
+            const auto file = mResourceSystem->getNifFileManager()->get(model);
+            const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
+            if (!binding->matches(definition))
+                throw std::runtime_error("native loose weapon save asset does not match its scene binding");
+            state.mNativeLooseWeapons[key] = mPhysics->captureLooseObjectSnapshot(ptr, *baseKey, model.value());
+        }
+    }
+
+    bool World::restoreOblivionLooseWeaponScene(const Ptr& ptr, MWRender::Objects& objects,
+        MWPhysics::PhysicsSystem& physics, const VFS::Path::Normalized& model, const osg::Quat& rotation) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || ptr.isEmpty() || ptr.getType() != ESM::REC_WEAP4)
+            return false;
+        const auto key = ptr.getCellRef().getFormKey();
+        const auto retained = mOblivionLooseWeaponStates;
+        const ESM4::RuntimeLooseWeapon* saved = nullptr;
+        if (retained)
+            if (const auto found = retained->find(key); found != retained->end()) saved = &found->second;
+        // Old saves have identity/extras but no recoverable physical history.
+        // A declared drop starts at its saved reference pose with zero velocity.
+        const bool legacyDrop = !saved && ptr.getCellRef().getNativeDropRelations().mDropper.has_value();
+        if (!saved && !legacyDrop) return false;
+        if (mPhysics.get() != &physics || !ptr.isInCell() || !ptr.getCellRef().getNativeReference()
+            || ptr.getCellRef().getCount() <= 0 || !ptr.getRefData().isEnabled()
+            || ptr.getRefData().getBaseNode() || key.isNull()
+            || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr)
+            throw std::invalid_argument("native loose weapon load requires its current registered reference and physics");
+        const auto* base = ptr.get<ESM4::Weapon>()->mBase;
+        if (!base) throw std::invalid_argument("native loose weapon load has no winning base");
+        const auto baseId = base->mId;
+        const auto baseKey = mStore.get<ESM4::Weapon>().findFormKey(baseId);
+        if (!baseKey || mStore.get<ESM4::Weapon>().search(baseId) != base
+            || model.empty() || ptr.getClass().getCorrectedModel(ptr) != model)
+            throw std::invalid_argument("native loose weapon load cannot resolve its winning base/model");
+        const auto position = ptr.getRefData().getPosition();
+        const float scale = ptr.getCellRef().getScale();
+        const std::weak_ptr<const char> identity = mOblivionRestoreIdentity;
+        const auto generation = mOblivionClearGeneration;
+        const auto revision = mWorldModel.getPtrRegistryRevision();
+        const auto number = ptr.getCellRef().getRefNum();
+        const auto referenceValid = [this, identity, generation, number, key, ptr] {
+            if (identity.expired() || mOblivionClearGeneration != generation) return false;
+            const auto current = mWorldModel.getPtr(number);
+            return !current.isEmpty() && current == ptr && current.getCellRef().getFormKey() == key;
+        };
+        const auto current = [&] {
+            // Check World/cache/registry ownership before touching a borrowed
+            // reference that a scene callback might have retired.
+            return !identity.expired() && mOblivionClearGeneration == generation
+                && mOblivionLooseWeaponStates == retained && mPhysics.get() == &physics
+                && mWorldModel.getPtrRegistryRevision() == revision
+                && referenceValid()
+                && mStore.get<ESM4::Weapon>().search(baseId) == base
+                && ptr.getClass().getCorrectedModel(ptr) == model;
+        };
+        const auto file = mResourceSystem->getNifFileManager()->get(model);
+        const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
+        if (!current()) throw std::runtime_error("native loose weapon source changed during load");
+        auto view = objects.prepareModel(ptr, std::string(model.value()), rotation, MWRender::Mask_Object,
+            &definition, referenceValid);
+        if (!current()) throw std::runtime_error("native loose weapon source changed during model preparation");
+        std::unique_ptr<MWPhysics::PreparedLooseObject> body;
+        if (saved)
+            body = physics.prepareLooseObjectSnapshot(ptr, definition, *saved, *baseKey, model.value(),
+                MWPhysics::CollisionType_World, MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
+        else
+        {
+            const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(definition, scale);
+            const auto root = osg::Matrixf::rotate(rotation) * osg::Matrixf::translate(position.asVec3());
+            std::vector<NifBullet::RagdollBoneWorldPose> bones;
+            for (const auto& item : scaled.mBodies)
+            {
+                auto bind = item.mBoneBind;
+                bind.setTrans(bind.getTrans() * scale);
+                bones.push_back({item.mNodeRecord, bind * root});
+            }
+            const auto poses = NifBullet::ragdollBodyWorldPoses(scaled, bones);
+            body = physics.prepareLooseObject(ptr, scaled, NifBullet::RagdollNativeLengthScale, poses,
+                MWPhysics::CollisionType_World, MWPhysics::CollisionType_AnyPhysical, view->looseSceneBinding());
+        }
+        bool modelPublished = false, bodyPublished = false;
+        try
+        {
+            if (!current() || !objects.validatePreparedModel(*view) || !physics.validatePreparedLooseObject(*body)
+                || !objects.commitModel(*view))
+                throw std::runtime_error("native loose weapon scene admission changed before publication");
+            modelPublished = true;
+            if (!current() || !objects.validatePublishedModel(*view) || !physics.commitLooseObject(*body))
+                throw std::runtime_error("native loose weapon body admission changed before publication");
+            bodyPublished = true;
+            if (!current() || !objects.validatePublishedModel(*view) || !physics.hasLooseObject(ptr))
+                throw std::runtime_error("native loose weapon ownership changed during publication");
+            return true;
+        }
+        catch (...)
+        {
+            if (bodyPublished && body->hasLiveOwner()) physics.removeLooseObject(ptr);
+            if (modelPublished && view->hasLiveOwner()) objects.rollbackModelAdmission(*view);
+            throw;
+        }
+    }
+
     void synchronizeLooseWeaponPoses(World& world, MWPhysics::PhysicsSystem& physics)
     {
         if (world.getGameProfile() != ESM::GameProfile::Oblivion) return;

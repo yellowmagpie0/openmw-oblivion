@@ -6374,3 +6374,29 @@ physics checkpoint; no new engine or runtime acceptance is claimed here.
 The earlier ordering follow-up is resolved. World retention and loaded-item
 physical/render admission, followed by the falling-item fresh-process course,
 remain next. **Full M15S4 is incomplete.**
+
+
+## World loose-body save/load integration — floor gate open
+
+World now captures and retains native loose-weapon snapshots, validates winning
+base/model identity, and admits a private physical model and restored body during
+scene load. Immutable retained state and reference liveness guards protect
+reentrant publication; rejected or retired publications roll back. Legacy drops
+bootstrap physical models with zero velocity because older saves lost motion.
+Tests cover both reference-root forms, scabbard removal, binary restoration,
+continued motion, rejected publication, reentrant load/clear and legacy cleanup.
+
+All **1704 engine cases /124 suites** pass normally and under ASan/UBSan,
+with exact unfiltered inventories and no failures or skips. Evidence:
+`S4/native-loose-world-load-normal-02` and `-sanitized-01`; tested fingerprint
+`ec6305047fc8504651f1b3e5931fd6dcec4de1dfbefe051aa8397b32dc772097`.
+ASan leak checking is disabled. Receipts: `native_loose_world_load`.
+
+The actual NPC weapon-break course saved a moving loose body in schema53 and
+loaded those exact bytes in a fresh process. Identity and downward motion
+survived, but the sword continued below the dungeon floor: saved z changed
+from -73.755 to -341.654. The existing 128-unit height bound failed. Static
+world collision masks exclude the World category currently used by loose
+bodies. Retained failure: `S4/native-npc-melee-break-reload-runtime-normal-01/physical-restart-failed-01.json`.
+This is not runtime acceptance. Fix collision routing and repeat the real
+course. **Full drop/restart acceptance and M15S4 remain incomplete.**

@@ -1,6 +1,7 @@
 #include <apps/openmw/mwrender/looseobjectscenebinding.hpp>
 #include <components/sceneutil/actorragdollpose.hpp>
 #include <components/esm4/physicalframe.hpp>
+#include <components/misc/convert.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <apps/openmw/mwclass/static.hpp>
 #include <components/l10n/manager.hpp>
@@ -24326,4 +24327,159 @@ TEST(OblivionWorldTest, NativeContactDropRejectsMismatchedContextsAndRetiredOwne
         ASSERT_TRUE(retained); ASSERT_TRUE(retained->isValid());
     }
     EXPECT_FALSE(retained->isValid()); EXPECT_FALSE(retained->commit());
+}
+
+
+namespace
+{
+    void detachNativeLooseWeaponForReadmission(NativeWeaponFactoryFixture& fixture, const MWWorld::Ptr& reference)
+    {
+        fixture.mWorld.retainOblivionPhysicalState();
+        fixture.mPhysics->removeLooseObject(reference);
+        fixture.mObjects->removeCell(reference.getCell());
+        reference.getRefData().setBaseNode(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativeLooseWeaponSnapshotsRestoreOwnedModelBodyAndScabbardPolicy)
+{
+    for (const bool retainedRoot : {false, true})
+    {
+        SCOPED_TRACE(retainedRoot);
+        NativeWeaponFactoryFixture fixture(false, 1, retainedRoot, true);
+        auto& world = fixture.mWorld;
+        auto plan = fixture.prepare(); const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        const auto key = reference.getCellRef().getFormKey();
+        const auto oldBinding = fixture.mPhysics->captureLooseObjectSceneBinding(reference); ASSERT_TRUE(oldBinding);
+        auto velocities = fixture.mPhysics->captureLooseObjectPackedVelocities(reference);
+        velocities.front().mVelocities.mLinear = {2, -1, 0, -0.f};
+        velocities.front().mVelocities.mAngular = {0, 0, .25f, .125f};
+        fixture.mPhysics->restoreLooseObject(reference, fixture.mPhysics->captureLooseObject(reference), velocities);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native loose save/readmission");
+        fixture.mPhysics->stepSimulation(.05f, false, osg::Timer::instance()->tick(), 1, *stats);
+        MWWorld::synchronizeLooseWeaponPoses(world, *fixture.mPhysics);
+        // The carried source renderer is independent of the admitted loose model.
+        world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
+        const auto saved = world.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mNativeLooseWeapons.size(), 1u);
+        const auto& physical = saved.mNativeLooseWeapons.at(key);
+        EXPECT_EQ(physical.mModel, "meshes/factory-weapon.nif");
+        EXPECT_FLOAT_EQ(physical.mPhysicalScale, 2.f); ASSERT_TRUE(physical.mRootLocal);
+        ASSERT_TRUE(physical.mBody.mNativePackedVelocity); EXPECT_NE(physical.mBody.mLinearVelocity[0], 0);
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        EXPECT_THROW(world.applyOblivionRuntimeState(), std::runtime_error);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+        detachNativeLooseWeaponForReadmission(fixture, reference);
+        EXPECT_FALSE(oldBinding->isValidFor(reference, true));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto loaded = world.getWorldModel().getDynamicNativePtr(key); ASSERT_FALSE(loaded.isEmpty());
+        const auto model = loaded.getClass().getCorrectedModel(loaded);
+        const auto rotation = Misc::Convert::makeOsgQuat(loaded.getRefData().getPosition());
+        ASSERT_TRUE(world.restoreOblivionLooseWeaponScene(loaded, *fixture.mObjects, *fixture.mPhysics, model, rotation));
+        EXPECT_TRUE(fixture.mPhysics->hasLooseObject(loaded)); EXPECT_EQ(fixture.mPhysics->getObject(loaded), nullptr);
+        ASSERT_NE(loaded.getRefData().getBaseNode(), nullptr);
+        EXPECT_EQ(loaded.getRefData().getBaseNode()->getNodeMask(), MWRender::Mask_Object);
+        const auto binding = fixture.mPhysics->captureLooseObjectSceneBinding(loaded); ASSERT_TRUE(binding);
+        EXPECT_NE(binding, oldBinding); EXPECT_TRUE(binding->isValidFor(loaded, true));
+        auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(loaded));
+        ASSERT_NE(animation, nullptr); ASSERT_NE(animation->getLoosePhysicalPose(), nullptr);
+        NativeWeaponTargetVisitor scabbard(5), leaf(6);
+        animation->getObjectRoot()->accept(scabbard); animation->getObjectRoot()->accept(leaf);
+        EXPECT_FALSE(scabbard.mTarget); EXPECT_FALSE(leaf.mTarget);
+        const auto cached = fixture.mResources.getSceneManager()->getTemplate(
+            VFS::Path::NormalizedView("meshes/factory-weapon.nif"), true, true);
+        NativeWeaponTargetVisitor templateScabbard(5);
+        const_cast<osg::Node*>(cached.get())->accept(templateScabbard); EXPECT_TRUE(templateScabbard.mTarget);
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mNativeLooseWeapons, saved.mNativeLooseWeapons);
+        EXPECT_EQ(after.mNextDynamicSerial, saved.mNextDynamicSerial);
+        EXPECT_EQ(after.mPhysicalActions, saved.mPhysicalActions); EXPECT_EQ(after.mCombatRngState, saved.mCombatRngState);
+        EXPECT_EQ(loaded.getCellRef().getNativeItemCondition(), 0.f);
+        EXPECT_FLOAT_EQ(loaded.getCellRef().getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(loaded.getCellRef().getNativeDropRelations().mDropper, fixture.mActor.getCellRef().getFormKey());
+        fixture.mPhysics->stepSimulation(.05f, false, osg::Timer::instance()->tick(), 2, *stats);
+        MWWorld::synchronizeLooseWeaponPoses(world, *fixture.mPhysics);
+        const auto moved = world.captureOblivionRuntimeState();
+        EXPECT_NE(moved.mNativeLooseWeapons.at(key).mBody.mPosition, physical.mBody.mPosition);
+    }
+}
+
+TEST(OblivionWorldTest, NativeLooseWeaponLoadRollsBackRejectedOrReentrantScenePublication)
+{
+    for (int outcome = 0; outcome < 5; ++outcome)
+    {
+        SCOPED_TRACE(outcome);
+        NativeWeaponFactoryFixture fixture(false, 1, false, true);
+        auto& world = fixture.mWorld;
+        auto plan = fixture.prepare(); const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+        const auto key = reference.getCellRef().getFormKey();
+        world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
+        auto saved = world.captureOblivionRuntimeState();
+        detachNativeLooseWeaponForReadmission(fixture, reference);
+        if (outcome == 0)
+        {
+            auto& hash = saved.mNativeLooseWeapons.at(key).mAssetHash;
+            hash[0] = hash[0] == '0' ? '1' : '0';
+        }
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto loaded = world.getWorldModel().getDynamicNativePtr(key); ASSERT_FALSE(loaded.isEmpty());
+        const auto model = loaded.getClass().getCorrectedModel(loaded);
+        const auto rotation = Misc::Convert::makeOsgQuat(loaded.getRefData().getPosition());
+        if (outcome == 1) fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
+        if (outcome == 2) fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::InsertThrow;
+        if (outcome == 3) fixture.mRoot->mAfterInsert = [&] {
+            readNativeSnapshot(fixture, saved); world.applyOblivionRuntimeState();
+        };
+        bool cleared = false;
+        if (outcome == 4) fixture.mRoot->mAfterInsert = [&] { world.clear(); cleared = true; };
+        EXPECT_THROW(world.restoreOblivionLooseWeaponScene(loaded, *fixture.mObjects, *fixture.mPhysics, model, rotation),
+            std::exception);
+        if (outcome == 4)
+        {
+            EXPECT_TRUE(cleared);
+            EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(key).isEmpty());
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+            EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+            fixture.mRoot->mAfterInsert = {};
+            continue; // World clear has destroyed the borrowed loaded reference.
+        }
+        EXPECT_FALSE(fixture.mPhysics->hasLooseObject(loaded)); EXPECT_EQ(fixture.mPhysics->getObject(loaded), nullptr);
+        EXPECT_EQ(loaded.getRefData().getBaseNode(), nullptr); EXPECT_EQ(fixture.mRoot->getNumChildren(), 0u);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, saved.mNextDynamicSerial);
+        fixture.mRoot->mAfterInsert = {}; fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::None;
+        if (outcome != 0)
+        {
+            ASSERT_TRUE(world.restoreOblivionLooseWeaponScene(loaded, *fixture.mObjects, *fixture.mPhysics, model, rotation));
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNativeLooseWeapons, saved.mNativeLooseWeapons);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, LegacyNativeDropsBootstrapPhysicalModelsWithoutInventingLostVelocityHistory)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, false, true);
+    auto& world = fixture.mWorld;
+    auto plan = fixture.prepare(); const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    const auto key = reference.getCellRef().getFormKey();
+    world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
+    auto legacy = world.captureOblivionRuntimeState(); legacy.mVersion = 52; legacy.mNativeLooseWeapons.clear();
+    detachNativeLooseWeaponForReadmission(fixture, reference);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto loaded = world.getWorldModel().getDynamicNativePtr(key); ASSERT_FALSE(loaded.isEmpty());
+    ASSERT_TRUE(world.restoreOblivionLooseWeaponScene(loaded, *fixture.mObjects, *fixture.mPhysics,
+        loaded.getClass().getCorrectedModel(loaded), Misc::Convert::makeOsgQuat(loaded.getRefData().getPosition())));
+    EXPECT_TRUE(fixture.mPhysics->hasLooseObject(loaded)); EXPECT_EQ(fixture.mPhysics->getObject(loaded), nullptr);
+    const auto current = world.captureOblivionRuntimeState();
+    ASSERT_EQ(current.mNativeLooseWeapons.size(), 1u);
+    const auto& restored = current.mNativeLooseWeapons.at(key);
+    EXPECT_EQ(restored.mBody.mLinearVelocity, (std::array<float,3>{}));
+    EXPECT_EQ(restored.mBody.mAngularVelocity, (std::array<float,3>{}));
+    EXPECT_FALSE(restored.mRootLocal); EXPECT_EQ(current.mNextDynamicSerial, legacy.mNextDynamicSerial);
+    auto* animation = dynamic_cast<MWRender::ObjectAnimation*>(fixture.mObjects->getAnimation(loaded));
+    ASSERT_NE(animation, nullptr); NativeWeaponTargetVisitor scabbard(5);
+    animation->getObjectRoot()->accept(scabbard); EXPECT_FALSE(scabbard.mTarget);
+    loaded.getCellRef().setCount(0); world.retainOblivionPhysicalState();
+    EXPECT_FALSE(world.captureOblivionRuntimeState().mNativeLooseWeapons.contains(key));
 }

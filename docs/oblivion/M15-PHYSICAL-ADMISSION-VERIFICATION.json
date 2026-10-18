@@ -11433,5 +11433,29 @@
     "case": "Two owners dynamic:a:0000000000000001 and dynamic:a-:0000000000000001, with reversed Python input order, must encode in kind/namespace/value order. Both codecs match the same literal body-entry tail and native owner sequence.",
     "compatibility": "No wire field or schema change; the existing single-owner golden suffix remains identical. Readers continue accepting previously written owner order.",
     "limits": "Only the new native_loose_weapons collection changes. Engine C++ behavior is unchanged from the preceding tested physics checkpoint; no new engine or runtime course is claimed."
+  },
+  "native_loose_world_load": {
+    "status": "World capture, retention and physical model/body readmission implemented; real runtime floor collision gate failed and remains open.",
+    "source_parent_commit": "8281592209366ea2e2940b2bfde8c340083902bf",
+    "tested_dirty_source_fingerprint": "ec6305047fc8504651f1b3e5931fd6dcec4de1dfbefe051aa8397b32dc772097",
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-world-load-normal-02/verification.json",
+      "sha256": "98c431d1714b17540be85fdfb111d168bfd23fa2a9dcaf625776d51851695fe0"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-loose-world-load-sanitized-01/verification.json",
+      "sha256": "6c88d3686c8b3b082e45cfb4e756dfdee60d6f11733f15129433c38623567bad"
+    },
+    "verification": {
+      "engine_normal": 1704,
+      "engine_sanitized": 1704,
+      "suites": 124,
+      "failures": 0,
+      "skips": 0,
+      "exact_unfiltered_inventories": true,
+      "asan_leak_checking": false
+    },
+    "runtime_failure": "build/oblivion-compat/m15/S4/native-npc-melee-break-reload-runtime-normal-01/physical-restart-failed-01.json",
+    "limits": "Fresh process retained weapon identity and downward motion but weapon fell through floor. Static world masks exclude the World category used by loose bodies. Full drop/restart and M15S4 acceptance remain false."
   }
 }

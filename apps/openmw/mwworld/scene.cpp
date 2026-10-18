@@ -149,12 +149,17 @@ namespace
         const VFS::Path::Normalized model = getModel(ptr);
         const auto rotation = makeDirectNodeRotation(ptr);
 
-        ESM::RefNum refnum = ptr.getCellRef().getRefNum();
-        if (!refnum.hasContentFile() || !std::binary_search(pagedRefs.begin(), pagedRefs.end(), refnum))
-            ptr.getClass().insertObjectRendering(ptr, model, rendering);
-        else
-            ptr.getRefData().setBaseNode(pagedNode);
-        setNodeRotation(ptr, rendering, rotation);
+        const bool looseWeapon = world.restoreOblivionLooseWeaponScene(
+            ptr, rendering.getObjects(), physics, model, rotation);
+        if (!looseWeapon)
+        {
+            ESM::RefNum refnum = ptr.getCellRef().getRefNum();
+            if (!refnum.hasContentFile() || !std::binary_search(pagedRefs.begin(), pagedRefs.end(), refnum))
+                ptr.getClass().insertObjectRendering(ptr, model, rendering);
+            else
+                ptr.getRefData().setBaseNode(pagedNode);
+            setNodeRotation(ptr, rendering, rotation);
+        }
 
         if (ptr.getClass().useAnim())
             MWBase::Environment::get().getMechanicsManager()->add(ptr);
@@ -165,7 +170,7 @@ namespace
         // Restore effect particles
         world.applyLoopingParticles(ptr);
 
-        if (!model.empty())
+        if (!model.empty() && !looseWeapon)
             ptr.getClass().insertObject(ptr, model, rotation, physics);
 
         MWBase::Environment::get().getLuaManager()->objectAddedToScene(ptr);
@@ -1198,7 +1203,7 @@ namespace MWWorld
 
     void Scene::removeObjectFromScene(const Ptr& ptr, bool keepActive)
     {
-        if (mPhysics->hasActorRagdoll(ptr))
+        if (mPhysics->hasActorRagdoll(ptr) || mPhysics->hasLooseObject(ptr))
             mWorld.retainOblivionPhysicalState();
         MWBase::Environment::get().getMechanicsManager()->remove(ptr, keepActive);
         // You'd expect the sounds attached to the object to be stopped here

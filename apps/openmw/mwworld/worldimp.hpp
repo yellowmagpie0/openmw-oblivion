@@ -6,6 +6,7 @@
 
 #include <array>
 #include <functional>
+#include <map>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -64,6 +65,7 @@ namespace ESM4
     enum class ActorDrawState : std::uint8_t;
     struct RuntimeInventoryItem;
     struct RuntimeReferenceState;
+    struct RuntimeLooseWeapon;
     struct RuntimeState;
     struct PhysicalFrameResult;
     class ObservationStream;
@@ -201,6 +203,10 @@ namespace MWWorld
         ESM::GameProfile mRequestedGameProfile;
         ESM::GameProfile mGameProfile = ESM::GameProfile::Auto;
         std::unique_ptr<ESM4::RuntimeState> mOblivionRuntimeState;
+        using NativeLooseWeaponStates = std::map<ESM::FormKey, ESM4::RuntimeLooseWeapon>;
+        // Immutable retained projection also identifies the cache version to
+        // detached scene admissions across reentrant callbacks.
+        std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
         std::unique_ptr<ESM4::RuntimeState> mPendingOblivionRuntimeState;
         struct PreparedOblivionServices;
         class PreparedOblivionSaveStateImpl;
@@ -317,6 +323,8 @@ namespace MWWorld
         float feetToGameUnits(float feet);
 
         void captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const;
+        void captureOblivionLooseWeaponState(ESM4::RuntimeState& state) const;
+        void validateOblivionLooseWeaponState(const ESM4::RuntimeState& state) const;
 
         MWWorld::ConstPtr getClosestMarker(const MWWorld::ConstPtr& ptr, const ESM::RefId& id);
         MWWorld::ConstPtr getClosestMarkerFromExteriorPosition(const osg::Vec3f& worldPos, const ESM::RefId& id);
@@ -817,6 +825,11 @@ namespace MWWorld
         // Retain current physical projections before scene ownership is released.
         // Validation failure leaves native authority and physical owners intact.
         void retainOblivionPhysicalState();
+        // Scene-resource admission for an existing registered native reference.
+        // Returning false leaves ordinary static insertion to the caller.
+        bool restoreOblivionLooseWeaponScene(const Ptr& ptr, MWRender::Objects& objects,
+            MWPhysics::PhysicsSystem& physics, const VFS::Path::Normalized& model,
+            const osg::Quat& rotation) const;
         void renderPlayer() override;
 
         /// open or close a non-teleport door (depending on current state)

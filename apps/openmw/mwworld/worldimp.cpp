@@ -163,6 +163,7 @@ namespace MWWorld
     struct World::PreparedOblivionServices
     {
         std::optional<MWMechanics::OblivionCombatService> mCombat;
+        decltype(World::mOblivionLooseWeaponStates) mLooseWeapons;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
         std::optional<ESMStore::PreparedDynamicRecords> mDefinitions;
@@ -361,6 +362,7 @@ namespace MWWorld
         ESM4::PathgridService mPathgrids;
         decltype(World::mPrng) mPrng{};
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
+        decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
         decltype(World::mPendingOblivionRuntimeState) mPendingOblivionRuntimeState{};
         decltype(World::mPendingOblivionServices) mPendingOblivionServices{};
         decltype(World::mSharedDefinitionsPrepared) mSharedDefinitionsPrepared{};
@@ -429,6 +431,8 @@ namespace MWWorld
         swap(mPrng, data.mPrng);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionRuntimeState)>);
         swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
+        static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
+        swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionRuntimeState)>);
         swap(mPendingOblivionRuntimeState, data.mPendingOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionServices)>);
@@ -528,6 +532,7 @@ namespace MWWorld
         mPendingOblivionServices.reset();
         mPendingOblivionRuntimeState.reset();
         mOblivionRuntimeState.reset();
+        mOblivionLooseWeaponStates.reset();
         mPlayer.reset();
         mOblivionCombat.reset();
     }
@@ -1342,6 +1347,7 @@ namespace MWWorld
         mPlayerInJail = false;
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
+        mOblivionLooseWeaponStates.reset();
         mPendingOblivionRuntimeState.reset();
         mPendingOblivionServices.reset();
         mSharedDefinitionsPrepared = false;
@@ -1740,6 +1746,7 @@ namespace MWWorld
 
     void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
     {
+        captureOblivionLooseWeaponState(state);
         if (!mPhysics)
         {
             // A retained save may be inspected without starting a scene/physics
@@ -1775,7 +1782,7 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics)
             return;
         const auto owners = mPhysics->actorRagdollOwners();
-        if (owners.empty())
+        if (owners.empty() && mPhysics->looseObjectOwners().empty())
             return;
         if (!mOblivionCombat)
             throw std::logic_error("native physical retention requires combat authority");
@@ -1786,6 +1793,7 @@ namespace MWWorld
         // Capture validates every current asset/body binding before replacing
         // local projections. No authority or scene ownership changes on failure.
         captureOblivionPhysicalState(state, player);
+        auto looseWeapons = std::make_shared<const NativeLooseWeaponStates>(std::move(state.mNativeLooseWeapons));
         MWMechanics::OblivionCombatService::PhysicalPoseUpdates updates;
         for (const auto& owner : owners)
         {
@@ -1798,6 +1806,7 @@ namespace MWWorld
         // zero lanes, before releasing any bodies. Other retained actors survive.
         if (!mOblivionCombat->syncActorRagdolls(updates))
             throw std::runtime_error("native physical authority changed during scene retention");
+        mOblivionLooseWeaponStates = std::move(looseWeapons);
     }
 
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
@@ -2161,6 +2170,12 @@ namespace MWWorld
             mOblivionCombat->capture(state);
         }
         captureOblivionPhysicalState(state, player);
+        std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> physicalReferences;
+        for (const auto& reference : state.mReferences) physicalReferences.emplace(reference.mKey, &reference);
+        std::erase_if(state.mNativeLooseWeapons, [&](const auto& entry) {
+            const auto found = physicalReferences.find(entry.first);
+            return found == physicalReferences.end() || found->second->mDeleted;
+        });
         const auto normalizeNativeInventory = [](std::vector<ESM4::RuntimeInventoryItem>& inventory) {
             for (ESM4::RuntimeInventoryItem& item : inventory)
                 if (item.mCount < 0)
@@ -3169,6 +3184,13 @@ namespace MWWorld
             return;
         }
         const ESM4::RuntimeState& state = *mPendingOblivionRuntimeState;
+        // A live loose model/body is replaced through scene readmission. Reject
+        // direct application before changing references or any native authority.
+        if (mPhysics)
+            for (const auto& owner : mPhysics->looseObjectOwners())
+                if (mPhysics->captureLooseObjectSceneBinding(owner))
+                    throw std::runtime_error("native loose weapon restore requires scene readmission");
+        validateOblivionLooseWeaponState(state);
         validateNativeDropRelations(state, mStore, ESM::FormKeyResolver(mContentFiles));
         for (const auto& reference : state.mReferences)
             if (const auto marker = reference.mCustomState.find("obscript.dead");
@@ -3189,6 +3211,8 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
         auto retained = std::move(mPendingOblivionServices);
+        auto preparedLooseWeapons = retained && retained->mLooseWeapons ? retained->mLooseWeapons
+            : std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
         if (retained)
         {
             // Admission prepared these allocations against immutable content.
@@ -3733,6 +3757,7 @@ namespace MWWorld
         if (!preparedCellMoves.commit())
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
+        mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
         preparedRegistry.commit();
         for (auto& reference : reconstructed)
             reference->commit();
@@ -4021,6 +4046,9 @@ namespace MWWorld
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
         const ESM::FormKeyResolver resolver(mContentFiles);
         validateNativeDropRelations(state, mStore, resolver, incoming);
+        validateOblivionLooseWeaponState(state);
+        if (prepared)
+            prepared->mLooseWeapons = std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
 
         const auto validateFloat = [](double value, std::string_view name) {
             if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()

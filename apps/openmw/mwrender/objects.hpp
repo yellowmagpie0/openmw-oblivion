@@ -2,6 +2,7 @@
 #define GAME_RENDER_OBJECTS_H
 
 #include <map>
+#include <functional>
 #include <memory>
 #include <osg/Quat>
 #include <string>
@@ -100,11 +101,13 @@ namespace MWRender
             PreparedModel& operator=(const PreparedModel&) = delete;
         };
 
-        // Borrowed reference and cell must outlive preparation and registration.
-        // Main-thread non-actor admission; no physics or game observers.
+        // Keep the borrowed reference/cell alive, or supply a guard that rejects
+        // retirement without dereferencing them. Main-thread non-actor admission;
+        // no physics or game observers. Scene-parent callbacks may invalidate it.
         std::unique_ptr<PreparedModel> prepareModel(const MWWorld::Ptr& ptr, const std::string& model,
             const osg::Quat& rotation, unsigned nodeMask,
-            const NifBullet::ActorRagdollDefinition* physicalDefinition = nullptr);
+            const NifBullet::ActorRagdollDefinition* physicalDefinition = nullptr,
+            std::function<bool()> referenceValid = {});
         bool validatePreparedModel(const PreparedModel& prepared) const;
         bool validatePublishedModel(const PreparedModel& prepared) const;
         // A previously published sibling can supply the cell root when both

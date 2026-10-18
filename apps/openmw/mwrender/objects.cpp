@@ -54,6 +54,7 @@ namespace MWRender
     {
         Objects* mOwner = nullptr;
         std::weak_ptr<const char> mIdentity;
+        std::function<bool()> mReferenceValid;
         MWWorld::Ptr mPtr;
         MWWorld::CellStore* mCell = nullptr;
         ESM::Position mPosition;
@@ -98,8 +99,10 @@ namespace MWRender
 
     std::unique_ptr<Objects::PreparedModel> Objects::prepareModel(const MWWorld::Ptr& ptr,
         const std::string& model, const osg::Quat& rotation, unsigned nodeMask,
-        const NifBullet::ActorRagdollDefinition* physicalDefinition)
+        const NifBullet::ActorRagdollDefinition* physicalDefinition, std::function<bool()> referenceValid)
     {
+        if (referenceValid && !referenceValid())
+            throw std::invalid_argument("prepared model reference is retired");
         if (ptr.isEmpty() || !ptr.isInCell() || ptr.getClass().isActor() || ptr.getClass().useAnim()
             || ptr.getContainerStore()
             || ptr.getCellRef().getCount() <= 0 || ptr.getRefData().getBaseNode() || mObjects.contains(ptr.mRef))
@@ -107,6 +110,7 @@ namespace MWRender
         auto data = std::make_unique<PreparedModel::Data>();
         data->mOwner = this;
         data->mIdentity = mModelPreparationIdentity;
+        data->mReferenceValid = std::move(referenceValid);
         data->mPtr = ptr;
         data->mCell = ptr.getCell();
         data->mPosition = ptr.getRefData().getPosition();
@@ -144,6 +148,8 @@ namespace MWRender
         // ObjectAnimation subsequently clones this same cached valid template.
         if (!model.empty())
             mResourceSystem->getSceneManager()->getTemplate(VFS::Path::toNormalized(model), true, true);
+        if (data->mReferenceValid && !data->mReferenceValid())
+            throw std::invalid_argument("prepared model reference retired during source loading");
         // Build the actual animation/model on its detached parent, without
         // changing the live reference's base node.
         osg::ref_ptr<ObjectAnimation> animation = new ObjectAnimation(ptr, osg::ref_ptr<osg::Group>(data->mInsert),
@@ -190,7 +196,8 @@ namespace MWRender
     {
         const auto* data = prepared.mData.get();
         if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
-            || data->mPublished || data->mConsumed || data->mObjectEntry.empty())
+            || data->mPublished || data->mConsumed || data->mObjectEntry.empty()
+            || (data->mReferenceValid && !data->mReferenceValid()))
             return false;
         const auto& ptr = data->mPtr;
         if (data->mPhysicalBinding)
@@ -221,7 +228,8 @@ namespace MWRender
     {
         const auto* data = prepared.mData.get();
         if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
-            || !data->mPublished || data->mConsumed)
+            || !data->mPublished || data->mConsumed
+            || (data->mReferenceValid && !data->mReferenceValid()))
             return false;
         if (data->mPhysicalBinding)
         {
@@ -277,6 +285,10 @@ namespace MWRender
         {
             if (!parent->addChild(child))
                 throw std::runtime_error("model scene admission rejected");
+            // A parent callback can clear World and destroy a borrowed live
+            // reference while addChild runs. Check before any Ptr publication.
+            if (data.mReferenceValid && !data.mReferenceValid())
+                throw std::logic_error("model reference retired during scene admission");
         }
         catch (...)
         {
@@ -300,7 +312,8 @@ namespace MWRender
     {
         auto* data = prepared.mData.get();
         if (!data || data->mOwner != this || data->mIdentity.lock() != mModelPreparationIdentity
-            || !data->mPublished || data->mConsumed)
+            || !data->mPublished || data->mConsumed
+            || (data->mReferenceValid && !data->mReferenceValid()))
             return false;
         const auto object = mObjects.find(data->mPtr.mRef);
         const auto cell = mCellSceneNodes.find(data->mCell);
