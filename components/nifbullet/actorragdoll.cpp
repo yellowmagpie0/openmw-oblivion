@@ -607,6 +607,7 @@ namespace NifBullet
                 require(!joint->mInfo.mEntityA.empty() && !joint->mInfo.mEntityB.empty()
                     && (joint->mInfo.mEntityA.getPtr() == body || joint->mInfo.mEntityB.getPtr() == body),
                     "constraint attached to unrelated body");
+                result.mBodies[entry.second].mAssociatedConstraints.push_back(joint->mRecordIndex);
                 referenced.insert(joint);
             }
         }

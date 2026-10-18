@@ -5179,3 +5179,30 @@ Hashes and limits are in `retained_incident_body_removal_followup` in
 `M15-PHYSICAL-ADMISSION-VERIFICATION.json`. This chunk changes no engine caller
 or Python/schema. Native gain/counter and directed admission policy, automatic
 contact/reaction/GetUp, and the full S4 normal-input/restart gates remain open.
+
+
+Owned ragdoll bodies now retain their authored constraint associations in each
+body's source order, including repeated references and references shared by
+both endpoints. Unique joint objects keep their existing global source-record
+order. This preserves the directed-list input needed by native associated
+admission; the previous description discarded it while deduplicating joints.
+The lists survive source-NIF destruction and property scaling. Full normal and
+ASan/UBSan component checks each pass2827 tests in269 suites with no failures
+or skips; leak checks remain disabled. Tested source fingerprint:
+`69b21610e65bde1267d8aa707272f7e05943a8feab83cbfc1beaf7fc5cabd59c`.
+
+A separate9216-case original-instruction corpus verifies full88F0E0/88F160
+counter updates. Increment wraps32 bits and dispatches only when the old value
+was0. Decrement wraps first, then clamps a nonpositive signed result to0; the
+INT_MIN underflow therefore becomes positive INT_MAX without clamping. Actual
+scene flag/update requests depend on rawBA7A8C and flags40/1. A body registration
+request additionally requires wrapper/native-body presence, filter low6bits8
+and a remembered owner. It uses normal registration. Downstream scene and
+World operations are explicit boundaries, and caller/lifetime semantics remain
+open. These results must not be replaced by a guessed saturating hold count.
+
+Provenance, editable matrix and check hashes are in
+`ordered_native_association_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Neither ordered metadata nor the
+counter oracle is an automatic admission/reaction/GetUp executor. Full S4
+normal-input and fresh-process recovery acceptance remain open.

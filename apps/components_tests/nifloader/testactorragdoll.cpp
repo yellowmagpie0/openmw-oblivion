@@ -137,6 +137,8 @@ namespace
         mFile.mRecords.clear();
         EXPECT_EQ(graph.mBodies[1].mBone, "Bip01 Spine");
         EXPECT_EQ(graph.mBodies[1].mBoneBind.getTrans(), osg::Vec3f(14, 25, 36));
+        EXPECT_EQ(graph.mBodies[0].mAssociatedConstraints, (std::vector<std::uint32_t>{9}));
+        EXPECT_TRUE(graph.mBodies[1].mAssociatedConstraints.empty());
     }
 
     TEST_F(ActorRagdollTest, OwnsAuthoredCollisionFlagsIndependentlyOfHavokFiltersAndReferenceRelocation)
@@ -592,7 +594,41 @@ namespace
         auto& body = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[7]);
         body.mConstraints = {Nif::RecordPtrT<Nif::bhkSerializable>(
             static_cast<Nif::bhkLimitedHingeConstraint*>(mFile.mRecords[9].get()))};
-        EXPECT_EQ(NifBullet::loadActorRagdollDefinition(mFile).mJoints.size(), 1);
+        const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+        EXPECT_EQ(graph.mJoints.size(), 1);
+        EXPECT_EQ(graph.mBodies[0].mAssociatedConstraints, (std::vector<std::uint32_t>{9}));
+        EXPECT_EQ(graph.mBodies[1].mAssociatedConstraints, (std::vector<std::uint32_t>{9}));
+    }
+
+    TEST_F(ActorRagdollTest, OwnsDirectedConstraintListsWithIndependentOrderAndRepeatedAssociations)
+    {
+        // Native associated-list dispatch is ordered and directed (independent
+        // full8A47C0/8A0A70 chain corpus). Global joint order cannot replace it.
+        auto& original = static_cast<Nif::bhkLimitedHingeConstraint&>(*mFile.mRecords[9]);
+        auto& middle = add<Nif::bhkLimitedHingeConstraint>();
+        middle.mInfo = original.mInfo; middle.mConstraint = original.mConstraint;
+        auto& last = add<Nif::bhkLimitedHingeConstraint>();
+        last.mInfo = original.mInfo; last.mConstraint = original.mConstraint;
+        auto& a = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[5]);
+        auto& b = static_cast<Nif::bhkRigidBody&>(*mFile.mRecords[7]);
+        a.mConstraints = {Nif::RecordPtrT<Nif::bhkSerializable>(&last),
+            Nif::RecordPtrT<Nif::bhkSerializable>(&original), Nif::RecordPtrT<Nif::bhkSerializable>(&last)};
+        b.mConstraints = {Nif::RecordPtrT<Nif::bhkSerializable>(&middle),
+            Nif::RecordPtrT<Nif::bhkSerializable>(&original)};
+        const std::vector<std::uint32_t> expectedA{last.mRecordIndex, original.mRecordIndex, last.mRecordIndex};
+        const std::vector<std::uint32_t> expectedB{middle.mRecordIndex, original.mRecordIndex};
+        const std::array expectedJoints{original.mRecordIndex, middle.mRecordIndex, last.mRecordIndex};
+        const auto graph = NifBullet::loadActorRagdollDefinition(mFile);
+        const auto scaled = NifBullet::ragdollDefinitionWithNativeScaledProperties(graph, 2.f);
+        a.mConstraints.clear(); b.mConstraints.clear();
+        mFile.mRecords.clear();
+        ASSERT_EQ(graph.mJoints.size(), expectedJoints.size());
+        for (unsigned i = 0; i < expectedJoints.size(); ++i)
+            EXPECT_EQ(graph.mJoints[i].mRecord, expectedJoints[i]);
+        EXPECT_EQ(graph.mBodies[0].mAssociatedConstraints, expectedA);
+        EXPECT_EQ(graph.mBodies[1].mAssociatedConstraints, expectedB);
+        EXPECT_EQ(scaled.mBodies[0].mAssociatedConstraints, expectedA);
+        EXPECT_EQ(scaled.mBodies[1].mAssociatedConstraints, expectedB);
     }
 
     TEST_F(ActorRagdollTest, RejectsSelfJointAndDegenerateFrame)

@@ -123,6 +123,10 @@ namespace NifBullet
         float mFriction, mRestitution;
         float mMaxLinearVelocity, mMaxAngularVelocity;
         RagdollShape mShape;
+        // This body's authored constraint list, in its own source order.
+        // Keep duplicates/shared references independently of the deduplicated
+        // joint objects: native8A47C0 traverses these directed associations.
+        std::vector<std::uint32_t> mAssociatedConstraints;
     };
 
     // Scale cached mass, inertia, center and supported shape properties only.

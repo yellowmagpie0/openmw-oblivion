@@ -3422,5 +3422,173 @@
       "Authored persistent constraints only; transient Bullet contacts remain owned by the physics World, not synthesized as authored records.",
       "Prepared removal is not automatic contact/FSM/GetUp integration or normal-input/restart acceptance. Full M15S4 remains incomplete."
     ]
+  },
+  "ordered_native_association_followup": {
+    "status": "Loaded owned bodies preserve ordered authored associations for future directed admission; automatic native policy remains open",
+    "source": {
+      "head": "aa691a2d446e69eb9527943545e02983053d40bf",
+      "source_fingerprint": "69b21610e65bde1267d8aa707272f7e05943a8feab83cbfc1beaf7fc5cabd59c"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdoll.hpp": "d8be25d14390e441ac4d63e4a805511c982db3e0578df78c743a263ad567c31b",
+      "components/nifbullet/actorragdoll.cpp": "b799bb011f3b7670a8a216786f692623f5e03b610da03c33693b543cd26a6764",
+      "apps/components_tests/nifloader/testactorragdoll.cpp": "59755e1045c043566b621013dbd854c71e3c57262dfef8fce55fad93956088f6"
+    },
+    "changes": [
+      "RagdollBodyDefinition keeps its own ordered associated constraint record identities, including repeats and references shared by both endpoints. Global joint objects remain deduplicated in source record order.",
+      "The loader copies associations after existing record/endpoint validation. The data survives parsed-source destruction and native property-scaled graph copies.",
+      "No runtime policy is inferred from the deduplicated joint vector; a body association is not replaced by an undirected closure."
+    ],
+    "motivation": "Independent full native8A47C0/8A0A70 associated-chain instruction corpus already shows directed traversal and ordered recursion; the old owned description discarded per-body association/order.",
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-associated-list-normal-01/verification.json",
+        "sha256": "6214f561c16a3c581847bb4a72e48d42a5a0cd2cd00b6b9c3720b2352f9e57f1",
+        "source": {
+          "head": "aa691a2d446e69eb9527943545e02983053d40bf",
+          "source_fingerprint": "69b21610e65bde1267d8aa707272f7e05943a8feab83cbfc1beaf7fc5cabd59c"
+        },
+        "results": {
+          "components": {
+            "executed": 2827,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "fa9542045dfae4d75005342e72a7be49bd25d7ef5c51b3020a0a79b468f11892",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "f975ee1fe02f0ff808d10d6d0f1d931f87d02ab188b677bbdd82a19013a4d976",
+            "inventory_sha256": "23c443141cc7b098f473a1563577b716f4073a59d6e5b922ebf57e7cc26f112a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 269
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-associated-list-sanitized-01/verification.json",
+        "sha256": "b38c098443f42798dd3afdf3bb77a49a276cae77f3452b0536b6f7a8f45ea8fd",
+        "source": {
+          "head": "aa691a2d446e69eb9527943545e02983053d40bf",
+          "source_fingerprint": "69b21610e65bde1267d8aa707272f7e05943a8feab83cbfc1beaf7fc5cabd59c"
+        },
+        "results": {
+          "components": {
+            "executed": 2827,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c5a8ed270affefe17a4181e03b4d09af7dd298b9ce2aaa8a28e37558e3befd02",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "a18076f500d498a2d6cf0c53ad5d83677d332d671a752bcf9193cb0d838b292b",
+            "inventory_sha256": "d1e0354936bfe207f11187536b7c81bd06079d0d2cff8bbea45b809b2f1d8161",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 269
+      }
+    },
+    "validation_scope": "Component builds/tests only; no engine caller, Python/schema or runtime acceptance change.",
+    "native_counter_instruction_followup": {
+      "evidence": "build/oblivion-compat/m15/S4/native-blend-counter-static-01",
+      "report_sha256": "62dac3434100dd2c24d572a889694907dcbcc331c71184d5cca0940d60e115c3",
+      "probe_sha256": "13d2167953e78ba2c3301afed6314866af775dddde91e6404afefdabb673f216",
+      "executable_metadata_sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "results": {
+        "passed": true,
+        "profiles": 9216,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "807971b6e1e1ad571ba01be2b2fe7a8bbc2724dc914965f0defb10500e30a110",
+        "paths": [
+          "Full original88F0E0 increment",
+          "Full original88F160 decrement",
+          "Actual bhkBlendCollisionObject A9643C and bodywrapper A5605C virtual dispatch"
+        ],
+        "boundaries": [
+          "89EAE0 scene sync and virtual64 88F3D0 update only record requests; no pose/controller update executes.",
+          "Body virtual5C8A48C0 only records the normal admission request, checking wrapper and remembered owner. Native World/admission/gains/constraints do not execute here.",
+          "Synthetic collision/body/owner fixtures; raw globalBA7A8C is an explicit input, without assigning a setting name."
+        ],
+        "findings": [
+          "Increment wraps the32-bit word and dispatches only when the old counter was exactly0. It does not saturate or clamp negative values.",
+          "On that0->1 transition, rawmode3 skips scene flag work. Otherwise flag40 requests direct scene sync and clears40 unless rawmode2; with40 absent and flag1 present it requests virtual64.",
+          "Decrement wraps first; a positive signed result is retained without dispatch. A nonpositive result clamps0 and may reconcile. INT_MIN decrements to INT_MAX, so no clamp occurs.",
+          "Reconciliation in either helper requires bodywrapper, nativebody, packed filter low6bits==8 and a remembered owner. It invokes normal registration, not forced registration.",
+          "No production implementation comparison or semantic caller/lifetime claim."
+        ],
+        "limits": [
+          "Does not identify callers, ownership lifetime, counter save policy or the meaning of rawmodeBA7A8C.",
+          "Does not execute downstream scene/physics/constraint effects; their existing independent probes remain separate.",
+          "No native simulation or fork acceptance."
+        ]
+      },
+      "editable_protocol": {
+        "entry_points": [
+          "88F0E0 increment",
+          "88F160 decrement"
+        ],
+        "initial_counters": [
+          -2147483648,
+          -2,
+          -1,
+          0,
+          1,
+          2,
+          2147483646,
+          2147483647
+        ],
+        "collision_flags": [
+          0,
+          1,
+          64,
+          65,
+          257,
+          65535
+        ],
+        "raw_BA7A8C": [
+          -1,
+          0,
+          2,
+          3
+        ],
+        "body_presence": [
+          "no wrapper",
+          "wrapper without native body",
+          "wrapper with native body"
+        ],
+        "packed_filters": [
+          0,
+          8,
+          264,
+          4294967295
+        ],
+        "remembered_owner": [
+          false,
+          true
+        ],
+        "assertions": [
+          "Reach each normal return with exact ESP and preserved callee-saved registers.",
+          "Exact signed counter and flag word after wrapped32-bit increment/decrement.",
+          "Exact ordered scene/update/normal registration requests at declared boundaries."
+        ]
+      }
+    },
+    "limits": [
+      "Ordered source metadata is a prerequisite, not a native admission executor.",
+      "Counter helper execution does not identify caller ownership/lifetime, assign a semantic name to BA7A8C or execute downstream scene/physics effects.",
+      "Full S4 automatic reaction/GetUp, input/view/device/FPS and fresh-process acceptance remain open."
+    ]
   }
 }
