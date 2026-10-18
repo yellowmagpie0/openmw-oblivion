@@ -8407,5 +8407,141 @@
       "KF/selector2/subtype/group/filter/root/capsule/morphology and complete actor/reaction/FSM/GetUp publication still require integration and acceptance.",
       "No fork normal-input gameplay, timing/FPS, contact or fresh-process save/restart gate is closed. Full M15S4 remains incomplete."
     ]
+  },
+  "native_prepared_scheduler_followup": {
+    "status": "Prepared native frame consumes the shared scheduler; authoritative Engine/World clock and automatic owner activation remain open. Full M15S4 incomplete.",
+    "base_head": "a24748cc108505451edfbf9d7a865f941e7085bc",
+    "implementation": [
+      "PhysicsTaskScheduler::applyPreparedNativeFrame consumes exact native prepared count/duration and caller-owned signed carry. It uses the same prepareWork, movement jobs, worker barriers, native gravity/damping and single Bullet world step as existing scheduling. It does not rerun performance-budget step selection or decrement a second accumulator.",
+      "Reject malformed/nonfinite frames, counts above3, inconsistent zero-step fields and stepping durations whose native gravity delta is nonrepresentable before consuming jobs or dispatching workers. Valid nonpositive frames take no steps.",
+      "Existing movement presentation interpolation still clamps its factor. A no-step pass uses the existing default physics duration only for that presentation divisor; it does not replace the supplied frame/clock state or advance bodies.",
+      "The existing generic scheduler entry retains its budget calculation. The new entry requires one authoritative caller to prepare/commit the native clock; no Engine/World activation is implied."
+    ],
+    "normal_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-prepared-scheduler-normal-02/verification.json",
+      "sha256": "57568ced1283ba2228bc39e930bbbf2fd7fcb20b848ad19de4421b0ba75b1744",
+      "source": {
+        "head": "a24748cc108505451edfbf9d7a865f941e7085bc",
+        "source_fingerprint": "20b6afe14bdec09860c4af78bf4d12940c534ef2cc4956298f40e27648169a6a"
+      },
+      "suites": 122,
+      "result": {
+        "executed": 1663,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "f81d3a7efe0f6a59d350372d9fd33a9bb05414422283f08922383c9356d358a3",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "afaaad44da8fe2e1510812ce82535e330c275195ad4cba26193d2ffb318703f3",
+        "inventory_sha256": "2c1a30cccc62451b2ac3f0f00d880297a2ad5bdb7c58cf5c75fb865fe8ebae3e",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-prepared-scheduler-sanitized-02/verification.json",
+      "sha256": "44e453a98ec204291663672e642724546efcfdb9696a15c5b25cf4d1ba4deaff",
+      "source": {
+        "head": "a24748cc108505451edfbf9d7a865f941e7085bc",
+        "source_fingerprint": "20b6afe14bdec09860c4af78bf4d12940c534ef2cc4956298f40e27648169a6a"
+      },
+      "suites": 122,
+      "result": {
+        "executed": 1663,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "6e96c803e0ddb41853d285757cd37e9d2e2ccff8e176313810a55db50f04433e",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "858c0875341f90983183260481d6af80b973067644534f9203dd2b945aad39df",
+        "inventory_sha256": "2c1a30cccc62451b2ac3f0f00d880297a2ad5bdb7c58cf5c75fb865fe8ebae3e",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_sha256": {
+      "apps/openmw/mwphysics/mtphysics.cpp": "ac5d2ce0c42bf608c07c96fb276b2b572537a3e945d9ed06713758abef04b2db",
+      "apps/openmw/mwphysics/mtphysics.hpp": "9d3ddafd9849d16f6d0b3fc4a1891e725941b6ca7aea7e52a3977a1fd3f7c944",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "6c0ba0031e50bd50d6573d6012676c02f0df5ae626313a5da8a587007cb8e15c"
+    },
+    "openmw_executables": {
+      "build/openmw": "59e41faf6d5df1657317478991513d79e6dd6061fb62101615af065854ffebe2",
+      "build/m15-sanitize/openmw": "1e19a3a19aeaf302c0ffbcba8d3225429ac7087c0b1bab7e1713c7a4e8a50dd4"
+    },
+    "regressions": {
+      "suite": "WorkerCounts/RagdollSchedulerTest",
+      "worker_counts": [
+        0,
+        1,
+        2
+      ],
+      "new_cases": 12,
+      "tests": [
+        "PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass",
+        "PreparedNativeVariableAndSmoothedDurationsReachEveryWorldStep",
+        "PreparedNativeNonpositiveFrameDoesNotStepOrConsumeSignedClock",
+        "InvalidPreparedNativeFrameRejectsBeforeBodyOrJobsChangeAndAllowsRetry"
+      ],
+      "coverage": [
+        "Actual native frame helper -> scheduler -> movement jobs and Bullet world. Projectile position observed at each of3 exact0.0167 Bullet ticks; actor and loose bodies share gravity/velocity/pose evolution.",
+        "Fixed, variable and smoothed durations plus two-step limit reach actual world ticks; zero-step pass synchronizes prior async movement results without another body step.",
+        "Signed negative carry/nonpositive frame does not step or mutate caller clock, followed by valid continuation.",
+        "Nonempty job queue survives invalid frame rejection; malformed values/nonrepresentable gravity reject before body changes and valid retry succeeds."
+      ]
+    },
+    "retained_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-prepared-scheduler-normal-01/verification.json",
+        "sha256": "1ae054055b16b16ab52de9402b93f212e0c5fa5ad6867ecd1f8146cf8c60bd45",
+        "source": {
+          "head": "a24748cc108505451edfbf9d7a865f941e7085bc",
+          "source_fingerprint": "64dfe80cdd16f2f1da1538572e5f8618c901b9e00ffcb811cb3bfba048e97dda"
+        },
+        "executed": 1663,
+        "failed": [
+          "WorkerCounts/RagdollSchedulerTest.PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass/1",
+          "WorkerCounts/RagdollSchedulerTest.PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass/2"
+        ],
+        "reason": "Fixture incorrectly expects async movement jobs to publish/clear when captureActorRagdoll only waits for workers. Final fixture explicitly performs the next zero-step prepare boundary, then checks publication without another Bullet step. No other initial test fails."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-prepared-scheduler-sanitized-01/verification.json",
+        "sha256": "9b9b88930790e068de8841ee39fcb89048ac064a050fa2a67626ca866eb01e1b",
+        "source": {
+          "head": "a24748cc108505451edfbf9d7a865f941e7085bc",
+          "source_fingerprint": "64dfe80cdd16f2f1da1538572e5f8618c901b9e00ffcb811cb3bfba048e97dda"
+        },
+        "executed": 1663,
+        "failed": [
+          "WorkerCounts/RagdollSchedulerTest.PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass/1",
+          "WorkerCounts/RagdollSchedulerTest.PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass/2"
+        ],
+        "reason": "Fixture incorrectly expects async movement jobs to publish/clear when captureActorRagdoll only waits for workers. Final fixture explicitly performs the next zero-step prepare boundary, then checks publication without another Bullet step. No other initial test fails."
+      }
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "All four engine build logs contain no warning/error diagnostics. Final normal and sanitizer reports match full1663-test inventories/122 suites, no failure/skip. ASan leak checks disabled.",
+    "unchanged_checks": "Component source/tests and Python/schema are unchanged; their passing earlier evidence is not repeated for this scheduler-only chunk. Engine mode builds openmw, openmw-tests and esmtool.",
+    "limits": [
+      "This is the shared prepared-step consumption boundary. Engine/World still must own the native process-frame clock, initialized settings, scene-complex lifetime, time publication/lifecycle and activation of this entry.",
+      "World native scene ownership/admission, KF/selector/subtype and coherent group/filter/capsule/root/morphology policy remain open.",
+      "Projectile movement/owned-body fixtures execute actual shared Bullet steps, without a contact or player/NPC normal-input combat course. They do not establish native actor capsule presentation or Havok trajectory equivalence.",
+      "No contact/reaction/FSM/GetUp or view/device/FPS/fresh-process gameplay/save-restart gate is closed by these regression cases. Full M15S4 remains incomplete."
+    ]
   }
 }

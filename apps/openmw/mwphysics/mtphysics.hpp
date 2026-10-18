@@ -27,6 +27,7 @@ class btTransform;
 namespace ESM4
 {
     struct RuntimeActorRagdoll;
+    struct PhysicalFrameResult;
 }
 
 namespace NifBullet
@@ -92,6 +93,14 @@ namespace MWPhysics
         /// @return new position of each actor
         void applyQueuedMovements(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
             unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
+
+        // Consume one frame prepared by the shared native clock. All movement
+        // jobs and owned bodies use its exact substep count/duration. Retain
+        // signed clock carry for existing presentation interpolation; no second
+        // accumulator or performance-budget step selection runs on this path.
+        void applyPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
+            std::vector<Simulation>& simulations, osg::Timer_t frameStart, unsigned int frameNumber,
+            osg::Stats& stats, const WorldFrameData& worldData);
 
         void resetSimulation(const ActorMap& actors);
         void suspendActorCollision(Actor& actor, bool suspended);
@@ -344,7 +353,8 @@ namespace MWPhysics
             const NativeRagdollSnapshotGroup& snapshot, std::span<const NativeRagdollSnapshotBinding> bindings);
         void commitActorRagdollSnapshotsLocked(PreparedNativeRagdollSnapshotRestore& prepared);
         void prepareWork(float& timeAccum, std::vector<Simulation>& simulations, osg::Timer_t frameStart,
-            unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData);
+            unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData,
+            const ESM4::PhysicalFrameResult* nativeFrame = nullptr);
 
         std::unique_ptr<WorldFrameData> mWorldFrameData;
         std::vector<Simulation>* mSimulations = nullptr;

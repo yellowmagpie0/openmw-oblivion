@@ -25,6 +25,7 @@
 #include <components/nifbullet/ragdollbonepose.hpp>
 #include <components/nifbullet/nativedynamicsworld.hpp>
 #include <components/settings/values.hpp>
+#include <components/esm4/physicalframe.hpp>
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
@@ -1152,8 +1153,32 @@ namespace MWPhysics
             mWorkersSync->wakeUpWorkers();
     }
 
+    void PhysicsTaskScheduler::applyPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
+        std::vector<Simulation>& simulations, osg::Timer_t frameStart, unsigned int frameNumber,
+        osg::Stats& stats, const WorldFrameData& worldData)
+    {
+        // Validate before waiting, consuming queued jobs or publishing state.
+        // Native nonpositive frames retain signed carry and execute no steps.
+        if (!std::isfinite(remaining) || !std::isfinite(frame.mInputDelta) || frame.mInputDelta < 0.f
+            || !std::isfinite(frame.mFrameSeconds) || !std::isfinite(frame.mSubstepSeconds)
+            || frame.mSubstepCount > 3
+            || (frame.mSubstepCount == 0
+                ? frame.mFrameSeconds > 0.f || frame.mSubstepSeconds != 0.f
+                : frame.mFrameSeconds <= 0.f || frame.mSubstepSeconds <= 0.f))
+            throw std::invalid_argument("invalid prepared native physics frame");
+        if (frame.mSubstepCount != 0)
+            (void)NifBullet::ragdollNativeGravityDelta(
+                {0, 0, NifBullet::RagdollNativeDefaultGravityZ}, frame.mSubstepSeconds);
+        assert(mSimulations != &simulations);
+        waitForWorkers();
+        prepareWork(remaining, simulations, frameStart, frameNumber, stats, worldData, &frame);
+        if (mWorkersSync != nullptr)
+            mWorkersSync->wakeUpWorkers();
+    }
+
     void PhysicsTaskScheduler::prepareWork(float& timeAccum, std::vector<Simulation>& simulations,
-        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData)
+        osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats, const WorldFrameData& worldData,
+        const ESM4::PhysicalFrameResult* nativeFrame)
     {
         // This function run in the main thread.
         // While the mSimulationMutex is held, background physics threads can't run.
@@ -1172,8 +1197,12 @@ namespace MWPhysics
             updateStats(frameStart, frameNumber, stats);
         }
 
-        auto [numSteps, newDelta] = calculateStepConfig(timeAccum);
-        timeAccum -= numSteps * newDelta;
+        auto [numSteps, newDelta] = nativeFrame
+            ? std::tuple<unsigned, float>{nativeFrame->mSubstepCount,
+                nativeFrame->mSubstepCount ? nativeFrame->mSubstepSeconds : mDefaultPhysicsDt}
+            : calculateStepConfig(timeAccum);
+        if (!nativeFrame)
+            timeAccum -= numSteps * newDelta;
 
         // init
         const Visitors::InitPosition vis{ mCollisionWorld };

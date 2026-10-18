@@ -15910,3 +15910,42 @@ exact reports, hashes and limits are under `native_postworld_identity_followup`
 in the verification index. Main clock ownership/shared scheduling, World native
 owner activation, complete actor publication and all remaining M15S4 gameplay/
 fresh-process gates remain open. Full M15S4 is incomplete.
+
+
+### Prepared native frames drive the shared physics scheduler
+
+PhysicsTaskScheduler now accepts a prepared native frame's exact step count and
+duration through the existing movement jobs, barriers, native velocity handling
+and single Bullet world pass. This entry does not recalculate performance-budget
+steps or introduce another accumulator. Caller-owned signed carry remains intact;
+nonpositive frames execute no physics steps. Malformed/nonfinite/inconsistent
+frames and nonrepresentable native gravity durations reject before consuming
+queued work. Existing movement presentation interpolation remains unchanged;
+the no-step case uses its existing default divisor without advancing bodies.
+
+Four new cases at0/1/2 workers add12 engine regressions. An actual helper-to-
+scheduler-to-world course records projectile position at each of3 exact0.0167
+Bullet ticks while actor and loose bodies share velocity/pose evolution. Fixed,
+variable and smoothed durations, two-step limiting, signed carry/continuation,
+nonempty queue preservation on rejection and valid retry are checked. A zero-step
+follow-up publishes previous async movement results without another body step.
+The initial normal/sanitized runs each fail only the2 async fixture cases that
+incorrectly expect publication from a worker-only wait. Those attempts remain
+retained; the fixture now explicitly checks the next publication boundary.
+
+Final full normal and ASan/UBSan engine checks each pass **1,663 tests in122
+suites**, exact inventory and no failures/skips. All four build logs are free
+of warning/error diagnostics. ASan leaks are disabled. Tested source fingerprint:
+`20b6afe14bdec09860c4af78bf4d12940c534ef2cc4956298f40e27648169a6a`.
+Unchanged component/Python/schema checks are not repeated. Exact binary/source
+hashes, retained failures and reports are in `native_prepared_scheduler_followup`
+in the verification index.
+
+This implements shared step consumption. Authoritative Engine/World clock,
+settings, scene-complex lifetime/time publication and activation of this entry
+remain required, together with native owner admission, KF/selector/subtype/
+group/filter/capsule/root/morphology coordination and complete reaction/FSM/GetUp
+publication. These cases run actual Bullet steps but no contact or normal-input
+combat/restart course. They do not establish native capsule presentation or
+Havok trajectory equivalence. All remaining S4 gameplay/fresh-process gates stay
+open. Full M15S4 is incomplete.

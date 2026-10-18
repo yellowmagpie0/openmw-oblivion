@@ -22,6 +22,9 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <components/nifbullet/nativedynamicsworld.hpp>
+#include <components/esm4/physicalframe.hpp>
+#include <components/nif/nativetransformmath.hpp>
+#include <apps/openmw/mwphysics/projectile.hpp>
 #include <cstddef>
 #include <new>
 #include <bit>
@@ -2509,4 +2512,153 @@ namespace
             scheduler.removeLooseObject(mPtr);
         }
     }
+    TEST_P(RagdollSchedulerTest, PreparedNativeStepsShareMovementActorAndLooseBodyWorldPass)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        struct Ticks
+        {
+            MWPhysics::Projectile* mProjectile = nullptr;
+            std::vector<std::pair<btScalar, float>> mValues;
+        } ticks;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase);
+        const MWWorld::Ptr loose(&other);
+        auto loosePoses = mPoses; loosePoses[0].getOrigin().setX(20);
+        auto prepared = scheduler.prepareLooseObject(loose, mGraph, 1, loosePoses, 1, -1);
+        ASSERT_TRUE(scheduler.commitLooseObject(*prepared));
+        auto projectile = std::make_shared<MWPhysics::Projectile>(MWWorld::Ptr(), osg::Vec3f(0, 0, 1000),
+            .02f, &scheduler, &physics);
+        ticks.mProjectile = projectile.get();
+        world.setInternalTickCallback([](btDynamicsWorld* w, btScalar dt) {
+            auto& t = *static_cast<Ticks*>(w->getWorldUserInfo());
+            t.mValues.emplace_back(dt, t.mProjectile->getPosition().x());
+        }, &ticks);
+        projectile->setVelocity({10, 0, 0});
+        std::vector<MWPhysics::Simulation> jobs;
+        jobs.emplace_back(MWPhysics::ProjectileSimulation{projectile, MWPhysics::ProjectileFrameData{*projectile}});
+        ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+        ESM4::PhysicalFrameClock clock;
+        const auto frame = ESM4::preparePhysicalFrame(clock, settings, .1f, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        ASSERT_EQ(frame.mSubstepCount, 3u);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("prepared native shared world");
+        auto invalid = frame; invalid.mSubstepCount = 4;
+        EXPECT_THROW(scheduler.applyPreparedNativeFrame(invalid, clock.mRemaining, jobs,
+            osg::Timer::instance()->tick(), 1, *stats, MWPhysics::WorldFrameData(false, {})), std::invalid_argument);
+        EXPECT_EQ(jobs.size(), 1u);
+        EXPECT_TRUE(ticks.mValues.empty());
+        EXPECT_EQ(projectile->getPosition().x(), 0);
+        scheduler.applyPreparedNativeFrame(frame, clock.mRemaining, jobs, osg::Timer::instance()->tick(),
+            1, *stats, MWPhysics::WorldFrameData(false, {}));
+        const auto actorState = scheduler.captureActorRagdoll(mPtr)[0]; // worker barrier
+        const auto looseState = scheduler.captureLooseObject(loose)[0];
+        ASSERT_EQ(ticks.mValues.size(), 3u);
+        for (std::size_t i = 0; i < ticks.mValues.size(); ++i)
+        {
+            EXPECT_EQ(ticks.mValues[i].first, btScalar(.0167f));
+            EXPECT_NEAR(ticks.mValues[i].second, 10 * .0167f * (i + 1), 1e-6);
+        }
+        EXPECT_EQ(actorState.mLinearVelocity, looseState.mLinearVelocity);
+        EXPECT_EQ(actorState.mPose.getOrigin().z(), looseState.mPose.getOrigin().z());
+        EXPECT_LT(actorState.mPose.getOrigin().z(), 2);
+        EXPECT_NEAR(projectile->getPosition().x(), .501f, 1e-6);
+        // Async jobs publish to the main thread at the next prepare boundary.
+        // A zero-step pass must synchronize those jobs without another body step.
+        std::vector<MWPhysics::Simulation> nextJobs;
+        scheduler.applyPreparedNativeFrame({0, 0, 0, 0}, 0, nextJobs, osg::Timer::instance()->tick(),
+            2, *stats, MWPhysics::WorldFrameData(false, {}));
+        scheduler.captureActorRagdoll(mPtr);
+        EXPECT_TRUE(jobs.empty());
+        EXPECT_EQ(ticks.mValues.size(), 3u);
+        EXPECT_NEAR(projectile->getSimulationPosition().x(), .501f, 1e-6);
+        world.setInternalTickCallback(nullptr);
+        projectile.reset();
+        scheduler.removeLooseObject(loose); scheduler.removeActorRagdoll(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PreparedNativeVariableAndSmoothedDurationsReachEveryWorldStep)
+    {
+        std::vector<btScalar> ticks;
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        mWorld.setInternalTickCallback([](btDynamicsWorld* w, btScalar dt) {
+            static_cast<std::vector<btScalar>*>(w->getWorldUserInfo())->push_back(dt);
+        }, &ticks);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native variable steps");
+        std::array<std::vector<MWPhysics::Simulation>, 2> jobs;
+        ESM4::PhysicalFrameClock clock;
+        ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+        unsigned frameNumber = 0;
+        for (const auto [mode, limited] : std::array<std::pair<unsigned, bool>, 4>{{
+                 {1, false}, {10, false}, {0, false}, {0, true}}})
+        {
+            const auto frame = ESM4::preparePhysicalFrame(clock, settings, .1f, mode, limited,
+                Nif::NativeTransformPrecision::Single);
+            const auto first = ticks.size();
+            scheduler.applyPreparedNativeFrame(frame, clock.mRemaining, jobs[frameNumber % 2],
+                osg::Timer::instance()->tick(), frameNumber, *stats, MWPhysics::WorldFrameData(false, {}));
+            ++frameNumber;
+            scheduler.captureActorRagdoll(mPtr);
+            ASSERT_EQ(ticks.size() - first, frame.mSubstepCount);
+            for (auto i = first; i < ticks.size(); ++i) EXPECT_EQ(ticks[i], btScalar(frame.mSubstepSeconds));
+        }
+        mWorld.setInternalTickCallback(nullptr);
+        scheduler.removeActorRagdoll(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PreparedNativeNonpositiveFrameDoesNotStepOrConsumeSignedClock)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("native signed carry");
+        std::array<std::vector<MWPhysics::Simulation>, 2> jobs;
+        ESM4::PhysicalFrameClock clock; clock.mRemaining = -.0001f;
+        const auto before = clock;
+        const auto frame = ESM4::preparePhysicalFrame(clock, {}, 0, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        ASSERT_EQ(frame.mSubstepCount, 0u);
+        scheduler.applyPreparedNativeFrame(frame, clock.mRemaining, jobs[0], osg::Timer::instance()->tick(),
+            1, *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, mPoses[0]);
+        EXPECT_EQ(clock, before);
+        const auto next = ESM4::preparePhysicalFrame(clock, {}, .02f, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        scheduler.applyPreparedNativeFrame(next, clock.mRemaining, jobs[1], osg::Timer::instance()->tick(),
+            2, *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_LT(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin().z(), 2);
+    }
+
+    TEST_P(RagdollSchedulerTest, InvalidPreparedNativeFrameRejectsBeforeBodyOrJobsChangeAndAllowsRetry)
+    {
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("invalid prepared native frame");
+        std::vector<MWPhysics::Simulation> jobs;
+        const float nan = std::numeric_limits<float>::quiet_NaN();
+        const float infinity = std::numeric_limits<float>::infinity();
+        const float maximum = std::numeric_limits<float>::max();
+        for (const auto& frame : std::vector<ESM4::PhysicalFrameResult>{
+                 {nan, .02f, .02f, 1}, {-.1f, .02f, .02f, 1}, {.1f, infinity, .02f, 1},
+                 {.1f, .02f, nan, 1}, {.1f, .02f, 0, 1}, {.1f, .02f, -.02f, 1},
+                 {.1f, .02f, .02f, 4}, {.1f, 0, .02f, 1}, {.1f, -.1f, .02f, 1},
+                 {.1f, .02f, 0, 0}, {.1f, 0, .02f, 0}, {maximum, maximum, maximum, 1}})
+        {
+            EXPECT_THROW(scheduler.applyPreparedNativeFrame(frame, 0, jobs, osg::Timer::instance()->tick(),
+                1, *stats, MWPhysics::WorldFrameData(false, {})), std::invalid_argument);
+            EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose, mPoses[0]);
+            EXPECT_TRUE(jobs.empty());
+        }
+        const ESM4::PhysicalFrameResult valid{.02f, .02f, .02f, 1};
+        for (float carry : {nan, infinity, -infinity})
+            EXPECT_THROW(scheduler.applyPreparedNativeFrame(valid, carry, jobs, osg::Timer::instance()->tick(),
+                1, *stats, MWPhysics::WorldFrameData(false, {})), std::invalid_argument);
+        scheduler.applyPreparedNativeFrame(valid, 0, jobs, osg::Timer::instance()->tick(),
+            1, *stats, MWPhysics::WorldFrameData(false, {}));
+        EXPECT_LT(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin().z(), 2);
+    }
+
 }
