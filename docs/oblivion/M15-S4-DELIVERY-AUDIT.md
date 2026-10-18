@@ -5401,3 +5401,41 @@ with precomposed targets cannot simply be wired in. No approximate coordinator
 or automatic construction is enabled here. Native frame/controller/contact/FSM/
 GetUp, global group/filter ownership and all remaining full S4 gameplay and
 fresh-engine restart gates remain open.
+
+
+### Object-local per-node native scene traversal
+
+The existing ordinary NIF traversal now accepts an explicit native parent for
+an object-local root. Initial and per-frame native caches use this parent;
+drawing projections continue to use actual OSG ancestors. Placement must be
+supplied on every object-local pass, and mismatched reference/object entry
+points reject before controllers. Root look-at reads the explicit parent while
+retaining its previous own world cache until projection. Physical local
+writeback uses the native parent and preserves separate scale.
+
+A per-node collision-update boundary receives the composed animated world after
+own controllers and before physical flags/targets are read. Its input includes
+the parent's completed physical projection. Existing selected/rigid policies,
+pending40 synchronization and child-cache rebasing remain shared. This provides
+the input boundary needed by an actor physical owner; it does not advance that
+owner's controllers or establish its global scheduling.
+
+Full normal and ASan/UBSan component runs each pass 2,884 tests in 273 suites,
+with identical case names, exact per-binary inventories and no failures/skips.
+Both component builds have no compiler warnings. A separate driver matches 512
+retained native controller/cache frames and 7,104 field comparisons in each
+configuration; maximum drawing matrix error is 2.84217e-14 against 1e-9 tolerance.
+It reconstructs the child/leaf branch with recorded parent worlds as inputs,
+seeds the initial old child cache and excludes the native fixture's invalid
+frame0 leaf old cache. Original root/helper topology and controller time/math
+are not replayed. No new original executable or game is run. Leak checks are
+disabled; unchanged engine and Python/schema checks were not repeated.
+
+Tested source fingerprint: `b31778c2247afb13d9713b270bda867841a68dea30632a314b1dd8eb3d5f25b2`. Exact source/binary/corpus
+hashes and boundaries are in `object_local_root_followup` in
+`M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json`.
+
+Automatic actor placement/controller/physics ownership, coherent group/filter
+initialization, contact/reaction/FSM/GetUp and all full S4 normal-input and
+fresh-engine restart acceptance courses remain open. App binaries need a fresh
+engine build when this component primitive is connected to runtime ownership.

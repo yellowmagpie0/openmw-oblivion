@@ -1223,7 +1223,15 @@ namespace NifOsg
         worldDir /= len;
 
         osg::Matrixf parentWorldInv;
-        if (nodePath.size() > 1 && !SceneUtil::NifSceneTraversal::isReferenceRoot(nv, node))
+        if (const auto parent = SceneUtil::NifSceneTraversal::nativeRootParentWorld(nv, node))
+        {
+            if (!parentWorldInv.invert(parent->toMatrix()))
+            {
+                traverse(node, nv);
+                return;
+            }
+        }
+        else if (nodePath.size() > 1 && !SceneUtil::NifSceneTraversal::isReferenceRoot(nv, node))
         {
             osg::NodePath parentPath(nodePath.begin(), nodePath.end() - 1);
             osg::Matrixf parentWorld = osg::computeLocalToWorld(parentPath);

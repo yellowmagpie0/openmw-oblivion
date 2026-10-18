@@ -78,9 +78,21 @@ namespace SceneUtil
             // Own node controllers run whenever a selected node is entered.
             // Reinspect projection flags after controllers, as native does.
             std::function<std::uint16_t(const NifOsg::MatrixTransform&)> mNodeFlags;
+            // After own controllers and native composition, before collision
+            // flags/physical reads. Supplies this node's animated world using
+            // its parent's already projected cache. The physical owner may
+            // dispatch its body here; query the supplied world rather than the
+            // node's previous drawing/cache handle. Do not change scene locals.
+            std::function<void(const NifOsg::MatrixTransform&, const Nif::NiTransform&)> mCollisionUpdate;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+        // Object-local root with an explicit native parent. Rendering ancestors
+        // remain independent scaffolding. Supply current native placement on
+        // every update, including controllerless passes; reference-only entry
+        // points reject this binding. Ordinary-node policies still apply.
+        NifSceneTraversal(NifOsg::MatrixTransform& objectRoot, const Nif::NiTransform& nativeParentWorld,
             Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
         ~NifSceneTraversal();
         NifSceneTraversal(const NifSceneTraversal&) = delete;
@@ -104,12 +116,16 @@ namespace SceneUtil
         // scaffolding inherits the containing native node's property policy.
         void update(const osg::FrameStamp& stamp, unsigned traversalNumber, const Callbacks& callbacks = {},
             Mode mode = Mode::Full);
+        void updateObjectLocal(const osg::FrameStamp& stamp, unsigned traversalNumber,
+            const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks = {}, Mode mode = Mode::Full);
         // Native Full(time, false): compose/project every node and perform
         // physical/reference callbacks without evaluating any own/property or
         // drawing callbacks. Generation supplies time zero. Unlike Selected/
         // Rigid, Full has an independent controller-evaluation argument.
         void updateWithoutControllers(const osg::FrameStamp& stamp, unsigned traversalNumber,
             const Callbacks& callbacks = {});
+        void updateObjectLocalWithoutControllers(const osg::FrameStamp& stamp, unsigned traversalNumber,
+            const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks = {});
 
         // Prepare ordinary NiNode/NiAVObject/NiGeometry selective flags from
         // live instance policy inputs. Controller presence includes inactive
@@ -126,11 +142,16 @@ namespace SceneUtil
         // Controller context query: the synthetic OSG ancestors of this root
         // must not be treated as native parents by a world-space controller.
         static bool isReferenceRoot(const osg::NodeVisitor* visitor, const osg::Node* node) noexcept;
+        // Only an object-local root has this explicit parent. World-space root
+        // controllers must use it instead of synthetic OSG ancestors.
+        static std::optional<Nif::NiTransform> nativeRootParentWorld(
+            const osg::NodeVisitor* visitor, const osg::Node* node) noexcept;
         static std::optional<Mode> updateMode(const osg::NodeVisitor* visitor) noexcept;
 
     private:
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
-            const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers);
+            const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
+            const Nif::NiTransform* nativeParentWorld = nullptr);
         struct Impl;
         std::unique_ptr<Impl> mImpl;
     };

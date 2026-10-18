@@ -70,10 +70,13 @@ namespace SceneUtil
         std::vector<Node> mNodes;
         std::vector<Group> mGroups;
         std::unordered_map<const osg::Node*, std::size_t> mIndices;
+        std::optional<Nif::NiTransform> mNativeParentWorld;
         bool mUpdating = false;
 
-        Impl(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision)
+        Impl(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision,
+            const Nif::NiTransform* nativeParentWorld = nullptr)
             : mRoot(&root), mPrecision(precision)
+            , mNativeParentWorld(nativeParentWorld ? std::optional(*nativeParentWorld) : std::nullopt)
         {
             require(precision == Nif::NativeTransformPrecision::Single
                     || precision == Nif::NativeTransformPrecision::Double, "unknown NIF scene precision");
@@ -94,8 +97,10 @@ namespace SceneUtil
                             && transform.getNumParents() <= 1, "ambiguous NIF scene transform");
                     require(!transform.getTraversalMatrix().getMatrix(), "NIF scene transform is already projected");
                     const auto local = transform.getControllerTransform();
-                    auto world = parent ? Nif::tryComposeNativeTransform(mNodes[*parent].mWorld, local, precision)
-                                        : std::optional<Nif::NiTransform>(local);
+                    const auto* parentWorld = parent ? &mNodes[*parent].mWorld
+                        : mNativeParentWorld ? &*mNativeParentWorld : nullptr;
+                    auto world = parentWorld ? Nif::tryComposeNativeTransform(*parentWorld, local, precision)
+                                            : std::optional<Nif::NiTransform>(local);
                     require(world.has_value(), "invalid initial NIF scene composition");
                     const auto index = mNodes.size();
                     mIndices.emplace(&node, index);
@@ -205,10 +210,16 @@ namespace SceneUtil
             auto& entry = mNodes[index];
             auto& node = *entry.mTransform;
             const auto local = node.getControllerTransform();
-            const auto* parent = entry.mParent ? &mNodes[*entry.mParent].mWorld : nullptr;
+            const auto* parent = entry.mParent ? &mNodes[*entry.mParent].mWorld
+                : mNativeParentWorld ? &*mNativeParentWorld : nullptr;
             const auto world = parent ? Nif::tryComposeNativeTransform(*parent, local, mPrecision)
                                       : std::optional<Nif::NiTransform>(local);
             require(world.has_value(), "invalid NIF scene composition");
+            if (callbacks.mCollisionUpdate)
+            {
+                callbacks.mCollisionUpdate(node, *world);
+                require(valid(), "NIF collision update changed the bound hierarchy");
+            }
             auto flags = callbacks.mCollisionFlags ? callbacks.mCollisionFlags(node) : std::nullopt;
             require(valid(), "NIF collision provider changed the bound hierarchy");
             const bool pending = flags && (*flags & 0x40);
@@ -222,7 +233,7 @@ namespace SceneUtil
                 frame = NifBullet::ragdollBonePoseWriteback(local, *world, desired,
                     parent, *flags, false, mPrecision);
             }
-            const osg::Matrixd parentMatrix = parent ? osg::Matrixd(parent->toMatrix()) : external;
+            const osg::Matrixd parentMatrix = entry.mParent ? osg::Matrixd(parent->toMatrix()) : external;
             NifOsg::MatrixTransform::TraversalMatrix own(
                 osg::Matrixd(frame.mWorld.toMatrix()) * inverse(parentMatrix));
             std::vector<NifOsg::MatrixTransform::TraversalMatrix> children;
@@ -380,6 +391,9 @@ namespace SceneUtil
 
     NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision)
         : mImpl(std::make_unique<Impl>(root, precision)) {}
+    NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, const Nif::NiTransform& nativeParentWorld,
+        Nif::NativeTransformPrecision precision)
+        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld)) {}
     NifSceneTraversal::~NifSceneTraversal() = default;
     bool NifSceneTraversal::isValid() const noexcept { return mImpl->valid(); }
     Nif::NiTransform NifSceneTraversal::cachedWorld(const NifOsg::MatrixTransform& node) const
@@ -468,7 +482,13 @@ namespace SceneUtil
     bool NifSceneTraversal::isReferenceRoot(const osg::NodeVisitor* visitor, const osg::Node* node) noexcept
     {
         const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
-        return native && native->mBinding.mRoot.get() == node;
+        return native && native->mBinding.mRoot.get() == node && !native->mBinding.mNativeParentWorld;
+    }
+    std::optional<Nif::NiTransform> NifSceneTraversal::nativeRootParentWorld(
+        const osg::NodeVisitor* visitor, const osg::Node* node) noexcept
+    {
+        const auto* native = dynamic_cast<const Impl::Visitor*>(visitor);
+        return native && native->mBinding.mRoot.get() == node ? native->mBinding.mNativeParentWorld : std::nullopt;
     }
     std::optional<NifSceneTraversal::Mode> NifSceneTraversal::updateMode(const osg::NodeVisitor* visitor) noexcept
     {
@@ -485,18 +505,39 @@ namespace SceneUtil
     {
         updateImpl(stamp, traversalNumber, callbacks, false, Mode::Full, false);
     }
+    void NifSceneTraversal::updateObjectLocal(const osg::FrameStamp& stamp, unsigned traversalNumber,
+        const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks, Mode mode)
+    {
+        updateImpl(stamp, traversalNumber, callbacks, false, mode, true, &nativeParentWorld);
+    }
+    void NifSceneTraversal::updateObjectLocalWithoutControllers(const osg::FrameStamp& stamp, unsigned traversalNumber,
+        const Nif::NiTransform& nativeParentWorld, const Callbacks& callbacks)
+    {
+        updateImpl(stamp, traversalNumber, callbacks, false, Mode::Full, false, &nativeParentWorld);
+    }
     void NifSceneTraversal::refreshReferenceRootCache()
     {
         updateImpl(osg::FrameStamp{}, 0, {}, true, Mode::Full, false);
     }
     void NifSceneTraversal::updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
-        const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers)
+        const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
+        const Nif::NiTransform* nativeParentWorld)
     {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
         require(mode == Mode::Full || mode == Mode::Selected || mode == Mode::Rigid, "unknown NIF update mode");
         require(mode == Mode::Full || bool(callbacks.mNodeFlags) || mImpl->mNodes[0].mSelectiveFlags.has_value(),
             "missing NIF selected update policy");
         require(!mImpl->mUpdating, "reentrant NIF scene traversal");
+        require(bool(nativeParentWorld) == mImpl->mNativeParentWorld.has_value(),
+            "NIF traversal native parent space mismatch");
+        if (nativeParentWorld)
+        {
+            // Validate before changing the retained parent or drawing handles.
+            const auto world = Nif::tryComposeNativeTransform(*nativeParentWorld,
+                mImpl->mRoot->getControllerTransform(), mImpl->mPrecision);
+            require(world.has_value(), "invalid NIF native parent composition");
+            inverse(osg::Matrixd(nativeParentWorld->toMatrix()));
+        }
         struct Reset
         {
             bool& mUpdating;
@@ -509,6 +550,7 @@ namespace SceneUtil
         // and release its ancestors before the final placement guard rejects
         // the pass, including Skeletons used during projection invalidation.
         auto placement = mImpl->placement();
+        if (nativeParentWorld) mImpl->mNativeParentWorld = *nativeParentWorld;
         mImpl->reanchor(placement);
         if (rootOnly)
             mImpl->project(0, callbacks, placement.mWorld, placement.mPath);

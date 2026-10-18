@@ -369,5 +369,146 @@
     "Ordinary private relative NifOsg::MatrixTransform hierarchy only; transparent Group/Geode and external Skeleton supported. Singular/zero-scale, nested Skeleton, billboard, Switch/LOD, absolute nodes, shared/multiple-ancestor paths and complete admission/property-copy/special policies need separate native rules.",
     "Real controller interpolation/Roll/LookAt formulas, Havok stepping, scene-to-physics/relocation/other live precision contexts, forced World/script continuation and loose-item save/recreation remain open.",
     "Production break/mastery/quest-retained/group-NPC drop, pickup/replacement/sound/power/creature/reactions/effects and complete first/third-person keyboard/mouse/gamepad FPS windup/block/recovery fresh-process matrix. Full M15S4 remains active and incomplete."
-  ]
+  ],
+  "object_local_root_followup": {
+    "status": "Object-local native root placement and per-node animated-world collision input are implemented in the existing ordinary NIF traversal. Production actor/controller/physics ownership and full M15S4 gameplay acceptance remain open.",
+    "source": {
+      "head": "54ddeb82c49b41193d42448e1e35c8616e0e75d0",
+      "source_fingerprint": "b31778c2247afb13d9713b270bda867841a68dea30632a314b1dd8eb3d5f25b2"
+    },
+    "source_sha256": {
+      "components/sceneutil/nifscenetraversal.hpp": "c639eb38d4ce959206a493aac988b05ec857e7e6e62e2ced58350869b645e7ac",
+      "components/sceneutil/nifscenetraversal.cpp": "70aa74938fcbcfb56b37cd6cc4483b535a649c6b53c32ed875602f7f0e9b9a43",
+      "components/nifosg/controller.cpp": "628572fd57cd4208137e7d873b0e09d2a2b5a795f445d7f98b9a031885c6fe7b",
+      "apps/components_tests/sceneutil/nifscenetraversal.cpp": "562413eca2e57d00fa44e64a45e0bf8fb858b4e9bf20cb1961b1449dd0bc9b43"
+    },
+    "post_test_changes": "Verification index and delivery audit only; production/test files unchanged after full checks.",
+    "changes": [
+      "An explicit object-local constructor composes initial root caches from a native parent independently of OSG drawing ancestors. updateObjectLocal and updateObjectLocalWithoutControllers require current placement on every pass. Reference-only and object-only entry points reject a mismatched binding before callbacks or projection.",
+      "Native parent validation precedes retained-parent/drawing changes. Between passes the own world cache stays unchanged until controllers finish, while nativeRootParentWorld exposes the current explicit parent to root controllers. Ordinary descendant caches still follow parent physical projection and child rebasing.",
+      "Root local physical writeback uses the native parent, while drawing projection uses actual external OSG ancestors. This preserves native scale separately and avoids applying placement twice.",
+      "The new mCollisionUpdate callback receives the exact animated native world after own controllers/composition and before flag/physical providers, so a physical owner can process each node before its children instead of using a globally precomposed animation batch. The callback input is new; the node drawing/cache handle is still the previous value until projection commits.",
+      "LookAtController uses the explicit parent for an object-local root. Reference roots still ignore synthetic placement and ordinary OSG/descendant behavior retains its prior path.",
+      "Tests cover updated-parent target production, previous own-cache visibility, real look-at rotation, scaled writeback, placement/entry validation, selected projection gates, pending40 first synchronization, hierarchy retirement and reentrant rejection."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-object-traversal-normal-01/verification.json",
+        "report_sha256": "510a3b2496e3ae967f1814de8f151524a5344fc4e7259831f25dbd0f2969bfa7",
+        "result": {
+          "executed": 2884,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d6900bb32bdb6fb1e92b12d9d06685bcf7d653597fe6cc16a086bcd9fadf5d72",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "dbf56c457aeb1b89830b4b377075ff2d333d780dca5a51791354dcaed1e9b89c",
+          "inventory_sha256": "89a86810325904c29e197c0f588272b7950cb01560406dc1179f0b5759aff0ba",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-object-traversal-sanitized-01/verification.json",
+        "report_sha256": "63ed80276c6ca6366f46954db394188c4e81ebc66361122d73d70b233d61b677",
+        "result": {
+          "executed": 2884,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0300b53bba84a94260010e7c1183cbeb0c52085f9c8d37aad08cbf6ad82ee73c",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "39f43617f4acaa38e8c603061fcd1f95fd2fc015a631ec1a037651b593802064",
+          "inventory_sha256": "8a4023c7cb6518113dbb08d192019143057e5e227f8c5dc7a6ad85f0465034df",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      }
+    },
+    "native_replay": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/normal-verification.json",
+        "report_sha256": "e62ae954e2e084cbdf6ec197e4f2f79ba585e10f1cec30e3e9e03bb864edebeb",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "c121d13de9f59f63e6d1727c7e254ad157fd2b6d9b50018773d4a8941c47f7ed",
+          "comparator_sha256": "f2da4a44b5e17c201131f8927ff48181fc2c1dd6c66d15f29434c7a53f546497",
+          "binary_sha256": "55c59610939cd7c1dd1eec734b3b1b9a91c81bbb0c6d96dfff7cdd6d7b524dcf",
+          "notes": "Original child+leaf branch replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/sanitized-verification.json",
+        "report_sha256": "8b23e31e218c274a4dc251b848c3440fc3c749f1f7cecc9a8334aa1aef8a6a2e",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "c121d13de9f59f63e6d1727c7e254ad157fd2b6d9b50018773d4a8941c47f7ed",
+          "comparator_sha256": "f2da4a44b5e17c201131f8927ff48181fc2c1dd6c66d15f29434c7a53f546497",
+          "binary_sha256": "fa97eafc1d3a467db9e26bfe050217f53091486745eea1eccd04ccc476e485f3",
+          "notes": "Original child+leaf branch replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      }
+    },
+    "cases": [
+      "NifSceneTraversalTest.ObjectLocalTraversalInterleavesCollisionTargetsWithUpdatedParentCaches",
+      "NifSceneTraversalTest.ObjectLocalRootWritesLocalRelativeToNativeParentRatherThanDrawingAncestors",
+      "NifSceneTraversalTest.ObjectLocalRootLookAtUsesExplicitNativeParentAndPreviousOwnCache",
+      "NifSceneTraversalTest.ObjectLocalPlacementAndEntryGuardsRejectBeforeControllersOrProjections",
+      "NifSceneTraversalTest.ObjectLocalSelectedProjectionGatesCollisionUpdateAndSettlesFirstSynchronization",
+      "NifSceneTraversalTest.CollisionUpdateRejectsReentryAndRetiredHierarchyBeforePhysicalReads"
+    ],
+    "native_provenance": {
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "cases": "build/oblivion-compat/m15/S4/node-controller-order-oracle-01/cases.json",
+      "cases_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+      "scope": "Replay retained independent original instruction results only. Select live007F and supported027F arithmetic,256 rows each; exclude037F extended precision. Reconstruct original child+leaf as an object-local branch with recorded current parent worlds supplied as inputs. Seed the initial old child cache through controllerless projection; restore its author local before callbacks. The original frame0 leaf zero/invalid cache is excluded; later cache/controller state continues naturally through8 frames. Original root/helper topology, native controller interpolation/time calculations and Havok stepping are not replayed. No new original game/instruction execution."
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/probe.cpp": "c121d13de9f59f63e6d1727c7e254ad157fd2b6d9b50018773d4a8941c47f7ed",
+      "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/compare.py": "f2da4a44b5e17c201131f8927ff48181fc2c1dd6c66d15f29434c7a53f546497",
+      "build/oblivion-compat/m15/S4/native-object-traversal-corpus-01/input.txt": "151abb6ddb0f04a6a122cc1c52facc4d7879408cbd59866e24bda53316f85006"
+    },
+    "inventory_review": "Both XML inventories contain identical2884 unique case names. Raw list hashes differ in diagnostic GetParam comments containing function pointers/object bytes; each helper independently matches its own binary inventory to XML.",
+    "warnings": "Normal and sanitizer component build logs contain no compiler warnings or errors.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Structural/compiler and full component inventories, actual ordinary-node/LookAt/projection semantics, pinned native controller/cache replay. Component-only addition has no automatic engine caller; engine/Python/schema suites and normal-input runtime were not repeated. App binaries must be rebuilt for subsequent engine integration/runtime courses.",
+    "limits": [
+      "Retains existing ordinary NifOsg::MatrixTransform and Group/Geode hierarchy restrictions; no special actor culling, Billboard/LOD policy or independent equipment asset ownership is inferred.",
+      "Collision update owns only its physical dispatch input boundary. A future owner must provide actual per-node physical controller ordering/clock advancement and supported raw selector/gravity/frame scheduling, resolve pending40 through its synchronization handler and prevent duplicate ordinary OSG updates.",
+      "Callbacks must preserve scene locals/hierarchy/placement except the existing explicit reference-update boundary. Exceptions can leave completed controller/projection nodes in place; arbitrary external controller/physics state is not rolled back.",
+      "No automatic actor construction, graph/filter initialization, native physical controller/force scheduling, contact/reaction/FSM/GetUp, or full S4 melee/mastery/input/view/device/FPS/interruption/savequitfreshprocess acceptance is closed."
+    ]
+  }
 }
