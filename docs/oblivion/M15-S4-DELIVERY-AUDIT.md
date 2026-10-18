@@ -5587,3 +5587,37 @@ AddRotation subtype's postpass from the implemented base gate; subtype selection
 math and runtime ownership remain open. First synchronization, actual scene
 scheduling/group/filter initialization, contact/reaction/FSM/GetUp and all full
 S4 normal-input and fresh-engine gameplay/restart acceptance remain open.
+
+
+### Pending blend scene synchronization reaches the owned body setter
+
+The previous chunk's required-first-sync rejection is replaced by the verified
+base pending path. The renamed owned/public blend scene entry stages native
+scene/body conversion, publishes the direct pose for either admitted motion,
+preserves packed velocities, forces, actual/stored motion and gains, then clears
+only 0x40. It retains phase 2/3 deferral. Invalid poses and throwing scene hooks
+leave this collision phase unchanged. The helper keeps forced velocity resets
+separate from first synchronization.
+
+Full normal and ASan/UBSan checks each pass all 2,907 component tests in 273
+suites and 1,637 engine tests in 122 suites, with exact inventories and no
+failures/skips. Both engines rebuild. The actual World fixture exercises
+successful sync and rollback with 0/1/2 workers, preserving controllers and the
+shared clock before continuing its existing physical-owner course. This is
+engine integration evidence, without normal game input or a contact-step claim.
+
+Fresh complete original handlers pass 720 cases; production comparisons each
+pass the 240 Single cases/3,600 fields, plus exact driver velocity/mode/ownership
+checks. Four captured negative controls distinguish pose omission, inappropriate
+velocity reset, premature pending clear and BodyT omission. Original fixtures
+have no native World and an already active island. Original World broadphase,
+contact and activation-island equivalence remain open; Bullet AABB publication
+uses the existing owned setter. ASan leak checks are disabled. Python/schema
+are unchanged and were not rerun.
+
+Tested source fingerprint: `9b6b741326d02ecca2de2360e7f2226286db8e4b5c93d910751eb28a3ff0d2d1`.
+See `blend_node_first_synchronization_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json` for hashes, retained attempts and limits.
+Automatic scene/controller scheduling, subtype handling, group/filter/capsule/
+root coordination, contact/reaction/FSM/GetUp and all remaining full M15S4
+normal-input and fresh-process gameplay/save-restart gates remain open.

@@ -606,10 +606,12 @@ namespace NifBullet
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
         // Scene entry applies the outer phase/flag gates before the inner
         // handler. Skipped nodes inspect no animated pose/frame/gravity and
-        // invoke no scene hook. A required first synchronization rejects without
-        // clearing40; its real body/scene owner must implement that boundary.
-        // Successful inner publication has the same per-node rollback contract.
-        std::optional<RagdollNativeBlendPublication> updateNativeSettledBlendNode(std::uint32_t nodeRecord,
+        // invoke no scene hook. Pending first synchronization directly publishes
+        // the scene pose in either actual motion, preserving velocities, forces,
+        // stored request and gains. Clear0x40 only after successful publication.
+        // The hook runs before body/flag writes; rejection preserves this phase.
+        // Inner publication has the same per-node rollback contract.
+        std::optional<RagdollNativeBlendPublication> updateNativeBlendSceneNode(std::uint32_t nodeRecord,
             const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
             std::uint32_t rawUpdateSelector, float nativeGravityZ,
             const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
@@ -715,8 +717,9 @@ namespace NifBullet
         std::vector<NativeForce> prepareNativeForces(
             std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies) const;
         void publishNativeForces(std::span<const NativeForce> forces);
-        void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool forced,
-            Nif::NativeTransformPrecision precision);
+        void synchronizeNativeScenePoses(std::span<const RagdollNativeScenePoseRequest> poses, bool allowDynamic,
+            bool resetVelocities, Nif::NativeTransformPrecision precision,
+            const std::function<void()>& beforePublish = {});
         void validateRestore(std::span<const RagdollBodyState> states) const;
         void validateNativeBlendStates(std::span<const RagdollNativeBlendState> states) const;
         std::vector<RagdollNativeBlendControllerState> prepareNativeBlendControllerRestore(

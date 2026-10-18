@@ -266,7 +266,7 @@ namespace MWPhysics
             const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
             const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene = {});
-        std::optional<NifBullet::RagdollNativeBlendPublication> updateActorRagdollSettledBlendNode(
+        std::optional<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlendSceneNode(
             const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
             const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene = {});

@@ -15591,3 +15591,39 @@ then performs an additional matrix postpass and writes node world rotation even
 when the base skipped. This is a subtype boundary, not a completed execution or
 arithmetic proof. It does not establish which actors/references instantiate that
 subtype. No automatic actor owner is wired using a base-only assumption.
+
+
+### Pending blend-node first synchronization preserves velocities
+
+The owned scene entry now implements the prior pending-sync boundary and is
+named `updateNativeBlendSceneNode` (`updateActorRagdollBlendSceneNode` through
+the scheduler). Complete original 88EDC0/89EAE0 probes establish that pending
+0x40 selects a direct pose setter before the ordinary actual-motion choice.
+Unlike ordinary 897510, the blend dispatcher does not invoke the separate
+89EE00 velocity reset. Dynamic and Keyframed poses therefore synchronize while
+all eight velocity lanes, stored request and gains survive. The pending bit
+clears only after successful body publication; phases 2/3 retain it.
+
+Fresh original probes pass 720 cases with plain and BodyT wrappers, actual
+motion getters 2/6, six selectors, five pending flag words, two scene positions
+and three x87 precision words. Only Windows critical section enter/leave are
+stubs. The fixture has no native World and an already active island. The KEY
+vtable/getter and constructor store are verified from the hash-pinned image;
+these synthetic fixtures do not execute the motion constructors.
+
+Owned normal and ASan/UBSan comparisons each pass all 240 Single cases and
+3,600 captured-output fields. Positions match exactly; maximum rotation-basis
+error is 3.422854177870249e-8 within the declared 1e-6 tolerance. The drivers also
+require exact packed velocity bits, unchanged actual/stored motion, hook-before-
+write order and complete body teardown. Captured negative controls reject
+480/480/240/240 rows for omitted pose sync, forced-style reset, premature pending
+clear and omitted BodyT correction. Raw source/binary/corpus hashes and bounded
+scope are in `blend_node_first_synchronization_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+The existing pose helper now separates Dynamic admission from velocity reset.
+Existing forced and keyframed callers retain their respective behavior. A scene
+hook runs after validation and before body/flag writes; invalid input or hook
+rejection preserves pose, flags and sleeping state. Automatic actor ownership,
+World/contact equivalence, AddRotation and gameplay/restart acceptance remain
+separate open gates.

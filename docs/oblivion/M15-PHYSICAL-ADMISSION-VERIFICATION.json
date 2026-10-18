@@ -6091,5 +6091,282 @@
       "Scene hooks execute under the World lock and cannot reenter physics. Earlier node/controller phases may already be published when a later collision phase rejects; no whole-frame rollback is claimed.",
       "Contact/reaction/FSM/GetUp, capsule/reference/rootmotion coordination and all remaining melee/block/mastery/drop/effects/input/view/device/FPS/interruption/savequitfreshprocess courses remain open. Full M15S4 is not complete."
     ]
+  },
+  "blend_node_first_synchronization_followup": {
+    "status": "Owned base blend scene entry now implements pending first synchronization, including body pose publication and success-only pending-bit clearing. Automatic actor scene ownership, original World/contact comparison and full M15S4 acceptance remain open.",
+    "supersedes": "outer_blend_scene_dispatch_followup required-sync rejection boundary only; its original integer-dispatch evidence and subtype/ownership limits remain valid.",
+    "source": {
+      "head": "c7ce43d4ffbfd57b3cc38dc02bf781fa08762b3f",
+      "source_fingerprint": "9b6b741326d02ecca2de2360e7f2226286db8e4b5c93d910751eb28a3ff0d2d1"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "fccadf16eefa61c447e62e49ef1aabaf054c52473b69011523f11df7dfbc8633",
+      "components/nifbullet/actorragdollphysics.cpp": "e1bb1a1771c21a05ab6327284f809211a4544b771f1b3eab350d8741985cac0d",
+      "apps/openmw/mwphysics/physicssystem.hpp": "4a40aeecc3f09ff028d7bbe0f67e5fe4ef8e53360c6f0c3eeae1259a43145dd0",
+      "apps/openmw/mwphysics/physicssystem.cpp": "413abae345a7442f121f6514746e404d79bd5b77f7f59bbbeb7ebfa94f87c805",
+      "apps/openmw/mwphysics/mtphysics.hpp": "f7de7831fd78dce4d402c622de3c8f07f053d40f719fb581daf474ebb3169e1a",
+      "apps/openmw/mwphysics/mtphysics.cpp": "3fcf981fd572d1513bb83fdb6fa0fc0b674d05ec6d18bb17b1a987a187fc5829",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "e17ea53005fcd56cf5d9f50307afcc3037e3b2ad3278c1c58109c5cf51099adf",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "dd28509f53b23e97af6a54fbdc7c16e94dfeed6f5e584be2ba42ef2fdcc0480f"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only. Source/tests remain exactly as verified.",
+    "changes": [
+      "Rename the settled entry to updateNativeBlendSceneNode and public updateActorRagdollBlendSceneNode now that it also handles pending synchronization. Direct updateNativeBlendNode still exposes the separate inner handler.",
+      "Pending 0x40 selects the existing native scene/body target conversion and direct pose setter for both admitted Dynamic and Keyframed actual modes. Prepared frame/gravity are unused. Preserve all eight velocity lanes, forces, actual mode, stored request and gains.",
+      "Scene helper separates Dynamic admission from velocity-reset policy. Existing forced SetPos/SetAngle publication retains its conditional resets; existing keyframed publication retains its admission/precision behavior.",
+      "Stage pose conversion/validation, invoke the scene hook before body/flag writes, publish current/interpolation poses and AABBs through the existing owned setter, then clear only 0x40 from live flags. A throwing hook or invalid pose preserves the pending bit, pose and sleeping state. Earlier traversal/controller phases are not rolled back.",
+      "Phases 2/3 still skip pending synchronization. Ordinary settled blend behavior uses the prior live Single inner path. Scheduler keeps its worker barrier and World lock; no automatic driver or duplicate clock/controller tick is installed."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/blend-first-sync-normal-01/verification.json",
+        "report_sha256": "42c88de82404fd4b5252e2d6531d15ec0e9e56d9d2187ff60fab36e0de3b8775",
+        "results": {
+          "components": {
+            "executed": 2907,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b2fcb1588f68f31e670e69a9cc95b4cca918ef862b9fc8a1acd78fed6f56a045",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "3f0e5846edff509c8a70ea04671eca8af4f98c1ef70cac5a36dfa4aa84a936d7",
+            "inventory_sha256": "8f626cdd6576b77a2f648fb422353ce21b44bea7837896b8f300f04f4cbdf127",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4b52cdee1c9812da8f24439a0c4c2ee389d0497443ccfd90b2d21a081e08e04a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "86789bb6595d3ba359bd2d5a42145a547623f6bb73ce29d7648d4e971f1d9383",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "a85dc001b84b727f5ca263e46fae26a11a8180235d9c1698620b5c1ae955f14f"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/blend-first-sync-sanitized-01/verification.json",
+        "report_sha256": "c40a52cd406f04c56295ab964e31639252b8774c8ab1dd7dc8301b6cc5407244",
+        "results": {
+          "components": {
+            "executed": 2907,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b00057c75b7fbcc6bf0b8fb3899ded54d02ea59901a6f5cf807145084c708ed8",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "800e0bef9993aec209f1430ae96d3b89033a7361018bf1602901fc05c25559e1",
+            "inventory_sha256": "44f22dad8c4c5aa57aa9286a534c76c19a74942f9da60b58c334d595f4a2d99a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1637,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3140265c276e9e69411fadb2188243e7624d7acc1565155b68b7a3fd217b3dbf",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "ab1d9bd6daecf70d07dcb670cac9fcb3f7acc2f3d49509e847cb38e3598b88af",
+            "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 273,
+          "engine": 122
+        },
+        "openmw_sha256": "6496007c3c67356938ef8658b6edf2c57922b5af244b6b1054f1dd11699937e7"
+      }
+    },
+    "native_comparisons": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/normal-verification.json",
+        "report_sha256": "18778f729f8992924dc544b92fa784f4e0735be59345aa65d51d9814f3498c12",
+        "result": {
+          "passed": true,
+          "cases": 240,
+          "checks": 3600,
+          "mismatches": [],
+          "position_tolerance": 1e-06,
+          "basis_tolerance": 1e-06,
+          "maximum_position_error": 0,
+          "maximum_basis_error": 3.422854177870249e-08,
+          "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-first-sync-oracle-03/cases.json",
+          "source_sha256": "05c25a27b28d12f1235cd1505b85162f4cb02eaca3c138427cbd43ff296be8bc",
+          "driver_sha256": "257b9e3c81809eeac4db09381b3372fc3aca9e3ff25aeefbaea9c1345bdec05b",
+          "comparator_sha256": "a529bfa6d8c34b46581bbeb3b96b2201a0be6bf8154ca15bdb4e9b8938feaac3",
+          "binary_sha256": "7ba4955416419d9b29ef464387e8288fc58be0a08ae0d17702f91b0a026b0356",
+          "output_sha256": "ae5fd927e497ee78a8e4a9d5032cc606253542382d1c552df36147135e9cdb15",
+          "scope": "Actual owned Dynamic/KEY first-sync scene entry, fixed no-World original fixtures, all 240 Single-precision rows. Includes both wrapper forms, selectors, live flags and full pose basis; exact flags/hook/result classification. Driver separately requires all eight velocity bits and stored/actual modes to remain unchanged, hook-before-write order and complete body teardown. Native quaternion basis projected in Python for unchanged 1e-6 tolerance; no World contact/substep or actual game input acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/sanitized-verification.json",
+        "report_sha256": "829a5551d62bd538f40499c0225a8a8e210503bfdc91076f9787870c66f39f1d",
+        "result": {
+          "passed": true,
+          "cases": 240,
+          "checks": 3600,
+          "mismatches": [],
+          "position_tolerance": 1e-06,
+          "basis_tolerance": 1e-06,
+          "maximum_position_error": 0,
+          "maximum_basis_error": 3.422854177870249e-08,
+          "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/blend-first-sync-oracle-03/cases.json",
+          "source_sha256": "05c25a27b28d12f1235cd1505b85162f4cb02eaca3c138427cbd43ff296be8bc",
+          "driver_sha256": "257b9e3c81809eeac4db09381b3372fc3aca9e3ff25aeefbaea9c1345bdec05b",
+          "comparator_sha256": "a529bfa6d8c34b46581bbeb3b96b2201a0be6bf8154ca15bdb4e9b8938feaac3",
+          "binary_sha256": "1797f1e709dbf9fa95c08c6167c6e524934487f0641558be6534139916c3c755",
+          "output_sha256": "ae5fd927e497ee78a8e4a9d5032cc606253542382d1c552df36147135e9cdb15",
+          "scope": "Actual owned Dynamic/KEY first-sync scene entry, fixed no-World original fixtures, all 240 Single-precision rows. Includes both wrapper forms, selectors, live flags and full pose basis; exact flags/hook/result classification. Driver separately requires all eight velocity bits and stored/actual modes to remain unchanged, hook-before-write order and complete body teardown. Native quaternion basis projected in Python for unchanged 1e-6 tolerance; no World contact/substep or actual game input acceptance."
+        }
+      }
+    },
+    "original_oracle": {
+      "report": "build/oblivion-compat/m15/S4/blend-first-sync-oracle-03/verification.json",
+      "report_sha256": "1130e7b5185d4a62eda079c3ed2ef195438ec4b327ba5559512450a3f556e429",
+      "result": {
+        "passed": true,
+        "cases": 720,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "acecb2def704172e365ae5702d1f3121f1aa47f312ed048bc81474357fafdb19",
+        "cases_sha256": "05c25a27b28d12f1235cd1505b85162f4cb02eaca3c138427cbd43ff296be8bc",
+        "scope": "Complete original88EDC0 pending blend dispatcher through actual89EAE0, scene transform conversion and direct body pose setters. Actual plain and BodyT wrappers with actual motion getters2/6, three x87 precision words, six raw selectors, five pending flag words, two scene positions, nonzero/signedzero four-lane velocities. Only Windows critical section enter/leave are stubs. No native World attached, island already active. Node unchanged; full return/ESP/callee-saved/FPCW and exact all-lane velocity retention verified. Phase2/3 retain pending, other phases clear it. No World broadphase/contact, live game input or runtime acceptance."
+      },
+      "original_motion_scope": "Synthetic actual sphere type2 and Keyframed type6 motions. Getter6 is verified from vtable A9AE10+8=911780 and constructor 8EA140 store at 8EA168, with exact executable bytes asserted in the probe. No constructor execution is claimed for these motion fixtures."
+    },
+    "captured_negative_controls": {
+      "report": "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/captured-controls-verification.json",
+      "report_sha256": "e0e0f3b1f84fd24d0900319b2bff3b2fd5c9dd4bdc6664fb590b88c26d467c1a",
+      "result": {
+        "passed": true,
+        "cases": 720,
+        "negative_control_mismatches": {
+          "omit_first_sync_pose": 480,
+          "reset_velocities_like_forced_sync": 480,
+          "clear_pending_in_deferred_phases": 240,
+          "omit_bodyt_correction": 240
+        },
+        "source_sha256": "05c25a27b28d12f1235cd1505b85162f4cb02eaca3c138427cbd43ff296be8bc",
+        "inspector_sha256": "871574e458cb007da7a829a8b34d38e62567da23ecc4da4a3a0e08cc85eb1879",
+        "scope": "Captured original-output controls only, no production invocation or game input. Three x87 precision words; Actual Dynamic2/KEY6 getters in original fixtures."
+      }
+    },
+    "drivers": {
+      "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/probe.cpp": "257b9e3c81809eeac4db09381b3372fc3aca9e3ff25aeefbaea9c1345bdec05b",
+      "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/compare.py": "a529bfa6d8c34b46581bbeb3b96b2201a0be6bf8154ca15bdb4e9b8938feaac3",
+      "build/oblivion-compat/m15/S4/blend-first-sync-corpus-02/captured-controls.py": "871574e458cb007da7a829a8b34d38e62567da23ecc4da4a3a0e08cc85eb1879"
+    },
+    "cases": [
+      "ActorRagdollPhysicsTest.SceneNodeFirstSyncPreservesMotionRequestGainsAndPackedVelocities",
+      "ActorRagdollPhysicsTest.SceneNodeFirstSyncRejectsInvalidPoseAndHookBeforeBodyOrFlagWrites",
+      "ActorRagdollPhysicsTest.SceneNodeOuterSkipsPreserveSleepingBodiesAndIgnoreUnusedInputs",
+      "ActorRagdollPhysicsTest.SceneNodeActiveDispatchPreservesTheSeparateInnerHandlerBoundary",
+      "OblivionWorld.PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval"
+    ],
+    "engine_scope": "The actual existing PhysicsSystem fixture runs with 0/1/2 workers, including pending defer, invalid-target rejection, hook rollback, successful sync, packed velocity and mode/request retention, no controller/shared-cache tick, and continuation through existing node/frame/snapshot/removal checks. It is not a game-input acceptance course.",
+    "retained_evidence": [
+      "blend-first-sync-oracle-01:240 Dynamic cases at double/extended x87 precision",
+      "blend-first-sync-oracle-02:360 Dynamic cases including Single",
+      "blend-first-sync-corpus-01:120 Single cases pass both builds",
+      "blend-first-sync-syntax-01:initial World test snapshot-field naming compile error, corrected before full builds",
+      "blend-first-sync-syntax-02:corrected World fixture compiles"
+    ],
+    "additional_subtype_inputs": {
+      "build/oblivion-compat/m15/S4/blend-addrotation-construction-01/report.json": {
+        "report_sha256": "1e56d2137e8bc6e0adf84da9021c018988e0a7dee4ac6121cc7393ab98288858",
+        "result": {
+          "passed": true,
+          "constructor_profiles": 12,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "d625216b0a929f82744aef85ffef3da2e3f1080e2aee022dff000fba1f64272b",
+          "cases_sha256": "23f32cdbf0decf99eb61a744ed506602bcead72d20b65b380c8f0b851f43463f",
+          "extra_rotation_initialized": "identity9dwords",
+          "constructor_entry": "88E7C0",
+          "direct_call_sites": [
+            "0x4387c9"
+          ],
+          "caller": "438730",
+          "caller_names": [
+            "Bip01 Spine2",
+            "Bip01 Spine1",
+            "Bip01 Spine"
+          ],
+          "scope": "Full original AddRotation constructor88E7C0 through base88EB60 and initialization callees. Windows InterlockedIncrement primitive boundary only. Verify unrelated prefilled bytes, three x87 precision words, final vtable/base defaults and identity extra matrix. Separate hash-pinned static direct-call scan finds4387C9 in438730; caller passes Spine2/Spine1/Spine names to virtual58, checks returned node collision through560920, allocates subtype, copies base via88E880 and replaces node collision via435CE0. The caller branch and high-level actor ownership are not executed/proved by this constructor probe. Extra-matrix live producer remains unresolved."
+        }
+      },
+      "build/oblivion-compat/m15/S4/blend-addrotation-postpass-oracle-01/verification.json": {
+        "report_sha256": "a3fa3624e736b33af2ace167517cd8639ebf84799dc093ebd028e2deca4d8592",
+        "result": {
+          "passed": true,
+          "cases": 720,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "4139897755f9426e3ebd4ed011dd89d82d12bc0817a30d1bd9afd5eaa8aea504",
+          "cases_sha256": "d0a9af06cfa088fc79b091fc610c3219033c27a6c175efbdb0be1f3b84919d75",
+          "scope": "Complete original AddRotation wrapper88E9F0 and two actual7100A0 products with no stubs. Sixty deterministic parent/local/extra rigid matrix triples, three x87 precision words, absent-body bypass, phase3 skip, settled inactive skip and phase2 pending defer. Assert inner handlers never execute; exact return/ESP/callee-saved/FPCW, author locals, position/scale, parent and collision object retained. Capture world rotation fields only. No active base-handler arithmetic, extra-matrix producer, null-parent admission, game/engine ownership or runtime acceptance."
+        }
+      },
+      "build/oblivion-compat/m15/S4/blend-addrotation-producer-oracle-01/verification.json": {
+        "report_sha256": "bcc0955f94abebeecc5a5bfeddd4e4ccff5fffb667cc607c67f52939fdd0abb0",
+        "result": {
+          "passed": true,
+          "cases": 315,
+          "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+          "probe_sha256": "13fba2b08d88d49fb8f2ca79b4232dccae8af9eb428cf57db0a7fc28514ee82f",
+          "cases_sha256": "a9e299f02b0d12fadd2a5941d73e8eda5601963aafb0fd91561638f7f22eda40",
+          "scope": "Full original47CAF0 producer with actual7116A0 angle-to-matrix arithmetic and NiRTTI getters, no stubs. Three ancestor target nodes and containing parent, seven angles including signedzero, three x87 precision words, missing-parent and actual base/AddRotation subtype patterns. Assert fullreturn/ESP/callee-saved/FPCW; capture nine extra-rotation words per target. Missing any of three required parent links returns before all writes; non-AddRotation nodes are ignored. This executes the local producer only, not its live caller, semantic angle source, scene/physics scheduling or game/engine input."
+        }
+      }
+    },
+    "additional_subtype_scope": "Next-work input only, no new AddRotation production support. Full constructor 12 seeded profiles initializes extra matrix to identity; separate static caller examines three named spine nodes. Full postpass 720 cases executes original wrapper/two matrix products with base skipped or absent, no stubs. Full local producer47CAF0 passes315 cases with actual angle-to-matrix arithmetic and subtype gates; semantic angle source/live caller and high-level owner remain open.",
+    "warnings": "Both full build logs retain unchanged World-test unused context and dangling-else diagnostics; review logs before committing.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "Original full-handler fixtures have no native World and an already active island. Production refreshes Bullet AABBs and activates owned groups through the existing setter; original World broadphase/contact/island equivalence is not established by this corpus.",
+      "Original720 cases span all three x87 precision settings; actual owned comparator intentionally covers all 240 Single cases, matching this live scene API. It compares pose origin/basis at predeclared 1e-6 tolerance and exact all-lane velocity bits/flags/classification, not a general bit-exact quaternion representation.",
+      "Base bhkBlendCollisionObject only; AddRotation postpass, actual subtype construction, raw-selector/frame producers, automatic renderer ownership and coherent group/filter/capsule/root coordination remain open.",
+      "Scene target inputs retain the existing rigid-matrix admission. Native separate scale, actual actor morphology and placement producers remain future-owner responsibilities.",
+      "Scene hooks cannot reenter physics. Per-collision staging does not promise whole-traversal rollback. Python/schema unchanged and prior 321 Python tests not repeated.",
+      "No original game or fresh engine gameplay/save-restart course was launched for this chunk. Contact/reaction/FSM/GetUp and all remaining M15S4 normal-input/end-to-end acceptance remain open."
+    ]
   }
 }

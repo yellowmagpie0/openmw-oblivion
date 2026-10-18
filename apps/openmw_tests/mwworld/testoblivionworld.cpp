@@ -900,31 +900,47 @@ namespace
                 const auto unusedFrame = std::numeric_limits<float>::quiet_NaN();
                 unsigned outerHooks = 0;
                 const auto outerHook = [&](auto values) { ++outerHooks; EXPECT_EQ(values.size(), 1u); };
-                EXPECT_THROW(physics.updateActorRagdollSettledBlendNode(previous, 8, invalidTarget, unusedFrame, 3),
+                EXPECT_THROW(physics.updateActorRagdollBlendSceneNode(previous, 8, invalidTarget, unusedFrame, 3),
                     std::invalid_argument);
-                EXPECT_THROW(physics.updateActorRagdollSettledBlendNode(ptr, 999, invalidTarget, unusedFrame, 3),
+                EXPECT_THROW(physics.updateActorRagdollBlendSceneNode(ptr, 999, invalidTarget, unusedFrame, 3),
                     std::invalid_argument);
                 (*outerState.mNativeBlends)[0].mCollisionFlags = 8;
                 physics.restoreActorRagdollSnapshot(ptr, outerState, base, path.value());
-                EXPECT_FALSE(physics.updateActorRagdollSettledBlendNode(ptr, 8, invalidTarget, unusedFrame, 0, outerHook));
+                EXPECT_FALSE(physics.updateActorRagdollBlendSceneNode(ptr, 8, invalidTarget, unusedFrame, 0, outerHook));
                 EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), outerState);
                 (*outerState.mNativeBlends)[0].mCollisionFlags = 0x49;
                 physics.restoreActorRagdollSnapshot(ptr, outerState, base, path.value());
                 for (const auto selector : {2u, 3u})
-                    EXPECT_FALSE(physics.updateActorRagdollSettledBlendNode(ptr, 8, invalidTarget, unusedFrame,
+                    EXPECT_FALSE(physics.updateActorRagdollBlendSceneNode(ptr, 8, invalidTarget, unusedFrame,
                         selector, outerHook));
-                EXPECT_THROW(physics.updateActorRagdollSettledBlendNode(ptr, 8, sceneTarget, 1.f / 120, 0, outerHook),
+                EXPECT_THROW(physics.updateActorRagdollBlendSceneNode(ptr, 8, invalidTarget, unusedFrame, 0, outerHook),
                     std::invalid_argument);
+                EXPECT_THROW(physics.updateActorRagdollBlendSceneNode(ptr, 8, sceneTarget, unusedFrame, 0,
+                    [](auto) { throw std::runtime_error("reject first synchronization"); }), std::runtime_error);
                 EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), outerState);
                 EXPECT_EQ(outerHooks, 0u);
+                const auto firstSyncVelocities = physics.captureActorRagdollNativePackedVelocities(ptr);
+                const auto firstSyncMotion = physics.captureActorRagdollNativeMotionModes(ptr);
+                const auto firstSync = physics.updateActorRagdollBlendSceneNode(ptr, 8, sceneTarget, unusedFrame, 0, outerHook);
+                ASSERT_TRUE(firstSync); EXPECT_EQ(firstSync->mCollisionFlags, 9u);
+                EXPECT_FALSE(firstSync->mSceneTarget);
+                EXPECT_EQ(physics.captureActorRagdollNativePackedVelocities(ptr)[0].mVelocities,
+                    firstSyncVelocities[0].mVelocities);
+                EXPECT_EQ(physics.captureActorRagdollNativeMotionModes(ptr), firstSyncMotion);
+                const auto firstSyncSnapshot = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+                EXPECT_EQ((*firstSyncSnapshot.mNativeBlends)[0].mRequestedMotion,
+                    (*outerState.mNativeBlends)[0].mRequestedMotion);
+                EXPECT_EQ(firstSyncSnapshot.mNativeControllers, outerState.mNativeControllers);
+                EXPECT_EQ(physics.captureNativeBlendTimeCache(), beforePhysicalCache);
+                EXPECT_EQ(outerHooks, 1u);
                 (*outerState.mNativeBlends)[0].mCollisionFlags = 9;
                 physics.restoreActorRagdollSnapshot(ptr, outerState, base, path.value());
-                EXPECT_FALSE(physics.updateActorRagdollSettledBlendNode(ptr, 8, invalidTarget, unusedFrame, 3, outerHook));
+                EXPECT_FALSE(physics.updateActorRagdollBlendSceneNode(ptr, 8, invalidTarget, unusedFrame, 3, outerHook));
                 EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), outerState);
                 const auto outerBlend = physics.captureActorRagdollBlendControllers(ptr)[0].mState;
                 const auto outerVelocity = physics.captureActorRagdollVelocityControllers(ptr)[0].mState;
-                ASSERT_TRUE(physics.updateActorRagdollSettledBlendNode(ptr, 8, sceneTarget, 1.f / 120, 0, outerHook));
-                EXPECT_EQ(outerHooks, 1u);
+                ASSERT_TRUE(physics.updateActorRagdollBlendSceneNode(ptr, 8, sceneTarget, 1.f / 120, 0, outerHook));
+                EXPECT_EQ(outerHooks, 2u);
                 EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState, outerBlend);
                 EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState, outerVelocity);
                 EXPECT_EQ(physics.captureNativeBlendTimeCache(), beforePhysicalCache);

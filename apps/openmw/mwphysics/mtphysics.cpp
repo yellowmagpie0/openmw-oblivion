@@ -1821,14 +1821,14 @@ namespace MWPhysics
             preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ, publishScene);
     }
 
-    std::optional<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollSettledBlendNode(
+    std::optional<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollBlendSceneNode(
         const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
         float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
         const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
-        return actorRagdoll(ptr).mPhysics.updateNativeSettledBlendNode(nodeRecord, animatedWorld,
+        return actorRagdoll(ptr).mPhysics.updateNativeBlendSceneNode(nodeRecord, animatedWorld,
             preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ, publishScene);
     }
 

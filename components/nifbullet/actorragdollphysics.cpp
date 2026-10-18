@@ -2381,17 +2381,18 @@ namespace NifBullet
     void ActorRagdollPhysics::synchronizeNativeKeyframedPoses(
         std::span<const RagdollNativeScenePoseRequest> poses)
     {
-        synchronizeNativeScenePoses(poses, false, Nif::NativeTransformPrecision::Double);
+        synchronizeNativeScenePoses(poses, false, false, Nif::NativeTransformPrecision::Double);
     }
 
     void ActorRagdollPhysics::synchronizeNativeForcedPoses(
         std::span<const RagdollNativeScenePoseRequest> poses, Nif::NativeTransformPrecision precision)
     {
-        synchronizeNativeScenePoses(poses, true, precision);
+        synchronizeNativeScenePoses(poses, true, true, precision);
     }
 
     void ActorRagdollPhysics::synchronizeNativeScenePoses(
-        std::span<const RagdollNativeScenePoseRequest> poses, bool forced, Nif::NativeTransformPrecision precision)
+        std::span<const RagdollNativeScenePoseRequest> poses, bool allowDynamic, bool resetVelocities,
+        Nif::NativeTransformPrecision precision, const std::function<void()>& beforePublish)
     {
         require(Nif::Detail::NativeTransformMath(precision).valid(), "invalid native scene arithmetic precision");
         struct Pending
@@ -2410,7 +2411,7 @@ namespace NifBullet
             const auto found = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
                 [&](const auto& body) { return body.mRecord == request.mRecord; });
             require(found != mImpl->mBodies.end(), "unknown native scene pose identity");
-            require(forced || found->mMotion == RagdollNativeMotion::Keyframed,
+            require(allowDynamic || found->mMotion == RagdollNativeMotion::Keyframed,
                 "native scene pose publication requires keyframed motion");
             const auto native = ragdollNativeSceneBodyTargetPose(request.mWorldPose, found->mSceneOffset, precision);
             auto pose = btTransform(btQuaternion(native.mRotation[0], native.mRotation[1],
@@ -2419,7 +2420,7 @@ namespace NifBullet
             pose *= found->mCenterFrame;
             validatePose(pose);
             Pending change{&*found, pose};
-            if (forced)
+            if (resetVelocities)
             {
                 ESM4::PhysicalWorldSceneVelocities input;
                 for (unsigned axis = 0; axis < 3; ++axis)
@@ -2435,6 +2436,7 @@ namespace NifBullet
             }
             pending.push_back(change);
         }
+        if (beforePublish) beforePublish();
         for (const auto& change : pending)
             mImpl->activateGroup(change.mOwned->mActivationGroup);
         for (const auto& change : pending)
@@ -3052,7 +3054,7 @@ namespace NifBullet
         return std::move(publications.front());
     }
 
-    std::optional<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeSettledBlendNode(
+    std::optional<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendSceneNode(
         std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
         std::uint32_t rawUpdateSelector, float nativeGravityZ,
         const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
@@ -3062,8 +3064,22 @@ namespace NifBullet
         require(target != mImpl->mBlendTargets.end(), "unknown native blend collision node");
         const auto dispatch = ESM4::resolvePhysicalBlendNodeDispatch(target->mState.mCollisionFlags, rawUpdateSelector);
         if (dispatch.mRoute == ESM4::PhysicalBlendNodeRoute::Skip) return std::nullopt;
-        require(dispatch.mRoute == ESM4::PhysicalBlendNodeRoute::Blend,
-            "native blend node requires first synchronization");
+        if (dispatch.mRoute == ESM4::PhysicalBlendNodeRoute::FirstSynchronization)
+        {
+            // Pending0x40 selects89EAE0's direct pose setter for either actual
+            // motion. Unlike ordinary897510,88EDC0 does not invoke89EE00's
+            // velocity reset. Keep the pending bit until the setter succeeds.
+            RagdollNativeBlendPublication publication{target->mState.mBodyRecord,
+                static_cast<std::uint16_t>(target->mState.mCollisionFlags & ~dispatch.mClearFlagsAfterSuccess),
+                std::nullopt};
+            const std::array<RagdollNativeScenePoseRequest, 1> poses{{{publication.mRecord, animatedWorld}}};
+            synchronizeNativeScenePoses(poses, true, false, Nif::NativeTransformPrecision::Single, [&] {
+                if (publishScene) publishScene(std::span<const RagdollNativeBlendPublication>(&publication, 1));
+            });
+            target->mState.mCollisionFlags &= ~dispatch.mClearFlagsAfterSuccess;
+            publication.mCollisionFlags = target->mState.mCollisionFlags;
+            return publication;
+        }
         return updateNativeBlendNode(nodeRecord, animatedWorld, preparedFrameSeconds,
             rawUpdateSelector, nativeGravityZ, publishScene);
     }
