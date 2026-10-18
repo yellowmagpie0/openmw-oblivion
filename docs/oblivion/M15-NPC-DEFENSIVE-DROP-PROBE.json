@@ -3240,7 +3240,7 @@
     "Current Bullet adapter collision checks are not original Havok CCD/quality or exact trajectory equivalence.",
     "Completed-contact restart only; broader input/view/FPS, mastery, effects, reactions, armor/shield and initially broken items remain open.",
     "Captured mixer output and two successful Hand requests are retained. No two-voice isolation claim for identical chosen stock variants.",
-    "Additional sanitizer copied-save altered-pitch camera experiment has a dark view and remains unresolved; no instrumented floor-visibility acceptance is claimed."
+    "The first sanitizer copied-save camera capture was dark; unchanged save/binary with explicit focus and longer wait shows floor and blade. Both timing and focus changed, so their individual causes are not isolated. This remains a camera-only diagnostic."
   ],
   "full_M15S4_acceptance": false,
   "instrumented_additional_camera_experiment": {
@@ -3398,5 +3398,239 @@
       ],
       "executable_sha256": "ae1e3fee5982021f27afe759c51bdeffaaedbf11e1879535aa3f742821d628c6"
     }
+  },
+  "instrumented_camera_focus_timing_retry": {
+    "preregistered_acceptance": {
+      "scope": "Same exact staged save as failed camera01, unchanged engine binary; focus explicitly and wait90wall seconds before capture. Tests camera initialization timing/focus only.",
+      "expected": "Visible dungeon floor and dropped blade; reject dark empty view.",
+      "prior_failure": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-01/visual-review.json"
+    },
+    "camera": {
+      "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+      "source_sha256": "fa5b7eb88d6473fefbd49155cd47064f72888435973b03173e1777cda78598cd",
+      "input_sha256": "fc68f8c41671f9f1257e4c2ea1d47bf70ea2bb27cb8bb7e6d5c7fe3cc92d9a5f",
+      "before_player_position": [
+        672.0,
+        -40.0,
+        -109.68915557861328,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "after_player_position": [
+        672.0,
+        -40.0,
+        -109.68915557861328,
+        0.949999988079071,
+        0.0,
+        -0.3805883824825287
+      ],
+      "target_body_position": [
+        645.62646484375,
+        25.918163299560547,
+        -109.75679016113281
+      ],
+      "scope": "Copied-save camera orientation only. Additional visual inspection of the actual saved physical item; not ordinary mouse look or exact-lineage restart proof."
+    },
+    "review": {
+      "passed": true,
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/npc-defensive-blade-on-floor.png",
+        "sha256": "d97fc33aa06d9052d90c3c3fa4e4a1744f6b94b93f03449f312981eeb4e25c6e"
+      },
+      "same_staged_bytes_as_failed_01": true,
+      "same_executable_as_failed_01": true,
+      "observations": [
+        "Dungeon floor and exposed dropped blade visible near NPC feet.",
+        "Crosshair tooltip reads Rusty Iron Shortsword.",
+        "Player hands and NPC hands are unarmed."
+      ],
+      "scope": "Copied-save camera orientation only. Additional visual inspection of the actual saved physical item; not ordinary mouse look or exact-lineage restart proof.",
+      "limits": "Explicit focus and longer wait changed together; this does not isolate which caused the earlier dark capture or prove a general camera fix."
+    },
+    "process_epoch": {
+      "pid": 460149,
+      "start_ticks": 10498445,
+      "clock_ticks_per_second": 100,
+      "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+      "command": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/config",
+        "--no-grab",
+        "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+      ],
+      "executable_sha256": "ae1e3fee5982021f27afe759c51bdeffaaedbf11e1879535aa3f742821d628c6"
+    },
+    "launcher": {
+      "command": [
+        "/usr/bin/python3",
+        "scripts/oblivion_compat.py",
+        "scenario",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/manifest.json",
+        "--output",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first",
+        "--variable",
+        "openmw=/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "--variable",
+        "resources=/home/maciek/openmw-oblivion/openmw-oblivion/build/resources",
+        "--variable",
+        "stationary_fixture=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stationary-matrix-seed0-cap60-01/fixture",
+        "--variable",
+        "oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data"
+      ],
+      "scenario_runner_pid": 460138,
+      "scenario_returncode": 0,
+      "monitor_returncode": 0,
+      "binary_sha256_before_launch": "ae1e3fee5982021f27afe759c51bdeffaaedbf11e1879535aa3f742821d628c6"
+    },
+    "manifest": {
+      "schema_version": 1,
+      "name": "native-defensive-npc-break-floor-visual-sanitized-02",
+      "cwd": "{source}",
+      "files": [
+        {
+          "path": "config/openmw.cfg",
+          "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{stationary_fixture}\"\ncontent=Oblivion.esm\ncontent=M15StationaryOpponent.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=m15-block-recovery.omwscripts\n"
+        },
+        {
+          "path": "config/settings.cfg",
+          "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 1\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n"
+        },
+        {
+          "path": "test-data/events.txt",
+          "content": "at 0 command player getav Health\nat 0 command player getav Magicka\nat 0 command player getav Fatigue\nat 0 command player getdead\n"
+        },
+        {
+          "path": "config/input_v3.xml",
+          "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n<Control name=\"51\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\"><KeyBinder key=\"5\" direction=\"INCREASE\" /><Channel number=\"51\" direction=\"DIRECT\" percentage=\"1\" /></Control>\n</Controller>"
+        },
+        {
+          "path": "test-data/m15-block-recovery.omwscripts",
+          "content": "PLAYER: scripts/m15_block_recovery.lua\nESM4_NPC: scripts/m15_npc_defensive_block.lua\n"
+        },
+        {
+          "path": "test-data/scripts/m15_block_recovery.lua",
+          "content": "local self = require('openmw.self')\nlocal Actor = require('openmw.types').Actor\nlocal sawDebit = false\nlocal announced = false\nreturn {{ engineHandlers = {{ onFrame = function()\n    local current = Actor.stats.dynamic.fatigue(self).current\n    if current < 140 then sawDebit = true end\n    if sawDebit and not announced and current >= 140 then\n        print('M15 block fatigue recovered: current=' .. tostring(current))\n        announced = true\n    end\nend }} }}\n"
+        },
+        {
+          "path": "config/alsoft.conf",
+          "content": "[general]\ndrivers = wave\n[wave]\nfile = {output}/mixed-output.wav\n"
+        },
+        {
+          "path": "test-data/scripts/m15_npc_defensive_block.lua",
+          "content": "local self = require('openmw.self')\nlocal Actor = require('openmw.types').Actor\nlocal announced, released = false, false\nreturn {{ engineHandlers = {{ onUpdate = function()\n    if self.contentFile ~= 'oblivion.esm' or self.recordId:sub(-5) ~= '25200' then return end\n    self:enableAI(false)\n    local carried = Actor.getEquipment(self)[Actor.EQUIPMENT_SLOT.CarriedRight]\n    self.type.setStance(self, self.type.STANCE.Weapon)\n    self.controls.block = carried ~= nil\n    if carried and not announced then\n        print('M15 NPC defensive block intent admitted: actor=' .. self.id)\n        announced = true\n    elseif not carried and not released then\n        print('M15 NPC defensive block intent released after empty carried slot: actor=' .. self.id)\n        released = true\n    end\nend }} }}\n"
+        }
+      ],
+      "command": [
+        "{openmw}",
+        "--replace=config",
+        "--config",
+        "{output}/config",
+        "--no-grab",
+        "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+      ],
+      "xvfb": false,
+      "width": 1280,
+      "height": 720,
+      "actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Applied TES4 runtime state:",
+          "timeout_seconds": 300
+        },
+        {
+          "type": "focus_window",
+          "name": "OpenMW"
+        },
+        {
+          "type": "sleep",
+          "seconds": 90
+        },
+        {
+          "type": "screenshot",
+          "name": "npc-defensive-blade-on-floor.png",
+          "minimum_entropy": 0.03,
+          "timeout_seconds": 120
+        }
+      ],
+      "terminate_after_actions": true,
+      "timeout_seconds": 1800,
+      "expected_exit": 0,
+      "expected_log": [
+        "Applied TES4 runtime state:"
+      ],
+      "forbidden_log": [
+        "Error in frame",
+        "onFrame failed",
+        "Segmentation fault",
+        "Assertion.*failed",
+        "Aborted",
+        "M15 melee miss committed:",
+        "sound=WPNBlockHand played=0",
+        "Failed to open audio device",
+        "Failed to load sound",
+        "model reference retired",
+        "M15 melee selection:",
+        "M15 melee hit committed:",
+        "M15 melee hit sound requested:",
+        "M15 block begin:",
+        "ERROR: AddressSanitizer",
+        "runtime error:"
+      ],
+      "environment": {
+        "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+        "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+        "ALSOFT_CONF": "{output}/config/alsoft.conf",
+        "ALSOFT_DRIVERS": "wave",
+        "ALSOFT_LOGLEVEL": "3",
+        "ALSOFT_LOGFILE": "{output}/openal.log",
+        "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "sdl_offscreen_input": true,
+      "sdl_input_timeout_seconds": 60
+    },
+    "binary": {
+      "sha256": "ae1e3fee5982021f27afe759c51bdeffaaedbf11e1879535aa3f742821d628c6",
+      "engine_report": "build/oblivion-compat/m15/S4/native-loose-compound-sweep-sanitized-02/verification.json",
+      "tested_source": {
+        "head": "b858acbd3e1b94b9d35225aab2e000144403ed39",
+        "source_fingerprint": "969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79bb87e76223"
+      },
+      "scope": "Full engine inventory passes after shared-pool fixture correction; full unchanged components passed in sanitized01."
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/staged-input.omwsave",
+        "sha256": "fc68f8c41671f9f1257e4c2ea1d47bf70ea2bb27cb8bb7e6d5c7fe3cc92d9a5f"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/process.log",
+        "sha256": "3a7b930dec152bc688f52d0cd0e52062a98afde7b8e8cb8124a375190156fddc"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/script-report.json",
+        "sha256": "c0b870296b1ab11a2eba7a4ba4a77273e684938b4e717e89742e63a0b88c3954"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/scenario.json",
+        "sha256": "791035a789bc1a9e993e81f0dacf9a11ba3a4fe63c551e974635e672ef4781c4"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/first/mixed-output.wav",
+        "sha256": "7cbd6dbe2bc48c0cb17ecc169945e93542295b0bac0e974c053d0a28846653b4"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/launcher.py",
+        "sha256": "ef054a3de01b9800ae73b06581faf5776082a5e882f0af75fc5973b95ad6b10f"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-npc-break-floor-visual-sanitized-02/epoch-monitor.py",
+        "sha256": "ebc88b8b927d12805f5b564e48a676c011f698bb91777c12c40971a23fe55652"
+      }
+    ]
   }
 }

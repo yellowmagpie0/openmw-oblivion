@@ -6667,10 +6667,15 @@ requests report playback; identical IDs cannot establish two separate voices
 when the same stock variant is selected.
 
 This verifies the bounded ordinary NPC defensive contacts and completed-contact
-physics restart in both builds, with floor-blade rendering in the normal camera
-diagnostic. An additional instrumented copied-save altered-pitch experiment
-produced a dark view; its cause remains unresolved and no instrumented floor-
-visibility acceptance is claimed. The main forward-view restarts still pass.
+physics restart in both builds, with floor-blade rendering in separate normal
+and instrumented camera diagnostics. The first instrumented altered-pitch capture
+was dark and remains retained. A retry with identical staged-save bytes and
+executable, explicit window focus and a 90-second wall wait shows the floor, blade
+and Rusty Iron Shortsword tooltip. Both focus and wait changed, so this does not
+isolate the earlier capture cause or establish a camera code fix. The retry is
+`S4/native-defensive-npc-break-floor-visual-sanitized-02`; its preregistered
+acceptance, terminal process receipt, source/binary pins and directly reviewed
+image hash are recorded in the probe document. No gameplay source changed.
 Shield/armor and initially broken items, remaining
 mastery/effects/reactions, full input/view/FPS and in-action restart matrices, plus
 the combined named-target/block/miss/wall/stagger course remain open.
