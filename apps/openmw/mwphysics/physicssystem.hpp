@@ -93,6 +93,7 @@ namespace ESM4
 {
     struct RuntimeActorRagdoll;
     struct PhysicalBlendTimeCache;
+    struct PhysicalFrameResult;
 }
 
 namespace MWPhysics
@@ -528,6 +529,12 @@ namespace MWPhysics
         void stepSimulation(
             float dt, bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
 
+        // One already prepared native process frame. Validate before changing
+        // collision inputs or consuming queued movement; use the shared worker
+        // world pass without adding time to the legacy accumulator.
+        void stepPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
+            bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
+
         /// Apply new positions to actors
         void moveActors();
         void debugDraw();
@@ -637,6 +644,8 @@ namespace MWPhysics
         void updateWater();
 
         void prepareSimulation(bool willSimulate, std::vector<Simulation>& simulations);
+        void stepSimulationImpl(float dt, bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber,
+            osg::Stats& stats, const ESM4::PhysicalFrameResult* nativeFrame, float remaining);
 
         std::unique_ptr<btBroadphaseInterface> mBroadphase;
         std::unique_ptr<btDefaultCollisionConfiguration> mCollisionConfiguration;

@@ -2662,3 +2662,122 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_P(RagdollSchedulerTest, PhysicsSystemPreparedFrameMovesProjectileAndBodyBelowLegacyStep)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        auto body = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*body));
+        auto prepared = physics.prepareProjectile({}, osg::Vec3f(0, 0, 1000), .02f);
+        const int id = physics.commitProjectile(*prepared);
+        auto* projectile = physics.getProjectile(id);
+        ASSERT_NE(projectile, nullptr);
+        projectile->setVelocity({10, 0, 0});
+        ESM4::PhysicalFrameClock clock;
+        ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+        const auto frame = ESM4::preparePhysicalFrame(clock, settings, .01f, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        ASSERT_EQ(frame.mSubstepCount, 1u);
+        ASSERT_LT(frame.mSubstepSeconds, 1.f / 60.f);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("physics native short frame");
+        physics.stepPreparedNativeFrame(frame, clock.mRemaining, false, osg::Timer::instance()->tick(), 1, *stats);
+        const auto state = physics.captureLooseObject(mPtr)[0];
+        EXPECT_LT(state.mPose.getOrigin().z(), 2);
+        EXPECT_EQ(state.mLinearVelocity.z(), btScalar(NifBullet::RagdollNativeDefaultGravityZ * .01f));
+        EXPECT_NEAR(projectile->getPosition().x(), .1f, 1e-6);
+        physics.removeProjectile(id); physics.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemRejectsNativeFrameBeforeConsumingProjectileVelocity)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        auto body = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*body));
+        auto prepared = physics.prepareProjectile({}, osg::Vec3f(0, 0, 1000), .02f);
+        const int id = physics.commitProjectile(*prepared);
+        auto* projectile = physics.getProjectile(id);
+        projectile->setVelocity({10, 0, 0});
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("physics native rejected input");
+        ESM4::PhysicalFrameClock clock;
+        ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+        const auto frame = ESM4::preparePhysicalFrame(clock, settings, .1f, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        auto invalid = frame; invalid.mSubstepCount = 4;
+        for (bool skip : {false, true})
+            EXPECT_THROW(physics.stepPreparedNativeFrame(invalid, clock.mRemaining, skip,
+                osg::Timer::instance()->tick(), 1, *stats), std::invalid_argument);
+        EXPECT_THROW(physics.stepPreparedNativeFrame(frame, std::numeric_limits<float>::quiet_NaN(), false,
+            osg::Timer::instance()->tick(), 1, *stats), std::invalid_argument);
+        EXPECT_EQ(physics.captureLooseObject(mPtr)[0].mPose, mPoses[0]);
+        EXPECT_EQ(projectile->getPosition().x(), 0);
+        physics.stepPreparedNativeFrame(frame, clock.mRemaining, false, osg::Timer::instance()->tick(), 1, *stats);
+        physics.captureLooseObject(mPtr);
+        EXPECT_NEAR(projectile->getPosition().x(), .501f, 1e-6);
+        physics.removeProjectile(id); physics.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemSkippedAndZeroNativeFramesDoNotAccumulateLegacyTime)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        auto body = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+        ASSERT_TRUE(physics.commitLooseObject(*body));
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("physics native skip and zero");
+        ESM4::PhysicalFrameClock clock;
+        ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+        const auto skipped = ESM4::preparePhysicalFrame(clock, settings, .1f, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        physics.stepPreparedNativeFrame(skipped, clock.mRemaining, true, osg::Timer::instance()->tick(), 1, *stats);
+        EXPECT_EQ(physics.captureLooseObject(mPtr)[0].mPose, mPoses[0]);
+        physics.stepPreparedNativeFrame({0, -.0001f, 0, 0}, -.0001f, false,
+            osg::Timer::instance()->tick(), 2, *stats);
+        EXPECT_EQ(physics.captureLooseObject(mPtr)[0].mPose, mPoses[0]);
+        physics.stepPreparedNativeFrame({.01f, .01f, .01f, 1}, 0, false,
+            osg::Timer::instance()->tick(), 3, *stats);
+        const auto after = physics.captureLooseObject(mPtr)[0];
+        EXPECT_EQ(after.mLinearVelocity.z(), btScalar(NifBullet::RagdollNativeDefaultGravityZ * .01f));
+        physics.stepSimulation(0, false, osg::Timer::instance()->tick(), 4, *stats);
+        const auto legacy = physics.captureLooseObject(mPtr)[0];
+        EXPECT_EQ(legacy.mPose, after.mPose);
+        EXPECT_EQ(legacy.mLinearVelocity, after.mLinearVelocity);
+        physics.removeLooseObject(mPtr);
+    }
+
+    TEST_P(RagdollSchedulerTest, PhysicsSystemPreparedFixedVariableAndSmoothedFramesShareMovementAndBodyTime)
+    {
+        for (auto mode : {0u, 1u, 10u})
+        {
+            SCOPED_TRACE(mode);
+            VFS::Manager vfs;
+            Resource::ResourceSystem resources(&vfs, 0., nullptr);
+            MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+            auto body = physics.prepareLooseObject(mPtr, mGraph, 1, mPoses, 1, -1);
+            ASSERT_TRUE(physics.commitLooseObject(*body));
+            auto prepared = physics.prepareProjectile({}, osg::Vec3f(0, 0, 1000), .02f);
+            const int id = physics.commitProjectile(*prepared);
+            auto* projectile = physics.getProjectile(id);
+            projectile->setVelocity({10, 0, 0});
+            ESM4::PhysicalFrameClock clock;
+            ESM4::PhysicalFrameSettings settings; settings.mFixedSubstep = .0167f;
+            const auto frame = ESM4::preparePhysicalFrame(clock, settings, .1f, mode, false,
+                Nif::NativeTransformPrecision::Single);
+            osg::ref_ptr<osg::Stats> stats = new osg::Stats("physics native frame modes");
+            physics.stepPreparedNativeFrame(frame, clock.mRemaining, false,
+                osg::Timer::instance()->tick(), 1, *stats);
+            const auto state = physics.captureLooseObject(mPtr)[0];
+            float velocity = 0;
+            for (unsigned i = 0; i < frame.mSubstepCount; ++i)
+                velocity += NifBullet::RagdollNativeDefaultGravityZ * frame.mSubstepSeconds;
+            EXPECT_EQ(state.mLinearVelocity.z(), btScalar(velocity));
+            EXPECT_NEAR(projectile->getPosition().x(), 10 * frame.mSubstepSeconds * frame.mSubstepCount, 1e-6);
+            physics.removeProjectile(id); physics.removeLooseObject(mPtr);
+        }
+    }
+}

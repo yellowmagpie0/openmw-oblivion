@@ -16028,3 +16028,48 @@ repeated. Initialized settings, main-loop frame publication/prepared scheduling,
 actor admission and complete native reactions remain open. No real game process,
 host timing, contact or normal-input gameplay/restart acceptance is claimed.
 All remaining M15S4 gameplay/fresh-process gates stay open. Full M15S4 is incomplete.
+
+
+### Prepared native frames reach PhysicsSystem preparation
+
+PhysicsSystem now snapshots and validates a prepared native frame before
+collision/trigger updates or movement-queue consumption, then uses the existing
+shared worker/world pass. Native movement/jump preparation keys off its supplied
+step count rather than legacy accumulated time. Native time does not add to the
+legacy accumulator. Skip/zero handling retains discard/synchronization behavior
+without deferring body steps. World lookup is delayed until an active mobile
+actor needs it, and weather is fetched only for actor movement. Owned bodies
+and projectiles can step without World/weather services.
+
+Twelve new cases at0/1/2 workers exercise actual PhysicsSystem preparation:
+a10ms native step below the legacy1/60 threshold, fixed/variable/smoothed shared
+movement/body timing, rejection before projectile velocity consumption, valid
+retry, skip/nonpositive frames and no native time leaking into a later generic
+zero-delta pass. These fixtures use a loose body and projectile; mobile capsule/
+jump and full game-controller acceptance still require their own courses.
+
+The initial normal suite passes1,675 tests, but the initial full sanitizer run
+finds an existing OpenAL device-enumeration heap use-after-free during SoundRuntime
+setup. Main-thread enumeration reads a list invalidated by background default-
+device probing. Fix4ec21e105d serializes probes across output instances and copies
+device names while locked. A new concurrent-output test performs128 enumerations.
+The original ASan log/source identity/build ID are retained; its failed binary
+SHA was not captured before rebuild. No suppression or rerun-only workaround is
+used. This closes the observed UAF, not melee audible-feedback acceptance.
+
+Final full normal and ASan/UBSan engine checks each pass **1,676 tests in123
+suites**, exact inventories, no failures/skips. Tested dirty source fingerprint:
+`c912210f7717813113469ef4b65e2765412122c0baf8492b0beaad6eda545f38`.
+Both chunks were tested together against e00d863422 before separate commits;
+exact code/binary hashes are retained. Final build logs have no warnings; initial
+broad builds retain two existing warnings in unchanged World tests. ASan leaks
+are disabled. Unchanged component/Python/schema checks are not repeated.
+Reports and failure scope are in `native_physics_system_frame_followup` in the
+verification index.
+
+World still calls the legacy physics entry. Engine/World process-clock settings,
+pause-source ownership, frame publication/activation, native actor admission,
+KF/selector/subtype/group/filter/root/capsule/morphology and complete reactions/
+FSM/GetUp remain open, alongside all remaining normal-input/view/device/FPS/
+fresh-process gameplay/save-restart gates. No new physical contact or game-input
+course is claimed. Full M15S4 is incomplete.

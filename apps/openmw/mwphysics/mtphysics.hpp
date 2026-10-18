@@ -98,6 +98,8 @@ namespace MWPhysics
         // jobs and owned bodies use its exact substep count/duration. Retain
         // signed clock carry for existing presentation interpolation; no second
         // accumulator or performance-budget step selection runs on this path.
+        // Also used before PhysicsSystem prepares collision/movement inputs.
+        static void validatePreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining);
         void applyPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
             std::vector<Simulation>& simulations, osg::Timer_t frameStart, unsigned int frameNumber,
             osg::Stats& stats, const WorldFrameData& worldData);

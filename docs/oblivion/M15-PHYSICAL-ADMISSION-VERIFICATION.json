@@ -9417,5 +9417,165 @@
       "Engine/World/renderer/physics consumers are unchanged and not activated here. Their full app/engine/Python/schema checks are not repeated. Main-loop pause event mapping, initialized settings, process-frame clock ownership/publication and prepared scheduler activation remain open.",
       "Actor admission, KF/selector/subtype/group/filter/capsule/root/morphology, complete contact/reaction/FSM/GetUp publication and all remaining normal-input/view/device/FPS/fresh-process gameplay/save-restart gates remain open. Full M15S4 is incomplete."
     ]
+  },
+  "native_physics_system_frame_followup": {
+    "status": "PhysicsSystem prepared-frame bridge and observed audio enumeration UAF fixed. Engine/World clock activation and full M15S4 remain incomplete.",
+    "implementation": [
+      "PhysicsSystem::stepPreparedNativeFrame snapshots and validates the supplied frame before collision preparation or movement-queue consumption. The shared scheduler validator remains applied at its direct entry too.",
+      "Both entries share collision/trigger updates, movement preparation and worker dispatch. Native movement/jump preparation uses the supplied count, not the legacy accumulated-time threshold. Native time never adds to the legacy accumulator. Skip and zero-step calls preserve existing discard/synchronization behavior without deferred native body steps.",
+      "World lookup is delayed until an active mobile actor needs movement inputs; weather is queried only if actor movement jobs exist. Projectile/body-only frames use no World/weather authority.",
+      "The existing World caller remains on the legacy entry. Main-loop process clock, settings/pause ownership, frame publication and activation of this native entry remain required."
+    ],
+    "normal_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-physics-system-normal-02/verification.json",
+      "sha256": "16f8d2a70c73a2c4496177c394d53381a8ab33d92963605819e6a541d942ce57",
+      "source": {
+        "head": "e00d86342271115b2be90877bd8257a1ece9cd3f",
+        "source_fingerprint": "c912210f7717813113469ef4b65e2765412122c0baf8492b0beaad6eda545f38"
+      },
+      "suites": 123,
+      "result": {
+        "executed": 1676,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5e6d83d49c9e962abd432845ff87abb6b3d98268558cd701d599188da3b9b3e3",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "79a4f905a10b75bfa8ca5c2b5e4bba6845db096fc3e034a90b00a43eb648b1c3",
+        "inventory_sha256": "b2acee4bdb99320552765f04dbc18e1c175242d00e53bbc7ddeac12080610375",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-physics-system-sanitized-02/verification.json",
+      "sha256": "9d7d5ba01d4e19bc67f70d23cecc126acd53398997969cffad2f4651db8356c9",
+      "source": {
+        "head": "e00d86342271115b2be90877bd8257a1ece9cd3f",
+        "source_fingerprint": "c912210f7717813113469ef4b65e2765412122c0baf8492b0beaad6eda545f38"
+      },
+      "suites": 123,
+      "result": {
+        "executed": 1676,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5d72e81cb8a277e7e3b50547439442058b1046136e754555d22fc57ba05a7fe2",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "697b2370e2efabfc7518dd0c483c4f17cb7f97459563a2acfafc41f38a885854",
+        "inventory_sha256": "b2acee4bdb99320552765f04dbc18e1c175242d00e53bbc7ddeac12080610375",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "earlier_full_normal": {
+      "path": "build/oblivion-compat/m15/S4/native-physics-system-normal-01/verification.json",
+      "sha256": "94bac3e16726c2ccf8cf71152ec514eac378692104461c4ae02d7e3ead46e19d",
+      "source": {
+        "head": "e00d86342271115b2be90877bd8257a1ece9cd3f",
+        "source_fingerprint": "1549d47bb1f44af1b97db3167b8ec7a1b6567861274196b726c23c4a878ebbfc"
+      },
+      "suites": 122,
+      "result": {
+        "executed": 1675,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "57890000fedd7691eb1032e190bee77a0f39f8b9ec6394723dcd412b4dfcf954",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "dde6cf04546986165b803175587a8284d6a8a349259255d1adcd1946548cfb3a",
+        "inventory_sha256": "9d01059de2b847daca57dc63f2f9b5bcd99be94eb0f3b9c15bcacd1517640237",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "retained_sanitizer_failure": {
+      "path": "build/oblivion-compat/m15/S4/native-physics-system-sanitized-01/verification.json",
+      "sha256": "1b63a6e211a55203e744825b2ff97778aa3282e91c5777eefa7671eba2be70fb",
+      "log": {
+        "path": "build/oblivion-compat/m15/S4/native-physics-system-sanitized-01/engine.log",
+        "sha256": "39fcc808049d24a96e1e216cfe274bd670443c8bda80d1133c40057109f9f33f"
+      },
+      "source": {
+        "head": "e00d86342271115b2be90877bd8257a1ece9cd3f",
+        "source_fingerprint": "1549d47bb1f44af1b97db3167b8ec7a1b6567861274196b726c23c4a878ebbfc"
+      },
+      "failed_binary_build_id": "b4a2c234cda4d0cf6289d2dc55a2f7d9c99c1d5b",
+      "failed_binary_sha256": "Not captured by helper on failure; original binary subsequently rebuilt. Source fingerprint/build ID and complete ASan log are retained.",
+      "result": "Full initial sanitizer run aborts during SoundRuntime setup: main-thread OpenAL enumeration reads freed device-list storage while DefaultDeviceThread getDeviceName(nullptr) reprobes the same global OpenAL list. The new physics cases had not yet run in that aborted inventory.",
+      "original_openal_source_sha256": "189de4373b153d1cc1db5566bca6c45c7d2c3767b9b3e7db367e1b3525c1e16c"
+    },
+    "audio_followup": {
+      "commit": "4ec21e105d",
+      "reason": "Fix the actual ASan failure rather than rerun around it. OpenAL probe storage is shared across output instances.",
+      "change": "One process-wide mutex covers device-list retrieval and owned string/vector copying. getDeviceName returns an owned string and the polling thread retains that owned value.",
+      "case": "OpenALDeviceEnumerationTest.CopiesDeviceListsAcrossConcurrentOutputs",
+      "coverage": "Two distinct outputs perform128 synchronized concurrent enumeration calls; full normal and sanitizer SoundRuntime/default-device startup paths also pass. No sanitizer suppression added."
+    },
+    "tested_source_identity": "Final02 checks cover the dirty e00d863422 tree containing both the bridge and audio fix. The two code chunks are committed separately after both helpers terminate; recorded source hashes identify their exact tested bytes.",
+    "source_sha256": {
+      "apps/openmw/mwphysics/mtphysics.cpp": "8d903c1256d714a69e21f39d965248caa90526d223ef1eb53e90d27568a3a4b3",
+      "apps/openmw/mwphysics/mtphysics.hpp": "8a6f8cb11876e6312d245950cff4ed4721a5b2ea62a391d30b00d7d36f182a89",
+      "apps/openmw/mwphysics/physicssystem.cpp": "045549a00edd5f1df48b7e1400cb47a3c39bfd843865872ce2e6e1faae3514db",
+      "apps/openmw/mwphysics/physicssystem.hpp": "eddb99be829ba304abdb369a8696ee99bd53b36e62bddd269ffd34c587fccad1",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "e50077417a7af79f2bb2a7e2e2a62f0a63eb2732956a709a35f4306faaea05ba",
+      "apps/openmw/mwsound/openaloutput.cpp": "ed1e1c0c242c425c66e94e25f7ee6f2cf26376f1eda94ea897cd1b3716ba9f7b",
+      "apps/openmw_tests/mwsound/testruntime.cpp": "fc88483f996f829af7535df787f159135e8352cac23d90aaa61b55b6964c139b"
+    },
+    "openmw_executables": {
+      "build/openmw": "b4d16b18614012a55be7cfbf903d2005a48bfbf1add3c36cea723246a9cbef12",
+      "build/m15-sanitize/openmw": "32c651c76da61e31042321a19e5869871d94414673f7fdb2037a6debb2f1848d"
+    },
+    "physics_regressions": {
+      "suite": "WorkerCounts/RagdollSchedulerTest",
+      "worker_counts": [
+        0,
+        1,
+        2
+      ],
+      "new_cases": 12,
+      "tests": [
+        "PhysicsSystemPreparedFrameMovesProjectileAndBodyBelowLegacyStep",
+        "PhysicsSystemRejectsNativeFrameBeforeConsumingProjectileVelocity",
+        "PhysicsSystemSkippedAndZeroNativeFramesDoNotAccumulateLegacyTime",
+        "PhysicsSystemPreparedFixedVariableAndSmoothedFramesShareMovementAndBodyTime"
+      ],
+      "coverage": [
+        "Actual PhysicsSystem movement/collision preparation and worker-owned Bullet world;10ms native step below legacy1/60 threshold moves a loose body and projectile.",
+        "Bad count/nonfinite carry reject before queued projectile velocity consumption, including skip=true; valid retry uses the retained request.",
+        "Skipped/nonpositive frames do not advance a body or accumulate legacy time; a later generic zero-delta pass adds no native body motion.",
+        "Fixed, variable and smoothed prepared durations drive projectile movement and native body velocity in the same pass."
+      ]
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "warning_review": "Final02 build logs have no warnings. Earlier01 broad rebuilds retain two existing warnings in unchanged testoblivionworld.cpp (unused context at15827 and dangling else at19868); no new physics/audio source warning. ASan leak checks disabled.",
+    "unchanged_checks": "Component source/tests and Python/schema are unchanged from the preceding2930-component checkpoint; not repeated. Engine mode rebuilds openmw, openmw-tests and esmtool.",
+    "limits": [
+      "Prepared frames now reach PhysicsSystem and its shared scheduler, but World/Engine do not automatically select this entry yet. Authoritative process-frame clock/settings/pause sources and publication remain open.",
+      "The new pipeline cases use a loose body and projectile, not a mobile actor capsule/jump or full game controller course. Existing lower scheduler actor-body tests remain regression coverage, not normal-input actor acceptance.",
+      "Native owner admission, KF/selector/subtype/group/filter/root/capsule/morphology coordination, complete contact/reaction/FSM/GetUp publication and every remaining view/device/FPS/fresh-process gameplay/save-restart gate remain open.",
+      "Actual shared Bullet steps are exercised without physical contacts or fork normal-input combat/restart acceptance. The audio fix closes the observed UAF, not the melee audible-feedback acceptance matrix. Full M15S4 remains incomplete."
+    ]
   }
 }

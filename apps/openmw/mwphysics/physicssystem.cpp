@@ -1,5 +1,6 @@
 #include "physicssystem.hpp"
 #include <components/nifbullet/ragdollbonepose.hpp>
+#include <components/esm4/physicalframe.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -1403,7 +1404,6 @@ namespace MWPhysics
     {
         assert(simulations.empty());
         simulations.reserve(mActors.size() + mProjectiles.size());
-        const MWBase::World* world = MWBase::Environment::get().getWorld();
         for (const auto& [ref, physicActor] : mActors)
         {
             if (!physicActor->isActive() || physicActor->isCollisionSuspended())
@@ -1431,6 +1431,7 @@ namespace MWPhysics
             // Slow fall reduces fall speed by a factor of (effect magnitude / 200)
             const float slowFall
                 = 1.f - std::clamp(effects.getOrDefault(ESM::MagicEffect::SlowFall).getMagnitude() * 0.005f, 0.f, 1.f);
+            const MWBase::World* world = MWBase::Environment::get().getWorld();
             const bool isPlayer = ptr == world->getPlayerConstPtr();
             const bool godmode = isPlayer && world->getGodModeState();
             const bool inert = stats.isDead()
@@ -1452,6 +1453,20 @@ namespace MWPhysics
 
     void PhysicsSystem::stepSimulation(
         float dt, bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+    {
+        stepSimulationImpl(dt, skipSimulation, frameStart, frameNumber, stats, nullptr, 0.f);
+    }
+
+    void PhysicsSystem::stepPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
+        bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats)
+    {
+        const auto prepared = frame;
+        PhysicsTaskScheduler::validatePreparedNativeFrame(prepared, remaining);
+        stepSimulationImpl(0.f, skipSimulation, frameStart, frameNumber, stats, &prepared, remaining);
+    }
+
+    void PhysicsSystem::stepSimulationImpl(float dt, bool skipSimulation, osg::Timer_t frameStart,
+        unsigned int frameNumber, osg::Stats& stats, const ESM4::PhysicalFrameResult* nativeFrame, float remaining)
     {
         for (const auto& [_, trigger] : mTriggers)
             if (trigger->isAnimated() && trigger->animateCollisionShapes())
@@ -1478,22 +1493,24 @@ namespace MWPhysics
         CProfileManager::Increment_Frame_Counter();
 #endif
 
-        mTimeAccum += dt;
+        if (!nativeFrame) mTimeAccum += dt;
 
         if (skipSimulation)
             mTaskScheduler->resetSimulation(mActors);
         else
         {
             std::vector<Simulation>& simulations = mSimulations[mSimulationsCounter++ % mSimulations.size()];
-            prepareSimulation(mTimeAccum >= mPhysicsDt, simulations);
-            // modifies mTimeAccum
-            // Weather only affects movement jobs. A native physical owner can
-            // keep stepping after all actor capsules are suspended, leaving no
-            // movement jobs and no reason to query scene/weather authority.
-            const auto worldData = simulations.empty()
-                ? WorldFrameData(false, osg::Vec3f(0, 1, 0)) : WorldFrameData{};
-            mTaskScheduler->applyQueuedMovements(
-                mTimeAccum, simulations, frameStart, frameNumber, stats, worldData);
+            prepareSimulation(nativeFrame ? nativeFrame->mSubstepCount != 0 : mTimeAccum >= mPhysicsDt, simulations);
+            // Weather affects actor movement, not projectiles or owned bodies.
+            const bool hasActorMovement = std::any_of(simulations.begin(), simulations.end(),
+                [](const Simulation& sim) { return std::holds_alternative<ActorSimulation>(sim); });
+            const auto worldData = hasActorMovement ? WorldFrameData{} : WorldFrameData(false, osg::Vec3f(0, 1, 0));
+            if (nativeFrame)
+                mTaskScheduler->applyPreparedNativeFrame(*nativeFrame, remaining, simulations,
+                    frameStart, frameNumber, stats, worldData);
+            else
+                mTaskScheduler->applyQueuedMovements(
+                    mTimeAccum, simulations, frameStart, frameNumber, stats, worldData);
         }
     }
 

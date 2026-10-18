@@ -1153,9 +1153,7 @@ namespace MWPhysics
             mWorkersSync->wakeUpWorkers();
     }
 
-    void PhysicsTaskScheduler::applyPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
-        std::vector<Simulation>& simulations, osg::Timer_t frameStart, unsigned int frameNumber,
-        osg::Stats& stats, const WorldFrameData& worldData)
+    void PhysicsTaskScheduler::validatePreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining)
     {
         // Validate before waiting, consuming queued jobs or publishing state.
         // Native nonpositive frames retain signed carry and execute no steps.
@@ -1169,6 +1167,13 @@ namespace MWPhysics
         if (frame.mSubstepCount != 0)
             (void)NifBullet::ragdollNativeGravityDelta(
                 {0, 0, NifBullet::RagdollNativeDefaultGravityZ}, frame.mSubstepSeconds);
+    }
+
+    void PhysicsTaskScheduler::applyPreparedNativeFrame(const ESM4::PhysicalFrameResult& frame, float remaining,
+        std::vector<Simulation>& simulations, osg::Timer_t frameStart, unsigned int frameNumber,
+        osg::Stats& stats, const WorldFrameData& worldData)
+    {
+        validatePreparedNativeFrame(frame, remaining);
         assert(mSimulations != &simulations);
         waitForWorkers();
         prepareWork(remaining, simulations, frameStart, frameNumber, stats, worldData, &frame);
