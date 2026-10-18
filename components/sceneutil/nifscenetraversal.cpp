@@ -10,6 +10,8 @@
 #include <osgUtil/UpdateVisitor>
 
 #include <cmath>
+#include <bit>
+#include <cstdint>
 #include <stdexcept>
 #include <typeinfo>
 #include <unordered_map>
@@ -65,22 +67,38 @@ namespace SceneUtil
             NifBullet::RagdollBonePoseWriteback mFrame;
             std::optional<std::uint16_t> mFlags;
         };
+        struct InitialLocal
+        {
+            osg::Matrixd mMatrix;
+            Nif::Matrix3 mRotationScale;
+            float mScale;
+        };
+        struct Preparation
+        {
+            Placement mPlacement;
+            std::vector<InitialLocal> mLocals;
+            std::vector<NifOsg::MatrixTransform::TraversalMatrix> mProjections;
+        };
         osg::observer_ptr<NifOsg::MatrixTransform> mRoot;
         Nif::NativeTransformPrecision mPrecision;
         std::vector<Node> mNodes;
         std::vector<Group> mGroups;
         std::unordered_map<const osg::Node*, std::size_t> mIndices;
         std::optional<Nif::NiTransform> mNativeParentWorld;
+        std::optional<Preparation> mPreparation;
+        bool mPublished = false;
+        bool mRetired = false;
         bool mUpdating = false;
 
         Impl(NifOsg::MatrixTransform& root, Nif::NativeTransformPrecision precision,
-            const Nif::NiTransform* nativeParentWorld = nullptr)
+            const Nif::NiTransform* nativeParentWorld = nullptr, bool deferred = false)
             : mRoot(&root), mPrecision(precision)
             , mNativeParentWorld(nativeParentWorld ? std::optional(*nativeParentWorld) : std::nullopt)
         {
             require(precision == Nif::NativeTransformPrecision::Single
                     || precision == Nif::NativeTransformPrecision::Double, "unknown NIF scene precision");
             std::unordered_set<const osg::Node*> visited;
+            std::vector<InitialLocal> locals;
             const auto walk = [&](auto&& self, osg::Node& node, std::optional<std::size_t> parent) -> void {
                 if (!visited.insert(&node).second)
                 {
@@ -97,6 +115,7 @@ namespace SceneUtil
                             && transform.getNumParents() <= 1, "ambiguous NIF scene transform");
                     require(!transform.getTraversalMatrix().getMatrix(), "NIF scene transform is already projected");
                     const auto local = transform.getControllerTransform();
+                    locals.push_back({transform.getMatrix(), transform.mRotationScale, transform.mScale});
                     const auto* parentWorld = parent ? &mNodes[*parent].mWorld
                         : mNativeParentWorld ? &*mNativeParentWorld : nullptr;
                     auto world = parentWorld ? Nif::tryComposeNativeTransform(*parentWorld, local, precision)
@@ -123,23 +142,18 @@ namespace SceneUtil
                 }
             };
             walk(walk, root, {});
-            const auto path = externalPath();
-            const auto external = osg::computeLocalToWorld(path);
+            auto initialPlacement = placement();
             // Complete all validation/allocation before changing the graph.
             std::vector<NifOsg::MatrixTransform::TraversalMatrix> prepared;
             prepared.reserve(mNodes.size());
             for (const auto& entry : mNodes)
             {
                 const osg::Matrixd parent = entry.mParent
-                    ? osg::Matrixd(mNodes[*entry.mParent].mWorld.toMatrix()) : external;
+                    ? osg::Matrixd(mNodes[*entry.mParent].mWorld.toMatrix()) : initialPlacement.mWorld;
                 prepared.emplace_back(osg::Matrixd(entry.mWorld.toMatrix()) * inverse(parent));
             }
-            for (std::size_t i = 0; i < prepared.size(); ++i)
-            {
-                mNodes[i].mTransform->setTraversalMatrix(prepared[i]);
-                mNodes[i].mPublished = prepared[i];
-            }
-            invalidateSkeletons(path);
+            mPreparation.emplace(Preparation{std::move(initialPlacement), std::move(locals), std::move(prepared)});
+            if (!deferred) require(commitPrepared(), "changed initial NIF scene preparation");
         }
 
         osg::NodePath externalPath() const
@@ -164,13 +178,38 @@ namespace SceneUtil
                 if (auto* skeleton = dynamic_cast<Skeleton*>(node)) skeleton->invalidateBoneMatrices();
         }
 
+        static void invalidateCurrentSkeletons(osg::Node* start) noexcept
+        {
+            const auto parent = [](osg::Node* node) {
+                return node && node->getNumParents() == 1 ? node->getParent(0) : nullptr;
+            };
+            osg::Node* slow = start;
+            osg::Node* fast = start;
+            do
+            {
+                slow = parent(slow);
+                fast = parent(parent(fast));
+            } while (fast && fast != slow);
+            osg::Node* cycle = fast ? slow : nullptr;
+            bool seenCycle = false;
+            for (osg::Node* node = start; node; node = parent(node))
+            {
+                if (node == cycle)
+                {
+                    if (seenCycle) break;
+                    seenCycle = true;
+                }
+                if (auto* skeleton = dynamic_cast<Skeleton*>(node)) skeleton->invalidateBoneMatrices();
+            }
+        }
+
         bool valid() const noexcept
         {
-            if (!mRoot.valid()) return false;
+            if (mRetired || !mRoot.valid()) return false;
             for (const auto& entry : mNodes)
                 if (!entry.mTransform.valid() || entry.mTransform->getReferenceFrame() != osg::Transform::RELATIVE_RF
                     || entry.mTransform->getNumParents() > 1
-                    || entry.mTransform->getTraversalMatrix() != entry.mPublished) return false;
+                    || !entry.mTransform->getTraversalMatrix().sharesStorageWith(entry.mPublished)) return false;
             for (const auto& entry : mGroups)
             {
                 if (!entry.mGroup.valid() || entry.mGroup->getNumChildren() != entry.mChildren.size()) return false;
@@ -178,6 +217,69 @@ namespace SceneUtil
                 for (std::size_t i = 0; i < entry.mChildren.size(); ++i)
                     if (!entry.mChildren[i].valid() || entry.mGroup->getChild(i) != entry.mChildren[i].get()) return false;
             }
+            if (mPreparation)
+            {
+                for (std::size_t i = 0; i < mNodes.size(); ++i)
+                {
+                    const auto& node = *mNodes[i].mTransform;
+                    const auto& saved = mPreparation->mLocals[i];
+                    for (unsigned j = 0; j < 16; ++j)
+                        if (std::bit_cast<std::uint64_t>(node.getMatrix().ptr()[j])
+                            != std::bit_cast<std::uint64_t>(saved.mMatrix.ptr()[j])) return false;
+                    if (std::bit_cast<std::uint32_t>(node.mScale)
+                        != std::bit_cast<std::uint32_t>(saved.mScale)) return false;
+                    for (unsigned row = 0; row < 3; ++row)
+                        for (unsigned column = 0; column < 3; ++column)
+                            if (std::bit_cast<std::uint32_t>(node.mRotationScale.mValues[row][column])
+                                != std::bit_cast<std::uint32_t>(saved.mRotationScale.mValues[row][column])) return false;
+                }
+                // The retained path leases every ancestor. Compare parent
+                // links without allocating a new NodePath in admission.
+                const auto& saved = mPreparation->mPlacement;
+                const osg::Node* node = mRoot.get();
+                for (auto i = saved.mPath.rbegin(); i != saved.mPath.rend(); ++i)
+                {
+                    if (node->getNumParents() != 1 || node->getParent(0) != *i) return false;
+                    node = *i;
+                }
+                if (node->getNumParents()) return false;
+                try
+                {
+                    if (osg::computeLocalToWorld(saved.mPath) != saved.mWorld) return false;
+                }
+                catch (...) { return false; }
+            }
+            return true;
+        }
+
+        bool commitPrepared() noexcept
+        {
+            if (mUpdating || mPublished || !mPreparation || !valid()) return false;
+            for (std::size_t i = 0; i < mNodes.size(); ++i)
+            {
+                mNodes[i].mTransform->setTraversalMatrix(mPreparation->mProjections[i]);
+                mNodes[i].mPublished = mPreparation->mProjections[i];
+            }
+            invalidateSkeletons(mPreparation->mPlacement.mPath);
+            mPublished = true;
+            mPreparation.reset();
+            return true;
+        }
+
+        bool retire() noexcept
+        {
+            if (mUpdating || mRetired) return false;
+            if (mPublished)
+                for (auto& entry : mNodes)
+                    if (entry.mTransform.valid() && entry.mTransform->getTraversalMatrix().sharesStorageWith(entry.mPublished))
+                    {
+                        entry.mTransform->clearTraversalMatrix();
+                        // A detached child can now belong to another Skeleton.
+                        // Avoid allocation and terminate even on damaged cycles.
+                        invalidateCurrentSkeletons(entry.mTransform.get());
+                    }
+            mRetired = true;
+            mPreparation.reset();
             return true;
         }
 
@@ -401,6 +503,16 @@ namespace SceneUtil
     NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, const Nif::NiTransform& nativeParentWorld,
         Nif::NativeTransformPrecision precision)
         : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld)) {}
+    NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, const Nif::NiTransform& nativeParentWorld,
+        Nif::NativeTransformPrecision precision, bool deferred)
+        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, deferred)) {}
+    std::unique_ptr<NifSceneTraversal> NifSceneTraversal::prepareObjectLocal(NifOsg::MatrixTransform& root,
+        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision)
+    {
+        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision, true));
+    }
+    bool NifSceneTraversal::commitPrepared() noexcept { return mImpl->commitPrepared(); }
+    bool NifSceneTraversal::retire() noexcept { return mImpl->retire(); }
     NifSceneTraversal::~NifSceneTraversal() = default;
     bool NifSceneTraversal::isValid() const noexcept { return mImpl->valid(); }
     Nif::NiTransform NifSceneTraversal::cachedWorld(const NifOsg::MatrixTransform& node) const
@@ -531,6 +643,7 @@ namespace SceneUtil
         const Nif::NiTransform* nativeParentWorld)
     {
         require(mImpl->valid(), "expired or changed NIF scene hierarchy");
+        require(mImpl->mPublished, "unpublished NIF scene traversal");
         require(mode == Mode::Full || mode == Mode::Selected || mode == Mode::Rigid, "unknown NIF update mode");
         require(mode == Mode::Full || bool(callbacks.mNodeFlags) || mImpl->mNodes[0].mSelectiveFlags.has_value(),
             "missing NIF selected update policy");

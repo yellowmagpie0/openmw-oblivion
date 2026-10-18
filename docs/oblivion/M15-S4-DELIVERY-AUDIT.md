@@ -5486,3 +5486,37 @@ checkpoint; actual KF controller bodies remain outside that observation.
 Earlier node/controller phases can already be published if a later collision
 phase rejects; no whole-frame rollback is claimed. App binaries need a fresh
 engine build before subsequent runtime integration or acceptance courses.
+
+
+### Deferred native scene admission and projection retirement
+
+NifSceneTraversal now prepares object-local caches and projection storage without
+changing the model or detaching callbacks. Commit checks all source local and
+hidden NIF cache bits, hierarchy, projection ownership and external placement
+before installing handles once. Unpublished traversals cannot run updates.
+Discard has no scene effect; actor life, generation and callback authority still
+belong to the composite engine owner.
+
+Explicit retirement preserves current author locals and callbacks while clearing
+only still-owned projection storage. It preserves even a distinct foreign handle
+with identical matrix values. A retained pre-fix probe demonstrates that matrix
+value equality had cleared that replacement; the unchanged probe now passes in
+both builds. Retirement also handles surviving nodes after hierarchy damage,
+invalidates moved Skeleton palettes through unique parent chains, rejects
+reentry and terminates damaged cycles. It does not invent an animation/recovery
+pose. Immediate constructor and destructor policies remain unchanged.
+
+Full final normal and ASan/UBSan runs each pass 2,899 component tests in 273 suites,
+with exact inventories and no warnings, failures or skips. Both native replay
+drivers pass 512 frames and 7,104 field comparisons, including 64 deferred
+admissions/retirements per build. Drawing error stays 2.84217e-14 against 1e-9.
+Original topology/controller/time/Havok boundaries remain explicit; no new game
+or original instructions are executed. Initial01 results and the failing foreign
+handle probe are retained. Leak checks are disabled.
+
+Tested source fingerprint: `15ed0dcc12843c20bb20b85f108ccb8def86f9b37d9315c064bdb316f53f0b59`. Exact source/binary/probe
+hashes and limits are in `deferred_admission_retirement_followup` in
+`M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json`. Engine/Python/schema checks are not
+repeated for this component lifecycle primitive. Composite engine ownership,
+physical frame scheduling, automatic construction and all remaining full S4
+normal-input and fresh-engine restart acceptance gates remain open.

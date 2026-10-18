@@ -510,5 +510,191 @@
       "Callbacks must preserve scene locals/hierarchy/placement except the existing explicit reference-update boundary. Exceptions can leave completed controller/projection nodes in place; arbitrary external controller/physics state is not rolled back.",
       "No automatic actor construction, graph/filter initialization, native physical controller/force scheduling, contact/reaction/FSM/GetUp, or full S4 melee/mastery/input/view/device/FPS/interruption/savequitfreshprocess acceptance is closed."
     ]
+  },
+  "deferred_admission_retirement_followup": {
+    "status": "Deferred ordinary scene traversal admission and explicit projection retirement are implemented. Composite native actor ownership/scheduling and complete M15S4 gameplay/restart acceptance remain open.",
+    "source": {
+      "head": "eea0e4efe2a8a171187a6df898825f7c5b7a4cf1",
+      "source_fingerprint": "15ed0dcc12843c20bb20b85f108ccb8def86f9b37d9315c064bdb316f53f0b59"
+    },
+    "source_sha256": {
+      "components/sceneutil/nifscenetraversal.hpp": "474b968288ddfffe0abc0742f3fc38ce7e1b2e5e3ba34d08fd14145fa24bdbd8",
+      "components/sceneutil/nifscenetraversal.cpp": "9f73c1449f0ca15782b6b37c5183207339754968bde4c65a2adf518d09e6e805",
+      "components/nifosg/matrixtransform.hpp": "5ba294ac35047775f000c577b75f059612ea25a7b0445fc1984fb4a6080df446",
+      "apps/components_tests/sceneutil/nifscenetraversal.cpp": "2e84187051a1c8f1841e284cd3de4e4ec6714e23105146133d9ce94965156df2"
+    },
+    "post_test_changes": "Verification index and delivery audit only; production/test sources unchanged after full checks.",
+    "changes": [
+      "prepareObjectLocal computes all native caches and allocates projection storage without publishing a handle or invoking a controller. Existing callbacks remain attached and live. Discard leaves the source scene unchanged.",
+      "commitPrepared validates every source matrix bit, separate NIF scale/rotation-cache bits, source handle, complete bound hierarchy and retained external ancestor path/matrix before any publication. It installs prepared handles once. Update entry points reject an unpublished traversal; actor identity, callback authority and generation remain the composite caller responsibility.",
+      "retire releases only handles sharing the actual immutable storage owned by this traversal. It preserves current author locals and foreign replacement storage, even if replacement matrix values are identical. Matrix value equality itself remains unchanged for other consumers.",
+      "Retirement can release surviving nodes after hierarchy damage. Unique current parent chains invalidate moved Skeleton palettes without allocation and terminate damaged cycles. Reentry during an update rejects; retirement is final for this owner.",
+      "Source guards do not execute callbacks or advance clocks. Completed retirement does not restore the generic pure-animation checkpoint or invent a recovery pose. Immediate constructors retain their existing publication behavior; destructor behavior is unchanged, so published owners must explicitly retire when changing ownership."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-admission-normal-02/verification.json",
+        "report_sha256": "fccc552b3357097114ba32c6414116d502f46f099efd8fac61c1e57d9d59b947",
+        "result": {
+          "executed": 2899,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cf32bd2f3fc33a8821eb5aa7377fe94a62a0ea1851a811612818a51e3d81297d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e2985ed8b3960f4e064cc722866e2338ae44ac01f4877cde8c1ffd647b77c7d1",
+          "inventory_sha256": "8fd06c05c4b310fea1af267d3172016d0db745178e784a6230577dfa758e87b3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-admission-sanitized-02/verification.json",
+        "report_sha256": "6a365ccde5ed2a7ec00ac0e223f96aee3f65fc4ee62d293300339817df79e7b5",
+        "result": {
+          "executed": 2899,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c0786b3a6ec95eeec4b848c99e19da3d5b1711efdb8fdcafe04d2eed6bdd780b",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e4105a4120440780b8b6a5b55ad7cb70dd61adc5827bc61b92a39a36387be973",
+          "inventory_sha256": "49cb2026081581474adfa8979fae87d778d156458664a3bec89c87efac776699",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      }
+    },
+    "native_cache_replay": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/normal-verification.json",
+        "report_sha256": "3fc290ec876393967c8d13f3e53352629527ec85cd8cd71db08d1dd3756cf13d",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "admissions": 64,
+          "retirements": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "a1e2fdc2e7da12590c31e4b13eca80e4a9b781994f6e6eafc54efa49dd7af8fa",
+          "comparator_sha256": "7bbf74af4b8a561d0b1c7073aaebd3ef5f9d392602ed11d2f40cf6389fd2c776",
+          "binary_sha256": "21d1149bf22bb753c69f247d6644a4d3c9101c660b981516e42c97fe3ff9663e",
+          "notes": "Deferred admission/explicit retirement and optional-target provider branch: original child+leaf replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/sanitized-verification.json",
+        "report_sha256": "30304dd404d42df7e079a68502f25086a66ec6b64e3a423f91d35384a9f837de",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "admissions": 64,
+          "retirements": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "a1e2fdc2e7da12590c31e4b13eca80e4a9b781994f6e6eafc54efa49dd7af8fa",
+          "comparator_sha256": "7bbf74af4b8a561d0b1c7073aaebd3ef5f9d392602ed11d2f40cf6389fd2c776",
+          "binary_sha256": "c750abfe6f8eeccc9d01f6d38d133741d8439032789af9dbcea5cdc777a77915",
+          "notes": "Deferred admission/explicit retirement and optional-target provider branch: original child+leaf replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      }
+    },
+    "identical_foreign_handle_regression": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-retire-identical-verify-02/normal-verification.json",
+        "report_sha256": "3f201abc55dbd6c40b272f6faf5638d5b099e61e5c671fb5519e8822424453a9",
+        "result": {
+          "passed": true,
+          "returncode": 0,
+          "stdout": "same_matrix=1 retired=1 foreign_preserved=1\n",
+          "probe_sha256": "b2dde5471e38276799dbd84630da399bc2d77c1d959f0e17543551da5471679d",
+          "binary_sha256": "3dbce2aff95169508ea92bfa91989cd298a263259817602d551f7d49ee9b72cb",
+          "scope": "Unchanged probe versus retained baseline; foreign identical-matrix handle now survives retirement."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-scene-retire-identical-verify-02/sanitized-verification.json",
+        "report_sha256": "1625f0b0d8c7ad0e2ef16a2996d1626110da63d6b929b4d151db2556d1bd9f5f",
+        "result": {
+          "passed": true,
+          "returncode": 0,
+          "stdout": "same_matrix=1 retired=1 foreign_preserved=1\n",
+          "probe_sha256": "b2dde5471e38276799dbd84630da399bc2d77c1d959f0e17543551da5471679d",
+          "binary_sha256": "1166b70af8090be7ca4b4eaa9a74aad11f310682c1e4643f356836ac92b2e3d8",
+          "scope": "Unchanged probe versus retained baseline; foreign identical-matrix handle now survives retirement."
+        }
+      }
+    },
+    "retained_baseline": {
+      "report": "build/oblivion-compat/m15/S4/native-scene-retire-identical-baseline-01/report.json",
+      "report_sha256": "09eb10b95d4ff0bc65e4ec57ea48e10a9bdab34ba734d05424ea786e472bc4fd",
+      "result": {
+        "observed_expected_failure": true,
+        "returncode": 1,
+        "stdout": "same_matrix=1 retired=1 foreign_preserved=0\n",
+        "probe_sha256": "b2dde5471e38276799dbd84630da399bc2d77c1d959f0e17543551da5471679d",
+        "binary_sha256": "131457a51066510f1d44dcd2594e02298de6c6a38f73132bfe4a44224d47cbb9",
+        "scope": "Actual production retirement clears a distinct foreign projection containing identical matrix values. Preserve this pre-fix result; no native game behavior inferred."
+      },
+      "note": "First full01 passes2898 tests but lacks identical-storage replacement coverage. Retained unchanged probe exits1 with foreign_preserved0. Fresh02 passes2899 including the regression and unchanged probe now reports foreign_preserved1 in both builds."
+    },
+    "cases": [
+      "NifSceneTraversalTest.DeferredAdmissionLeavesCallbacksLiveAndRetirementPreservesCurrentLocals",
+      "NifSceneTraversalTest.DeferredAdmissionGuardsEveryAuthorAndCachedComponentBeforeAnyProjection",
+      "NifSceneTraversalTest.DeferredAdmissionGuardsPlacementHierarchyAndForeignProjection",
+      "NifSceneTraversalTest.CompetingDeferredCandidatesCannotReplaceOrRetireTheAdmittedOwner",
+      "NifSceneTraversalTest.RetirementPreservesForeignHandlesAndInvalidatesMovedSkeletonPalette",
+      "NifSceneTraversalTest.RetirementRejectsReentryAndTerminatesDamagedCycles",
+      "NifSceneTraversalTest.RetirementPreservesForeignStorageEvenWhenItsMatrixIsIdentical",
+      "NifSceneTraversalTest.DeferredDiscardAndExpiredRootDoNotPublish"
+    ],
+    "native_provenance": {
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "cases": "build/oblivion-compat/m15/S4/node-controller-order-oracle-01/cases.json",
+      "cases_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+      "scope": "Unchanged native controller/cache expectations replay through deferred commit and retirement:512 frames,64 sequences. Same recorded parent boundary, warm initial old child cache and excluded invalid frame0 leaf cache as object_local_root_followup. New C++ resource lifecycle is engineering validation, not an original Havok admission/retirement claim. No new original instructions or game run."
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/probe.cpp": "a1e2fdc2e7da12590c31e4b13eca80e4a9b781994f6e6eafc54efa49dd7af8fa",
+      "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/compare.py": "7bbf74af4b8a561d0b1c7073aaebd3ef5f9d392602ed11d2f40cf6389fd2c776",
+      "build/oblivion-compat/m15/S4/native-scene-admission-corpus-02/input.txt": "151abb6ddb0f04a6a122cc1c52facc4d7879408cbd59866e24bda53316f85006",
+      "build/oblivion-compat/m15/S4/native-scene-retire-identical-verify-02/probe.cpp": "b2dde5471e38276799dbd84630da399bc2d77c1d959f0e17543551da5471679d",
+      "build/oblivion-compat/m15/S4/native-scene-retire-identical-verify-02/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/native-scene-retire-identical-verify-02/verify.py": "afa6e9fefe8ddbb64684c8cda36336dc5f2d6324e87d8ce9f2f4cc4399036961"
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Full component compiler/structural inventories, actual projection resource lifecycle and cache replay. Both final builds have identical2899 test names and no warnings/failures/skips. No automatic app caller, engine/Python/schema rerun or normal-input/fresh-engine course in this component chunk.",
+    "limits": [
+      "The composite engine owner must retain its source model and validate actor life/generation/callback ownership through commit. Component admission compares current source state and is not a global actor ownership epoch.",
+      "Retirement preserves author locals, foreign storage and callback attachment. It does not perform GetUp/FSM recovery, rebuild KF states or synchronize an external physics/capsule owner.",
+      "Existing ordinary single-root transform/group restrictions and exclusive update ownership remain. Palette cleanup follows unique parent chains; unsupported multiply parented scene semantics are not admitted.",
+      "Automatic actor construction/frame ownership, coherent group/filter initialization, contact/reaction/FSM/GetUp and all remaining full M15S4 mastery/input/view/device/FPS/interruption/savequitfreshrestart courses stay open."
+    ]
   }
 }

@@ -68,6 +68,164 @@ namespace
         }
     };
 
+    TEST_F(NifSceneTraversalTest, DeferredAdmissionLeavesCallbacksLiveAndRetirementPreservesCurrentLocals)
+    {
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        unsigned calls = 0;
+        osg::ref_ptr<Callback> callback = new Callback([&](Node&, osg::NodeVisitor&) { ++calls; });
+        mRoot->setUpdateCallback(callback);
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        EXPECT_TRUE(prepared->isValid()); EXPECT_EQ(calls, 0u);
+        for (const auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+            EXPECT_FALSE(node->getTraversalMatrix().getMatrix());
+        EXPECT_EQ(mRoot->getUpdateCallback(), callback);
+        EXPECT_EQ(prepared->cachedWorld(*mLeaf).mTranslation.x(), 117);
+        EXPECT_THROW(prepared->updateObjectLocal(mStamp, 1, placement), std::invalid_argument);
+        EXPECT_EQ(calls, 0u);
+        osgUtil::UpdateVisitor ordinary; mRoot->accept(ordinary);
+        EXPECT_EQ(calls, 1u);
+        ASSERT_TRUE(prepared->commitPrepared()); EXPECT_FALSE(prepared->commitPrepared());
+        EXPECT_EQ(mRoot->getUpdateCallback(), callback);
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional<std::uint16_t>(9) : std::nullopt;
+        };
+        callbacks.mPhysicalWorld = [](const Node&) {
+            auto world = Nif::NiTransform::getIdentity(); world.mTranslation = {150, 0, 0}; return world;
+        };
+        prepared->updateObjectLocal(mStamp, 1, placement, callbacks);
+        EXPECT_EQ(calls, 2u); EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 50);
+        EXPECT_EQ(prepared->cachedWorld(*mLeaf).mTranslation.x(), 157);
+        ASSERT_TRUE(prepared->retire()); EXPECT_FALSE(prepared->retire());
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared());
+        for (const auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+            EXPECT_FALSE(node->getTraversalMatrix().getMatrix());
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 50);
+        EXPECT_EQ(mRoot->getUpdateCallback(), callback);
+        EXPECT_THROW(prepared->updateObjectLocal(mStamp, 1, placement), std::invalid_argument);
+    }
+
+    TEST_F(NifSceneTraversalTest, DeferredAdmissionGuardsEveryAuthorAndCachedComponentBeforeAnyProjection)
+    {
+        const auto placement = Nif::NiTransform::getIdentity();
+        const auto unchanged = [&] {
+            for (const auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+                EXPECT_FALSE(node->getTraversalMatrix().getMatrix());
+        };
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mLeaf->mRotationScale.mValues[0][1] = -0.f;
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared()); unchanged();
+        mLeaf->mRotationScale.mValues[0][1] = 0;
+        prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mLeaf->mScale = 2;
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared()); unchanged();
+        mLeaf->mScale = 1;
+        prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mLeaf->setTranslation({99, 0, 0});
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared()); unchanged();
+    }
+
+    TEST_F(NifSceneTraversalTest, DeferredAdmissionGuardsPlacementHierarchyAndForeignProjection)
+    {
+        osg::ref_ptr<osg::MatrixTransform> scaffold = new osg::MatrixTransform(osg::Matrixd::translate(100, 0, 0));
+        scaffold->addChild(mRoot);
+        const auto placement = Nif::NiTransform::getIdentity();
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        scaffold->setMatrix(osg::Matrixd::translate(101, 0, 0));
+        EXPECT_FALSE(prepared->commitPrepared()); EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+        prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mRoot->removeChild(mChild);
+        EXPECT_FALSE(prepared->commitPrepared()); EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+        mRoot->addChild(mChild);
+        prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mLeaf->setTraversalMatrix(osg::Matrixd::translate(99, 0, 0));
+        const auto foreign = mLeaf->getTraversalMatrix();
+        EXPECT_FALSE(prepared->commitPrepared()); EXPECT_TRUE(prepared->retire());
+        EXPECT_EQ(mLeaf->getTraversalMatrix(), foreign);
+        EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+    }
+
+    TEST_F(NifSceneTraversalTest, CompetingDeferredCandidatesCannotReplaceOrRetireTheAdmittedOwner)
+    {
+        const auto placement = Nif::NiTransform::getIdentity();
+        auto first = Binding::prepareObjectLocal(*mRoot, placement);
+        auto second = Binding::prepareObjectLocal(*mRoot, placement);
+        ASSERT_TRUE(first->commitPrepared());
+        const auto owned = mRoot->getTraversalMatrix();
+        EXPECT_FALSE(second->isValid()); EXPECT_FALSE(second->commitPrepared());
+        EXPECT_TRUE(second->retire()); EXPECT_EQ(mRoot->getTraversalMatrix(), owned);
+        EXPECT_TRUE(first->isValid()); EXPECT_TRUE(first->retire());
+        EXPECT_FALSE(second->commitPrepared()); EXPECT_FALSE(first->commitPrepared());
+    }
+
+    TEST_F(NifSceneTraversalTest, RetirementPreservesForeignHandlesAndInvalidatesMovedSkeletonPalette)
+    {
+        Binding binding(*mRoot);
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mChild ? std::optional<std::uint16_t>(1) : std::nullopt;
+        };
+        callbacks.mPhysicalWorld = [](const Node&) {
+            auto world = Nif::NiTransform::getIdentity(); world.mTranslation = {200, 0, 0}; return world;
+        };
+        binding.update(mStamp, 1, callbacks);
+        mLeaf->setName("leaf"); mLeaf->setTraversalMatrix(osg::Matrixd::translate(999, 0, 0));
+        const auto foreign = mLeaf->getTraversalMatrix();
+        mRoot->removeChild(mChild);
+        osg::ref_ptr<SceneUtil::Skeleton> moved = new SceneUtil::Skeleton; moved->addChild(mChild);
+        auto* bone = moved->getBone("leaf"); ASSERT_NE(bone, nullptr);
+        moved->updateBoneMatrices(42);
+        EXPECT_FLOAT_EQ(bone->mMatrixInSkeletonSpace.getTrans().x(), 1189);
+        EXPECT_FALSE(binding.isValid()); EXPECT_TRUE(binding.retire());
+        EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+        EXPECT_FALSE(mChild->getTraversalMatrix().getMatrix());
+        EXPECT_EQ(mLeaf->getTraversalMatrix(), foreign);
+        moved->updateBoneMatrices(42);
+        EXPECT_FLOAT_EQ(bone->mMatrixInSkeletonSpace.getTrans().x(), 1004);
+    }
+
+    TEST_F(NifSceneTraversalTest, RetirementRejectsReentryAndTerminatesDamagedCycles)
+    {
+        Binding binding(*mRoot);
+        mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) {
+            EXPECT_FALSE(binding.retire()); EXPECT_FALSE(binding.commitPrepared());
+        }));
+        binding.update(mStamp, 1);
+        EXPECT_TRUE(binding.isValid());
+        mLeaf->addChild(mRoot);
+        EXPECT_TRUE(binding.retire());
+        for (const auto* node : {mRoot.get(), mChild.get(), mLeaf.get()})
+            EXPECT_FALSE(node->getTraversalMatrix().getMatrix());
+        mLeaf->removeChild(mRoot);
+    }
+
+    TEST_F(NifSceneTraversalTest, RetirementPreservesForeignStorageEvenWhenItsMatrixIsIdentical)
+    {
+        Binding binding(*mRoot);
+        const auto owned = mRoot->getTraversalMatrix();
+        ASSERT_TRUE(owned.getMatrix());
+        mRoot->setTraversalMatrix(*owned.getMatrix());
+        const auto foreign = mRoot->getTraversalMatrix();
+        EXPECT_EQ(owned, foreign);
+        EXPECT_FALSE(owned.sharesStorageWith(foreign));
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_TRUE(binding.retire());
+        EXPECT_TRUE(mRoot->getTraversalMatrix().sharesStorageWith(foreign));
+        EXPECT_FALSE(mChild->getTraversalMatrix().getMatrix());
+    }
+
+    TEST_F(NifSceneTraversalTest, DeferredDiscardAndExpiredRootDoNotPublish)
+    {
+        const auto placement = Nif::NiTransform::getIdentity();
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        prepared.reset();
+        EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+        prepared = Binding::prepareObjectLocal(*mRoot, placement);
+        mRoot = nullptr;
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared());
+        EXPECT_TRUE(prepared->retire()); EXPECT_FALSE(mChild->getTraversalMatrix().getMatrix());
+    }
+
     TEST_F(NifSceneTraversalTest, ObjectLocalTraversalInterleavesCollisionTargetsWithUpdatedParentCaches)
     {
         osg::ref_ptr<osg::MatrixTransform> scaffold = new osg::MatrixTransform(osg::Matrixd::translate(-300, 0, 0));

@@ -100,6 +100,18 @@ namespace SceneUtil
         // points reject this binding. Ordinary-node policies still apply.
         NifSceneTraversal(NifOsg::MatrixTransform& objectRoot, const Nif::NiTransform& nativeParentWorld,
             Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+        // Prepare all caches/projection storage without changing the scene.
+        // Admission guards every native local/cache component, hierarchy,
+        // source projection and external drawing placement. The source must be
+        // owned exclusively through commit; callbacks have their own owner.
+        static std::unique_ptr<NifSceneTraversal> prepareObjectLocal(NifOsg::MatrixTransform& objectRoot,
+            const Nif::NiTransform& nativeParentWorld,
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+        bool commitPrepared() noexcept;
+        // Release only still-owned drawing handles, including after hierarchy
+        // damage. Preserve current author locals and foreign replacements.
+        // Reject reentry while traversing. Retirement is final for this owner.
+        bool retire() noexcept;
         ~NifSceneTraversal();
         NifSceneTraversal(const NifSceneTraversal&) = delete;
         NifSceneTraversal& operator=(const NifSceneTraversal&) = delete;
@@ -155,6 +167,8 @@ namespace SceneUtil
         static std::optional<Mode> updateMode(const osg::NodeVisitor* visitor) noexcept;
 
     private:
+        NifSceneTraversal(NifOsg::MatrixTransform& objectRoot, const Nif::NiTransform& nativeParentWorld,
+            Nif::NativeTransformPrecision precision, bool deferred);
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
             const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
             const Nif::NiTransform* nativeParentWorld = nullptr);

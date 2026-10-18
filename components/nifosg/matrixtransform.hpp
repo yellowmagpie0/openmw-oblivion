@@ -29,6 +29,9 @@ namespace NifOsg
             explicit TraversalMatrix(const osg::Matrixd& matrix);
             const osg::Matrixd* getMatrix() const noexcept;
             bool operator==(const TraversalMatrix& other) const noexcept;
+            // Resource identity for exclusive projection ownership. Matrix
+            // value equality intentionally also accepts distinct storage.
+            bool sharesStorageWith(const TraversalMatrix& other) const noexcept { return mData == other.mData; }
 
         private:
             struct Data;
