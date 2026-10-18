@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "purpose": "Editable original-executable producer probe inputs; not gameplay acceptance or permission to invent a live frame provider.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "ini_fields": {
+    "iUpdateType:HAVOK": {
+      "value_address": "0xB0520C",
+      "runtime_address": "0xBA7918",
+      "compiled_bits": 0
+    },
+    "fChaseDeltaMult:HAVOK": {
+      "value_address": "0xB05234",
+      "runtime_address": "0xB2E2F0",
+      "compiled_bits": 1028443341
+    },
+    "fMaxTime:HAVOK": {
+      "value_address": "0xB097C0",
+      "runtime_address": "0xB2E2E8",
+      "compiled_bits": 1015580809,
+      "setup": "Original setting < 1 ? setting : 1; malformed/nonpositive results are not admitted by the C++ frame helper."
+    }
+  },
+  "raw_modes": [
+    0,
+    1,
+    2,
+    3,
+    10,
+    4294967295
+  ],
+  "smoothing_values": [
+    -0.0,
+    0.01,
+    0.05,
+    0.5,
+    1,
+    4
+  ],
+  "clamp_setting_bits": [
+    0,
+    2147483648,
+    3184315597,
+    953267991,
+    1015580809,
+    1015598704,
+    1056964608,
+    1065353216,
+    1065353215,
+    1065353217,
+    1073741824,
+    2139095039,
+    2139095040,
+    4286578688,
+    2143289344
+  ],
+  "frame_profiles": [
+    [
+      0,
+      0.0167,
+      0.05
+    ],
+    [
+      0,
+      0.016666666666666666,
+      0.05
+    ],
+    [
+      10,
+      0.0167,
+      0.05
+    ],
+    [
+      1,
+      0.0167,
+      0.05
+    ],
+    [
+      2,
+      0.0167,
+      0.9
+    ],
+    [
+      0,
+      2,
+      0.05
+    ],
+    [
+      0,
+      0.01,
+      0.05
+    ],
+    [
+      10,
+      0.0167,
+      0.5
+    ]
+  ],
+  "frame_tick_deltas_ms": [
+    0,
+    1,
+    8,
+    16,
+    17,
+    33,
+    167,
+    1000,
+    16,
+    17,
+    16,
+    17
+  ],
+  "frame_initial_remaining": [
+    0,
+    0.004
+  ],
+  "scene_complex_inputs": [
+    0,
+    1
+  ],
+  "timer": {
+    "elapsed_ms": [
+      0,
+      1,
+      16,
+      167,
+      4294967295
+    ],
+    "override_ms": [
+      0,
+      16.5
+    ],
+    "fractional_ms": [
+      0,
+      0.75
+    ],
+    "scales": [
+      0.5,
+      1,
+      2
+    ],
+    "paused": [
+      0,
+      1
+    ]
+  },
+  "selector_wrapper": {
+    "entry": "0x47C990",
+    "body_selector": 3,
+    "final_selector": 0,
+    "initial_selectors": [
+      0,
+      2,
+      3,
+      99
+    ],
+    "primary_children": [
+      "empty",
+      "ordinary",
+      "billboard",
+      "derived",
+      "mixed"
+    ],
+    "secondary_cases": [
+      "none",
+      "same-parent",
+      "distinct-parent"
+    ],
+    "boundaries": [
+      "Virtual RTTI getter returns declared fixture type chain.",
+      "Virtual controller callback records selector and forwards to actual 88EDC0 with pending0x49 collision.",
+      "Virtual world-update callback records selector and returns."
+    ]
+  },
+  "scene_complex_setter": {
+    "execute_address": "0x50E9D0",
+    "prefix_entry": "0x50EA06",
+    "parsed_integer_inputs": [
+      0,
+      1,
+      4294967295,
+      2147483648,
+      2147483647
+    ],
+    "initial_flag_bytes": [
+      0,
+      1,
+      255
+    ],
+    "limits": "Execute parsed-input setter prefix; the argument parser and complete command dispatcher are outside this probe."
+  },
+  "comparison_domain": {
+    "positive": "Current preparePhysicalFrame API uses Double intermediate precision; compare all connected caller rows at control words0x27F/0x37F.",
+    "exploratory": "Record0x7F observations separately; main-call-site live control word is not established by emulation.",
+    "fields": [
+      "input_delta",
+      "prepared_frame",
+      "substep_seconds",
+      "substep_count",
+      "remaining",
+      "smoothed"
+    ]
+  },
+  "limits": [
+    "INI text audit is separate from a live parser/configuration bootstrap; emitted fixture floats are explicitly supplied.",
+    "Original timer uses supplied tick values; no OS tick producer, full engine loop, contact step, original game process, normal input or restart acceptance.",
+    "Direct references establish a selector3 wrapper and its reset to0, not a complete indirect-writer audit or selector2 semantics.",
+    "Clock ownership, persistence, World admission, actor controller clocks and actual KF order still require integration and runtime validation."
+  ]
+}

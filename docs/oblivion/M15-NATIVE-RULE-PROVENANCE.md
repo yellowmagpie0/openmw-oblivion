@@ -15730,3 +15730,51 @@ source fingerprint `02dca996945e4f527d7b367ba519020f4a01c865cc34c8b6cec8734d8e8a
 generic renderer path. Automatic actor construction, winning frame/selector
 producers, native KF ordering, subtype ownership, contact steps and complete
 gameplay/restart acceptance remain open. ASan leaks are disabled.
+
+
+### Physical frame caller, configuration and selector producers
+
+Original SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The main40D8B0 prefix supplies timerB33E9C and byteB333B8 to full889810;
+preceding47D170 consumes the KERNEL32.GetTickCount import. Full timer and
+caller/helper execute with supplied unsigned tick, pause/override/fraction,
+scale, persistent remainder and smoothing fixtures. Configuration-copy prefix
+441A09 identifies iUpdateType:HAVOK and fChaseDeltaMult:HAVOK as the sources
+of raw modeBA7918 and smoothingB2E2F0. Both World setup prefixes clamp
+fMaxTime:HAVOK with `setting < 1 ? setting : 1` into fixed stepB2E2E8.
+Compiled fixed step bits1015580809 differ from the0.0167 text override in both
+current shipped/installed INIs (fixture bits1015598704). Text/metadata inspection
+does not establish initialized live parser results.
+
+The command table independently names SetSceneIsComplex opcode115D, execute
+50E9D0. Its parsed setter prefix maps a nonzero integer to1 inB333B8/BA7A04.
+That byte selects the frame helper's two-step cap. The collision selector is a
+separateBA7A8C global: full47C990 brackets primary/secondary scene callbacks
+with3 and resets to0, without restoring its entry value. Supplied virtual RTTI,
+controller and world callbacks are explicit boundaries. The controller boundary
+forwards to actual88EDC0 and observes pending0x49 retained under selector3.
+Other indirect selector writers, selector2 production and ordinary actor frame
+context are still unproved.
+
+Manifest-driven original03 passes1,935 cases:45 setter prefixes,108 configuration
+copies,90 clamps,1,152 connected caller frames,360 timers and180 wrappers.
+Timer/configuration/caller paths have no stubs. Original-input sensitivity checks
+change96 frames for compiled-step substitution,144 for forced fixed mode,66 for
+ignoring scene complexity and135 final selectors for restoring entry state.
+Normal and ASan/UBSan standalone builds of unchanged actualphysicalframe.cpp
+match all768 Double-domain rows/4,608 fields each. The separately declared384
+Single0x7F observations expose six one-ULP differences in stored smoothing and
+substep duration. They remain retained; live main-call-site precision must be
+observed before runtime arithmetic selection. No whole-precision pass is claimed.
+
+Initial01 harness wrongly inspected stack arguments after the helper reused
+that storage;02/03 observe entry arguments and retained globals. The strict INI
+parser attempt also remains retained; final metadata audit extracts only three
+unique HAVOK scalar keys. Editable inputs are in
+`M15-PHYSICAL-FRAME-PRODUCER-PROBE.json`; hashes, exact reports, boundaries and
+limits are in `native_physical_frame_producer_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. No production code changes, full-suite
+reruns, native game process, physical contact step or gameplay/restart acceptance
+are claimed. Actual clock ownership and native World activation remain open;
+ASan leaks are disabled.

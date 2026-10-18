@@ -7086,5 +7086,246 @@
       "Explicit actor Ptr rebinding is implemented; live cell migration still needs World/service and runtime coverage. Generic physical-pose sample/batch/snapshot methods are not made native-owner APIs by this change. Frame/controller callbacks must not change topology or release owners. Later failures do not roll back completed callback/body phases.",
       "ASan leaks disabled. Python/schema unchanged and not rerun. Coherent group/filter/capsule/root/reference coordination, contact/reaction/FSM/GetUp and full normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart gates remain open. Full M15S4 is not complete."
     ]
+  },
+  "native_physical_frame_producer_followup": {
+    "status": "Original configuration/timer/caller and selector-wrapper producers mapped and independently executed. Current Double-domain helper agrees with connected inputs. Live caller precision, initialized winning globals, indirect selector2 production and actual runtime integration remain open; full M15S4 is incomplete.",
+    "source_head": "c8fe98e9893999bd466edcea01a6c54ef5abc8e1",
+    "implementation_change": "No production C++ or engine test source changed. Added editable original-probe manifest and new native provenance/evidence; existing full-suite checks were not repeated.",
+    "manifest": {
+      "path": "docs/oblivion/M15-PHYSICAL-FRAME-PRODUCER-PROBE.json",
+      "sha256": "db8c4a0079fec0e50be32ab581afd3a7405401534838d510a667668db8f9ec5c"
+    },
+    "mapping": [
+      "Main caller40D8B0 loads timer floatB33E9C and the byteB333B8 into arguments for actual889810 at40D8C2. The preceding47D170 call consumes KERNEL32.GetTickCount from IAT A280D0. Full timer executes on supplied unsigned ticks, override/fraction, scale and pause state; no OS call is emulated as a live observation.",
+      "Original441A09..441A48 copies iUpdateType:HAVOK fromB0520C toBA7918 and fChaseDeltaMult:HAVOK fromB05234 toB2E2F0. Raw compiled defaults are mode0 and smoothing0.05.",
+      "Both setup prefixes4D4C2C..4D4C4A and4D52D5..4D52F4 load fMaxTime:HAVOK atB097C0 and store setting<1?setting:1 atB2E2E8. The image default has bits1015580809; both audited shipped/installed INI texts specify0.0167, fixture bits1015598704. Invalid/nonpositive clamp outputs are outside the C++ frame helper supported domain.",
+      "Command table identifies SetSceneIsComplex opcode0x115D, execute50E9D0, one parameter and no parent. Its parsed-input prefix50EA06 normalizes nonzero int to1 and sets bothB333B8 andBA7A04. The full command argument parser and main-loop clear ordering are not covered.",
+      "Full47C990 writes selectorBA7A8C=3 for its primary/secondary scene work and resets it to0 on return, even when entry selector was2/3/99. Declared virtual RTTI/controller/world boundaries supply node fixtures; controller boundary forwards to real88EDC0, which retains pending0x49 under selector3. This is not a complete indirect writer audit or proof that ordinary actor frames always use0."
+    ],
+    "original_probe": {
+      "report": "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/verification.json",
+      "report_sha256": "aa9e7baf237bff107ef257acd67d2fa47416882ea7a2cf37339d9cdfd291f3c7",
+      "result": {
+        "passed": true,
+        "counts": {
+          "setters": 45,
+          "bootstrap": 108,
+          "clamps": 90,
+          "frames": 1152,
+          "timers": 360,
+          "wrappers": 180
+        },
+        "manifest_sha256": "db8c4a0079fec0e50be32ab581afd3a7405401534838d510a667668db8f9ec5c",
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "6099aa09cfa59522db7e73386bf056971c61ab8015d7d456abd7b769f5e102ff",
+        "cases_sha256": "26f9a6453cbd57bb3c8986a5602aeace962f1968cb65b64c49324862830e1679",
+        "scope": "Actual INI-copy and two fixed-step-clamp prefixes, full47D170 timer, actual40D8B0 caller prefix entering full889810 across consecutive retained frames; no stubs on those paths. Full47C990 selector wrapper uses declared RTTI/controller/world virtual boundaries; controller boundary forwards to actual88EDC0 skip. No INI parser, complete setup caller, real node controller evaluation, physical step, game process or restart acceptance. Scene-complex boolean supplied; command metadata checked separately."
+      }
+    },
+    "metadata": {
+      "report": "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/metadata.json",
+      "report_sha256": "09766328c85eab5754ec2d855737cc714aefb1151d77b8e12716c6a1ccd02d6f",
+      "result": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "extractor_sha256": "569b1ccc5565089ba9fcea2a25f58c0e8527347b66d8b9b6f989c59f03a1ba7a",
+        "setting_metadata": {
+          "iUpdateType:HAVOK": {
+            "value_address": "0xb0520c",
+            "compiled_bits": 0,
+            "name_address": "0xa3790c"
+          },
+          "fChaseDeltaMult:HAVOK": {
+            "value_address": "0xb05234",
+            "compiled_bits": 1028443341,
+            "name_address": "0xa37988"
+          },
+          "fMaxTime:HAVOK": {
+            "value_address": "0xb097c0",
+            "compiled_bits": 1015580809,
+            "name_address": "0xa46b94"
+          }
+        },
+        "command_metadata": {
+          "long_name": "SetSceneIsComplex",
+          "opcode": 4445,
+          "execute": "0x50e9d0",
+          "needs_parent": 0,
+          "parameter_count": 1
+        },
+        "ini_text_audit": {
+          "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion_default.ini": {
+            "sha256": "1111363369502f4d3546435878b61b7744512b5e817c120796d4c8c8fd4a5f1a",
+            "fields": {
+              "iUpdateType": {
+                "text": "0",
+                "integer": 0
+              },
+              "fChaseDeltaMult": {
+                "text_override": null,
+                "compiled_fallback_bits": 1028443341
+              },
+              "fMaxTime": {
+                "text": "0.0167",
+                "binary32_bits": 1015598704
+              }
+            }
+          },
+          "/home/maciek/.local/share/Steam/steamapps/compatdata/22330/pfx/drive_c/users/steamuser/Documents/My Games/Oblivion/Oblivion.ini": {
+            "sha256": "ce0af8be4dc8525a7dc5c0496a1df7011e3a30015671f9be8ba934016c990c51",
+            "fields": {
+              "iUpdateType": {
+                "text": "0",
+                "integer": 0
+              },
+              "fChaseDeltaMult": {
+                "text_override": null,
+                "compiled_fallback_bits": 1028443341
+              },
+              "fMaxTime": {
+                "text": "0.0167",
+                "binary32_bits": 1015598704
+              }
+            }
+          }
+        },
+        "limits": "Narrow current installed/shipped HAVOK text and immutable command/setting metadata; no complete INI syntax validation, live original parser or game process. Converted binary32 values are explicit fixture inputs, not observed initialized globals. SetSceneIsComplex parsed setter prefix is separately executed. Full main-loop indirect-selector-writer audit and live FPCW remain open."
+      }
+    },
+    "imports": {
+      "report": "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/imports.json",
+      "report_sha256": "d069b52dc14cb32826396d72c0513e11dbb3404cb1e27442284af8d054875ef9",
+      "result": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "inspector_sha256": "1981c7ff033acf09439c25253ff3bb31c6f77e1dfc49b875a28c7935a8f9698b",
+        "timer_caller_import": {
+          "iat": "0xA280D0",
+          "dll": "KERNEL32.dll",
+          "function": "GetTickCount"
+        },
+        "scope": "Import metadata only; no OS tick call or original-game runtime execution."
+      }
+    },
+    "configuration_sensitivity": {
+      "report": "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/controls.json",
+      "report_sha256": "094294518a9161f92af8415eb40cf35b5290a1d55a0bebaeff1d6b2d43f34725",
+      "result": {
+        "passed": true,
+        "cases_sha256": "26f9a6453cbd57bb3c8986a5602aeace962f1968cb65b64c49324862830e1679",
+        "controls": {
+          "compiled_fixed_step_instead_of_ini": {
+            "pairs": 144,
+            "differing_frames": 96
+          },
+          "forced_fixed_mode_instead_of_configured_smoothing": {
+            "pairs": 144,
+            "differing_frames": 144
+          },
+          "ignore_scene_complex_limit": {
+            "pairs": 576,
+            "differing_frames": 66
+          },
+          "restore_previous_selector_after_wrapper": {
+            "cases": 180,
+            "differing_final_selectors": 135
+          }
+        },
+        "scope": "Sensitivity checks using separate original configuration sequences and observed wrapper returns; no C++ invocation, no patched original instructions, no new numerical tolerance or claim that a supplied alternate configuration is a live observed state."
+      }
+    },
+    "cpp_comparisons": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/normal-verification.json",
+        "report_sha256": "b34288d371fd9e69f0e53ddbedea6abdb2513e139c97030800ac0ccc86fbc59d",
+        "result": {
+          "passed": true,
+          "cases": 768,
+          "checks": 4608,
+          "mismatches": [],
+          "exploratory_single_cases": 384,
+          "exploratory_single_differences": 6,
+          "source_sha256": "26f9a6453cbd57bb3c8986a5602aeace962f1968cb65b64c49324862830e1679",
+          "driver_sha256": "3c251ba66444e036af8d9222d94a9728be6ac5fe46990304aeb5019adaeb6f95",
+          "comparator_sha256": "548df2660b01abb2a39ba20cbd6d313e981fd07ff095dcd4c716d052e391dd1e",
+          "production_source_sha256": "f079984b491376652a3f79038d634ee57f3329085700d06c58dedaafc0a64e4f",
+          "binary_sha256": "19e2f1fc5df2c3f6473085631c719434890a779633a35eb5bd68e16e3173439d",
+          "output_sha256": "9f529ea1d41c3ab4390a22d389e99dff4a78aae200b10b3147c44dc5fe4c186e",
+          "scope": "All connected original timer/bootstrap/caller cases at0x27F/0x37F, current Double-intermediate helper API. Six fields exact. Single0x7F observations retained separately; no live main-caller precision, runtime source integration or gameplay acceptance claim."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/sanitized-verification.json",
+        "report_sha256": "ba7e20d56823189846bc87a0fb2caf7ec8fd70b23db3392eb88990a46e32b478",
+        "result": {
+          "passed": true,
+          "cases": 768,
+          "checks": 4608,
+          "mismatches": [],
+          "exploratory_single_cases": 384,
+          "exploratory_single_differences": 6,
+          "source_sha256": "26f9a6453cbd57bb3c8986a5602aeace962f1968cb65b64c49324862830e1679",
+          "driver_sha256": "3c251ba66444e036af8d9222d94a9728be6ac5fe46990304aeb5019adaeb6f95",
+          "comparator_sha256": "548df2660b01abb2a39ba20cbd6d313e981fd07ff095dcd4c716d052e391dd1e",
+          "production_source_sha256": "f079984b491376652a3f79038d634ee57f3329085700d06c58dedaafc0a64e4f",
+          "binary_sha256": "ec1d8ecc34170dca077fcc4720d59720e30296eefc4ccb761d624fdc0fb7d582",
+          "output_sha256": "9f529ea1d41c3ab4390a22d389e99dff4a78aae200b10b3147c44dc5fe4c186e",
+          "scope": "All connected original timer/bootstrap/caller cases at0x27F/0x37F, current Double-intermediate helper API. Six fields exact. Single0x7F observations retained separately; no live main-caller precision, runtime source integration or gameplay acceptance claim."
+        }
+      }
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/probe.py": "6099aa09cfa59522db7e73386bf056971c61ab8015d7d456abd7b769f5e102ff",
+      "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/metadata.py": "569b1ccc5565089ba9fcea2a25f58c0e8527347b66d8b9b6f989c59f03a1ba7a",
+      "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/imports.py": "1981c7ff033acf09439c25253ff3bb31c6f77e1dfc49b875a28c7935a8f9698b",
+      "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/driver.cpp": "3c251ba66444e036af8d9222d94a9728be6ac5fe46990304aeb5019adaeb6f95",
+      "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/compare.py": "548df2660b01abb2a39ba20cbd6d313e981fd07ff095dcd4c716d052e391dd1e"
+    },
+    "production_source_sha256": {
+      "components/esm4/physicalframe.cpp": "f079984b491376652a3f79038d634ee57f3329085700d06c58dedaafc0a64e4f",
+      "components/esm4/physicalframe.hpp": "b21f366c368496e069184557d94f32fe9ba15ac8e8ff5ebd377fb88fc1266727"
+    },
+    "precision_limit": {
+      "positive": "All768 connected caller rows at0x27F/0x37F match all six fields, in both normal and ASan/UBSan standalone builds of the unchanged actual production helper.",
+      "exploratory": "Each build also compares384 rows at0x7F. Six smoothing-mode rows differ by one ULP in both stored substep and smoothing; all other declared fields agree. This is retained evidence, not a full-precision pass or a reason to change current default arithmetic without observing live main-caller precision.",
+      "reports": {
+        "normal": {
+          "path": "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/normal-single-exploration.json",
+          "sha256": "df4ea4f6fb4adfb43264bf6e02333458ce06a7df9b44eb39de7fac9982b8932d"
+        },
+        "sanitized": {
+          "path": "build/oblivion-compat/m15/S4/native-frame-producer-comparison-01/sanitized-single-exploration.json",
+          "sha256": "df4ea4f6fb4adfb43264bf6e02333458ce06a7df9b44eb39de7fac9982b8932d"
+        }
+      }
+    },
+    "retained_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-frame-producer-audit-01/setup-failure.json",
+        "sha256": "5e7a38226bbdc140b2ca1c3f5eccb7e1f9544869489b0f998b43c1a097236496",
+        "result": "Harness incorrectly checked original input stack storage after return.889810 reuses it for scratch;02/03 observe argument words at actual entry and retained input global afterward."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-frame-producer-audit-02/verification.json",
+        "sha256": "ff8796b53f6a52ba5201a11070e1696fcbc3b9acbf9e84096dc7f0fab9814fa6",
+        "result": "All1890 original cases pass;03 adds45 parsed scene-complex setter cases and consumes the committed editable manifest."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-frame-producer-audit-03/metadata-initial-parser-failure.json",
+        "sha256": "75e2f5de7a8d63b2178fd72348e3cad534944b189fdf47ab05f3f8f5e99204ae",
+        "result": "Generic strict INI parser rejects unrelated standalone warning lines; final audit narrowly extracts three unique HAVOK scalar keys. No native parsing or complete syntax validation is claimed."
+      }
+    ],
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "Original counts:45 parsed setter prefixes,108 configuration-copy prefixes,90 fixed-step clamps,1152 connected timer/caller frames,360 full timer cases and180 full selector-wrapper cases. Timer/config/caller paths have no stubs. Scene wrapper has three declared virtual-node boundaries; collision base executes for admitted ordinary controller callbacks.",
+      "INI audit is current text/metadata, not a live native parser/configuration bootstrap. Script inputs, main timer ticks, scales and state remain explicit fixtures. No original game process or normal input was launched; no physical World/contact step or restart acceptance is claimed.",
+      "Positive C++ comparison domain is declared in the manifest before comparison.0x7F Single differences remain open. Clamping NaN/infinite/negative setup inputs is recorded only as original prefix behavior; it does not widen validated C++ frame inputs.",
+      "A raw selector remains distinct from raw iUpdateType and scene-complex flag. Wrapper reset establishes one producer path only. Live main-caller FPCW, initialized setting/flag values, per-frame clock ownership/lifetime/persistence, full actor scene orchestration and coherent physics stepping remain required.",
+      "No new component/engine suite run or application rebuild is claimed because production and engine tests are unchanged. Standalone normal/sanitized comparison compiles actualphysicalframe.cpp with retained commands/logs; leaks disabled. World native-owner activation, contacts/reaction/FSM/GetUp and the complete normal-input/device/view/FPS/interruption/fresh-process gameplay/save-restart gates remain open. Full M15S4 is not complete."
+    ]
   }
 }

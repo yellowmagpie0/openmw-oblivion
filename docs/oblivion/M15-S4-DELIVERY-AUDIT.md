@@ -5723,3 +5723,31 @@ node/attachment policies and live migration/morphology remain open, alongside
 group/filter/capsule/root coordination, contacts/reaction/FSM/GetUp and every
 remaining normal-input and fresh-process gameplay/save-restart gate. Full M15S4
 is not complete.
+
+
+### Frame inputs traced before World activation
+
+The original main caller's frame input now connects to full timer47D170 and the
+GetTickCount import. Executable setting metadata and actual setup prefixes map
+raw mode to iUpdateType:HAVOK, smoothing to fChaseDeltaMult:HAVOK, and fixed
+substep to fMaxTime:HAVOK clamped to at most1. Current installed/shipped INI texts
+both specify0.0167; using the compiled1/60 alone changes96 sampled frames. Text
+values remain supplied fixtures, without a live original INI-parser observation.
+The frame-limit flag comes from SetSceneIsComplex. Full47C990 separately brackets
+scene callbacks with raw collision selector3, then resets it to0.
+
+A manifest-driven original probe passes1,935 timer/configuration/caller/wrapper
+cases with declared virtual scene boundaries. Normal and ASan/UBSan comparison
+of the unchanged actual frame helper each matches768 Double-domain cases and
+4,608 fields. The separate384 Single-precision observations expose six one-ULP
+smoothing/substep differences. Live precision at the main call site is therefore
+an explicit next runtime check, alongside initialized settings and selector
+context. Both harness setup failures and exploratory differences are retained.
+Editable inputs are in `M15-PHYSICAL-FRAME-PRODUCER-PROBE.json`; exact evidence
+is under `native_physical_frame_producer_followup` in the verification index.
+
+Production code and engine tests are unchanged; full suites/app builds are not
+repeated. No original game/input course, physical step, contact or fresh-process
+acceptance is claimed. Clock lifecycle/persistence, indirect selector2 production,
+native World activation and all remaining M15S4 gameplay/restart gates stay open.
+Full M15S4 is not complete.
