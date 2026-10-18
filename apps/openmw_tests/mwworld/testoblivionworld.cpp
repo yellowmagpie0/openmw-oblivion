@@ -2466,7 +2466,11 @@ namespace
             for (unsigned field = 0; field < 3; ++field)
             {
                 wrong = cached;
-                if (field == 0) wrong.mBodies[0].mRecord = 13;
+                if (field == 0)
+                {
+                    wrong.mBodies[0].mRecord = 13;
+                    wrong.mWorldRegistration->mBodies = {13};
+                }
                 if (field == 1) wrong.mBodies[0].mNodeRecord = 9;
                 if (field == 2)
                 {

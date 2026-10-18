@@ -33,6 +33,9 @@ namespace MWPhysics
     ESM4::RuntimeActorRagdoll captureNativeActorRagdollSnapshot(
         const NifBullet::ActorRagdollPhysics& physics, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
+    std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepareNativeActorRagdollSnapshot(
+        const NifBullet::ActorRagdollPhysics& physics, const ESM4::RuntimeActorRagdoll& snapshot,
+        const ESM::FormKey& base, std::string_view model, const NifBullet::ActorRagdollDefinition& definition);
     void restoreNativeActorRagdollSnapshot(NifBullet::ActorRagdollPhysics& physics,
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition);

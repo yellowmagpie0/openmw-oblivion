@@ -4991,3 +4991,47 @@ and constraint-callback policy, the automatic reaction/GetUp caller and compound
 contact publication remain open. Registration selection is not yet in save DTOs;
 pose/controller restore preserves its live selection. Full recovery restart and
 normal-input/view/FPS gates remain open.
+
+
+Version 50 now persists explicit body/constraint World registration selections in
+C++ and the independent Python save codec. An absent field preserves legacy live
+selection; a present empty field requests no members. Shared single/group snapshot
+bridges retain this metadata. Prepared registrations stage routing/topology storage,
+admit all requested additions under the World lock, and publish only after the
+whole actor group validates. Late admission failure rolls back new members while
+retaining every prior pose, selection, body identity and shared clock. Cancellation,
+owner destruction, stale generations and retry have focused coverage. The software
+save/recreate course now restores one unregistered actor beside a registered
+actor and compares sixty explicit controller phases across fresh graphs.
+
+The corrected checkpoint passes all 2823 component tests and 1634 engine tests in
+each normal and ASan/UBSan configuration, plus 315 Python tests. Failed initial
+engine runs remain preserved: group capture had omitted the new metadata and two
+malformed identity fixtures needed matching registration records. Detailed source
+fingerprints, hashes, inventories and limits are in the
+`registration_persistence_followup` entry of
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. ASan leak checks are disabled.
+
+An additional 1080-case independent original-instruction corpus executes full
+8A0A70 admission preparation and actual normal/forced endpoint registration.
+With endpoint B's wrapper present and batch gate zero, a failed normal admission
+is followed by a diagnostic and forced admission; a nonzero unsigned batch gate
+skips both. Initially absent endpoint B inherits endpoint A's upper 16 filter bits
+while retaining its lower 16. Native World operations, diagnostic allocation and
+recursive associated-constraint callbacks remain declared boundaries. This does
+not establish recursive topology policy, native physics or fork acceptance.
+
+A separate 288-case corpus now executes actual 8A47C0/677C70 associated-list
+iteration and 8A06E0 constraint dispatch on a declared directed chain with every
+member initially absent and batch gate zero. An eligible child's admission
+registers ancestors, forcing deferred parents, and adds constraints on recursion
+unwind. Starting at a parent leaves descendants absent; a deferred starting body
+does not traverse its list. Imported atomic reference operations, the owning World
+getter, diagnostic allocation and native World operations are declared boundaries.
+This proves that fixture's ordering and filter propagation, not a universal graph
+closure, removal cascade or batch-flush policy.
+
+Automatic contact-driven reaction/FSM/GetUp integration, partial HIT policy,
+reference and capsule movement, every S4 mastery/effect branch, normal-input
+recovery, first/third person and device/FPS coverage, and real recovery save/quit/
+fresh-process continuation remain open. Full M15S4 is not delivered.

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 49
+CURRENT_VERSION = 50
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1189,7 +1189,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for entry in ragdolls:
         fields = {"actor", "base", "model", "asset_hash", "bodies"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"native_blends", "native_controllers"}):
+                or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration"}):
             raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
         actor, base = entry["actor"], entry["base"]
         native_key(actor)
@@ -1254,6 +1254,21 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             determinant = r[0]*(r[4]*r[8]-r[5]*r[7])-r[1]*(r[3]*r[8]-r[5]*r[6])+r[2]*(r[3]*r[7]-r[4]*r[6])
             if abs(determinant - 1.) > 1e-4:
                 raise RuntimeStateError("Improper TES4 ragdoll rotation")
+        if "world_registration" in entry:
+            registration = entry["world_registration"]
+            if (version < 50 or not isinstance(registration, dict)
+                    or set(registration) != {"bodies", "constraints"}):
+                raise RuntimeStateError("Invalid TES4 World registration or version")
+            for field in ("bodies", "constraints"):
+                records = check_collection(registration[field], "World registration records")
+                if (any(type(record) is not int or not 0 <= record <= 0x7fffffff for record in records)
+                        or any(a >= b for a, b in zip(records, records[1:]))):
+                    raise RuntimeStateError("Invalid TES4 World registration identity or order")
+            body_records = {body["record"] for body in bodies}
+            if (not set(registration["bodies"]) <= body_records
+                    or set(registration["constraints"]) & body_records
+                    or (registration["constraints"] and len(registration["bodies"]) < 2)):
+                raise RuntimeStateError("Unknown TES4 World body or invalid constraint selection")
         if "native_blends" in entry:
             blends = check_collection(entry["native_blends"], "native ragdoll blends")
             if (version < 34 or len(blends) > len(bodies)
@@ -2049,6 +2064,13 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         value = common_state(); controller["state"] = value
                         value["force_vector"] = [reader.unpack("<f") for _ in range(4)]; value["frame_delta"] = reader.unpack("<f")
                         controls["velocities"].append(controller)
+            if version >= 50:
+                present = reader.unpack("<B")
+                if present not in (0, 1):
+                    raise RuntimeStateError("Invalid TES4 World registration presence marker")
+                if present:
+                    entry["world_registration"] = {field: [reader.unpack("<I") for _ in range(reader.count())]
+                        for field in ("bodies", "constraints")}
             result["native_actor_ragdolls"].append(entry)
     if version >= 36:
         present = reader.unpack("<B")
@@ -2503,6 +2525,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         writer.pack("<B", int(controller["precedes_blend"])); value = controller["state"]; common_state(value)
                         for component in value["force_vector"]: writer.pack("<f", component)
                         writer.pack("<f", value["frame_delta"])
+            if version >= 50:
+                writer.pack("<B", int("world_registration" in entry))
+                if "world_registration" in entry:
+                    for field in ("bodies", "constraints"):
+                        records = entry["world_registration"][field]
+                        writer.pack("<I", len(records))
+                        for record in records: writer.pack("<I", record)
     if version >= 36:
         writer.pack("<B", int("native_physical_blend_time_cache" in state))
         if "native_physical_blend_time_cache" in state:

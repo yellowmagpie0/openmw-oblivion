@@ -199,7 +199,10 @@ namespace
             {
                 case 0: invalid.mAssetHash[0] = '0'; break;
                 case 1: invalid.mBodies[0].mNodeRecord = 99; break;
-                case 2: invalid.mBodies[0].mRecord = 99; break;
+                case 2:
+                    invalid.mBodies[0].mRecord = 99;
+                    invalid.mWorldRegistration->mBodies = {99};
+                    break;
                 case 3: invalid.mBodies[0].mLinearVelocity[0] = std::numeric_limits<float>::infinity(); break;
                 case 4: invalid.mBodies[0].mNativePackedVelocity->mAngular[3] = std::numeric_limits<float>::quiet_NaN(); break;
             }
@@ -971,12 +974,15 @@ namespace
         ASSERT_EQ(current.mActors.size(), 1u); ASSERT_TRUE(current.mTimeCache);
         auto legacy = current; legacy.mTimeCache.reset();
         auto& pose = legacy.mActors.begin()->second; pose.mNativeControllers.reset(); pose.mNativeBlends.reset();
+        pose.mWorldRegistration.reset();
+        scheduler.setActorRagdollWorldRegistrationSelection(mPtr, {});
         pose.mBodies[0].mNativeMotion.reset(); pose.mBodies[0].mNativePackedVelocity.reset();
         pose.mBodies[0].mPosition = {10, 20, 30};
         const ESM4::PhysicalBlendTimeCache retained{0xffffffffu, 1, -1, -0.f, -.25f};
         scheduler.restoreNativeBlendTimeCache(retained);
         scheduler.restoreActorRagdollSnapshots(legacy, bindings);
         EXPECT_EQ(scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin(), btVector3(10, 20, 30));
+        EXPECT_TRUE(scheduler.captureActorRagdollWorldRegistrationSelection(mPtr).mBodies.empty());
         EXPECT_EQ(scheduler.captureNativeBlendTimeCache(), retained);
         scheduler.removeActorRagdoll(mPtr);
         const auto empty = scheduler.captureActorRagdollSnapshots({});
@@ -1011,6 +1017,7 @@ namespace
         MWPhysics::PhysicsTaskScheduler resumed(1.f / 60.f, &fresh.mWorld, nullptr);
         for (const auto& binding : bindings) source.addActorRagdoll(binding.mPtr, mGraph, 1, mPoses, 1, -1);
         for (const auto& binding : freshBindings) resumed.addActorRagdoll(binding.mPtr, mGraph, 1, mPoses, 1, -1);
+        source.setActorRagdollWorldRegistrationSelection(bindings[0].mPtr, {});
         auto snapshot = source.captureActorRagdollSnapshots(bindings);
         ASSERT_EQ(snapshot.mActors.size(), 2u);
         snapshot.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
@@ -1044,9 +1051,12 @@ namespace
         const MWPhysics::NativeRagdollSnapshotGroup loaded{decoded.mNativeActorRagdolls, decoded.mNativePhysicalBlendTimeCache};
         resumed.restoreActorRagdollSnapshots(loaded, freshBindings);
         EXPECT_EQ(resumed.captureActorRagdollSnapshots(freshBindings), snapshot);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(), 1);
+        EXPECT_EQ(fresh.mWorld.getNumCollisionObjects(), 1);
+        EXPECT_TRUE(resumed.captureActorRagdollWorldRegistrationSelection(freshBindings[0].mPtr).mBodies.empty());
         const std::array<std::uint32_t, 1> nodes{8};
         // Explicit physical-controller phases; neither Bullet world is stepped.
-        // This is a software v36 envelope, not automatic World/gameplay saving.
+        // This is a current software envelope, not automatic World/gameplay saving.
         for (unsigned frame = 0; frame < 60; ++frame)
         {
             const float input = 11.f + frame * .016f;
@@ -1254,6 +1264,60 @@ namespace
             if (mFailAfterInsertion) throw std::runtime_error("loose fixture admission failed");
         }
     };
+
+    TEST_P(RagdollSchedulerTest, GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry)
+    {
+        LooseAdmissionFailureWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        world.mFailAfterInsertion = false;
+        mGraph.mSourceHash = std::string(16, 'a'); mGraph.mBodies[0].mNodeRecord = 8;
+        MWWorld::LiveCellRef<ESM::Static> other(mReference, &mBase);
+        const MWWorld::Ptr second(&other);
+        const auto base = ESM::FormKey::content("actors.esm", 100);
+        const std::string model = "characters/_male/skeleton.nif";
+        const std::array<MWPhysics::NativeRagdollSnapshotBinding, 2> bindings{{
+            {mPtr, ESM::FormKey::content("actors.esm", 10), base, model},
+            {second, ESM::FormKey::content("actors.esm", 20), base, model}}};
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        scheduler.addActorRagdoll(second, mGraph, 1, mPoses, 1, -1);
+        const auto* firstBody = world.getCollisionObjectArray()[0];
+        const auto* secondBody = world.getCollisionObjectArray()[1];
+        const auto registered = scheduler.captureActorRagdollWorldRegistrationSelection(second);
+        scheduler.setActorRagdollWorldRegistrationSelection(second, {});
+        const auto before = scheduler.captureActorRagdollSnapshots(bindings);
+        auto desired = before;
+        desired.mActors.at(bindings[0].mActor).mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{};
+        desired.mActors.at(bindings[1].mActor).mWorldRegistration
+            = ESM4::RuntimeRagdollWorldRegistration{registered.mBodies, registered.mConstraints};
+        desired.mActors.at(bindings[0].mActor).mBodies[0].mPosition = {10, 0, 2};
+        desired.mActors.at(bindings[1].mActor).mBodies[0].mPosition = {20, 0, 2};
+        desired.mTimeCache = ESM4::PhysicalBlendTimeCache{2, 4, 0, 1, 3};
+        auto prepared = scheduler.prepareActorRagdollSnapshots(desired, bindings);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), before);
+        world.mFailAfterInsertion = true;
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*prepared), std::runtime_error);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), before);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], firstBody);
+        EXPECT_NE(firstBody->getBroadphaseHandle(), nullptr);
+        EXPECT_EQ(secondBody->getBroadphaseHandle(), nullptr);
+        world.mFailAfterInsertion = false;
+        scheduler.commitActorRagdollSnapshots(*prepared);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), desired);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], secondBody);
+        EXPECT_EQ(firstBody->getBroadphaseHandle(), nullptr);
+
+        // A later owner's selection round trip invalidates the entire group,
+        // even though its final selection equals the prepared baseline.
+        auto stale = scheduler.prepareActorRagdollSnapshots(before, bindings);
+        scheduler.setActorRagdollWorldRegistrationSelection(second, {});
+        scheduler.setActorRagdollWorldRegistrationSelection(second, registered);
+        EXPECT_THROW(scheduler.commitActorRagdollSnapshots(*stale), std::invalid_argument);
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshots(bindings), desired);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], secondBody);
+    }
 
     TEST_P(RagdollSchedulerTest, LooseBodyPreparationRejectsStaleAndDuplicateOwnersWithoutActorPublication)
     {
@@ -2398,7 +2462,9 @@ namespace
         ASSERT_EQ(world.getNumCollisionObjects(), 1);
         EXPECT_EQ(world.getCollisionObjectArray()[0], body);
         EXPECT_EQ(scheduler.getUserPointer(body), identity);
-        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), snapshot);
+        auto resumedSnapshot = snapshot;
+        resumedSnapshot.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{registered.mBodies, registered.mConstraints};
+        EXPECT_EQ(scheduler.captureActorRagdollSnapshot(mPtr, base, model), resumedSnapshot);
         const auto resumedPosition = scheduler.captureActorRagdoll(mPtr)[0].mPose.getOrigin();
         time += 1.f / 60.f;
         scheduler.applyQueuedMovements(time, frames[1], osg::Timer::instance()->tick(), 31,

@@ -699,6 +699,29 @@ namespace ESM4
             if (std::abs(determinant - 1.0) > 1e-4)
                 throw std::runtime_error("Improper TES4 ragdoll rotation");
         }
+        if (mWorldRegistration)
+        {
+            const auto canonical = [](const std::vector<std::uint32_t>& records) {
+                return records.size() <= sMaximumCollectionSize
+                    && std::all_of(records.begin(), records.end(), [](auto record) {
+                        return record <= std::numeric_limits<std::int32_t>::max();
+                    }) && std::adjacent_find(records.begin(), records.end(), std::greater_equal<>()) == records.end();
+            };
+            if (!canonical(mWorldRegistration->mBodies) || !canonical(mWorldRegistration->mConstraints)
+                || (!mWorldRegistration->mConstraints.empty() && mWorldRegistration->mBodies.size() < 2))
+                throw std::runtime_error("Invalid TES4 World registration order, identity or count");
+            for (auto record : mWorldRegistration->mBodies)
+            {
+                const auto found = std::lower_bound(mBodies.begin(), mBodies.end(), record,
+                    [](const auto& body, auto value) { return body.mRecord < value; });
+                if (found == mBodies.end() || found->mRecord != record)
+                    throw std::runtime_error("Unknown TES4 World registration body");
+            }
+            for (auto record : mWorldRegistration->mConstraints)
+                if (std::any_of(mBodies.begin(), mBodies.end(),
+                        [&](const auto& body) { return body.mRecord == record; }))
+                    throw std::runtime_error("TES4 World constraint reuses a body record");
+        }
         if (mNativeBlends)
         {
             if (!mBodies.front().mNativePackedVelocity || !mBodies.front().mNativeMotion
@@ -1100,6 +1123,8 @@ namespace ESM4
                 throw std::runtime_error("TES4 native blend snapshots require runtime-state version34");
             if (mVersion < 35 && pose.mNativeControllers)
                 throw std::runtime_error("TES4 ragdoll controllers require runtime-state version35");
+            if (mVersion < 50 && pose.mWorldRegistration)
+                throw std::runtime_error("TES4 World registrations require runtime-state version50");
             const auto values = nativeActors.find(actor);
             if (values == nativeActors.end() || !lives.contains(actor) || values->second != pose.mBase)
                 throw std::runtime_error("Dangling or mismatched TES4 ragdoll owner");
@@ -2122,6 +2147,16 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 50)
+                {
+                    writer.integer<std::uint8_t>(pose.mWorldRegistration.has_value());
+                    if (pose.mWorldRegistration)
+                        for (const auto* records : {&pose.mWorldRegistration->mBodies, &pose.mWorldRegistration->mConstraints})
+                        {
+                            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(records->size()));
+                            for (auto record : *records) writer.integer(record);
+                        }
+                }
             }
         }
         if (mVersion >= 36)
@@ -3002,6 +3037,20 @@ namespace ESM4
                             for (float& value : state.mForceVector) value = reader.float32();
                             state.mFrameDelta = reader.float32();
                             pose.mNativeControllers->mVelocities.push_back(std::move(controller));
+                        }
+                    }
+                }
+                if (result.mVersion >= 50)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1) throw std::runtime_error("Invalid TES4 World registration presence flag");
+                    if (present)
+                    {
+                        pose.mWorldRegistration.emplace();
+                        for (auto* records : {&pose.mWorldRegistration->mBodies, &pose.mWorldRegistration->mConstraints})
+                        {
+                            const auto registrationCount = reader.count(); records->reserve(registrationCount);
+                            for (std::uint32_t j = 0; j < registrationCount; ++j) records->push_back(reader.integer<std::uint32_t>());
                         }
                     }
                 }
@@ -3946,6 +3995,22 @@ namespace ESM4
                         stream << ",\"precedes_blend\":" << (controller.mPrecedesBlend ? "true" : "false") << ",\"state\":{";
                         common(state.mTiming, state.mClock); stream << ",\"force_vector\":"; vector(state.mForceVector);
                         stream << ",\"frame_delta\":"; scalar(state.mFrameDelta); stream << "}}";
+                    }
+                    stream << "]}";
+                }
+                if (pose.mWorldRegistration)
+                {
+                    stream << ",\"world_registration\":{\"bodies\":[";
+                    for (std::size_t i = 0; i < pose.mWorldRegistration->mBodies.size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        stream << pose.mWorldRegistration->mBodies[i];
+                    }
+                    stream << "],\"constraints\":[";
+                    for (std::size_t i = 0; i < pose.mWorldRegistration->mConstraints.size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        stream << pose.mWorldRegistration->mConstraints[i];
                     }
                     stream << "]}";
                 }

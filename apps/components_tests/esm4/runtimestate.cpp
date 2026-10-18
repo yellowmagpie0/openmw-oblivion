@@ -3692,3 +3692,72 @@ TEST(ESM4RuntimeState, PowerMeleePhaseVersionFortyNineRoundTripsAndRejectsCorrup
     EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
     EXPECT_EQ(old.serializeBinary(), oldBytes);
 }
+
+TEST(ESM4RuntimeState, WorldRegistrationVersionFiftyHasExplicitWirePresenceAndCanonicalJson)
+{
+    auto state = controllerRagdollState();
+    // The independent v35 controller suffix identifies the exact following
+    // registration field. v49 has no registration field at that boundary.
+    state.mVersion = 49;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    auto second = pose.mBodies.front(); second.mRecord = 24; second.mNodeRecord = 20;
+    pose.mBodies.push_back(second);
+    const auto old = state.serializeBinary();
+    const auto suffix = controllerRagdollGoldenSuffix();
+    const auto found = std::search(old.begin(), old.end(), suffix.begin(), suffix.end());
+    ASSERT_NE(found, old.end());
+    const auto offset = std::size_t(found - old.begin()) + suffix.size();
+    auto expected = old; expected[std::string_view("OMW4STATE").size()] = 50;
+    expected.insert(expected.begin() + offset, 0);
+    state.mVersion = 50;
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.begin()->second.mWorldRegistration);
+    EXPECT_EQ(state.canonicalJson().find("world_registration"), std::string::npos);
+    pose.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{{12, 24}, {25}};
+    const std::vector<std::uint8_t> registration{
+        1, 2,0,0,0, 12,0,0,0, 24,0,0,0, 1,0,0,0, 25,0,0,0};
+    expected.erase(expected.begin() + offset);
+    expected.insert(expected.begin() + offset, registration.begin(), registration.end());
+    EXPECT_EQ(state.serializeBinary(), expected);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls, state.mNativeActorRagdolls);
+    EXPECT_NE(state.canonicalJson().find("\"world_registration\":{\"bodies\":[12,24],\"constraints\":[25]}"), std::string::npos);
+    for (std::size_t i = 0; i < registration.size(); ++i)
+    {
+        const std::vector<std::uint8_t> truncated(expected.begin(), expected.begin() + offset + i);
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+    auto bad = expected; bad[offset] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    bad = expected;
+    for (unsigned i = 1; i < 5; ++i) bad[offset + i] = 0xff;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    pose.mWorldRegistration.emplace();
+    const auto empty = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(empty);
+    ASSERT_TRUE(restored.mNativeActorRagdolls.begin()->second.mWorldRegistration);
+    EXPECT_TRUE(restored.mNativeActorRagdolls.begin()->second.mWorldRegistration->mBodies.empty());
+    EXPECT_NE(state.canonicalJson().find("\"world_registration\":{\"bodies\":[],\"constraints\":[]}"), std::string::npos);
+}
+
+TEST(ESM4RuntimeState, WorldRegistrationRejectsMalformedRecordSetsAndOlderVersionWrites)
+{
+    auto state = packedRagdollState(); state.mVersion = 50;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    auto second = pose.mBodies.front(); second.mRecord = 24; second.mNodeRecord = 20;
+    pose.mBodies.push_back(second);
+    const std::array<ESM4::RuntimeRagdollWorldRegistration, 7> bad{{
+        {{999}, {}}, {{24, 12}, {}}, {{12, 12}, {}}, {{12}, {25}},
+        {{12, 24}, {25, 25}}, {{12, 24}, {12}}, {{12, 24}, {0xffffffffu}}}};
+    for (const auto& selection : bad)
+    {
+        pose.mWorldRegistration = selection;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        EXPECT_THROW(state.canonicalJson(), std::runtime_error);
+    }
+    pose.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{{12, 24}, {25}};
+    ASSERT_NO_THROW(state.validate());
+    state.mVersion = 49;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    pose.mWorldRegistration.reset();
+    EXPECT_NO_THROW(state.serializeBinary());
+}

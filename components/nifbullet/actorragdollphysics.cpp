@@ -352,6 +352,9 @@ namespace NifBullet
         bool mDisableLinkedCollisions = true;
         bool mPublished = false, mNativeWorld = false;
         std::weak_ptr<const NativeDynamicsWorld::Lifetime> mWorldLifetime;
+        const std::shared_ptr<const char> mLifetime = std::make_shared<const char>();
+        std::shared_ptr<const char> mRegistrationGeneration = std::make_shared<const char>();
+        std::weak_ptr<const char> mPendingRegistration;
 
         bool worldAlive() const noexcept
         {
@@ -1295,7 +1298,8 @@ namespace NifBullet
 
     bool ActorRagdollPhysics::publish(btDynamicsWorld& world)
     {
-        if (mImpl->mPublished || &world != &mImpl->mWorld || !mImpl->worldAlive())
+        if (mImpl->mPublished || &world != &mImpl->mWorld || !mImpl->worldAlive()
+            || !mImpl->mPendingRegistration.expired())
             return false;
         if (mImpl->mNativeWorld)
         {
@@ -1351,9 +1355,32 @@ namespace NifBullet
         return result;
     }
 
-    void ActorRagdollPhysics::setWorldRegistrationSelection(const RagdollWorldRegistration& selection)
+    struct ActorRagdollPhysics::PreparedWorldRegistration::Data
     {
-        require(mImpl->worldAlive(), "expired physical World registration");
+        ActorRagdollPhysics* mOwner = nullptr;
+        Impl* mImpl = nullptr;
+        std::weak_ptr<const char> mLifetime, mExpected;
+        std::shared_ptr<const char> mNext;
+        bool mPublished = false, mAdmitted = false;
+        std::vector<unsigned char> mBodies, mConstraints;
+        Impl::ActivationGroups mGroups;
+        std::vector<std::size_t> mAddedBodies, mAddedConstraints;
+        NativeDynamicsWorld* mNative = nullptr;
+        std::unique_ptr<NativeDynamicsWorld::PreparedMotionOwnerBodies> mRouting;
+    };
+    ActorRagdollPhysics::PreparedWorldRegistration::PreparedWorldRegistration(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    ActorRagdollPhysics::PreparedWorldRegistration::~PreparedWorldRegistration()
+    {
+        if (mData && mData->mAdmitted && !mData->mLifetime.expired())
+            mData->mOwner->rollbackWorldRegistrationSelection(*this);
+    }
+
+    std::unique_ptr<ActorRagdollPhysics::PreparedWorldRegistration>
+    ActorRagdollPhysics::prepareWorldRegistrationSelection(const RagdollWorldRegistration& selection) const
+    {
+        require(mImpl->worldAlive() && mImpl->mPendingRegistration.expired(),
+            "expired or admitted physical World registration");
         const auto select = [](const auto& records, std::size_t count, const auto& recordAt) {
             std::vector<unsigned char> result(count, 0);
             std::unordered_set<std::uint32_t> unique;
@@ -1379,70 +1406,123 @@ namespace NifBullet
                 require(bodies[a] && bodies[b], "unregistered constraint endpoint");
             }
         auto groups = mImpl->prepareActivationGroups(constraints);
-        if (!mImpl->mPublished)
+        auto data = std::make_unique<PreparedWorldRegistration::Data>();
+        data->mOwner = const_cast<ActorRagdollPhysics*>(this); data->mImpl = mImpl.get();
+        data->mLifetime = mImpl->mLifetime; data->mExpected = mImpl->mRegistrationGeneration;
+        data->mNext = std::make_shared<const char>(); data->mPublished = mImpl->mPublished;
+        data->mBodies = std::move(bodies); data->mConstraints = std::move(constraints);
+        data->mGroups = std::move(groups);
+        data->mAddedBodies.reserve(data->mBodies.size());
+        data->mAddedConstraints.reserve(data->mConstraints.size());
+        if (mImpl->mPublished)
         {
-            mImpl->commitActivationGroups(std::move(groups));
-            mImpl->mSelectedBodies.swap(bodies);
-            mImpl->mSelectedConstraints.swap(constraints);
-            return;
+            data->mNative = dynamic_cast<NativeDynamicsWorld*>(&mImpl->mWorld);
+            if (data->mNative)
+            {
+                std::vector<btCollisionObject*> routed;
+                routed.reserve(data->mBodies.size());
+                for (std::size_t i = 0; i < data->mBodies.size(); ++i)
+                    if (data->mBodies[i]) routed.push_back(mImpl->mBodies[i].mBody.get());
+                data->mRouting = data->mNative->prepareNativeMotionOwnerBodies(this, std::move(routed));
+            }
         }
+        return std::unique_ptr<PreparedWorldRegistration>(new PreparedWorldRegistration(std::move(data)));
+    }
 
-        std::vector<btCollisionObject*> routed;
-        std::vector<std::size_t> addedBodies, addedConstraints;
-        routed.reserve(bodies.size());
-        addedBodies.reserve(bodies.size());
-        addedConstraints.reserve(constraints.size());
-        for (std::size_t i = 0; i < bodies.size(); ++i)
-        {
-            auto* body = mImpl->mBodies[i].mBody.get();
-            require(mImpl->mRegisteredBodies[i] || !body->getBroadphaseHandle(),
+    bool ActorRagdollPhysics::validateWorldRegistrationSelection(const PreparedWorldRegistration& prepared) const noexcept
+    {
+        const auto* data = prepared.mData.get();
+        if (!data || data->mLifetime.expired() || data->mOwner != this || data->mImpl != mImpl.get()
+            || data->mLifetime.lock() != mImpl->mLifetime || !mImpl->worldAlive()
+            || data->mExpected.lock() != mImpl->mRegistrationGeneration
+            || data->mPublished != mImpl->mPublished) return false;
+        const auto pending = mImpl->mPendingRegistration.lock();
+        if (data->mAdmitted ? pending != data->mNext : bool(pending)) return false;
+        return !data->mRouting || data->mNative->validateNativeMotionOwnerBodies(*data->mRouting, data->mAdmitted);
+    }
+
+    void ActorRagdollPhysics::admitWorldRegistrationSelection(PreparedWorldRegistration& prepared)
+    {
+        require(validateWorldRegistrationSelection(prepared), "foreign, stale or consumed registration preparation");
+        auto& data = *prepared.mData;
+        if (data.mAdmitted) return;
+        for (std::size_t i = 0; i < data.mBodies.size(); ++i)
+            require(mImpl->mRegisteredBodies[i] || !mImpl->mBodies[i].mBody->getBroadphaseHandle(),
                 "body registered outside its physical owner");
-            if (bodies[i]) routed.push_back(body);
-        }
+        data.mAdmitted = true; mImpl->mPendingRegistration = data.mNext;
+        if (!mImpl->mPublished) return;
         try
         {
-            for (std::size_t i = 0; i < bodies.size(); ++i)
-                if (bodies[i] && !mImpl->mRegisteredBodies[i])
+            for (std::size_t i = 0; i < data.mBodies.size(); ++i)
+                if (data.mBodies[i] && !mImpl->mRegisteredBodies[i])
                 {
-                    // Include a virtual World that inserts and then throws.
-                    addedBodies.push_back(i);
-                    mImpl->mWorld.addRigidBody(mImpl->mBodies[i].mBody.get(),
-                        mImpl->mCollisionGroup, mImpl->mCollisionMask);
+                    data.mAddedBodies.push_back(i);
+                    mImpl->mRegisteredBodies[i] = 1;
+                    mImpl->mWorld.addRigidBody(mImpl->mBodies[i].mBody.get(), mImpl->mCollisionGroup, mImpl->mCollisionMask);
                 }
-            for (std::size_t i = 0; i < constraints.size(); ++i)
-                if (constraints[i] && !mImpl->mRegisteredConstraints[i])
+            for (std::size_t i = 0; i < data.mConstraints.size(); ++i)
+                if (data.mConstraints[i] && !mImpl->mRegisteredConstraints[i])
                 {
-                    addedConstraints.push_back(i);
+                    data.mAddedConstraints.push_back(i);
+                    mImpl->mRegisteredConstraints[i] = 1;
                     mImpl->mWorld.addConstraint(mImpl->mConstraints[i].get(), mImpl->mDisableLinkedCollisions);
                 }
-            if (auto* native = dynamic_cast<NativeDynamicsWorld*>(&mImpl->mWorld))
-                native->replaceNativeMotionOwnerBodies(this, std::move(routed));
+            require(validateWorldRegistrationSelection(prepared), "registration admission lost native routing");
         }
         catch (...)
         {
-            for (auto i = addedConstraints.rbegin(); i != addedConstraints.rend(); ++i)
-                mImpl->mWorld.removeConstraint(mImpl->mConstraints[*i].get());
-            for (auto i = addedBodies.rbegin(); i != addedBodies.rend(); ++i)
-                mImpl->mWorld.removeRigidBody(mImpl->mBodies[*i].mBody.get());
+            rollbackWorldRegistrationSelection(prepared);
             throw;
         }
-        // Successful routing is followed only by nonthrowing World cleanup and
-        // owned buffer publication. Keep previous registrations until all
-        // potentially failing additions and routing validation have succeeded.
-        const auto removeOld = [&]() noexcept {
-            for (std::size_t i = constraints.size(); i-- > 0;)
-                if (mImpl->mRegisteredConstraints[i] && !constraints[i])
+    }
+
+    void ActorRagdollPhysics::rollbackWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept
+    {
+        auto* data = prepared.mData.get();
+        if (!data || !data->mAdmitted || data->mLifetime.expired()
+            || data->mOwner != this || data->mImpl != mImpl.get()) return;
+        for (auto i = data->mAddedConstraints.rbegin(); i != data->mAddedConstraints.rend(); ++i)
+        {
+            if (mImpl->worldAlive()) mImpl->mWorld.removeConstraint(mImpl->mConstraints[*i].get());
+            mImpl->mRegisteredConstraints[*i] = 0;
+        }
+        for (auto i = data->mAddedBodies.rbegin(); i != data->mAddedBodies.rend(); ++i)
+        {
+            if (mImpl->worldAlive()) mImpl->mWorld.removeRigidBody(mImpl->mBodies[*i].mBody.get());
+            mImpl->mRegisteredBodies[*i] = 0;
+        }
+        data->mAddedConstraints.clear(); data->mAddedBodies.clear();
+        data->mAdmitted = false; mImpl->mPendingRegistration.reset();
+    }
+
+    bool ActorRagdollPhysics::commitWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept
+    {
+        if (!validateWorldRegistrationSelection(prepared) || !prepared.mData->mAdmitted) return false;
+        auto& data = *prepared.mData;
+        if (data.mRouting && !data.mNative->commitNativeMotionOwnerBodies(*data.mRouting)) return false;
+        if (mImpl->mPublished)
+        {
+            for (std::size_t i = data.mConstraints.size(); i-- > 0;)
+                if (mImpl->mRegisteredConstraints[i] && !data.mConstraints[i])
                     mImpl->mWorld.removeConstraint(mImpl->mConstraints[i].get());
-            for (std::size_t i = bodies.size(); i-- > 0;)
-                if (mImpl->mRegisteredBodies[i] && !bodies[i])
+            for (std::size_t i = data.mBodies.size(); i-- > 0;)
+                if (mImpl->mRegisteredBodies[i] && !data.mBodies[i])
                     mImpl->mWorld.removeRigidBody(mImpl->mBodies[i].mBody.get());
-        };
-        removeOld();
-        std::copy(bodies.begin(), bodies.end(), mImpl->mRegisteredBodies.begin());
-        std::copy(constraints.begin(), constraints.end(), mImpl->mRegisteredConstraints.begin());
-        mImpl->commitActivationGroups(std::move(groups));
-        mImpl->mSelectedBodies.swap(bodies);
-        mImpl->mSelectedConstraints.swap(constraints);
+            std::copy(data.mBodies.begin(), data.mBodies.end(), mImpl->mRegisteredBodies.begin());
+            std::copy(data.mConstraints.begin(), data.mConstraints.end(), mImpl->mRegisteredConstraints.begin());
+        }
+        mImpl->commitActivationGroups(std::move(data.mGroups));
+        mImpl->mSelectedBodies.swap(data.mBodies); mImpl->mSelectedConstraints.swap(data.mConstraints);
+        mImpl->mRegistrationGeneration.swap(data.mNext);
+        mImpl->mPendingRegistration.reset(); data.mAdmitted = false; prepared.mData.reset();
+        return true;
+    }
+
+    void ActorRagdollPhysics::setWorldRegistrationSelection(const RagdollWorldRegistration& selection)
+    {
+        auto prepared = prepareWorldRegistrationSelection(selection);
+        admitWorldRegistrationSelection(*prepared);
+        require(commitWorldRegistrationSelection(*prepared), "registration changed before publication");
     }
 
     std::span<btCollisionObject* const> ActorRagdollPhysics::collisionObjects() const
@@ -1469,6 +1549,7 @@ namespace NifBullet
         std::optional<std::vector<Impl::BlendTarget>> mTargets;
         std::optional<std::vector<RagdollNativeBlendControllerState>> mAuthored;
         std::optional<std::vector<RagdollNativeVelocityControllerState>> mGenerated;
+        std::unique_ptr<PreparedWorldRegistration> mRegistration;
     };
     ActorRagdollPhysics::PreparedRestore::PreparedRestore(std::unique_ptr<Data> data)
         : mData(std::move(data)) {}
@@ -1548,11 +1629,41 @@ namespace NifBullet
         return prepared;
     }
 
-    void ActorRagdollPhysics::commitRestore(PreparedRestore& prepared)
+    void ActorRagdollPhysics::prepareRestoreWorldRegistration(
+        PreparedRestore& prepared, const RagdollWorldRegistration& selection) const
     {
         require(prepared.mData && prepared.mData->mOwner == this
             && prepared.mData->mOwnerImpl == mImpl.get(), "foreign or consumed prepared pose restore");
+        require(!prepared.mData->mRegistration || !prepared.mData->mRegistration->mData->mAdmitted,
+            "cannot replace admitted restore registration");
+        prepared.mData->mRegistration = prepareWorldRegistrationSelection(selection);
+    }
+
+    bool ActorRagdollPhysics::validatePreparedRestore(const PreparedRestore& prepared) const noexcept
+    {
+        return prepared.mData && prepared.mData->mOwner == this && prepared.mData->mOwnerImpl == mImpl.get()
+            && (!prepared.mData->mRegistration || validateWorldRegistrationSelection(*prepared.mData->mRegistration));
+    }
+
+    void ActorRagdollPhysics::admitPreparedRestore(PreparedRestore& prepared)
+    {
+        require(validatePreparedRestore(prepared), "foreign, stale or consumed prepared pose restore");
+        if (prepared.mData->mRegistration)
+            admitWorldRegistrationSelection(*prepared.mData->mRegistration);
+    }
+
+    void ActorRagdollPhysics::rollbackPreparedRestore(PreparedRestore& prepared) noexcept
+    {
+        if (prepared.mData && prepared.mData->mRegistration)
+            rollbackWorldRegistrationSelection(*prepared.mData->mRegistration);
+    }
+
+    void ActorRagdollPhysics::commitRestore(PreparedRestore& prepared)
+    {
+        admitPreparedRestore(prepared);
         auto& data = *prepared.mData;
+        if (data.mRegistration)
+            require(commitWorldRegistrationSelection(*data.mRegistration), "changed restore registration");
         if (data.mMotions)
             for (std::size_t i = 0; i < data.mMotions->size(); ++i)
                 if (mImpl->mBodies[i].mMotion != (*data.mMotions)[i].mMotion)

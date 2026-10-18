@@ -272,12 +272,20 @@ namespace MWPhysics
     {
         const auto authored = physics.captureNativeBlendControllers();
         const auto generated = physics.captureNativeVelocityControllers();
-        return captureNativeActorRagdoll(base, model, definition, physics.capture(),
+        auto result = captureNativeActorRagdoll(base, model, definition, physics.capture(),
             physics.captureNativePackedVelocities(), physics.captureNativeMotionModes(),
             physics.captureNativeBlendStates(), NativeRagdollControllerSnapshot{authored, generated});
+        auto registration = physics.captureWorldRegistrationSelection();
+        std::sort(registration.mBodies.begin(), registration.mBodies.end());
+        std::sort(registration.mConstraints.begin(), registration.mConstraints.end());
+        result.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{
+            std::move(registration.mBodies), std::move(registration.mConstraints)};
+        result.validate();
+        return result;
     }
 
-    void restoreNativeActorRagdollSnapshot(NifBullet::ActorRagdollPhysics& physics,
+    std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepareNativeActorRagdollSnapshot(
+        const NifBullet::ActorRagdollPhysics& physics,
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
     {
@@ -286,28 +294,41 @@ namespace MWPhysics
         const auto motions = restoreNativeActorRagdollMotionModes(snapshot, base, model, definition);
         const auto blends = restoreNativeActorRagdollBlendStates(snapshot, base, model, definition);
         const auto controllers = restoreNativeActorRagdollControllers(snapshot, base, model, definition);
+        std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepared;
         if (controllers)
         {
             if (!packed || !motions || !blends)
                 throw std::invalid_argument("native controller restoration requires complete physical and blend state");
-            physics.restore(states, *packed, *motions, *blends, controllers->mBlends, controllers->mVelocities);
+            prepared = physics.prepareRestore(states, *packed, *motions, *blends, controllers->mBlends, controllers->mVelocities);
         }
         else if (blends)
         {
             if (!packed || !motions)
                 throw std::invalid_argument("native blend restoration requires packed velocity and motion state");
-            physics.restore(states, *packed, *motions, *blends);
+            prepared = physics.prepareRestore(states, *packed, *motions, *blends);
         }
         else if (motions)
         {
             if (!packed)
                 throw std::invalid_argument("native motion restoration requires packed velocities");
-            physics.restore(states, *packed, *motions);
+            prepared = physics.prepareRestore(states, *packed, *motions);
         }
         else if (packed)
-            physics.restore(states, *packed);
+            prepared = physics.prepareRestore(states, *packed);
         else
-            physics.restore(states);
+            prepared = physics.prepareRestore(states);
+        if (snapshot.mWorldRegistration)
+            physics.prepareRestoreWorldRegistration(*prepared,
+                {snapshot.mWorldRegistration->mBodies, snapshot.mWorldRegistration->mConstraints});
+        return prepared;
+    }
+
+    void restoreNativeActorRagdollSnapshot(NifBullet::ActorRagdollPhysics& physics,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition)
+    {
+        auto prepared = prepareNativeActorRagdollSnapshot(physics, snapshot, base, model, definition);
+        physics.commitRestore(*prepared);
     }
 
 }

@@ -2668,6 +2668,60 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io.encode_payload(state)
 
 
+    def test_world_registration_v50_literal_wire_and_legacy_absence(self):
+        state = self.controller_ragdoll_state()
+        suffix = state_io.encode_payload(state)[-140:]
+        state_io._upgrade_power_melee_phases(state)
+        state["schema_version"] = 49
+        pose = state["native_actor_ragdolls"][0]
+        second = copy.deepcopy(pose["bodies"][0]); second.update(record=24, node_record=20)
+        pose["bodies"].append(second)
+        legacy = state_io.encode_payload(state)
+        offset = legacy.index(suffix) + len(suffix)
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 50)
+        expected[offset:offset] = b"\x00"
+        state["schema_version"] = 50
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertNotIn("world_registration", state_io.decode_payload(expected)["native_actor_ragdolls"][0])
+        pose["world_registration"] = {"bodies": [12, 24], "constraints": [25]}
+        registration = bytes.fromhex("01 02000000 0c000000 18000000 01000000 19000000")
+        expected[offset:offset + 1] = registration
+        self.assertEqual(state_io.encode_payload(state), expected)
+        self.assertEqual(state_io.decode_payload(expected)["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        for end in range(offset, offset + len(registration)):
+            with self.subTest(end=end), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(expected[:end])
+        for relative, replacement in ((0, b"\x02"), (1, b"\xff\xff\xff\xff")):
+            bad = bytearray(expected); bad[offset + relative:offset + relative + len(replacement)] = replacement
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        pose["world_registration"] = {"bodies": [], "constraints": []}
+        decoded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertEqual(decoded["native_actor_ragdolls"][0]["world_registration"], pose["world_registration"])
+        state["schema_version"] = 49
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del pose["world_registration"]
+        self.assertEqual(state_io.encode_payload(state), legacy)
+
+    def test_world_registration_v50_rejects_malformed_record_sets(self):
+        state = self.controller_ragdoll_state()
+        state_io._upgrade_power_melee_phases(state)
+        state["schema_version"] = 50
+        pose = state["native_actor_ragdolls"][0]
+        second = copy.deepcopy(pose["bodies"][0]); second.update(record=24, node_record=20)
+        pose["bodies"].append(second)
+        state_io.encode_payload(state)
+        for value in (None, {}, {"bodies": [], "constraints": [], "extra": []},
+                {"bodies": [999], "constraints": []}, {"bodies": [24, 12], "constraints": []},
+                {"bodies": [12, 12], "constraints": []}, {"bodies": [12], "constraints": [25]},
+                {"bodies": [12, 24], "constraints": [25, 25]}, {"bodies": [12, 24], "constraints": [12]},
+                {"bodies": [12, 24], "constraints": [0xffffffff]}, {"bodies": [True], "constraints": []},
+                {"bodies": [12, 24], "constraints": "25"}):
+            pose["world_registration"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(state)
+
+
 class SaveEnvelopeAdmissionTests(unittest.TestCase):
     @staticmethod
     def record(name, body):

@@ -2422,5 +2422,318 @@
       "Original05 full/empty uniform Dog recovery does not establish partial HIT or every actor/effect branch.",
       "No new fork normal-input visual, trajectory, input/view/FPS or fresh-process recovery gate is closed. ASan/UBSan runs have leak detection disabled."
     ]
+  },
+  "registration_persistence_followup": {
+    "status": "Version50 explicit World registrations and atomic multi-owner restore verified; full S4 reaction/recovery runtime delivery remains open",
+    "source": {
+      "head": "68213830cbae726eddba82e35e7fb8a8f6320f19",
+      "source_fingerprint": "6b83bb06d5dc36225ba8f1e321ee87a90a7c365c41b635979cb118e7677a0bf5"
+    },
+    "source_sha256": {
+      "apps/components_tests/esm4/runtimestate.cpp": "6bccb6bf430ce3d978de6737a87bf382be39c8e3f78760e254ca8a9fa5e3ddae",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "15506b4b9450169451cfdd908e78843154ea4b823a348fc734d3ed4f072bab87",
+      "apps/openmw/mwphysics/mtphysics.cpp": "d05f8c1b31254545981208a68dbb0c49095cdae344dd6f4bb19b8aca043c5292",
+      "apps/openmw/mwphysics/oblivionragdoll.cpp": "a3e83eab358c9d6d20f4d464a665d7f7c2d6b2942fa72bc5cc6ba99a29fa4259",
+      "apps/openmw/mwphysics/oblivionragdoll.hpp": "2b86d529779feaa4aa8af8f0f0be14d2aeb734f4143e4eb01d11780049cc4cc9",
+      "apps/openmw_tests/mwphysics/testactorragdoll.cpp": "8d56a772e6bf54835c604519b398250229a4c5ea815affcab5ce395884913228",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "403ee453a59d7b38981a47d660cf361b0f9b6ec282fa16efb40330f2f42c1b0a",
+      "components/esm4/runtimestate.cpp": "08a58b16278be70c4e3b8c948a06c23a846c042ad277f72b980dd9b4affc5b43",
+      "components/esm4/runtimestate.hpp": "ad1c9c7a85c1e4c2124eb116deafb04de5f93c54ff748554e9620ad820edc73d",
+      "components/nifbullet/actorragdollphysics.cpp": "2a812e2b1459f416bf5ce8323964bf4fad0c318ac3b81fc9c1ea31346c3fc416",
+      "components/nifbullet/actorragdollphysics.hpp": "efaa9af87ddd0162e79df50a2b3a65f33adc33646db6340c059c07fa4eed8208",
+      "components/nifbullet/nativedynamicsworld.hpp": "f440d7da75dc3a98feae8bce9f1989f927458d0d6149a1fdd6e3ec4baaf0483a",
+      "scripts/tes4_runtime_state.py": "2108749d287236f3fb03aff417c1212005d9bdadf46faa6d2a27b52ecc26e046",
+      "scripts/tests/test_tes4_runtime_state.py": "6c672c3dab47a2631224b531506eeeb193b7f1f7b3bb24457733be1b552d0f97"
+    },
+    "changes": [
+      "RuntimeActorRagdoll v50 optionally encodes canonically sorted body/constraint record selections. Absent preserves legacy live selection; present empty explicitly requests no members. Both C++ and independent Python codecs check record sets, field presence, version and collection bounds.",
+      "Native routing and graph registration now have lifetime/generation-validated pure preparations, explicit admission, cancellation/rollback and nonallocating publication. Pending additions remain under the exclusive World barrier; discard or graph destruction cleans admitted additions.",
+      "Shared single/group capture and restore bridges preserve selections. Scheduler validates every owner, admits all additions, validates the admitted group, then commits poses/selections and shared cache. A late admission failure rolls back all additions without releasing old members or publishing any actor pose, selection or clock.",
+      "All three worker counts exercise late insertion failure, retry of the same preparation, stable retained body identities, and whole-group rejection after a later selection round trip. The software save/recreate case now restores an actor with an explicitly empty selection beside a registered actor and compares sixty controller phases. Legacy field absence preserves an empty live selection."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/registration-persistence-normal-02/verification.json",
+        "report_sha256": "a2242a5d002cab43d8d7fa388df2e20a18a092aed7f148e8f9eb0405f829b0b1",
+        "source": {
+          "head": "68213830cbae726eddba82e35e7fb8a8f6320f19",
+          "source_fingerprint": "6b83bb06d5dc36225ba8f1e321ee87a90a7c365c41b635979cb118e7677a0bf5"
+        },
+        "results": {
+          "components": {
+            "executed": 2823,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c91686088252dec46b46147a167409a192462ed72a56a3dc57db7cf6c09df100",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "a3a2d9a274b46b0166a509825c767df37589f1b24779b33b9de5ca49102b00e5",
+            "inventory_sha256": "97f85776a6a312d79048e5de83490eea2229e8443a488d7dfbd4c0ceefce9dcd",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "da6603a5758888b9850119285e0d37ce2b1114560776d72f363015e651f53d57",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e75e8f514d64cbabc146035972acee7c6ca8495a70e0b9b326172e7cda1dff4c",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 315,
+            "passed": true,
+            "log_sha256": "ff3e6d96b14c7f8bd1cdf68450b8df571fca25508f6255f004d6a0b6c0014040"
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        },
+        "worker_cases": [
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/0",
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/1",
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/2"
+        ]
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/registration-persistence-sanitized-02/verification.json",
+        "report_sha256": "6661bed1ed8cc0448b1da7b61d489f9baf9ee978219b4360e0b597d210c6a91d",
+        "source": {
+          "head": "68213830cbae726eddba82e35e7fb8a8f6320f19",
+          "source_fingerprint": "6b83bb06d5dc36225ba8f1e321ee87a90a7c365c41b635979cb118e7677a0bf5"
+        },
+        "results": {
+          "components": {
+            "executed": 2823,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "611676cdabc2ff6822d09660eed5eb98ebac68bbbf16bb812a7a0c1d46b36147",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "a0f64f199d25ec1f1d38ab13c0a82b7830fcd635db07b3493c1d44e7bcd4f4e5",
+            "inventory_sha256": "69ff5563ed2bc2319be3387883c71e28964ecc858e013e6c882e5f7cf274ba17",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1634,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "254b20f78b63229e84878be86a37eb37df4722cd3fa900f26578e53b1c994699",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "aede216684ff6afe03202061dcaa823e1368bfed2a7a256147cee2729985a119",
+            "inventory_sha256": "97b09f730a9960f5321a65ced2bc3bc79e7d9ed68727b085e9638db8ed3ed8c0",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 269,
+          "engine": 122
+        },
+        "worker_cases": [
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/0",
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/1",
+          "GroupRegistrationFailureRollsBackEveryOwnerAndCanRetry/2"
+        ]
+      }
+    },
+    "component_cases": [
+      "PreparedRegistrationStagesAdmissionsAndRollsBackWithoutPublishingSelection",
+      "AdmittedRegistrationSafelyOutlivesOwnerAndDeferredAdmissionRemainsPrivate",
+      "WorldRegistrationVersionFiftyHasExplicitWirePresenceAndCanonicalJson",
+      "WorldRegistrationRejectsMalformedRecordSetsAndOlderVersionWrites"
+    ],
+    "retained_failed_attempts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/registration-persistence-normal-01",
+        "reason": "Both group capture and malformed identity fixtures needed the new registration metadata; ten engine cases failed. Component inventory passed."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/registration-persistence-sanitized-01",
+        "reason": "Same pre-correction source and failed engine cases; preserved in place."
+      }
+    ],
+    "additional_independent_instruction_evidence": {
+      "report": "build/oblivion-compat/m15/S4/native-constraint-registration-static-01/report.json",
+      "report_sha256": "c064e3a927d872cb6b821b491740adad45522115a7804c65e542f5cc9178d8ea",
+      "probe_sha256": "bf29aac135d2142e66be36912d453c53e5f1aba74bd918dff1827291ff58c87d",
+      "results": {
+        "passed": true,
+        "profiles": 1080,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "2db917e3ed7750394907e440ad22738b0630a861761a712efd6c42500d7c8917",
+        "native_paths": [
+          "full8A0A70 true/admission flag",
+          "actual constraint endpoint getters88/8C for three actual vtables",
+          "actual607840 membership",
+          "full8A48C0 blend-aware admission",
+          "full8A4A60 forced admission",
+          "actual extra lookup, RTTI and generic World membership dispatcher"
+        ],
+        "boundaries": [
+          "88B430/88C210 World operations record/remove/add synthetic body World link",
+          "8A47C0 associated constraints followup recorded but not executed: no recursive topology policy claimed",
+          "diagnostic string constructor/append/destructor and logger are stubs",
+          "B2EB00=0 excludes optional low-velocity deactivation",
+          "synthetic two endpoints/constraint/World owners; no native physical simulation"
+        ],
+        "finding": "With endpointB wrapper present and World-owner+1C zero, admission preparation invokes its normal blend-aware registration. If it remains absent, diagnostic then virtual84 forced registration bypasses gain/counter gate. Nonzero unsigned owner+1C skips both registrations. Initially absent endpointB inherits upper16 filter bits from endpointA and retains its own lower16 even when batch gate skips admission. Preparation returns false in these cases; caller must be inspected before treating false as failure.",
+        "limits": [
+          "Only admission flagtrue and endpointB/wrapper present",
+          "No associated constraint topology or ordering proof",
+          "Not runtime/fork acceptance"
+        ]
+      },
+      "editable_protocol": {
+        "entry": "8A0A70 with true admission flag and real endpoint getters",
+        "vtables": [
+          "A564A4",
+          "A98B24",
+          "A5653C"
+        ],
+        "initial_endpoint_B_membership": [
+          "absent",
+          "same",
+          "other"
+        ],
+        "gain_bits": [
+          0,
+          1065353215,
+          1065353216,
+          1065353217,
+          2143289344
+        ],
+        "owner_batch_gate": [
+          0,
+          1,
+          4294967295
+        ],
+        "signed_counter": [
+          -1,
+          1
+        ],
+        "BA7909": [
+          0,
+          1
+        ],
+        "x87_control_word": [
+          639,
+          895
+        ],
+        "assertions": [
+          "all cases must reach return, preserve callee-saved registers and restore ESP",
+          "exact ordered normal/removal/addition/diagnostic/forced-admission/followup calls",
+          "final synthetic World link and packed filter fields",
+          "return AL is zero in this branch"
+        ]
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "limits": [
+      "The registration APIs consume an explicit resolved selection. Automatic native blend/counter/constraint callback policy, contact-driven KO/FSM/GetUp integration, reference/capsule movement and full reaction ownership remain open.",
+      "The save/recreate test is an engine software-envelope test with explicit controller phases; neither Bullet World steps nor normal-input fresh-process recovery is claimed by it.",
+      "The 1080-case instruction corpus does not execute recursive associated constraint dispatch, native World physics or batch flushes. It is independent rule evidence, not fork runtime acceptance.",
+      "No new fork normal-input visual, input/view/FPS, recovery or fresh-process gameplay gate is closed. ASan/UBSan leak detection is disabled."
+    ],
+    "associated_chain_instruction_evidence": {
+      "report": "build/oblivion-compat/m15/S4/native-associated-registration-static-01/report.json",
+      "report_sha256": "d4b35366f37dd7e08ccb2390e63acf3de0cfbb0c39fe33f86c529a16f477d329",
+      "probe_sha256": "096019770d7f3806f7d1a7a20fc18e29e76df42107cfb12bd6595cdb8571c6e4",
+      "results": {
+        "passed": true,
+        "profiles": 288,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "519c5f76db00c0f1a16d633c99da9c56190f154a5f89140bc6695462772f6224",
+        "native_paths": [
+          "full8A48C0 and8A4A60",
+          "actual8A47C0 associated-list iteration and677C70 smart-pointer retrieval",
+          "actual8A06E0 constraint World dispatcher,8A05E0/8A0530/8A0550 endpoint/getter methods,8A0760 empty removal",
+          "full8A0A70 admission preparation and607840 membership",
+          "real extra-map and NiRTTI lookup"
+        ],
+        "boundaries": [
+          "owner virtual58 returns the declared synthetic World",
+          "88C210 body add and88C330 constraint add store synthetic membership links and record ordering; assert both endpoints admitted at constraint add",
+          "Win32 InterlockedIncrement/Decrement model reference counters at imported API boundaries",
+          "diagnostic string/allocator/logger boundaries",
+          "B2EB00=0 excludes optional low-velocity deactivation",
+          "owner batch gate0, all members initially absent, counter0, synthetic directed chain2->1->0; no native simulation or removal cascade"
+        ],
+        "finding": "For this directed associated-list chain, normal admission of an eligible starting child recursively registers its ancestors, forcing each deferred parent after normal admission and registering constraints on recursion unwind. Starting at a parent does not admit descendants. A deferred starting body does not traverse its list. Upper16 filter bits propagate from the starting child toward admitted ancestors; lower16 remain per body. Smart-pointer reference counts return to their initial value.",
+        "limits": [
+          "A directed synthetic fixture, not a universal closure rule",
+          "No originally registered body removals, callback mutation/order changes, batch flushes or failed native World operations",
+          "No native simulation, fork integration or runtime acceptance"
+        ]
+      },
+      "editable_protocol": {
+        "entry": "full8A48C0 on selected starting body",
+        "initial_membership": "all absent",
+        "associated_lists": "each of child2 and middle1 owns exactly its constraint to parent1 or root0; root0 list empty",
+        "gains": "all eight hierarchy=velocity patterns from zero/one for three bodies",
+        "start_body": [
+          0,
+          1,
+          2
+        ],
+        "BA7909": [
+          0,
+          1
+        ],
+        "constraint_vtables": [
+          "A564A4",
+          "A98B24",
+          "A5653C"
+        ],
+        "x87_control_word": [
+          639,
+          895
+        ],
+        "body_counters": 0,
+        "World_owner_batch_gate": 0,
+        "constraint_smart_reference_counts": 2,
+        "assertions": [
+          "return and callee-saved registers/ESP",
+          "exact ordered admission and constraint calls",
+          "body/constraint membership",
+          "inherited upper16 and retained lower16 filters",
+          "smart reference counts return to two"
+        ]
+      }
+    }
   }
 }

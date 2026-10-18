@@ -26,6 +26,7 @@ namespace NifBullet
             const void* mIdentity;
             std::function<void(float)> mStep;
             std::vector<btCollisionObject*> mBodies;
+            std::shared_ptr<const char> mGeneration;
         };
         const std::shared_ptr<Lifetime> mLifetime = std::make_shared<Lifetime>();
         std::vector<Owner> mNativeOwners;
@@ -102,14 +103,26 @@ namespace NifBullet
                         == m_collisionObjects.size())
                     throw std::invalid_argument("Invalid native motion owner body");
             }
-            Owner owner{identity, std::move(step), {bodies.begin(), bodies.end()}};
+            Owner owner{identity, std::move(step), {bodies.begin(), bodies.end()}, std::make_shared<const char>()};
             mNativeOwners.push_back(std::move(owner));
         }
 
-        // The caller prepares the vector before changing World membership.
-        // Validate all new members before a nonallocating routing swap. Empty
-        // selections retain the owner but receive no simulation callback.
-        void replaceNativeMotionOwnerBodies(const void* identity, std::vector<btCollisionObject*> bodies)
+        class PreparedMotionOwnerBodies
+        {
+            friend class NativeDynamicsWorld;
+            const NativeDynamicsWorld* mWorld = nullptr;
+            const void* mIdentity = nullptr;
+            std::weak_ptr<const Lifetime> mWorldLifetime;
+            std::weak_ptr<const char> mExpected;
+            std::shared_ptr<const char> mNext;
+            std::vector<btCollisionObject*> mBodies;
+        };
+
+        // Pure storage/identity preparation. New members may still be absent
+        // from the World. Their owning graph retains the synchronization barrier
+        // across admission, final validation and the nonallocating commit.
+        std::unique_ptr<PreparedMotionOwnerBodies> prepareNativeMotionOwnerBodies(
+            const void* identity, std::vector<btCollisionObject*> bodies) const
         {
             const auto found = std::find_if(mNativeOwners.begin(), mNativeOwners.end(),
                 [&](const Owner& owner) { return owner.mIdentity == identity; });
@@ -120,14 +133,52 @@ namespace NifBullet
                 auto* body = bodies[i];
                 if (!body || !btRigidBody::upcast(body)
                     || std::find(bodies.begin(), bodies.begin() + i, body) != bodies.begin() + i
-                    || m_collisionObjects.findLinearSearch(body) == m_collisionObjects.size()
                     || std::any_of(mNativeOwners.begin(), mNativeOwners.end(), [&](const Owner& owner) {
                         return owner.mIdentity != identity
                             && std::find(owner.mBodies.begin(), owner.mBodies.end(), body) != owner.mBodies.end();
                     }))
                     throw std::invalid_argument("Invalid native motion owner replacement body");
             }
-            found->mBodies.swap(bodies);
+            auto result = std::make_unique<PreparedMotionOwnerBodies>();
+            result->mWorld = this; result->mIdentity = identity; result->mWorldLifetime = mLifetime;
+            result->mExpected = found->mGeneration;
+            result->mNext = std::make_shared<const char>(); result->mBodies = std::move(bodies);
+            return result;
+        }
+
+        bool validateNativeMotionOwnerBodies(const PreparedMotionOwnerBodies& prepared,
+            bool requireRegistration = true) const noexcept
+        {
+            if (prepared.mWorld != this || prepared.mWorldLifetime.lock() != mLifetime || !prepared.mNext)
+                return false;
+            const auto found = std::find_if(mNativeOwners.begin(), mNativeOwners.end(),
+                [&](const Owner& owner) { return owner.mIdentity == prepared.mIdentity; });
+            if (found == mNativeOwners.end() || prepared.mExpected.lock() != found->mGeneration) return false;
+            for (auto* body : prepared.mBodies)
+                if ((requireRegistration && m_collisionObjects.findLinearSearch(body) == m_collisionObjects.size())
+                    || std::any_of(mNativeOwners.begin(), mNativeOwners.end(), [&](const Owner& owner) {
+                        return owner.mIdentity != prepared.mIdentity
+                            && std::find(owner.mBodies.begin(), owner.mBodies.end(), body) != owner.mBodies.end();
+                    })) return false;
+            return true;
+        }
+
+        bool commitNativeMotionOwnerBodies(PreparedMotionOwnerBodies& prepared) noexcept
+        {
+            if (!validateNativeMotionOwnerBodies(prepared)) return false;
+            const auto found = std::find_if(mNativeOwners.begin(), mNativeOwners.end(),
+                [&](const Owner& owner) { return owner.mIdentity == prepared.mIdentity; });
+            found->mBodies.swap(prepared.mBodies);
+            found->mGeneration.swap(prepared.mNext);
+            prepared.mNext.reset();
+            return true;
+        }
+
+        void replaceNativeMotionOwnerBodies(const void* identity, std::vector<btCollisionObject*> bodies)
+        {
+            auto prepared = prepareNativeMotionOwnerBodies(identity, std::move(bodies));
+            if (!commitNativeMotionOwnerBodies(*prepared))
+                throw std::invalid_argument("Unregistered or changed native motion owner replacement");
         }
 
         void unregisterNativeMotionOwner(const void* identity) noexcept

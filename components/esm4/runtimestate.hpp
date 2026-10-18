@@ -40,7 +40,8 @@ namespace ESM4
     // v46 adds exact Player reference Fame/Infamy and optional accumulation.
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 49;
+    // v50 retains explicit physical body/constraint World registrations.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 50;
 
     struct RuntimeContentIdentity
     {
@@ -407,6 +408,13 @@ namespace ESM4
         friend bool operator==(const RuntimeRagdollControllers&, const RuntimeRagdollControllers&) = default;
     };
 
+    struct RuntimeRagdollWorldRegistration
+    {
+        std::vector<std::uint32_t> mBodies;
+        std::vector<std::uint32_t> mConstraints;
+        friend bool operator==(const RuntimeRagdollWorldRegistration&, const RuntimeRagdollWorldRegistration&) = default;
+    };
+
     struct RuntimeActorRagdoll
     {
         ESM::FormKey mBase;
@@ -422,6 +430,10 @@ namespace ESM4
         // v35: absent legacy data differs from current complete empty lists.
         // Shared clocks are runtime-authority state, not per-actor fields.
         std::optional<RuntimeRagdollControllers> mNativeControllers = std::nullopt;
+        // Absent legacy state preserves the live selection. Present empty
+        // retains the graph with no World bodies or constraints. IDs increase
+        // canonically; the bound asset validates constraint endpoints.
+        std::optional<RuntimeRagdollWorldRegistration> mWorldRegistration = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
     };

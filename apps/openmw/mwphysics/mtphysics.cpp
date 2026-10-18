@@ -1483,12 +1483,8 @@ namespace MWPhysics
         for (const auto& binding : bindings)
         {
             const auto& owned = actorRagdoll(binding.mPtr);
-            const auto authored = owned.mPhysics.captureNativeBlendControllers();
-            const auto generated = owned.mPhysics.captureNativeVelocityControllers();
-            result.mActors.emplace(binding.mActor, captureNativeActorRagdoll(binding.mBase, binding.mModel,
-                owned.mDefinition, owned.mPhysics.capture(), owned.mPhysics.captureNativePackedVelocities(),
-                owned.mPhysics.captureNativeMotionModes(), owned.mPhysics.captureNativeBlendStates(),
-                NativeRagdollControllerSnapshot{authored, generated}));
+            result.mActors.emplace(binding.mActor, captureNativeActorRagdollSnapshot(
+                owned.mPhysics, binding.mBase, binding.mModel, owned.mDefinition));
         }
         result.mTimeCache = *mNativeBlendTimeCache;
         return result;
@@ -1530,35 +1526,8 @@ namespace MWPhysics
             if (saved == snapshot.mActors.end())
                 throw std::invalid_argument("native physical snapshot omits a bound actor");
             auto& owned = actorRagdoll(binding.mPtr);
-            const auto& pose = saved->second;
-            const auto states = restoreNativeActorRagdoll(pose, binding.mBase, binding.mModel, owned.mDefinition);
-            const auto packed = restoreNativeActorRagdollPackedVelocities(pose, binding.mBase, binding.mModel, owned.mDefinition);
-            const auto modes = restoreNativeActorRagdollMotionModes(pose, binding.mBase, binding.mModel, owned.mDefinition);
-            const auto blends = restoreNativeActorRagdollBlendStates(pose, binding.mBase, binding.mModel, owned.mDefinition);
-            const auto controllers = restoreNativeActorRagdollControllers(pose, binding.mBase, binding.mModel, owned.mDefinition);
-            std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepared;
-            if (controllers)
-            {
-                if (!packed || !modes || !blends)
-                    throw std::invalid_argument("native controller group restore requires complete physical and blend state");
-                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes, *blends, controllers->mBlends, controllers->mVelocities);
-            }
-            else if (blends)
-            {
-                if (!packed || !modes)
-                    throw std::invalid_argument("native blend group restore requires packed and motion state");
-                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes, *blends);
-            }
-            else if (modes)
-            {
-                if (!packed)
-                    throw std::invalid_argument("native motion group restore requires packed state");
-                prepared = owned.mPhysics.prepareRestore(states, *packed, *modes);
-            }
-            else if (packed)
-                prepared = owned.mPhysics.prepareRestore(states, *packed);
-            else
-                prepared = owned.mPhysics.prepareRestore(states);
+            auto prepared = prepareNativeActorRagdollSnapshot(owned.mPhysics, saved->second,
+                binding.mBase, binding.mModel, owned.mDefinition);
             data->mPending.push_back({binding.mPtr, owned.mLifetime, std::move(prepared)});
         }
         return std::unique_ptr<PreparedNativeRagdollSnapshotRestore>(
@@ -1578,6 +1547,26 @@ namespace MWPhysics
             const auto found = mActorRagdolls.find(entry.mPtr.mRef);
             if (found == mActorRagdolls.end() || entry.mLifetime.lock() != found->second->mLifetime)
                 throw std::invalid_argument("removed, replaced or rebound native physical restore owner");
+        }
+        for (const auto& entry : prepared.mData->mPending)
+            if (!actorRagdoll(entry.mPtr).mPhysics.validatePreparedRestore(*entry.mRestore))
+                throw std::invalid_argument("changed native physical restore preparation");
+        try
+        {
+            // Admit every requested World addition before any actor pose or
+            // registration selection is published. Keep the World barrier until
+            // the whole batch commits or all admitted additions roll back.
+            for (auto& entry : prepared.mData->mPending)
+                actorRagdoll(entry.mPtr).mPhysics.admitPreparedRestore(*entry.mRestore);
+            for (const auto& entry : prepared.mData->mPending)
+                if (!actorRagdoll(entry.mPtr).mPhysics.validatePreparedRestore(*entry.mRestore))
+                    throw std::invalid_argument("changed admitted native physical restore");
+        }
+        catch (...)
+        {
+            for (auto& entry : prepared.mData->mPending)
+                actorRagdoll(entry.mPtr).mPhysics.rollbackPreparedRestore(*entry.mRestore);
+            throw;
         }
         for (auto& entry : prepared.mData->mPending)
             actorRagdoll(entry.mPtr).mPhysics.commitRestore(*entry.mRestore);

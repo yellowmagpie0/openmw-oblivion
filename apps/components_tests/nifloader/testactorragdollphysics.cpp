@@ -5022,6 +5022,59 @@ namespace
         }
     };
 
+    TEST_F(ActorRagdollPhysicsTest, PreparedRegistrationStagesAdmissionsAndRollsBackWithoutPublishingSelection)
+    {
+        addHinge();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        NifBullet::ActorRagdollPhysics graph(mGraph, world, 1, mPoses, 1, -1);
+        const NifBullet::RagdollWorldRegistration sparse{{24}, {}}, full{{12, 24}, {25}};
+        graph.setWorldRegistrationSelection(sparse);
+        const auto* existing = graph.collisionObjects()[1]->getBroadphaseHandle();
+        auto first = graph.prepareWorldRegistrationSelection(full);
+        auto competing = graph.prepareWorldRegistrationSelection(full);
+        EXPECT_TRUE(graph.validateWorldRegistrationSelection(*first));
+        EXPECT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_FALSE(graph.commitWorldRegistrationSelection(*first));
+        graph.admitWorldRegistrationSelection(*first);
+        EXPECT_EQ(world.getNumCollisionObjects(), 2); EXPECT_EQ(world.getNumConstraints(), 1);
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), sparse);
+        EXPECT_FALSE(graph.validateWorldRegistrationSelection(*competing));
+        EXPECT_THROW(graph.setWorldRegistrationSelection({}), std::invalid_argument);
+        first.reset();
+        EXPECT_EQ(world.getNumCollisionObjects(), 1); EXPECT_EQ(world.getNumConstraints(), 0);
+        EXPECT_EQ(graph.collisionObjects()[1]->getBroadphaseHandle(), existing);
+        EXPECT_EQ(graph.captureWorldRegistrationSelection(), sparse);
+        ASSERT_TRUE(graph.validateWorldRegistrationSelection(*competing));
+        graph.admitWorldRegistrationSelection(*competing);
+        ASSERT_TRUE(graph.commitWorldRegistrationSelection(*competing));
+        EXPECT_FALSE(graph.commitWorldRegistrationSelection(*competing));
+        auto stale = graph.prepareWorldRegistrationSelection(full);
+        graph.setWorldRegistrationSelection({}); graph.setWorldRegistrationSelection(full);
+        EXPECT_FALSE(graph.validateWorldRegistrationSelection(*stale));
+        EXPECT_THROW(graph.admitWorldRegistrationSelection(*stale), std::invalid_argument);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, AdmittedRegistrationSafelyOutlivesOwnerAndDeferredAdmissionRemainsPrivate)
+    {
+        addHinge();
+        NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
+        auto graph = std::make_unique<NifBullet::ActorRagdollPhysics>(mGraph, world, 1, mPoses, 1, -1,
+            nullptr, nullptr, GraphPublication::Deferred);
+        auto staged = graph->prepareWorldRegistrationSelection({});
+        graph->admitWorldRegistrationSelection(*staged);
+        EXPECT_FALSE(graph->publish(world));
+        ASSERT_TRUE(graph->commitWorldRegistrationSelection(*staged));
+        ASSERT_TRUE(graph->publish(world));
+        EXPECT_EQ(world.getNumCollisionObjects(), 0);
+        auto admitted = graph->prepareWorldRegistrationSelection({{12, 24}, {25}});
+        graph->admitWorldRegistrationSelection(*admitted);
+        EXPECT_EQ(world.getNumCollisionObjects(), 2); EXPECT_EQ(world.getNumConstraints(), 1);
+        graph.reset();
+        EXPECT_EQ(world.getNumCollisionObjects(), 0); EXPECT_EQ(world.getNumConstraints(), 0);
+        admitted.reset();
+        world.stepSimulation(.01, 0);
+    }
+
     TEST_F(ActorRagdollPhysicsTest, RegistrationSelectionRetainsObjectsControllersAndPackedState)
     {
         addHinge(); defineOwnedHitBlends(mGraph);

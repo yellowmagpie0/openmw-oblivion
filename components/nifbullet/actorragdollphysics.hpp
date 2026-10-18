@@ -342,6 +342,28 @@ namespace NifBullet
         // This does not infer native gain/counter/constraint callback policy.
         void setWorldRegistrationSelection(const RagdollWorldRegistration& selection);
         RagdollWorldRegistration captureWorldRegistrationSelection() const;
+        class PreparedWorldRegistration
+        {
+        public:
+            ~PreparedWorldRegistration();
+            PreparedWorldRegistration(const PreparedWorldRegistration&) = delete;
+            PreparedWorldRegistration& operator=(const PreparedWorldRegistration&) = delete;
+        private:
+            friend class ActorRagdollPhysics;
+            struct Data;
+            explicit PreparedWorldRegistration(std::unique_ptr<Data> data);
+            std::unique_ptr<Data> mData;
+        };
+        // Preparation changes no World state. Admission adds only new members;
+        // retain the exclusive World barrier until commit or rollback. Discard
+        // and owner destruction remove admitted additions without releasing old
+        // members. Validate an entire batch before committing any pose/selection.
+        std::unique_ptr<PreparedWorldRegistration> prepareWorldRegistrationSelection(
+            const RagdollWorldRegistration& selection) const;
+        bool validateWorldRegistrationSelection(const PreparedWorldRegistration& prepared) const noexcept;
+        void admitWorldRegistrationSelection(PreparedWorldRegistration& prepared);
+        void rollbackWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept;
+        bool commitWorldRegistrationSelection(PreparedWorldRegistration& prepared) noexcept;
 
         // Borrowed identities for engine collision routing; ownership stays here.
         std::span<btCollisionObject* const> collisionObjects() const;
@@ -406,6 +428,10 @@ namespace NifBullet
             std::span<const RagdollNativeVelocityControllerState> velocityControllers) const;
         // Original owner only; successful publication consumes the token.
         void commitRestore(PreparedRestore& prepared);
+        void prepareRestoreWorldRegistration(PreparedRestore& prepared, const RagdollWorldRegistration& selection) const;
+        bool validatePreparedRestore(const PreparedRestore& prepared) const noexcept;
+        void admitPreparedRestore(PreparedRestore& prepared);
+        void rollbackPreparedRestore(PreparedRestore& prepared) noexcept;
         // Native units, including both packed fourth lanes. XYZ comes from the
         // current body; fourth lanes have separate owned binary32 storage.
         std::vector<RagdollNativePackedVelocityState> captureNativePackedVelocities() const;
