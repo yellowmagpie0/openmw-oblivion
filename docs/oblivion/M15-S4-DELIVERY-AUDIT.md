@@ -5751,3 +5751,35 @@ repeated. No original game/input course, physical step, contact or fresh-process
 acceptance is claimed. Clock lifecycle/persistence, indirect selector2 production,
 native World activation and all remaining M15S4 gameplay/restart gates stay open.
 Full M15S4 is not complete.
+
+
+### Live frame precision gap corrected
+
+Read-only original-game entry/return observation confirms FPCW007F and initialized
+fMaxTime0.0167/fChaseDeltaMult0.05 in separate mode0/10 processes. The previous
+Double helper differs on one of64 actual mode10 frames. An explicit Single
+precision overload now matches that observation and the retained instruction
+corpora. Quotient/product rounding also produces verified negative carry;
+nonpositive accumulated frames take no step and preserve signed clock state.
+Three new unit cases cover the live store and carry behavior. The existing
+five-argument helper keeps its Double contract. This does not activate a new
+World clock or route signed time through scene/body consumers.
+
+Full normal and ASan/UBSan checks each pass **2,920 component tests in273 suites**
+and **1,645 engine tests in122 suites**, with exact inventories and no failures/
+skips. Each standalone comparison matches29,538 cases and177,228 fields,
+including104 actual original observations. Wrong-precision controls change41
+cases. Both original processes exit0, the owned Steam process exits0, cloned
+inputs restore exactly and pristine saves are unchanged. No owned process
+remains. Debugger overhead precludes timing/FPS/contact or restart acceptance;
+no new fork gameplay course is claimed. ASan leaks are disabled.
+
+Tested source fingerprint: `48e4074942d711ee7014f110ac69f81d18ffee5d51065d71fc75a4fcf712390b`.
+Exact reports and limits are in `live_native_physical_frame_precision_followup`
+in the verification index. A supplementary correction identifies the controller
+wrapper's excluded RTTI as NiMultiTargetTransformController; earlier billboard/
+child fixture labels were misleading. Corrected native rerun preserves all
+numerical frame rows. Main timer publication and clock lifecycle, native World
+owner activation, KF/subtype/group/filter/root/capsule coordination and the
+remaining contact/reaction/FSM/GetUp and gameplay/save-restart gates remain open.
+Full M15S4 is not complete.

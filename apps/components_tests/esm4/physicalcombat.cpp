@@ -7,6 +7,7 @@
 #include <components/esm4/physicalframe.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/nif/nativetransform.hpp>
 #include <array>
 #include <bit>
 #include <algorithm>
@@ -3517,12 +3518,76 @@ TEST(ESM4PhysicalFrame, InvalidSettingsStateAndDurationRejectWithoutMutation)
     unsupported.mFixedSubstep = std::numeric_limits<float>::min();
     EXPECT_THROW(ESM4::preparePhysicalFrame(clock, unsupported, .1f, 0, false), std::invalid_argument);
     EXPECT_EQ(clock, previous);
-    ESM4::PhysicalFrameClock invalid{-1.f, .032f};
+    ESM4::PhysicalFrameClock invalid{-std::numeric_limits<float>::infinity(), .032f};
     EXPECT_THROW(ESM4::preparePhysicalFrame(invalid, {}, .1f, 1, false), std::invalid_argument);
-    EXPECT_EQ(invalid.mRemaining, -1.f);
+    EXPECT_EQ(invalid.mRemaining, -std::numeric_limits<float>::infinity());
     invalid = {0, -1};
     EXPECT_THROW(ESM4::preparePhysicalFrame(invalid, {}, .1f, 10, false), std::invalid_argument);
     EXPECT_EQ(invalid.mSmoothed, -1.f);
+    EXPECT_THROW(ESM4::preparePhysicalFrame(clock, {}, .1f, 0, false,
+        static_cast<Nif::NativeTransformPrecision>(42)), std::invalid_argument);
+    EXPECT_EQ(clock, previous);
+}
+
+TEST(ESM4PhysicalFrame, LiveSingleSmoothingMatchesObservedMainCallerStores)
+{
+    // Original live mode10, main889810 entry/return, FPCW007F.
+    ESM4::PhysicalFrameSettings settings;
+    settings.mFixedSubstep = std::bit_cast<float>(1015598704u);
+    ESM4::PhysicalFrameClock single{0, std::bit_cast<float>(1030875952u)};
+    auto wide = single;
+    const auto delta = std::bit_cast<float>(1031865893u);
+    const auto actual = ESM4::preparePhysicalFrame(single, settings, delta, 10, false,
+        Nif::NativeTransformPrecision::Single);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(actual.mSubstepSeconds), 1030928804u);
+    EXPECT_EQ(actual.mSubstepCount, 1u);
+    EXPECT_EQ(actual.mFrameSeconds, delta);
+    EXPECT_EQ(actual.mInputDelta, delta);
+    EXPECT_EQ(single.mSmoothed, actual.mSubstepSeconds);
+    EXPECT_EQ(single.mRemaining, 0.f);
+    const auto legacy = ESM4::preparePhysicalFrame(wide, settings, delta, 10, false);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(legacy.mSubstepSeconds), 1030928805u);
+}
+
+TEST(ESM4PhysicalFrame, RoundedFixedQuotientRetainsNegativeCarryAndZeroDeltaContinuation)
+{
+    // Full original889810: Single quotient rounds to3 and its product rounds
+    // before subtraction. Both signed-zero initial carries generate the same
+    // negative carry. The following zero-delta call retains it without stepping.
+    for (float initial : {0.f, -0.f})
+    {
+        ESM4::PhysicalFrameClock clock{initial, .032f};
+        const auto first = ESM4::preparePhysicalFrame(clock, {}, std::bit_cast<float>(1028443341u), 0, false,
+            Nif::NativeTransformPrecision::Single);
+        EXPECT_EQ(first.mSubstepCount, 3u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(first.mSubstepSeconds), 1015580809u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(first.mFrameSeconds), 1028443342u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(clock.mRemaining), 2977955840u);
+        const auto saved = clock;
+        const auto next = ESM4::preparePhysicalFrame(clock, {}, 0, 0, false,
+            Nif::NativeTransformPrecision::Single);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(next.mFrameSeconds), 2977955840u);
+        EXPECT_EQ(next.mSubstepCount, 0u);
+        EXPECT_EQ(next.mSubstepSeconds, 0.f);
+        EXPECT_EQ(clock, saved);
+    }
+}
+
+TEST(ESM4PhysicalFrame, NonpositiveAccumulatedFramesPreserveSignedClockWithoutStepping)
+{
+    // Original full-handler signed-carry fixtures; this is independent of
+    // whether a particular runtime profile produces such an initial clock.
+    for (auto precision : {Nif::NativeTransformPrecision::Single, Nif::NativeTransformPrecision::Double})
+    {
+        ESM4::PhysicalFrameClock clock{-1.f, .032f};
+        const auto saved = clock;
+        const auto result = ESM4::preparePhysicalFrame(clock, {}, 0, 10, false, precision);
+        EXPECT_EQ(result.mFrameSeconds, -1.f);
+        EXPECT_EQ(result.mInputDelta, 0.f);
+        EXPECT_EQ(result.mSubstepSeconds, 0.f);
+        EXPECT_EQ(result.mSubstepCount, 0u);
+        EXPECT_EQ(clock, saved);
+    }
 }
 
 TEST(ESM4PhysicalFrame, CapsOverflowingAccumulationAndRejectsOverflowingSmoothingAtomically)

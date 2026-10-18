@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+namespace Nif { enum class NativeTransformPrecision; }
+
 namespace ESM4
 {
     // Raw original image defaults; winning runtime configuration is separate.
@@ -31,11 +33,19 @@ namespace ESM4
 
     // Original889810 frame preparation. Mode0 uses fixed substeps,10 smooths;
     // other raw modes divide the prepared frame. Boolean limits to2 vs3 steps.
-    // Stage clock changes atomically. Finite nonnegative input/state, positive
-    // durations and a maximum/fixed-substep quotient below2^32 are supported.
+    // Stage clock changes atomically. Finite nonnegative input/smoothing, signed
+    // finite remainder, positive durations and a maximum/fixed-substep quotient
+    // below2^32 are supported.
     // This neither advances bodies nor resolves the engine's winning settings.
     PhysicalFrameResult preparePhysicalFrame(PhysicalFrameClock& clock,
         const PhysicalFrameSettings& settings, float delta, std::uint32_t rawMode, bool limitSubsteps);
+    // The original API retains Double intermediates. Select Single explicitly
+    // for the observed live main caller's007F arithmetic. Rounded quotients can
+    // generate negative carry; a nonpositive accumulated frame takes no steps
+    // and retains the clock, including that signed carry.
+    PhysicalFrameResult preparePhysicalFrame(PhysicalFrameClock& clock,
+        const PhysicalFrameSettings& settings, float delta, std::uint32_t rawMode, bool limitSubsteps,
+        Nif::NativeTransformPrecision precision);
 }
 
 #endif

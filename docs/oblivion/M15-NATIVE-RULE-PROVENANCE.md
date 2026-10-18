@@ -15778,3 +15778,52 @@ limits are in `native_physical_frame_producer_followup` in
 reruns, native game process, physical contact step or gameplay/restart acceptance
 are claimed. Actual clock ownership and native World activation remain open;
 ASan leaks are disabled.
+
+
+### Live main-frame precision and signed native carry
+
+Original processes now observe main889810 entry and40D8C7 return directly.
+Two separate pristine-prefix clones initialize modes0/10 from their INIs; code
+hashes and PID epochs guard read-only GDB observers. All104 matched frames use
+FPCW007F and initialized fMaxTime0.0167/fChaseDeltaMult0.05. The8 menu and32
+loaded-world mode0 frames match the previous Double helper; one of64 loaded-world
+mode10 frames differs. Both loaded phases also record64 base collision entries
+at selector0 and16 controller-wrapper entries. Instrumented timing has no FPS or
+trajectory interpretation. Normal UI loading/quickload and console exit are
+recorded. Both games and the verified-owned Steam process exit0; exact cloned
+inputs restore and pristine saves remain unchanged. No owned process remains.
+
+preparePhysicalFrame now accepts explicit Single/Double precision through the
+existing native arithmetic primitive. The original five-argument API retains
+Double intermediates. Single rounds the significand of each arithmetic operation
+without inserting extra binary32 memory stores. Native fixed quotient rounding
+can produce negative finite carry; the next zero-delta call preserves that carry,
+returns its nonpositive prepared frame and takes no step. Input remainder admits
+finite signed values; nonfinite remainder and the other supported-domain checks
+still reject atomically. The native signed behavior is not replaced by a zero
+clamp, and no downstream clock/drive integration is implied.
+
+Full original boundary03 executes2,522 unique cases without call stubs:2,475
+adjacent/signed-carry cases,45 finite accumulation overflows and2 unique generated
+negative-carry continuations. Earlier duplicate-case attempts remain retained.
+Fresh normal and ASan/UBSan comparisons each match29,538 cases/177,228 exact
+fields:25,760 prior rows,2,522 boundary rows,1,152 connected producer rows and104
+live original frames. Forcing Double changes41 cases, including the observed
+mode10 frame. Three new component tests retain these native expectations.
+Full normal/sanitized checks each pass2,920 components/273 suites and1,645
+engine tests/122 suites, with exact inventory agreement and no failures/skips.
+Tested source fingerprint: `48e4074942d711ee7014f110ac69f81d18ffee5d51065d71fc75a4fcf712390b`.
+ASan leaks are disabled; unchanged Python/schema tests are not rerun.
+
+The prior selector manifest's billboard/child labels were incorrect: actual full
+RTTI initializationA02E80->70E220 namesB3CD7C NiMultiTargetTransformController.
+47C990 traverses a controller list at+0C with next+34. Manifest version2 and a
+corrected1,935-case original04 rerun preserve all branch results; its1,152 frame
+rows are identical to03. Both the correction and historical reports are retained.
+
+Editable precision inputs are in `M15-PHYSICAL-FRAME-PRECISION-PROBE.json`;
+all hashes, source identity, cleanup, failures and limits are in
+`live_native_physical_frame_precision_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Native main-frame publication, clock
+lifecycle/persistence, downstream nonpositive-time handling, World activation,
+selector2/KF/subtype policy and complete gameplay/restart acceptance remain open.

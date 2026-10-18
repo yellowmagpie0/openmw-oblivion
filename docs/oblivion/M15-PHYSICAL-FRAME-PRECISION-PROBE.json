@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "purpose": "Precision and signed carry expected values from full original889810; live FPCW observation precedes implementation selection.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "function": "0x889810",
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "fixed_substeps": [
+    0.0167,
+    0.016666666666666666,
+    0.1,
+    0.008333333333333333,
+    1
+  ],
+  "raw_modes": [
+    0,
+    1,
+    10
+  ],
+  "smoothing": 0.05,
+  "initial_smoothed": 0.032,
+  "carry_inputs": [
+    "positive-zero",
+    "negative-zero",
+    "negative-quarter-substep",
+    "negative-one",
+    "positive-0.004"
+  ],
+  "delta_inputs": {
+    "base": [
+      "zero",
+      "one-tenth-substep"
+    ],
+    "adjacent_products": {
+      "multiples": [
+        1,
+        2,
+        3
+      ],
+      "binary32_word_offsets": [
+        -1,
+        0,
+        1
+      ]
+    }
+  },
+  "followup": "For every nonnegative-carry fixed-mode row that generates negative carry, execute a second native frame with delta0 and retained native clock.",
+  "overflow": "Finite maximum binary32 delta and remainder, normal positive fixed substep and smoothing.",
+  "comparison": {
+    "precision_mapping": {
+      "127": "Single",
+      "639": "Double",
+      "895": "Double for these declared cases; extended precision remains separately observed."
+    },
+    "fields": [
+      "input_delta",
+      "prepared_frame",
+      "substep_seconds",
+      "substep_count",
+      "remaining",
+      "smoothed"
+    ],
+    "tolerance": "exact binary32 words and integer count"
+  },
+  "live_protocol": {
+    "prefix_source": "S2/original-06/compat cloned separately for modes0/10; stock master only",
+    "pristine_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+    "entry": "0x889810",
+    "return": "0x40D8C7",
+    "fields": [
+      "caller/arguments",
+      "FPCW before and after",
+      "initialized INI/raw settings",
+      "clock before/after",
+      "selector and scene-complex byte"
+    ],
+    "method": "Read-only GDB entry/return observations, bounded collision/selector-wrapper entry observations, code-hash and process-epoch guards. Normal UI load/quickload and console qqq exit; exact cloned input restore.",
+    "limit": "Debugger perturbs timing. No native timing/FPS, full melee input, contact, fork runtime or save/restart acceptance."
+  }
+}
