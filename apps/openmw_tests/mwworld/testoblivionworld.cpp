@@ -1985,6 +1985,8 @@ namespace
             const auto retainedKey = retained.getCellRef().getFormKey();
             const std::string modelName(path.value());
             const auto cached = physics.captureActorRagdollSnapshot(actor, baseKey, modelName);
+            ASSERT_TRUE(cached.mInternalFilters);
+            ASSERT_EQ(cached.mInternalFilters->size(), cached.mBodies.size());
             ASSERT_TRUE(combat.syncActorRagdoll(actorKey, std::nullopt, cached));
             auto retainedPose = cached;
             retainedPose.mBodies[0].mPosition = {777, 888, 999};
@@ -2471,12 +2473,14 @@ namespace
                 {
                     wrong.mBodies[0].mRecord = 13;
                     wrong.mWorldRegistration->mBodies = {13};
+                    wrong.mInternalFilters->front().mBodyRecord = 13;
                 }
                 if (field == 1) wrong.mBodies[0].mNodeRecord = 9;
                 if (field == 2)
                 {
                     auto extra = wrong.mBodies[0]; extra.mRecord = 13; extra.mNodeRecord = 9;
                     wrong.mBodies.push_back(extra);
+                    wrong.mInternalFilters->push_back({extra.mRecord, wrong.mInternalFilters->front().mPackedFilter});
                 }
                 ASSERT_TRUE(combat.syncActorRagdoll(actorKey, std::nullopt, wrong));
                 EXPECT_ANY_THROW(world.captureOblivionRuntimeState());

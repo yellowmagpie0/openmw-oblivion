@@ -5322,3 +5322,15 @@ Full normal and ASan/UBSan checks each pass 2,862 component tests in 272 suites 
 Tested source fingerprint: `ea52a190a9629e220b81f059b1edd26cec19ed5bbf8ff8d2e9b9f078603c22e5`. Detailed source/binary/probe hashes, normalization, retained setup failures and boundaries are in `owned_blend_registration_persistence_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
 
 Automatic counter callers and scene requests, internal packed-filter/group persistence, external World routing and automatic contact/reaction/GetUp remain open. These checks do not establish a fresh-engine gameplay/restart course or close the remaining full M15S4 acceptance gates.
+
+### Internal filter persistence and composite restoration
+
+Runtime version52 preserves complete internal packed filter words, including absent World bodies, in canonical body-record order. Both codecs validate explicit presence, exact count/order, supported layers and downgrade writes while preserving opaque upper bits. Configured owners capture complete words; legacy absence preserves the target policy, and supplied words cannot silently create a missing policy.
+
+PreparedRestore now stages the internal policy with poses, counters and World selection. Whole-source validation permits only its own pending registration tag. The expected membership epoch change uses the private prevalidated filter publisher; independent public filter tokens remain strict. Tests preserve old contacts through admission/rollback, release only changed pair algorithms, recreate enabled contacts without movement and retain unrelated contacts. Later-owner failure and stale ignore/policy state publish no pose/counter/word/selection changes.
+
+The fresh-owner wire test restores distinct group words into a differently initialized policy, rebinds canonical records to winning body order, and proves actual contact behavior before and after restore. Full normal and ASan/UBSan checks each pass 2,867 component tests in 272 suites and 1,636 engine tests in 122 suites. All 321 Python tests pass, with no failures or skips. Seven valid and five malformed codec fixtures pass through 24 fresh normal/instrumented C++ processes with exact Python/C++ binary agreement. Leak checks are disabled.
+
+Tested source fingerprint: `f1e8fd792f0c52e2e8942aa9b37817c38483c8b911ee2010a891dcdd34d84496`. Source/binary hashes, scope and evidence are recorded in `internal_filter_restore_persistence_followup` in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.
+
+These words control the configured owned-pair policy. Global group ownership/allocation, external native World routing, automatic counter/scene and contact/reaction/GetUp integration remain open. No normal-input or fresh-engine gameplay/restart gate is closed by these backend checks; full M15S4 remains open.

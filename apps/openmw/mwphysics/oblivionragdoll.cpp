@@ -283,6 +283,14 @@ namespace MWPhysics
         std::sort(registration.mConstraints.begin(), registration.mConstraints.end());
         result.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{
             std::move(registration.mBodies), std::move(registration.mConstraints)};
+        if (physics.hasInternalCollisionFilters())
+        {
+            result.mInternalFilters.emplace();
+            for (const auto& filter : physics.captureInternalCollisionFilters())
+                result.mInternalFilters->push_back({filter.mRecord, filter.mPackedFilter});
+            std::sort(result.mInternalFilters->begin(), result.mInternalFilters->end(),
+                [](const auto& a, const auto& b) { return a.mBodyRecord < b.mBodyRecord; });
+        }
         result.validate();
         return result;
     }
@@ -323,6 +331,20 @@ namespace MWPhysics
         if (snapshot.mWorldRegistration)
             physics.prepareRestoreWorldRegistration(*prepared,
                 {snapshot.mWorldRegistration->mBodies, snapshot.mWorldRegistration->mConstraints});
+        if (snapshot.mInternalFilters)
+        {
+            std::vector<NifBullet::RagdollInternalBodyFilter> filters;
+            filters.reserve(definition.mBodies.size());
+            for (const auto& body : definition.mBodies)
+            {
+                const auto found = std::lower_bound(snapshot.mInternalFilters->begin(), snapshot.mInternalFilters->end(),
+                    body.mRecord, [](const auto& filter, auto record) { return filter.mBodyRecord < record; });
+                if (found == snapshot.mInternalFilters->end() || found->mBodyRecord != body.mRecord)
+                    throw std::invalid_argument("internal filter snapshot does not match the winning body");
+                filters.push_back({body.mRecord, found->mPackedFilter});
+            }
+            physics.prepareRestoreInternalCollisionFilters(*prepared, filters);
+        }
         return prepared;
     }
 

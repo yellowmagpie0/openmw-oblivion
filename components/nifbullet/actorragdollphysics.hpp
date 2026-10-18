@@ -404,6 +404,7 @@ namespace NifBullet
         // symmetry/layers and reserves ignore-list capacity without changing
         // collision decisions or cached contacts. Hold the World barrier until
         // commit. Stale membership/filter/ignore-list snapshots reject.
+        bool hasInternalCollisionFilters() const noexcept;
         std::vector<RagdollInternalBodyFilter> captureInternalCollisionFilters() const;
         std::unique_ptr<PreparedInternalCollisionFilters> prepareInternalCollisionFilters(
             std::span<const RagdollInternalBodyFilter> filters) const;
@@ -511,6 +512,11 @@ namespace NifBullet
         // Original owner only; successful publication consumes the token.
         void commitRestore(PreparedRestore& prepared);
         void prepareRestoreWorldRegistration(PreparedRestore& prepared, const RagdollWorldRegistration& selection) const;
+        // Stage complete configured internal words with this pose/selection
+        // restore. Validate all source tokens before any release; membership
+        // publication does not invalidate its own staged filter transition.
+        void prepareRestoreInternalCollisionFilters(PreparedRestore& prepared,
+            std::span<const RagdollInternalBodyFilter> filters) const;
         bool validatePreparedRestore(const PreparedRestore& prepared) const noexcept;
         void admitPreparedRestore(PreparedRestore& prepared);
         void rollbackPreparedRestore(PreparedRestore& prepared) noexcept;

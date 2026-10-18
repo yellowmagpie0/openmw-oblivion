@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 51
+CURRENT_VERSION = 52
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1189,7 +1189,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for entry in ragdolls:
         fields = {"actor", "base", "model", "asset_hash", "bodies"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
-                or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration"}):
+                or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration", "internal_filters"}):
             raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
         actor, base = entry["actor"], entry["base"]
         native_key(actor)
@@ -1269,6 +1269,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     or set(registration["constraints"]) & body_records
                     or (registration["constraints"] and len(registration["bodies"]) < 2)):
                 raise RuntimeStateError("Unknown TES4 World body or invalid constraint selection")
+        if "internal_filters" in entry:
+            filters = check_collection(entry["internal_filters"], "native internal filters")
+            if version < 52 or len(filters) != len(bodies):
+                raise RuntimeStateError("Invalid TES4 internal filter version or count")
+            for body, value in zip(bodies, filters):
+                if (not isinstance(value, dict) or set(value) != {"body_record", "packed_filter"}
+                        or type(value["body_record"]) is not int or value["body_record"] != body["record"]
+                        or type(value["packed_filter"]) is not int or not 0 <= value["packed_filter"] <= 0xffffffff
+                        or value["packed_filter"] & 63 >= 32):
+                    raise RuntimeStateError("Invalid TES4 internal filter identity, order or layer")
         if "native_blends" in entry:
             blends = check_collection(entry["native_blends"], "native ragdoll blends")
             if (version < 34 or len(blends) > len(bodies)
@@ -2093,6 +2103,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present:
                     entry["world_registration"] = {field: [reader.unpack("<I") for _ in range(reader.count())]
                         for field in ("bodies", "constraints")}
+            if version >= 52:
+                present = reader.unpack("<B")
+                if present not in (0, 1):
+                    raise RuntimeStateError("Invalid TES4 internal filter presence marker")
+                if present:
+                    count = reader.count()
+                    if count != len(entry["bodies"]):
+                        raise RuntimeStateError("Incomplete TES4 internal filter count")
+                    entry["internal_filters"] = [{"body_record": reader.unpack("<I"), "packed_filter": reader.unpack("<I")}
+                        for _ in range(count)]
             result["native_actor_ragdolls"].append(entry)
     if version >= 36:
         present = reader.unpack("<B")
@@ -2560,6 +2580,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         records = entry["world_registration"][field]
                         writer.pack("<I", len(records))
                         for record in records: writer.pack("<I", record)
+            if version >= 52:
+                writer.pack("<B", int("internal_filters" in entry))
+                if "internal_filters" in entry:
+                    writer.pack("<I", len(entry["internal_filters"]))
+                    for value in entry["internal_filters"]:
+                        writer.pack("<I", value["body_record"])
+                        writer.pack("<I", value["packed_filter"])
     if version >= 36:
         writer.pack("<B", int("native_physical_blend_time_cache" in state))
         if "native_physical_blend_time_cache" in state:

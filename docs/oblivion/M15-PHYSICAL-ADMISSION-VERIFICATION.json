@@ -4751,5 +4751,183 @@
       "Internal packed filter words/group ownership and external World filter routing still need persistence/integration. Counter persistence alone does not close the complete recovery restart gate.",
       "Fresh-owner binary continuation and fresh codec processes are distinct from a fresh engine normal-input gameplay course. Every remaining full M15S4 input/view/device/FPS/interruption/mastery/effects/drop/restart gate remains open."
     ]
+  },
+  "internal_filter_restore_persistence_followup": {
+    "status": "Internal packed words persist in runtime version52 and restore coherently with pose, counters and World selection; external World routing/group ownership and automatic S4 gameplay remain open.",
+    "source": {
+      "head": "4938ea39d36e97ae4f9fb5b8a109169ecfe92e40",
+      "source_fingerprint": "f1e8fd792f0c52e2e8942aa9b37817c38483c8b911ee2010a891dcdd34d84496"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "7aaed63a1e7b56db70d0a0ab0eb963f1e624e9c1535275438d07c0f80eed8180",
+      "components/nifbullet/actorragdollphysics.cpp": "36947ca6ee9c69c44293c4c0fd540916cbbf83c7e9359dbf70c8e25a18495114",
+      "components/esm4/runtimestate.hpp": "6184476a62802559d838fc819732293b46cf363cebeb939a16f98395e6b01f81",
+      "components/esm4/runtimestate.cpp": "48eb8d15d663fed9171851ecc87dfe034322dad9cea5e2703723365a4fcf73f6",
+      "apps/openmw/mwphysics/oblivionragdoll.cpp": "b7b4f811c3c13e53d01975ac891fc4675f5e40ef4e8c20812586409d9020dfb7",
+      "apps/components_tests/nifloader/testorderedragdollregistration.cpp": "83f4a099d5e0e39dca77aa63d46bd298fdd567deadcbf3631d2d59dedfd421e0",
+      "apps/components_tests/esm4/runtimestate.cpp": "a9ba644851b9ef1b6cfcb16c5f2f5573287be1516ad9ed99388e766e69b220d8",
+      "apps/openmw_tests/mwphysics/testoblivionragdoll.cpp": "39b7feb4d6722789f46aed7dbe99c7026d9ffa8e65d3bc23f35b1d64a6eedbed",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "45cbbbfe9f4c966fb6cf498fac038a07fcc05e7fa889df93106335f8437bbc6d",
+      "scripts/tes4_runtime_state.py": "ead0bd9eeca4208aef3f905bfa8010e6deb2c945e2b2133cfba4cc9ed184cd72",
+      "scripts/tests/test_tes4_runtime_state.py": "177ad75047864056f206b1df635e4b540e03dbd1434078aa13192fec41cc001e"
+    },
+    "post_test_changes": [
+      "Evidence index and delivery audit only; production and test sources unchanged after the checks."
+    ],
+    "changes": [
+      "Snapshot configured internal packed words for every owned body, including absent World members, canonically by body record. Unconfigured policy has no snapshot; absent data preserves the target's configured policy.",
+      "Version52 adds explicit filter presence, complete count and uint32 body-record/packed-word pairs after the per-actor World registration. Validate complete body order, supported layer domain0..31, strict presence and unsupported downgrade writes in both codecs. Preserve opaque high bits.",
+      "prepareRestoreInternalCollisionFilters stages the existing validated/reserved internal mask replacement with PreparedRestore. Composite validation permits only its own admitted registration tag. After all-source prevalidation, the expected registration epoch change uses the private prevalidated filter publisher; public independent stale guards remain strict.",
+      "Snapshot adapters reorder canonical records into winning body order and reject missing policy or incompatible inputs before publication. Cached changed-pair algorithms release while unrelated contacts and external ignore references survive.",
+      "Late cohort admission failure and stale policy/ignore inputs preserve old poses, counters, selection and words. Complete admission allows pose/counter/selection/filter publication for every owner."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/internal-filter-restore-normal-02/verification.json",
+        "report_sha256": "a74ebaed1f916fad0843082537dd8d111c9a573e35bcc1ab90b737cb716c41e0",
+        "source": {
+          "head": "4938ea39d36e97ae4f9fb5b8a109169ecfe92e40",
+          "source_fingerprint": "f1e8fd792f0c52e2e8942aa9b37817c38483c8b911ee2010a891dcdd34d84496"
+        },
+        "results": {
+          "components": {
+            "executed": 2867,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "f1542a52a5868bcf1fc04561ceb2d7e89a757828961ee896be1b698e5c2a9cd9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "62eea215dbbb162a48fd0b6c57707d265d239b0154b786dd7794d5910d3d223a",
+            "inventory_sha256": "031ec76d4ce4e86d1bcdf09736706250975edc3b8f72c97bd0a73df5389ae036",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1636,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "adce1a3cd720d3f9e100ed240d820c47eaf1960eaa3dfc9c80b804f51d10ade7",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "5b35d21c020ec4ba24123f024719a1813028db0ca210757b422e7396ea6e2b01",
+            "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 321,
+            "passed": true,
+            "log_sha256": "eb2b369de3234031872f0b323cf5569289b9e2a29be654b3430c0476d8116d12"
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "eb17a2d38c6af9564b99a7dc8ac611d2adcfb6f47b7c94f330ead7941acef7b3"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/internal-filter-restore-sanitized-02/verification.json",
+        "report_sha256": "091b0ab462f0e627e4e7a419324840b61588b056a72612e95d745e3b07590534",
+        "source": {
+          "head": "4938ea39d36e97ae4f9fb5b8a109169ecfe92e40",
+          "source_fingerprint": "f1e8fd792f0c52e2e8942aa9b37817c38483c8b911ee2010a891dcdd34d84496"
+        },
+        "results": {
+          "components": {
+            "executed": 2867,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1b08610a53932cfd4881dcbcebaef2fbe9c16d50c1d4edb61d045147f3944f2d",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "3c9badcf150f291b6230a1a21d718728dd590755b1cadf12857c10cf90fbbbfe",
+            "inventory_sha256": "397fcd2ca3ee684e4481946386509bbec4374443e2ff2af74ef302b34f35452a",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1636,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "99a029ed73ea8ed4406fafa359076c84fe470545653116d43137db021102f707",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5705fc1cbc72189882a7ab307c947b3ff67a23ba07fa696278b3bbfa10960f35",
+            "inventory_sha256": "f93a9765319ecff0e6a69d9c8fd1998429905777ec79e6a2f491aa9273c3b261",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": {
+          "components": 272,
+          "engine": 122
+        },
+        "openmw_sha256": "daa0cbf376b5fec1d68033a265ec51915fb8e87091306eb06ae59ac41f8d3417"
+      }
+    },
+    "component_cases": [
+      "CompositeFilterRestorePublishesAcrossItsOwnRegistrationEpochAndRecreatesContacts",
+      "WholeCohortFilterPoseAndCounterRestoreWaitsForEveryAdmission",
+      "CompositeRestoreRejectsStalePolicyAndIgnoreListsBeforePoseOrSelectionPublication",
+      "InternalFilterVersionFiftyTwoHasLiteralWireAndLegacyAbsence",
+      "InternalFilterRecordsMustCoverEveryBodyInCanonicalOrderAndUseVerifiedLayers"
+    ],
+    "engine_case": "InternalFilterWireRestoresActualCollisionPolicyAndMembershipInFreshOwner",
+    "python_cases": [
+      "test_internal_filters_v52_literal_wire_and_legacy_absence",
+      "test_internal_filters_reject_incomplete_reordered_and_unverified_words",
+      "test_internal_filter_wire_presence_count_and_truncation_reject"
+    ],
+    "codec": {
+      "report": "build/oblivion-compat/m15/S4/internal-filter-codec-01/report.json",
+      "report_sha256": "17d5c8a35f9b9071d1e645e43a307607e05dbce1853219f8e565afc944ca037c",
+      "valid_cases": 7,
+      "malformed_cases": 5,
+      "fresh_cpp_processes": 24,
+      "scope": "Version51 legacy and52 absent/present filters, arbitrary supported uint32 words including high bits and suppression flags. Python encode -> fresh C++ normal/instrumented decode/JSON/exact binary rewrite -> Python encode identical bytes. Both reject malformed presence/count/layer/record/duplicate inputs. Codec process evidence, not fresh gameplay acceptance."
+    },
+    "native_rule_provenance": "Reuse the already verified RagdollCollisionFilter predicate and internal policy implementation. No new native rule, original executable probe or new gameplay observation. The ordered registration rule/corpus remains unchanged and was not rerun solely for this restore change.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "retained_failed_checks": {
+      "normal": "build/oblivion-compat/m15/S4/internal-filter-restore-normal-01/verification.json",
+      "sanitized": "build/oblivion-compat/m15/S4/internal-filter-restore-sanitized-01/verification.json",
+      "reason": "WorldSaveRefreshesLivePhysicalOwnersAndPreservesRetainedPoses deliberately changes body records to exercise winning-asset checks. Its cached filter IDs/count must change with those bodies so structural validation remains valid and the intended semantic rejection is reached. No production validation was weakened."
+    },
+    "validation_scope": "Full normal/instrumented components and engine plus Python, actual Bullet cached contacts and fresh-owner binary snapshot restoration, and fresh C++ codec processes. These are structural/compiler and semantic collision checks, not normal-input fresh-engine gameplay acceptance.",
+    "limits": [
+      "Configured internal owned-pair policy only; the mask table remains caller configuration. Snapshot words do not enable a missing policy or snapshot unrelated ignore owners.",
+      "Exact internal packed high words are restored, but external native World routing and global group ownership/allocation still require integration. Do not claim cross-actor native physical filter parity.",
+      "Caller retains owner and the exclusive World barrier, including queries, through whole-cohort admission/prevalidation/commit or rollback. Existing Bullet publication/cleanup and AABB-update contracts apply; this is not arbitrary allocator-failure coverage.",
+      "Legacy absence preserves configured live words and does not reconstruct missing filter history. Current configured owners always capture complete words.",
+      "Automatic counter/scene callers, contact/reaction/GetUp and all remaining full M15S4 input/view/device/FPS/interruption/mastery/effects/drop and fresh-process recovery courses remain open."
+    ]
   }
 }

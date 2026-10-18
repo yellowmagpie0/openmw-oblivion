@@ -1620,6 +1620,11 @@ namespace NifBullet
         : mData(std::move(data)) {}
     ActorRagdollPhysics::PreparedInternalCollisionFilters::~PreparedInternalCollisionFilters() = default;
 
+    bool ActorRagdollPhysics::hasInternalCollisionFilters() const noexcept
+    {
+        return mImpl->mInternalMasks.has_value();
+    }
+
     std::vector<RagdollInternalBodyFilter> ActorRagdollPhysics::captureInternalCollisionFilters() const
     {
         require(mImpl->mInternalMasks.has_value(), "unconfigured internal collision policy");
@@ -1966,6 +1971,7 @@ namespace NifBullet
         std::optional<std::vector<RagdollNativeBlendControllerState>> mAuthored;
         std::optional<std::vector<RagdollNativeVelocityControllerState>> mGenerated;
         std::unique_ptr<PreparedWorldRegistration> mRegistration;
+        std::unique_ptr<PreparedInternalCollisionFilters> mFilters;
     };
     ActorRagdollPhysics::PreparedRestore::PreparedRestore(std::unique_ptr<Data> data)
         : mData(std::move(data)) {}
@@ -2055,17 +2061,42 @@ namespace NifBullet
         prepared.mData->mRegistration = prepareWorldRegistrationSelection(selection);
     }
 
+    void ActorRagdollPhysics::prepareRestoreInternalCollisionFilters(PreparedRestore& prepared,
+        std::span<const RagdollInternalBodyFilter> filters) const
+    {
+        require(validatePreparedRestore(prepared), "foreign, stale or consumed filter restore");
+        require(!prepared.mData->mRegistration || !prepared.mData->mRegistration->mData->mAdmitted,
+            "cannot replace admitted restore filters");
+        prepared.mData->mFilters = prepareInternalCollisionFilters(filters);
+    }
+
     bool ActorRagdollPhysics::validatePreparedRestore(const PreparedRestore& prepared) const noexcept
     {
-        return prepared.mData && prepared.mData->mOwner == this && prepared.mData->mOwnerImpl == mImpl.get()
-            && (!prepared.mData->mRegistration || validateWorldRegistrationSelection(*prepared.mData->mRegistration));
+        if (!prepared.mData || prepared.mData->mOwner != this || prepared.mData->mOwnerImpl != mImpl.get())
+            return false;
+        const auto& data = *prepared.mData;
+        if (data.mRegistration && !validateWorldRegistrationSelection(*data.mRegistration)) return false;
+        const auto pending = data.mRegistration && data.mRegistration->mData->mAdmitted
+            ? data.mRegistration->mData->mNext : std::shared_ptr<const char>{};
+        return !data.mFilters || validateInternalCollisionFilters(*data.mFilters, pending);
     }
 
     void ActorRagdollPhysics::admitPreparedRestore(PreparedRestore& prepared)
     {
         require(validatePreparedRestore(prepared), "foreign, stale or consumed prepared pose restore");
         if (prepared.mData->mRegistration)
-            admitWorldRegistrationSelection(*prepared.mData->mRegistration);
+        {
+            try
+            {
+                admitWorldRegistrationSelection(*prepared.mData->mRegistration);
+                require(validatePreparedRestore(prepared), "changed composite filter restore admission");
+            }
+            catch (...)
+            {
+                rollbackPreparedRestore(prepared);
+                throw;
+            }
+        }
     }
 
     void ActorRagdollPhysics::rollbackPreparedRestore(PreparedRestore& prepared) noexcept
@@ -2080,6 +2111,10 @@ namespace NifBullet
         auto& data = *prepared.mData;
         if (data.mRegistration)
             require(commitWorldRegistrationSelection(*data.mRegistration), "changed restore registration");
+        // Already validated against the same source as the registration token.
+        // Its own registration epoch change is expected; public filter guards
+        // remain strict for every independent token.
+        if (data.mFilters) publishInternalCollisionFilters(*data.mFilters);
         if (data.mMotions)
             for (std::size_t i = 0; i < data.mMotions->size(); ++i)
                 if (mImpl->mBodies[i].mMotion != (*data.mMotions)[i].mMotion)

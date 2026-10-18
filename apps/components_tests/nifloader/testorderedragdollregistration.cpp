@@ -270,4 +270,108 @@ namespace
         EXPECT_EQ(value->captureWorldRegistrationSelection(),(NifBullet::RagdollWorldRegistration{{24},{}}));
     }
 
+    TEST_F(OrderedRagdollRegistrationTest, CompositeFilterRestorePublishesAcrossItsOwnRegistrationEpochAndRecreatesContacts)
+    {
+        auto value = actor(); auto* a = value->collisionObjects()[0]; auto* b = value->collisionObjects()[1];
+        btSphereShape outsideShape(.5); btCollisionObject outside;
+        outside.setCollisionShape(&outsideShape);
+        outside.setWorldTransform(btTransform(btQuaternion::getIdentity(),btVector3(.5,.5,0)));
+        mWorld.addCollisionObject(&outside,1,-1);
+        struct Remove {btDynamicsWorld& w;btCollisionObject& o;~Remove(){w.removeCollisionObject(&o);}} remove{mWorld,outside};
+        mWorld.performDiscreteCollisionDetection();
+        const auto* internal = contact(a,b); const auto* external = contact(b,&outside);
+        ASSERT_NE(internal,nullptr); ASSERT_NE(external,nullptr);
+        const auto before = value->captureInternalCollisionFilters(); auto disabled = before;
+        disabled[1].mPackedFilter |= 0x4000;
+        auto independent = value->prepareInternalCollisionFilters(disabled);
+        auto prepared = value->prepareRestore(value->capture());
+        value->prepareRestoreWorldRegistration(*prepared,value->captureWorldRegistrationSelection());
+        value->prepareRestoreInternalCollisionFilters(*prepared,disabled);
+        value->admitPreparedRestore(*prepared);
+        EXPECT_TRUE(value->validatePreparedRestore(*prepared));
+        EXPECT_FALSE(value->commitInternalCollisionFilters(*independent));
+        EXPECT_EQ(value->captureInternalCollisionFilters(),before);
+        EXPECT_EQ(contact(a,b),internal); EXPECT_EQ(contact(b,&outside),external);
+        value->rollbackPreparedRestore(*prepared); ASSERT_TRUE(value->validatePreparedRestore(*prepared));
+        value->commitRestore(*prepared);
+        EXPECT_EQ(value->captureInternalCollisionFilters(),disabled);
+        EXPECT_FALSE(a->checkCollideWith(b)); EXPECT_EQ(contact(a,b),nullptr);
+        EXPECT_EQ(contact(b,&outside),external);
+        EXPECT_FALSE(value->commitInternalCollisionFilters(*independent));
+        auto enabled = value->prepareRestore(value->capture());
+        value->prepareRestoreInternalCollisionFilters(*enabled,before);
+        value->commitRestore(*enabled);
+        mWorld.performDiscreteCollisionDetection();
+        EXPECT_TRUE(a->checkCollideWith(b)); ASSERT_NE(contact(a,b),nullptr);
+        EXPECT_GT(contact(a,b)->getNumContacts(),0); EXPECT_EQ(contact(b,&outside),external);
+    }
+
+    TEST_F(OrderedRagdollRegistrationTest, WholeCohortFilterPoseAndCounterRestoreWaitsForEveryAdmission)
+    {
+        auto first = actor(), second = actor(); onlyB(*first); onlyB(*second);
+        const auto prepare = [&](Actor& value) {
+            auto poses = value.capture(); poses[0].mPose.setOrigin(btVector3(7,8,9));
+            auto blends = value.captureNativeBlendStates(); blends[0].mRegistrationCounter = 42;
+            blends[0].mHasRememberedWorldOwner = true;
+            auto prepared = value.prepareRestore(poses,value.captureNativePackedVelocities(),
+                value.captureNativeMotionModes(),blends);
+            value.prepareRestoreWorldRegistration(*prepared,{{12,24},{25}});
+            auto filters = value.captureInternalCollisionFilters(); filters[0].mPackedFilter |= 0x4000;
+            value.prepareRestoreInternalCollisionFilters(*prepared,filters);
+            return prepared;
+        };
+        const auto firstWords = first->captureInternalCollisionFilters(), secondWords = second->captureInternalCollisionFilters();
+        const auto before = first->capture();
+        auto a = prepare(*first), b = prepare(*second);
+        first->admitPreparedRestore(*a); mBroadphase.mFailAt = mBroadphase.mCreates+1;
+        EXPECT_THROW(second->admitPreparedRestore(*b),std::runtime_error);
+        first->rollbackPreparedRestore(*a);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(),2); EXPECT_EQ(mWorld.getNumConstraints(),0);
+        EXPECT_EQ(first->capture()[0].mPose,before[0].mPose);
+        EXPECT_EQ(first->captureInternalCollisionFilters(),firstWords); EXPECT_EQ(second->captureInternalCollisionFilters(),secondWords);
+        EXPECT_EQ(first->captureNativeBlendStates()[0].mRegistrationCounter,0);
+        EXPECT_FALSE(first->captureNativeBlendStates()[0].mHasRememberedWorldOwner);
+        ASSERT_TRUE(first->validatePreparedRestore(*a)); ASSERT_TRUE(second->validatePreparedRestore(*b));
+        mBroadphase.mFailAt = 0;
+        first->admitPreparedRestore(*a); second->admitPreparedRestore(*b);
+        ASSERT_TRUE(first->validatePreparedRestore(*a)); ASSERT_TRUE(second->validatePreparedRestore(*b));
+        first->commitRestore(*a); second->commitRestore(*b);
+        EXPECT_EQ(mWorld.getNumCollisionObjects(),4); EXPECT_EQ(mWorld.getNumConstraints(),2);
+        for (auto* value : {first.get(),second.get()})
+        {
+            EXPECT_EQ(value->capture()[0].mPose.getOrigin(),btVector3(7,8,9));
+            EXPECT_EQ(value->captureNativeBlendStates()[0].mRegistrationCounter,42);
+            EXPECT_TRUE(value->captureNativeBlendStates()[0].mHasRememberedWorldOwner);
+            EXPECT_NE(value->captureInternalCollisionFilters()[0].mPackedFilter&0x4000u,0u);
+            EXPECT_FALSE(value->collisionObjects()[0]->checkCollideWith(value->collisionObjects()[1]));
+        }
+    }
+
+    TEST_F(OrderedRagdollRegistrationTest, CompositeRestoreRejectsStalePolicyAndIgnoreListsBeforePoseOrSelectionPublication)
+    {
+        auto value = actor(); auto words = value->captureInternalCollisionFilters();
+        auto disabled = words; disabled[0].mPackedFilter |= 0x4000;
+        auto poses = value->capture(); poses[0].mPose.setOrigin(btVector3(10,20,30));
+        auto prepared = value->prepareRestore(poses);
+        value->prepareRestoreWorldRegistration(*prepared,{{24},{}});
+        value->prepareRestoreInternalCollisionFilters(*prepared,disabled);
+        auto other = value->prepareInternalCollisionFilters(words);
+        ASSERT_TRUE(value->commitInternalCollisionFilters(*other));
+        EXPECT_FALSE(value->validatePreparedRestore(*prepared));
+        EXPECT_THROW(value->commitRestore(*prepared),std::invalid_argument);
+        EXPECT_EQ(value->capture()[0].mPose,mPoses[0]); EXPECT_EQ(mWorld.getNumCollisionObjects(),2);
+        prepared = value->prepareRestore(poses);
+        value->prepareRestoreWorldRegistration(*prepared,{{24},{}});
+        value->prepareRestoreInternalCollisionFilters(*prepared,disabled);
+        value->admitPreparedRestore(*prepared);
+        auto* a = value->collisionObjects()[0]; auto* b = value->collisionObjects()[1];
+        a->setIgnoreCollisionCheck(b,true);
+        EXPECT_FALSE(value->validatePreparedRestore(*prepared));
+        EXPECT_THROW(value->commitRestore(*prepared),std::invalid_argument);
+        value->rollbackPreparedRestore(*prepared);
+        EXPECT_EQ(value->capture()[0].mPose,mPoses[0]); EXPECT_EQ(mWorld.getNumCollisionObjects(),2);
+        EXPECT_EQ(a->getNumObjectsWithoutCollision(),1);
+        a->setIgnoreCollisionCheck(b,false); ASSERT_TRUE(value->validatePreparedRestore(*prepared));
+    }
+
 }

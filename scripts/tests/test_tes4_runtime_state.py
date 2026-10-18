@@ -2777,6 +2777,69 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_actor_ragdolls"], state["native_actor_ragdolls"])
 
 
+
+    def internal_filter_state(self):
+        state = self.blend_ragdoll_state(); state_io._upgrade_power_melee_phases(state)
+        state["schema_version"] = 51
+        pose = state["native_actor_ragdolls"][0]
+        body = copy.deepcopy(pose["bodies"][0]); body.update(record=24,node_record=20)
+        pose["bodies"].append(body)
+        pose["world_registration"] = {"bodies":[12,24],"constraints":[25]}
+        return state
+
+    def test_internal_filters_v52_literal_wire_and_legacy_absence(self):
+        state = self.internal_filter_state(); legacy = state_io.encode_payload(state)
+        registration = bytes.fromhex("01 02000000 0c000000 18000000 01000000 19000000")
+        self.assertEqual(legacy.count(registration),1)
+        offset = legacy.index(registration)+len(registration)
+        expected = bytearray(legacy); struct.pack_into("<I",expected,len(state_io.MAGIC),52)
+        expected[offset:offset] = b"\x00"; state["schema_version"] = 52
+        self.assertEqual(state_io.encode_payload(state),expected)
+        self.assertNotIn("internal_filters",state_io.decode_payload(expected)["native_actor_ragdolls"][0])
+        pose = state["native_actor_ragdolls"][0]
+        pose["internal_filters"] = [{"body_record":12,"packed_filter":0x12340108},
+            {"body_record":24,"packed_filter":0x98760208}]
+        words = bytes.fromhex("01 02000000 0c000000 08013412 18000000 08027698")
+        expected[offset:offset+1] = words
+        self.assertEqual(state_io.encode_payload(state),expected)
+        decoded = state_io.decode_payload(expected)
+        self.assertEqual(decoded["native_actor_ragdolls"],state["native_actor_ragdolls"])
+        self.assertEqual(state_io.encode_payload(decoded),expected)
+        state["schema_version"] = 51
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del pose["internal_filters"]; self.assertEqual(state_io.encode_payload(state),legacy)
+
+    def test_internal_filters_reject_incomplete_reordered_and_unverified_words(self):
+        state = self.internal_filter_state(); state["schema_version"] = 52
+        pose = state["native_actor_ragdolls"][0]
+        valid = [{"body_record":12,"packed_filter":0x12340108},{"body_record":24,"packed_filter":0x98760208}]
+        bad = [None,{},[],valid[:1],list(reversed(valid)),[valid[0],valid[0]],
+            [valid[0],{"body_record":99,"packed_filter":8}]]
+        for word in (-1,0x100000000,True,"8",32,63):
+            bad.append([{"body_record":12,"packed_filter":word},valid[1]])
+        for value in bad:
+            pose["internal_filters"] = value
+            with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        pose["internal_filters"] = valid
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_actor_ragdolls"],state["native_actor_ragdolls"])
+
+    def test_internal_filter_wire_presence_count_and_truncation_reject(self):
+        state = self.internal_filter_state(); state["schema_version"] = 52
+        pose = state["native_actor_ragdolls"][0]
+        pose["internal_filters"] = [{"body_record":12,"packed_filter":0x12340108},
+            {"body_record":24,"packed_filter":0x98760208}]
+        payload = state_io.encode_payload(state)
+        words = bytes.fromhex("01 02000000 0c000000 08013412 18000000 08027698")
+        self.assertEqual(payload.count(words),1); offset = payload.index(words)
+        for index,value in ((offset,2),(offset+1,0),(offset+1,3),(offset+9,32)):
+            corrupt = bytearray(payload); corrupt[index] = value
+            with self.subTest(index=index,value=value), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(corrupt)
+        for cut in range(offset,offset+len(words)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:cut])
+
+
 class SaveEnvelopeAdmissionTests(unittest.TestCase):
     @staticmethod
     def record(name, body):

@@ -722,6 +722,15 @@ namespace ESM4
                         [&](const auto& body) { return body.mRecord == record; }))
                     throw std::runtime_error("TES4 World constraint reuses a body record");
         }
+        if (mInternalFilters)
+        {
+            if (mInternalFilters->size() != mBodies.size())
+                throw std::runtime_error("Incomplete TES4 internal filter snapshot");
+            for (std::size_t i = 0; i < mBodies.size(); ++i)
+                if ((*mInternalFilters)[i].mBodyRecord != mBodies[i].mRecord
+                    || ((*mInternalFilters)[i].mPackedFilter & 63u) >= 32)
+                    throw std::runtime_error("Invalid TES4 internal filter record order or layer");
+        }
         if (mNativeBlends)
         {
             if (!mBodies.front().mNativePackedVelocity || !mBodies.front().mNativeMotion
@@ -1129,6 +1138,8 @@ namespace ESM4
                 throw std::runtime_error("TES4 blend registration state requires runtime-state version51");
             if (mVersion < 35 && pose.mNativeControllers)
                 throw std::runtime_error("TES4 ragdoll controllers require runtime-state version35");
+            if (mVersion < 52 && pose.mInternalFilters)
+                throw std::runtime_error("TES4 internal filters require runtime-state version52");
             if (mVersion < 50 && pose.mWorldRegistration)
                 throw std::runtime_error("TES4 World registrations require runtime-state version50");
             const auto values = nativeActors.find(actor);
@@ -2172,6 +2183,19 @@ namespace ESM4
                             for (auto record : *records) writer.integer(record);
                         }
                 }
+                if (mVersion >= 52)
+                {
+                    writer.integer<std::uint8_t>(pose.mInternalFilters.has_value());
+                    if (pose.mInternalFilters)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mInternalFilters->size()));
+                        for (const auto& filter : *pose.mInternalFilters)
+                        {
+                            writer.integer(filter.mBodyRecord);
+                            writer.integer(filter.mPackedFilter);
+                        }
+                    }
+                }
             }
         }
         if (mVersion >= 36)
@@ -3080,6 +3104,20 @@ namespace ESM4
                             const auto registrationCount = reader.count(); records->reserve(registrationCount);
                             for (std::uint32_t j = 0; j < registrationCount; ++j) records->push_back(reader.integer<std::uint32_t>());
                         }
+                    }
+                }
+                if (result.mVersion >= 52)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1) throw std::runtime_error("Invalid TES4 internal filter presence flag");
+                    if (present)
+                    {
+                        const auto filterCount = reader.count();
+                        if (filterCount != pose.mBodies.size())
+                            throw std::runtime_error("Incomplete TES4 internal filter count");
+                        pose.mInternalFilters.emplace(); pose.mInternalFilters->reserve(filterCount);
+                        for (std::uint32_t j = 0; j < filterCount; ++j)
+                            pose.mInternalFilters->push_back({reader.integer<std::uint32_t>(), reader.integer<std::uint32_t>()});
                     }
                 }
                 if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
@@ -4029,6 +4067,18 @@ namespace ESM4
                         stream << ",\"frame_delta\":"; scalar(state.mFrameDelta); stream << "}}";
                     }
                     stream << "]}";
+                }
+                if (pose.mInternalFilters)
+                {
+                    stream << ",\"internal_filters\":[";
+                    for (std::size_t i = 0; i < pose.mInternalFilters->size(); ++i)
+                    {
+                        if (i) stream << ',';
+                        const auto& filter = (*pose.mInternalFilters)[i];
+                        stream << "{\"body_record\":" << filter.mBodyRecord
+                            << ",\"packed_filter\":" << filter.mPackedFilter << '}';
+                    }
+                    stream << ']';
                 }
                 if (pose.mWorldRegistration)
                 {

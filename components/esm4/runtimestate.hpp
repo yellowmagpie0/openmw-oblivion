@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 51;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 52;
 
     struct RuntimeContentIdentity
     {
@@ -425,6 +425,12 @@ namespace ESM4
         friend bool operator==(const RuntimeRagdollWorldRegistration&, const RuntimeRagdollWorldRegistration&) = default;
     };
 
+    struct RuntimeRagdollInternalFilter
+    {
+        std::uint32_t mBodyRecord = 0, mPackedFilter = 0;
+        friend bool operator==(const RuntimeRagdollInternalFilter&, const RuntimeRagdollInternalFilter&) = default;
+    };
+
     struct RuntimeActorRagdoll
     {
         ESM::FormKey mBase;
@@ -444,6 +450,10 @@ namespace ESM4
         // retains the graph with no World bodies or constraints. IDs increase
         // canonically; the bound asset validates constraint endpoints.
         std::optional<RuntimeRagdollWorldRegistration> mWorldRegistration = std::nullopt;
+        // v52: complete body-record-ordered internal packed words, including
+        // absent World bodies. Missing data preserves the configured policy.
+        // This does not snapshot external World routing or allocate groups.
+        std::optional<std::vector<RuntimeRagdollInternalFilter>> mInternalFilters = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeActorRagdoll&, const RuntimeActorRagdoll&) = default;
     };

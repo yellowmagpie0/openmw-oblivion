@@ -627,7 +627,7 @@ namespace
         for (const auto& blend : *snapshot.mNativeBlends) ASSERT_TRUE(blend.mRegistration);
         const auto bytes = save(snapshot).serializeBinary();
         const auto decoded = ESM4::RuntimeState::deserializeBinary(bytes);
-        EXPECT_EQ(decoded.mVersion,51u);
+        EXPECT_EQ(decoded.mVersion,ESM4::CurrentRuntimeStateVersion);
         const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
         NifBullet::ActorRagdollPhysics resumed(mGraph,second.world,1,poses,1,-1,nullptr,&filters);
         MWPhysics::restoreNativeActorRagdollSnapshot(resumed,loaded,mBase,mModel,mGraph);
@@ -655,6 +655,65 @@ namespace
             EXPECT_EQ(blend.mRegistrationCounter,0);
             EXPECT_FALSE(blend.mHasRememberedWorldOwner);
         }
+    }
+
+    TEST_F(NativeRagdollSnapshotTest, InternalFilterWireRestoresActualCollisionPolicyAndMembershipInFreshOwner)
+    {
+        struct World
+        {
+            btDefaultCollisionConfiguration config;
+            btCollisionDispatcher dispatcher{&config}; btDbvtBroadphase broadphase;
+            btSequentialImpulseConstraintSolver solver;
+            NifBullet::NativeDynamicsWorld world{&dispatcher,&broadphase,&solver,&config};
+        } first, second;
+        for (auto& body : mGraph.mBodies)
+        {
+            body.mCenter = {0,0,0}; body.mInfoFilter.mLayer = 8;
+            body.mBlend = NifBullet::RagdollBlendDefinition{body.mRecord+100,1,0,0};
+        }
+        const std::array poses{btTransform(btQuaternion::getIdentity(),btVector3(0,0,0)),
+            btTransform(btQuaternion::getIdentity(),btVector3(.5,0,0))};
+        NifBullet::RagdollInternalCollisionFilter masks;
+        masks.mSystemGroup = 3; masks.mMasks.mLayerMasks.fill(0xffffffffu); masks.mMasks.mBoneMasks.fill(0);
+        NifBullet::ActorRagdollPhysics source(mGraph,first.world,1,poses,1,-1,nullptr,&masks);
+        auto words = source.captureInternalCollisionFilters();
+        words[0].mPackedFilter = 0x12340108; words[1].mPackedFilter = 0x98760208;
+        auto filters = source.prepareInternalCollisionFilters(words);
+        ASSERT_TRUE(source.commitInternalCollisionFilters(*filters));
+        const auto hasContact = [](btCollisionDispatcher& dispatcher,const auto& actor) {
+            for (int i=0;i<dispatcher.getNumManifolds();++i)
+            {
+                const auto* contact = dispatcher.getManifoldByIndexInternal(i);
+                if ((contact->getBody0()==actor.collisionObjects()[0] && contact->getBody1()==actor.collisionObjects()[1])
+                    || (contact->getBody1()==actor.collisionObjects()[0] && contact->getBody0()==actor.collisionObjects()[1]))
+                    return contact->getNumContacts()>0;
+            }
+            return false;
+        };
+        first.world.performDiscreteCollisionDetection(); ASSERT_TRUE(hasContact(first.dispatcher,source));
+        const auto snapshot = MWPhysics::captureNativeActorRagdollSnapshot(source,mBase,mModel,mGraph);
+        ASSERT_TRUE(snapshot.mInternalFilters); ASSERT_EQ(snapshot.mInternalFilters->size(),2u);
+        EXPECT_EQ(snapshot.mInternalFilters->front().mBodyRecord,12u);
+        EXPECT_EQ(snapshot.mInternalFilters->front().mPackedFilter,0x98760208u);
+        const auto bytes = save(snapshot).serializeBinary();
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(bytes);
+        const auto& loaded = decoded.mNativeActorRagdolls.begin()->second;
+        masks.mSystemGroup = 77;
+        NifBullet::ActorRagdollPhysics resumed(mGraph,second.world,1,poses,1,-1,nullptr,&masks);
+        EXPECT_FALSE(resumed.collisionObjects()[0]->checkCollideWith(resumed.collisionObjects()[1]));
+        auto prepared = MWPhysics::prepareNativeActorRagdollSnapshot(resumed,loaded,mBase,mModel,mGraph);
+        resumed.admitPreparedRestore(*prepared); ASSERT_TRUE(resumed.validatePreparedRestore(*prepared));
+        EXPECT_FALSE(resumed.collisionObjects()[0]->checkCollideWith(resumed.collisionObjects()[1]));
+        resumed.commitRestore(*prepared);
+        EXPECT_EQ(resumed.captureInternalCollisionFilters(),words);
+        EXPECT_TRUE(resumed.collisionObjects()[0]->checkCollideWith(resumed.collisionObjects()[1]));
+        second.world.performDiscreteCollisionDetection(); EXPECT_TRUE(hasContact(second.dispatcher,resumed));
+        EXPECT_EQ(MWPhysics::captureNativeActorRagdollSnapshot(resumed,mBase,mModel,mGraph),snapshot);
+        auto legacy = loaded; legacy.mInternalFilters.reset();
+        MWPhysics::restoreNativeActorRagdollSnapshot(resumed,legacy,mBase,mModel,mGraph);
+        EXPECT_EQ(resumed.captureInternalCollisionFilters(),words);
+        NifBullet::ActorRagdollPhysics unconfigured(mGraph,second.world,1,poses,1,-1);
+        EXPECT_THROW(MWPhysics::prepareNativeActorRagdollSnapshot(unconfigured,loaded,mBase,mModel,mGraph),std::invalid_argument);
     }
 
 }

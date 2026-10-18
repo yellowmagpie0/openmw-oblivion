@@ -3812,3 +3812,55 @@ TEST(ESM4RuntimeState, BlendRegistrationIsCompleteAndPreservesBothSignedExtremes
     const auto bytes = state.serializeBinary();
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeActorRagdolls,state.mNativeActorRagdolls);
 }
+
+TEST(ESM4RuntimeState, InternalFilterVersionFiftyTwoHasLiteralWireAndLegacyAbsence)
+{
+    auto state = packedRagdollState(); state.mVersion = 51;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    auto second = pose.mBodies.front(); second.mRecord = 24; second.mNodeRecord = 20; pose.mBodies.push_back(second);
+    pose.mWorldRegistration = ESM4::RuntimeRagdollWorldRegistration{{12,24},{25}};
+    const auto legacy = state.serializeBinary();
+    const std::vector<std::uint8_t> registration{1,2,0,0,0, 12,0,0,0, 24,0,0,0, 1,0,0,0, 25,0,0,0};
+    const auto found = std::search(legacy.begin(),legacy.end(),registration.begin(),registration.end());
+    ASSERT_NE(found,legacy.end());
+    ASSERT_EQ(std::search(found+1,legacy.end(),registration.begin(),registration.end()),legacy.end());
+    const auto offset = std::size_t(found-legacy.begin())+registration.size();
+    state.mVersion = 52;
+    auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 52;
+    expected.insert(expected.begin()+offset,0);
+    EXPECT_EQ(state.serializeBinary(),expected);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls.begin()->second.mInternalFilters);
+    pose.mInternalFilters = std::vector<ESM4::RuntimeRagdollInternalFilter>{{12,0x12340108},{24,0x98760208}};
+    const std::vector<std::uint8_t> words{1,2,0,0,0, 12,0,0,0, 8,1,0x34,0x12, 24,0,0,0, 8,2,0x76,0x98};
+    expected.erase(expected.begin()+offset); expected.insert(expected.begin()+offset,words.begin(),words.end());
+    EXPECT_EQ(state.serializeBinary(),expected);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(expected).mNativeActorRagdolls,state.mNativeActorRagdolls);
+    EXPECT_NE(state.canonicalJson().find("\"internal_filters\":[{\"body_record\":12,\"packed_filter\":305398024},"),std::string::npos);
+    auto bad = expected; bad[offset] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad),std::runtime_error);
+    bad = expected; bad[offset+1] = 0;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad),std::runtime_error);
+    for (std::size_t cut=offset;cut<offset+words.size();++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({expected.begin(),expected.begin()+cut}),std::runtime_error);
+    state.mVersion = 51; EXPECT_THROW(state.serializeBinary(),std::runtime_error);
+    pose.mInternalFilters.reset(); EXPECT_EQ(state.serializeBinary(),legacy);
+}
+
+TEST(ESM4RuntimeState, InternalFilterRecordsMustCoverEveryBodyInCanonicalOrderAndUseVerifiedLayers)
+{
+    auto state = packedRagdollState(); state.mVersion = 52;
+    auto& pose = state.mNativeActorRagdolls.begin()->second;
+    auto body = pose.mBodies.front(); body.mRecord = 24; body.mNodeRecord = 20; pose.mBodies.push_back(body);
+    const std::vector<ESM4::RuntimeRagdollInternalFilter> valid{{12,0x12340108},{24,0x98760208}};
+    for (auto words : {std::vector<ESM4::RuntimeRagdollInternalFilter>{},
+            std::vector<ESM4::RuntimeRagdollInternalFilter>{{12,8}},
+            std::vector<ESM4::RuntimeRagdollInternalFilter>{{24,8},{12,8}},
+            std::vector<ESM4::RuntimeRagdollInternalFilter>{{12,8},{12,8}},
+            std::vector<ESM4::RuntimeRagdollInternalFilter>{{12,8},{99,8}},
+            std::vector<ESM4::RuntimeRagdollInternalFilter>{{12,32},{24,8}}})
+    {
+        pose.mInternalFilters = std::move(words); EXPECT_THROW(state.serializeBinary(),std::runtime_error);
+    }
+    pose.mInternalFilters = valid;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeActorRagdolls,state.mNativeActorRagdolls);
+}
