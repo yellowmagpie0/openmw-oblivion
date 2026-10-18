@@ -2,7 +2,10 @@
 #define OPENMW_ESM4_PHYSICALREGISTRATION_H
 
 #include <cstdint>
+#include <cstddef>
 #include <optional>
+#include <span>
+#include <vector>
 
 namespace ESM4
 {
@@ -13,6 +16,7 @@ namespace ESM4
         float mHierarchyGain, mVelocityGain;
         std::int32_t mCounter;
         bool mRegistrationOverride;
+        friend bool operator==(const PhysicalBodyBlendRegistration&, const PhysicalBodyBlendRegistration&) = default;
     };
 
     struct PhysicalBodyRegistrationPlan
@@ -66,6 +70,65 @@ namespace ESM4
     // Does not assign counter ownership/lifetime or invoke forced admission.
     PhysicalBlendCounterStep resolvePhysicalBlendCounterStep(PhysicalBlendCounterState state,
         PhysicalBlendCounterOperation operation, const PhysicalBlendCounterContext& context);
+
+    struct PhysicalRegistrationBody
+    {
+        bool mRegistered = false;
+        std::uint32_t mPackedFilter = 0;
+        bool mHasRememberedWorldOwner = false;
+        std::optional<PhysicalBodyBlendRegistration> mBlend;
+        std::vector<std::size_t> mAssociatedConstraints;
+        friend bool operator==(const PhysicalRegistrationBody&, const PhysicalRegistrationBody&) = default;
+    };
+
+    struct PhysicalRegistrationConstraint
+    {
+        std::size_t mBodyA, mBodyB;
+        bool mRegistered;
+        friend bool operator==(const PhysicalRegistrationConstraint&, const PhysicalRegistrationConstraint&) = default;
+    };
+
+    struct PhysicalRegistrationGraph
+    {
+        std::vector<PhysicalRegistrationBody> mBodies;
+        std::vector<PhysicalRegistrationConstraint> mConstraints;
+        friend bool operator==(const PhysicalRegistrationGraph&, const PhysicalRegistrationGraph&) = default;
+    };
+
+    enum class PhysicalRegistrationEventKind : std::uint8_t
+    {
+        NormalBodyRequest, ForcedBodyRequest, ConstraintRequest, BodyAdded,
+        BodyRemoved, IncidentConstraintRemoved, ConstraintAdded, ForcedAdmissionDiagnostic,
+    };
+
+    struct PhysicalRegistrationEvent
+    {
+        PhysicalRegistrationEventKind mKind;
+        // Body index for body events, constraint index otherwise.
+        std::size_t mIndex;
+        // The filter at admission, before any later removal/re-admission.
+        std::uint32_t mPackedFilter = 0;
+        friend bool operator==(const PhysicalRegistrationEvent&, const PhysicalRegistrationEvent&) = default;
+    };
+
+    struct PhysicalRegistrationGraphPlan
+    {
+        PhysicalRegistrationGraph mGraph;
+        std::vector<PhysicalRegistrationEvent> mEvents;
+        std::vector<unsigned char> mReturnsTrue;
+    };
+
+    // Stage ordered normal body requests against one resolved World, with all
+    // endpoint wrappers present and World operation gates/queues zero. Follow
+    // actual authored lists; do not add an undirected graph closure. Retain
+    // removals/re-admissions even when final membership is unchanged.
+    // Validates every endpoint, association and initial membership before work.
+    // A bounded iterative traversal throws length_error on exhaustion, leaving
+    // input untouched. No partial result is published; a native nonreturning
+    // prefix is not treated as a completed plan. No solver, queue, scene,
+    // low-velocity sleep or callback list mutation is implemented here.
+    PhysicalRegistrationGraphPlan preparePhysicalRegistrationGraph(const PhysicalRegistrationGraph& graph,
+        std::span<const std::size_t> normalRequests, std::size_t operationLimit = 4096);
 }
 
 #endif

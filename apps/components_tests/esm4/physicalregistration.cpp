@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -139,5 +140,147 @@ namespace
         EXPECT_THROW(ESM4::resolvePhysicalBlendCounterStep(initial, static_cast<CounterOp>(99),
             ESM4::PhysicalBlendCounterContext{0, true, true, 8, true}), std::invalid_argument);
         EXPECT_EQ(initial, (ESM4::PhysicalBlendCounterState{0, 0x41}));
+    }
+
+    ESM4::PhysicalRegistrationGraph registrationChain()
+    {
+        ESM4::PhysicalRegistrationGraph graph;
+        graph.mBodies.resize(3);
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            graph.mBodies[i].mPackedFilter = ((0x1010u + i) << 16) | (0x30u + i);
+            graph.mBodies[i].mBlend = ESM4::PhysicalBodyBlendRegistration{0, 0, 0, false};
+        }
+        graph.mBodies[1].mAssociatedConstraints = {0};
+        graph.mBodies[2].mAssociatedConstraints = {1};
+        graph.mConstraints = {{1, 0, false}, {2, 1, false}};
+        return graph;
+    }
+
+    TEST(ESM4PhysicalRegistration, DirectedListsAtEndpointBDoNotInventAdmissionOfEndpointA)
+    {
+        auto graph = registrationChain();
+        graph.mBodies[0].mAssociatedConstraints = {0};
+        graph.mBodies[1].mAssociatedConstraints = {1};
+        graph.mBodies[2].mAssociatedConstraints.clear();
+        const auto before = graph;
+        const std::array<std::size_t, 1> requests{0};
+        const auto result = ESM4::preparePhysicalRegistrationGraph(graph, requests);
+        EXPECT_EQ(graph, before);
+        EXPECT_TRUE(result.mGraph.mBodies[0].mRegistered);
+        EXPECT_FALSE(result.mGraph.mBodies[1].mRegistered);
+        EXPECT_FALSE(result.mGraph.mBodies[2].mRegistered);
+        EXPECT_FALSE(result.mGraph.mConstraints[0].mRegistered);
+        EXPECT_FALSE(result.mGraph.mConstraints[1].mRegistered);
+        EXPECT_EQ(result.mReturnsTrue, (std::vector<unsigned char>{1}));
+        using Kind = ESM4::PhysicalRegistrationEventKind;
+        EXPECT_EQ(result.mEvents, (std::vector<ESM4::PhysicalRegistrationEvent>{
+            {Kind::NormalBodyRequest, 0}, {Kind::BodyAdded, 0, 0x10100030},
+            {Kind::ConstraintRequest, 0}, {Kind::NormalBodyRequest, 0}}));
+    }
+
+    TEST(ESM4PhysicalRegistration, ExistingWorldMembershipSkipsAssociatedListsForRepeatedRequests)
+    {
+        auto graph = registrationChain();
+        for (auto& body : graph.mBodies) body.mRegistered = true;
+        const std::array<std::size_t, 2> requests{2, 2};
+        const auto result = ESM4::preparePhysicalRegistrationGraph(graph, requests);
+        EXPECT_EQ(result.mReturnsTrue, (std::vector<unsigned char>{0, 0}));
+        ASSERT_EQ(result.mEvents.size(), 2u);
+        for (const auto& event : result.mEvents)
+            EXPECT_EQ(event.mKind, ESM4::PhysicalRegistrationEventKind::NormalBodyRequest);
+        EXPECT_FALSE(result.mGraph.mConstraints[0].mRegistered);
+        EXPECT_FALSE(result.mGraph.mConstraints[1].mRegistered);
+        EXPECT_TRUE(result.mGraph.mBodies[2].mHasRememberedWorldOwner);
+    }
+
+    TEST(ESM4PhysicalRegistration, NativeRemovalAndReadmissionRetainPreviouslyRegisteredEndpointFilter)
+    {
+        auto graph = registrationChain();
+        graph.mBodies[1].mRegistered = true;
+        graph.mBodies[1].mBlend = ESM4::PhysicalBodyBlendRegistration{1, 1, 0, false};
+        const auto before = graph;
+        const std::array<std::size_t, 1> requests{2};
+        const auto result = ESM4::preparePhysicalRegistrationGraph(graph, requests);
+        EXPECT_EQ(graph, before);
+        // Frozen chain/gains010/start2/initialmask2 row of the expanded
+        // original-instruction corpus03. Body1 retains1011, so its ancestor
+        // inherits1011 rather than the initiating body's1012 group.
+        using Kind = ESM4::PhysicalRegistrationEventKind;
+        EXPECT_EQ(result.mEvents, (std::vector<ESM4::PhysicalRegistrationEvent>{
+            {Kind::NormalBodyRequest, 2}, {Kind::BodyAdded, 2, 0x10120032},
+            {Kind::ConstraintRequest, 1}, {Kind::NormalBodyRequest, 1},
+            {Kind::BodyRemoved, 1}, {Kind::ForcedAdmissionDiagnostic, 1},
+            {Kind::ForcedBodyRequest, 1}, {Kind::BodyAdded, 1, 0x10110031},
+            {Kind::ConstraintRequest, 0}, {Kind::NormalBodyRequest, 0},
+            {Kind::BodyAdded, 0, 0x10110030}, {Kind::ConstraintAdded, 0}, {Kind::ConstraintAdded, 1}}));
+        for (const auto& body : result.mGraph.mBodies)
+        {
+            EXPECT_TRUE(body.mRegistered);
+            EXPECT_TRUE(body.mHasRememberedWorldOwner);
+        }
+        EXPECT_TRUE(result.mGraph.mConstraints[0].mRegistered);
+        EXPECT_TRUE(result.mGraph.mConstraints[1].mRegistered);
+        EXPECT_EQ(result.mGraph.mBodies[0].mPackedFilter, 0x10110030u);
+    }
+
+    TEST(ESM4PhysicalRegistration, RepeatedAssociationsKeepRequestOrderButDoNotDuplicateOwnedConstraints)
+    {
+        auto graph = registrationChain();
+        graph.mBodies[1].mAssociatedConstraints = {0, 0};
+        graph.mBodies[2].mAssociatedConstraints = {1, 1};
+        const std::array<std::size_t, 1> requests{2};
+        const auto result = ESM4::preparePhysicalRegistrationGraph(graph, requests);
+        using Kind = ESM4::PhysicalRegistrationEventKind;
+        EXPECT_EQ(std::count_if(result.mEvents.begin(), result.mEvents.end(),
+            [](const auto& event) { return event.mKind == Kind::ConstraintRequest; }), 4);
+        EXPECT_EQ(std::count_if(result.mEvents.begin(), result.mEvents.end(),
+            [](const auto& event) { return event.mKind == Kind::ConstraintAdded; }), 2);
+        EXPECT_EQ(result.mEvents.back(), (ESM4::PhysicalRegistrationEvent{Kind::ConstraintRequest, 1}));
+        EXPECT_EQ(result.mGraph.mBodies[0].mPackedFilter, 0x10120030u);
+    }
+
+    TEST(ESM4PhysicalRegistration, InvalidGraphAndRequestRejectBeforeReturningAPlan)
+    {
+        const auto graph = registrationChain();
+        const std::array<std::size_t, 2> requests{2, 999};
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(graph, requests), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph({}, {}), std::invalid_argument);
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(graph, {}, 0), std::invalid_argument);
+        auto malformed = graph;
+        malformed.mConstraints[0].mRegistered = true;
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        malformed = graph; malformed.mConstraints[0].mBodyA = 999;
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        malformed = graph; malformed.mBodies[0].mAssociatedConstraints = {1};
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        malformed = graph; malformed.mBodies[0].mAssociatedConstraints = {999};
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        malformed = graph; malformed.mBodies[0].mBlend.reset();
+        malformed.mBodies[0].mHasRememberedWorldOwner = true;
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        malformed = graph; malformed.mBodies[0].mBlend->mHierarchyGain = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(malformed, {}), std::invalid_argument);
+        const auto empty = ESM4::preparePhysicalRegistrationGraph(graph, {});
+        EXPECT_EQ(empty.mGraph, graph);
+        EXPECT_TRUE(empty.mEvents.empty());
+        EXPECT_TRUE(empty.mReturnsTrue.empty());
+    }
+
+    TEST(ESM4PhysicalRegistration, BoundedTraversalNeverPublishesANativeNonterminalPrefix)
+    {
+        auto graph = registrationChain();
+        graph.mBodies[0].mAssociatedConstraints = {0};
+        graph.mBodies[1].mAssociatedConstraints = {0, 1};
+        graph.mBodies[1].mBlend = ESM4::PhysicalBodyBlendRegistration{1, 1, 0, false};
+        const auto before = graph;
+        const std::array<std::size_t, 1> requests{2};
+        // Native corpus03 retains this shared-list/gains010 prefix at the
+        // declared256-event bound; it is never a golden final state.
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(graph, requests, 4096), std::length_error);
+        EXPECT_EQ(graph, before);
+        const auto valid = registrationChain();
+        EXPECT_THROW(ESM4::preparePhysicalRegistrationGraph(valid, requests, 1), std::length_error);
+        EXPECT_EQ(valid, registrationChain());
     }
 }

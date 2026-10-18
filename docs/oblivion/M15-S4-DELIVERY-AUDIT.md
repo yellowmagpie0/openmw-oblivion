@@ -5229,3 +5229,31 @@ Hashes and scope are in `typed_native_registration_rules_followup` in
 counter ownership/persistence, automatic contact/reaction/GetUp and all full S4
 normal-input/restart acceptance gates remain open. This component-only chunk
 adds no engine caller or Python/schema change.
+
+
+The native registration planner now follows ordered authored associations with
+normal and forced endpoint requests, filter inheritance, constraint admission
+and incident removal. It stages a separate graph and preserves remove/re-add
+operations and the filter at each admission. Existing same-World membership
+skips list traversal; an association at endpointB does not admit endpointA by
+an invented undirected closure. Repeated references retain request order while
+registered constraints retain unique membership.
+
+The expanded original-instruction probe completes14144 cases across directed,
+shared, repeated and cyclic lists, both association endpoints, every initial
+body mask and every valid initial constraint subset. The normal and ASan/UBSan
+planner drivers match complete request traces, admission-time/final filters,
+remembered owners, memberships and returns. Another256 prefixes reach the
+declared256-event observation bound; they are retained as nonterminal evidence,
+not golden final states or proofs of infinite recursion. The planner rejects
+them at its own operation bound without publishing partial state. The initial
+instruction-budget failure remains preserved.
+
+Both full component runs pass2839 tests in270 suites without skips/failures;
+leak checks are disabled. Tested source fingerprint:
+`16f678ebaebed2a03107874e64e59e1f2ac014dd0a02c3673e503e6318c4a1a0`. Hashes, editable matrix and explicit lower
+World/solver boundaries are in `directed_registration_plan_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. The actual physics executor must
+preserve remove/re-add effects even when final membership agrees. This planner
+adds no engine caller, physical publication or persisted registration fields;
+automatic contact/reaction/GetUp and full S4 gameplay/restart gates stay open.

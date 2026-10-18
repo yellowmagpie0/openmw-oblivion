@@ -3750,5 +3750,261 @@
       "These rules do not implement recursive directed graph admission, native queue phases, counter caller/lifetime ownership, saved counter state or automatic contact/FSM/GetUp.",
       "No new normal-input, view/device/FPS, solver trajectory or fresh-process fork gate. Full M15S4 remains incomplete."
     ]
+  },
+  "directed_registration_plan_followup": {
+    "status": "Ordered immediate registration graph plans match completed original traces; physical publication and automatic reaction/restart remain open",
+    "source": {
+      "head": "1533ae07334a90cfb7c43138c95f6623ee2705eb",
+      "source_fingerprint": "16f678ebaebed2a03107874e64e59e1f2ac014dd0a02c3673e503e6318c4a1a0"
+    },
+    "source_sha256": {
+      "components/esm4/physicalregistration.hpp": "209c3047f11415c619a0f541e438bde8f207ad8dd90087bbcd061e07ad8c8f51",
+      "components/esm4/physicalregistration.cpp": "8b8afbf4d9d477669f7bf2d270fe460cde0de2a28a4108c2407b145dc4c134a0",
+      "apps/components_tests/esm4/physicalregistration.cpp": "516d0486d91350453c5fc51664a6b93e591d79ef7dcfb6910dcfd26069a09431"
+    },
+    "changes": [
+      "preparePhysicalRegistrationGraph stages ordered normal requests, mapped owner intent, endpointB filter inheritance, normal/forced endpoint admission, associated lists, constraint registration and incident-removal effects. It leaves the input graph untouched.",
+      "An iterative task stack preserves recursion order, repeated associations and same-World early returns; an operation bound throws without returning a partial plan. Structural validation precedes traversal.",
+      "Plans retain body removals and re-admissions with the packed filter at each admission. Final membership alone does not erase a native operation.",
+      "All endpoint wrappers and one desired World are explicit supported inputs; operation gates/queues are zero. No solver, scene, optional low-velocity sleep or callback list mutation executes here."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-associated-plan-normal-01/verification.json",
+        "sha256": "d975c42934c7a1df7bbe7ee55b7ca820691405496fbe92413efa1699b266bddf",
+        "source": {
+          "head": "1533ae07334a90cfb7c43138c95f6623ee2705eb",
+          "source_fingerprint": "16f678ebaebed2a03107874e64e59e1f2ac014dd0a02c3673e503e6318c4a1a0"
+        },
+        "results": {
+          "components": {
+            "executed": 2839,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "15362449f5e8e1eb31a028cf3898c1574dcb1f50e8d746a4922a2f30a8ad08da",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "1e55c69d2049e2c277d5830690c588f8acdd3b12c888062db114a513fdee7aef",
+            "inventory_sha256": "11aa8cfcdf52a20074a6dae6f6be1e309310d58069c98898012d578572d5816c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 270
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-associated-plan-sanitized-01/verification.json",
+        "sha256": "fd984cb743bca972f3d99db010c4d2b8e8f4cfc0d4721e4aecc5d341390228b5",
+        "source": {
+          "head": "1533ae07334a90cfb7c43138c95f6623ee2705eb",
+          "source_fingerprint": "16f678ebaebed2a03107874e64e59e1f2ac014dd0a02c3673e503e6318c4a1a0"
+        },
+        "results": {
+          "components": {
+            "executed": 2839,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "32196a48ad962f6879ad74b851d6fa2501ad0c3f7c3a7753ebdfebf302db2307",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "46d8873cf0764b2cdc889b28f0cfcbc54aa02b1e245efdcac4c2a2ba5cb5ebf7",
+            "inventory_sha256": "2459cd7a4fc86066512a92f035c703e33cd6f327f735dff87abb1d14e38bb838",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "suites": 270
+      }
+    },
+    "native_evidence": {
+      "directory": "build/oblivion-compat/m15/S4/native-associated-registration-static-04",
+      "report_sha256": "3bdfd3bd3f4f2c8801d52c2664b128145626fab5a3199cfc2f7e15a728f4b440",
+      "probe_sha256": "a1b68970e6796dab3cfa47d339d9da3bd8571f16311065a78f10461a29b1a6b7",
+      "executable_metadata_sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "results": {
+        "passed": true,
+        "profiles": 14144,
+        "bounded_nonreturns": 256,
+        "bounded_prefixes_sha256": "f90d536e8205fda12659a67def7c934c4787ffa581eb775b4a7b52bdb6554bd7",
+        "observation_event_bound": 256,
+        "seconds": 60.452148849995865,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "5abf575188020c585e764005f5337e96ceffa1612a385cb6329e8d99ee94ddc4",
+        "patterns": [
+          "chain",
+          "chain_lists_at_B",
+          "chain_shared",
+          "chain_repeated",
+          "branch",
+          "branch_reverse",
+          "cycle",
+          "cycle_shared",
+          "cycle_shared_reverse",
+          "cycle_repeated"
+        ],
+        "paths": [
+          "full8A48C0/8A4A60 body requests",
+          "full8A47C0 smart-pointer list traversal and677C70 retrieval",
+          "full8A06E0/8A0760 constraint dispatcher",
+          "full8A0A70 endpoint preparation and actual607840",
+          "full88C210/88B430/88C330/88B600 World request wrappers"
+        ],
+        "boundaries": [
+          "owner virtual58 supplies synthetic World; batch gates and queues0",
+          "8994E0/8996C0 body World operations supply world/island membership and already-verified incident-removal membership effects; no native solver/callback implementation executes at this boundary",
+          "8988A0/8988F0 constraint World operations supply owner membership after actual native wrapper eligibility checks",
+          "Win32 interlocked smart-reference operations and diagnostic string/logger calls are modeled boundaries",
+          "B2EB00=0 excludes optional small-velocity sleep; body counters0; one native constraint wrapper vtableA564A4; every endpoint wrapper present; no cross-World transfers"
+        ],
+        "limits": [
+          "Immediate request phase only; no World queue scheduler, callback list mutation, actual native solver or fork runtime acceptance",
+          "Lower body removal incident effects use the separately verified1548-case rule and are not an additional execution of the native removal cascade",
+          "Admission-time packed filters are now captured at the actual lower body-add boundary; not inferred from final filters",
+          "No production graph executor comparison yet; nonterminal256-event prefixes are separate from completed native returns and never treated as final membership",
+          "Initial02 instruction-budget failure retained in native-associated-registration-static-02"
+        ]
+      },
+      "editable_protocol": {
+        "body_count": 3,
+        "patterns": [
+          "directed chain",
+          "lists at endpointB",
+          "shared and repeated chain lists",
+          "branch in either order",
+          "directed cycle",
+          "shared cycle in either order",
+          "repeated cycle"
+        ],
+        "gains": "All eight zero/one hierarchy=velocity patterns",
+        "starting_body": [
+          0,
+          1,
+          2
+        ],
+        "initial_body_masks": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "initial_constraint_membership": "Every subset whose endpoints are both initially registered",
+        "registration_override": [
+          false,
+          true
+        ],
+        "x87_control_word": [
+          639,
+          895
+        ],
+        "body_counters": 0,
+        "observation_bound": 256,
+        "assertions": [
+          "A completed case must reach its actual return with exact ESP and callee-saved registers.",
+          "All smart reference counts return to2 and selected constraints retain admitted endpoints.",
+          "Capture ordered calls, actual admission-time/final filters, remembered-owner intent, resulting membership and native AL.",
+          "Keep bounded nonterminal prefixes separate from completed outcomes; no infinite-loop or final-state claim."
+        ]
+      }
+    },
+    "comparison": {
+      "report": "build/oblivion-compat/m15/S4/native-associated-plan-compare-01/report.json",
+      "report_sha256": "5deae67086dc5e53c6dce2e38c3ebb896313052000f09ad834d9cef53b6e157d",
+      "driver_sha256": "978216e8826b39d19e2b760c74f0c8787715572daebda15bcca3efde83a53f37",
+      "comparator_sha256": "2526d5d274fe4fc8e69254cebd5d05f5776880a6c4f6027db20cbb7a638a1bb2",
+      "results": {
+        "passed": true,
+        "native_completed_comparisons": 14144,
+        "bounded_nonreturn_guard_checks": 256,
+        "source_sha256": {
+          "components/esm4/physicalregistration.hpp": "209c3047f11415c619a0f541e438bde8f207ad8dd90087bbcd061e07ad8c8f51",
+          "components/esm4/physicalregistration.cpp": "8b8afbf4d9d477669f7bf2d270fe460cde0de2a28a4108c2407b145dc4c134a0",
+          "apps/components_tests/esm4/physicalregistration.cpp": "516d0486d91350453c5fc51664a6b93e591d79ef7dcfb6910dcfd26069a09431"
+        },
+        "native_report_sha256": "3bdfd3bd3f4f2c8801d52c2664b128145626fab5a3199cfc2f7e15a728f4b440",
+        "native_corpus_sha256": "5abf575188020c585e764005f5337e96ceffa1612a385cb6329e8d99ee94ddc4",
+        "native_bounded_prefixes_sha256": "f90d536e8205fda12659a67def7c934c4787ffa581eb775b4a7b52bdb6554bd7",
+        "inputs_sha256": "c0ce8e4bf894f59e18a45607b90a137ebe123f69aea6d331c2af465cc01fe15a",
+        "expected_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+        "runs": {
+          "normal": {
+            "passed": true,
+            "rows": 14400,
+            "binary_sha256": "e57f5ba01744b3d676d11d75e419d9ee79ca10a9d5908ddf9ff2ce9b959ad45e",
+            "stdout_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion",
+              "-O2",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-associated-plan-compare-01/compare.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/components/esm4/physicalregistration.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-associated-plan-compare-01/compare-normal"
+            ]
+          },
+          "sanitized": {
+            "passed": true,
+            "rows": 14400,
+            "binary_sha256": "ed2566b26bcb928ba951bc73ed61ff075efef31207834a47d16fee97ca955955",
+            "stdout_sha256": "93271005d9b62e48733fc05a124a6ee23757411d6297ca063039e17106d68fb2",
+            "command": [
+              "g++",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-I",
+              "/home/maciek/openmw-oblivion/openmw-oblivion",
+              "-O1",
+              "-g",
+              "-fsanitize=address,undefined",
+              "-fno-omit-frame-pointer",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-associated-plan-compare-01/compare.cpp",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/components/esm4/physicalregistration.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-associated-plan-compare-01/compare-sanitized"
+            ]
+          }
+        },
+        "scope": "Exact native completed request traces, admission-time/final filters, ownership/membership and top-level return;256 native nonterminal prefixes separately require a pure-planner length_error, without claiming a native final state or infinite loop. No physics World publication."
+      }
+    },
+    "retained_attempts": [
+      {
+        "directory": "build/oblivion-compat/m15/S4/native-associated-registration-static-02",
+        "reason": "First broad probe reached its100000-instruction limit on chain_shared/gains010/start2/all absent. Full failure trace retained; not treated as return."
+      },
+      {
+        "directory": "build/oblivion-compat/m15/S4/native-associated-registration-static-03",
+        "reason": "Completed14144 cases plus256 bounded prefixes before adding actual admission-time filter capture in04; retained independently."
+      }
+    ],
+    "validation_scope": "Full normal/instrumented component suites and independent standalone comparisons. No engine caller, Python/schema or physical World publication change.",
+    "limits": [
+      "The lower body-removal boundary supplies incident membership effects from the separately verified1548-case native cascade; it does not execute that cascade or native solver again.",
+      "Constraint removal events at that boundary use the declared fixture edge order; no new native master/slave callback ordering claim.",
+      "The event stream describes native request boundaries and their nested effects. BodyRemoved records the lower removal request before its incident effects; it is not a command to remove a Bullet body before constraints. Physical publication must release incident constraints before that body.",
+      "The256 nonterminal prefixes are guard checks, not native completed-state comparisons or proofs of infinite recursion.",
+      "A backend executor must preserve remove/re-add and filter effects even if final selected record sets agree. Counter/remembered-owner/filter persistence and publication remain required.",
+      "Full M15S4 automatic contact/FSM/GetUp and normal-input/device/view/FPS/interrupt/restart gates remain open."
+    ]
   }
 }
