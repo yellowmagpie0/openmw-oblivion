@@ -1802,6 +1802,25 @@ namespace MWPhysics
         actorRagdoll(ptr).mPhysics.advanceNativePhysicalControllers(controllerOrder, inputTime, *mNativeBlendTimeCache);
     }
 
+    void PhysicsTaskScheduler::advanceActorRagdollPhysicalNodeControllers(
+        const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, float inputTime)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        actorRagdoll(ptr).mPhysics.advanceNativePhysicalNodeControllers(nodeRecord, inputTime, *mNativeBlendTimeCache);
+    }
+
+    std::optional<NifBullet::RagdollNativeBlendPublication> PhysicsTaskScheduler::updateActorRagdollBlendNode(
+        const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+        const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.updateNativeBlendNode(nodeRecord, animatedWorld,
+            preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ, publishScene);
+    }
+
     void PhysicsTaskScheduler::applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests)
     {
         waitForWorkers();

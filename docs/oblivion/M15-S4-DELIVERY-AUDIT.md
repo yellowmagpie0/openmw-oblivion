@@ -5520,3 +5520,36 @@ hashes and limits are in `deferred_admission_retirement_followup` in
 repeated for this component lifecycle primitive. Composite engine ownership,
 physical frame scheduling, automatic construction and all remaining full S4
 normal-input and fresh-engine restart acceptance gates remain open.
+
+
+### Worker-safe engine entry points for native scene nodes
+
+PhysicsSystem and PhysicsTaskScheduler now expose the node-scoped own-controller
+and blend collision phases. Both wait for movement workers and hold the existing
+collision-World lock. Controller advancement uses the existing scheduler clock
+cache; collision publication uses existing native gravity and does not tick the
+controllers/cache again. A scene hook must not reenter physics under that lock.
+
+The real World integration fixture checks 0/1/2 workers, stale actors and unknown
+nodes, native-derived force publication, scene rejection after a completed
+controller phase, accepted publication without duplicate clock advancement, and
+restoration of the prior snapshot/cache before the existing complete-batch course.
+Its existing generic capsule policy is retained. Full normal and ASan/UBSan
+engine runs each pass all 1,637 tests in 122 suites with exact inventories and no
+failures/skips. Both engines rebuild against the accumulated traversal/physical
+components. Prior 2,899 component tests and unchanged Python/schema checks are not
+repeated; leak checks remain disabled.
+
+A separate pinned-original outer blend dispatcher probe executes 393,216 contexts
+with explicit successful sync/inner-handler stubs. It distinguishes phase 3 skip,
+phase 2 pending-sync deferral and active and pending flags from the already implemented
+inner gain rule. Pending blend dispatch directly calls scene sync, whereas the
+ordinary dispatcher also calls its reset virtual. This supplies outer dispatch
+expectations; inner body effects and actual game-frame selector production remain
+unproved, and no automatic outer scene driver is installed by these wrappers.
+
+Tested source fingerprint: `99ba0784681faf9bd09507fb6c4f60ff07b60fe8ed859c84a2ad0643bc223661`. Exact source/binary/oracle
+hashes and limits are in `node_physical_scheduler_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Actual actor scene ownership/scheduling,
+group/filter initialization, contact/reaction/FSM/GetUp and all remaining full S4
+normal-input and fresh-engine gameplay/restart acceptance remain open.

@@ -1203,6 +1203,21 @@ namespace MWPhysics
         mTaskScheduler->advanceActorRagdollPhysicalControllers(ptr, controllerOrder, inputTime);
     }
 
+    void PhysicsSystem::advanceActorRagdollPhysicalNodeControllers(
+        const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, float inputTime)
+    {
+        mTaskScheduler->advanceActorRagdollPhysicalNodeControllers(ptr, nodeRecord, inputTime);
+    }
+
+    std::optional<NifBullet::RagdollNativeBlendPublication> PhysicsSystem::updateActorRagdollBlendNode(
+        const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
+        float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+        const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene)
+    {
+        return mTaskScheduler->updateActorRagdollBlendNode(ptr, nodeRecord, animatedWorld,
+            preparedFrameSeconds, rawUpdateSelector, publishScene);
+    }
+
     void PhysicsSystem::applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests)
     {
         mTaskScheduler->applyActorRagdollNativeForces(ptr, requests);

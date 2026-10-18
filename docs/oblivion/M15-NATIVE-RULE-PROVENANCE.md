@@ -15534,3 +15534,32 @@ it does not establish generic override/Deleted loader behavior. Reports,
 corpus hashes and limits are in the
 [verification index](M15-PHYSICAL-ADMISSION-VERIFICATION.json).
 This evidence does not implement native GetUp selection or prove recovery.
+
+
+### Outer blend-node collision dispatch before the inner handler
+
+`S4/native-blend-node-dispatch-oracle-01` freshly verifies pinned executable
+SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+and actual RTTI/vtable `A9643C` for bhkBlendCollisionObject. Virtual+50 is 88EDC0,
+virtual+64 is 88F3D0, +68 is 89EAE0 and +6C is 89EE00. Complete `88EDC0` executes
+393,216 contexts: all 65,536 flag words under raw selectors `0/1/2/3/0x80000000/0xFFFFFFFF`.
+Original branches, virtual target selection, outer flag clearing and returns
+execute. Two successful inner-handler boundary stubs at `89EAE0` and `88F3D0` return
+without body/scene work. ESP, callee-saved registers, global selector and FPCW
+are checked. No game or Havok step is executed.
+
+Selector 3 returns immediately for every flag word. Selector 2 defers pending `0x40`;
+without `0x40`, bit 0 dispatches the inner blend handler. Other supplied selectors
+invoke `89EAE0` for pending `0x40` and then clear `0x40`, otherwise dispatching only bit 0.
+Per `0/1/0x80000000/0xFFFFFFFF` selector there are 32,768 sync, 16,384 blend and 16,384 skip
+cases; selector 2 has 16,384 blend/49,152 skip, and selector 3 has 65,536 skip.
+These outer gates are distinct from the inner gain/selector rule already modeled
+by updateNativeBlendNode. The eventual actual scene owner must apply them before
+calling that inner boundary. This probe does not determine the normal game-frame
+producer of the selector.
+
+The blend pending path calls `89EAE0` directly; ordinary `897510` additionally calls
+virtual+6C before virtual+68. This distinguishes their dispatch paths only:
+stubbed sync bodies do not establish a universal velocity/reset policy. Raw
+corpus/probe hashes and boundaries are recorded in `node_physical_scheduler_followup`
+in `M15-PHYSICAL-ADMISSION-VERIFICATION.json`.

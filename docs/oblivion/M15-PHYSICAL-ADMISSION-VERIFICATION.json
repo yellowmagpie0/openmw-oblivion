@@ -5690,5 +5690,171 @@
       "Caller must use actual per-node traversal order, one own-controller phase per entered node, the existing authoritative animation clock and correct physical raw selector/gravity/frame scheduling. No global all-body approximation or duplicate clock/force tick is installed.",
       "Automatic native actor construction/frame ownership and coherent group/filter initialization, contact/reaction/FSM/GetUp and full S4 melee/block/mastery/drop/effect/input/view/device/FPS/interruption/savequitfreshprocess acceptance remain open. App binaries require a fresh engine build for subsequent runtime integration."
     ]
+  },
+  "node_physical_scheduler_followup": {
+    "status": "PhysicsSystem and PhysicsTaskScheduler expose node-scoped native controller and blend collision phases with actual worker/world barriers. Automatic actor scene ownership and full M15S4 gameplay/restart acceptance remain open.",
+    "source": {
+      "head": "f09fda77e915b76edd0a808293456d0bf99d8684",
+      "source_fingerprint": "99ba0784681faf9bd09507fb6c4f60ff07b60fe8ed859c84a2ad0643bc223661"
+    },
+    "source_sha256": {
+      "apps/openmw/mwphysics/physicssystem.hpp": "74dcbd61c1f74bad6491ddae64b3a3f21bb9cd5c420cdcac97488361a41ab0ea",
+      "apps/openmw/mwphysics/physicssystem.cpp": "782a373d0de855fbc44f391e29c015d4b03277e74c9302d1f5657f994bd46df8",
+      "apps/openmw/mwphysics/mtphysics.hpp": "5daa21cf3cffb6d47ee1101723d4aafcaeffcf9c8f8923dd8f496e41c6833c14",
+      "apps/openmw/mwphysics/mtphysics.cpp": "677cf828633b4509d77bd80eb8aba151c960542c618594d92f07e3b71e783115",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "a5d931972365c478382553f191472f9b9ad9d1767d228c8e053b4e52a7776166"
+    },
+    "post_test_changes": "Verification index, native provenance and delivery audit only; production/test files unchanged after full checks.",
+    "changes": [
+      "advanceActorRagdollPhysicalNodeControllers routes to the actual owned component node phase after waitForWorkers and the existing collision-World exclusive lock. It uses the scheduler-owned mNativeBlendTimeCache, without adding another timer or controller mirror.",
+      "updateActorRagdollBlendNode returns the actual optional component publication with existing native gravity and supplied prepared frame/selector. It does not advance controllers or the shared cache. Its scene hook runs under the worker/World lock and must not reenter physics.",
+      "The real PhysicsSystem World integration fixture exercises0/1/2 workers: stale Ptr and unknown node rejection preserve snapshot/cache; selected node controllers apply the existing original-derived force; rejecting the later scene hook preserves the already completed controller phase; accepted collision publication does not tick blend/velocity clocks or the shared cache again.",
+      "The fixture restores the complete prior actor snapshot and global cache before resuming the existing complete-batch course, which continues to pass. Existing capsule policy and owner lifecycle semantics remain in force; this generic fixture uses its prior Suspend policy, not a new native capsule decision."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-node-engine-normal-01/verification.json",
+        "report_sha256": "de5f19186d1523fb8d08f7c6f71f601a4f4e87916df466906a802d995c2c0c51",
+        "result": {
+          "executed": 1637,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c122c928818c60fa8e49286abb54894f2b2e972bccab7674824542f9515f9b80",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2dd9a9eed9d9c5ffa0752b23efd66ae8a7b84148851d22ab2adcc4d2a0258467",
+          "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 122,
+        "openmw_sha256": "760dd35b001aaebddb352863e63a965326d86db2abdd2eeeb7ae6eee981d6729"
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-node-engine-sanitized-01/verification.json",
+        "report_sha256": "5feee83523e1a21ac58cd493cf46f9517f5403b483d9a31974becbcc2e51c141",
+        "result": {
+          "executed": 1637,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ffe5e9abe5f6d30326d4515d136ae84131b11c1616f68ab23c6760dfefb134f9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "77b65c33b8f604c0c455d335e8de859ee0d9441d1c69e04e6ea67221336a485c",
+          "inventory_sha256": "b40129e36438b6914d6c22ab5922eda4d6d0ab214352b9e87170938a83c815f0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 122,
+        "openmw_sha256": "c22c18bfba03afea2df9e33e37f837c63aa89a66bcd6d40b879f2d983b108322"
+      }
+    },
+    "engine_cases": [
+      "OblivionWorld.PhysicalSystemOwnsCapsuleHandoffSnapshotsAndRemoval"
+    ],
+    "accumulated_component_checkpoint": {
+      "unchanged_source_sha256": {
+        "components/sceneutil/nifscenetraversal.hpp": "474b968288ddfffe0abc0742f3fc38ce7e1b2e5e3ba34d08fd14145fa24bdbd8",
+        "components/sceneutil/nifscenetraversal.cpp": "9f73c1449f0ca15782b6b37c5183207339754968bde4c65a2adf518d09e6e805",
+        "components/nifosg/matrixtransform.hpp": "5ba294ac35047775f000c577b75f059612ea25a7b0445fc1984fb4a6080df446",
+        "apps/components_tests/sceneutil/nifscenetraversal.cpp": "2e84187051a1c8f1841e284cd3de4e4ec6714e23105146133d9ce94965156df2"
+      },
+      "index": "docs/oblivion/M15-NIF-SCENE-TRAVERSAL-VERIFICATION.json:deferred_admission_retirement_followup",
+      "scope": "Prior full2899 components/273 suites normalSAN from f09fda77e9 production source; unchanged component tests not repeated. Both app binaries now rebuild against the accumulated object-local traversal, per-node physical phases and deferred admission/retirement components."
+    },
+    "native_outer_dispatch_basis": {
+      "report": "build/oblivion-compat/m15/S4/native-blend-node-dispatch-oracle-01/verification.json",
+      "report_sha256": "72cd0dd69947b7a901b06d684c44892133239b9c3b858d0f9f684f442fb4be19",
+      "result": {
+        "passed": true,
+        "contexts": 393216,
+        "counts_by_selector": {
+          "00000000": {
+            "0": 16384,
+            "2": 16384,
+            "1": 32768
+          },
+          "00000001": {
+            "0": 16384,
+            "2": 16384,
+            "1": 32768
+          },
+          "00000002": {
+            "0": 49152,
+            "2": 16384
+          },
+          "00000003": {
+            "0": 65536
+          },
+          "80000000": {
+            "0": 16384,
+            "2": 16384,
+            "1": 32768
+          },
+          "ffffffff": {
+            "0": 16384,
+            "2": 16384,
+            "1": 32768
+          }
+        },
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "probe_sha256": "5e5d636b93019c7fbb79afb35acefcc45f23cbede192da788d5f84d6c619b68a",
+        "cases_sha256": "f56f19056f2416efcf12c90e795908574e5012905db941f551e9c3e8ed58a9ed",
+        "routes": {
+          "0": "outer returns without inner update",
+          "1": "outer invokes scene sync89EAE0 then clears40",
+          "2": "outer tail-calls blend handler88F3D0"
+        },
+        "scope": "Complete original bhkBlendCollisionObject outer dispatcher88EDC0, verified via actual RTTI/vtableA9643C+50 and+64. Exhaustive uint16 flag words across six raw selectors. Check exact return, ESP, callee-saved registers, selector and x87 control. Two declared successful handler boundary stubs89EAE0 and88F3D0 return without body/scene work; original outer branch/flag clearing/virtual target dispatch execute. No body/reset/clock/Havok/global-frame schedule or gameplay acceptance claim.",
+        "limits": [
+          "Does not prove how callers choose selectors during actual game frames.",
+          "Stubbed handler success does not establish inner sync/body side effects. Pending path directly invokes89EAE0; no separate reset call appears in this outer blend handler."
+        ]
+      },
+      "vtable_report": "build/oblivion-compat/m15/S4/native-blend-node-dispatch-oracle-01/vtable-verification.json",
+      "vtable_report_sha256": "ba9d842ba3793dc30d9c4135f924e8975cf5dad75657d6d906d3118e7f91a96b",
+      "vtable_result": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "inspector_sha256": "f508af214de21d7c5dcda1f2f4d8cd3b6c7d213f67bf3ba7852b574c16b1a1b2",
+        "table": "0xa9643c",
+        "locator": "0xad1c0c",
+        "type_descriptor": "0xb119cc",
+        "rtti_name": ".?AVbhkBlendCollisionObject@@",
+        "virtual_targets": {
+          "0x50": "0x88edc0",
+          "0x64": "0x88f3d0",
+          "0x68": "0x89eae0",
+          "0x6c": "0x89ee00"
+        },
+        "scope": "Hash-verified PE RTTI and pointer storage inspection only. Outer blend pending40 dispatcher uses direct89EAE0; the ordinary collision dispatcher897510 additionally calls virtual6C. No actual game-frame selector producer or inner-body effects established."
+      },
+      "implementation_status": "Independent outer dispatcher basis only; these new wrapper APIs call the existing inner blend handler. The eventual scene owner must resolve outer phase/active/pending dispatch first. No outer dispatcher implementation or automatic game-frame selector producer is claimed."
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "build_warning_review": "Rebuild diagnostics refer to unchanged CharacterController unpersist optional state and unchanged World-test context/dangling-else statements. No warning points to the new node methods/assertions. Exact logs retained.",
+    "validation_scope": "Full rebuilt engine compiler/inventory checks and actual worker-configured PhysicsSystem integration. Native outer branching is independently executed with two declared inner handler stubs. No new original game, normal-input fork or fresh-engine save/restart course is executed. Python/schema unchanged.",
+    "limits": [
+      "The public node blend update is an inner native handler boundary. Actual outer collision dispatch can suppress phase3, defer pending40 at phase2 or skip inactive bit0; callers must not infer those gates from the inner gain selector alone.",
+      "Outer pending blend dispatch calls scene synchronization directly; the ordinary collision dispatcher has a separate reset call. The probe does not execute sync body effects and is not proof of a universal reset/velocity policy.",
+      "The scene hook cannot reenter physics under its World lock. Controller and collision phases are separate; no whole-frame or earlier-controller rollback on a later collision failure is claimed.",
+      "Actual actor render/update callback ownership, ordinary-vs-special node/asset policies, native frame selector/time placement and coherent group/filter initialization are still required before automatic construction.",
+      "Contact/reaction/FSM/GetUp, capsule/reference/rootmotion response, remaining melee/block/mastery/drop/effects/input/view/device/FPS/interruption and actual savequitfreshprocess acceptance remain open. Full M15S4 is not complete."
+    ]
   }
 }

@@ -892,6 +892,39 @@ namespace
                 std::runtime_error);
             EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforePhysicalFrame);
             EXPECT_EQ(physics.captureNativeBlendTimeCache(), beforePhysicalCache);
+            // The scene-node owner must use the same scheduler barrier/cache
+            // without rerunning its own controllers in the collision phase.
+            EXPECT_THROW(physics.advanceActorRagdollPhysicalNodeControllers(previous, 8, 3.f), std::invalid_argument);
+            EXPECT_THROW(physics.advanceActorRagdollPhysicalNodeControllers(ptr, 999, 3.f), std::invalid_argument);
+            EXPECT_THROW(physics.updateActorRagdollBlendNode(previous, 8, sceneTarget, 1.f / 120, 0),
+                std::invalid_argument);
+            EXPECT_THROW(physics.updateActorRagdollBlendNode(ptr, 999, sceneTarget, 1.f / 120, 0),
+                std::invalid_argument);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforePhysicalFrame);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), beforePhysicalCache);
+            physics.advanceActorRagdollPhysicalNodeControllers(ptr, 8, 3.f);
+            EXPECT_FLOAT_EQ(float(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x()),
+                float(beforeControllerForce.mLinearVelocity.x()) + 1.6f);
+            const auto nodePhase = physics.captureActorRagdollSnapshot(ptr, base, path.value());
+            const auto nodeCache = physics.captureNativeBlendTimeCache();
+            const auto nodeBlend = physics.captureActorRagdollBlendControllers(ptr)[0].mState;
+            const auto nodeVelocity = physics.captureActorRagdollVelocityControllers(ptr)[0].mState;
+            EXPECT_THROW(physics.updateActorRagdollBlendNode(ptr, 8, sceneTarget, 1.f / 120, 0,
+                [](auto) { throw std::runtime_error("scene rejected native node"); }), std::runtime_error);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), nodePhase);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), nodeCache);
+            unsigned nodePublications = 0;
+            const auto nodePublication = physics.updateActorRagdollBlendNode(ptr, 8, sceneTarget, 1.f / 120, 0,
+                [&](auto values) { ++nodePublications; ASSERT_EQ(values.size(), 1u); EXPECT_EQ(values[0].mRecord, 12u); });
+            ASSERT_TRUE(nodePublication); EXPECT_EQ(nodePublication->mRecord, 12u);
+            EXPECT_EQ(nodePublications, 1u);
+            EXPECT_EQ(physics.captureActorRagdollBlendControllers(ptr)[0].mState, nodeBlend);
+            EXPECT_EQ(physics.captureActorRagdollVelocityControllers(ptr)[0].mState, nodeVelocity);
+            EXPECT_EQ(physics.captureNativeBlendTimeCache(), nodeCache);
+            EXPECT_TRUE(capsule->isCollisionSuspended());
+            physics.restoreActorRagdollSnapshot(ptr, beforePhysicalFrame, base, path.value());
+            physics.restoreNativeBlendTimeCache(beforePhysicalCache);
+            EXPECT_EQ(physics.captureActorRagdollSnapshot(ptr, base, path.value()), beforePhysicalFrame);
             physics.advanceActorRagdollPhysicalControllers(ptr, expectedOrder, 3.f);
             EXPECT_FLOAT_EQ(float(physics.captureActorRagdoll(ptr)[0].mLinearVelocity.x()),
                 float(beforeControllerForce.mLinearVelocity.x()) + 1.6f);

@@ -432,6 +432,16 @@ namespace MWPhysics
         void restoreActorRagdollVelocityControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeVelocityControllerState> controllers);
         std::vector<NifBullet::RagdollNativeControllerReference> captureActorRagdollControllerOrder(const MWWorld::Ptr& ptr, std::span<const std::uint32_t> nodeOrder);
         void advanceActorRagdollPhysicalControllers(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeControllerReference> controllerOrder, float inputTime);
+        // Actual scene-node phases share the worker barrier and existing native
+        // clock cache. Advance own controllers once, then supply the composed
+        // animated world after the parent's physical projection. No World step
+        // or automatic scene/controller scheduling is inferred here.
+        void advanceActorRagdollPhysicalNodeControllers(const MWWorld::Ptr& ptr,
+            std::uint32_t nodeRecord, float inputTime);
+        std::optional<NifBullet::RagdollNativeBlendPublication> updateActorRagdollBlendNode(
+            const MWWorld::Ptr& ptr, std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld,
+            float preparedFrameSeconds, std::uint32_t rawUpdateSelector,
+            const std::function<void(std::span<const NifBullet::RagdollNativeBlendPublication>)>& publishScene = {});
         void applyActorRagdollNativeForces(const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeForceRequest> requests);
         std::vector<NifBullet::RagdollNativeBlendControllerState> captureActorRagdollBlendControllers(const MWWorld::Ptr& ptr);
         std::vector<NifBullet::RagdollNativeBlendState> captureActorRagdollBlendStates(const MWWorld::Ptr& ptr);
