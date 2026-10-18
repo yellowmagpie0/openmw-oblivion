@@ -5088,3 +5088,24 @@ hashes are restored. Protocol, identity hashes, scope and limits are in
 `M15-ORIGINAL-BODY-LIFECYCLE-PROBES.json`. This is independent original evidence;
 automatic fork reaction/GetUp integration and every remaining full S4 normal-input,
 view/device/FPS and recovery fresh-process acceptance gate remain open.
+
+
+The callback identified in original06 now executes independently in a 1548-case
+original-instruction corpus: full 8DC1C0 body dispatch, actual A9A274 virtual C
+8D9A30, native 8CB4E0 and full 91ED30 array removal. Star graphs with zero through
+four edges cover both master endpoint choices, every removed body, two array
+orders, managed/unmanaged references and three pending-operation depths. All
+incident registered constraints are removed, including those whose authored
+association belongs to the other endpoint; nonincident constraints remain.
+Master compaction repairs every internal backpointer, slave swap-last repairs
+its moved index, and native owner/internal pointers clear with exactly one
+managed reference release. Body World pointers remain intact during this phase.
+
+Constraint-info reporting, island statistics, optional listeners/pending replay
+and runtime payload storage remain declared boundaries. This establishes the
+native removal operation; it does not turn admission into an undirected closure
+or enumerate every auxiliary constraint seen in original06. Matrix, hashes and
+limits are in `native_body_removal_cascade_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Production code is unchanged, and
+automatic fork reaction/GetUp plus the remaining full S4 acceptance gates stay
+open.

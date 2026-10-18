@@ -3030,5 +3030,86 @@
     },
     "status": "Original native writer/identity evidence; no fork recovery or solver graph completion claim",
     "next": "Execute the identified body/constraint removal path with native28-byte master and4-byte slave arrays, then account for runtime auxiliary constraints before automatic registration/recovery integration."
+  },
+  "native_body_removal_cascade_followup": {
+    "status": "Native incident-constraint removal and native array repair independently verified; full automatic fork reactions remain open",
+    "source_parent_commit": "1dd6b4f9639b9f38c33710b7168470257734e9f1",
+    "report": "build/oblivion-compat/m15/S4/native-body-removal-cascade-static-01/report.json",
+    "report_sha256": "be52cf08b7483b27429c148e8eacbba8f6e19562043eee2a37620f6e04df4303",
+    "probe_sha256": "e63aac6c6abea68253f5efb106abdc5f2ff982f3b9a3f51012c3baebf8992722",
+    "executable_metadata_sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "results": {
+      "passed": true,
+      "profiles": 1548,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "a2f6b75f3de267c0c8280cae44966a985ab6d638eb335e6ee5bbf1c0660a0880",
+      "native_paths": [
+        "full8DC1C0 body removal dispatch",
+        "actual capturedA9A274 virtualC8D9A30",
+        "full8CB4E0 native World constraint removal",
+        "full91ED30 owner clearing, master compaction, slave swap-last/index repair and managed reference release"
+      ],
+      "boundaries": [
+        "Constraint-data virtual20 writes a declared zero16-byte information record",
+        "Island owner virtual10 records constraint-info/statistics subtraction; no solver/statistics implementation",
+        "Optional body listenersAC/B0 andB8/BC empty, optional WorldEC listener list empty, World pending replay84 empty",
+        "Constraint runtime buffer size0 excludes runtime payload compaction and heap operations",
+        "This is the constraint-removal dispatch phase: body World pointer remains intact until later native body teardown; no World/broadphase/solver simulation"
+      ],
+      "findings": [
+        "Every registered constraint incident to the removed body is removed, regardless of its authored body-list direction or which endpoint owns the native master record. Nonincident constraints and both endpoint bodies remain registered in this phase.",
+        "Master first entries drain before slave first entries. Master compaction preserves order and repairs shifted native internal pointers; slave removal swaps its last pointer into the removed slot and repairs the moved internal slave index.",
+        "Native owner+8 and internal+24 clear; managed reference count decrements once. Endpoint identities stay unchanged. Native World pending depth is preserved for0/1/2."
+      ],
+      "limits": [
+        "Synthetic star graphs of0..4 edges and both master endpoint choices; not all possible graph/callback mutation cases",
+        "Optional listeners, runtime payload storage, pending replay and island statistics remain explicit boundaries",
+        "No fork implementation comparison, automatic reaction integration or gameplay acceptance yet"
+      ]
+    },
+    "concrete_callback_provenance": "Original06 captured native constraint primary vtableA9A274 and virtualC8D9A30; exact constraint-owner clear instruction91ED60 was hardware observed during GetUp.",
+    "editable_protocol": {
+      "entry": "8DC1C0 cdecl(body), with actualA9A274 dispatch through8D9A30,8CB4E0 and91ED30",
+      "graphs": "Star root0 with N leaves. Edge endpointsA=leaf,B=root; every master-endpoint assignment is tested independently of authored association direction.",
+      "N": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "master_masks": "all2^N bit patterns",
+      "removed_body": "every root/leaf",
+      "array_order": [
+        "ascending edge IDs",
+        "descending edge IDs"
+      ],
+      "native_managed_reference_word4": [
+        0,
+        1
+      ],
+      "native_reference_count6": 5,
+      "World_pending_operation_depth88": [
+        0,
+        1,
+        2
+      ],
+      "master_array": "Dense28-byte internal records atbody+68 with count+6C; instance+24 points back to its current record.",
+      "slave_array": "Dense4-byte constraint pointers atbody+74 with count+78; each internal record keeps its current slave index at+12.",
+      "constraints": "Every initial native owner+8 is present. Runtime buffer size+18 is zero. Empty-list cases return without callbacks.",
+      "assertions": [
+        "Exact native callback/remove/statistics call order, sentinel return, ESP and callee-saved registers.",
+        "Remove every incident constraint and only incident constraints; retain nonincident owner/registration.",
+        "Clear removed native owner+8/internal+24; decrement managed references exactly once; preserve endpoint identities.",
+        "Check master compaction order and every remaining instance internal backpointer.",
+        "Check slave swap-last contents and every moved internal slave index.",
+        "Preserve every body World pointer during this constraint-dispatch phase and restore the initial World pending depth."
+      ],
+      "profile_counts": {
+        "empty_graph": 12,
+        "one_to_four_edges": 1536
+      }
+    },
+    "validation_scope": "Executable corpus and structured documentation only. No product C++/Python code changed, no new fork runtime gate and no native solver/statistics or trajectory parity claim."
   }
 }
