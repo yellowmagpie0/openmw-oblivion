@@ -84,6 +84,12 @@ namespace SceneUtil
             // dispatch its body here; query the supplied world rather than the
             // node's previous drawing/cache handle. Do not change scene locals.
             std::function<void(const NifOsg::MatrixTransform&, const Nif::NiTransform&)> mCollisionUpdate;
+            // Alternative to mPhysicalWorld for owners whose collision update
+            // can produce no scene target (for example SceneToPhysics). A null
+            // target keeps animated world/locals even with active bit0/bit8.
+            // Supply exactly one physical provider when active; pending40 does
+            // not read either. mProjected still receives the actual flags.
+            std::function<std::optional<Nif::NiTransform>(const NifOsg::MatrixTransform&)> mPhysicalTarget;
         };
 
         explicit NifSceneTraversal(NifOsg::MatrixTransform& referenceRoot,

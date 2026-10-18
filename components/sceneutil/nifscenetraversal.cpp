@@ -225,13 +225,20 @@ namespace SceneUtil
             const bool pending = flags && (*flags & 0x40);
             require(!pending || bool(callbacks.mFirstSynchronization), "missing pending NIF first synchronization");
             NifBullet::RagdollBonePoseWriteback frame{local, *world, 0};
+            bool physicalTarget = false;
             if (!pending && flags && (*flags & 1))
             {
-                require(bool(callbacks.mPhysicalWorld), "missing active NIF physical pose source");
-                const auto desired = callbacks.mPhysicalWorld(node);
+                require(bool(callbacks.mPhysicalWorld) != bool(callbacks.mPhysicalTarget),
+                    "missing or ambiguous active NIF physical pose source");
+                const auto desired = callbacks.mPhysicalTarget ? callbacks.mPhysicalTarget(node)
+                    : std::optional(callbacks.mPhysicalWorld(node));
                 require(valid(), "NIF physical provider changed the bound hierarchy");
-                frame = NifBullet::ragdollBonePoseWriteback(local, *world, desired,
-                    parent, *flags, false, mPrecision);
+                if (desired)
+                {
+                    frame = NifBullet::ragdollBonePoseWriteback(local, *world, *desired,
+                        parent, *flags, false, mPrecision);
+                    physicalTarget = true;
+                }
             }
             const osg::Matrixd parentMatrix = entry.mParent ? osg::Matrixd(parent->toMatrix()) : external;
             NifOsg::MatrixTransform::TraversalMatrix own(
@@ -242,7 +249,7 @@ namespace SceneUtil
             for (const auto child : entry.mChildren)
                 children.emplace_back(osg::Matrixd(mNodes[child].mWorld.toMatrix()) * inverseWorld);
             // Retain author/controller state unless actual active bit8 writes it.
-            if (!pending && flags && ((*flags & 9) == 9))
+            if (physicalTarget && (*flags & 8))
             {
                 node.setRotation(frame.mLocal.mRotation);
                 node.setTranslation(frame.mLocal.mTranslation);

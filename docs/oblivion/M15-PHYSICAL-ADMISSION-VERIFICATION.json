@@ -5528,5 +5528,167 @@
       "Automatic traversal must interleave own controllers, updated parent world caches and per-node physical dispatch. The existing all-body API with precomposed animation world targets is insufficient for mixed parent/child gains; no approximate coordinator is installed.",
       "Automatic native construction/frame/contact/FSM/GetUp, coherent global group/filter ownership, remaining mastery/drop/effects/input and full S4 view/device/FPS/interruption/savequitfreshrestart acceptance remain open."
     ]
+  },
+  "per_node_physical_dispatch_followup": {
+    "status": "Node-scoped selected physical-controller and blend collision phases are implemented and coupled to the real scene traversal in component integration tests. Production actor scheduling/ownership and full M15S4 gameplay acceptance remain open.",
+    "source": {
+      "head": "9cce045ee3be389216af650609c0e16bfde8c0b9",
+      "source_fingerprint": "f59e4a8350a1150f712f582a873d7e67f3698207832418aa9340653b3f9f23b5"
+    },
+    "source_sha256": {
+      "components/nifbullet/actorragdollphysics.hpp": "65df473ffc621134e3fd344e811fc442b77a90e6b5c16a2b586241e99c3c6b60",
+      "components/nifbullet/actorragdollphysics.cpp": "b16fe189e0aa420a256f406ec606cc1576bfde866d17c226759265d65591dcd4",
+      "components/sceneutil/nifscenetraversal.hpp": "42ca49836c25b12d7bfb86cc68b08f4408d4a27058ed1f23c8f7b130bcf2ef8e",
+      "components/sceneutil/nifscenetraversal.cpp": "31b98a00543e3b43062f0a0326425224c8a435a7253943d07262c8f863ace0ad",
+      "apps/components_tests/nifloader/testactorragdollphysics.cpp": "cbae4a2f517e46b643e4a4874242233254db5cac26845ffa829c7d361c74901c",
+      "apps/components_tests/sceneutil/nifscenetraversal.cpp": "064a17686feab2541dfd0cded36054dde9691bba82675323bed48e30369d8ceb"
+    },
+    "post_test_changes": "Verification index and delivery audit only; production/test files unchanged after full checks.",
+    "changes": [
+      "advanceNativePhysicalNodeControllers captures only controllers attached to the supplied owned node, preserving current generated-velocity head/tail order and independent target identity. It stages clocks/gains/removal and immediate forces with the existing native controller implementation. Other nodes are not advanced; forces publish before this node collision phase.",
+      "The private preparation helper admits an internally selected partial list for that node entry point. Existing complete-batch public APIs still require complete controller order and retain all their validation; arbitrary public partial lists are not admitted.",
+      "updateNativeBlendNode reads the mapped node live owned gains/flags and performs exactly one existing native blend collision update with liveSingle scene conversion. It does not tick controllers/forces or mirror their state. Unknown blend nodes and pending40 reject; skipped selectors return no publication without reading unused animated matrices.",
+      "NifSceneTraversal accepts an optional physical-target provider as an alternative to the existing required-world provider. An absent target preserves animated world/locals while mProjected receives actual collision flags. Bit8 local setters run only when a physical target exists, preserving deliberately stale procedural NIF rotation caches when no physical write occurs. Active ambiguous providers reject; inactive/pending routes do not read either.",
+      "The coupled production-component test executes own node callbacks, selected physics clocks, parent physical projection, child animated world composition and keyframed Bullet pose publication. Parent world moves from animated110 to physical0; child target is5, rather than precomposed115. The SceneToPhysics child has real bit0 but no scene target and retains its animation.",
+      "A later-node velocity controller targets an earlier body after its .5 velocity drive. Its original-derived3.2 world-X force remains3.2; a global controller-first/body-second batch would incorrectly halve it to1.6. Separate tests retain independent target gains and prove collision phase does not advance a controller or apply a force again."
+    ],
+    "checks": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-node-phase-normal-01/verification.json",
+        "report_sha256": "2c4eb91d251497c32c18c6fe22cb70fb122b7872f893f521c74f1a61c7965289",
+        "result": {
+          "executed": 2891,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "649f063df1a8a062fce0aef616ebdebbd3b8068cd613b729b03e035aee8f14c3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3ca7bf1488eebdf3595568737cbfeaee2ddaf079b7634256c96bc88961a209dc",
+          "inventory_sha256": "6560906ed352b491ac077257b1d72fbd7336f9ca2a6007f9e7fa7dab31a37744",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-node-phase-sanitized-01/verification.json",
+        "report_sha256": "3f84cb20eed5f879de7a65ce0dab40192d7144ac1f51d3a154bc58455fa3ffeb",
+        "result": {
+          "executed": 2891,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9cb90d8b039bac9e9764c521407624d27dee11aec334af519bca8c8851a2eabe",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "8184b9a66249e7251032de6e3668feee2f30d1415151d71cb4b13f071a95c83c",
+          "inventory_sha256": "e88cc7e82cb10a0111c883c3817be1649b86f6acdc6c87f60e74d22009cf14ee",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "suites": 273
+      }
+    },
+    "optional_target_native_replay": {
+      "normal": {
+        "report": "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/normal-verification.json",
+        "report_sha256": "7c89f6d3b80ec33c050d1cc9ef177c19b2a53b9f745ca7d5f5169fe2b69de4d9",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "70a52cacb765a047f200f3daff47305df8d9c35dfd4afbc2c7545866b82a14c0",
+          "comparator_sha256": "4d6d7a36672790dffcc3bdbae4fe48b7d97cebbcdb40bc062fcd65a844539356",
+          "binary_sha256": "9f7e2a20d30f182dabbe736a2ee8efd5437d9d11cd46b8c08925ac02122be15f",
+          "notes": "Optional-target provider branch: original child+leaf replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      },
+      "sanitized": {
+        "report": "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/sanitized-verification.json",
+        "report_sha256": "5f9605ef3f9d9e4ec85a5fe1c69cfacbe951bf73df9fb77089e96665e2d9132d",
+        "result": {
+          "passed": true,
+          "supported_frames": 512,
+          "field_checks": 7104,
+          "sequences": 64,
+          "mismatches": [],
+          "max_osg_matrix_absolute_error": 2.84217e-14,
+          "osg_tolerance": 1e-09,
+          "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+          "probe_sha256": "70a52cacb765a047f200f3daff47305df8d9c35dfd4afbc2c7545866b82a14c0",
+          "comparator_sha256": "4d6d7a36672790dffcc3bdbae4fe48b7d97cebbcdb40bc062fcd65a844539356",
+          "binary_sha256": "61ec33e60fdd23a350260b6195441ca96f404cd95730fd932d63304f135f2233",
+          "notes": "Optional-target provider branch: original child+leaf replayed as an object-local root with supplied recorded parent worlds. Warm start seeds original old child cache through controllerless projection, then restores original author local. Frame0 leaf old cache is invalid in original fixture and excluded; all subsequent old caches persist naturally across8 frames. Original root/helper topology is not replayed and its parent worlds are boundary inputs. Native own/controller input and output fields and collision-update animated world exact; drawing tolerance1e-9. No native controller interpolation/time math, Havok/global scheduling or gameplay acceptance."
+        }
+      }
+    },
+    "cases": [
+      "ActorRagdollPhysicsTest.NodeControllerPhaseAdvancesOnlyAttachedControllersAndPreservesCrossTargets",
+      "ActorRagdollPhysicsTest.NodeCollisionPhaseDoesNotAdvanceControllersOrApplyTheirForcesAgain",
+      "ActorRagdollPhysicsTest.NodeCollisionRejectsSceneFailureAndPendingSyncAndPreservesSkippedBodies",
+      "ActorRagdollPhysicsTest.LaterNodeForceTargetsEarlierBodyAfterItsCollisionDrive",
+      "ActorRagdollPhysicsTest.PerNodeSceneTraversalDrivesChildFromUpdatedPhysicalParent",
+      "NifSceneTraversalTest.OptionalPhysicalTargetKeepsAnimatedWorldAndProceduralLocalsWithActualFlags",
+      "NifSceneTraversalTest.OptionalPhysicalTargetRejectsAmbiguityButDoesNotReadInactiveOrPendingSources"
+    ],
+    "native_provenance": {
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "controller_cases": "build/oblivion-compat/m15/S4/node-controller-order-oracle-01/cases.json",
+      "cases_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+      "scope": "The changed optional-target projection branch replays512 retained007F/027F frames,7104 field comparisons. Same declared child+leaf reconstruction, recorded parent boundary, warm initial old child cache and excluded invalid frame0 leaf cache as object_local_root_followup. No new native rule, formula, original executable or game run. Per-node physics tests compose existing independently verified selected-controller/force/dispatch rules and native own-controller/collision/child order; they are not an original Havok graph comparison."
+    },
+    "local_continuity_reinspection": {
+      "report": "build/oblivion-compat/m15/S4/native-local-continuity-01/report.json",
+      "report_sha256": "981030558da8e8ce593d4dee4a92c3bdf04e181bb2f39d3265f0314c1a36a695",
+      "result": {
+        "passed": true,
+        "source_sha256": "1494d13fd557c0338d123aa7f0fb75e00c0a0b4c2de50fb3ea9340943f5da15c",
+        "analyzer_sha256": "23cff3bfe638bd0366d80dd8ba3df81dfcec3872bab1e8283c2ef6bfbeb706b7",
+        "continuations": 168,
+        "differ_from_previous_callback_locals": 168,
+        "scope": "Reinspection only. All168 active bit8 continuation rows enter the child controller with prior physical writeback locals, distinct from prior supplied controller outputs. Source has four topologies, plain/bodyT and007F/027F/037F. Controller Update suppliers overwrite only chosen translation fields; actual KF interpolation/missing-channel implementation is not executed or established.",
+        "consequence": "The new per-node native traversal must enter controllers with current author locals left by prior physical projection. Do not restore the generic whole-frame pure-animation checkpoint before these callbacks. Controller bodies may then update their own fields normally.",
+        "limits": [
+          "No new original executable/game execution.",
+          "Does not establish every KF/procedural controller behavior or native runtime scheduling/acceptance."
+        ]
+      }
+    },
+    "driver_sha256": {
+      "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/probe.cpp": "70a52cacb765a047f200f3daff47305df8d9c35dfd4afbc2c7545866b82a14c0",
+      "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/build.py": "d4e75e47fe868ae144ee235c489a6e86e5b0535f7fa44bc842e6bc7c5d9f30b6",
+      "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/compare.py": "4d6d7a36672790dffcc3bdbae4fe48b7d97cebbcdb40bc062fcd65a844539356",
+      "build/oblivion-compat/m15/S4/native-node-phase-corpus-01/input.txt": "151abb6ddb0f04a6a122cc1c52facc4d7879408cbd59866e24bda53316f85006"
+    },
+    "inventory_review": "Both configurations have identical2891 unique XML case names,273 suites and exact per-binary list/XML correspondence. Raw list comments may contain different diagnostic object/pointer bytes.",
+    "warnings": "No compiler warnings or errors in either component build.",
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "validation_scope": "Structural/compiler and full component inventories, actual ActorRagdollPhysics/ordinary NIF traversal coupling and optional-target native cache replay. No automatic engine caller was added. Engine/Python/schema and normal-input/fresh-engine gameplay courses were not repeated.",
+    "limits": [
+      "Controller and collision phases are separate native traversal boundaries. Scene rejection rolls back only the current collision phase through its scene hook; earlier node/controller forces and clocks may already be published. No whole-frame atomic rollback is claimed.",
+      "Node-controller entry requires an owned body node; blend collision entry requires an owned blend node. Ordinary unconfigured/nonblend collision routing, pending40 synchronization, actor asset/equipment traversal ownership and special node/culling policies remain with their actual owners.",
+      "Native node controller entry must retain prior physical author-local writeback, as168 retained original continuation rows confirm. Do not restore the generic whole-frame pure-animation checkpoint before these callbacks; actual KF interpolation/missing-channel bodies remain separate evidence.",
+      "Caller must use actual per-node traversal order, one own-controller phase per entered node, the existing authoritative animation clock and correct physical raw selector/gravity/frame scheduling. No global all-body approximation or duplicate clock/force tick is installed.",
+      "Automatic native actor construction/frame ownership and coherent group/filter initialization, contact/reaction/FSM/GetUp and full S4 melee/block/mastery/drop/effect/input/view/device/FPS/interruption/savequitfreshprocess acceptance remain open. App binaries require a fresh engine build for subsequent runtime integration."
+    ]
   }
 }

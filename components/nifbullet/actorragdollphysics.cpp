@@ -2929,9 +2929,10 @@ namespace NifBullet
 
     ActorRagdollPhysics::NativeControllerFrame ActorRagdollPhysics::prepareNativeControllerFrame(
         std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
-        const ESM4::PhysicalBlendTimeCache& sharedTimeCache) const
+        const ESM4::PhysicalBlendTimeCache& sharedTimeCache, bool requireComplete) const
     {
-        require(controllerOrder.size() == mImpl->mBlendControllers.size() + mImpl->mVelocityControllers.size(),
+        require(!requireComplete
+                || controllerOrder.size() == mImpl->mBlendControllers.size() + mImpl->mVelocityControllers.size(),
             "native physical controller order must be complete");
         std::unordered_set<std::uint64_t> selected;
         for (const auto& reference : controllerOrder)
@@ -3018,6 +3019,37 @@ namespace NifBullet
         mImpl->mVelocityControllers.swap(frame.mVelocities);
         mImpl->mBlendTargets.swap(frame.mTargets);
         sharedTimeCache = frame.mCache;
+    }
+
+    void ActorRagdollPhysics::advanceNativePhysicalNodeControllers(std::uint32_t nodeRecord, float inputTime,
+        ESM4::PhysicalBlendTimeCache& sharedTimeCache)
+    {
+        const std::array<std::uint32_t, 1> nodes{nodeRecord};
+        const auto order = captureNativeControllerOrder(nodes);
+        auto frame = prepareNativeControllerFrame(order, inputTime, sharedTimeCache, false);
+        applyNativeForcesImpl(frame.mForces, true);
+        mImpl->mBlendControllers.swap(frame.mBlends);
+        mImpl->mVelocityControllers.swap(frame.mVelocities);
+        mImpl->mBlendTargets.swap(frame.mTargets);
+        sharedTimeCache = frame.mCache;
+    }
+
+    std::optional<RagdollNativeBlendPublication> ActorRagdollPhysics::updateNativeBlendNode(
+        std::uint32_t nodeRecord, const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
+        std::uint32_t rawUpdateSelector, float nativeGravityZ,
+        const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene)
+    {
+        const auto target = std::find_if(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+            [&](const auto& value) { return value.mNode == nodeRecord; });
+        require(target != mImpl->mBlendTargets.end(), "unknown native blend collision node");
+        const auto& state = target->mState;
+        require(!(state.mCollisionFlags & 0x40), "unsettled native blend node first synchronization");
+        const std::array<RagdollNativeBlendUpdate, 1> updates{{{state.mBodyRecord, animatedWorld,
+            state.mGains.mHierarchy, state.mGains.mVelocity, state.mCollisionFlags}}};
+        auto publications = updateNativeBlendsImpl(updates, preparedFrameSeconds,
+            rawUpdateSelector, nativeGravityZ, publishScene, {}, Nif::NativeTransformPrecision::Single);
+        if (publications.empty()) return std::nullopt;
+        return std::move(publications.front());
     }
 
     std::vector<RagdollNativeKnockdownBlendDisposition> ActorRagdollPhysics::prepareNativeKnockdownControllerSetup(

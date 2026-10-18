@@ -588,6 +588,22 @@ namespace NifBullet
         // recursive scene traversal; those remain separate caller boundaries.
         void advanceNativePhysicalControllers(std::span<const RagdollNativeControllerReference> controllerOrder,
             float inputTime, ESM4::PhysicalBlendTimeCache& sharedTimeCache);
+        // Own-controller phase for one actual traversal node. Retains this
+        // node's current head/tail velocity ordering and independent targets;
+        // other nodes' controllers are not advanced. Publish immediate forces
+        // before this node's collision projection. The caller visits each node
+        // once and owns ordinary renderer callbacks and the input clock.
+        void advanceNativePhysicalNodeControllers(std::uint32_t nodeRecord, float inputTime,
+            ESM4::PhysicalBlendTimeCache& sharedTimeCache);
+        // Collision phase for one owned blend node, after its own controllers
+        // and native world composition using the updated parent cache. Reads
+        // live owned gains/flags; does not tick any controller or force again.
+        // A skipped selector returns no publication. Scene rejection preserves
+        // this collision phase; earlier node/controller phases remain published.
+        std::optional<RagdollNativeBlendPublication> updateNativeBlendNode(std::uint32_t nodeRecord,
+            const osg::Matrixf& animatedWorld, float preparedFrameSeconds,
+            std::uint32_t rawUpdateSelector, float nativeGravityZ,
+            const std::function<void(std::span<const RagdollNativeBlendPublication>)>& publishScene = {});
         // One selected-controller phase followed by blend-body publication.
         // Includes generated velocity forces and controller removal. Stage all
         // results before the scene hook; a rejected scene leaves bodies,
@@ -686,7 +702,7 @@ namespace NifBullet
         struct NativeForce;
         NativeControllerFrame prepareNativeControllerFrame(
             std::span<const RagdollNativeControllerReference> controllerOrder, float inputTime,
-            const ESM4::PhysicalBlendTimeCache& sharedTimeCache) const;
+            const ESM4::PhysicalBlendTimeCache& sharedTimeCache, bool requireComplete = true) const;
         std::vector<NativeForce> prepareNativeForces(
             std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies) const;
         void publishNativeForces(std::span<const NativeForce> forces);

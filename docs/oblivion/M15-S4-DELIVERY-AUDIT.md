@@ -5439,3 +5439,50 @@ Automatic actor placement/controller/physics ownership, coherent group/filter
 initialization, contact/reaction/FSM/GetUp and all full S4 normal-input and
 fresh-engine restart acceptance courses remain open. App binaries need a fresh
 engine build when this component primitive is connected to runtime ownership.
+
+
+### Node-scoped physical controller and collision phases
+
+ActorRagdollPhysics now advances the controllers attached to one actual node
+without advancing other nodes. It preserves generated velocity head/tail order,
+independent targets, immediate forces and shared clock cache semantics. Existing
+public complete-batch APIs remain strict. A separate blend collision entry
+reads live owned gains/flags and uses live Single scene conversion; it does not
+advance controllers or forces again. Pending40 and unknown blend nodes reject.
+
+The ordinary NIF traversal can receive an absent physical scene target while
+retaining actual collision flags. This represents SceneToPhysics and skipped
+projection routes without rewriting flags or author locals. Procedural NIF
+rotation caches stay untouched when no physical local write occurs. Active
+ambiguous providers reject; inactive and pending routes do not read providers.
+
+A coupled test runs real own callbacks, physical controller clocks, parent world
+projection, child composition and keyframed Bullet pose publication: parent
+animated 110 projects to physical 0, and child animated target becomes 5 instead
+of 115. Another test applies a later-node controller force to an earlier body
+after its collision drive, retaining 3.2 instead of the erroneous globally
+prebatched 1.6. Cross-target gains, rejection, skipped sleeping bodies and
+absence of duplicate controller/force advancement are also checked.
+
+Full normal and ASan/UBSan runs each pass 2,891 component tests in 273 suites,
+with identical case names, exact inventories, no failures/skips and no compiler
+warnings. The changed optional-target projection branch also matches 512 retained
+native controller/cache frames and 7,104 field comparisons in each build;
+maximum drawing matrix error remains 2.84217e-14 against 1e-9 tolerance. The
+recorded-parent branch reconstruction and initial-cache boundaries are explicit;
+this is not a new original Havok or game run. Leak checks are disabled.
+
+Tested source fingerprint: `f59e4a8350a1150f712f582a873d7e67f3698207832418aa9340653b3f9f23b5`. Source/binary/corpus
+hashes and limits are in `per_node_physical_dispatch_followup` in
+`M15-PHYSICAL-ADMISSION-VERIFICATION.json`. Engine and Python/schema sources were
+not changed; their suites were not repeated for this component-only bridge.
+
+Production actor traversal/controller/physics ownership and scheduling,
+coherent group/filter initialization, contact/reaction/FSM/GetUp and every
+remaining full S4 normal-input and fresh-engine restart gate remain open.
+Reinspection of 168 retained original continuations confirms that controllers
+enter with prior physical author locals, rather than a restored pure-animation
+checkpoint; actual KF controller bodies remain outside that observation.
+Earlier node/controller phases can already be published if a later collision
+phase rejects; no whole-frame rollback is claimed. App binaries need a fresh
+engine build before subsequent runtime integration or acceptance courses.

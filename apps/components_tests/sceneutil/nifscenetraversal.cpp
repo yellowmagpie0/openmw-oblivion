@@ -242,6 +242,55 @@ namespace
         EXPECT_EQ(flags, 3u);
     }
 
+    TEST_F(NifSceneTraversalTest, OptionalPhysicalTargetKeepsAnimatedWorldAndProceduralLocalsWithActualFlags)
+    {
+        Binding binding(*mRoot);
+        mRoot->setUpdateCallback(new Callback([](Node& node, osg::NodeVisitor&) {
+            node.setMatrix(osg::Matrixd::rotate(.5, osg::Vec3d(0, 0, 1)) * osg::Matrixd::translate(20, 0, 0));
+        }));
+        unsigned reads = 0, projections = 0;
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional<std::uint16_t>(9) : std::nullopt;
+        };
+        callbacks.mPhysicalTarget = [&](const Node&) -> std::optional<Nif::NiTransform> { ++reads; return {}; };
+        callbacks.mProjected = [&](Node& node, const auto& frame, auto flags) {
+            if (&node != mRoot) return;
+            ++projections; EXPECT_EQ(flags, 9); EXPECT_EQ(frame.mWorld.mTranslation.x(), 20);
+        };
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(reads, 1u); EXPECT_EQ(projections, 1u);
+        // No physical local setter should refresh the deliberately stale NIF
+        // rotation cache left by the procedural matrix callback.
+        EXPECT_EQ(mRoot->mRotationScale.mValues[0][0], 1);
+        EXPECT_NEAR(mRoot->getMatrix()(0, 0), std::cos(.5), 1e-9);
+        EXPECT_NEAR(binding.cachedWorld(*mRoot).mRotation.mValues[0][0], std::cos(.5), 1e-6);
+    }
+
+    TEST_F(NifSceneTraversalTest, OptionalPhysicalTargetRejectsAmbiguityButDoesNotReadInactiveOrPendingSources)
+    {
+        Binding binding(*mRoot);
+        unsigned reads = 0;
+        std::uint16_t flags = 1;
+        Binding::Callbacks callbacks;
+        callbacks.mCollisionFlags = [&](const Node& node) -> std::optional<std::uint16_t> {
+            return &node == mRoot ? std::optional(flags) : std::nullopt;
+        };
+        callbacks.mPhysicalWorld = [&](const Node&) { ++reads; return Nif::NiTransform::getIdentity(); };
+        callbacks.mPhysicalTarget = [&](const Node&) -> std::optional<Nif::NiTransform> { ++reads; return {}; };
+        EXPECT_THROW(binding.update(mStamp, 1, callbacks), std::invalid_argument);
+        EXPECT_EQ(reads, 0u);
+        flags = 0;
+        binding.update(mStamp, 1, callbacks);
+        flags = 0x49;
+        callbacks.mFirstSynchronization = [&](const Node&, const auto&, auto) { flags &= ~0x40; };
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(flags, 9); EXPECT_EQ(reads, 0u);
+        callbacks.mPhysicalWorld = {};
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(reads, 1u);
+    }
+
     TEST_F(NifSceneTraversalTest, PropertyCallbacksPrecedeOwnPostTraverseWorkAndProjection)
     {
         Binding binding(*mRoot);
