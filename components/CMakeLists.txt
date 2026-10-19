@@ -259,6 +259,7 @@ add_component_dir (esm4
     combatsettings
     fatigueexpenditure
     physicalcombat
+    animationblend
     firstpersonview
     physicalblendsettings
     physicalvelocitycontroller

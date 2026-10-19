@@ -7666,3 +7666,58 @@ following actor recovery, outgoing sequence layers, and in-action restart remain
 unfinished. A restored non-null reaction currently prevents new strike/bow/block
 admission but has no controller recovery. Existing ReactionOnly and Expert/Master
 contact guards remain. **M15S4 is still incomplete.**
+
+
+## Native sampled-sequence pose projection checkpoint
+
+The renderer can now project ordered caller-owned sequence samples onto NIF
+nodes using their raw per-bone priorities, activation weights and ease factors.
+Winning-source metadata retains authored weight and ordered target/priority
+bytes; imported node blend settings survive inactive controllers and ambiguous
+bindings reject preparation. Private track clones preserve the resource cache.
+Equal-topology updates replace frame values without rebuilding callbacks.
+Sampling completes before publishing node channels, participates in animated
+physical-target sampling, and releases on model/scene teardown. This projection
+owns no event traversal, root motion, combat actions, RNG or lifecycle clock.
+
+Independent original instructions execute the constructor, real slot insertion,
+nonempty sequence application, virtual transform update, normalization and
+composition for **21,440 observations /10,720 contexts**. Both x87 precision
+words agree. Production matches every normalized weight, valid pose float32 bit,
+channel mask and return status. The corpus includes unequal weights, signed
+priority bytes, one to five tracks, fade/threshold branches, missing channels
+and quaternion hemisphere changes. Synthetic constant transforms and preallocated
+storage are supplied; Windows atomic refcount increment is a boundary. No game
+function is stubbed. This proves sampled-pose blending, not KF interpolation,
+native group/variant resolution, geometry or original-game gameplay. The
+separate two-track threshold behavior and many-track priority suppression remain
+as observed, including the two-track path's repeated write to the second weight.
+Eighteen editable original cases are checked in the component suite.
+
+Normal `native-sequence-blend-normal-03` passes **2,947 component and1,745 engine
+/125 suites**; ASan/UBSan `native-sequence-blend-sanitized-03` passes **800 selected
+ESM4* component /62 suites and1,745 engine /125 suites**. Exact inventories agree,
+with no failures/skips. Both pin dirty-source fingerprint
+`08a9941b447f06963e5981bccd509204bab97ea2304a067cca3691b64b85ed61`
+on parent `6ae45f660cfa600269aec8117d65807d54e84bb7`, unchanged throughout.
+Four actual renderer tests cover pose bits and caller clocks, callback reuse,
+rejected replacement/winning overrides, physical target sampling, sample-failure
+publication, copy isolation and release without replay. Leak detection is
+disabled. Existing compiler warnings remain; no warning-free build is claimed.
+
+The initial independent comparison caught a reversed reading of the many-track
+priority branch. The first build attempts then exposed unresolved record pointers
+in the synthetic NIF fixture, and the second engine attempts caught a double
+coordinate used in a float32 bit assertion. Each failed attempt is retained;
+corrected expectations came from original execution and fixture fixes did not
+change the production parser or weaken the comparison. Static base-archive audits
+also confirm distinct per-bone priorities and numbered weapon-recoil filenames;
+they do not prove native variant selection, RNG or winning overrides.
+
+`M15-NATIVE-SEQUENCE-BLEND-VERIFICATION.json` records source/build/oracle hashes,
+comparisons, tests, static asset scope and retained failures. CharacterController
+and normal contact adapters do not yet call the new projection. Owned inactive
+state until the following actor recovery, outgoing/replaced sequence persistence,
+retirement, group/variant resolution and normal-input in-action restart remain
+open, along with the other S4 mastery/effect/control/view/FPS gates. No application
+runtime or full owned-reaction acceptance is claimed. **M15S4 is still incomplete.**

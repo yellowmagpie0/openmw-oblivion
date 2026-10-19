@@ -89,6 +89,41 @@ namespace
         }
     };
 
+    class NativeTrack : public SceneUtil::KeyframeController, public osg::NodeCallback
+    {
+    public:
+        struct Observation { unsigned mSamples = 0; float mTime = -1; };
+        KfTransform mPose;
+        osg::Vec3f mVelocity;
+        bool mThrow = false;
+        std::shared_ptr<Observation> mObserved = std::make_shared<Observation>();
+        NativeTrack() = default;
+        NativeTrack(const NativeTrack& other, const osg::CopyOp& copy)
+            : osg::Object(other, copy), SceneUtil::KeyframeController(other, copy), osg::NodeCallback(other, copy)
+            , mPose(other.mPose), mVelocity(other.mVelocity), mThrow(other.mThrow), mObserved(other.mObserved) {}
+        META_Object(Testing, NativeTrack)
+        osg::Callback* getAsCallback() override { return this; }
+        KfTransform getCurrentTransformation(osg::NodeVisitor* visitor) override
+        {
+            if (mThrow) throw std::runtime_error("native track sample failed");
+            ++mObserved->mSamples;
+            const float time = hasInput() ? getInputValue(visitor) : 0;
+            mObserved->mTime = time;
+            auto result = mPose;
+            if (result.mTranslation) *result.mTranslation += mVelocity * time;
+            return result;
+        }
+        void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
+        {
+            auto* bone = dynamic_cast<NifOsg::MatrixTransform*>(node);
+            const auto pose = getCurrentTransformation(visitor);
+            if (pose.mTranslation) bone->setTranslation(*pose.mTranslation);
+            if (pose.mRotation) bone->setRotation(*pose.mRotation);
+            if (pose.mScale) bone->setScale(*pose.mScale);
+            traverse(node, visitor);
+        }
+    };
+
     class TestAnimation : public MWRender::Animation
     {
     public:
@@ -109,6 +144,25 @@ namespace
         void rebuildControllers() { resetActiveGroups(); }
         void bindRoots(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
         { bindNativeReactionRoot(sequences); }
+        osg::ref_ptr<SceneUtil::KeyframeHolder> addNativeSource(
+            std::string group, osg::ref_ptr<NativeTrack> track, std::uint8_t priority)
+        {
+            osg::ref_ptr<SceneUtil::KeyframeHolder> holder = new SceneUtil::KeyframeHolder;
+            holder->mTextKeys.emplace(0.f, group + ": start");
+            holder->mTextKeys.emplace(10.f, group + ": stop");
+            SceneUtil::ControllerSequenceMetadata sequence;
+            sequence.mGroup = group;
+            sequence.mTimelineStop = sequence.mStopTime = 10;
+            sequence.mTransformPriorities.emplace_back(mBone->getName(), priority);
+            holder->mControllerSequences.push_back(std::move(sequence));
+            holder->mKeyframeControllers.emplace(mBone->getName(), track);
+            auto source = std::make_shared<AnimSource>();
+            source->mKeyframes = holder;
+            source->mControllerMap[0].emplace(Misc::StringUtils::lowerCase(mBone->getName()), track);
+            mAnimSources.push_back(source);
+            mSupportedAnimations.insert(std::move(group));
+            return holder;
+        }
     private:
         void addControllers() override
         {
@@ -155,6 +209,144 @@ namespace
         void traverse() { mRoot->accept(mVisitor); }
     };
 
+
+    osg::ref_ptr<NativeTrack> nativeTrack(osg::Vec3f position, float scale = 1, bool rotated = false)
+    {
+        osg::ref_ptr<NativeTrack> result = new NativeTrack;
+        result->mPose.mTranslation = position;
+        const float q = .7071067811865476f;
+        result->mPose.mRotation = rotated ? osg::Quat(0, 0, q, q) : osg::Quat();
+        result->mPose.mScale = scale;
+        return result;
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSequenceLayersUseAuthoredPriorityAndCallerFramesWithoutRebuilding)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto first = nativeTrack({1, 2, 3});
+        auto second = nativeTrack({11, 12, 13}, 2, true);
+        first->mVelocity = {2, 0, 0}; second->mVelocity = {0, 2, 0};
+        mAnimation->addNativeSource("native-idle", first, 20);
+        mAnimation->addNativeSource("native-reaction", second, 75);
+        std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"native-idle", MWRender::BlendMask_All, 0, 1, 1},
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, .25f}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        const auto builds = mAnimation->mControllerBuilds;
+        EXPECT_EQ(first->mObserved->mSamples, 0u);
+        EXPECT_FALSE(first->getSource()); EXPECT_FALSE(second->getSource());
+        traverse();
+        const auto original = mBone->getControllerTransform();
+        // Independent two-track original fixture, threshold0.
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(original.mTranslation.x()), 1071805992u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(original.mTranslation.y()), 1076968212u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(original.mTranslation.z()), 1081162516u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(original.mScale), 1065998494u);
+        EXPECT_NEAR(mBone->mRotationScale.toOsgMatrix()(0, 1), .11094956, 1e-6);
+        layers[0].mTime = .5f; layers[1].mTime = 1; layers[1].mEase = .5f;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        mFrameStamp->setFrameNumber(1); traverse();
+        EXPECT_EQ(first->mObserved->mTime, .5f); EXPECT_EQ(second->mObserved->mTime, 1);
+        EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 5);
+        EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.y(), 6);
+        const auto samples = first->mObserved->mSamples;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers({}));
+        mAnimation->mWriter->mWriteTranslation = true;
+        mFrameStamp->setFrameNumber(2); traverse();
+        EXPECT_EQ(first->mObserved->mSamples, samples);
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSequenceLayerRejectionPreservesExistingProjectionAndWinningSources)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto first = nativeTrack({1, 2, 3});
+        mAnimation->addNativeSource("native-idle", first, 20);
+        std::array<MWRender::Animation::NativeSequenceLayer, 1> layers{{{"native-idle"}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        traverse();
+        const auto builds = mAnimation->mControllerBuilds;
+        const auto callbacks = mBone->getUpdateCallback();
+        auto invalid = layers; invalid[0].mEase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(invalid), std::invalid_argument);
+        invalid = layers; invalid[0].mTime = 11;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(invalid), std::invalid_argument);
+        invalid = layers; invalid[0].mBlendMask = 0;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(invalid), std::invalid_argument);
+        invalid = layers; invalid[0].mGroup = "absent";
+        EXPECT_FALSE(mAnimation->setNativeSequenceLayers(invalid));
+        auto overrideTrack = nativeTrack({99, 99, 99});
+        auto overrideSource = mAnimation->addNativeSource("native-idle", overrideTrack, 75);
+        overrideSource->mControllerSequences.push_back(overrideSource->mControllerSequences.front());
+        EXPECT_FALSE(mAnimation->setNativeSequenceLayers(layers));
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        EXPECT_EQ(mBone->getUpdateCallback(), callbacks);
+        mFrameStamp->setFrameNumber(1); traverse();
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+        EXPECT_EQ(first->mObserved->mSamples, 2u);
+        EXPECT_EQ(overrideTrack->mObserved->mSamples, 0u);
+        mAnimation->removeFromScene();
+        mFrameStamp->setFrameNumber(2); traverse();
+        EXPECT_EQ(first->mObserved->mSamples, 2u);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSequenceFramesSampleAnimatedPhysicalTargetsAndReleaseWithoutReplay)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto first = nativeTrack({1, 2, 3}); auto second = nativeTrack({11, 12, 13});
+        mAnimation->addNativeSource("native-idle", first, 20);
+        mAnimation->addNativeSource("native-reaction", second, 75);
+        std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"native-idle", MWRender::BlendMask_All, 0, 1, 1},
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, .25f}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        traverse();
+        const auto placement = Nif::NiTransform::getIdentity();
+        auto prepared = mAnimation->prepareNativePhysicalPose(mGraph, placement,
+            MWRender::PhysicalPoseAnimation::AnimatedTargets);
+        ASSERT_TRUE(prepared); ASSERT_TRUE(mAnimation->commitPhysicalPose(*prepared));
+        mAnimation->applyPhysicalPose(std::vector<NifBullet::RagdollBoneWorldPose>{
+            {8, osg::Matrixf::translate(99, 0, 0)}}, placement);
+        const auto physical = mBone->getMatrix();
+        layers[1].mEase = .5f;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        auto sampled = mAnimation->samplePhysicalAnimationTarget(placement, mVisitor);
+        ASSERT_EQ(sampled.size(), 1u);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(static_cast<float>(sampled[0].mPose.getTrans().x())), 1082829483u);
+        EXPECT_EQ(mBone->getMatrix(), physical);
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers({}));
+        const auto count = first->mObserved->mSamples;
+        mAnimation->endPhysicalPose();
+        mAnimation->mWriter->mWriteTranslation = true;
+        mFrameStamp->setFrameNumber(1); traverse();
+        EXPECT_EQ(first->mObserved->mSamples, count);
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, NativeSequenceControllerStagesSamplesAndCopiesIndependentFrames)
+    {
+        auto first = nativeTrack({1, 2, 3}); auto second = nativeTrack({11, 12, 13});
+        auto a = std::make_shared<MWRender::NativeSequenceFrame>();
+        auto b = std::make_shared<MWRender::NativeSequenceFrame>(); b->mEase = .5f;
+        osg::ref_ptr<MWRender::NativeSequenceController> controller = new MWRender::NativeSequenceController(
+            {{first, a, 20}, {second, b, 75}}, 0, false);
+        second->mThrow = true;
+        const auto before = mBone->getMatrix();
+        EXPECT_THROW((*controller)(mBone, &mVisitor), std::runtime_error);
+        EXPECT_EQ(mBone->getMatrix(), before);
+        b->mEase = 0;
+        ASSERT_NO_THROW((*controller)(mBone, &mVisitor));
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+        second->mThrow = false; b->mEase = .5f;
+        osg::ref_ptr<MWRender::NativeSequenceController> copied
+            = osg::clone(controller.get(), osg::CopyOp::SHALLOW_COPY);
+        b->mEase = 1;
+        (*controller)(mBone, &mVisitor);
+        EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(11, 12, 13));
+        (*copied)(mBone, &mVisitor);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(mBone->getControllerTransform().mTranslation.x()), 1082829483u);
+    }
 
     TEST_F(PhysicalPoseAnimationTest, PreparedOwnershipLeavesCallbacksLiveUntilCommitWithoutControllerRebuild)
     {

@@ -133,6 +133,15 @@ namespace MWRender
         using BoneGroup = MWRender::BoneGroup;
         using AnimPriority = MWRender::AnimPriority;
 
+        struct NativeSequenceLayer
+        {
+            std::string mGroup;
+            int mBlendMask = BlendMask_All;
+            float mTime = 0;
+            float mWeight = 1;
+            float mEase = 1;
+        };
+
         class TextKeyListener
         {
         public:
@@ -174,7 +183,14 @@ namespace MWRender
             float getValue(osg::NodeVisitor* nv) override { return 0.f; }
         };
 
-        struct AnimSource;
+        struct AnimSource
+        {
+            osg::ref_ptr<const SceneUtil::KeyframeHolder> mKeyframes;
+            using ControllerMap = std::map<std::string, osg::ref_ptr<SceneUtil::KeyframeController>>;
+            ControllerMap mControllerMap[sNumBlendMasks];
+            const SceneUtil::TextKeyMap& getTextKeys() const;
+            osg::ref_ptr<const SceneUtil::AnimBlendRules> mAnimBlendRules;
+        };
 
         struct AnimState
         {
@@ -212,6 +228,12 @@ namespace MWRender
 
         typedef std::vector<std::shared_ptr<AnimSource>> AnimSourceList;
         AnimSourceList mAnimSources;
+        std::shared_ptr<AnimSource> nativeSequenceSource(std::string_view group);
+        std::vector<NativeSequenceLayer> mNativeSequenceLayers;
+        std::vector<std::shared_ptr<AnimSource>> mNativeSequenceSources;
+        std::vector<std::shared_ptr<NativeSequenceFrame>> mNativeSequenceFrames;
+        ActiveControllersVector mNativeSequenceControllers;
+        void releaseNativeSequenceLayers() noexcept;
 
         std::unordered_set<std::string> mSupportedAnimations;
         struct LazyAnimSource
@@ -528,6 +550,14 @@ namespace MWRender
         // runAnimation call. Text keys and root motion still traverse normally.
         // Missing groups return false; invalid times or looping groups throw.
         bool setAnimationFrameTime(std::string_view groupname, float time);
+
+        // Project explicit native sequence samples, in occupied-slot order.
+        // Uses each winning KF's per-node priority and node blend settings.
+        // The caller owns lifecycle, event traversal, root motion and clocks;
+        // this method neither plays events nor allocates combat actions.
+        // Missing/ambiguous sources return false without replacing the plan.
+        // Malformed frames throw. Empty input releases the projection.
+        bool setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers);
 
         /** Disables the specified animation group;
          * \param groupname Animation group to disable.

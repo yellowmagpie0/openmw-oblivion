@@ -1,0 +1,251 @@
+{
+  "status": "Native sampled-sequence pose projection implemented and verified; reaction controller/lifecycle/contact integration and full M15S4 remain incomplete",
+  "code_state": {
+    "head": "6ae45f660cfa600269aec8117d65807d54e84bb7",
+    "source_fingerprint": "08a9941b447f06963e5981bccd509204bab97ea2304a067cca3691b64b85ed61"
+  },
+  "tested_source_sha256": {
+    "apps/components_tests/CMakeLists.txt": "4e8edf14684687298c180ba178e4eb42cd7de98f6a1dd0df6b427ac6c8b4384c",
+    "apps/components_tests/esm4/animationblend.cpp": "5a596462bf81500a77e75887bc042d50cb2cde101d1331975ed113ababb2118a",
+    "apps/components_tests/nifosg/testnifloader.cpp": "eb20ed2422c95a3abd956d46b32d4923c92069b81900a5bdc5e0a1d504e4eb5c",
+    "apps/openmw/mwrender/animation.cpp": "3354d2cb7cb13bee707acc2d322a077d1e3f5e0a22128a141ae23521e594b83b",
+    "apps/openmw/mwrender/animation.hpp": "9363c9db6c62929438ebfcbf9c1d96b7513c34e8897afdfdbc3f62f8070b0e8a",
+    "apps/openmw/mwrender/animblendcontroller.cpp": "c31bdec45e0fa1f6492236e29be34c143ddf4dda9c6f5d790467e51a22460024",
+    "apps/openmw/mwrender/animblendcontroller.hpp": "d0e4aba4fd9ef7332d524ddbdba5b3322d4da6ae6f917560e4bf52746ac8fbc1",
+    "apps/openmw_tests/mwrender/testphysicalpose.cpp": "b85538619bee80543daea206d51e21797ca4a893ab0de56e84838eba8720c99a",
+    "components/CMakeLists.txt": "81584bef19870311d1f11819b735e131e1ea26d277079ef4bc4517476ef272ae",
+    "components/esm4/animationblend.cpp": "ec5aa880ca38448f2fbdac4afb9629341110daf9ea9ce435517c578280928604",
+    "components/esm4/animationblend.hpp": "07c90e3e440767a922d5a424526b15d4dfdd215374858bcc23c47ba6bdebd5b0",
+    "components/nifosg/nifloader.cpp": "83ecabbf392268d9a0bff8dc70da295833e280a9987c6e6eac18a67a3ee83d60",
+    "components/sceneutil/keyframe.hpp": "f0b04aeecc41740b4522e58ceba5de3f3d9865b26451de6683a388be2d507e16",
+    "scripts/data/oblivion_compat/m15_native_sequence_blend_expected.json": "e148b11c1fe1fbd5e8fb60d3a5df0f990a69d8d52779ff70b631b2ca57927940"
+  },
+  "implemented": [
+    "Winning KF metadata preserves raw authored weight and ordered transform target/priority bytes, including duplicate names. Imported node blend thresholds/only-highest flags survive inactive controllers; ambiguous bindings are explicit.",
+    "Original one/two/many-slot normalization, signed priority comparison, threshold distinctions and optional translation/quaternion/scale composition use native float stores. The two-slot threshold path intentionally retains its observed double write to the second weight.",
+    "Animation.setNativeSequenceLayers projects caller-owned ordered track samples through actual NIF callbacks. It uses current/winning sources and raw per-node priorities, samples private track clones, updates equal-topology frame values without rebuilding, and rejects missing/ambiguous or malformed requests before replacing the plan.",
+    "Sampling finishes before node channel publication. Callback copies have independent frames; zero-weight tracks are not sampled. Projection participates in animated physical-target sampling and releases on model/scene teardown."
+  ],
+  "build_checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-normal-03/verification.json",
+      "sha256": "58c5104c09002fc2b1cd898ea995df39585309d676b9ad028fe873b1f34610ed",
+      "results": {
+        "components": {
+          "executed": 2947,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a0b13c4b78ab20b63943b4f073974c22666fdfd7cebc11c1f922ae37335f9383",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9d0660b41660f37cdbbe1751e9f82b7933f5a16dd0d1edc51fd1355d08f0762f",
+          "inventory_sha256": "454118ca8b8ae5193a331cd21b07ba0c6aac838da194f72888f70b9be83cd73c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1745,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "906079890a1005ab68a4e23df21922b792944ab1d55a030d1737567002b2e1bd",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "c5fc0e81a9367b10ac44b64275d5feec1d98dcf47ced83907d1373109f34f239",
+          "inventory_sha256": "79991fbf0d19ad5a8232c9349cc9837eeebdf39ec5a94d984d247612545586ac",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-sanitized-03/verification.json",
+      "sha256": "aed4286132cfd8aa58dfc42e7b929b10c006b4198fa306f2df8df21c491c190c",
+      "results": {
+        "sanitize": {
+          "executed": 800,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "77b854cd00197d88628e030dc241d168938c3c1a12fa34a9d0f2919da9c4c240",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "658c5644b9b73d5bf910b0dfd0d5f9717fdba80163849ac3eb5aedc129e930f7",
+          "inventory_sha256": "4ff69491ffb004e8c34e86310f35b05acec2a03d505cc5e359c28662b4a5efd9",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1745,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "60b0395a60d25ee9035469b470525b445bfc8f40d96a382de65e728e59c75a86",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ae8371678e66760e1220a5063e7065711f358414e77cd6e1d8c0696db7a53619",
+          "inventory_sha256": "79991fbf0d19ad5a8232c9349cc9837eeebdf39ec5a94d984d247612545586ac",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "source_unchanged_during_each_check": true,
+  "warning_free": false,
+  "warning_scope": "Existing runtime-state/World-test macro warnings and GCC maybe-uninitialized warning in unchanged AnimationQueueEntry code remain; no warning-free or leak-coverage claim.",
+  "independent_original_comparison": {
+    "native_report": {
+      "path": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/blend-transform-verification-03.json",
+      "sha256": "c4c889c245efc814eb74602fd04aab013dd3b50b7deddbd8f35b738321e84f7b"
+    },
+    "native_summary": {
+      "passed": true,
+      "contexts": 10720,
+      "observations": 21440,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "1abbdbc59b8c5e6816b0f98e4a696e2e13da4308cd1b9e44a30ba950595b99f7",
+      "executed_calls": [
+        "0x6c6dc0",
+        "0x6cbc10",
+        "0x6cbdf0",
+        "0x6cbee0",
+        "0x6cc3a0",
+        "0x6cc4e0",
+        "0x6cc5c0",
+        "0x6cc900",
+        "0x6cd0f0",
+        "0x6d60b0",
+        "0x6eba00"
+      ],
+      "atomic_increment_calls": 74844,
+      "boundary": "Preallocated eight-entry array, caller-supplied constant-transform interpolators and manager-controlled sequence records. Windows InterlockedIncrement implemented as atomic refcount increment; no game function stubs. Original constructor, real slot insertion, nonempty sequence application, blend virtual update, normalization, constant-transform evaluation and composition execute. No geometry, skeleton animation policy, slot retirement, input or gameplay acceptance."
+    },
+    "probe": {
+      "path": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/blend-transform-probe-03.py",
+      "sha256": "4ebbdb68aab115cb5c49c853a97aec275c522d2fd2ba351f1366d17774a0a4f8"
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/blend-transform-corpus-03.json",
+      "sha256": "1abbdbc59b8c5e6816b0f98e4a696e2e13da4308cd1b9e44a30ba950595b99f7"
+    },
+    "comparison": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/attempt03.json",
+      "sha256": "32f8c8bf76b9e4a3b97220a98a9f3727c9b3e78567f06283a96c0fbef7b548b9"
+    },
+    "comparison_log": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/attempt03.log",
+      "sha256": "7b9f96d1c06113a6185d461bdaac8aa90504ac28f21514362fdb61e4d1d4677f"
+    },
+    "comparison_program": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/compare.cpp",
+      "sha256": "cbdf78b3785d5ad98d5b8703a06ffffa93d70b3f2c3d78211d3f3f61a755cc1c"
+    },
+    "comparison_binary": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/compare-02",
+      "sha256": "8fb5a9cf0b3df3974463b962ca7dff36e382141965047c42d01f2d7944c1a98c"
+    },
+    "compiler_arguments": [
+      "c++",
+      "-std=c++20",
+      "-O2",
+      "-I.",
+      "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/compare.cpp",
+      "components/esm4/animationblend.cpp",
+      "-o",
+      "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/compare-02"
+    ],
+    "expected_protocol": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/expected-03.txt",
+      "sha256": "5be97f3c9e859cc55fd78ebeffc082872d9853030debacc2a0df4d044d5a5d61"
+    },
+    "observations": 21440,
+    "mismatches": 0,
+    "both_x87_precision_words_agree": true,
+    "editable_component_expectations": {
+      "path": "scripts/data/oblivion_compat/m15_native_sequence_blend_expected.json",
+      "sha256": "e148b11c1fe1fbd5e8fb60d3a5df0f990a69d8d52779ff70b631b2ca57927940"
+    },
+    "component_cases": 18,
+    "scope": "Original constructor, actual slot insertion, nonempty manager-controlled application, virtual transform update, normalization and composition. Synthetic constant tracks/preallocated storage; OS atomic refcount boundary. Exact normalized weights, channel presence, valid pose float32 bits and return status. No geometry, KF interpolation, native group/variant selection, input, clock retirement or gameplay acceptance."
+  },
+  "renderer_tests": [
+    "PhysicalPoseAnimationTest.NativeSequenceLayersUseAuthoredPriorityAndCallerFramesWithoutRebuilding",
+    "PhysicalPoseAnimationTest.NativeSequenceLayerRejectionPreservesExistingProjectionAndWinningSources",
+    "PhysicalPoseAnimationTest.NativeSequenceFramesSampleAnimatedPhysicalTargetsAndReleaseWithoutReplay",
+    "PhysicalPoseAnimationTest.NativeSequenceControllerStagesSamplesAndCopiesIndependentFrames"
+  ],
+  "static_stock_assets": {
+    "base_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/assets.json",
+      "sha256": "4a3d5d1e11f291d97fd191fe55e10d9ad4b82af27c808cfb8e1e720ad72a5fcb"
+    },
+    "variant_audit": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/variants.json",
+      "sha256": "8264b4d57a2ee3c67871223619322cff8ba79d42b2c542daaad3cf10c619f382"
+    },
+    "variant_audit_program": {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/audit-variants.py",
+      "sha256": "0812c60caccba4dcf4757c75cfa068f76fbbdb8feb95962a1c2423b86c9d3007"
+    },
+    "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "scope": "Raw installed base archive only, using the existing generic NIF parser. Male/first-person skeletons have no authored blend interpolators; sampled KFs have weight1 and distinct per-bone priorities. Weapon recoil filenames have numbered variants. This does not prove native variant selection, RNG, overrides, runtime admission or playback."
+  },
+  "retained_failures": [
+    {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/attempt01.json",
+        "sha256": "0836f05e076cd8ea67ab846e55af85eb22794f2049b3cdc557a3db09ecd50a9b"
+      },
+      "reason": "216 original comparisons exposed an inverted static reading of the multiple-high-priority branch; corrected before passing02/03 comparisons. Source snapshots/log retained."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-sequence-blend-normal-01/verification.json",
+        "build/oblivion-compat/m15/S4/native-sequence-blend-sanitized-01/verification.json"
+      ],
+      "reason": "New synthetic NIF fixture used unresolved RecordPtr defaults rather than post-read null links. Normal crashed; sanitizer asserted. Explicit null fixture links fixed this; production parser unchanged."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-sequence-blend-normal-02/verification.json",
+        "build/oblivion-compat/m15/S4/native-sequence-blend-sanitized-02/verification.json"
+      ],
+      "reason": "Components passed2947/800; engine test compilation caught a double coordinate used in a float32 bit_cast. Added the explicit float conversion in the assertion before fresh03 checks."
+    }
+  ],
+  "remaining_integration": [
+    "CharacterController does not yet call the pose projection; normal contact adapters do not yet generate owned reaction descriptors. No new application/runtime course exercises this renderer API.",
+    "Service must own and persist inactive reaction state until the following actor-prefix recovery, outgoing/replaced sequence layers, clocks and actual retirement. Renderer projection itself owns no events, root motion, combat action IDs, RNG or lifecycle.",
+    "Audit actual family/numbered-variant group resolution and RNG. Existing ReactionOnly and Expert/Master admission guards remain.",
+    "Complete all S4 mastery/effect, interruption/control/view/FPS, normal opponent and in-action restart/combined-course gates."
+  ],
+  "application_runtime_acceptance": false,
+  "owned_reaction_runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}

@@ -2,13 +2,16 @@
 #define OPENMW_MWRENDER_ANIMBLENDCONTROLLER_H
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <osgAnimation/Bone>
 
 #include <components/nifosg/matrixtransform.hpp>
+#include <components/esm4/animationblend.hpp>
 #include <components/sceneutil/animblendrules.hpp>
 #include <components/sceneutil/controller.hpp>
 #include <components/sceneutil/keyframe.hpp>
@@ -16,6 +19,38 @@
 
 namespace MWRender
 {
+    // Borrowed frame projection. Combat/animation authority supplies the clock,
+    // activation weight and ease; this source invents no timer or lifecycle.
+    struct NativeSequenceFrame : SceneUtil::ControllerSource
+    {
+        float mTime = 0;
+        float mWeight = 1;
+        float mEase = 1;
+        float getValue(osg::NodeVisitor*) override { return mTime; }
+    };
+
+    class NativeSequenceController
+        : public SceneUtil::NodeCallback<NativeSequenceController, NifOsg::MatrixTransform*>
+    {
+    public:
+        struct Track
+        {
+            osg::ref_ptr<SceneUtil::KeyframeController> mController;
+            std::shared_ptr<NativeSequenceFrame> mFrame;
+            std::uint8_t mPriority = 0;
+        };
+        NativeSequenceController() = default;
+        NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest);
+        NativeSequenceController(const NativeSequenceController& other, const osg::CopyOp& copy);
+        META_Object(MWRender, NativeSequenceController)
+        void operator()(NifOsg::MatrixTransform* node, osg::NodeVisitor* visitor);
+
+    private:
+        std::vector<Track> mTracks;
+        float mThreshold = 0;
+        bool mOnlyHighest = false;
+    };
+
     typedef float (*EasingFn)(float);
 
     struct AnimBlendStateData

@@ -6,6 +6,8 @@
 #include <osgAnimation/Bone>
 
 #include <cassert>
+#include <cmath>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -294,6 +296,80 @@ namespace MWRender
             applyBoneBlend(node);
 
         SceneUtil::NodeCallback<BoneAnimBlendController, osgAnimation::Bone*>::traverse(node, nv);
+    }
+
+    NativeSequenceController::NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest)
+        : mTracks(std::move(tracks)), mThreshold(threshold), mOnlyHighest(onlyHighest)
+    {
+        for (const auto& track : mTracks)
+            if (!track.mController || !track.mFrame)
+                throw std::invalid_argument("native sequence track requires a controller and frame");
+        std::vector<ESM4::SequenceBlendWeight> weights;
+        for (const auto& track : mTracks)
+            weights.push_back({track.mFrame->mWeight, track.mFrame->mEase, track.mPriority});
+        (void)ESM4::normalizeSequenceBlendWeights(weights, mThreshold, mOnlyHighest);
+        for (auto& track : mTracks) track.mController->setSource(track.mFrame);
+    }
+
+    NativeSequenceController::NativeSequenceController(const NativeSequenceController& other, const osg::CopyOp& copy)
+        : SceneUtil::NodeCallback<NativeSequenceController, NifOsg::MatrixTransform*>(other, copy)
+        , mThreshold(other.mThreshold), mOnlyHighest(other.mOnlyHighest)
+    {
+        for (const auto& track : other.mTracks)
+        {
+            Track cloned{osg::clone(track.mController.get(), copy),
+                std::make_shared<NativeSequenceFrame>(*track.mFrame), track.mPriority};
+            cloned.mController->getAsCallback()->setNestedCallback(nullptr);
+            cloned.mController->setSource(cloned.mFrame);
+            mTracks.push_back(std::move(cloned));
+        }
+    }
+
+    void NativeSequenceController::operator()(NifOsg::MatrixTransform* node, osg::NodeVisitor* visitor)
+    {
+        std::vector<ESM4::SequenceBlendWeight> weights;
+        weights.reserve(mTracks.size());
+        for (const auto& track : mTracks)
+        {
+            if (!std::isfinite(track.mFrame->mTime))
+                throw std::invalid_argument("nonfinite native sequence renderer time");
+            weights.push_back({track.mFrame->mWeight, track.mFrame->mEase, track.mPriority});
+        }
+        const auto normalized = ESM4::normalizeSequenceBlendWeights(weights, mThreshold, mOnlyHighest);
+        std::vector<ESM4::SequenceBlendPose> poses(mTracks.size());
+        for (std::size_t i = 0; i < mTracks.size(); ++i)
+        {
+            if (normalized[i] == 0) continue;
+            const auto sampled = mTracks[i].mController->getCurrentTransformation(visitor);
+            auto& pose = poses[i];
+            if (sampled.mTranslation)
+            {
+                const auto& value = *sampled.mTranslation;
+                pose.mTranslation = std::array<float, 3>{value.x(), value.y(), value.z()};
+            }
+            if (sampled.mRotation)
+            {
+                const auto& value = *sampled.mRotation;
+                pose.mRotation = std::array<float, 4>{static_cast<float>(value.w()), static_cast<float>(value.x()),
+                    static_cast<float>(value.y()), static_cast<float>(value.z())};
+            }
+            pose.mScale = sampled.mScale;
+        }
+        // Finish every sample/validation before publishing any node channel.
+        const auto pose = ESM4::blendSequenceTransforms(poses, normalized);
+        if (pose.mRotation)
+        {
+            const auto& value = *pose.mRotation;
+            node->setRotation(osg::Quat(value[1], value[2], value[3], value[0]));
+        }
+        else node->setRotation(node->mRotationScale);
+        if (pose.mTranslation)
+        {
+            const auto& value = *pose.mTranslation;
+            node->setTranslation(osg::Vec3f(value[0], value[1], value[2]));
+        }
+        if (pose.mScale) node->setScale(*pose.mScale);
+        traverse(node, visitor);
     }
 
     void NifAnimBlendController::operator()(NifOsg::MatrixTransform* node, osg::NodeVisitor* nv)

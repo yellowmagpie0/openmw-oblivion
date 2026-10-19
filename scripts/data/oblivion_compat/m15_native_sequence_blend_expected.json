@@ -1,0 +1,1089 @@
+{
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "corpus_sha256": "82c54628e03600055135d72661869599b6a38b075cadab10f8f08fe2ebd6f4bf",
+  "scope": "Independent original constructor, real slot insertion, nonempty sequence application and virtual blend update. Synthetic constant transforms, preallocated storage and OS atomic refcount boundary; no production C++ used to obtain expectations. Both x87 precision words agree. Pose fields: translation xyz, quaternion wxyz, scale. Missing channel sentinel bits4286578687; quaternion validity marker is x. One-slot expected weight1 describes the direct single-interpolator path; its normalized slot memory is not read by that path.",
+  "cases": [
+    {
+      "name": "two_priority_fade_threshold_0.0",
+      "original_case": 1038,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 75,
+          "weight": 1.0,
+          "ease": 0.25,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1064062662,
+        1033734617
+      ],
+      "expected_pose_bits": [
+        1071805992,
+        1076968212,
+        1081162516,
+        1065327301,
+        0,
+        0,
+        1029936004,
+        1065998494
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "two_priority_fade_threshold_0.1",
+      "original_case": 1040,
+      "threshold": 0.1,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 75,
+          "weight": 1.0,
+          "ease": 0.25,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1064062662,
+        1065353216
+      ],
+      "expected_pose_bits": [
+        1094632684,
+        1096649177,
+        1098665669,
+        1063967639,
+        0,
+        0,
+        1053539914,
+        1077613490
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "two_equal_priority",
+      "original_case": 4116,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1082829483,
+        1084926635,
+        1087023787,
+        1064808598,
+        0,
+        0,
+        1048667427,
+        1068149419
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "two_highest_tie_prefers_first",
+      "original_case": 4123,
+      "threshold": 0.0,
+      "only_highest": true,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1065353216,
+        0
+      ],
+      "expected_pose_bits": [
+        1065353216,
+        1073741824,
+        1077936128,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "two_signed_priorities",
+      "original_case": 5652,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 128,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 255,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1082829483,
+        1084926635,
+        1087023787,
+        1064808598,
+        0,
+        0,
+        1048667427,
+        1068149419
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "zero_weight_full_ease_priority_shortcut",
+      "original_case": 1818,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 75,
+          "weight": 0.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1065353216,
+        0
+      ],
+      "expected_pose_bits": [
+        1065353216,
+        1073741824,
+        1077936128,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "missing_translation",
+      "original_case": 8556,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            4286578687,
+            4286578687,
+            4286578687,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1093664769,
+        1094713345,
+        1095761922,
+        1064808598,
+        0,
+        0,
+        1048667427,
+        1068149419
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "missing_rotation",
+      "original_case": 8564,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1082829483,
+        1084926635,
+        1087023787,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1068149419
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "missing_scale",
+      "original_case": 8580,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            4286578687
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1082829483,
+        1084926635,
+        1087023787,
+        1064808598,
+        0,
+        0,
+        1048667427,
+        1073741825
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "missing_all",
+      "original_case": 8604,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687,
+            4286578687
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1093664769,
+        1094713345,
+        1095761922,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1073741825
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "quaternion_hemisphere",
+      "original_case": 8549,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1088421888,
+            3238002688,
+            1091567616,
+            3207922931,
+            0,
+            0,
+            3207922931,
+            1077936128
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1059760811,
+        1051372203
+      ],
+      "expected_pose_bits": [
+        1092266667,
+        1084926634,
+        1094363819,
+        1060439284,
+        0,
+        0,
+        1060439284,
+        1075139926
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "single_bypasses_zero_weight_and_ease",
+      "original_case": 7680,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 0.0,
+          "ease": 0.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1065353216
+      ],
+      "expected_pose_bits": [
+        1065353216,
+        1073741824,
+        1077936128,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "multiple_high_priority_suppresses_lower",
+      "original_case": 8070,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 75,
+          "weight": 0.25,
+          "ease": 0.25,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 0.25,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 75,
+          "weight": 0.25,
+          "ease": 0.25,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1056964608,
+        0,
+        1056964608
+      ],
+      "expected_pose_bits": [
+        3217031168,
+        1080033280,
+        3217031168,
+        1060439283,
+        1060439283,
+        0,
+        0,
+        1061158912
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "inactive_high_priority_allows_lower",
+      "original_case": 8064,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 75,
+          "weight": 0.25,
+          "ease": 0.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 0.25,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 75,
+          "weight": 0.25,
+          "ease": 0.0,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        0,
+        1065353216,
+        0
+      ],
+      "expected_pose_bits": [
+        1093664768,
+        1094713344,
+        1095761920,
+        1060439284,
+        0,
+        0,
+        1060439284,
+        1073741824
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "three_zero_weight_highest_selects_first",
+      "original_case": 7897,
+      "threshold": 0.0,
+      "only_highest": true,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 0.0,
+          "ease": 0.0,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 0.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 0.0,
+          "ease": 0.0,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1065353216,
+        0,
+        0
+      ],
+      "expected_pose_bits": [
+        1065353216,
+        1073741824,
+        1077936128,
+        1065353216,
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "three_equal_priority_threshold",
+      "original_case": 7954,
+      "threshold": 0.5,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.25,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.25,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        0,
+        1065353216,
+        0
+      ],
+      "expected_pose_bits": [
+        1093664768,
+        1094713344,
+        1095761920,
+        1060439284,
+        0,
+        0,
+        1060439284,
+        1073741824
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "four_priority_levels",
+      "original_case": 8220,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 0.25,
+          "ease": 0.5,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 30,
+          "weight": 0.25,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 40,
+          "weight": 0.25,
+          "ease": 0.5,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        },
+        {
+          "priority": 50,
+          "weight": 0.25,
+          "ease": 1.0,
+          "pose_bits": [
+            1088421888,
+            3238002688,
+            1091567616,
+            3207922931,
+            0,
+            0,
+            3207922931,
+            1077936128
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        0,
+        0,
+        0,
+        1065353216
+      ],
+      "expected_pose_bits": [
+        1088421888,
+        3238002688,
+        1091567616,
+        3207922932,
+        0,
+        0,
+        3207922932,
+        1077936128
+      ],
+      "expected_valid": true
+    },
+    {
+      "name": "five_weighted_quaternions",
+      "original_case": 8388,
+      "threshold": 0.0,
+      "only_highest": false,
+      "slots": [
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            1065353216,
+            1073741824,
+            1077936128,
+            1065353216,
+            0,
+            0,
+            0,
+            1065353216
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1093664768,
+            1094713344,
+            1095761920,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1073741824
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            3229614080,
+            1084227584,
+            3233808384,
+            0,
+            1065353216,
+            0,
+            0,
+            1056964608
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 1.0,
+          "pose_bits": [
+            1088421888,
+            3238002688,
+            1091567616,
+            3207922931,
+            0,
+            0,
+            3207922931,
+            1077936128
+          ]
+        },
+        {
+          "priority": 20,
+          "weight": 1.0,
+          "ease": 0.5,
+          "pose_bits": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1065353216,
+            0,
+            1065353216
+          ]
+        }
+      ],
+      "expected_weight_bits": [
+        1041385765,
+        1049774373,
+        1041385765,
+        1049774373,
+        1041385765
+      ],
+      "expected_pose_bits": [
+        1083628398,
+        1074341011,
+        1086025144,
+        1061511149,
+        1045313629,
+        1045313629,
+        1058132438,
+        1071944266
+      ],
+      "expected_valid": true
+    }
+  ]
+}

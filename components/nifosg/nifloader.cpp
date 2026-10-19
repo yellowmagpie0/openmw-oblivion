@@ -511,6 +511,7 @@ namespace NifOsg
                     metadata.mCycleType = static_cast<std::uint32_t>(embedded.mExtrapolationMode);
                     metadata.mTimelineStart = timeline.mTimelineStart;
                     metadata.mTimelineStop = timeline.mTimelineStop;
+                    metadata.mWeight = embedded.mWeight;
                     if (!embedded.mTextKeys.empty()
                         && embedded.mTextKeys->mRecordType == Nif::RC_NiTextKeyExtraData)
                     {
@@ -519,7 +520,6 @@ namespace NifOsg
                         for (const auto& key : keys->mList)
                             metadata.mTextKeys.emplace_back(key.mTime, key.mText);
                     }
-                    target.mControllerSequences.push_back(std::move(metadata));
                     target.mTextKeys.emplace(timeline.mTimelineStart, group + ": start");
                     target.mTextKeys.emplace(timeline.mTimelineStop, group + ": stop");
                     if (!embedded.mTextKeys.empty()
@@ -538,9 +538,11 @@ namespace NifOsg
                         const std::string& node = block.mNodeName.empty() ? block.mTargetName : block.mNodeName;
                         if (node.empty())
                             continue;
+                        metadata.mTransformPriorities.emplace_back(node, block.mPriority);
                         tracks[node].push_back({ timeline.mTimelineStart, timeline.mTimelineStop, embedded.mStartTime,
                             embedded.mStopTime, block.mInterpolator.getPtr() });
                     }
+                    target.mControllerSequences.push_back(std::move(metadata));
                 }
 
                 for (auto& [node, nodeTracks] : tracks)
@@ -1293,6 +1295,25 @@ namespace NifOsg
         {
             for (Nif::NiTimeControllerPtr ctrl = nifNode->mController; !ctrl.empty(); ctrl = ctrl->mNext)
             {
+                if (ctrl->mRecordType == Nif::RC_NiKeyframeController)
+                {
+                    const auto* key = static_cast<const Nif::NiKeyframeController*>(ctrl.getPtr());
+                    if (!key->mInterpolator.empty()
+                        && key->mInterpolator->mRecordType == Nif::RC_NiBlendTransformInterpolator)
+                    {
+                        const auto* blend = static_cast<const Nif::NiBlendTransformInterpolator*>(
+                            key->mInterpolator.getPtr());
+                        float previous = 0;
+                        if (node->getUserValue("nativeSequenceBlendThreshold", previous))
+                            node->setUserValue("nativeSequenceBlendAmbiguous", true);
+                        else
+                        {
+                            node->setUserValue("nativeSequenceBlendThreshold", blend->mWeightThreshold);
+                            node->setUserValue("nativeSequenceBlendOnlyHighest",
+                                bool(blend->mFlags & Nif::NiBlendInterpolator::Flag_OnlyUseHighestWeight));
+                        }
+                    }
+                }
                 if (!ctrl->isActive())
                     continue;
                 if (ctrl->mRecordType == Nif::RC_NiKeyframeController)

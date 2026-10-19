@@ -77,6 +77,11 @@ namespace SceneUtil
         float mTimelineStart = 0;
         float mTimelineStop = 0;
         std::vector<std::pair<float, std::string>> mTextKeys;
+        // Native sequence mixing uses the authored weight and each transform
+        // block's priority. Keep raw names/order/duplicates for the consumer;
+        // a map would silently choose a priority for ambiguous bindings.
+        float mWeight = 1;
+        std::vector<std::pair<std::string, std::uint8_t>> mTransformPriorities;
         friend bool operator==(const ControllerSequenceMetadata&, const ControllerSequenceMetadata&) = default;
     };
 

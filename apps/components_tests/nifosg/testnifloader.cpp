@@ -462,6 +462,58 @@ osg::Group {
         EXPECT_EQ(visitor.count, 1u);
     }
 
+    struct ESM4NativeBlendLoaderTest : NifOsgLoaderTest {};
+
+    TEST_F(ESM4NativeBlendLoaderTest, RetainsInactiveControllerSettingsAndAmbiguity)
+    {
+        for (bool duplicate : {false, true})
+        {
+            Nif::NiNode node{};
+            init(node);
+            node.mRecordType = Nif::RC_NiNode;
+            Nif::NiBlendTransformInterpolator blend{};
+            blend.mRecordType = Nif::RC_NiBlendTransformInterpolator;
+            blend.mWeightThreshold = .125f;
+            blend.mFlags = Nif::NiBlendInterpolator::Flag_OnlyUseHighestWeight;
+            Nif::NiKeyframeController first{}, second{};
+            for (auto* controller : {&first, &second})
+            {
+                init(static_cast<Nif::NiTimeController&>(*controller));
+                controller->mRecordType = Nif::RC_NiKeyframeController;
+                controller->mInterpolator = &blend;
+            }
+            if (duplicate) first.mNext = &second;
+            node.mController = &first;
+            Nif::NIFFile file(testNif);
+            file.mVersion = Nif::NIFFile::VER_OB;
+            file.mRoots.push_back(&node);
+            const auto result = Loader::load(file, &mImageManager, &mMaterialManager);
+            struct Inspect : osg::NodeVisitor
+            {
+                unsigned mFound = 0;
+                bool mAmbiguous = false;
+                Inspect() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+                void apply(osg::Node& value) override
+                {
+                    float threshold = 0;
+                    if (value.getUserValue("nativeSequenceBlendThreshold", threshold))
+                    {
+                        ++mFound;
+                        EXPECT_EQ(threshold, .125f);
+                        bool highest = false;
+                        EXPECT_TRUE(value.getUserValue("nativeSequenceBlendOnlyHighest", highest));
+                        EXPECT_TRUE(highest);
+                        value.getUserValue("nativeSequenceBlendAmbiguous", mAmbiguous);
+                    }
+                    traverse(value);
+                }
+            } inspect;
+            result->accept(inspect);
+            EXPECT_EQ(inspect.mFound, 1u);
+            EXPECT_EQ(inspect.mAmbiguous, duplicate);
+        }
+    }
+
     TEST(NifOsgControllerTest, multiplexesOverlappingSequenceTracksOnTheSyntheticTimeline)
     {
         auto forward = std::make_shared<Nif::FloatKeyMap>();
@@ -934,10 +986,36 @@ namespace
         sequence->mStartTime = 10;
         sequence->mStopTime = 12;
         sequence->mFrequency = 1.25f;
+        sequence->mWeight = .625f;
         sequence->mExtrapolationMode = static_cast<Nif::NiTimeController::ExtrapolationMode>(1);
         sequence->mTextKeys = keys.get();
+        auto transform = std::make_unique<Nif::NiTransformInterpolator>();
+        transform->mRecordType = Nif::RC_NiTransformInterpolator;
+        transform->mDefaultValue = Nif::NiQuatTransform::getIdentity();
+        transform->mData = nullptr;
+        auto unsupported = std::make_unique<Nif::NiFloatInterpolator>();
+        unsupported->mRecordType = Nif::RC_NiFloatInterpolator;
+        unsupported->mDefaultValue = 0;
+        unsupported->mData = nullptr;
+        Nif::ControlledBlock fallback{};
+        fallback.mTargetName = "FallbackBone";
+        fallback.mInterpolator = transform.get();
+        fallback.mController = nullptr;
+        fallback.mBlendInterpolator = nullptr;
+        fallback.mStringPalette = nullptr;
+        fallback.mPriority = 128;
+        Nif::ControlledBlock named = fallback;
+        named.mNodeName = " Bone ";
+        named.mPriority = 255;
+        Nif::ControlledBlock duplicate = named;
+        duplicate.mPriority = 1;
+        Nif::ControlledBlock ignored = named;
+        ignored.mInterpolator = unsupported.get();
+        sequence->mControlledBlocks = {fallback, named, duplicate, ignored};
         file.mRecords.push_back(std::move(sequence));
         file.mRecords.push_back(std::move(keys));
+        file.mRecords.push_back(std::move(transform));
+        file.mRecords.push_back(std::move(unsupported));
         osg::ref_ptr<SceneUtil::KeyframeHolder> holder = new SceneUtil::KeyframeHolder;
         NifOsg::Loader::loadKf(file, *holder);
         ASSERT_EQ(holder->mControllerSequences.size(), 1);
@@ -947,6 +1025,10 @@ namespace
         EXPECT_EQ(original.mStartTime, 10);
         EXPECT_EQ(original.mStopTime, 12);
         EXPECT_EQ(original.mFrequency, 1.25f);
+        EXPECT_EQ(original.mWeight, .625f);
+        const std::vector<std::pair<std::string, std::uint8_t>> priorities{
+            {"FallbackBone", 128}, {" Bone ", 255}, {" Bone ", 1}};
+        EXPECT_EQ(original.mTransformPriorities, priorities);
         EXPECT_EQ(original.mCycleType, 1u);
         EXPECT_EQ(original.mTimelineStart, 0);
         EXPECT_EQ(original.mTimelineStop, 2);
@@ -965,6 +1047,10 @@ namespace
         EXPECT_EQ(holder->mControllerSequences[0].mAccumRootName, " AuthoredRoot ");
         copied->mControllerSequences[0].mTextKeys[0].second = "changed";
         EXPECT_EQ(holder->mControllerSequences[0].mTextKeys[0].second, "Start");
+        copied->mControllerSequences[0].mWeight = 2;
+        copied->mControllerSequences[0].mTransformPriorities[0].second = 0;
+        EXPECT_EQ(original.mWeight, .625f);
+        EXPECT_EQ(original.mTransformPriorities, priorities);
         Nif::NIFFile noSequence(VFS::Path::Normalized("empty.kf"));
         noSequence.mVersion = Nif::NIFFile::VER_MW;
         osg::ref_ptr<SceneUtil::KeyframeHolder> empty = new SceneUtil::KeyframeHolder;
