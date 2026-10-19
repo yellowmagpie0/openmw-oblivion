@@ -9,9 +9,13 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include <variant>
+#include <functional>
 #include <osg/Quat>
 
 #include <components/esm/exteriorcelllocation.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadweap.hpp>
 #include <components/misc/algorithm.hpp>
 
 #include "cellstore.hpp"
@@ -174,10 +178,14 @@ namespace MWWorld
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask);
 
+        // Borrow the caller's live inputs, as the original weapon-only API did.
+        // Native weapons and shields use the same atomic loose-object admission.
+        using LooseEquipmentReference = std::variant<std::reference_wrapper<const LiveCellRef<ESM4::Weapon>>,
+            std::reference_wrapper<const LiveCellRef<ESM4::Armor>>>;
         struct LooseWeaponAdmission
         {
             CellStore& mCell;
-            const LiveCellRef<ESM4::Weapon>& mReference;
+            LooseEquipmentReference mReference;
             MWRender::Objects& mObjects;
             MWPhysics::PhysicsSystem& mPhysics;
             std::string mModel;
@@ -189,7 +197,7 @@ namespace MWWorld
             int mCollisionGroup, mCollisionMask;
         };
         // One registry reservation and one final publication hook for all drops
-        // caused by a contact, including two weapons in the same managed cell.
+        // caused by a contact, including a weapon and shield in the same managed cell.
         std::unique_ptr<PreparedLooseWeaponAdmission> prepareLooseWeaponAdmissions(
             std::span<const LooseWeaponAdmission> admissions);
 

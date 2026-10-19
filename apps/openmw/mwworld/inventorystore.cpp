@@ -26,6 +26,14 @@
 
 namespace
 {
+    bool carriedRemovalKind(const MWWorld::ConstPtr& item, int slot)
+    {
+        if (slot == MWWorld::InventoryStore::Slot_CarriedRight)
+            return item.getType() == ESM::REC_WEAP;
+        return slot == MWWorld::InventoryStore::Slot_CarriedLeft && item.getType() == ESM::REC_ARMO
+            && item.get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield;
+    }
+
     std::uint32_t oblivionEquipmentSlots(
         const MWWorld::Ptr& item, int sharedSlot)
     {
@@ -1069,6 +1077,7 @@ struct MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::Impl
     std::shared_ptr<const char> mIdentity;
     std::weak_ptr<const char> mStorageIdentity;
     Ptr mItem;
+    int mSlot = Slot_CarriedRight;
     std::optional<float> mExtraScale;
     bool mCommitted = false;
     bool mNotified = false;
@@ -1104,24 +1113,27 @@ bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::notify()
 }
 
 std::unique_ptr<MWWorld::InventoryStore::PreparedEquippedWeaponRemoval>
-MWWorld::InventoryStore::prepareEquippedWeaponRemoval()
+MWWorld::InventoryStore::prepareEquippedWeaponRemoval(int slotIndex)
 {
-    const auto slot = getSlot(Slot_CarriedRight);
-    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon)
-        throw std::invalid_argument("prepared weapon removal requires an equipped weapon");
+    if (slotIndex != Slot_CarriedRight && slotIndex != Slot_CarriedLeft)
+        throw std::invalid_argument("prepared equipment removal requires a carried slot");
+    const auto slot = getSlot(slotIndex);
+    if (slot == end() || !carriedRemovalKind(*slot, slotIndex))
+        throw std::invalid_argument("prepared equipment removal requires a carried weapon or shield");
     const auto item = *slot;
     const auto* ref = std::get_if<ESM::CellRef>(&item.getCellRef().mCellRef.mVariant);
     if (item.getContainerStore() != this || !ref || ref->mCount != 1)
-        throw std::invalid_argument("prepared weapon removal requires one projected instance");
+        throw std::invalid_argument("prepared equipment removal requires one projected instance");
     for (int i = 0; i < Slots; ++i)
-        if (i != Slot_CarriedRight && mSlots[i] != end() && *mSlots[i] == item)
-            throw std::invalid_argument("prepared weapon removal cannot clear another slot");
+        if (i != slotIndex && mSlots[i] != end() && *mSlots[i] == item)
+            throw std::invalid_argument("prepared equipment removal cannot clear another slot");
     auto impl = std::make_unique<PreparedEquippedWeaponRemoval::Impl>();
     if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
     impl->mOwner = this;
     impl->mIdentity = mPreparedAmmunitionIdentity;
     impl->mStorageIdentity = prepareStorageIdentity();
     impl->mItem = item;
+    impl->mSlot = slotIndex;
     impl->mExtraScale = item.getCellRef().getNativeItemScale();
     return std::unique_ptr<PreparedEquippedWeaponRemoval>(new PreparedEquippedWeaponRemoval(std::move(impl)));
 }
@@ -1133,13 +1145,13 @@ bool MWWorld::InventoryStore::validatePreparedEquippedWeaponRemoval(
     if (!value || value->mStorageIdentity.expired() || value->mOwner != this
         || value->mIdentity != mPreparedAmmunitionIdentity || value->mCommitted)
         return false;
-    const auto& slot = mSlots[Slot_CarriedRight];
-    if (slot == end() || slot.getType() != ContainerStore::Type_Weapon || *slot != value->mItem)
+    const auto& slot = mSlots[value->mSlot];
+    if (slot == end() || *slot != value->mItem || !carriedRemovalKind(*slot, value->mSlot))
         return false;
     const auto* ref = std::get_if<ESM::CellRef>(&value->mItem.getCellRef().mCellRef.mVariant);
     if (!ref || ref->mCount != 1 || !value->mItem.getCellRef().hasNativeItemScale(value->mExtraScale)) return false;
     for (int i = 0; i < Slots; ++i)
-        if (i != Slot_CarriedRight && mSlots[i] != end() && *mSlots[i] == value->mItem)
+        if (i != value->mSlot && mSlots[i] != end() && *mSlots[i] == value->mItem)
             return false;
     return true;
 }
@@ -1153,8 +1165,8 @@ bool MWWorld::InventoryStore::commitPreparedEquippedWeaponRemoval(PreparedEquipp
     // swapping an earlier CellRef snapshot here would resurrect or undo wear.
     std::get<ESM::CellRef>(cell.mCellRef.mVariant).mCount = 0;
     cell.mChanged = true;
-    if (mSelectedEnchantItem == mSlots[Slot_CarriedRight]) mSelectedEnchantItem = end();
-    mSlots[Slot_CarriedRight] = end();
+    if (mSelectedEnchantItem == mSlots[value.mSlot]) mSelectedEnchantItem = end();
+    mSlots[value.mSlot] = end();
     ContainerStore::flagAsModified();
     value.mCommitted = true;
     return true;

@@ -12094,5 +12094,12 @@
     "evidence": "docs/oblivion/M15-SHIELD-RETENTION-PROBE.json",
     "scope": "Early blocking-wear shield break retention for Player/flag400 NPC, atomic carried-left unequip/resources/condition/posture, projected inventory for later armor selection and post-wear general sounds. Ordinary NPC shield drops and later selected-wear shield breaks remain rejected, pending complete world admission/distinct caller audit.",
     "full_M15S4_acceptance": false
+  },
+  "native_shield_admission_foundation": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-SHIELD-ADMISSION-PROBE.json",
+    "scope": "Atomic admission foundation for NPC shield drops: exact carried-left projected shield debit and shared typed WEAP/ARMO cell/registry/render/physics/contact publication. Requests borrow live caller references. Current ordinary NPC shield-drop policy guard stays in place until production carried binding, factory and physical persistence integration are complete.",
+    "runtime_acceptance": false,
+    "full_M15S4_acceptance": false
   }
 }

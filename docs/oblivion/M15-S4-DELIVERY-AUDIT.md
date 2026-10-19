@@ -7157,3 +7157,79 @@ Full M15S4 remains incomplete. This chunk does not close NPC shield world
 drops, later selected-wear shield breaks, initially broken equipped gear,
 BlockHit/reaction playback, mastery/directional procs/effects or the remaining
 input/view/FPS/in-action restart and combined acceptance matrix.
+
+### Typed shield world-admission foundation
+
+The existing loose-weapon transaction now accepts typed native shield references
+alongside weapons. It still reserves one registry group, admits all scene nodes
+before bodies, validates every participant, and publishes the contact, exact
+inventory debits, stable keys and cell nodes in one final interval without
+callbacks. Private typed insertion nodes outlive their borrowed rendering and
+physics preparations. Mixed weapon/shield drops share this pipeline and its
+rollback path rather than publishing one item at a time.
+
+The equipped-removal primitive accepts an explicit carried-left shield slot;
+its default remains the carried-right weapon. It requires one exact projected
+instance, rejects aliases and changed count/scale/kind/owner, preserves final
+wear and unrelated inventory, clears the appropriate selection and notifies
+observers separately. This is the source debit required by an NPC drop, distinct
+from retaining a broken shield unequipped.
+
+Normal and ASan/UBSan engine `native-shield-admission-{normal,sanitized}-04`
+each pass the full unfiltered 1,724 tests / 125 suites with no failures or skips.
+Both identify parent `08a6d2247ea5a35daf5194257ef17482a95db3c2` and tested dirty
+source fingerprint `3e1f9de5f0cbfae43c44c5af13bf27a81cb5e7019d8f164fc8dd59a559c19c32`.
+Sanitizers halt on errors; leak detection is disabled. The five source hashes
+are pinned in the probe manifest; only evidence documents change after checks.
+Existing build warnings remain recorded, including the unrelated animation
+queue initialization warning; this is not a warning-free-build claim.
+
+Earlier normal attempts retain an incomplete-type compile error, a duplicated
+same-line `SCOPED_TRACE` compile error, and a full run with two failed tests.
+That last run exposed a real borrowing regression: a copied request variant
+hid caller changes made after request construction. Reference-wrapper variants
+restore the original live-input contract for both types. The new malformed-kind
+fixture also attempted forbidden static-store replacement; it now changes and
+restores only its owned instance definition. Each corresponding unfinished
+sanitizer build was stopped after the normal failure established a required
+source correction, with owned-tree cancellation and terminal receipts retained.
+Those interrupted runs provide no sanitizer acceptance.
+
+Owned compound tests exercise seven single-shield outcomes and weapon/weapon
+plus weapon/shield groups in the same managed cell. They check actual typed
+references, registry/cell counts, rendered nodes, physics owners, resource and
+condition deltas, serial allocation, exact source quantities and rollback after
+scene/source/actor/god-mode invalidation. The new primitive case checks invalid
+slots, stale counts/scales, malformed projected kind, inventory replacement and
+preservation of the right-hand weapon. These owned scene/body inputs prove the
+publication mechanism; they are not normal-input stock NPC drop acceptance.
+
+The raw installed-master inventory contains 206 shield records. World MOD2/MOD4
+and effective carried MODL/MOD3 paths coincide for all of them. The
+factory will still distinguish the record roles and source identities. Existing
+generic NIF/NIFBullet readers accept nonempty carried and normalized reference
+body definitions for all 34 unique model files, with identified reference roots
+and matching 16-byte source hashes. Twenty-nine models are in the default mesh
+archive set; five expansion models are audited statically only. Some assets
+require the loader's synthetic reference root to preserve their authored root.
+This is content/parser capability evidence, not an independent original-game
+physics oracle or expansion runtime acceptance.
+
+Forty original-instruction selector cases execute actual ARMO RTTI, the biped
+model selector and TESModel getters with distinct carried/world paths. They
+confirm male MOD2 by default, female MOD4 for a resolved female NPC owner, and
+female-to-male world fallback when MOD4 is empty. Owner
+resolution and NPC sex are declared boundaries in this selector probe; owner
+inheritance has its separate native audit. The factory must select by resolved
+reference owner, rather than assuming the dropper's sex determines the model. The first harness lacked the
+exception-registration page used by MSVC RTTI; its retained failure is fixed
+without replacing RTTI. A private draft had mislabeled model roles; the
+corrected raw-field inventory is published here.
+
+`M15-SHIELD-ADMISSION-PROBE.json` records source/check receipts, editable content
+probes and retained failures. No runtime-state wire format changes. Actual NPC
+shield scene binding, world-model factory/ownership, physical save/load and
+normal-input break/drop/pickup/restart still require integration. The ordinary
+NPC shield-drop policy guard remains until that pipeline is complete. Full
+M15S4 remains incomplete, including the other mastery/effect/reaction and
+input/view/FPS/in-action restart/combined gates.

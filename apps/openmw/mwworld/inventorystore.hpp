@@ -124,7 +124,7 @@ namespace MWWorld
             PreparedAmmunitionDebit(const PreparedAmmunitionDebit&) = delete;
             PreparedAmmunitionDebit& operator=(const PreparedAmmunitionDebit&) = delete;
         };
-        // One actual equipped ammunition instance. Preparation/cancellation
+        // One actual equipped carried instance. Preparation/cancellation
         // do not debit. Publication is allocation/callback-free and once-only;
         // owner replacement, slot replacement or changed count reject it.
         class PreparedEquippedWeaponRemoval
@@ -146,11 +146,11 @@ namespace MWWorld
             PreparedEquippedWeaponRemoval& operator=(const PreparedEquippedWeaponRemoval&) = delete;
         };
 
-        // Remove one exact carried-right weapon instance after its replacement
+        // Remove one exact carried-right weapon or carried-left shield after its replacement
         // world reference, rendering and physics have been admitted. The caller
         // validates item extras and commits wear before this callback-free debit.
         // Removal preserves the item extras and all unrelated inventory pointers.
-        std::unique_ptr<PreparedEquippedWeaponRemoval> prepareEquippedWeaponRemoval();
+        std::unique_ptr<PreparedEquippedWeaponRemoval> prepareEquippedWeaponRemoval(int slot = Slot_CarriedRight);
         bool validatePreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval& removal) const noexcept;
         bool commitPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal) noexcept;
         bool notifyPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal);
