@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 53;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 54;
 
     struct RuntimeContentIdentity
     {
@@ -550,12 +550,40 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeMeleeAiIntent&, const RuntimeMeleeAiIntent&) = default;
     };
+    // Clamp subtype0/1 reactions. BlockAttack is an attack protocol, not one
+    // of these non-damaging sequences. Enum values are private save tags.
+    enum class MeleeReactionKind : std::uint8_t { BlockHit, Recoil, Stagger };
+    struct RuntimeReactionRetirement
+    {
+        float mDuration = 0;
+        // Native deactivation anchors the interval on the next manager update.
+        // Absence preserves a save taken between the request and that update.
+        std::optional<float> mStartClock = std::nullopt;
+        friend bool operator==(const RuntimeReactionRetirement&, const RuntimeReactionRetirement&) = default;
+    };
+    struct RuntimeMeleeReaction
+    {
+        // The already consumed contact, shared by both participants if needed.
+        // Starting a reaction does not allocate a new damage/strike action.
+        std::uint64_t mContactId = 0;
+        MeleeReactionKind mKind = MeleeReactionKind::BlockHit;
+        std::string mAnimationGroup;
+        float mAnimationTime = 0;
+        bool mStarted = false;
+        MeleeSequenceTiming mSequenceTiming{};
+        std::optional<RuntimeReactionRetirement> mRetirement = std::nullopt;
+        std::int16_t processAction() const;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleeReaction&, const RuntimeMeleeReaction&) = default;
+    };
     struct RuntimeMeleeState
     {
         RuntimeMeleeInput mInput;
         std::optional<RuntimeMeleeStrike> mStrike;
         // v28: combat service owns the NPC input and its selected target.
         std::optional<RuntimeMeleeAiIntent> mAiIntent = std::nullopt;
+        // v54: owns the selected sequence and its clock through blend retirement.
+        std::optional<RuntimeMeleeReaction> mReaction = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

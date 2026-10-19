@@ -870,6 +870,18 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 melee input state");
     }
 
+    static void validateMeleeTiming(const MeleeSequenceTiming& timing)
+    {
+        if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
+            || !std::isfinite(timing.mOutputTime)
+            || timing.mOffset.has_value() != timing.mEaseStart.has_value()
+            || timing.mOffset.has_value() != timing.mLastInput.has_value())
+            throw std::runtime_error("Invalid TES4 melee sequence timing");
+        for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+            if (value && !std::isfinite(*value))
+                throw std::runtime_error("Nonfinite TES4 melee sequence timing");
+    }
+
     void RuntimeMeleeStrike::validate() const
     {
         if (mActionId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
@@ -882,18 +894,7 @@ namespace ESM4
                 || static_cast<unsigned>(*mPowerPhase) > static_cast<unsigned>(PowerMeleePhase::End)
                 || mOrdinaryPhase != OrdinaryMeleePhase::Start))
             throw std::runtime_error("Invalid TES4 power melee phase");
-        if (mSequenceTiming)
-        {
-            const auto& timing = *mSequenceTiming;
-            if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
-                || !std::isfinite(timing.mOutputTime)
-                || timing.mOffset.has_value() != timing.mEaseStart.has_value()
-                || timing.mOffset.has_value() != timing.mLastInput.has_value())
-                throw std::runtime_error("Invalid TES4 melee sequence timing");
-            for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
-                if (value && !std::isfinite(*value))
-                    throw std::runtime_error("Nonfinite TES4 melee sequence timing");
-        }
+        if (mSequenceTiming) validateMeleeTiming(*mSequenceTiming);
     }
 
     void RuntimeMeleeAiIntent::validate() const
@@ -902,11 +903,45 @@ namespace ESM4
             throw std::runtime_error("Null TES4 melee AI target or style");
     }
 
+    std::int16_t RuntimeMeleeReaction::processAction() const
+    {
+        switch (mKind)
+        {
+            case MeleeReactionKind::BlockHit: return 6;
+            case MeleeReactionKind::Recoil: return 7;
+            case MeleeReactionKind::Stagger: return 8;
+        }
+        throw std::runtime_error("Invalid TES4 melee reaction kind");
+    }
+
+    void RuntimeMeleeReaction::validate() const
+    {
+        (void)processAction();
+        if (mContactId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
+            || mAnimationGroup.find('\0') != std::string::npos
+            || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
+            throw std::runtime_error("Invalid TES4 melee reaction identity or animation");
+        validateMeleeTiming(mSequenceTiming);
+        if (mRetirement)
+        {
+            const auto& retirement = *mRetirement;
+            if (!std::isfinite(retirement.mDuration) || retirement.mDuration <= 0
+                || mSequenceTiming.mEasing || !mSequenceTiming.mOffset
+                || (retirement.mStartClock && (!std::isfinite(*retirement.mStartClock)
+                    || *retirement.mStartClock < 0
+                    || !std::isfinite(static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration)))))
+                throw std::runtime_error("Invalid TES4 melee reaction retirement");
+        }
+    }
+
     void RuntimeMeleeState::validate() const
     {
         mInput.validate();
         if (mStrike) mStrike->validate();
         if (mAiIntent) mAiIntent->validate();
+        if (mReaction) mReaction->validate();
+        if (mStrike && mReaction)
+            throw std::runtime_error("TES4 melee strike and reaction cannot own playback together");
     }
 
     void RuntimeState::validate() const
@@ -1198,6 +1233,10 @@ namespace ESM4
         for (const auto& [actor, clock] : mNativeAnimationClocks)
             if (!nativeActors.contains(actor) || !lives.contains(actor) || !std::isfinite(clock) || clock < 0)
                 throw std::runtime_error("Invalid or dangling TES4 native animation clock");
+        std::map<ESM::FormKey, const RuntimeActorValues*> reactionValues;
+        if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
+                [](const auto& entry) { return entry.second.mReaction.has_value(); }))
+            for (const auto& values : mNativeActorValues) reactionValues.emplace(values.mActor, &values);
         std::set<std::uint64_t> meleeIds;
         for (const auto& [actor, melee] : mNativeMeleeStates)
         {
@@ -1215,6 +1254,16 @@ namespace ESM4
                     || targetLife->second->mPhase != ActorLifePhase::Alive
                     || !mNativeCombatEngagements.contains(pair))
                     throw std::runtime_error("Invalid, dangling or unsupported TES4 melee AI intent");
+            }
+            if (melee.mReaction)
+            {
+                const auto& reaction = *melee.mReaction;
+                const auto values = reactionValues.find(actor);
+                if (mVersion < 54 || !mNativeAnimationClocks.contains(actor)
+                    || reaction.mContactId >= mPhysicalActions.mNext || pendingActions.contains(reaction.mContactId)
+                    || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active
+                    || values->second->mProcessAction != reaction.processAction())
+                    throw std::runtime_error("Unowned, replaying or mismatched TES4 melee reaction");
             }
             if (melee.mStrike)
             {
@@ -1246,7 +1295,7 @@ namespace ESM4
             const bool pending = pendingActions.contains(bow.mActionId);
             if (!nativeActors.contains(actor) || life == lives.end()
                 || life->second->mPhase != ActorLifePhase::Alive || !mNativeAnimationClocks.contains(actor)
-                || (melee != mNativeMeleeStates.end() && melee->second.mStrike)
+                || (melee != mNativeMeleeStates.end() && (melee->second.mStrike || melee->second.mReaction))
                 || !meleeIds.insert(bow.mActionId).second || bow.mActionId >= mPhysicalActions.mNext
                 || (bow.mReleaseCommitted ? pending
                     : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
@@ -2087,6 +2136,37 @@ namespace ESM4
                     {
                         writeKey(writer, melee.mAiIntent->mTarget);
                         writeKey(writer, melee.mAiIntent->mStyle);
+                    }
+                }
+                if (mVersion >= 54)
+                {
+                    writer.integer<std::uint8_t>(melee.mReaction.has_value());
+                    if (melee.mReaction)
+                    {
+                        const auto& reaction = *melee.mReaction;
+                        writer.integer(reaction.mContactId);
+                        writer.integer<std::uint8_t>(static_cast<std::uint8_t>(reaction.mKind));
+                        writer.string(reaction.mAnimationGroup);
+                        writer.floating(reaction.mAnimationTime);
+                        writer.integer<std::uint8_t>(reaction.mStarted);
+                        const auto& timing = reaction.mSequenceTiming;
+                        writer.integer<std::uint8_t>(timing.mEasing);
+                        for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+                        {
+                            writer.integer<std::uint8_t>(value.has_value());
+                            if (value) writer.floating(*value);
+                        }
+                        writer.floating(timing.mEaseEnd);
+                        writer.floating(timing.mWeightedTime);
+                        writer.floating(timing.mOutputTime);
+                        writer.integer<std::uint8_t>(reaction.mRetirement.has_value());
+                        if (reaction.mRetirement)
+                        {
+                            writer.floating(reaction.mRetirement->mDuration);
+                            writer.integer<std::uint8_t>(reaction.mRetirement->mStartClock.has_value());
+                            if (reaction.mRetirement->mStartClock)
+                                writer.floating(*reaction.mRetirement->mStartClock);
+                        }
                     }
                 }
             }
@@ -2980,6 +3060,30 @@ namespace ESM4
                 }
                 if (result.mVersion >= 28 && boolean())
                     melee.mAiIntent = RuntimeMeleeAiIntent{key(), key()};
+                if (result.mVersion >= 54 && boolean())
+                {
+                    RuntimeMeleeReaction reaction;
+                    reaction.mContactId = reader.integer<std::uint64_t>();
+                    reaction.mKind = static_cast<MeleeReactionKind>(reader.integer<std::uint8_t>());
+                    reaction.mAnimationGroup = reader.string();
+                    reaction.mAnimationTime = reader.float32();
+                    reaction.mStarted = boolean();
+                    auto& timing = reaction.mSequenceTiming;
+                    timing.mEasing = boolean();
+                    for (auto* value : {&timing.mOffset, &timing.mEaseStart, &timing.mLastInput})
+                        if (boolean()) *value = reader.float32();
+                    timing.mEaseEnd = reader.float32();
+                    timing.mWeightedTime = reader.float32();
+                    timing.mOutputTime = reader.float32();
+                    if (boolean())
+                    {
+                        RuntimeReactionRetirement retirement;
+                        retirement.mDuration = reader.float32();
+                        if (boolean()) retirement.mStartClock = reader.float32();
+                        reaction.mRetirement = retirement;
+                    }
+                    melee.mReaction = std::move(reaction);
+                }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
             }
@@ -4003,6 +4107,48 @@ namespace ESM4
                         }
                     }
                     stream << '}';
+                }
+                if (mVersion >= 54)
+                {
+                    stream << ",\"reaction\":";
+                    if (!melee.mReaction) stream << "null";
+                    else
+                    {
+                        const auto& reaction = *melee.mReaction;
+                        const auto floating = [&](float value) {
+                            if (value == 0 && std::signbit(value)) stream << "-0.0";
+                            else stream << std::setprecision(17) << value;
+                        };
+                        stream << "{\"contact_id\":" << reaction.mContactId
+                            << ",\"kind\":" << static_cast<unsigned>(reaction.mKind)
+                            << ",\"animation_group\":\"" << escapeJson(reaction.mAnimationGroup)
+                            << "\",\"animation_time\":";
+                        floating(reaction.mAnimationTime);
+                        stream << ",\"started\":" << (reaction.mStarted ? "true" : "false")
+                            << ",\"sequence_timing\":{\"easing\":"
+                            << (reaction.mSequenceTiming.mEasing ? "true" : "false");
+                        const auto optional = [&](std::string_view name, std::optional<float> value) {
+                            stream << ",\"" << name << "\":";
+                            if (value) floating(*value);
+                            else stream << "null";
+                        };
+                        const auto& timing = reaction.mSequenceTiming;
+                        optional("offset", timing.mOffset);
+                        optional("ease_start", timing.mEaseStart);
+                        optional("last_input", timing.mLastInput);
+                        stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                        stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                        stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                        stream << "},\"retirement\":";
+                        if (!reaction.mRetirement) stream << "null";
+                        else
+                        {
+                            stream << "{\"duration\":"; floating(reaction.mRetirement->mDuration);
+                            optional("start_clock", reaction.mRetirement->mStartClock);
+                            stream << '}';
+                        }
+                        stream << '}';
+                    }
                 }
                 stream << '}';
             }

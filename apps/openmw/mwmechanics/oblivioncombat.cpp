@@ -816,7 +816,8 @@ namespace MWMechanics
             || life->mPhase != ESM4::ActorLifePhase::Alive
             || values->mProcess != ESM4::ActorValueProcess::Active
             || values->mProcessKnockedState != 0 || values->mProcessAction != -1
-            || mBowStates.contains(actor) || (melee && melee->mStrike) || getProcessParalysis(actor) != 0)
+            || mBowStates.contains(actor) || (melee && (melee->mStrike || melee->mReaction))
+            || getProcessParalysis(actor) != 0)
             throw std::invalid_argument("native bow draw requires an idle, awake Active actor");
         prepared.mPlayerHoldLatched = values->mOwner == ESM4::ActorValueOwner::Player;
         // Prepare map nodes and owned strings before allocating an action ID.
@@ -1358,6 +1359,8 @@ namespace MWMechanics
             strike.mPowerPhase = ESM4::PowerMeleePhase::Start;
         strike.validate();
         const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end() && found->second.mReaction)
+            throw std::invalid_argument("native melee strike cannot replace an owned reaction");
         if (found != mMeleeStates.end() && found->second.mStrike)
             throw std::invalid_argument("native melee strike must finish or cancel before replacement");
         // Prepare every map node/string before allocating the action ID. The
@@ -1513,6 +1516,21 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionCombatService::cancelMeleeReaction(std::uint64_t contact, const ESM::FormKey& actor) noexcept
+    {
+        const auto melee = mMeleeStates.find(actor);
+        if (melee == mMeleeStates.end() || !melee->second.mReaction
+            || melee->second.mReaction->mContactId != contact)
+            return false;
+        const auto values = mActorValues.find(actor);
+        if (values != mActorValues.end() && values->second.mProcess == ESM4::ActorValueProcess::Active
+            && values->second.mProcessAction == melee->second.mReaction->processAction())
+            values->second.mProcessAction = -1;
+        melee->second.mReaction.reset();
+        melee->second.mInput = {};
+        return true;
+    }
+
     void OblivionCombatService::clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept
     {
         const auto found = mActorValues.find(actor);
@@ -1632,6 +1650,8 @@ namespace MWMechanics
         const auto melee = mMeleeStates.find(actor);
         if (melee != mMeleeStates.end() && melee->second.mStrike)
             clearMeleePlaybackAction(actor);
+        if (melee != mMeleeStates.end() && melee->second.mReaction)
+            cancelMeleeReaction(melee->second.mReaction->mContactId, actor);
         mMeleeStates.erase(actor);
         clearBowPlaybackAction(actor);
         mBowStates.erase(actor);
@@ -1821,6 +1841,9 @@ namespace MWMechanics
         std::unique_ptr<OblivionActorProjection> mPlayerView;
         std::unique_ptr<PreparedNonPlayerView> mAttackerView, mVictimView;
         std::vector<Condition> mConditions;
+        std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mReactionStates;
+        std::map<ESM::FormKey, float> mReactionClocks;
+        std::vector<std::uint64_t> mReactionCanceledActions;
         struct Unequip
         {
             MWWorld::Ptr mItem;
@@ -1931,6 +1954,8 @@ namespace MWMechanics
         ESM::FormKey victimKey;
         if (victim.isEmpty())
         {
+            if (deltas.mAttackerReaction || deltas.mVictimReaction)
+                throw std::invalid_argument("native missed swing cannot start contact reactions");
             if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
         }
@@ -2065,6 +2090,58 @@ namespace MWMechanics
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
         }
+        std::map<ESM::FormKey, ESM4::RuntimeMeleeState> reactionStates;
+        std::map<ESM::FormKey, float> reactionClocks;
+        std::vector<std::uint64_t> reactionCanceledActions;
+        const auto prepareReaction = [&](const std::optional<ESM4::RuntimeMeleeReaction>& request,
+                                         ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorLife& life) {
+            const auto* previous = findMeleeState(values.mActor);
+            if (!request)
+            {
+                // Equipment consequences can withdraw action6 independently
+                // of starting another sequence. Retire its old ownership in
+                // the same transaction, before any observer can save it.
+                if (previous && previous->mReaction && life.mPhase == ESM4::ActorLifePhase::Alive
+                    && values.mProcessAction != previous->mReaction->processAction())
+                {
+                    auto candidate = *previous;
+                    candidate.mReaction.reset();
+                    candidate.mInput = {};
+                    reactionStates.emplace(values.mActor, std::move(candidate));
+                }
+                return;
+            }
+            request->validate();
+            const auto& timing = request->mSequenceTiming;
+            if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted
+                || request->mRetirement || timing.mOffset || timing.mEaseStart || timing.mLastInput
+                || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
+                || timing.mEasing != (timing.mEaseEnd > 0)
+                || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
+                || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
+                || (previous && previous->mReaction) || mBowStates.contains(values.mActor))
+                throw std::invalid_argument("invalid or unsupported native contact reaction start");
+            auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+            if (candidate.mStrike && !candidate.mStrike->mContactCommitted
+                && candidate.mStrike->mActionId != id)
+                reactionCanceledActions.push_back(candidate.mStrike->mActionId);
+            candidate.mStrike.reset();
+            candidate.mInput = {};
+            // Incapacitation clears targeting during the same commit. A
+            // prepared reaction must not restore the superseded AI intent.
+            if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
+                && candidate.mAiIntent->mTarget == victimKey)
+                candidate.mAiIntent.reset();
+            candidate.mReaction = *request;
+            candidate.validate();
+            reactionStates.emplace(values.mActor, std::move(candidate));
+            if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
+            values.mProcessAction = request->processAction();
+        };
+        prepareReaction(deltas.mAttackerReaction, attacking, *findActorLife(attackerKey));
+        if (deltas.mVictimReaction && !receiving)
+            throw std::invalid_argument("native missed swing cannot start a victim reaction");
+        if (receiving) prepareReaction(deltas.mVictimReaction, *receiving, *receivingLife);
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
@@ -2098,6 +2175,9 @@ namespace MWMechanics
         data->mAttackerView = std::move(attackerView);
         data->mVictimView = std::move(victimView);
         data->mConditions = std::move(conditions);
+        data->mReactionStates = std::move(reactionStates);
+        data->mReactionClocks = std::move(reactionClocks);
+        data->mReactionCanceledActions = std::move(reactionCanceledActions);
         data->mUnequips = std::move(unequips);
         return std::unique_ptr<PreparedPhysicalContact>(new PreparedPhysicalContact(std::move(data)));
     }
@@ -2172,6 +2252,25 @@ namespace MWMechanics
             if (findActorLife(*victimKey)->mPhase != ESM4::ActorLifePhase::Alive) cancelActorActions(*victimKey);
             if (findActorLife(*victimKey)->mPhase == ESM4::ActorLifePhase::Dead) stopCombat(*victimKey);
         }
+        for (const auto canceled : data.mReactionCanceledActions)
+        {
+            mActions.consume(canceled);
+            mActionOwners.erase(canceled);
+        }
+        while (!data.mReactionStates.empty())
+        {
+            const auto next = data.mReactionStates.begin();
+            const auto found = mMeleeStates.find(next->first);
+            if (found == mMeleeStates.end()) mMeleeStates.insert(data.mReactionStates.extract(next));
+            else
+            {
+                static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+                std::swap(found->second, next->second);
+                data.mReactionStates.erase(next);
+            }
+        }
+        while (!data.mReactionClocks.empty())
+            mAnimationClocks.insert(data.mReactionClocks.extract(data.mReactionClocks.begin()));
         consumeContactAction(data.mId, attackerKey);
         if (data.mTransition)
         {
@@ -3548,6 +3647,13 @@ namespace MWMechanics
             throw std::invalid_argument("native action transition requires actor authority");
         if (found->second.mProcess == ESM4::ActorValueProcess::Low)
             return;
+        const auto melee = mMeleeStates.find(actor);
+        if (melee != mMeleeStates.end() && melee->second.mReaction
+            && melee->second.mReaction->processAction() != action)
+        {
+            melee->second.mReaction.reset();
+            melee->second.mInput = {};
+        }
         found->second.mProcessAction = action;
     }
 
@@ -3559,7 +3665,8 @@ namespace MWMechanics
         if (!values || values->mProcess != ESM4::ActorValueProcess::Active
             || !values->mProcessKnockedState || *values->mProcessKnockedState != 0
             || !values->mProcessAction || (*values->mProcessAction != -1 && *values->mProcessAction != 6)
-            || !life || life->mPhase != ESM4::ActorLifePhase::Alive || (melee && melee->mStrike)
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || (melee && (melee->mStrike || melee->mReaction))
             || mBowStates.contains(actor) || getProcessParalysis(actor) != 0)
             return false;
         setProcessAction(actor, 6);
@@ -3570,8 +3677,9 @@ namespace MWMechanics
     bool OblivionCombatService::endBlocking(const ESM::FormKey& actor)
     {
         const auto* values = findActorValues(actor);
+        const auto* melee = findMeleeState(actor);
         if (!values || values->mProcess != ESM4::ActorValueProcess::Active
-            || values->mProcessAction != 6)
+            || values->mProcessAction != 6 || (melee && melee->mReaction))
             return false;
         setProcessAction(actor, -1);
         return true;
@@ -4337,6 +4445,9 @@ namespace MWMechanics
             throw std::invalid_argument("native Player bow hold latch requires an Oblivion v39+ save");
         if (state.mVersion < 38 && !mBowStates.empty())
             throw std::invalid_argument("native owned bow playback requires an Oblivion v38+ save");
+        if (state.mVersion < 54 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
+                [](const auto& entry) { return entry.second.mReaction.has_value(); }))
+            throw std::invalid_argument("native owned melee reactions require an Oblivion v54+ save");
         if (state.mVersion < 37 && mPlayerBowTimer)
             throw std::invalid_argument("native Player bow timer requires an Oblivion v37+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()

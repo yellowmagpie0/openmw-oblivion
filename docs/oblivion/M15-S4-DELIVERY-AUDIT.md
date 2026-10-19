@@ -7618,3 +7618,51 @@ stock-PCM correlation or full autonomous defensive-AI acceptance is claimed.
 Mastery/recoil/reaction/effect, complete interruption/input/view/FPS, in-action
 restart and combined named-target/block/miss/wall/stagger gates remain open.
 **M15S4 is still incomplete.**
+
+## Reaction ownership and schema54 checkpoint
+
+The combat service can now publish typed BlockHit, Recoil and Stagger ownership
+in the same physical-contact transaction as resource, condition and RNG changes.
+The reaction retains its already consumed causal contact; it allocates no new
+strike. Participant strikes and queued input are canceled together, unrelated
+actor state survives, and stale participant snapshots reject publication.
+Equipment withdrawal and external action changes clear superseded ownership.
+Victim incapacitation cannot restore the attacker's cleared targeting intent.
+BlockAttack remains a distinct attack protocol.
+
+Schema54 records the selected reaction group, renderer progress, native sequence
+activation timing, Start progress and an optional positive retirement interval.
+The interval can remain unanchored across a save before its first manager update.
+C++ and Python reject replaying causes, mismatched actions, missing clocks and
+conflicting strike/bow ownership. Legacy raw actions6/7/8 acquire no invented
+reaction or timer. Fifteen actual C++ binary/JSON fixtures independently decode
+and re-encode identically in Python in both build profiles, including signed zero.
+
+Final normal `native-reaction-ownership-normal-02` passes **2,944 component,
+1,741 engine /125 suites and327 Python tests**. ASan/UBSan
+`native-reaction-ownership-sanitized-02` passes **797 selected ESM4* component
+and1,741 engine /125 suites**. Inventories match exactly with no failures/skips.
+Both pin dirty-source fingerprint
+`81c59b15ef34b6a0ecf9b9a18d3934be2c1d95c54ce5d548721150f2a39b82ab`
+on parent `58d33f47fda2f12dc1bce8683da87c7f9f3d4c6c`, unchanged throughout.
+Leak detection is disabled. Existing warnings and one new GoogleTest macro brace
+warning remain; this is not a warning-free build.
+
+The earlier passing candidate, fingerprint
+`027004f89616268973b17124ae8f7ddcf601805e79b77c75e6b5e7c1048d0b4f`,
+also completed the normal legacy shield-break course and exact-output
+fresh-process continuation. Its input schema53 became54 in both output saves;
+all reaction entries remained null. The original expected damage, actor bits,
+inventory/body identity, RNG and no-replay outcomes were retained. Three captures
+were directly reviewed. This is prior-source codec regression evidence, not
+final-candidate runtime or owned-reaction playback acceptance. It adds no floor
+placement or quantitative stock-PCM claim.
+
+`M15-REACTION-OWNERSHIP-VERIFICATION.json` records the source and evidence hashes,
+checks, historical runtime lineage, retained fixture failures and limits. Normal
+contact adapters do not yet create these reaction descriptors. Controller
+binding, rendered activation/retirement, inactive-sequence ownership until the
+following actor recovery, outgoing sequence layers, and in-action restart remain
+unfinished. A restored non-null reaction currently prevents new strike/bow/block
+admission but has no controller recovery. Existing ReactionOnly and Expert/Master
+contact guards remain. **M15S4 is still incomplete.**

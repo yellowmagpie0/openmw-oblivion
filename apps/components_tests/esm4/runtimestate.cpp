@@ -4029,3 +4029,132 @@ TEST(ESM4RuntimeState, LooseWeaponRejectsInvalidIdentityMotionAndGeometry)
     actor.mNativeLooseWeapons.emplace(actor.mReferences.front().mKey, weapon);
     EXPECT_THROW(actor.serializeBinary(), std::runtime_error);
 }
+
+namespace
+{
+    ESM4::RuntimeState reactionState()
+    {
+        auto state = meleeState();
+        state.mVersion = 54;
+        std::sort(state.mPhysicalActions.mPending.begin(), state.mPhysicalActions.mPending.end());
+        const auto actor = state.mReferences.front().mKey;
+        state.mNativeActorValues.front().mProcess = ESM4::ActorValueProcess::Active;
+        state.mNativeActorValues.front().mProcessAction = 6;
+        state.mNativeAnimationClocks.emplace(actor, 0);
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        melee.mStrike.reset();
+        melee.mReaction = ESM4::RuntimeMeleeReaction{3, ESM4::MeleeReactionKind::BlockHit, "blockhit"};
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, Reaction54PreservesActivationActiveAndUnanchoredRetirement)
+{
+    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil,
+             ESM4::MeleeReactionKind::Stagger})
+        for (int phase = 0; phase != 5; ++phase)
+        {
+            auto state = reactionState();
+            const auto actor = state.mReferences.front().mKey;
+            auto& reaction = *state.mNativeMeleeStates.at(actor).mReaction;
+            reaction.mKind = kind;
+            state.mNativeActorValues.front().mProcessAction = reaction.processAction();
+            auto& timing = reaction.mSequenceTiming;
+            if (phase == 1) { timing.mEasing = true; timing.mEaseEnd = .125f; }
+            if (phase >= 2)
+            {
+                timing.mOffset = -0.f; timing.mEaseStart = -0.f; timing.mLastInput = .25f;
+                timing.mWeightedTime = .25f; timing.mOutputTime = .25f;
+                reaction.mStarted = true; reaction.mAnimationTime = .25f;
+            }
+            if (phase >= 3) reaction.mRetirement = ESM4::RuntimeReactionRetirement{.125f, {}};
+            if (phase == 4) reaction.mRetirement->mStartClock = 1000.25f;
+            const auto bytes = state.serializeBinary();
+            const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+            EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+            EXPECT_EQ(loaded.serializeBinary(), bytes);
+            EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+            EXPECT_EQ(loaded.mPhysicalActions, state.mPhysicalActions);
+            const std::string prefix = "reaction54_" + std::to_string(static_cast<unsigned>(kind))
+                + "_" + std::to_string(phase);
+            std::string wire;
+            constexpr char hex[] = "0123456789abcdef";
+            for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+            RecordProperty(prefix + "_hex", wire);
+            RecordProperty(prefix + "_json", state.canonicalJson());
+            if (phase >= 2)
+            {
+                EXPECT_TRUE(std::signbit(*loaded.mNativeMeleeStates.at(actor).mReaction->mSequenceTiming.mOffset));
+            }
+        }
+}
+
+TEST(ESM4RuntimeState, Reaction54RejectsReplayConflictingPlaybackAndMalformedTimers)
+{
+    const auto state = reactionState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto reject = [&](auto change) {
+        auto bad = state; change(bad);
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto& s) { s.mVersion = 53; });
+    reject([&](auto& s) { s.mNativeAnimationClocks.clear(); });
+    reject([&](auto& s) { s.mNativeActorValues.front().mProcessAction = 7; });
+    for (auto id : {0u, 1u, 2u, 5u, 7u})
+        reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mContactId = id; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mKind = static_cast<ESM4::MeleeReactionKind>(3); });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mStrike = meleeState().mNativeMeleeStates.at(actor).mStrike; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mAnimationGroup.clear(); });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mSequenceTiming.mOffset = 0; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mRetirement = ESM4::RuntimeReactionRetirement{.1f, {}}; });
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+        reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mReaction->mAnimationTime = bad; });
+    auto active = state;
+    auto& reaction = *active.mNativeMeleeStates.at(actor).mReaction;
+    reaction.mSequenceTiming = ESM4::updateMeleeSequenceTiming({}, 0, 1, 0, 1);
+    for (float duration : {0.f, -1.f, std::numeric_limits<float>::infinity()})
+    {
+        reaction.mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+        EXPECT_THROW(active.serializeBinary(), std::runtime_error);
+    }
+    reaction.mRetirement = ESM4::RuntimeReactionRetirement{.125f, -1.f};
+    EXPECT_THROW(active.serializeBinary(), std::runtime_error);
+    reaction.mRetirement->mStartClock = 0;
+    reaction.mSequenceTiming.mEasing = true;
+    EXPECT_THROW(active.serializeBinary(), std::runtime_error);
+    const auto bytes = state.serializeBinary();
+    for (std::size_t size = 0; size < bytes.size(); ++size)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({bytes.begin(), bytes.begin() + size}), std::runtime_error);
+    auto changed = state;
+    changed.mNativeMeleeStates.at(actor).mReaction->mStarted = true;
+    const auto changedBytes = changed.serializeBinary();
+    unsigned differences = 0;
+    for (std::size_t i = 0; i < bytes.size(); ++i)
+        if (bytes[i] != changedBytes[i])
+        {
+            ++differences;
+            auto malformed = bytes; malformed[i] = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(malformed), std::runtime_error);
+        }
+    EXPECT_EQ(differences, 1u);
+}
+
+TEST(ESM4RuntimeState, Reaction54DoesNotInventLegacySequenceOrClockOwnership)
+{
+    for (std::int16_t action : {6, 7, 8})
+    {
+        auto old = reactionState(); const auto actor = old.mReferences.front().mKey;
+        old.mVersion = 53; old.mNativeMeleeStates.at(actor).mReaction.reset();
+        old.mNativeAnimationClocks.clear(); old.mNativeActorValues.front().mProcessAction = action;
+        const auto wire = old.serializeBinary();
+        auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+        EXPECT_FALSE(loaded.mNativeMeleeStates.at(actor).mReaction);
+        EXPECT_TRUE(loaded.mNativeAnimationClocks.empty());
+        EXPECT_EQ(loaded.serializeBinary(), wire);
+        loaded.mVersion = 54;
+        const auto current = ESM4::RuntimeState::deserializeBinary(loaded.serializeBinary());
+        EXPECT_FALSE(current.mNativeMeleeStates.at(actor).mReaction);
+        EXPECT_TRUE(current.mNativeAnimationClocks.empty());
+        EXPECT_EQ(current.mNativeActorValues.front().mProcessAction, action);
+    }
+}

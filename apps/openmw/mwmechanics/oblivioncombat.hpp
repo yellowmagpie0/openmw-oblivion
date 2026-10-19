@@ -232,6 +232,8 @@ namespace MWMechanics
         std::vector<OblivionPhysicalConditionChange> mConditionChanges{};
         std::optional<OblivionCombatRandomTransition> mRandomTransition{};
         std::optional<OblivionKnockbackContact> mKnockback{};
+        std::optional<ESM4::RuntimeMeleeReaction> mAttackerReaction{};
+        std::optional<ESM4::RuntimeMeleeReaction> mVictimReaction{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -489,6 +491,9 @@ namespace MWMechanics
         // Accepted renderer binding publishes attack2, or followthrough3 for
         // an already committed contact. It never imports an animation pointer.
         bool bindMeleePlayback(std::uint64_t id, const ESM::FormKey& actor);
+        // Cancels an owned reaction without consuming its causal contact again.
+        // A foreign process action is preserved. Renderer release is external.
+        bool cancelMeleeReaction(std::uint64_t contact, const ESM::FormKey& actor) noexcept;
         // No allocation or Alive precondition: safe after death/life cancellation.
         void clearMeleeInput(const ESM::FormKey& actor) noexcept;
         std::uint64_t allocateAction();

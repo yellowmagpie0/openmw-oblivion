@@ -1,0 +1,237 @@
+{
+  "status": "Schema54 reaction ownership and atomic contact publication verified; controller playback/recovery and full M15S4 incomplete",
+  "code_state": {
+    "head": "58d33f47fda2f12dc1bce8683da87c7f9f3d4c6c",
+    "source_fingerprint": "81c59b15ef34b6a0ecf9b9a18d3934be2c1d95c54ce5d548721150f2a39b82ab"
+  },
+  "tested_source_sha256": {
+    "apps/components_tests/esm4/runtimestate.cpp": "4bd1f52ab631ee167e5a77aa803b61ba8a7e915e2a34378847093fc1a04daa50",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "5c3cb4a875bf0e6d290a83ec8a80f381c63ed1c9f38909c6cb3912f5c1194d4c",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "6e34674e261cf62751e1cb39c507fbe801c6b79e554d8a2e3b040574930c4243",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "0a37369920d45a3556ace47c7781a14bb7381606bbfa65766096199b0f5ca03c",
+    "components/esm4/runtimestate.cpp": "95f7b323bfbf2656823bdd78809a88e4383bb5350afce34682dd9608f16d2932",
+    "components/esm4/runtimestate.hpp": "59b9016a922ec34f4e98ae96ac3a4765145f3ba9f75724101cbd4d1775714aae",
+    "scripts/tes4_runtime_state.py": "c97289fc0bc7f58f94eb9cdf7fa04e38fa6209e85131418c4cca3126a5b809c7",
+    "scripts/tests/test_tes4_runtime_state.py": "2dbed90acadde7068c73b8ffa96be83047d3cc596e2223e937d74efc15cea2ba"
+  },
+  "implemented": [
+    "Optional typed BlockHit/Recoil/Stagger ownership retains consumed causal contact, selected group, renderer time, native activation timing, Start progress and optional unanchored/anchored positive retirement interval. BlockAttack remains a separate attack protocol.",
+    "Strict C++/Python schema54 codecs and validators reject replaying contacts, mismatched actions/owners, missing clocks, malformed timing and conflicting strike/bow ownership. Legacy raw actions6/7/8 acquire no invented sequence or timer.",
+    "Prepared physical contact stages new reactions with resource/RNG/condition publication and cancels only participant strikes without allocating a new action. Stale participant leases fail; unrelated actor changes survive.",
+    "External process action changes and transactional equipment withdrawal clear superseded reaction/input ownership. Victim incapacitation does not restore cleared attacker AI intent. Matching cancellation is idempotent and does not consume the cause twice."
+  ],
+  "build_checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-normal-02/verification.json",
+      "sha256": "6c662c8910b05cbafd8190ce7ed5b4db70045467421fee1969c355850a6e34d0",
+      "results": {
+        "components": {
+          "executed": 2944,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "51747a3bf18b177c2b5a789ce36a7b68f20b3f1201a55f03e8bc4eccfda49eb8",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3aa62c3dc7648d69ca4a6ec79eef0d3ce57f62e2016ee2f9c83a23c118001d47",
+          "inventory_sha256": "ae08c94b70b89d2a2d9dd7bf98113f9eecaa29c7192f2cbfb1b69e606ea32e41",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1741,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4e84e4e5963456ad7415c42585271c895ee1f5f668a1ce2eaf0b96196c26b603",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "95459861a3c517210a26ee6e0c7b3186f964dbc14dadb49b34014f47a31789bf",
+          "inventory_sha256": "4b5bcca9709c00172440512309dc41db1c75865f23181d72285489c3854eabb8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 327,
+          "passed": true,
+          "log_sha256": "ad0b0d12f93094e6a2f793a1a39fac7666f6046076e9841903472e73ab917724"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-sanitized-02/verification.json",
+      "sha256": "74727c750f134da685d008785e1d22acac583ef6026bfab2a68e102029f7aa6b",
+      "results": {
+        "sanitize": {
+          "executed": 797,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "a38e24f71bf3576344a327d79f1188d04b2643cb43e76c930f51356838347a02",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f2c945c430027d757ae8b08b7b3acf5477943ef569a96dd36efb341b5b67c6ca",
+          "inventory_sha256": "70d06a8ba24ae310623ac67fa6f066842e89750506e47e95b17256d964560bfa",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1741,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "15324cc525a404a5213a4450d794bdc5f3ed1329d62dc3fcbfdd40a1c3497b65",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "edc9431df2851c786ea6d0714d16de766573a510bb3444bf043393f941b629e0",
+          "inventory_sha256": "4b5bcca9709c00172440512309dc41db1c75865f23181d72285489c3854eabb8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "source_unchanged_during_checks": true,
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "scope": "Full normal component and engine inventories and Python discovery; ESM4* components and full engine inventory under ASan/UBSan. Leak detection disabled.",
+    "warning_free": false,
+    "warnings": "Existing aggregate, range-loop, enum conditional and GoogleTest macro warnings remain. The new priorVictimContact ASSERT_TRUE conditional also emits a dangling-else warning; no warning-free claim."
+  },
+  "codec_interoperability": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-interop-01/normal-02.json",
+      "sha256": "a337772c7f84d2f8e86870103d52013925981c47fea26ea255409370d7f31892"
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-interop-01/sanitized-02.json",
+      "sha256": "b116da930b0fea4a152e863a3787c63949e2504dcdebf1e04434d93cda8892a3"
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-interop-01/verify.py",
+      "sha256": "c96fa12c933f9bd625596adca7f8217b2d7cfd114d38c4e4bb8c67bc4d852d89"
+    },
+    "cases_per_profile": 15,
+    "identical_bytes_across_profiles_and_prior_candidate": true,
+    "scope": "Actual C++ serialized bytes and canonical JSON from GoogleTest XML, independently read/re-encoded by the Python runtime codec; activation, initialized timing and unanchored/anchored retirement, signed zero and causal action ledger. No live controller or application course.",
+    "runtime_acceptance": false
+  },
+  "historical_legacy_runtime_regression": {
+    "source_state": {
+      "head": "58d33f47fda2f12dc1bce8683da87c7f9f3d4c6c",
+      "source_fingerprint": "027004f89616268973b17124ae8f7ddcf601805e79b77c75e6b5e7c1048d0b4f"
+    },
+    "source_differs_from_final_tested_candidate": true,
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/verification.json",
+      "sha256": "6ed0a7e4db6a7db821aa778e33d062d88ebf05d01382e645d9ed45274d07c397"
+    },
+    "own_profile_build_receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/accepted-builds.json",
+      "sha256": "baea031ae07746203ee11be6f0255e7a9ee0959bdaf8c2cb0bd36c4529976d0f"
+    },
+    "preregistered_acceptance": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/preregistered-acceptance.json",
+      "sha256": "b217a57a73614a2a2e7d51131db6af3689d091400a66fd82c78ff75908de9c27"
+    },
+    "manifests": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/manifest.json",
+        "sha256": "0669d9d2880fe6eea395cef31f28244a33b66ae66637bcb30f5019a06d8c5792"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/continuation.json",
+        "sha256": "22c9fb681e1d996237ae5f1e3b9ce410e4e9070d773283fbd1bf851ef7e65055"
+      }
+    ],
+    "base_editable_manifests": [
+      "scripts/data/oblivion_compat/oblivion_m15_initially_broken_shield.json",
+      "scripts/data/oblivion_compat/oblivion_m15_initially_broken_shield_continuation.json"
+    ],
+    "manifest_changes": "Scenario names only; original input actions and expected damage/resources/inventory/body/RNG/action outcomes retained. Acceptance adds schema53-to54 and reaction=null assertions.",
+    "executable_sha256": "f5c2ad45f66a8526d19634646bf8aa747884edabcf33581d22b2d3f37feec311",
+    "process_epochs": [
+      {
+        "pid": 605527,
+        "start_ticks": 14580702,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      },
+      {
+        "pid": 605887,
+        "start_ticks": 14602051,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5"
+      }
+    ],
+    "staged_input_sha256": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+    "output_sha256": [
+      "64b8c75d14734edc8fbe1d05a5f270ff65f771e5fe46c544eb56fd0464bc1339",
+      "8b190bb166a29a997ab48d51ec71dfe0c25993210564259ed54e99124de0c459"
+    ],
+    "migration": {
+      "input": 53,
+      "outputs": [
+        54,
+        54
+      ],
+      "no_reaction_invented": true,
+      "second_input_equals_first_output": true
+    },
+    "native_actor_arrays": 9,
+    "exact_actor_bits_except_expected_health": true,
+    "no_replay_on_exact_output_fresh_process_load": true,
+    "visual_review": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-ownership-legacy-runtime-normal-01/visual-review.json",
+      "sha256": "ae1de4786ec3872ceb8f69264ec77bb2efae5d4138b034886792bd47535485ef"
+    },
+    "limits": "Prior candidate only. All reactions are null. No owned reaction playback/recovery proof, no final-candidate runtime proof, no quantitative stock PCM correlation. Public NPC block controls with AI disabled; three directly reviewed forward-facing captures do not show floor placement."
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/schema54-python-attempt01.log",
+      "reason": "Existing manual migration test omitted the new schema54 upgrade; corrected before accepted checks."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/schema54-python-attempt02.log",
+      "reason": "New fixtures compared unsorted input pending IDs with canonical sorted output; expectations corrected without changing codec behavior."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-reaction-ownership-normal-01/verification.json",
+        "build/oblivion-compat/m15/S4/native-reaction-ownership-sanitized-01/verification.json"
+      ],
+      "reason": "Passing earlier candidate. Review then added action-change/equipment-withdrawal consistency and one World regression case; final02 evidence is separate."
+    }
+  ],
+  "native_rule_provenance": "M15-BLOCK-REACTION-INSTRUCTION-VERIFICATION.json and M15-REACTION-SLOT-VERIFICATION.json retain the independent original-executable group/action/lifecycle observations. This chunk adds fork-owned serialization/transaction contracts; it makes no new original-game gameplay claim.",
+  "remaining_integration": [
+    "Normal contact adapters must select and prepare actual supported reaction groups; existing ReactionOnly and Expert/Master admission guards remain.",
+    "CharacterController must bind and advance owned reaction sequences, render native activation/retirement, interrupt strikes/held block correctly, and recover only when the owning sequence becomes inactive.",
+    "Represent owned inactive sequence state until the next actor-prefix recovery, including immediate zero/negative retirement, and persist outgoing/replaced sequence layers needed for blend continuation. The current foundation does not represent these states.",
+    "Non-null restored reactions currently block new strike/bow/block starts but have no controller recovery. Owned-reaction runtime acceptance is therefore explicitly false.",
+    "Complete mastery/effect, interruption/input/view/FPS, normal opponent, in-action restart and combined named-target/block/miss/wall/stagger requirements in the S4 audit."
+  ],
+  "owned_reaction_runtime_acceptance": false,
+  "final_candidate_runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}
