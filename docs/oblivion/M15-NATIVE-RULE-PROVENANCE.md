@@ -16341,3 +16341,24 @@ the receipt. The initial wrong-channel fixture and the initial Player fixture
 that failed to clear its extended memory region are retained as rejected
 attempts. Normal-contact descriptor generation and runtime acceptance remain
 open.
+
+### Correction: reaction scene predicate is a camera-frustum test
+
+Full original47F7B0 execution corrects the provisional ancestry label used for
+one supplied boundary in the preceding cached-reaction probes. It copies the
+NiAVObject world-bound sphere at+20, builds cached camera planes through
+718200/717A40, and classifies the sphere against six planes with47DA70. The
+SceneGraph globalB333CC +DC field supplies the camera. Twenty cases execute this
+complete path without stubs, with identical stored planes and results under
+both precision words. Identity-camera perspective fixtures distinguish an
+interior sphere from spheres behind/outside the frustum and zero-radius points
+on the near/far planes. The exact supplied values and results are recorded in
+`M15-REACTION-SCENE-GATE-VERIFICATION.json`.
+
+In474530, the predicate's true branch withB333B8 zero selects6C5C70; earlier
+Player-node equality branches also select it. The tested false boundary used
+by the cached-reaction probes selects the separate direct activation path.
+Their supplied values and original observations remain unchanged, but they
+must not be generalized to visible actors' scene-pose capture/easing. Full
+6C5860/6C5C70 snapshot execution, controlled-track capture and runtime integration
+remain open. This correction adds no rendered or normal-contact acceptance.

@@ -1,0 +1,167 @@
+{
+  "status": "Original reaction scene predicate identified and executed; pose-capture/controller integration remains open",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0047F7B0",
+  "actual_path": [
+    "0047DCA0 initializes cached plane storage",
+    "00718200/00717A40 construct camera frustum planes",
+    "0047DA70 classifies sphere against each plane"
+  ],
+  "cases": 20,
+  "passed": true,
+  "stubs": [],
+  "fixtures": "Supplied NiAVObject world-bound sphere at+20; identity camera world rotation, zero translation, scale1; perspective frustum left-1/right1/top1/bottom-1/near1/far100; increment native frame key each case. Both x87 precision words. No original-game process or loaded actor geometry.",
+  "observations": [
+    {
+      "sphere": [
+        10,
+        0,
+        0,
+        1
+      ],
+      "result": 1
+    },
+    {
+      "sphere": [
+        -10,
+        0,
+        0,
+        1
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        0,
+        10,
+        0,
+        1
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        0,
+        -10,
+        0,
+        1
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        0,
+        0,
+        10,
+        1
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        0,
+        0,
+        -10,
+        1
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        100,
+        0,
+        0,
+        0
+      ],
+      "result": 0
+    },
+    {
+      "sphere": [
+        101,
+        0,
+        0,
+        0
+      ],
+      "result": 0
+    }
+  ],
+  "precision_words": [
+    639,
+    895
+  ],
+  "plane_bits": [
+    1065353216,
+    0,
+    0,
+    1065353216,
+    3212836864,
+    2147483648,
+    2147483648,
+    3267887104,
+    1060439283,
+    0,
+    1060439283,
+    0,
+    1060439283,
+    0,
+    3207922931,
+    0,
+    1060439283,
+    3207922931,
+    0,
+    0,
+    1060439283,
+    1060439283,
+    0,
+    0
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/frustum-gate-probe-01.py",
+      "sha256": "94086259fae30d4d8f171ea8020341c0b054ce191aa5da6dca38f9bf1223407e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/frustum-gate-corpus01.json",
+      "sha256": "051d83a4e29ecc24773a4ca5d91227fa5856160da4ec60acb021e53e1ce04a3e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/scene-membership-complete-private.txt",
+      "sha256": "6c105d1feb25a75c150e52398d81876a448b0d2d3b1edc0f28987e764f8a6abe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/sphere-plane-classification-private.txt",
+      "sha256": "942e9eba05035a5e4ff6c193982d37485bcec23e794d72ff4977356bf6e03b7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/camera-frustum-planes-private.txt",
+      "sha256": "7c7dc784f92c540aa7700e475dedaf70941b9a45d0b82e67b968c023ca528475"
+    }
+  ],
+  "meaning": "The predicate tests the supplied world-bound sphere against six camera frustum planes. It is not an ancestry test. The SceneGraph globalB333CC +DC field is a camera. Native474530 selects6C5C70 when this predicate is true andB333B8 is zero, or when an earlier Player-node equality branch matches; otherwise the tested fallback uses470B20 direct activation. The actual6C5C70 pose capture path is not executed by this probe.",
+  "correction": "Earlier native caller receipts retain ancestry as a provisional label for the supplied47F7B0=false boundary. The value supplied in those experiments is unchanged; this receipt corrects its meaning. Those direct-activation results must not be generalized to visible/camera-intersecting actors.",
+  "remaining": [
+    "Execute full6C5860/6C5C70 pose capture with a valid manager/palette/sequence pool and controlled tracks.",
+    "Retain native pose snapshot and scene visibility inputs through normal contact publication, save and recreation.",
+    "Verify real scene/view/C4 mode and actual Player-node inputs before normal reaction acceptance."
+  ],
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}

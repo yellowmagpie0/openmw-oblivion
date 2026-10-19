@@ -7863,3 +7863,13 @@ and Player results. There is **no new rendered or normal-input restart course**
 in this chunk. The prior owned-state continuation remains historical controller
 evidence and its Stagger/outgoing duration is synthetic. Normal contact adapters
 still generate no reaction descriptors. **M15S4 is still incomplete.**
+
+### Reaction scene-gate correction
+
+The provisional47F7B0 ancestry label is now resolved: full original execution
+with no stubs shows a world-bound-sphere/camera-frustum test. Twenty cases agree
+under both precision words. `M15-REACTION-SCENE-GATE-VERIFICATION.json` records
+fixtures, native paths and hashes; the cached-reaction receipt links this
+correction. Its supplied false boundary and recorded outputs remain unchanged.
+Visible actors can select the separate scene-pose capture path, which still
+requires implementation and runtime acceptance. **M15S4 remains incomplete.**
