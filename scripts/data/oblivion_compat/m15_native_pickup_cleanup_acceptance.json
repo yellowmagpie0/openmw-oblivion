@@ -1,0 +1,82 @@
+{
+  "scope": "Normal Space pickup of a shield dropped by a previous independently accepted normal-input block break; clear actor dropped-list before save, retain deleted reference dropper, then actual quit/fresh load/repeated Space/resave without duplicate pickup. Keyboard first-person bounded course; no fullS4 claim.",
+  "source": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01/staged-pickup.omwsave",
+  "source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+  "staged_source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+  "fixture_changes": [],
+  "previous_camera_staging": {
+    "source": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+    "source_sha256": "6652488ea49b2889a8f05f95045c13b853f3816666b26a7b4afdd3bdd0ab09f3",
+    "staged_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+    "only_changed_path": "player.position",
+    "before": [
+      672.0,
+      -40.0,
+      -109.68915557861328,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "after": [
+      585.80615234375,
+      28.275888442993164,
+      -108.28837585449219,
+      1.0267834663391113,
+      0.0,
+      1.5707963705062866
+    ],
+    "camera_height": 124,
+    "aim_body_position": [
+      665.80615234375,
+      28.275888442993164,
+      -116.54217529296875
+    ],
+    "acceptance_action": "normal Space/activate through SDL input; no take API, console, inventory or contact injection"
+  },
+  "expected": {
+    "victim": "content:oblivion.esm:01fc43",
+    "shield_base": "content:oblivion.esm:0352c1",
+    "reference": "dynamic:native-reference:0000000000000001",
+    "actor_list_after": null,
+    "reference_dropper_after": "content:oblivion.esm:01fc43",
+    "source_count_after": 0,
+    "player_shield_count": 1,
+    "player_condition": 0,
+    "physical_bodies_after": 0,
+    "right_sword": {
+      "base": "content:oblivion.esm:090615",
+      "count": 1,
+      "condition": 55.875,
+      "charge": -1.0,
+      "equipped_slots": 65536,
+      "hotkey": -1,
+      "owner": "null",
+      "remaining_usage_time": -1.0,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null
+    },
+    "action_next": 3,
+    "combat_rng": 505908858,
+    "next_dynamic_serial": 2,
+    "all_native_actor_value_arrays_unchanged": true
+  },
+  "original_finalization_oracle": {
+    "path": "build/oblivion-compat/m15/S4/native-pickup-finalization-oracle-02/verification.json",
+    "sha256": "ea23011516cd11c02f7c1357ec5324eb9868507c261e1441bcc4c6e9526a15f4",
+    "cases": 960
+  },
+  "limits": "Original list/flag wrapper with declared external boundaries, not full original-game pickup/scene emulation. Current-course runtime verifies actual scene/physics collection and cached/live save/restart state. Other S4 mastery/reaction/effect/input/view/FPS/in-action and combined gates remain open.",
+  "preregistered_before_this_course": true,
+  "sanitizer_environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "ALSOFT_CONF": "{output}/config/alsoft.conf",
+    "ALSOFT_DRIVERS": "wave",
+    "ALSOFT_LOGLEVEL": "3",
+    "ALSOFT_LOGFILE": "{output}/openal.log",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  }
+}

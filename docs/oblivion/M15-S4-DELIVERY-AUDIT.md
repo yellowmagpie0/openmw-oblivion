@@ -17,7 +17,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
-| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Later selected-shield breaks, pickup dropper-list cleanup and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
+| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
 weapon resistance, negative incoming damage, and remaining breakage branches.
@@ -7394,3 +7394,57 @@ expectations, runtime epochs and these limits. Later selected-shield wear-to-zer
 initially broken equipment, mastery/effect/reaction and interruption branches,
 the input/view/FPS and in-action restart matrices, and combined S4 acceptance
 remain open. **M15S4 is still incomplete.**
+
+## Native pickup dropper-list cleanup checkpoint
+
+The pickup transaction now removes the collected reference from its dropper's
+list before observers run, alongside inventory, source and scene publication.
+Loaded actor extras override an older runtime cache; cached actors can be updated
+without constructing their cells or inventories. The actual compatibility Player
+uses its accepted runtime identity despite having no native CellRef key. The
+collected reference retains its separate dropper metadata. Empty list extras are
+detached, absent extras stay absent, and the first matching entry is removed
+without changing the remaining order.
+
+Independent original `4D7D80` finalization, `4203C0` dropper lookup and
+`424C00`/`65C620` removal instructions pass **960 cases** against executable
+SHA-256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Reference virtual dispatch and actor caller slots were audited. Extra lookup,
+allocation/free, changed-reference registration, modification notification and
+Set3D are declared boundaries; this does not prove the original whole pickup,
+rendering or physics path.
+
+Normal `native-pickup-cleanup-normal-02` and ASan/UBSan
+`native-pickup-cleanup-sanitized-02` each pass **1,735 engine tests /125 suites**
+and **2,938 component tests /276 suites**, exact inventories, no failures/skips.
+They test dirty-source fingerprint
+`9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8`
+on parent `77edba887cdcdf0a0e76406522bbe82a3eb469de`.
+Nine literal helper cases and four new World tests cover extra presence/order,
+resident but unregistered actors, stale caches, callback reentry/failure,
+preparation failure/retry, cached-only fresh World roundtrip and absent authored
+actors/Player. The first normal attempt's three fixture failures, the separately
+found Player identity defect and canceled earlier sanitizer build are retained;
+only the corrected full02 runs are accepted.
+
+Both `native-pickup-cleanup-runtime-{normal,sanitized}-01` courses use the same
+unchanged pre-pickup save from the prior accepted physical shield-drop course.
+Actual Space collects one condition-zero shield; save/quit and a fresh process
+loading that exact output then repeat activation. Both saves detach the NPC list,
+retain the source dropper on the deleted reference, preserve the right sword and
+contain no loose body. All **913 present float32 actor-value stores /nine actors**
+match the input bit for bit, including signed zero; inventory, action-next3,
+RNG505908858 and dynamic serial2 remain exact. Additional content references are
+audited against the unchanged master. Three captures per profile are directly
+reviewed for shield presence, collection and continued absence after reload.
+These are completed-pickup restart checks, not an in-action restart matrix.
+
+Normal runtime began after its own full checks while the unchanged sanitizer
+source was still building; an immutable own-profile receipt records this order.
+Final acceptance requires both full profiles and both runtime courses. Application
+ELF hashes are pinned separately from the test binaries. ASan leak detection is
+disabled; this is not leak coverage. The editable pickup/continuation manifests,
+acceptance recipe and `M15-PICKUP-DROPPER-CLEANUP-VERIFICATION.json` record these
+layers and limits. The old stale-list observation in
+`M15-SHIELD-DROP-VERIFICATION.json` remains historical evidence. No migration of
+already-collected stale-list saves is claimed. **M15S4 is still incomplete.**

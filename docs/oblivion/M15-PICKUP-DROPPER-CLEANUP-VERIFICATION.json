@@ -1,0 +1,1375 @@
+{
+  "schema_version": 1,
+  "status": "Native actor dropped-list cleanup publishes with ordinary pickup and survives completed-pickup fresh-process restart; full M15S4 incomplete.",
+  "source_pin": {
+    "parent": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+    "files": {
+      "apps/components_tests/esm4/runtimestate.cpp": "dc86e588953572ecd303e5480076e322e8e69146ecf7d6c70b2768a10689e32d",
+      "apps/openmw/mwworld/oblivioninteraction.cpp": "a209770e151752cde340f62d4b88ec0f20bef4a6b3590dedf869af6092e85e0b",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8d22c399601420a509277ab31677d06fdc4b5e1653b52984630547b83f991b83",
+      "components/CMakeLists.txt": "4e4e7a85c85d101ccda59dde93a6368c9821c86266ba82cfe883608d11ad93eb",
+      "components/esm4/droprelations.hpp": "503defcf3655e76c7f26d0f6096448a23234492bec551007cc3d8dd30fd84ba6"
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/verification.json",
+      "sha256": "e13e6a9fec2bb85acf5bb5f375530d63a8d00d33ed88150cc913feb3f63ab8c7",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 334.816
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.265
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 27.582
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "3"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 72.356
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.798
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1735,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "869b94b4910a2a5e2a55a941270d20e56fca8db984503fd69cd292d65b7b4632",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "412129d2b241a73615b9a49cf1f3ac7990ceace6cd001d1a63f10df7e7e83ced",
+            "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2938,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "e8dba6d77c0695b23909ed239b275f763683646956935f31dc7824542e46618d",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "43011d8301793645d0f82a7d9f52d71a3d26f85ca94317c27b4c139045c68f0f",
+            "inventory_sha256": "d16583f4af3d3ace1b8d3823a3f95285a1eecaadf4919ca3b161c9150fcca909",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+          "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+        },
+        "source_after": {
+          "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+          "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/verification.json",
+      "sha256": "057f43ce2d1d629162e390b64dbf879b8a5d9ef1bea39748d25a95a0a47c719e",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 1259.004
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 162.508
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "3"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 121.82
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 70.027
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1735,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "70b51e9761597e3ac4903d85f2d5038c952a560ec3c331aa795fe2c39156fcf0",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "91a1bb08635806d5c5f444f50f2c181d4e338533c781426ec891281691d38807",
+            "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "components": {
+            "executed": 2938,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "0c6350a3a3f9c124db00915b004a5cdca8d731ce891f04231e38dbaed9a5932b",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "af27c4c8a799da3644b7bd37eb45d5dbaf50446989674d4e0d2b67104213b4ab",
+            "inventory_sha256": "a9f769ef375e91f1c953a1a0cb74cf04f00d5d778bf21ef1c4c3c89fb59af49e",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+          "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+        },
+        "source_after": {
+          "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+          "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+        }
+      }
+    }
+  },
+  "runtime": {
+    "normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/verification.json",
+        "sha256": "a76c879f3424a04116d217a3d5a62c3a718268be1ab71dade0ea47df130e0689",
+        "result": {
+          "passed": true,
+          "scope": "Normal Space pickup of a shield dropped by a previous independently accepted normal-input block break; clear actor dropped-list before save, retain deleted reference dropper, then actual quit/fresh load/repeated Space/resave without duplicate pickup. Keyboard first-person bounded course; no fullS4 claim.",
+          "epochs": [
+            {
+              "pid": 575382,
+              "start_ticks": 13503518,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "c68c5e4a93bebfee6ca19275bad864217cf959ea83df5f00d929e36a8785fa1e"
+            },
+            {
+              "pid": 575646,
+              "start_ticks": 13518545,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "c68c5e4a93bebfee6ca19275bad864217cf959ea83df5f00d929e36a8785fa1e"
+            }
+          ],
+          "application_sha256": "c68c5e4a93bebfee6ca19275bad864217cf959ea83df5f00d929e36a8785fa1e",
+          "source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+          "save_sha256": [
+            "124fdfcafd405dd59bdbbdf7c369c431e35d29cb64655b00f7ed83206e8e908d",
+            "0ae184ee76f9dd754b9f781f2b4f3af38293de79477d88c6d766d1bfea1a92fd"
+          ],
+          "actor_list_after": [
+            null,
+            null
+          ],
+          "taken_reference_dropper": "content:oblivion.esm:01fc43",
+          "player_shield_counts": [
+            1,
+            1
+          ],
+          "physical_body_counts": [
+            0,
+            0
+          ],
+          "all_native_actor_arrays_preserved": 9,
+          "right_sword_inventory_preserved": true,
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "next_dynamic_serial": 2,
+          "fresh_repeated_activation_did_not_duplicate": true,
+          "runtime_visual_review": "passed; see visual-review.json",
+          "full_M15S4_acceptance": false,
+          "limits": "Original list/flag wrapper with declared external boundaries, not full original-game pickup/scene emulation. Current-course runtime verifies actual scene/physics collection and cached/live save/restart state. Other S4 mastery/reaction/effect/input/view/FPS/in-action and combined gates remain open."
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/visual-review.json",
+        "sha256": "1daacad26ceb1e1b31c96e1f493f0175a33fd3d772352cfc5c9c883ea643d882",
+        "result": {
+          "passed": true,
+          "directly_reviewed": true,
+          "captures": [
+            {
+              "path": "first/shield-pickup-before.png",
+              "sha256": "e5222de0544c0b3de5472905d2587a6fc48a71f11bd9ed23b0701ec590d0c684"
+            },
+            {
+              "path": "first/shield-pickup-after.png",
+              "sha256": "7602aff1908b225a35a57b043b13cf27452c67ad80cfc2d83bff900f143a5bda"
+            },
+            {
+              "path": "second/pickup-fresh-repeated-activation.png",
+              "sha256": "2bfcae8fe728c5e4f89111f94de17d081637e676713cb3aa361bdabb63514f95"
+            }
+          ],
+          "observations": "First-person before: one stock Iron Shield on prison floor with focus label, NPC sword retained in frame and Player hands rendered. After actual Space: shield/model and focus label gone, Taken Iron Shield message visible. Fresh second process after repeated Space: same floor clear, no shield/focus/taken message; NPC sword and hands/dungeon render. Actor-list and inventory/resource assertions are separate decoded-save evidence."
+        }
+      },
+      "audit": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/extra-content-reference-audit.json",
+        "sha256": "d69cb2a87e020b907362fe964c86f11c38cff8ad3edbe4fad985d569a7dda27d",
+        "result": {
+          "passed": true,
+          "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "counts": [
+            {
+              "count": 0,
+              "identity_base_cell_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "count": 0,
+              "identity_base_cell_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            }
+          ],
+          "persistent_exterior_references": [],
+          "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim."
+        }
+      },
+      "exact_actor_values": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/exact-actor-value-bit-verification.json",
+        "sha256": "8a69062e56a81acbcda64e90f19ae7acfb58b1bbd6cebfec088f0aac2fde95c6",
+        "result": {
+          "passed": true,
+          "scope": "Additional independent check of the preregistered unchanged raw AV arrays. Compares every present float32 bit pattern including signed zero; expected data is the immutable input save, not production combat output.",
+          "actors": 9,
+          "present_float32_stores_per_snapshot": 913,
+          "snapshots": 2,
+          "source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+          "output_sha256": [
+            "124fdfcafd405dd59bdbbdf7c369c431e35d29cb64655b00f7ed83206e8e908d",
+            "0ae184ee76f9dd754b9f781f2b4f3af38293de79477d88c6d766d1bfea1a92fd"
+          ]
+        }
+      },
+      "accepted_builds": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/accepted-builds.json",
+        "sha256": "b454c25d287f2208ce93631ad23d8f47eac679de1298eea6961aea4a68e5e8cf",
+        "result": {
+          "passed": true,
+          "source_pin": {
+            "parent": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "files": {
+              "apps/components_tests/esm4/runtimestate.cpp": "dc86e588953572ecd303e5480076e322e8e69146ecf7d6c70b2768a10689e32d",
+              "apps/openmw/mwworld/oblivioninteraction.cpp": "a209770e151752cde340f62d4b88ec0f20bef4a6b3590dedf869af6092e85e0b",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8d22c399601420a509277ab31677d06fdc4b5e1653b52984630547b83f991b83",
+              "components/CMakeLists.txt": "4e4e7a85c85d101ccda59dde93a6368c9821c86266ba82cfe883608d11ad93eb",
+              "components/esm4/droprelations.hpp": "503defcf3655e76c7f26d0f6096448a23234492bec551007cc3d8dd30fd84ba6"
+            }
+          },
+          "source_state": {
+            "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/verification.json",
+              "sha256": "e13e6a9fec2bb85acf5bb5f375530d63a8d00d33ed88150cc913feb3f63ab8c7",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 334.816
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 27.582
+                  },
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "components-tests",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "components-build.log",
+                    "returncode": 0,
+                    "seconds": 72.356
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "components-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.065
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/components.xml"
+                    ],
+                    "log": "components.log",
+                    "returncode": 0,
+                    "seconds": 13.798
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1735,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "869b94b4910a2a5e2a55a941270d20e56fca8db984503fd69cd292d65b7b4632",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "412129d2b241a73615b9a49cf1f3ac7990ceace6cd001d1a63f10df7e7e83ced",
+                    "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  },
+                  "components": {
+                    "executed": 2938,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "e8dba6d77c0695b23909ed239b275f763683646956935f31dc7824542e46618d",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "43011d8301793645d0f82a7d9f52d71a3d26f85ca94317c27b4c139045c68f0f",
+                    "inventory_sha256": "d16583f4af3d3ace1b8d3823a3f95285a1eecaadf4919ca3b161c9150fcca909",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                },
+                "source_after": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                }
+              }
+            },
+            "sanitized": {
+              "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/verification.json",
+              "sha256": "057f43ce2d1d629162e390b64dbf879b8a5d9ef1bea39748d25a95a0a47c719e",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 1259.004
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.516
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 162.508
+                  },
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "components-tests",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "components-build.log",
+                    "returncode": 0,
+                    "seconds": 121.82
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "components-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.266
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/components.xml"
+                    ],
+                    "log": "components.log",
+                    "returncode": 0,
+                    "seconds": 70.027
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1735,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "70b51e9761597e3ac4903d85f2d5038c952a560ec3c331aa795fe2c39156fcf0",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "91a1bb08635806d5c5f444f50f2c181d4e338533c781426ec891281691d38807",
+                    "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  },
+                  "components": {
+                    "executed": 2938,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "0c6350a3a3f9c124db00915b004a5cdca8d731ce891f04231e38dbaed9a5932b",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "af27c4c8a799da3644b7bd37eb45d5dbaf50446989674d4e0d2b67104213b4ab",
+                    "inventory_sha256": "a9f769ef375e91f1c953a1a0cb74cf04f00d5d778bf21ef1c4c3c89fb59af49e",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                },
+                "source_after": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                }
+              }
+            }
+          }
+        }
+      },
+      "application": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "c68c5e4a93bebfee6ca19275bad864217cf959ea83df5f00d929e36a8785fa1e"
+      },
+      "preregistered_pin": {
+        "staged-input.omwsave": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+        "manifest.json": "9f29cf71fc1807b2425a63f30f7b09808a6190642d2bd08e92173bdaa42e5856",
+        "continuation.json": "0dc29ad73463e7dbd1fec0bdffce089194b87ec729b7b71264f370e694e88365",
+        "preregistered-acceptance.json": "0e6c600deab25cd385134428eefb3cf40371a4e0da5d7ecbf976a6ad5ee215f3",
+        "verify.py": "d9bca36a98b6ae1d0c207f189cdc6d9afd454aaa6167f03202cba6b6007eb5d0"
+      },
+      "own_profile_before_launch": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-normal-01/accepted-profile-before-launch.json",
+        "sha256": "f7ade3eee65f6ce64a2904dae963e4508c40377a72baf4068c497eafcdd8026f",
+        "result": {
+          "passed": true,
+          "profile": "normal",
+          "source_pin": {
+            "parent": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "files": {
+              "apps/components_tests/esm4/runtimestate.cpp": "dc86e588953572ecd303e5480076e322e8e69146ecf7d6c70b2768a10689e32d",
+              "apps/openmw/mwworld/oblivioninteraction.cpp": "a209770e151752cde340f62d4b88ec0f20bef4a6b3590dedf869af6092e85e0b",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8d22c399601420a509277ab31677d06fdc4b5e1653b52984630547b83f991b83",
+              "components/CMakeLists.txt": "4e4e7a85c85d101ccda59dde93a6368c9821c86266ba82cfe883608d11ad93eb",
+              "components/esm4/droprelations.hpp": "503defcf3655e76c7f26d0f6096448a23234492bec551007cc3d8dd30fd84ba6"
+            }
+          },
+          "source_state": {
+            "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+          },
+          "report_path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/verification.json",
+          "report_sha256": "e13e6a9fec2bb85acf5bb5f375530d63a8d00d33ed88150cc913feb3f63ab8c7",
+          "report": {
+            "schema_version": 1,
+            "passed": true,
+            "commands": [
+              {
+                "argv": [
+                  "cmake",
+                  "--build",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                  "--target",
+                  "openmw",
+                  "openmw-tests",
+                  "esmtool",
+                  "-j",
+                  "3"
+                ],
+                "log": "engine-build.log",
+                "returncode": 0,
+                "seconds": 334.816
+              },
+              {
+                "argv": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                  "--gtest_list_tests"
+                ],
+                "log": "engine-inventory.txt",
+                "returncode": 0,
+                "seconds": 0.265
+              },
+              {
+                "argv": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                  "--gtest_filter=*",
+                  "--gtest_repeat=1",
+                  "--gtest_shuffle=0",
+                  "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/engine.xml"
+                ],
+                "log": "engine.log",
+                "returncode": 0,
+                "seconds": 27.582
+              },
+              {
+                "argv": [
+                  "cmake",
+                  "--build",
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                  "--target",
+                  "components-tests",
+                  "-j",
+                  "3"
+                ],
+                "log": "components-build.log",
+                "returncode": 0,
+                "seconds": 72.356
+              },
+              {
+                "argv": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                  "--gtest_list_tests"
+                ],
+                "log": "components-inventory.txt",
+                "returncode": 0,
+                "seconds": 0.065
+              },
+              {
+                "argv": [
+                  "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                  "--gtest_filter=*",
+                  "--gtest_repeat=1",
+                  "--gtest_shuffle=0",
+                  "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/components.xml"
+                ],
+                "log": "components.log",
+                "returncode": 0,
+                "seconds": 13.798
+              }
+            ],
+            "results": {
+              "engine": {
+                "executed": 1735,
+                "inventory_matches": true,
+                "failed": 0,
+                "skipped": 0,
+                "filter": "*",
+                "binary_sha256": "869b94b4910a2a5e2a55a941270d20e56fca8db984503fd69cd292d65b7b4632",
+                "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                "xml_sha256": "412129d2b241a73615b9a49cf1f3ac7990ceace6cd001d1a63f10df7e7e83ced",
+                "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+                "configuration": {
+                  "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                  "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                  "CMAKE_CXX_FLAGS": "",
+                  "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                  "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                }
+              },
+              "components": {
+                "executed": 2938,
+                "inventory_matches": true,
+                "failed": 0,
+                "skipped": 0,
+                "filter": "*",
+                "binary_sha256": "e8dba6d77c0695b23909ed239b275f763683646956935f31dc7824542e46618d",
+                "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                "xml_sha256": "43011d8301793645d0f82a7d9f52d71a3d26f85ca94317c27b4c139045c68f0f",
+                "inventory_sha256": "d16583f4af3d3ace1b8d3823a3f95285a1eecaadf4919ca3b161c9150fcca909",
+                "configuration": {
+                  "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                  "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                  "CMAKE_CXX_FLAGS": "",
+                  "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                  "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                }
+              }
+            },
+            "source_before": {
+              "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+              "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+            },
+            "source_after": {
+              "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+              "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+            }
+          },
+          "execution_order_policy": "Own-profile full engine/components pass authorizes this profile runtime while the other profile builds, with sources frozen. Final acceptance/commit still requires BOTH fullcheck reports and BOTH runtime courses. Revised ordering before any current-course app launch; no input, expected value or final gate relaxed."
+        }
+      }
+    },
+    "sanitized": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/verification.json",
+        "sha256": "379b7d858dd9c9303b3ed0d511cb34e4c6a6bddea300e8918f38de27deeedf9a",
+        "result": {
+          "passed": true,
+          "scope": "Normal Space pickup of a shield dropped by a previous independently accepted normal-input block break; clear actor dropped-list before save, retain deleted reference dropper, then actual quit/fresh load/repeated Space/resave without duplicate pickup. Keyboard first-person bounded course; no fullS4 claim.",
+          "epochs": [
+            {
+              "pid": 579152,
+              "start_ticks": 13603146,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "2b45779b44332652640f3f3a6d788fb944d6ab3aab8323844fd4afeeb992cbfd"
+            },
+            {
+              "pid": 579325,
+              "start_ticks": 13627689,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "2b45779b44332652640f3f3a6d788fb944d6ab3aab8323844fd4afeeb992cbfd"
+            }
+          ],
+          "application_sha256": "2b45779b44332652640f3f3a6d788fb944d6ab3aab8323844fd4afeeb992cbfd",
+          "source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+          "save_sha256": [
+            "ba33034993cbc97f8a7394c65e833028b70e9c9426592a6c36e0a29387817cc7",
+            "41e00fd4f122080ea4445e49b99356066a5c392a978aefcaed4132a0b9af5c4e"
+          ],
+          "actor_list_after": [
+            null,
+            null
+          ],
+          "taken_reference_dropper": "content:oblivion.esm:01fc43",
+          "player_shield_counts": [
+            1,
+            1
+          ],
+          "physical_body_counts": [
+            0,
+            0
+          ],
+          "all_native_actor_arrays_preserved": 9,
+          "right_sword_inventory_preserved": true,
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "next_dynamic_serial": 2,
+          "fresh_repeated_activation_did_not_duplicate": true,
+          "runtime_visual_review": "passed; see visual-review.json",
+          "full_M15S4_acceptance": false,
+          "limits": "Original list/flag wrapper with declared external boundaries, not full original-game pickup/scene emulation. Current-course runtime verifies actual scene/physics collection and cached/live save/restart state. Other S4 mastery/reaction/effect/input/view/FPS/in-action and combined gates remain open."
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/visual-review.json",
+        "sha256": "ec35a641dc85183d3621d120dd6d90030c34f0bddd33791fbdf9beaf48556139",
+        "result": {
+          "passed": true,
+          "directly_reviewed": true,
+          "captures": [
+            {
+              "path": "first/shield-pickup-before.png",
+              "sha256": "336090c46d5394e0fe96149eb77e231118ce20782a97abb69adc4e36f8e1d199"
+            },
+            {
+              "path": "first/shield-pickup-after.png",
+              "sha256": "df659807c7e4325661123a6df40c1d03c09ea933a0755da31ac1d7cd605c2d8e"
+            },
+            {
+              "path": "second/pickup-fresh-repeated-activation.png",
+              "sha256": "68756d7949ed61443f44a72b9c2a4b82c8e1c220ddb417b53b6b291a02bf4d59"
+            }
+          ],
+          "observations": "First-person before: Iron Shield on dungeon floor with focus label, Player hands and NPC right sword visible. After normal Space: shield/model and focus label gone; Taken: Iron Shield visible. Fresh second process after repeated Space: floor remains clear with no shield, focus label or Taken message; hands, dungeon and NPC sword still rendered. Relation/inventory/body/resource assertions are separate decoded-save evidence."
+        }
+      },
+      "audit": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/extra-content-reference-audit.json",
+        "sha256": "d69cb2a87e020b907362fe964c86f11c38cff8ad3edbe4fad985d569a7dda27d",
+        "result": {
+          "passed": true,
+          "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "counts": [
+            {
+              "count": 0,
+              "identity_base_cell_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "count": 0,
+              "identity_base_cell_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            }
+          ],
+          "persistent_exterior_references": [],
+          "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim."
+        }
+      },
+      "exact_actor_values": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/exact-actor-value-bit-verification.json",
+        "sha256": "b821f557e5b30746c0b56d489e78db0d66e45b91e15578a9cf67d10d52b6dea8",
+        "result": {
+          "passed": true,
+          "scope": "Additional independent check of the preregistered unchanged raw AV arrays. Compares every present float32 bit pattern including signed zero; expected data is the immutable input save, not production combat output.",
+          "actors": 9,
+          "present_float32_stores_per_snapshot": 913,
+          "snapshots": 2,
+          "source_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+          "output_sha256": [
+            "ba33034993cbc97f8a7394c65e833028b70e9c9426592a6c36e0a29387817cc7",
+            "41e00fd4f122080ea4445e49b99356066a5c392a978aefcaed4132a0b9af5c4e"
+          ]
+        }
+      },
+      "accepted_builds": {
+        "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-runtime-sanitized-01/accepted-builds.json",
+        "sha256": "b454c25d287f2208ce93631ad23d8f47eac679de1298eea6961aea4a68e5e8cf",
+        "result": {
+          "passed": true,
+          "source_pin": {
+            "parent": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "files": {
+              "apps/components_tests/esm4/runtimestate.cpp": "dc86e588953572ecd303e5480076e322e8e69146ecf7d6c70b2768a10689e32d",
+              "apps/openmw/mwworld/oblivioninteraction.cpp": "a209770e151752cde340f62d4b88ec0f20bef4a6b3590dedf869af6092e85e0b",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "8d22c399601420a509277ab31677d06fdc4b5e1653b52984630547b83f991b83",
+              "components/CMakeLists.txt": "4e4e7a85c85d101ccda59dde93a6368c9821c86266ba82cfe883608d11ad93eb",
+              "components/esm4/droprelations.hpp": "503defcf3655e76c7f26d0f6096448a23234492bec551007cc3d8dd30fd84ba6"
+            }
+          },
+          "source_state": {
+            "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+            "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/verification.json",
+              "sha256": "e13e6a9fec2bb85acf5bb5f375530d63a8d00d33ed88150cc913feb3f63ab8c7",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 334.816
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 27.582
+                  },
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "components-tests",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "components-build.log",
+                    "returncode": 0,
+                    "seconds": 72.356
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "components-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.065
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-normal-02/components.xml"
+                    ],
+                    "log": "components.log",
+                    "returncode": 0,
+                    "seconds": 13.798
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1735,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "869b94b4910a2a5e2a55a941270d20e56fca8db984503fd69cd292d65b7b4632",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "412129d2b241a73615b9a49cf1f3ac7990ceace6cd001d1a63f10df7e7e83ced",
+                    "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  },
+                  "components": {
+                    "executed": 2938,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "e8dba6d77c0695b23909ed239b275f763683646956935f31dc7824542e46618d",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "43011d8301793645d0f82a7d9f52d71a3d26f85ca94317c27b4c139045c68f0f",
+                    "inventory_sha256": "d16583f4af3d3ace1b8d3823a3f95285a1eecaadf4919ca3b161c9150fcca909",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                },
+                "source_after": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                }
+              }
+            },
+            "sanitized": {
+              "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/verification.json",
+              "sha256": "057f43ce2d1d629162e390b64dbf879b8a5d9ef1bea39748d25a95a0a47c719e",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 1259.004
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.516
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 162.508
+                  },
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "components-tests",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "components-build.log",
+                    "returncode": 0,
+                    "seconds": 121.82
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "components-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.266
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pickup-cleanup-sanitized-02/components.xml"
+                    ],
+                    "log": "components.log",
+                    "returncode": 0,
+                    "seconds": 70.027
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1735,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "70b51e9761597e3ac4903d85f2d5038c952a560ec3c331aa795fe2c39156fcf0",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "91a1bb08635806d5c5f444f50f2c181d4e338533c781426ec891281691d38807",
+                    "inventory_sha256": "28b8bd7697f503f4f141aa013a4d6d943bbee1c098a0dc5bfd468b98003ff634",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  },
+                  "components": {
+                    "executed": 2938,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "0c6350a3a3f9c124db00915b004a5cdca8d731ce891f04231e38dbaed9a5932b",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "af27c4c8a799da3644b7bd37eb45d5dbaf50446989674d4e0d2b67104213b4ab",
+                    "inventory_sha256": "a9f769ef375e91f1c953a1a0cb74cf04f00d5d778bf21ef1c4c3c89fb59af49e",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                },
+                "source_after": {
+                  "head": "77edba887cdcdf0a0e76406522bbe82a3eb469de",
+                  "source_fingerprint": "9bf9acf9c38ef82089dedc10c988eda46dda0dc05560e46e8d70bc2c8c105bd8"
+                }
+              }
+            }
+          }
+        }
+      },
+      "application": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "2b45779b44332652640f3f3a6d788fb944d6ab3aab8323844fd4afeeb992cbfd"
+      },
+      "preregistered_pin": {
+        "staged-input.omwsave": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+        "manifest.json": "2f1985fd6e38cd0d12b98ceaf64f0d314c6c5d0cbddd457cf4c8a5497b29bd25",
+        "continuation.json": "5ba2c3e8b58cc9366f0f2824de907ee74f0c16c27436c14ca8e1ed5fe17dbbd7",
+        "preregistered-acceptance.json": "0e6c600deab25cd385134428eefb3cf40371a4e0da5d7ecbf976a6ad5ee215f3",
+        "verify.py": "d9bca36a98b6ae1d0c207f189cdc6d9afd454aaa6167f03202cba6b6007eb5d0"
+      },
+      "own_profile_before_launch": null
+    }
+  },
+  "original_finalization": {
+    "path": "build/oblivion-compat/m15/S4/native-pickup-finalization-oracle-02/verification.json",
+    "sha256": "ea23011516cd11c02f7c1357ec5324eb9868507c261e1441bcc4c6e9526a15f4",
+    "result": {
+      "passed": true,
+      "cases": 960,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "14ffcda719553b2beb4ac539b060a00361f24689f41afb77b0c3e85b821767ab",
+      "executed": [
+        "4D7D80",
+        "4203C0",
+        "424C00",
+        "65C620",
+        "4D65D0",
+        "46A9E0",
+        "4D6DB0",
+        "46C640"
+      ],
+      "scope": "Actual complete4D7D80 with identified primary REFR vtableA46C44; actual dropper getter4203C0, first-match actor-list removal424C00/65C620, deleted flag method4D65D0/46A9E0 and taken flag method4D6DB0/46C640. Six initial flag profiles include dynamic-temporary4000 and already-taken22. Extra lookup41E210, heap free401F20, empty extra detach422E20, parent getter(null), changed-form registration449070, MarkModified virtual+40 and Set3D(0) virtual+150 are declared boundaries. Final flags equal initial|22, first actor-list match removed/empty extra detached, reference dropper field retained outside scene boundary. Both Player660910 and NPC5FBB10 occupy native actor slot2CC and have statically reviewed4D7D80 calls following inventory-helper4DDC40. Full pickup prefixes/collision and scene removal are not emulated."
+    }
+  },
+  "original_probe_sha256": "c2d1fed872ba0f527c3b2854ac02f1c327dba3c4ef84c7ca753b1e4b3fc8e4d9",
+  "component_contract_cases": 9,
+  "world_contract_tests": [
+    "NativePickupRemovesLiveDropperListBeforeObserversAndRetainsItemDropper",
+    "NativePickupNewDropFailurePreservesListAndRetryPublishesOneRemoval",
+    "NativePickupCleansUnprojectedDropperCacheAndFreshWorldPreservesIt",
+    "NativePickupAbsentDropperListDoesNotConstructAnAuthoredActor"
+  ],
+  "retained_attempts": {
+    "normal01-failures.json": {
+      "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-integration-01/normal01-failures.json",
+      "sha256": "f170e42b2ce25e015f63c77e7dd7fc4bc6273b5b70aee7e58dd079cf0de1f327",
+      "result": {
+        "executed": 1735,
+        "passed": 1732,
+        "failed_cases": [
+          {
+            "name": "NativePickupRemovesLiveDropperListBeforeObserversAndRetainsItemDropper",
+            "failures": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 0\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 1\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 2\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 3\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 4\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 5\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: false\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 0\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 1\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 2\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 3\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 4\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25759\nExpected equality of these values:\n  fixture.mOther.getCellRef().getCount()\n    Which is: 2\n  1\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25716: 5\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25715: true\n"
+            ]
+          },
+          {
+            "name": "NativePickupCleansUnprojectedDropperCacheAndFreshWorldPreservesIt",
+            "failures": [
+              "unknown file\nC++ exception with description \"TES4 runtime-state reference capture failed: TES4 runtime-state reference content:headless.esm:000900 capture failed: Native TES4 reference has no FormId base or cell identity\" thrown in the test body.\n"
+            ]
+          },
+          {
+            "name": "NativePickupAbsentDropperListDoesNotConstructAnAuthoredActor",
+            "failures": [
+              "unknown file\nC++ exception with description \"TES4 runtime-state reference capture failed: TES4 runtime-state reference content:headless.esm:000900 capture failed: Native TES4 reference has no FormId base or cell identity\" thrown in the test body.\n"
+            ]
+          }
+        ],
+        "diagnosis": "Other loose-reference fixture copied runtime count2; explicitly author count1. Unloaded fixtures incorrectly constructed Native actors in the draft cell, which has no native CELL identity; keep only typed base/ACHR records, construct live actors directly in the managed native cell only for resident cases. Separately correct production Player runtime-key comparison and canonical Player test input."
+      }
+    },
+    "cancel-sanitized-01.json": {
+      "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-integration-01/cancel-sanitized-01.json",
+      "sha256": "db94ca612e6e5b64a4494d88a289f72a580510557f12ed982f4ea2aeffd55830",
+      "result": {
+        "reason": "Player bridge CellRef.getFormKey returns null; runtime Player identity is dynamic:player:1. Preserve normal01 test verdict, cancel only this owned sanitizer group before correcting constructor guard and Player test canonical key. No current-source acceptance.",
+        "run_checks_pid": 565263,
+        "command_pid": 565288,
+        "signaled_group": 565288,
+        "group_pids": [
+          565288,
+          565290,
+          565428,
+          565431,
+          565739,
+          568185,
+          568186,
+          568196,
+          568197,
+          568199,
+          568200
+        ]
+      }
+    },
+    "player-identity-diagnostic-01.json": {
+      "path": "build/oblivion-compat/m15/S4/native-pickup-cleanup-integration-01/player-identity-diagnostic-01.json",
+      "sha256": "03a1c03754f88e19ffa9f2f6e973d0d7ca64a19fcd974a17d5d4d6952f10310e",
+      "result": {
+        "status": "Correction required after normal01 is terminal; SAN01 owned group canceled and helper terminal1/child-15. No source edits yet.",
+        "source_pin": "source-pin.json",
+        "evidence": {
+          "CellRef_getFormKey": "cellref.cpp69..76: ESM3 CellRef returns null, including compatibility Player.",
+          "canonical_runtime_Player": "World::captureOblivionRuntimeState and native actor APIs use dynamic:player:1.",
+          "production_defect": "PreparedDropperListRemoval compares dropper against Player CellRef null; it also unconditionally checks a live Player CellRef FormKey against the canonical key.",
+          "test_defect": "New absent-list Player case builds a null dropper key from Player CellRef instead of a canonical runtime key, so the setter will reject before exercising cleanup."
+        },
+        "correction": "Use accepted cache.mPlayer.mReference for Player identity and the actual World Player Ptr; skip the native CellRef FormKey check for that actual Player. Test dynamic:player:1 and explicitly assert the compatibility bridge lacks a native FormKey. Preserve source extra identity."
+      }
+    }
+  },
+  "exact_actor_value_verifier_sha256": "8d72d561c49ba8383d72a83a8aed3f3c4f814a6e143d07af25a8bf9dd16313cd",
+  "retained_prior_gap": "M15-SHIELD-DROP-VERIFICATION.json pickup_collection records the old stale actor list; do not rewrite that historical result.",
+  "limits": "Original list/flag wrapper with declared external boundaries, not full original-game pickup/scene emulation. Current-course runtime verifies actual scene/physics collection and cached/live save/restart state. Other S4 mastery/reaction/effect/input/view/FPS/in-action and combined gates remain open.",
+  "full_M15S4_acceptance": false
+}

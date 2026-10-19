@@ -25680,3 +25680,229 @@ TEST(OblivionWorldTest, BlockingNpcShieldBreakPublishesOneContactDropAndPostureO
         }
     }
 }
+
+namespace
+{
+    struct PickupDropperFixture : NativePickupFixture
+    {
+        MWWorld::Ptr mActor, mOther;
+        const ESM::FormKey mActorKey = ESM::FormKey::content("headless.esm",0x900);
+        explicit PickupDropperFixture(bool resident = true)
+        {
+            auto& store = mWorld.getStore();
+            ESM4::Race race{}; race.mId = {0x810,0};
+            race.mAttribMale = {40,40,40,40,40,40,40,40}; race.mAttribFemale = race.mAttribMale;
+            store.getWritable<ESM4::Race>().insertStatic(race,ESM::FormKey::content("headless.esm",0x810));
+            auto base = *store.search<ESM4::Npc>(ESM::FormKey::content("headless.esm",0x800));
+            base.mId = {0x880,0}; base.mFormKey = ESM::FormKey::content("headless.esm",0x880);
+            base.mEditorId = "PickupDropperActor";
+            base.mRace = race.mId;
+            store.getWritable<ESM4::Npc>().insertStatic(base,base.mFormKey);
+            ESM4::ActorCharacter actor{}; actor.mId = {0x900,0}; actor.mFormKey = mActorKey;
+            actor.mBaseObj = base.mId; actor.mBaseKey = base.mFormKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(actor,mActorKey);
+            MWClass::ESM4Npc::registerSelf();
+            if (resident)
+            {
+                MWWorld::LiveCellRef<ESM4::Npc> live(actor,store.search<ESM4::Npc>(base.mFormKey));
+                mActor = MWWorld::Ptr(mSource.getCell()->insert(&live),mSource.getCell());
+                mWorld.getWorldModel().registerPtr(mActor);
+            }
+            auto placed = *mSource.getCellRef().getNativeReference();
+            placed.mId = {0x961, 0}; placed.mFormKey = ESM::FormKey::content("headless.esm", 0x961);
+            MWWorld::LiveCellRef<ESM4::Weapon> live(placed, mSource.get<ESM4::Weapon>()->mBase);
+            live.mRef.setCount(1);
+            store.getWritable<ESM4::Reference>().insertStatic(*live.mRef.getNativeReference(),placed.mFormKey);
+            mOther = MWWorld::Ptr(mSource.getCell()->insert(&live), mSource.getCell());
+            mWorld.getWorldModel().registerPtr(mOther);
+        }
+    };
+
+    unsigned residentPickupActorCount(MWWorld::World& world,const ESM::FormKey& key)
+    {
+        unsigned count = 0;
+        for (const auto& ptr : world.getWorldModel().getResidentPtrs())
+            if (ptr.getCellRef().getFormKey() == key) ++count;
+        return count;
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupRemovesLiveDropperListBeforeObserversAndRetainsItemDropper)
+{
+    for (const bool registered : {false, true})
+    for (unsigned shape = 0; shape < 6; ++shape)
+    {
+        SCOPED_TRACE(registered);
+        SCOPED_TRACE(shape);
+        PickupDropperFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto key = fixture.mSource.getCellRef().getFormKey();
+        const auto actorKey = fixture.mActor.getCellRef().getFormKey();
+        const auto otherKey = fixture.mOther.getCellRef().getFormKey();
+        using Items = std::optional<std::vector<ESM::FormKey>>;
+        const std::array<Items,6> before{{std::nullopt, std::vector<ESM::FormKey>{},
+            std::vector{key}, std::vector{key,otherKey}, std::vector{otherKey,key}, std::vector{otherKey}}};
+        const std::array<Items,6> expected{{std::nullopt, std::nullopt, std::nullopt,
+            std::vector{otherKey}, std::vector{otherKey}, std::vector{otherKey}}};
+        // Accept a deliberately older cache, then update the live extras.
+        // Cleanup must use the live list and preserve unrelated cached state.
+        auto state = world.captureOblivionRuntimeState();
+        auto cachedActor = std::find_if(state.mReferences.begin(),state.mReferences.end(),
+            [&](const auto& r) { return r.mKey == actorKey; });
+        ASSERT_NE(cachedActor,state.mReferences.end());
+        cachedActor->mDropRelations.mItems = {{otherKey}};
+        cachedActor->mCustomState["pickup_cleanup_witness"] = std::int64_t{91};
+        readNativeSnapshot(fixture,state);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        fixture.mActor.getCellRef().setNativeDropRelations({{},before[shape]});
+        fixture.mActor.getRefData().setCustomData(nullptr);
+        fixture.mSource.getCellRef().setNativeDropRelations({actorKey,{}});
+        if (!registered) world.getWorldModel().deregisterLiveCellRef(*fixture.mActor.mRef);
+        ASSERT_EQ(world.getWorldModel().getResidentPtr(ESM::FormId{0x900,0}),fixture.mActor);
+        auto& inventory = world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr());
+        NativePickupFixture::Listener listener;
+        listener.mCallback = [&](const MWWorld::ConstPtr&, int count) {
+            EXPECT_EQ(count,2);
+            EXPECT_EQ(fixture.mSource.getCellRef().getCount(),0);
+            EXPECT_EQ(fixture.mActor.getCellRef().getNativeDropRelations().mItems,expected[shape]);
+            EXPECT_EQ(fixture.mSource.getCellRef().getNativeDropRelations().mDropper,actorKey);
+            EXPECT_EQ(fixture.mActor.getRefData().getCustomData(),nullptr);
+            world.interactWithOblivionReference(fixture.mSource,MWWorld::OblivionInteractionKind::Take);
+            throw std::runtime_error("pickup relation observer");
+        };
+        inventory.setContListener(&listener);
+        EXPECT_THROW(world.interactWithOblivionReference(fixture.mSource,MWWorld::OblivionInteractionKind::Take),
+            std::runtime_error);
+        EXPECT_EQ(listener.mCalls,1);
+        EXPECT_EQ(fixture.mActor.getRefData().getCustomData(),nullptr);
+        EXPECT_EQ(inventory.count(fixture.mSource.getCellRef().getRefId()),2);
+        EXPECT_EQ(fixture.mOther.getCellRef().getCount(),1);
+        const auto saved = world.captureOblivionRuntimeState();
+        const auto actor = std::find_if(saved.mReferences.begin(),saved.mReferences.end(),
+            [&](const auto& r) { return r.mKey == actorKey; });
+        ASSERT_NE(actor,saved.mReferences.end());
+        EXPECT_EQ(actor->mDropRelations.mItems,expected[shape]);
+        EXPECT_EQ(std::get<std::int64_t>(actor->mCustomState.at("pickup_cleanup_witness")),91);
+        const auto source = std::find_if(saved.mReferences.begin(),saved.mReferences.end(),
+            [&](const auto& r) { return r.mKey == key; });
+        ASSERT_NE(source,saved.mReferences.end());
+        EXPECT_EQ(source->mDropRelations.mDropper,actorKey);
+        EXPECT_TRUE(source->mDeleted);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()),saved);
+        inventory.setContListener(nullptr);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupNewDropFailurePreservesListAndRetryPublishesOneRemoval)
+{
+    PickupDropperFixture fixture;
+    auto& world = fixture.mWorld;
+    auto state = world.captureOblivionRuntimeState();
+    readNativeSnapshot(fixture,state);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    auto serial = world.prepareOblivionDynamicReferenceKey();
+    auto placed = *fixture.mSource.getCellRef().getNativeReference();
+    placed.mId = {}; placed.mFormKey = serial->key();
+    ASSERT_TRUE(serial->commit());
+    MWWorld::LiveCellRef<ESM4::Weapon> live(placed,fixture.mSource.get<ESM4::Weapon>()->mBase);
+    live.mRef.setCount(1); live.mRef.setNativeItemCondition(0.f);
+    const auto actorKey = fixture.mActor.getCellRef().getFormKey();
+    live.mRef.setNativeDropRelations({actorKey,{}});
+    const MWWorld::Ptr source(fixture.mSource.getCell()->insert(&live),fixture.mSource.getCell());
+    world.getWorldModel().registerPtr(source);
+    const ESM4::DropRelations before{{},{{placed.mFormKey}}};
+    fixture.mActor.getCellRef().setNativeDropRelations(before);
+    auto& inventory = world.getPlayerPtr().getClass().getInventoryStore(world.getPlayerPtr());
+    // Failure after private cleanup preparation, before source/list publication.
+    source.getRefData().setBaseNode(new SceneUtil::PositionAttitudeTransform);
+    EXPECT_THROW(world.interactWithOblivionReference(source,MWWorld::OblivionInteractionKind::Take),
+        std::invalid_argument);
+    EXPECT_EQ(source.getCellRef().getCount(),1);
+    EXPECT_EQ(fixture.mActor.getCellRef().getNativeDropRelations(),before);
+    EXPECT_EQ(inventory.count(source.getCellRef().getRefId()),0);
+    source.getRefData().setBaseNode(nullptr);
+    EXPECT_NO_THROW(world.interactWithOblivionReference(source,MWWorld::OblivionInteractionKind::Take));
+    EXPECT_FALSE(fixture.mActor.getCellRef().getNativeDropRelations().mItems);
+    EXPECT_EQ(source.getCellRef().getNativeDropRelations().mDropper,actorKey);
+    EXPECT_EQ(source.getCellRef().getCount(),0);
+    EXPECT_EQ(inventory.count(source.getCellRef().getRefId()),1);
+    EXPECT_NO_THROW(world.interactWithOblivionReference(source,MWWorld::OblivionInteractionKind::Take));
+    EXPECT_EQ(inventory.count(source.getCellRef().getRefId()),1);
+}
+
+TEST(OblivionWorldTest, NativePickupCleansUnprojectedDropperCacheAndFreshWorldPreservesIt)
+{
+    ESM4::RuntimeState saved;
+    const auto actorKey = ESM::FormKey::dynamic("fixture-actor",1);
+    {
+        PickupDropperFixture fixture(false);
+        auto& world = fixture.mWorld;
+        auto state = world.captureOblivionRuntimeState();
+        ESM4::RuntimeReferenceState actor;
+        actor.mKey = actorKey;
+        actor.mBase = ESM::FormKey::content("headless.esm",0x880);
+        actor.mCell = state.mPlayer.mCell;
+        actor.mDropRelations.mItems = {{fixture.mSource.getCellRef().getFormKey()}};
+        actor.mCustomState["pickup_cleanup_witness"] = std::int64_t{173};
+        state.mReferences.push_back(actor);
+        // Find by identity rather than relying on native reference sort order.
+        for (auto& r : state.mReferences)
+            if (r.mKey == fixture.mSource.getCellRef().getFormKey()) r.mDropRelations.mDropper = actorKey;
+        state.mNextDynamicSerial = 2;
+        readNativeSnapshot(fixture,state);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(actorKey).isEmpty());
+        EXPECT_EQ(residentPickupActorCount(world,actorKey),0u);
+        ASSERT_NO_THROW(world.interactWithOblivionReference(fixture.mSource,MWWorld::OblivionInteractionKind::Take));
+        EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(actorKey).isEmpty());
+        EXPECT_EQ(residentPickupActorCount(world,actorKey),0u);
+        EXPECT_TRUE(fixture.mActor.isEmpty());
+        saved = world.captureOblivionRuntimeState();
+        const auto found = std::find_if(saved.mReferences.begin(),saved.mReferences.end(),
+            [&](const auto& r) { return r.mKey == actorKey; });
+        ASSERT_NE(found,saved.mReferences.end());
+        EXPECT_FALSE(found->mDropRelations.mItems);
+        EXPECT_EQ(std::get<std::int64_t>(found->mCustomState.at("pickup_cleanup_witness")),173);
+    }
+    {
+        PickupDropperFixture fresh(false);
+        const auto decoded = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        readNativeSnapshot(fresh,decoded);
+        ASSERT_NO_THROW(fresh.mWorld.applyOblivionRuntimeState());
+        const auto recaptured = fresh.mWorld.captureOblivionRuntimeState();
+        const auto actor = std::find_if(recaptured.mReferences.begin(),recaptured.mReferences.end(),
+            [&](const auto& r) { return r.mKey == actorKey; });
+        ASSERT_NE(actor,recaptured.mReferences.end());
+        EXPECT_FALSE(actor->mDropRelations.mItems);
+        EXPECT_EQ(std::get<std::int64_t>(actor->mCustomState.at("pickup_cleanup_witness")),173);
+        EXPECT_TRUE(fresh.mWorld.getWorldModel().getDynamicNativePtr(actorKey).isEmpty());
+        EXPECT_EQ(residentPickupActorCount(fresh.mWorld,actorKey),0u);
+        EXPECT_EQ(fresh.mSource.getCellRef().getCount(),0);
+        EXPECT_EQ(fresh.mSource.getCellRef().getNativeDropRelations().mDropper,actorKey);
+        EXPECT_EQ(fresh.mWorld.captureOblivionActorInventory(fresh.mWorld.getPlayerPtr()).front().mCount,2);
+        EXPECT_EQ(recaptured.mNextDynamicSerial,saved.mNextDynamicSerial);
+    }
+}
+
+TEST(OblivionWorldTest, NativePickupAbsentDropperListDoesNotConstructAnAuthoredActor)
+{
+    for (const bool playerDropper : {false,true})
+    {
+        SCOPED_TRACE(playerDropper);
+        PickupDropperFixture fixture(false);
+        auto& world = fixture.mWorld;
+        auto state = world.captureOblivionRuntimeState();
+        readNativeSnapshot(fixture,state);
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        ASSERT_TRUE(world.getPlayerPtr().getCellRef().getFormKey().isNull());
+        const auto dropper = playerDropper ? ESM::FormKey::dynamic("player",1) : fixture.mActorKey;
+        fixture.mSource.getCellRef().setNativeDropRelations({dropper,{}});
+        ASSERT_TRUE(world.getWorldModel().getResidentPtr(ESM::FormId{0x900,0}).isEmpty());
+        ASSERT_TRUE(fixture.mActor.isEmpty());
+        EXPECT_NO_THROW(world.interactWithOblivionReference(fixture.mSource,MWWorld::OblivionInteractionKind::Take));
+        EXPECT_TRUE(world.getWorldModel().getResidentPtr(ESM::FormId{0x900,0}).isEmpty());
+        EXPECT_EQ(residentPickupActorCount(world,fixture.mActorKey),0u);
+        EXPECT_EQ(fixture.mSource.getCellRef().getNativeDropRelations().mDropper,dropper);
+        EXPECT_EQ(fixture.mSource.getCellRef().getCount(),0);
+    }
+}

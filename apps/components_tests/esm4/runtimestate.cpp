@@ -3492,6 +3492,36 @@ TEST(ESM4RuntimeState, Reputation46OwnsExactSignedCountersAndIndependentAccumula
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
 }
 
+TEST(ESM4RuntimeState, DropRelationsRemovalMatchesOriginalFirstMatchAndExtraPresence)
+{
+    const auto target = ESM::FormKey::dynamic("native-reference", 1);
+    const auto other = ESM::FormKey::dynamic("native-reference", 2);
+    const auto third = ESM::FormKey::dynamic("native-reference", 3);
+    const auto owner = ESM::FormKey::content("master.esm", 0x123);
+    using Items = std::optional<std::vector<ESM::FormKey>>;
+    struct Case { Items mBefore; ESM::FormKey mTarget; Items mAfter; };
+    // Independently observed original424C00/65C620 and full4D7D80 wrapper.
+    // Duplicate fixtures deliberately test the helper before wire validation.
+    const std::array<Case, 9> cases{{
+        {std::nullopt, target, std::nullopt},
+        {std::vector<ESM::FormKey>{}, {}, std::vector<ESM::FormKey>{}},
+        {std::vector<ESM::FormKey>{}, target, std::nullopt},
+        {{ {target} }, target, std::nullopt},
+        {{ {other} }, target, {{other}}},
+        {{ {target, other, third} }, target, {{other, third}}},
+        {{ {other, target, third} }, target, {{other, third}}},
+        {{ {other, third, target} }, target, {{other, third}}},
+        {{ {other, target, target} }, target, {{other, target}}},
+    }};
+    for (const auto& row : cases)
+    {
+        ESM4::DropRelations relations{owner, row.mBefore};
+        relations.removeItem(row.mTarget);
+        EXPECT_EQ(relations.mItems, row.mAfter);
+        EXPECT_EQ(relations.mDropper, owner);
+    }
+}
+
 TEST(ESM4RuntimeState, DropRelations47IndependentWirePresenceOrderAndLegacyBoundary)
 {
     auto state = makeState();

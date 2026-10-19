@@ -67,6 +67,109 @@ namespace MWWorld
             return false;
         }
 
+        class PreparedDropperListRemoval
+        {
+            World& mWorld;
+            ESM4::RuntimeState& mCache;
+            std::optional<ESM::FormKey> mKey;
+            std::optional<ESM::FormId> mContentId;
+            bool mPlayer = false;
+            Ptr mLive;
+            std::optional<ESM4::DropRelations> mLiveBefore;
+            std::optional<CellRef> mLiveAfter;
+            std::optional<std::size_t> mCachedIndex;
+            ESM::FormKey mCachedBase;
+            ESM4::DropRelations mCachedBefore, mCachedAfter;
+            std::size_t mRegistryRevision;
+
+            Ptr live() const
+            {
+                if (!mKey) return {};
+                if (mPlayer) return mWorld.getPlayerPtr();
+                return mContentId ? mWorld.getWorldModel().getResidentPtr(*mContentId)
+                    : mWorld.getWorldModel().getDynamicNativePtr(*mKey);
+            }
+
+            std::optional<std::size_t> cachedIndex() const
+            {
+                if (mKey)
+                    for (std::size_t i = 0; i < mCache.mReferences.size(); ++i)
+                        if (mCache.mReferences[i].mKey == *mKey) return i;
+                return std::nullopt;
+            }
+
+        public:
+            PreparedDropperListRemoval(World& world, ESM4::RuntimeState& cache,
+                const ESM4::DropRelations& source, const ESM::FormKey& item,
+                const ESM::FormKeyResolver& resolver)
+                : mWorld(world), mCache(cache), mKey(source.mDropper),
+                  mRegistryRevision(world.getWorldModel().getPtrRegistryRevision())
+            {
+                if (!mKey) return;
+                // The compatibility Player CellRef has no native FormKey.
+                // Its accepted runtime reference identifies the actual Player.
+                mPlayer = *mKey == cache.mPlayer.mReference;
+                if (mKey->isContent())
+                {
+                    mContentId = resolver.toFormId(*mKey);
+                    if (!mContentId) throw std::invalid_argument("pickup dropper has no native content identity");
+                }
+                mLive = live();
+                mCachedIndex = cachedIndex();
+                const auto& store = world.getStore();
+                if (!mLive.isEmpty())
+                {
+                    if (!mPlayer && (mLive.getCellRef().getFormKey() != *mKey
+                        || (mLive.getType() != ESM::REC_NPC_4 && mLive.getType() != ESM::REC_CREA4)))
+                        throw std::invalid_argument("pickup dropper is not its native actor reference");
+                    mLiveBefore = mLive.getCellRef().getNativeDropRelations();
+                    auto after = *mLiveBefore;
+                    after.removeItem(item);
+                    if (after != *mLiveBefore)
+                    {
+                        mLiveAfter.emplace(mLive.getCellRef());
+                        mLiveAfter->setNativeDropRelations(std::move(after));
+                    }
+                }
+                if (mCachedIndex)
+                {
+                    const auto& actor = cache.mReferences[*mCachedIndex];
+                    if (!mPlayer && !store.get<ESM4::Npc>().search(actor.mBase)
+                        && !store.get<ESM4::Creature>().search(actor.mBase))
+                        throw std::invalid_argument("pickup cached dropper has no native actor base");
+                    mCachedBase = actor.mBase;
+                    mCachedBefore = actor.mDropRelations;
+                    // Loaded extras are authoritative over a possibly older
+                    // cache. Unloaded actors need only the cached field changed.
+                    mCachedAfter = mLiveBefore.value_or(mCachedBefore);
+                    mCachedAfter.removeItem(item);
+                }
+                else if (mLive.isEmpty() && !store.get<ESM4::ActorCharacter>().search(*mKey)
+                    && !store.get<ESM4::ActorCreature>().search(*mKey))
+                    throw std::invalid_argument("pickup dropper reference is unresolved");
+                // An authored actor without live/cached extras has no list.
+                // Do not instantiate it, its inventory or its cell to erase one.
+            }
+
+            bool isValid() const
+            {
+                if (!mKey) return true;
+                if (mWorld.getWorldModel().getPtrRegistryRevision() != mRegistryRevision
+                    || live() != mLive || cachedIndex() != mCachedIndex)
+                    return false;
+                if (mLiveBefore && mLive.getCellRef().getNativeDropRelations() != *mLiveBefore) return false;
+                return !mCachedIndex || (mCache.mReferences[*mCachedIndex].mBase == mCachedBase
+                    && mCache.mReferences[*mCachedIndex].mDropRelations == mCachedBefore);
+            }
+
+            void commit() noexcept
+            {
+                if (mLiveAfter && !mLive.getCellRef().swapNativeDropRelations(*mLiveAfter)) std::terminate();
+                static_assert(std::is_nothrow_swappable_v<ESM4::DropRelations>);
+                if (mCachedIndex) std::swap(mCache.mReferences[*mCachedIndex].mDropRelations, mCachedAfter);
+            }
+        };
+
         template <class T>
         std::string findName(const ESMStore& store, const ESM::RefId& id)
         {
@@ -791,6 +894,9 @@ namespace MWWorld
             throw std::invalid_argument("pickup source is absent from the current native state");
         const auto* cacheOwner = mOblivionRuntimeState.get();
         const auto cachedSize = mOblivionRuntimeState->mReferences.size();
+        const auto cachedRelations = cached->mDropRelations;
+        const auto sourceRelations = ptr.getCellRef().getNativeDropRelations();
+        auto takenRelations = sourceRelations;
         auto custom = cached->mCustomState;
         custom["taken"] = true;
         if (!owner.empty()) custom["ownership_checked"] = true;
@@ -807,6 +913,7 @@ namespace MWWorld
         if (!mOblivionDynamicReferenceIdentity)
             mOblivionDynamicReferenceIdentity = std::make_shared<const char>(0);
         const std::weak_ptr<const char> worldIdentity = mOblivionDynamicReferenceIdentity;
+        PreparedDropperListRemoval dropper(*this, *mOblivionRuntimeState, sourceRelations, key, resolver);
         std::unique_ptr<Scene::PreparedItemRemoval> scene;
         if (mWorldScene)
             scene = mWorldScene->prepareItemRemoval(ptr);
@@ -818,6 +925,8 @@ namespace MWWorld
                     || mOblivionRuntimeState->mReferences.capacity() <= cachedSize
                 : findSource() != cached)
             || ptr.getCellRef().getCount() != item.mCount
+            || ptr.getCellRef().getNativeDropRelations() != sourceRelations
+            || cached->mDropRelations != cachedRelations || !dropper.isValid()
             || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr
             || !addition->isValid() || (registration && !registration->isValid())
             || (scene && !scene->isValid()))
@@ -830,6 +939,8 @@ namespace MWWorld
         if (published.isEmpty())
             throw std::logic_error("validated pickup inventory addition was rejected");
         if (registration) registration->commit();
+        dropper.commit();
+        std::swap(cached->mDropRelations, takenRelations);
         cached->mCustomState.swap(custom);
         if (newSource)
         {

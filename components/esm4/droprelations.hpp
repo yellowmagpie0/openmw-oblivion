@@ -3,6 +3,7 @@
 
 #include <components/esm/formkey.hpp>
 
+#include <algorithm>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -19,6 +20,16 @@ namespace ESM4
         std::optional<std::vector<ESM::FormKey>> mItems;
 
         bool empty() const noexcept { return !mDropper && !mItems; }
+        // Original424C00/65C620 removes the first match and detaches an
+        // existing empty list, even when the target was absent. The item's
+        // separate dropper extra survives reference finalization.
+        void removeItem(const ESM::FormKey& item)
+        {
+            if (item.isNull() || !mItems) return;
+            const auto found = std::find(mItems->begin(), mItems->end(), item);
+            if (found != mItems->end()) mItems->erase(found);
+            if (mItems->empty()) mItems.reset();
+        }
         void validate() const
         {
             const auto key = [](const ESM::FormKey& value) {

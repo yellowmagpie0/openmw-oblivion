@@ -349,6 +349,7 @@ add_component_dir (esm4
     reference
     runtimestate
     dropplacement
+    droprelations.hpp
     npcplacement
     referenceplacement
     observation
