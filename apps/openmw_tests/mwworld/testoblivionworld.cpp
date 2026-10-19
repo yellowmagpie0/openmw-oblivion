@@ -8733,13 +8733,41 @@ namespace
         service.clear(); service.restore(loaded, store);
         EXPECT_EQ(snapshot().serializeBinary(), committed.serializeBinary());
         EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
-        const auto beforeBreak = snapshot().serializeBinary();
-        target.getCellRef().setNativeItemCondition(1);
-        const auto broken = snapshot().serializeBinary();
-        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
-        EXPECT_EQ(snapshot().serializeBinary(), broken);
-        target.getCellRef().setNativeItemCondition(44.015625f);
-        EXPECT_EQ(snapshot().serializeBinary(), beforeBreak);
+        // Original5F3870/60E260/468FF0: zero body condition invalidates
+        // armor rating without removing the equipped body item. Exercise an
+        // initially broken item as well as wear crossing the zero boundary.
+        for (const float current : {0.f, .5f, 1.f})
+        {
+            SCOPED_TRACE(current);
+            source = install(attacker, initial.mReferences[0].mInventory[0], MWWorld::InventoryStore::Slot_CarriedRight);
+            auto worn = initial.mReferences[1].mInventory[0]; worn.mCondition = current;
+            target = install(victim, worn, MWWorld::InventoryStore::Slot_Cuirass);
+            service.clear(); service.restore(initial, store);
+            const auto nextAction = world.beginOblivionPhysicalAction(attacker);
+            const auto pendingBreak = snapshot().serializeBinary();
+            const auto contact = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+            ASSERT_TRUE(contact); ASSERT_EQ(contact->mVictimConditionChanges.size(), 1u);
+            EXPECT_EQ(contact->mHealth, 12.46875f);
+            EXPECT_EQ(contact->mVictimConditionChanges[0].mCondition, 0.f);
+            EXPECT_EQ(contact->mVictimConditionChanges[0].mBreakDisposition,
+                MWMechanics::OblivionWeaponBreakDisposition::None);
+            EXPECT_EQ(snapshot().serializeBinary(), pendingBreak);
+            MWMechanics::OblivionPhysicalContactDeltas next{-7, -contact->mHealth, 0, 0,
+                {MWMechanics::captureOblivionPhysicalConditionChange(attacker, source, *contact->mConditionAfterWear)}};
+            next.mConditionChanges.insert(next.mConditionChanges.end(),
+                contact->mVictimConditionChanges.begin(), contact->mVictimConditionChanges.end());
+            next.mRandomTransition = contact->mRandomTransition;
+            ASSERT_TRUE(world.commitOblivionPhysicalContact(nextAction, attacker, victim, next));
+            EXPECT_EQ(target.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(*victim.getClass().getInventoryStore(victim).getSlot(MWWorld::InventoryStore::Slot_Cuirass), target);
+            EXPECT_EQ(service.findActorValues(victim.getCellRef().getFormKey())->mValues[8].mModifiers[2], -12.46875f);
+            const auto atZero = snapshot();
+            target = install(victim, atZero.mReferences[1].mInventory[0], MWWorld::InventoryStore::Slot_Cuirass);
+            service.clear(); service.restore(ESM4::RuntimeState::deserializeBinary(atZero.serializeBinary()), store);
+            EXPECT_EQ(snapshot().serializeBinary(), atZero.serializeBinary());
+            EXPECT_FALSE(world.commitOblivionPhysicalContact(nextAction, attacker, victim, next));
+            EXPECT_EQ(snapshot().serializeBinary(), atZero.serializeBinary());
+        }
     }
 
 }

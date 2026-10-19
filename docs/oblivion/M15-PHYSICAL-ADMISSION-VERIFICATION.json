@@ -12064,5 +12064,11 @@
     },
     "probe": "M15-NPC-DEFENSIVE-DROP-PROBE.json",
     "full_M15S4_acceptance": false
+  },
+  "native_body_armor_break": {
+    "passed": true,
+    "probe": "docs/oblivion/M15-BODY-ARMOR-BREAK-PROBE.json",
+    "scope": "Body armor wear to zero retains equipped body inventory. Shield break consequences remain rejected. Actual Player left attack against staged restrained NPC plus completed-contact fresh-process continuation, normally and with ASan/UBSan. No full M15S4 acceptance.",
+    "full_M15S4_acceptance": false
   }
 }

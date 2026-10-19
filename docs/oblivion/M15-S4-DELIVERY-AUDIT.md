@@ -17,7 +17,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
-| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Shield/armor breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
+| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Shield breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
 weapon resistance, negative incoming damage, and remaining breakage branches.
@@ -6690,3 +6690,81 @@ final engine fingerprint `969a35cbd4090ad0349fb9299a494c6bf5d495f5e558b237cbfd79
 Only the worker-pool test fixture changes between those source snapshots.
 Editable expectations, native probe reports, retained failures, current production
 comparison and actual runtime receipts are in `M15-NPC-DEFENSIVE-DROP-PROBE.json`.
+
+## Body armor condition zero preserves equipped inventory
+
+Ordinary melee contacts now admit body armor wear to zero instead of rejecting
+the entire hit. The shield-mask guard remains: shield equipment consequences are
+not inferred from body armor. Original5F3870 calls actor virtual+2C0 before its
+zero-condition branch. Player and Character resolve that slot to60E260, which
+stores the original -1 armor-cache sentinel. Actual468FF0 slot13 membership then
+gates equipment consequences; body armor never enters them. The fork's armor
+query recomputes equipment directly, so no new serialized cache is needed.
+
+The new original-executable probe executes672 body cases and48 shield controls,
+both x87 words, against SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+It includes Player/NPC dispatch, all six body slots, a combined body mask,
+positive/nonpositive resulting condition, process presence and drawn states.
+Six additional contact cases execute5FFC56..5FFC74 through actual NPC5F3870 or
+Player65FF10 and the original cache invalidation. The caller ignores broken AL.
+Reader/writer/GMST and shield process-draw boundaries remain explicit; this is
+instruction evidence, not a new original-game run.
+
+The retained full484F80 precision probe supplies raw weapon damage1062506497 at
+the previously observed live CW007F, versus1062506496 at027F/037F. With the
+independently established IronCuirass condition1/max300 armor rating1, original
+mitigation yields Health bits1062367192 at007F and1062367191 at the wider words.
+The actual courses use the declared007F expectation. A prose description in the
+runtime preregistration still names the wider value; its numerical criterion,
+precision note and verifier use1062367192, established before either launch.
+The canonical acceptance source corrects that descriptive typo.
+
+The expanded World integration case exercises current conditions0,.5 and1,
+preparation without mutation, one committed resource/condition/RNG publication,
+retained cuirass slot, binary restore and consumed-action rejection. Its first
+normal/instrumented runs fail only an incorrect second-hit expectation: the
+fixture reused a worn sword and depleted Fatigue but expected first-hit damage.
+The corrected fixture restores the independently verified initial profile for
+each boundary. Those failed receipts remain; gameplay C++ does not change.
+
+Actual first-person keyboard courses attack the staged restrained Valen Dreth
+using the normal left-swing input with a1FPS cap. Only NPC IronCuirass condition is changed
+from250.125 to1; the existing schema52 source is promoted to53 with an empty
+loose-body list. The hit commits Health0.822019100189209, Player Fatigue140->132.2,
+sword55.875->55.57500076293945, cuirass1->0 still equipped, and combat RNG
+1->415139642 through three selection draws. All nine actors' complete value
+arrays and prior inventories retain every undeclared value after regeneration.
+No dynamic dropped item is allocated. Exact first-output bytes load in a fresh
+process; no contact, sound, random or resource publication replays.
+
+Directly reviewed post-hit and continuation captures show the named NPC still
+wearing the cuirass, Player sword and dungeon. Actual PCM uses the unchanged
+joint-template analysis from the prior Heavy/Flesh/Blade feedback course:
+correlation >=.90, at least1% explained energy per family, one accepted first
+impact and zero in continuation. Requests alone are not the audio criterion.
+Normal and ASan/UBSan runtime receipts and hashes are in
+`M15-BODY-ARMOR-BREAK-PROBE.json`.
+
+The first sanitizer launch omitted the ASan-first preload required by SDL
+replay and exits before native load; it is retained separately. The corrected
+launch uses the existing verified preload with identical staged save bytes. A
+second completed gameplay run has no accepted epoch receipt because its copied
+monitor still matched the normal binary; it is retained and repeated using the
+previous passing sanitizer monitor. Final acceptance uses the third cohort.
+The older source also constructs additional persistent exterior ACHR records.
+The first auditor's REFR-only alternative rejects those; the corrected auditor
+requires original identity/base, both Persistent flags, the same original
+worldspace, unchanged master position and exact physical CELL coordinates for
+REFR/ACHR/ACRE. No broad whole-world preservation claim is made.
+
+Final full engine checks cover1714 cases /124 suites normally and with
+ASan/UBSan, exact unfiltered inventories and no failures/skips. Leak checking is
+disabled. Component code is unchanged and its previous passing checks are
+reused. Final tested fingerprint: cdf321788e2cf22798af74eba9020bf3e634169d71d9a5b58a37d0a7d0a435e0.
+
+This closes the bounded NPC body-armor-zero contact and completed-contact
+restart route. Shield breaks, remaining weapon initial-zero routes, mastery,
+effects/reactions, full input/view/FPS and in-action restarts, and the combined
+named-target/block/miss/wall/stagger course remain open.
+**Full M15S4 remains incomplete.**

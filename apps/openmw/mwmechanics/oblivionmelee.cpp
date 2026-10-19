@@ -1000,8 +1000,11 @@ namespace MWMechanics
                 ESM4::buildArmorWearMasterySettings(settings), ESM4::buildCombatMasterySettings(settings));
             if (!condition)
                 throw std::logic_error("admitted native armor wear did not prepare a condition");
-            if (*condition == 0)
-                return std::nullopt; // Break unequip/drop/reactions require their own atomic policy.
+            // Original5F39C7 invalidates armor rating through60E260. Only
+            // slot13 enters the equipment consequence branch at5F3A10;
+            // ordinary body armor remains equipped when its condition is zero.
+            if (*condition == 0 && (candidate.mBase->mArmorFlags & ESM4::Armor::TES4_Shield))
+                return std::nullopt; // Shield equipment consequences remain separate.
             if (priorCondition != result.mConditions.end())
                 priorCondition->mCondition = *condition;
             else

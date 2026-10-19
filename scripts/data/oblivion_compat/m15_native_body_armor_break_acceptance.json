@@ -1,0 +1,33 @@
+{
+  "expected_health_damage_bits": 1062367192,
+  "expected_weapon_condition_bits": 1113476301,
+  "expected_armor_condition_bits": 0,
+  "expected_rng": [
+    1,
+    415139642
+  ],
+  "physical_action_next": 2,
+  "expected_sounds": [
+    "PHYArmorHitHeavy",
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "source_oracle": "native-body-armor-break-oracle-01/contact-report.json",
+  "actor_values": "All arrays unchanged except NPC Health Damage=-floatbits1062367192; regen complete before save.",
+  "restart": "First actual output exactly second input; no hit/sound/selection replay; armor stays equipped condition0.",
+  "visual": "NPC still wears IronCuirass after hit and fresh restart; Player sword visible; dungeon view.",
+  "original_precision_note": "Original CW007F weapon input1062506497; wider words input1062506496. Distinction established in retained full484F80 probe before this course.",
+  "pcm_joint_correlation_minimum": 0.9,
+  "pcm_per_family_minimum_explained_energy": 0.01,
+  "pcm_candidate_minimum_individual_correlation": 0.2,
+  "pcm_families": [
+    "PHYArmorHitHeavy",
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "pcm_expected_clusters": [
+    1,
+    0
+  ],
+  "pcm_method": "Unchanged analysis from native-armor-hit-feedback-runtime-03; first contact1 joint material/body/blade cluster, fresh continuation0."
+}
