@@ -7063,3 +7063,97 @@ index+8+slot*8 layout. Named scene resolution and mutation/drop constructors
 remain declared boundaries; identity node rotations are used in this harness.
 This adds independent evidence for the upcoming production transaction, without
 claiming ARMO drop, live original-game or full M15S4 acceptance.
+
+### Blocking shield break retention
+
+Native blocking wear can now prepare a retained shield reaching zero: Player
+or NPC equipment with flag `0x400` stays in inventory and its exact carried-left slot is
+unequipped in the same contact publication as resources, condition and posture
+withdrawal. This uses the existing prepared unequip and deferred notification
+path, preserving stale-state rejection, exact-once action consumption and
+observer exception behavior. The right weapon remains equipped.
+
+Later armor selection reads the projected inventory after this early shield
+break; it cannot select the removed shield. The contact uses general
+Flesh/weapon-Flesh sounds when the early blocking shield has disappeared.
+It keeps mitigation already calculated for the accepted block. Native sound
+ordering is explicit: a shield surviving blocking wear can request its shield
+sound before the later selected-armor wear. Later selected-wear shield breaks
+remain rejected pending their distinct posture/equipment audit. Ordinary NPC
+ARMO drops remain rejected until actual reference/render/physics admission is
+implemented. They do not silently become retained items.
+
+Original `0x5F5C69..0x5F5CD6` executes 1,152 blocking-wear profiles with the actual
+Player/NPC condition virtual. It requests `0x5F4AE0(false)` when the condition
+mutation reports broken. The prior withdrawal probe independently identifies
+its process-action effects. Another 48 Player profiles execute full wear,
+contiguous contact/armor selection and the sound dispatcher prefix: early
+retained removal makes all seven armor draws fail, seed 1 becomes 752224798
+and runtime seed 505908858 becomes 2832368235; requested sound EDIDs are
+PHYDamageFlesh and WPNHitBladeFlesh. Readers, mutation/drop sinks, scene lookup
+and sound lookup remain declared boundaries, not live original-game acceptance.
+
+Another 48 original Player profiles start condition 20 and survive blocking wear
+at 8.75, then can reach zero from later selected armor wear. Their sound request
+retains the early shield layer, confirming its ordering independently of the
+final equipment state. Full selected-wear unequip/posture side effects remain
+outside that boundary-sink probe.
+
+Final normal and ASan/UBSan engine02 checks each pass **1,722 tests / 125
+suites**, without failures or skips. Both use dirty source fingerprint
+`31558d3cdcafabf4d685a2629c6f0f1ef2d0abbb7bd0bc574aee92a1e622abe9` on parent `9a503caf0d`. All three recorded C++ hashes remain
+unchanged after those checks. Components are unchanged and are not rerun.
+Initial engine01 checks also pass 1,722/125, but final02 supersedes them after
+the sound-ordering guard, explicit unsupported NPC-drop rejection, original
+seven-draw seed assertion and test cleanup. Leak checks remain disabled;
+ASan/UBSan halt-on-error and ASan-first runtime preload are explicit.
+
+The new owned cases exercise 16 retained-NPC profiles across fist/sword,
+drawn/undrawn, base Block 5/25 and throwing/nonthrowing deferred observers, plus two
+Player normal/god-mode profiles. They verify exact resources and condition,
+left-slot removal, retained count/charge/scale, projected seven-draw RNG,
+posture, stale-state rejection, deferred observer ordering, replay rejection
+and authority restore. Ordinary NPC nonretained shield breaks remain rejected
+without changes. Explicit god-mode break requests suppress equipment and
+posture effects together with wear.
+
+The normal course uses executable SHA256 `66dc9d9f89528af28721471bd094210157cc61426fa02840cd04d9fae26988e2` in two distinct recorded process epochs (PIDs 519774 and 519869).
+The sanitized course uses executable SHA256 `c10f13d186e2ed5b60b8158071df45e9469842966d4335f8d8a32b59769e4534` in two distinct recorded process epochs (PIDs 522585 and 522768).
+Both actual first saves enter their fresh second process byte for byte. All
+launcher epochs exit 0 and are terminal. Full nine actor-value arrays, full
+inventory multisets and native bases are checked. Player sword 55.875 stays
+equipped; shield condition 0/count 1 stays in inventory unequipped. NPC sword
+condition bits 1113509069, next action 3, empty pending/owner state, dynamic
+serial 1 and no loose world item are verified. Combat seed 505908858 advances by
+seven independently observed selection draws to 2832368235, without replay.
+
+The original course preregisters Player health damage inside (0,2). A separate
+native calculation is derived after the normal first contact, before decoded
+output-save inspection and before sanitizer launch. Full original `0x488CB0` stock
+IronShield (armor 1200 hundredths, health 225, condition float 0.0001, Heavy Armor 15, Luck 50) yields armor
+rating 1. Original mitigation, shield Block 5/full Fatigue and Health stores
+produce damage bits 1064502899; both runtime courses match those bits exactly
+and preserve them through continuation. A further original path uses the exact
+absorbed-damage wear store and full Player `0x65FF10` mutation, observing condition 0
+and the retained-unequip request. Declared max/current-value/condition readers
+and mutation sinks remain boundaries. Initial native damage-probe attempts
+incorrectly reuse the emulated stop address as a float-store instruction;
+retained diagnostics show the native local is 1 while the stale store reads 0.
+Final05 uses an immutable separate store and verifies its terminal EIP.
+
+All six final captures are directly reviewed: a raised Player shield before
+contact, its absence with sword still drawn afterward, and the same visible
+world/weapon state in the fresh process, for both builds. The initial verifier
+incorrectly forbids every shield attachment in the fresh world; an unrelated
+original Blades guard legitimately carries one. The corrected check requires
+Player attachment before contact, no Player reattachment after contact/fresh,
+and all prior mechanics/epoch assertions. Failed verifier/log evidence is
+retained; completed normal scenarios are not replayed for that assertion fix.
+Two successful Flesh/BladeFlesh engine requests and actual mixer output are
+retained; quantitative PCM identification is outside this course.
+
+
+Full M15S4 remains incomplete. This chunk does not close NPC shield world
+drops, later selected-wear shield breaks, initially broken equipped gear,
+BlockHit/reaction playback, mastery/directional procs/effects or the remaining
+input/view/FPS/in-action restart and combined acceptance matrix.

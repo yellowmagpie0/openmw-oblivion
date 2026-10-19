@@ -1,0 +1,33 @@
+{
+  "scope": "Player normal keyboard held shield block against one production-policy NPC sword strike. Shield breaks, stays in inventory unequipped, posture withdraws, sword remains equipped, post-wear general sound and seven failed selection draws, then actual fresh-process save/load/resave. First-person1FPS only.",
+  "source": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-runtime-normal-01/staged-input.omwsave",
+  "source_sha256": "53cd69d954b0620e0f3ce51a10c9b4e4cd70c530a000670f0601156ce67dd738",
+  "shield_template_source": "build/oblivion-compat/m15/S4/native-shield-attachment-runtime-normal-03/staged-input.omwsave",
+  "shield_template_source_sha256": "049e6bae211aa082bf345db613325b804e08fe1a62f9e2245b07c74c210d502d",
+  "staged_sha256": "8ddd221746457a2a8750414f09d3211b97b851206817b0a90252be6f0ee408c1",
+  "fixture_changes": "Restore Player sword55.875 and add stock IronShield0352C1 equipped8192 conditionfloat0.0001. No contact, damage, outcome or authoritative AV injection.",
+  "expected": {
+    "player": "dynamic:player:0000000000000001",
+    "actor": "content:oblivion.esm:01fc43",
+    "shield": "content:oblivion.esm:0352c1",
+    "sword": "content:oblivion.esm:090615",
+    "shield_condition": 0,
+    "shield_equipped_slots": 0,
+    "sword_condition": 55.875,
+    "opponent_weapon_condition_bits": 1113509069,
+    "health_damage_range": [
+      0,
+      2
+    ],
+    "combat_rng": 2832368235,
+    "original_selection_draws": 7,
+    "action_next": 3,
+    "dynamic_serial": 1,
+    "sound_edids": [
+      "PHYDamageFlesh",
+      "WPNHitBladeFlesh"
+    ]
+  },
+  "health_scope": "Preregistered nonlethal bound plus exact preservation across continuation; no independently frozen runtime magnitude in this course.",
+  "limits": "Staged equipment, keyboard first-person1FPS and completed-contact restart. No ordinary inventory equipping, NPC ARMO drop, BlockHit, gamepad/FPS/in-action restart matrix, quantitative PCM identification or fullS4 acceptance."
+}

@@ -2037,14 +2037,24 @@ namespace MWMechanics
                 throw std::invalid_argument("stale or stacked native contact condition request");
             if (request.mBreakDisposition != OblivionWeaponBreakDisposition::None)
             {
-                const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-                if (request.mCondition != 0 || request.mItem.getType() != ESM::REC_WEAP
-                    || carried == inventory.end() || *carried != request.mItem)
-                    throw std::invalid_argument("native break consequence requires a broken carried weapon");
+                int slot = MWWorld::InventoryStore::Slot_CarriedRight;
+                if (request.mItem.getType() == ESM::REC_ARMO)
+                {
+                    // Native caller resolves the winning ARMO. This layer
+                    // validates the projected equipment kind and exact slot.
+                    if (request.mItem.get<ESM::Armor>()->mBase->mData.mType != ESM::Armor::Shield)
+                        throw std::invalid_argument("native break consequence requires a shield projection");
+                    slot = MWWorld::InventoryStore::Slot_CarriedLeft;
+                }
+                else if (request.mItem.getType() != ESM::REC_WEAP)
+                    throw std::invalid_argument("native break consequence requires a weapon or shield");
+                const auto carried = inventory.getSlot(slot);
+                if (request.mCondition != 0 || carried == inventory.end() || *carried != request.mItem)
+                    throw std::invalid_argument("native break consequence requires a broken carried item");
                 // Do not publish a god-mode break consequence when wear is suppressed.
                 if (found->mApply && request.mBreakDisposition == OblivionWeaponBreakDisposition::Unequip)
-                    unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(MWWorld::InventoryStore::Slot_CarriedRight)});
-                // Original5F5C84: a blocking weapon that reaches zero returns
+                    unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(slot)});
+                // Original5F5C84: a blocking weapon/shield reaching zero returns
                 // true from condition mutation, then5F4AE0(false) withdraws
                 // posture6. Publish that action with wear/equipment/resources;
                 // existing deferred equipment observers release the render binding.

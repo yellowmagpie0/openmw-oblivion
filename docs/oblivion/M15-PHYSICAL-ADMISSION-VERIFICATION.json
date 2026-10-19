@@ -12088,5 +12088,11 @@
     "evidence": "docs/oblivion/M15-SHIELD-PRESENTATION-PROBE.json",
     "scope": "Native rigid shield Prn attachment on NPC and Player, Player first/third-person visibility without duplicate Torch part, and correct unprefixed shield BlockIdle. Exact metadata/source identity, native case-sensitive parent lookup and authored local transforms. Normal/instrumented input/contact/view/block/release plus completed-contact fresh-process courses. Shield break/drop and fullM15S4 remain open.",
     "full_M15S4_acceptance": false
+  },
+  "native_shield_retention": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-SHIELD-RETENTION-PROBE.json",
+    "scope": "Early blocking-wear shield break retention for Player/flag400 NPC, atomic carried-left unequip/resources/condition/posture, projected inventory for later armor selection and post-wear general sounds. Ordinary NPC shield drops and later selected-wear shield breaks remain rejected, pending complete world admission/distinct caller audit.",
+    "full_M15S4_acceptance": false
   }
 }

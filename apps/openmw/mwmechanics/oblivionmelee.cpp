@@ -415,10 +415,17 @@ namespace MWMechanics
             result.mHitSoundPosition = position;
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
+        const bool removedBlockingShield = blockAccepted && !result.mHitSounds
+            && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                return change.mOwner == *contact && change.mItem.getType() == ESM::REC_ARMO
+                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+            });
         if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
                 || contact->getType() == ESM::REC_CREA4)
-            && !blockAccepted)
+            && (!blockAccepted || removedBlockingShield))
         {
+            // Original5FFB05 re-reads the shield after blocking wear. A removed shield
+            // uses general hit layers even when the contact was blocked.
             // Original5FFCE5 uses the armor selected by this contact's wear
             // path;5FFD61 uses no material even if other armor is equipped.
             // Model initialization projects Creature Actor byte104 as
@@ -709,6 +716,20 @@ namespace MWMechanics
                 ? OblivionWeaponBreakDisposition::Unequip : OblivionWeaponBreakDisposition::Drop;
         }
 
+        OblivionWeaponBreakDisposition shieldBreakDisposition(MWBase::World& world,
+            const OblivionCombatService& service, const MWWorld::Ptr& actor, const ESM4::Armor& shield)
+        {
+            const bool player = actor == world.getPlayerPtr();
+            const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            const auto* values = service.findActorValues(key);
+            if (!values) throw std::logic_error("native shield break has no actor authority");
+            // Original5F3A10: active worn slot13, independent of weapon-out.
+            if (values->mProcess != ESM4::ActorValueProcess::Active)
+                return OblivionWeaponBreakDisposition::None;
+            return player || (shield.mFlags & ESM4::Rec_Persistent)
+                ? OblivionWeaponBreakDisposition::Unequip : OblivionWeaponBreakDisposition::Drop;
+        }
+
         std::optional<PreparedBlock> prepareOrdinaryBlock(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
             float remaining, std::int32_t attackerWeaponType, std::span<const ESM4::GameSetting* const> settings)
@@ -817,14 +838,21 @@ namespace MWMechanics
                     auto change = captureOblivionPhysicalConditionChange(victim, item, *condition);
                     if (*condition == 0)
                     {
-                        if (shield) return std::nullopt; // Armor/shield break consequences remain separate.
-                        change.mBreakDisposition = weaponBreakDisposition(world, service, victim, *weapon);
+                        change.mBreakDisposition = shield ? shieldBreakDisposition(world, service, victim, *shield)
+                            : weaponBreakDisposition(world, service, victim, *weapon);
+                        if (shield && change.mBreakDisposition == OblivionWeaponBreakDisposition::Drop)
+                            return std::nullopt; // ARMO scene/body admission must precede NPC shield drops.
                         if (change.mBreakDisposition == OblivionWeaponBreakDisposition::None)
                             return std::nullopt; // Undrawn broken-blocking-item state is not admitted here.
                         // Original5FF914 re-reads the carried weapon after
                         // blocking wear. Both unequip and drop leave it empty.
-                        const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType, -1);
-                        result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
+                        if (shield)
+                            result.mSounds.reset(); // Final material is selected after projected shield removal.
+                        else
+                        {
+                            const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType, -1);
+                            result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
+                        }
                     }
                     result.mConditions.push_back(std::move(change));
                 }
@@ -949,6 +977,11 @@ namespace MWMechanics
             {
                 if (!inventory.isEquipped(*item) || item->getType() != ESM::REC_ARMO)
                     continue; // Original486790(slot,1) excludes clothing.
+                // Original selection runs after blocking wear has already
+                // removed a broken shield. Inspect that projected inventory.
+                if (std::any_of(prior.begin(), prior.end(), [&](const auto& change) {
+                    return change.mItem == *item && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+                })) continue;
                 const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item->getCellRef().getRefId());
                 const auto* form = id.getIf<ESM::FormId>();
                 const auto* armor = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
@@ -1017,7 +1050,7 @@ namespace MWMechanics
             // slot13 enters the equipment consequence branch at5F3A10;
             // ordinary body armor remains equipped when its condition is zero.
             if (*condition == 0 && (candidate.mBase->mArmorFlags & ESM4::Armor::TES4_Shield))
-                return std::nullopt; // Shield equipment consequences remain separate.
+                return std::nullopt; // Later selected-wear break needs its distinct posture/equipment caller audit.
             if (priorCondition != result.mConditions.end())
                 priorCondition->mCondition = *condition;
             else
