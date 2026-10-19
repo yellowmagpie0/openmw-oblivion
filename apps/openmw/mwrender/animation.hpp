@@ -140,6 +140,9 @@ namespace MWRender
             float mTime = 0;
             float mWeight = 1;
             float mEase = 1;
+            // Background tracks follow their existing shared animation clock.
+            // Reactions and outgoing tracks keep explicit service-owned times.
+            bool mFollowAnimationTime = false;
         };
 
         class TextKeyListener
@@ -558,6 +561,7 @@ namespace MWRender
         // Missing/ambiguous sources return false without replacing the plan.
         // Malformed frames throw. Empty input releases the projection.
         bool setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers);
+        std::vector<NativeSequenceLayer> nativePlayingSequenceLayers(std::span<const std::string_view> excluded);
 
         /** Disables the specified animation group;
          * \param groupname Animation group to disable.

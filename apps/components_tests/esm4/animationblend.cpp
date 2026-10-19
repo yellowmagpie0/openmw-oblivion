@@ -30,6 +30,29 @@ namespace
     }
 }
 
+TEST(ESM4NativeAnimationBlend, OriginalManagerActivationAndRetirementEaseBits)
+{
+    boost::property_tree::ptree document;
+    boost::property_tree::read_json((std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR)
+        / "scripts/data/oblivion_compat/m15_native_sequence_ease_expected.json").string(), document);
+    unsigned cases = 0;
+    for (const auto& row : document.get_child("cases"))
+    {
+        const auto& value = row.second;
+        const auto input = [&](const char* key) { return std::bit_cast<float>(value.get<std::uint32_t>(key)); };
+        const float actual = ESM4::sequenceBlendEase(input("clock_bits"), input("start_bits"),
+            input("end_bits"), value.get<bool>("retiring"));
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(actual), value.get<std::uint32_t>("expected_ease_bits"))
+            << value.get<unsigned>("original_context") << ':' << value.get<unsigned>("original_sample");
+        ++cases;
+    }
+    EXPECT_GT(cases, 0u);
+    EXPECT_EQ(ESM4::sequenceBlendEase(1, 1, 1, true), 0);
+    EXPECT_EQ(ESM4::sequenceBlendEase(1, 1, 1, false), 1);
+    EXPECT_THROW(ESM4::sequenceBlendEase(0, 2, 1, false), std::invalid_argument);
+    EXPECT_THROW(ESM4::sequenceBlendEase(std::numeric_limits<float>::infinity(), 0, 1, true), std::invalid_argument);
+}
+
 TEST(ESM4NativeAnimationBlend, OriginalSlotNormalizationAndTransformBits)
 {
     boost::property_tree::ptree document;

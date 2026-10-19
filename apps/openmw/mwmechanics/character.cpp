@@ -24,8 +24,10 @@
 #include "../mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/physicalcombat.hpp>
+#include <components/esm4/animationblend.hpp>
 
 #include <array>
+#include <bit>
 #include <unordered_set>
 
 #include <components/esm/records.hpp>
@@ -140,6 +142,30 @@ namespace
         {
             return {};
         }
+    }
+
+    MWMechanics::OblivionMeleeSequenceMetadata nativeReactionMetadata(
+        MWRender::Animation& animation, std::string_view group, bool reaction)
+    {
+        const auto* source = animation.getControllerSequenceMetadata(group);
+        if (!source || source->mCycleType != 2)
+            throw std::invalid_argument("native reaction requires a clamp sequence");
+        const auto raw = nativeRawKeys(*source);
+        const auto blend = std::bit_cast<std::int8_t>(ESM4::meleeBlendFrames(raw));
+        // Reviewed original General INI defaults: fAnimationDefaultBlend=.1,
+        // fAnimationMult=1. Custom original INI import is not implemented.
+        const float retirement = blend == 0 ? .1f : static_cast<float>(double(blend) / 30.);
+        MWMechanics::OblivionMeleeSequenceMetadata result{group, source->mFrequency,
+            source->mStartTime, source->mStopTime, source->mTimelineStart, source->mTimelineStop, {}, retirement};
+        if (reaction)
+        {
+            const auto keys = ESM4::reactionKeyTimes(raw);
+            if (keys.mMatchedCount != 2)
+                throw std::invalid_argument("native reaction requires Start/End keys");
+            result.mReactionKeys = keys.mTimes;
+        }
+        result.validate();
+        return result;
     }
 
     const ESM::RefId wolfRun = ESM::RefId::stringRefId("WolfRun");
@@ -1545,6 +1571,122 @@ namespace MWMechanics
                                 << " combat_random_draws=" << contact->mRandomDraws;
     }
 
+    bool CharacterController::bindOblivionMeleeReaction()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation) return false;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        const auto reaction = state ? state->mReaction : std::nullopt;
+        if (mOblivionRenderedReaction && (!reaction || reaction->mContactId != mOblivionRenderedReaction
+                || reaction->mAnimationGroup != mOblivionReactionGroup))
+        {
+            const auto old = std::exchange(mOblivionReactionGroup, {});
+            mOblivionRenderedReaction = 0;
+            if (!old.empty()) mAnimation->disable(old);
+        }
+        if (!reaction || reaction->mInactive) return false;
+        if (mOblivionRenderedReaction == reaction->mContactId
+            && mAnimation->getInfo(reaction->mAnimationGroup)) return true;
+        (void)nativeReactionMetadata(*mAnimation, reaction->mAnimationGroup, true);
+        const float start = mAnimation->getTextKeyTimeInGroup(reaction->mAnimationGroup,
+            reaction->mAnimationGroup + ": start");
+        const float stop = mAnimation->getTextKeyTimeInGroup(reaction->mAnimationGroup,
+            reaction->mAnimationGroup + ": stop");
+        if (start < 0 || stop <= start || reaction->mAnimationTime > stop)
+            throw std::invalid_argument("native reaction cannot bind its saved renderer time");
+        const std::string oldStrike = mOblivionRenderedStrike ? mCurrentWeapon : std::string{};
+        mOblivionRenderedStrike = 0;
+        mCurrentWeapon.clear();
+        if (!oldStrike.empty()) mAnimation->disable(oldStrike);
+        if (reaction->mKind != ESM4::MeleeReactionKind::BlockHit)
+        {
+            const auto block = std::exchange(mOblivionBlockGroup, {});
+            if (!block.empty()) mAnimation->disable(block);
+        }
+        mOblivionRenderedReaction = reaction->mContactId;
+        mOblivionReactionGroup = reaction->mAnimationGroup;
+        const float fraction = (std::max(start, reaction->mAnimationTime) - start) / (stop - start);
+        // Distinct shared priority keeps BlockIdle resident during BlockHit.
+        // Native per-bone priorities determine the projected pose.
+        playBlendedAnimation(mOblivionReactionGroup, Priority_Hit, MWRender::BlendMask_All,
+            false, 0.f, "start", "stop", fraction, 0);
+        Log(Debug::Verbose) << "M15 reaction bind: actor=" << actor.serialize()
+                            << " cause=" << reaction->mContactId << " group=" << reaction->mAnimationGroup;
+        return true;
+    }
+
+    bool CharacterController::advanceOblivionMeleeReactionFrame(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation) return false;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        if (!state || (!state->mReaction && state->mRetiringSequences.empty()))
+        {
+            if (mOblivionMeleeProjection) mAnimation->setNativeSequenceLayers({});
+            mOblivionMeleeProjection = false;
+            return false;
+        }
+        bindOblivionMeleeReaction();
+        state = service->findMeleeState(actor);
+        if (!state || (!state->mReaction && state->mRetiringSequences.empty())) return false;
+        std::set<std::string_view> groups;
+        if (state->mReaction) groups.insert(state->mReaction->mAnimationGroup);
+        for (const auto& sequence : state->mRetiringSequences) groups.insert(sequence.mAnimationGroup);
+        std::vector<OblivionMeleeSequenceMetadata> metadata;
+        for (const auto group : groups)
+            metadata.push_back(nativeReactionMetadata(*mAnimation, group,
+                state->mReaction && state->mReaction->mAnimationGroup == group));
+        auto prepared = service->prepareMeleeReactionFrame(actor, duration, metadata);
+        if (!prepared) return false;
+        const auto& next = prepared->state();
+        std::vector<std::string_view> excluded(groups.begin(), groups.end());
+        if (next.mStrike) excluded.push_back(next.mStrike->mAnimationGroup);
+        auto layers = mAnimation->nativePlayingSequenceLayers(excluded);
+        const float clock = prepared->clock();
+        const auto retirementEase = [&](const auto& span) {
+            const float end = static_cast<float>(double(*span.mStartClock) + span.mDuration);
+            return ESM4::sequenceBlendEase(clock, *span.mStartClock, end, true);
+        };
+        const auto activationEase = [&](const ESM4::MeleeSequenceTiming& timing) {
+            return timing.mEasing ? ESM4::sequenceBlendEase(clock, *timing.mEaseStart, timing.mEaseEnd, false) : 1.f;
+        };
+        const auto append = [&](std::string_view group, float time, float ease) {
+            const auto* source = mAnimation->getControllerSequenceMetadata(group);
+            if (!source) throw std::invalid_argument("native melee layer lost its sequence metadata");
+            layers.push_back({std::string(group), MWRender::BlendMask_All, time, source->mWeight, ease});
+        };
+        for (const auto& sequence : next.mRetiringSequences)
+            append(sequence.mAnimationGroup, sequence.mAnimationTime, retirementEase(sequence.mRetirement));
+        if (next.mReaction && !next.mReaction->mInactive)
+        {
+            const auto& reaction = *next.mReaction;
+            append(reaction.mAnimationGroup, reaction.mAnimationTime, reaction.mRetirement
+                    ? retirementEase(*reaction.mRetirement) : activationEase(reaction.mSequenceTiming));
+        }
+        if (next.mStrike)
+            append(next.mStrike->mAnimationGroup, next.mStrike->mAnimationTime,
+                next.mStrike->mSequenceTiming ? activationEase(*next.mStrike->mSequenceTiming) : 1.f);
+        if (!mAnimation->setNativeSequenceLayers(layers))
+            throw std::invalid_argument("native melee sequence projection could not bind");
+        mOblivionMeleeProjection = true;
+        if (next.mReaction && !next.mReaction->mInactive
+            && !mAnimation->setAnimationFrameTime(next.mReaction->mAnimationGroup, next.mReaction->mAnimationTime))
+            throw std::invalid_argument("native reaction event track is missing");
+        const bool inactive = next.mReaction && next.mReaction->mInactive;
+        if (!service->commitMeleeReactionFrame(*prepared))
+            throw std::invalid_argument("native reaction frame lost actor ownership");
+        if (inactive && !mOblivionReactionGroup.empty()) mAnimation->disable(mOblivionReactionGroup);
+        return true;
+    }
+
     void CharacterController::advanceOblivionMeleePlayback(float duration)
     {
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
@@ -1579,8 +1721,33 @@ namespace MWMechanics
         if (frozen || life->mPhase != ESM4::ActorLifePhase::Alive)
         {
             cancel();
+            cancelOblivionCombatInput();
             service->advanceAnimationClock(actor, frozen ? 0.f : duration);
             return;
+        }
+        // Contact dispatch can replace this actor's strike after its weapon
+        // prefix already ran. Bind the newly published reaction on this pass.
+        try
+        {
+            bindOblivionMeleeReaction();
+            state = service->findMeleeState(actor);
+            if (state && !state->mStrike && (state->mReaction || !state->mRetiringSequences.empty()))
+            {
+                if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
+                return;
+            }
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 reaction frame rejected: actor=" << actor.serialize() << " reason=" << error.what();
+            cancelOblivionCombatInput();
+            service->advanceAnimationClock(actor, duration);
+            return;
+        }
+        if (mOblivionMeleeProjection && (!state || state->mRetiringSequences.empty()))
+        {
+            mAnimation->setNativeSequenceLayers({});
+            mOblivionMeleeProjection = false;
         }
         if (!state || !state->mStrike)
         {
@@ -1666,6 +1833,14 @@ namespace MWMechanics
             service->advanceOrdinaryMeleeSequence(strike.mActionId, actor, duration, metadata->mFrequency,
                 metadata->mBegin, metadata->mEnd, metadata->mKeys);
         service->updateMeleeAnimation(strike.mActionId, actor, target);
+        // The strike manager advanced the shared clock. Detached layers use
+        // that same clock without a second frame-duration increment.
+        try { advanceOblivionMeleeReactionFrame(0); }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 outgoing frame rejected: actor=" << actor.serialize() << " reason=" << error.what();
+            cancelOblivionCombatInput();
+        }
         if (initialized || priorPhase != next.mPhase)
             Log(Debug::Verbose) << "M15 melee frame: actor=" << actor.serialize()
                                 << " id=" << strike.mActionId << " phase=" << unsigned(next.mPhase)
@@ -1720,6 +1895,13 @@ namespace MWMechanics
             Log(Debug::Verbose) << "M15 melee interrupt: actor=" << actor.serialize()
                                 << " id=" << strike.mActionId << " group=" << strikeGroup;
         }
+        if (const auto* state = service->findMeleeState(actor); state && state->mReaction)
+            service->cancelMeleeReaction(state->mReaction->mContactId, actor);
+        service->clearRetiringMeleeSequences(actor);
+        const auto reactionGroup = std::exchange(mOblivionReactionGroup, {});
+        mOblivionRenderedReaction = 0;
+        if (mOblivionMeleeProjection) mAnimation->setNativeSequenceLayers({});
+        mOblivionMeleeProjection = false;
         service->endBlocking(actor);
         service->clearMeleeInput(actor);
         const std::string blockGroup = std::exchange(mOblivionBlockGroup, {});
@@ -1732,6 +1914,7 @@ namespace MWMechanics
         // disable can emit an animation-end observer.
         if (!strikeGroup.empty())
             mAnimation->disable(strikeGroup);
+        if (!reactionGroup.empty()) mAnimation->disable(reactionGroup);
         if (!blockGroup.empty())
         {
             Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << blockGroup;
@@ -1765,6 +1948,29 @@ namespace MWMechanics
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
         {
             interrupt();
+            return false;
+        }
+        const bool blockIdlePresent = !mOblivionBlockGroup.empty() && mAnimation->getInfo(mOblivionBlockGroup);
+        const auto* recovering = service->findMeleeState(actor);
+        const auto recoveryCause = recovering && recovering->mReaction ? recovering->mReaction->mContactId : 0;
+        if (service->recoverInactiveMeleeReaction(actor, blockIdlePresent))
+            Log(Debug::Verbose) << "M15 reaction recovered: actor=" << actor.serialize()
+                                << " cause=" << recoveryCause << " action=" << service->getProcessAction(actor);
+        if (const auto* state = service->findMeleeState(actor); state && state->mReaction)
+        {
+            if (isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+                || oblivionKnockedState(*world, mPtr) != 0 || oblivionParalyzed(*world, mPtr) || mSkipAnim)
+            {
+                interrupt();
+                return false;
+            }
+            try { bindOblivionMeleeReaction(); }
+            catch (const std::invalid_argument& error)
+            {
+                Log(Debug::Verbose) << "M15 reaction binding rejected: actor=" << actor.serialize()
+                                    << " reason=" << error.what();
+                interrupt();
+            }
             return false;
         }
         if (!drawn || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
@@ -1898,7 +2104,7 @@ namespace MWMechanics
             }
             else
             {
-                if (mOblivionRenderedStrike != strike.mActionId)
+                if (mOblivionRenderedStrike != strike.mActionId || !mAnimation->getInfo(strike.mAnimationGroup))
                 {
                     mOblivionRenderedStrike = strike.mActionId;
                     Log(Debug::Verbose) << "M15 melee restore: actor=" << actor.serialize()

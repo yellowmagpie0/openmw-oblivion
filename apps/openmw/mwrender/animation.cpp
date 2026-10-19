@@ -1753,12 +1753,28 @@ namespace MWRender
         return true;
     }
 
+    std::vector<Animation::NativeSequenceLayer> Animation::nativePlayingSequenceLayers(
+        std::span<const std::string_view> excluded)
+    {
+        std::vector<NativeSequenceLayer> result;
+        for (const auto& [group, state] : mStates)
+        {
+            if (std::find(excluded.begin(), excluded.end(), group) != excluded.end()) continue;
+            const auto* metadata = getControllerSequenceMetadata(group);
+            if (!metadata) throw std::invalid_argument("shared animation has no native sequence metadata");
+            result.push_back({group, state.mBlendMask, state.getTime(), metadata->mWeight, 1, true});
+        }
+        return result;
+    }
+
     bool Animation::setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers)
     {
         if (layers.size() > 255)
             throw std::invalid_argument("too many native sequence layers");
         std::vector<std::shared_ptr<AnimSource>> sources;
         sources.reserve(layers.size());
+        std::vector<std::shared_ptr<const float>> clocks;
+        clocks.reserve(layers.size());
         for (const auto& layer : layers)
         {
             if (layer.mGroup.empty() || !layer.mBlendMask || (layer.mBlendMask & ~BlendMask_All)
@@ -1772,6 +1788,16 @@ namespace MWRender
                 || metadata->mTimelineStop < metadata->mTimelineStart
                 || layer.mTime < metadata->mTimelineStart || layer.mTime > metadata->mTimelineStop)
                 throw std::invalid_argument("native sequence sample outside source timeline");
+            std::shared_ptr<const float> clock;
+            if (layer.mFollowAnimationTime)
+            {
+                const auto playing = mStates.find(layer.mGroup);
+                if (playing == mStates.end()) return false;
+                clock = playing->second.mTime;
+                if (!std::isfinite(*clock) || *clock < metadata->mTimelineStart || *clock > metadata->mTimelineStop)
+                    throw std::invalid_argument("native background sample outside source timeline");
+            }
+            clocks.push_back(std::move(clock));
             sources.push_back(std::move(source));
         }
         bool same = layers.size() == mNativeSequenceLayers.size() && sources == mNativeSequenceSources;
@@ -1786,9 +1812,11 @@ namespace MWRender
                 frame.mTime = layers[i].mTime;
                 frame.mWeight = layers[i].mWeight;
                 frame.mEase = layers[i].mEase;
+                frame.mAnimationTime = clocks[i];
                 mNativeSequenceLayers[i].mTime = layers[i].mTime;
                 mNativeSequenceLayers[i].mWeight = layers[i].mWeight;
                 mNativeSequenceLayers[i].mEase = layers[i].mEase;
+                mNativeSequenceLayers[i].mFollowAnimationTime = layers[i].mFollowAnimationTime;
             }
             return true;
         }
@@ -1806,6 +1834,7 @@ namespace MWRender
             frame->mTime = layer.mTime;
             frame->mWeight = layer.mWeight;
             frame->mEase = layer.mEase;
+            frame->mAnimationTime = clocks[i];
             frames.push_back(frame);
             for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
             {

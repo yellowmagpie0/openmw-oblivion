@@ -1,0 +1,369 @@
+{
+  "provenance": {
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "original_corpus_sha256": "7e2dc02e6945209edb6d88999f138bc370e52abf9c039bef50fd958ed9da66c6",
+    "scope": "Distinct published ease inputs from original activation/deactivation/manager execution. Published weight and output-time arguments are separate. Retired sequences have no publication and are excluded."
+  },
+  "cases": [
+    {
+      "original_context": 0,
+      "original_sample": 0,
+      "clock_bits": 0,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 1,
+      "clock_bits": 1020054733,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 2,
+      "clock_bits": 1028443341,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 3,
+      "clock_bits": 1033476506,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 4,
+      "clock_bits": 1036831949,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 5,
+      "clock_bits": 1040187392,
+      "start_bits": 0,
+      "end_bits": 0,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 6,
+      "clock_bits": 1041865114,
+      "start_bits": 1041865114,
+      "end_bits": 1048576000,
+      "retiring": true,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 0,
+      "original_sample": 7,
+      "clock_bits": 1043542836,
+      "start_bits": 1041865114,
+      "end_bits": 1048576000,
+      "retiring": true,
+      "expected_ease_bits": 1061158911
+    },
+    {
+      "original_context": 0,
+      "original_sample": 8,
+      "clock_bits": 1045220557,
+      "start_bits": 1041865114,
+      "end_bits": 1048576000,
+      "retiring": true,
+      "expected_ease_bits": 1056964608
+    },
+    {
+      "original_context": 0,
+      "original_sample": 9,
+      "clock_bits": 1046898279,
+      "start_bits": 1041865114,
+      "end_bits": 1048576000,
+      "retiring": true,
+      "expected_ease_bits": 1048575995
+    },
+    {
+      "original_context": 2,
+      "original_sample": 6,
+      "clock_bits": 1041865114,
+      "start_bits": 1041865114,
+      "end_bits": 1051931444,
+      "retiring": true,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 2,
+      "original_sample": 7,
+      "clock_bits": 1045220557,
+      "start_bits": 1041865114,
+      "end_bits": 1051931444,
+      "retiring": true,
+      "expected_ease_bits": 1061158913
+    },
+    {
+      "original_context": 2,
+      "original_sample": 8,
+      "clock_bits": 1048576000,
+      "start_bits": 1041865114,
+      "end_bits": 1051931444,
+      "retiring": true,
+      "expected_ease_bits": 1056964609
+    },
+    {
+      "original_context": 2,
+      "original_sample": 9,
+      "clock_bits": 1050253722,
+      "start_bits": 1041865114,
+      "end_bits": 1051931444,
+      "retiring": true,
+      "expected_ease_bits": 1048576001
+    },
+    {
+      "original_context": 4,
+      "original_sample": 0,
+      "clock_bits": 0,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 0
+    },
+    {
+      "original_context": 4,
+      "original_sample": 1,
+      "clock_bits": 1020054733,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 1048576000
+    },
+    {
+      "original_context": 4,
+      "original_sample": 2,
+      "clock_bits": 1028443341,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 1056964608
+    },
+    {
+      "original_context": 4,
+      "original_sample": 3,
+      "clock_bits": 1033476506,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 1061158912
+    },
+    {
+      "original_context": 4,
+      "original_sample": 4,
+      "clock_bits": 1036831949,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 4,
+      "original_sample": 5,
+      "clock_bits": 1040187392,
+      "start_bits": 0,
+      "end_bits": 1036831949,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 0,
+      "clock_bits": 1148846080,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 1,
+      "clock_bits": 1148846490,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 2,
+      "clock_bits": 1148846899,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 3,
+      "clock_bits": 1148847309,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 4,
+      "clock_bits": 1148847718,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 5,
+      "clock_bits": 1148848128,
+      "start_bits": 1148846080,
+      "end_bits": 1148846080,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 6,
+      "clock_bits": 1148848538,
+      "start_bits": 1148848538,
+      "end_bits": 1148850176,
+      "retiring": true,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 16,
+      "original_sample": 7,
+      "clock_bits": 1148848948,
+      "start_bits": 1148848538,
+      "end_bits": 1148850176,
+      "retiring": true,
+      "expected_ease_bits": 1061153791
+    },
+    {
+      "original_context": 16,
+      "original_sample": 8,
+      "clock_bits": 1148849357,
+      "start_bits": 1148848538,
+      "end_bits": 1148850176,
+      "retiring": true,
+      "expected_ease_bits": 1056964608
+    },
+    {
+      "original_context": 16,
+      "original_sample": 9,
+      "clock_bits": 1148849767,
+      "start_bits": 1148848538,
+      "end_bits": 1148850176,
+      "retiring": true,
+      "expected_ease_bits": 1048555515
+    },
+    {
+      "original_context": 18,
+      "original_sample": 6,
+      "clock_bits": 1148848538,
+      "start_bits": 1148848538,
+      "end_bits": 1148851815,
+      "retiring": true,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 18,
+      "original_sample": 7,
+      "clock_bits": 1148849357,
+      "start_bits": 1148848538,
+      "end_bits": 1148851815,
+      "retiring": true,
+      "expected_ease_bits": 1061160192
+    },
+    {
+      "original_context": 18,
+      "original_sample": 8,
+      "clock_bits": 1148850176,
+      "start_bits": 1148848538,
+      "end_bits": 1148851815,
+      "retiring": true,
+      "expected_ease_bits": 1056967168
+    },
+    {
+      "original_context": 18,
+      "original_sample": 9,
+      "clock_bits": 1148850996,
+      "start_bits": 1148848538,
+      "end_bits": 1148851815,
+      "retiring": true,
+      "expected_ease_bits": 1048570880
+    },
+    {
+      "original_context": 20,
+      "original_sample": 0,
+      "clock_bits": 1148846080,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 0
+    },
+    {
+      "original_context": 20,
+      "original_sample": 1,
+      "clock_bits": 1148846490,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 1048586243
+    },
+    {
+      "original_context": 20,
+      "original_sample": 2,
+      "clock_bits": 1148846899,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 1056964608
+    },
+    {
+      "original_context": 20,
+      "original_sample": 3,
+      "clock_bits": 1148847309,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 1061164033
+    },
+    {
+      "original_context": 20,
+      "original_sample": 4,
+      "clock_bits": 1148847718,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    },
+    {
+      "original_context": 20,
+      "original_sample": 5,
+      "clock_bits": 1148848128,
+      "start_bits": 1148846080,
+      "end_bits": 1148847718,
+      "retiring": false,
+      "expected_ease_bits": 1065353216
+    }
+  ]
+}

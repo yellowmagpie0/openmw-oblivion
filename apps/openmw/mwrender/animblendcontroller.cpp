@@ -331,7 +331,7 @@ namespace MWRender
         weights.reserve(mTracks.size());
         for (const auto& track : mTracks)
         {
-            if (!std::isfinite(track.mFrame->mTime))
+            if (!std::isfinite(track.mFrame->time()))
                 throw std::invalid_argument("nonfinite native sequence renderer time");
             weights.push_back({track.mFrame->mWeight, track.mFrame->mEase, track.mPriority});
         }

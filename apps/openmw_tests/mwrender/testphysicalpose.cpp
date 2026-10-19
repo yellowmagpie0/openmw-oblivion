@@ -258,6 +258,40 @@ namespace
         EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
     }
 
+    TEST_F(PhysicalPoseAnimationTest, NativeBackgroundLayersFollowSharedClockWithoutAdvancingOwnedSamples)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto idle = nativeTrack({0, 0, 0}); idle->mVelocity = {1, 0, 0};
+        auto reaction = nativeTrack({10, 0, 0});
+        mAnimation->addNativeSource("native-idle", idle, 20);
+        mAnimation->addNativeSource("native-reaction", reaction, 75);
+        mAnimation->play("native-idle", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 1, "start", "stop", 0, 0, false);
+        const std::array<std::string_view, 1> excluded{{"native-reaction"}};
+        auto layers = mAnimation->nativePlayingSequenceLayers(excluded);
+        ASSERT_EQ(layers.size(), 1u); EXPECT_TRUE(layers[0].mFollowAnimationTime);
+        layers.push_back({"native-reaction", MWRender::BlendMask_All, 1, 1, .5f});
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        const auto builds = mAnimation->mControllerBuilds;
+        mAnimation->runAnimation(.25f); traverse();
+        EXPECT_EQ(idle->mObserved->mTime, .25f);
+        EXPECT_EQ(reaction->mObserved->mTime, 1);
+        mAnimation->runAnimation(.25f); mFrameStamp->setFrameNumber(1); traverse();
+        EXPECT_EQ(idle->mObserved->mTime, .5f);
+        EXPECT_EQ(reaction->mObserved->mTime, 1);
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        layers[0].mFollowAnimationTime = false; layers[0].mTime = .125f;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        mAnimation->runAnimation(.25f); mFrameStamp->setFrameNumber(2); traverse();
+        EXPECT_EQ(idle->mObserved->mTime, .125f);
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        auto invalid = layers; invalid[1].mFollowAnimationTime = true;
+        EXPECT_FALSE(mAnimation->setNativeSequenceLayers(invalid));
+        mFrameStamp->setFrameNumber(3); traverse();
+        EXPECT_EQ(idle->mObserved->mTime, .125f);
+        EXPECT_EQ(reaction->mObserved->mTime, 1);
+    }
+
     TEST_F(PhysicalPoseAnimationTest, NativeSequenceLayerRejectionPreservesExistingProjectionAndWinningSources)
     {
         mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;

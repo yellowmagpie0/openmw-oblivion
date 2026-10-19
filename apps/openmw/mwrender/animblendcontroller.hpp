@@ -26,7 +26,9 @@ namespace MWRender
         float mTime = 0;
         float mWeight = 1;
         float mEase = 1;
-        float getValue(osg::NodeVisitor*) override { return mTime; }
+        std::shared_ptr<const float> mAnimationTime;
+        float time() const { return mAnimationTime ? *mAnimationTime : mTime; }
+        float getValue(osg::NodeVisitor*) override { return time(); }
     };
 
     class NativeSequenceController

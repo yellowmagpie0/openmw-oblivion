@@ -24,6 +24,16 @@ namespace ESM4
         }
     }
 
+    float sequenceBlendEase(float clock, float start, float end, bool retiring)
+    {
+        if (!std::isfinite(clock) || !std::isfinite(start) || !std::isfinite(end) || end < start)
+            throw std::invalid_argument("invalid native sequence ease interval");
+        if (clock >= end) return retiring ? 0.f : 1.f;
+        const double current = std::max(clock, start);
+        return stored(retiring ? (double(end) - current) / (double(end) - start)
+                               : (current - start) / (double(end) - start));
+    }
+
     std::vector<float> normalizeSequenceBlendWeights(
         std::span<const SequenceBlendWeight> slots, float threshold, bool onlyHighest)
     {

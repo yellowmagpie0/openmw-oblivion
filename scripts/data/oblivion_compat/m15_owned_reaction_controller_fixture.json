@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "scope": "Injected schema55 owned Stagger and explicit synthetic outgoing span for controller/view-model/fresh-process continuation. This does not generate a normal contact or prove a stock retirement duration.",
+  "source_save": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-controller-pov-seed-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+    "sha256": "3d1c7f55348aa1498c14c0fc6d6b604d9c8ac9eded3713bb76b52ecb3b6f3cc7"
+  },
+  "preconditions": {
+    "actor": "dynamic:player:0000000000000001",
+    "actor_alive": true,
+    "actor_process": "Active",
+    "consumed_cause": 1,
+    "physical_actions": {
+      "next": 2,
+      "pending": []
+    },
+    "camera_first_person": false
+  },
+  "actor_animation_clock": 15.994014739990234,
+  "process_action": 8,
+  "melee_state": {
+    "actor": "dynamic:player:0000000000000001",
+    "input": {
+      "held_seconds": 0.0,
+      "input_held": false,
+      "prefer_left": false,
+      "queued": 0
+    },
+    "strike": null,
+    "ai_intent": null,
+    "reaction": {
+      "contact_id": 1,
+      "kind": 2,
+      "animation_group": "handtohandstagger",
+      "animation_time": 0.0,
+      "started": false,
+      "sequence_timing": {
+        "easing": true,
+        "offset": null,
+        "ease_start": null,
+        "last_input": null,
+        "ease_end": 0.1,
+        "weighted_time": 0.0,
+        "output_time": 0.0
+      },
+      "retirement": null,
+      "inactive": false
+    },
+    "retiring_sequences": [
+      {
+        "contact_id": 1,
+        "animation_group": "handtohandattackleft",
+        "animation_time": 0.25,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -15.744014739990234,
+          "ease_start": 0.25,
+          "last_input": 0.25,
+          "ease_end": 15.994014739990234,
+          "weighted_time": 0.25,
+          "output_time": 0.25
+        },
+        "retirement": {
+          "duration": 1.0,
+          "start_clock": null
+        }
+      }
+    ]
+  },
+  "apply": "Copy the private source save. Replace only this actor melee entry and process action, preserving this clock, consumed ledger and other actors. Use tes4_runtime_state.write_save and re-read with load_save before launch.",
+  "outgoing_duration_scope": "The stored one-second span is deliberately synthetic so a slow in-action save can retain it. It is not inferred from this stock KF Blend key.",
+  "expected": {
+    "first": {
+      "kind": 2,
+      "group": "handtohandstagger",
+      "reaction_inactive": false,
+      "minimum_animation_time_exclusive": 0,
+      "retiring_sequences": 1,
+      "retirement_anchor_present": true,
+      "camera_first_person": false
+    },
+    "second": {
+      "same_input_as_first_output": true,
+      "fresh_process": true,
+      "process_action": -1,
+      "reaction": null,
+      "retiring_sequences": [],
+      "camera_first_person": false,
+      "require_natural_recovery_event": true
+    },
+    "both": {
+      "no_contact_dispatch": true,
+      "physical_actions_unchanged": true,
+      "combat_rng_unchanged": true,
+      "all_actor_health_bits_unchanged": true
+    }
+  },
+  "limits": [
+    "This is stored-state injection, not the required normal-input contact/reaction gate.",
+    "First-person/model restoration may initially bind the first-person source before restoring third-person; controller must rebind without resetting authority.",
+    "Visible captures verify a displayed pose and recovery, not quantitative original-game pose or audio equivalence."
+  ]
+}

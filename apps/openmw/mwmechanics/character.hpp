@@ -221,9 +221,14 @@ namespace MWMechanics
         void persistOblivionMeleeProgress() const;
         void dispatchOblivionMeleeContact();
         void advanceOblivionMeleePlayback(float duration);
+        bool bindOblivionMeleeReaction();
+        bool advanceOblivionMeleeReactionFrame(float duration);
         void finishOblivionMeleePlayback();
         std::string mOblivionBlockGroup; // Render binding; held input is not saved.
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
+        std::uint64_t mOblivionRenderedReaction = 0;
+        std::string mOblivionReactionGroup;
+        bool mOblivionMeleeProjection = false;
         void updateIdleStormState(bool inwater) const;
 
         std::string chooseRandomAttackAnimation() const;

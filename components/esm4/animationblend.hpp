@@ -9,6 +9,10 @@
 
 namespace ESM4
 {
+    // Native manager's activation/retirement contribution at an absolute clock.
+    // The caller omits a retired sequence once clock reaches its stored end.
+    float sequenceBlendEase(float clock, float start, float end, bool retiring);
+
     struct SequenceBlendWeight
     {
         float mWeight = 1;

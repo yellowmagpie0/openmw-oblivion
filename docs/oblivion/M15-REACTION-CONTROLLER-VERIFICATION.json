@@ -1,0 +1,515 @@
+{
+  "status": "Saved owned-reaction controller/projection and fresh-process continuation verified in normal and instrumented builds; normal contact generation and full M15S4 remain incomplete",
+  "code_state": {
+    "head": "883f1b8ee304a6a3cdefd39a15633b319e527563",
+    "source_fingerprint": "8373e3fc9d03e23f41db193b2ba46ce3bd6d89bcee44ee35275895ec90ef2dfc"
+  },
+  "tested_source_sha256": {
+    "apps/components_tests/esm4/animationblend.cpp": "c1ec9e0b9272d3dbcfc907a026cf0d2425add685467604d20322ce8b296554a8",
+    "apps/openmw/mwmechanics/character.cpp": "86535902599165c691afe53ed1651dd2eb134da4959a8e9354f2d359f9cce093",
+    "apps/openmw/mwmechanics/character.hpp": "558239f0c576c2d41ea6a772fc272392b3230fd36d23dbe1f6a6d0b900a21e5c",
+    "apps/openmw/mwrender/animation.cpp": "d97524bf12262081200fee73ed6db7b7e828c96dbc54fd1f836df25b6dd1f921",
+    "apps/openmw/mwrender/animation.hpp": "ca2ee84f6b0ed47ffed295305507491a47461ec0b7078d1de24e7368349bf531",
+    "apps/openmw/mwrender/animblendcontroller.cpp": "2e9eab834197efda88984f8bae72769f3fdd8e06c5d201b87618ef6df77b58bf",
+    "apps/openmw/mwrender/animblendcontroller.hpp": "d7077eaceed6a6cac94e19e7ccd2788cb7fc6838bb9df868fe0c8013c0589e01",
+    "apps/openmw_tests/mwrender/testphysicalpose.cpp": "59d87d52599549752a099435b99fb5afd7933ef3727236af33f2fd2af4d80bc7",
+    "components/esm4/animationblend.cpp": "0a325987e0e80e0880741044ac10e8bc11fcbf1641f36badcf2661bfcc752596",
+    "components/esm4/animationblend.hpp": "9688d64305457d3c293ffdf0e411c92b7110b50e48a06ad0a447724e203a63bf"
+  },
+  "editable_data_sha256": {
+    "scripts/data/oblivion_compat/m15_native_sequence_ease_expected.json": "2ea443a85291d1ff7d561abedd0913ab9f9fafa7c25dc11dfb5e909eed04999d",
+    "scripts/data/oblivion_compat/m15_owned_reaction_controller_fixture.json": "995e918c51ac4a3b3928952a86e75ee8eab62700c1628f2a6d26b96b3ca47ea0",
+    "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller.json": "b789527801cc6b402125e89754f41888ef48e6a44d500672d78792674f8c845b",
+    "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_continuation.json": "1bc8e53a43a52f169fa9354b42d9d0a9888f9998483d780873cb51e4585d5e9a",
+    "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_sanitized.json": "9d30ac06289576ac01cc182d6b5eee25073a74177dbcfa028e1d45d62856fb35",
+    "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_sanitized_continuation.json": "78fb0ecc4d5bd5d8247966d8d238613f46be240bbb83718020522f8e0898017b"
+  },
+  "implemented": [
+    "CharacterController consumes prepared reaction frames, binds the current shared event track, projects ordered outgoing/current samples with native weights/ease and recovers inactive actions at the following actor prefix.",
+    "Contact dispatch can replace a strike after its actor input prefix. The same tail binds the new reaction. Outgoing layers alongside a strike use its already advanced clock, with no second duration increment.",
+    "Background samples borrow existing shared animation clocks so runAnimation advances them before pose sampling; current/outgoing owned samples retain explicit service times. Current reaction traversal emits its own keys, while private outgoing samples traverse no event track.",
+    "BlockHit uses a distinct shared priority to keep BlockIdle resident. Recoil/Stagger remove cached BlockIdle. Existing interruption paths clear typed reaction/outgoing ownership and private projection without inventing ownership for legacy raw actions.",
+    "Model/view restoration can clear shared animation state while a render ID survives. Reaction and strike binding shortcuts now require the actual shared track to be present and rebind from durable time when absent.",
+    "A transition log records actual actor-prefix recovery. Continuation scenarios await that event, then independently inspect saved state rather than using wall-clock delay as completion proof."
+  ],
+  "component_checks": [
+    {
+      "report": "build/oblivion-compat/m15/S4/native-reaction-controller-normal-01/verification.json",
+      "report_sha256": "5ef52da2a3a398b92748bb2e6251f7473307bb139412dab9bc81053e7b24e7a5",
+      "mode": "components",
+      "executed": 2949,
+      "binary": "build/components-tests",
+      "binary_sha256": "9d01bb9f2ecd109e78083d8ecd3a1f94d4d14622e42f4dca2f3ad0041f9d3b86",
+      "still_matches_passing_component_baseline": true
+    },
+    {
+      "report": "build/oblivion-compat/m15/S4/native-reaction-controller-sanitized-01/verification.json",
+      "report_sha256": "d66a2afbc9ffff50b7b12eed96d0cac80fe8136e8b5aedb9e21f796372847fbd",
+      "mode": "sanitize",
+      "executed": 802,
+      "binary": "build/m15-sanitize/components-tests",
+      "binary_sha256": "6f6464c16cf879eef836c3993c4694195b9569ca82131d4e5ee15a0a702ad07a",
+      "still_matches_passing_component_baseline": true
+    }
+  ],
+  "component_checks_scope": "Passing full normal2949 and selected ESM4*802 instrumented component inventories from01; their exact test binaries remain unchanged after the CharacterController-only02/03 fixes.",
+  "final_engine_checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-normal-03/verification.json",
+      "sha256": "83be986c6d4bdcfe2e119165e3fdbc29e281c21079faed5c0e6d455ba03e68dc",
+      "results": {
+        "engine": {
+          "executed": 1747,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8d3ba66407244752ef4527e368f46e18b7ef6059ac0fbbbf85b9a774c5df23cb",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ba250a9d6224b1cf9c39be80392f04c64d6c2aae049c03123a479fcb2f3a4108",
+          "inventory_sha256": "d9a12ccf7b0aaaf19c3d6f89f96439b4c0b7e113e0fec28396565071e73c75cb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-sanitized-03/verification.json",
+      "sha256": "8fe44e98e8ecbab010ee590d34026f7cbb9b68beb82c57b388ef646aae58ae97",
+      "results": {
+        "engine": {
+          "executed": 1747,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "47ef92358ff3cd09ba978391f0716985ed88bf72de3cbc4b5e77be738239f2a7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "87e936787dae46e82adb018d7da396281c0f7ade8aaa70086bb7e32676994723",
+          "inventory_sha256": "d9a12ccf7b0aaaf19c3d6f89f96439b4c0b7e113e0fec28396565071e73c75cb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "source_unchanged_during_each_check": true,
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "warning_free": false,
+  "native_ease_comparison": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/ease-comparison.json",
+    "sha256": "faa91092078cc1d57d0522d4fbff871184b8695b3e6636906de3945b711527e0",
+    "result": {
+      "passed": true,
+      "observations": 320,
+      "published_observations_only": true,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "native_corpus_sha256": "7e2dc02e6945209edb6d88999f138bc370e52abf9c039bef50fd958ed9da66c6",
+      "expected_input_sha256": "d6ee3dd32d84aa0a1a31a9eece8d8ed2e947ab020cdb92d1151470163f6a8620",
+      "comparator_sha256": "92d3ada3eed697e8a55a93b3871303b3eb744a23de85ea711668bab14c319000",
+      "binary_sha256": "286c464271ccdf3e9368511dbc42bfb92cacd9661ad8ed45031fae4ea7c077f1",
+      "production_source_sha256": {
+        "components/esm4/animationblend.cpp": "0a325987e0e80e0880741044ac10e8bc11fcbf1641f36badcf2661bfcc752596",
+        "components/esm4/animationblend.hpp": "9688d64305457d3c293ffdf0e411c92b7110b50e48a06ad0a447724e203a63bf"
+      },
+      "compile_argv": [
+        "c++",
+        "-std=c++20",
+        "-O2",
+        "-I.",
+        "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/compare-ease.cpp",
+        "components/esm4/animationblend.cpp",
+        "-o",
+        "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/compare-ease"
+      ],
+      "output": "320 original publication ease values match production exactly",
+      "limits": "Synthetic sequence metadata and clocks, empty controller set and null synchronization in retained original probe. This comparison verifies published ease arithmetic, not native group choice, actor/controller integration or gameplay."
+    }
+  },
+  "native_pose_comparison_current_translation_unit": {
+    "path": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-02/verification.json",
+    "sha256": "10275f816021f129b90b657642c9afe7a8f893d13d0bd202538180fbd5e713f2",
+    "result": {
+      "passed": true,
+      "observations": 21440,
+      "contexts": 10720,
+      "native_corpus_sha256": "1abbdbc59b8c5e6816b0f98e4a696e2e13da4308cd1b9e44a30ba950595b99f7",
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "expected_input": "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-01/expected-03.txt",
+      "expected_sha256": "5be97f3c9e859cc55fd78ebeffc082872d9853030debacc2a0df4d044d5a5d61",
+      "comparator_sha256": "cbdf78b3785d5ad98d5b8703a06ffffa93d70b3f2c3d78211d3f3f61a755cc1c",
+      "binary_sha256": "8418e48b1269d6f08d25a1085c8f9812c9e9013385fcd65b4b04acb9aa56f550",
+      "production_sources": {
+        "components/esm4/animationblend.cpp": "0a325987e0e80e0880741044ac10e8bc11fcbf1641f36badcf2661bfcc752596",
+        "components/esm4/animationblend.hpp": "9688d64305457d3c293ffdf0e411c92b7110b50e48a06ad0a447724e203a63bf"
+      },
+      "compile_argv": [
+        "c++",
+        "-std=c++20",
+        "-O2",
+        "-I.",
+        "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-02/compare.cpp",
+        "components/esm4/animationblend.cpp",
+        "-o",
+        "build/oblivion-compat/m15/S4/native-sequence-blend-comparison-02/compare"
+      ],
+      "returncode": 0,
+      "output": "21440 original observations compared, 0 mismatches",
+      "log_sha256": "7b9f96d1c06113a6185d461bdaac8aa90504ac28f21514362fdb61e4d1d4677f",
+      "reason": "Rebuilt current production translation unit after adding manager ease helper; unchanged frozen original normalization/pose expectations.",
+      "limits": "Synthetic original interpolator inputs. No normal contact, original-game geometry or application gameplay acceptance."
+    }
+  },
+  "native_ini_defaults": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion_default.ini",
+    "sha256": "1111363369502f4d3546435878b61b7744512b5e817c120796d4c8c8fd4a5f1a",
+    "fAnimationDefaultBlend": 0.1,
+    "fAnimationMult": 1.0,
+    "scope": "Shipped General INI defaults agree with hash-identified executable registered settings. Custom original INI import and live byteC4 bypass mapping are not established."
+  },
+  "native_ini_identity": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/animation-setting-identities.json",
+    "sha256": "d46f4f98496b87872547800c7bca4c3fd3e7245069876d45c9bdee53f24ef9f6"
+  },
+  "runtime_courses": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/verification.json",
+      "sha256": "577c27f0dab6e913304e544a5953d06fb46b0d0488b6bd050d779d8f6dec6940",
+      "result": {
+        "passed": true,
+        "recovery_event_before_save": true,
+        "scope": "Injected third-person owned-state continuation, synthetic outgoing span; no normal contact generation or original-game visual equivalence claim.",
+        "source_sha256": "7534e73f5242ba90a69aa502fc78c52840d04f7bb5e6b442198634c7a8585b4c",
+        "outputs": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "sha256": "2655ede3e91005ba93c8cba34d567d0bdc4d2e2566e8a2414c8b6d85bbe3856d"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "sha256": "579096774958b821e26b834b79032f8dff3bd9abf6cb7249b5b48727c5210864"
+          }
+        ],
+        "first_melee": {
+          "actor": "dynamic:player:0000000000000001",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": false,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": null,
+          "reaction": {
+            "contact_id": 1,
+            "kind": 2,
+            "animation_group": "handtohandstagger",
+            "animation_time": 0.332000732421875,
+            "started": true,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -15.994014739990234,
+              "ease_start": 0.1660003662109375,
+              "last_input": 0.332000732421875,
+              "ease_end": 16.09401512145996,
+              "weighted_time": 0.332000732421875,
+              "output_time": 0.332000732421875
+            },
+            "retirement": null,
+            "inactive": false
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 1,
+              "animation_group": "handtohandattackleft",
+              "animation_time": 0.582000732421875,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -15.744014739990234,
+                "ease_start": 15.994014739990234,
+                "last_input": 0.582000732421875,
+                "ease_end": 16.994014739990234,
+                "weighted_time": 0.582000732421875,
+                "output_time": 0.582000732421875
+              },
+              "retirement": {
+                "duration": 1.0,
+                "start_clock": 15.994014739990234
+              }
+            }
+          ]
+        },
+        "final_melee": {
+          "actor": "dynamic:player:0000000000000001",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": null,
+          "reaction": null,
+          "retiring_sequences": []
+        },
+        "process_epochs": [
+          {
+            "pid": 659789,
+            "start_ticks": 15831807,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "cd72c05cf0f5c87cfb074ea4e0b959bdae6ff2ef18315b261df53cafe497158f"
+          },
+          {
+            "pid": 662389,
+            "start_ticks": 15847316,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "cd72c05cf0f5c87cfb074ea4e0b959bdae6ff2ef18315b261df53cafe497158f"
+          }
+        ],
+        "exact_first_output_as_second_input": true,
+        "ledger_unchanged": true,
+        "combat_rng_unchanged": true,
+        "all_actor_health_bits_unchanged": true,
+        "health_actor_count": 9,
+        "camera_first_person": false,
+        "binary_pin": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "sha256": "cd72c05cf0f5c87cfb074ea4e0b959bdae6ff2ef18315b261df53cafe497158f"
+        },
+        "verifier_sha256": "bd5805f19a8057be3ae8522b8026b09eac3a9f3804d4dabace5ef10a6e1ebdb6",
+        "visual_review_required_separately": true
+      },
+      "own_profile_build_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/accepted-builds.json",
+        "sha256": "fa61ce776ae0e70c9f31b3f5ba5e11ab90b34cf2ca8617ec6de3de0960c4ae8a"
+      },
+      "preregistered_acceptance": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/preregistered-acceptance.json",
+        "sha256": "5d418b36816486fda43acc879184a647f9a1bbf2cf3a2969530b1c1fe233b843"
+      },
+      "manifests": [
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller.json",
+          "sha256": "b789527801cc6b402125e89754f41888ef48e6a44d500672d78792674f8c845b"
+        },
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_continuation.json",
+          "sha256": "1bc8e53a43a52f169fa9354b42d9d0a9888f9998483d780873cb51e4585d5e9a"
+        }
+      ],
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/visual-review.json",
+        "sha256": "064ea8158648084ed7da47f40aefba4f81de90d5d65c864577897aa743db76d5"
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/verification.json",
+      "sha256": "f684a1918258e9faac4ebfac2a514b54c335dbfed878cc60c24418b63489e160",
+      "result": {
+        "passed": true,
+        "recovery_event_before_save": true,
+        "scope": "Injected third-person owned-state continuation, synthetic outgoing span; no normal contact generation or original-game visual equivalence claim.",
+        "source_sha256": "7534e73f5242ba90a69aa502fc78c52840d04f7bb5e6b442198634c7a8585b4c",
+        "outputs": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+            "sha256": "d1e3a2ed8b1357362ed3cf699de58bbf9d8e5fb752ed0d10920bed9deb4c32b4"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+            "sha256": "ff8806f98701728f975241c9b42060aa347badff5e117214c3bffc8a8bddc029"
+          }
+        ],
+        "first_melee": {
+          "actor": "dynamic:player:0000000000000001",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": false,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": null,
+          "reaction": {
+            "contact_id": 1,
+            "kind": 2,
+            "animation_group": "handtohandstagger",
+            "animation_time": 0.332000732421875,
+            "started": true,
+            "sequence_timing": {
+              "easing": false,
+              "offset": -15.994014739990234,
+              "ease_start": 0.1660003662109375,
+              "last_input": 0.332000732421875,
+              "ease_end": 16.09401512145996,
+              "weighted_time": 0.332000732421875,
+              "output_time": 0.332000732421875
+            },
+            "retirement": null,
+            "inactive": false
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 1,
+              "animation_group": "handtohandattackleft",
+              "animation_time": 0.582000732421875,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -15.744014739990234,
+                "ease_start": 15.994014739990234,
+                "last_input": 0.582000732421875,
+                "ease_end": 16.994014739990234,
+                "weighted_time": 0.582000732421875,
+                "output_time": 0.582000732421875
+              },
+              "retirement": {
+                "duration": 1.0,
+                "start_clock": 15.994014739990234
+              }
+            }
+          ]
+        },
+        "final_melee": {
+          "actor": "dynamic:player:0000000000000001",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": null,
+          "reaction": null,
+          "retiring_sequences": []
+        },
+        "process_epochs": [
+          {
+            "pid": 662478,
+            "start_ticks": 15865804,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "331c39be5a1bab1a9c73e84da333086d772b3a13701ed3b30397b35acf14e4fc"
+          },
+          {
+            "pid": 663043,
+            "start_ticks": 15964129,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "331c39be5a1bab1a9c73e84da333086d772b3a13701ed3b30397b35acf14e4fc"
+          }
+        ],
+        "exact_first_output_as_second_input": true,
+        "ledger_unchanged": true,
+        "combat_rng_unchanged": true,
+        "all_actor_health_bits_unchanged": true,
+        "health_actor_count": 9,
+        "camera_first_person": false,
+        "binary_pin": {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "sha256": "331c39be5a1bab1a9c73e84da333086d772b3a13701ed3b30397b35acf14e4fc"
+        },
+        "verifier_sha256": "bd5805f19a8057be3ae8522b8026b09eac3a9f3804d4dabace5ef10a6e1ebdb6",
+        "visual_review_required_separately": true
+      },
+      "own_profile_build_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/accepted-builds.json",
+        "sha256": "15599edba4b5adbc5f76f28922cc529a444a0eddffb168ec276b85912beb272c"
+      },
+      "preregistered_acceptance": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/preregistered-acceptance.json",
+        "sha256": "d54641c474b6eb2d74873039b961fc04ff8e498deff09c4c79e06d29d0f14c99"
+      },
+      "manifests": [
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_sanitized.json",
+          "sha256": "9d30ac06289576ac01cc182d6b5eee25073a74177dbcfa028e1d45d62856fb35"
+        },
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_owned_reaction_controller_sanitized_continuation.json",
+          "sha256": "78fb0ecc4d5bd5d8247966d8d238613f46be240bbb83718020522f8e0898017b"
+        }
+      ],
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-02/visual-review.json",
+        "sha256": "3a8bc2a4bf5c4fd8cb552b5f59613ca3802255003c35ece7dd43ce9153cd95ff"
+      }
+    }
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-01",
+      "passed": false,
+      "reason": "Actual cold view/model restoration cleared the shared event track while cached reaction ID survived. Track-presence rebinding fixed the defect; identical staged input passed in later attempts."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-sanitized-01",
+      "passed": false,
+      "reason": "Scenario exited successfully but independent final inspection found active Stagger at1.826seconds, below End2.03333. Fixed45wall seconds allowed too few simulation updates under instrumentation. Replaced wall delay with actual recovery-event wait; final semantic assertions retained."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-runtime-normal-01",
+      "scope": "Historical earlier-source first-person injected continuation passed, but Player body was hidden. Not final-candidate first-person visual acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-02",
+      "scope": "Earlier-source third-person continuation passed before recovery logging/event-wait manifests. Superseded by final03 course."
+    }
+  ],
+  "limits": [
+    "Runtime state was explicitly injected. Stagger and an outgoing attack layer were already owned by consumed cause1; the one-second outgoing span is synthetic. These courses do not prove normal-input contact/reaction generation or a stock-source retirement duration.",
+    "Only default static Player Stagger continuation was exercised here. Full first/third-person, keyboard/gamepad, FPS, NPC/creature, interruption, mastery/effect and uninterrupted-versus-restart matrices remain open.",
+    "Source-authored weights and reviewed General INI defaults(.1/1) are supplied. Native caller activation weights, cached/repeated sequence semantics, variants/RNG, live animation byteC4 bypass mapping and custom original INI import remain separate work.",
+    "Generic background/native channel insertion semantics during movement and quantitative original-game pose, root-motion and stock audio equivalence are not established by the static injected continuation.",
+    "Normal contact adapters still generate no reaction/outgoing descriptors. ReactionOnly, Expert/Master and existing-owned-reaction guards remain."
+  ],
+  "owned_state_controller_runtime_acceptance": true,
+  "normal_contact_reaction_acceptance": false,
+  "full_M15S4_acceptance": false
+}

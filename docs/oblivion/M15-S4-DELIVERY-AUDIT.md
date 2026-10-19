@@ -7762,3 +7762,58 @@ CharacterController and normal contact adapters do not yet consume these APIs
 or generate the descriptors. Sequence projection, actual group/variant/RNG
 selection, interruption handling and normal-input fresh-process reaction courses
 remain open, along with the other S4 gates. **M15S4 is still incomplete.**
+
+
+## Owned-reaction controller and visible continuation checkpoint
+
+CharacterController now consumes the prepared reaction frames and projects
+ordered outgoing/current sequence samples through the native blend renderer.
+The current shared track traverses its own text keys; private outgoing samples
+emit no events. Background layers follow their existing shared animation clocks,
+so they sample the current frame after runAnimation rather than lagging one
+frame. Incoming/outgoing-only updates advance the actor clock once; detached
+layers beside a strike use its already advanced clock with duration0. BlockHit
+keeps BlockIdle resident through a distinct shared priority. Recoil/Stagger
+remove cached BlockIdle. Existing interruption paths release typed ownership
+and projection; unowned legacy actions receive no invented timer.
+
+A real cold third-person load exposed a missing shared event track: camera/model
+restoration replaced the animation after the first bind, while the render ID
+survived. Reaction and strike binding shortcuts now also check actual shared
+track presence and rebind from durable time. The failed attempt is retained.
+An instrumented continuation then showed why wall time is insufficient evidence:
+its scenario exited successfully after45seconds, but independent inspection
+found Stagger still active at1.826seconds, below End2.03333. The scenario now
+awaits actual actor-prefix recovery before saving, retaining the same decoded
+state assertions. No native duration or phase rule was changed to pass it.
+
+Final03 engine checks pass **1,747 tests /125 suites in each profile** with exact
+inventories and no failures/skips. Unchanged component test binaries still match
+passing01 inventories: **2,949 full normal and802 selected ESM4* instrumented**.
+Forty editable original ease cases and the borrowed-background-clock renderer
+case pass. Current production ease matches all **320 original published samples**;
+the rebuilt blend translation unit still matches **21,440 original observations**
+with zero mismatches. ASan leak detection is disabled; existing warnings remain.
+
+Normal third-person03 and instrumented third-person02 both save an active owned
+Stagger with a progressing outgoing layer, quit, and load the exact first output
+in a fresh process. Actual recovery precedes the second save; reaction becomes
+null, outgoing layers empty and action-1. Ledger/combat RNG and all nine actors'
+Health float bits remain unchanged. Directly reviewed captures show the visible
+Player leaning/hunched with a raised arm during the reaction, then upright idle.
+The four editable scenario manifests and typed fixture are in scripts/data.
+
+`M15-REACTION-CONTROLLER-VERIFICATION.json` pins code, inventories, binaries,
+original comparisons, manifests, source inputs, epochs, saved states, visual
+reviews and retained failures. This is **injected owned-state continuation**:
+its outgoing one-second span is synthetic. It does not prove a normal contact,
+stock caller duration, quantitative original-game pose/root-motion/audio
+identity, or the full input/view/FPS matrix. The earlier first-person course
+used an older candidate and hid the Player body; it is not final first-person
+visual acceptance. General INI defaults are reviewed, while custom INI import
+and live byteC4 mapping remain open.
+
+Normal contact adapters still create no reaction/outgoing descriptors. Native
+caller decisions, activation weights, cached/repeated group semantics,
+variant/RNG selection and the remaining mastery/effect/control cases must be
+finished before closing the normal-input gate. **M15S4 is still incomplete.**
