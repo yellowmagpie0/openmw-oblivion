@@ -2454,10 +2454,14 @@ namespace MWMechanics
                     || std::bit_cast<std::uint32_t>(firstPerson->mClock) != std::bit_cast<std::uint32_t>(expectedClock))
                     throw std::invalid_argument("invalid or stale native first-person mirror owner/clock");
                 const auto& mirror = *firstPerson->mReaction;
+                const auto& mirrorTiming = mirror.mSequenceTiming;
                 if (mirror.mContactId != id || mirror.mKind != request->mKind || mirror.mAnimationTime != 0
-                    || mirror.mStarted || mirror.mInactive || mirror.mRetirement || mirror.mPoseSnapshot
-                    || mirror.mSequenceTiming != ESM4::MeleeSequenceTiming{})
-                    throw std::invalid_argument("native first-person mirror requires fresh direct activation");
+                    || mirror.mStarted || mirror.mInactive || mirror.mRetirement
+                    || mirrorTiming.mOffset || mirrorTiming.mEaseStart || mirrorTiming.mLastInput
+                    || mirrorTiming.mWeightedTime != 0 || mirrorTiming.mOutputTime != 0
+                    || mirrorTiming.mEasing != mirror.mPoseSnapshot.has_value()
+                    || (mirrorTiming.mEasing ? mirrorTiming.mEaseEnd <= 0 : mirrorTiming.mEaseEnd != 0))
+                    throw std::invalid_argument("native first-person mirror requires fresh direct or captured-pose activation");
                 candidate.mFirstPerson = *firstPerson;
             }
             candidate.validate();

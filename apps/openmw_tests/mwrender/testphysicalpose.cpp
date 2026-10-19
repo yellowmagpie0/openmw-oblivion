@@ -1538,3 +1538,32 @@ namespace
         EXPECT_EQ(property->mVisits, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
     }
 }
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, OwnedFirstPersonQuarterTurnPoseAppliesBeforeIncomingEaseBegins)
+    {
+        mAnimation->addNativeSource("native-reaction", nativeTrack({-100, -200, -300}, 1.5f), 9);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        const float q = std::bit_cast<float>(0x3f3504f3u);
+        auto snapshot = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(ESM4::RuntimeMeleePoseSnapshot{0,
+            {{"Pelvis", {-4, 5, 6}, {q, 0, 0, q}, .5f, 9}}});
+        const std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, 1, false, snapshot},
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, 0}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        traverse();
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation, osg::Vec3f(-4, 5, 6));
+        EXPECT_EQ(mBone->getControllerTransform().mScale, .5f);
+        // Original6CC3A0 retains two slots at ease0, renormalizing F3 ->F4.
+        // The quaternion is converted to the engine matrix at this boundary.
+        const float normalized = std::bit_cast<float>(0x3f3504f4u);
+        const osg::Matrixf expected = osg::Matrixf::rotate(osg::Quat(0, 0, normalized, normalized))
+            * osg::Matrixf::scale(.5f, .5f, .5f);
+        const auto actual = mBone->getMatrix();
+        for (unsigned r = 0; r < 3; ++r)
+            for (unsigned c = 0; c < 3; ++c)
+                EXPECT_NEAR(actual(r, c), expected(r, c), 1e-7f);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(snapshot->mTracks.front().mRotation[0]), 0x3f3504f3u);
+    }
+}

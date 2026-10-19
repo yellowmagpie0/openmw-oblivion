@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "runtime_state_version": 57,
+  "status": "Fresh Player captured-pose packet/service and synthetic renderer acceptance verified; persistent dual roots, normal Player generation and full M15S4 remain incomplete.",
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "f29387e4761ba5e6efa0ac794da1ace7162b2423",
+    "source_fingerprint": "616f3c9b166367c3fab4eace7d6d33ddc6a80eb0f25e55d6b7a40b993c32e2d1"
+  },
+  "tested_source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "d1904ffe0948a800135bdacbac3f119eb0922ba8eb8ecfa6dc2da15eb704d6d3"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "3391a71ecea51362b9b9f52b47e4b4ce23667c72a0ee74370183481726369337"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testphysicalpose.cpp",
+      "sha256": "fa96eebba046d74ced73a2ae3f272d46f6f83036eab1b1030265904c46a6ab3f"
+    },
+    {
+      "path": "apps/components_tests/esm4/animationblend.cpp",
+      "sha256": "b3883c8ffab61716bb78a4fa4607f514aa9ce2f0d7158d337079f295e16bd6a1"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_player_owned_pose_expected.json",
+      "sha256": "53324985f2eb101d55c41f36f4b74146f277d31fd2758c37e3fd96d1f0f072f9"
+    }
+  ],
+  "checks": {
+    "normal_blend": {
+      "executed": 6,
+      "filter": "ESM4NativeAnimationBlend.*",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-components-normal-01/verification.json",
+        "sha256": "d7de5529ad44d5fceb32d9bb8b2ac2f3ffbb4e212ffa090fbac00e0dbb1e5aa9"
+      },
+      "inventory": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-components-normal-01/components-inventory.txt",
+        "sha256": "429c6c75ef55502f1baaeb8b8320f4a30a080dfca56d5e17da7b65bab76fb33e"
+      },
+      "xml": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-components-normal-01/components.xml",
+        "sha256": "d040f18073fd4bda4ceea2645500f935bdf3ca4585b20d41954082d083f0befb"
+      }
+    },
+    "sanitized_components": {
+      "executed": 814,
+      "filter": "ESM4*",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-sanitized-01/verification.json",
+        "sha256": "114ba3c9cffd1b9e4edc751bb59895127132a7710de376b5b45e94e1873f0502"
+      },
+      "inventory": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-sanitized-01/sanitize-inventory.txt",
+        "sha256": "42e5da07062bd9bc1a2cc311ed5172b309651801f0ed23c47120a9450ffd45b2"
+      },
+      "xml": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-sanitized-01/sanitize.xml",
+        "sha256": "0cc7c96a4e136fe9465dba9906068a54dc3f089aea505dde36c54a2fe10e7cce"
+      }
+    },
+    "normal_engine": {
+      "executed": 1759,
+      "filter": "*",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-03/verification.json",
+        "sha256": "0e2fe66a269a55c30035ebca98c22502fa406f30e172136c3a6bf08f8a3724d2"
+      },
+      "inventory": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-03/engine-inventory.txt",
+        "sha256": "5293ce441c39ba87b05123d4b05349a2cf464f29283633ae7436a7ee1cb3e133"
+      },
+      "xml": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-03/engine.xml",
+        "sha256": "044e96f7a1c4b224f83aeb07c574382ab3a298a5625bfd997dcb0916414800f1"
+      },
+      "suites": 125
+    },
+    "sanitized_engine": {
+      "executed": 1759,
+      "filter": "*",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-03/verification.json",
+        "sha256": "dbb0abe690b0ea78d17ca0c8ab10a3ae292143ee991c73ea5d61b2dd906bbf33"
+      },
+      "inventory": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-03/engine-inventory.txt",
+        "sha256": "5293ce441c39ba87b05123d4b05349a2cf464f29283633ae7436a7ee1cb3e133"
+      },
+      "xml": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-03/engine.xml",
+        "sha256": "16326e33ba7168b31cc4a6cc9a8588ee2dc3d1cbdfdaa36501b0d675f46d734d"
+      },
+      "suites": 125
+    }
+  },
+  "implemented": [
+    "Fresh first-person captured-pose activation beside body with independent timing and pose data; no previous mirror replacement.",
+    "Atomic rejection of malformed/initialized start packets.",
+    "Exact original timing comparisons for three reaction kinds and five clock pairs across seven cumulative updates, binary restore after every update, unchanged settled AV/RNG/ledger and body process ownership.",
+    "Exact 56 representative native blend outputs and renderer application at zero incoming ease."
+  ],
+  "independent_original": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "live_roots": {
+      "accepted_samples": 4,
+      "body": "AnimData.root = Player+3C",
+      "first_person": "AnimData.root = Player+5D0",
+      "managers_match_own_roots": true,
+      "roots_and_AnimData_persist_across_camera_draw_changes": true,
+      "equal_clock_bits_observed": true,
+      "clock_limit": "Four idle/draw snapshots do not establish combat scheduling or require clocks always equal.",
+      "input_cleanup": "Owned game/Steam/private display processes closed; four private inputs restored; source prefix/content unchanged."
+    },
+    "owned_pose_instruction_matrices": {
+      "absolute_clock": {
+        "contexts": 48,
+        "samples": 336
+      },
+      "cumulative_float32_clock": {
+        "contexts": 48,
+        "samples": 336
+      },
+      "axes": "Two root roles x four initial clocks x three groups28/30/31 x two x87 precision words027F/037F.",
+      "actual_path": "474530 with actual660110/612220 owned-root selection,6C5C70/6C9F10 capture,6CA950 sequence update and6CC3A0 blending. Real manager/sequence/controller/blend/interpolator constructors and one bound transform.",
+      "boundaries": [
+        "Synthetic but real constructed manager, sequence, controller, blend and authored interpolator; prescribed local transform. No existing target slot.",
+        "Heap allocation/free, OS atomics/critical sections/atexit, scene predicates578F60/5790E0 and scene update471230 boundaries. Frustum suppliedfalse but must not be called.",
+        "Group/AnimGroup metadata supplied; no resource selection/file load/full Player helper/process-action setter/actor completion/rendered gameplay acceptance."
+      ],
+      "result": "All state5 incoming/state4 snapshot until inclusive stored-end detection; frozen capture survives root mutation. Group/CW replicas agree per role/clock.",
+      "clock_limit": "Cumulative f32 clocks are supplied inputs; actual original scheduler/clock driver is outside the probe.",
+      "overshoot": "The first update noticing end anchors destination0 at its current clock. Initial .5 notices end at nominal.125; initial0 notices at.1 under cumulative .025f durations.",
+      "offset_mapping": "Native state5 offset is destination frame, represented by RuntimeMeleePoseSnapshot.destination_frame. Compare service timing offset after state1 only.",
+      "normalization": "FP captured quaternionF3 renormalizes toF4 with two slots, including initial incoming ease0."
+    }
+  },
+  "runtime_acceptance": {
+    "new_normal_Player_reaction": false,
+    "synthetic_renderer_test": true,
+    "scope": "No new gameplay/save-restart acceptance claimed. Existing NPC course evidence remains in preceding ownership receipt."
+  },
+  "retained_failures": [
+    "Absolute matrix01 resolved venv symlink to system Python without Unicorn, stopping before executable execution; fresh matrix02 passes.",
+    "Live firstperson-drawn-01 had correct flags/root identities but automatic vanity camera in its image; excluded from accepted view matrix.",
+    "Initial normal/SAN engine builds were stopped during compilation after review found new test exception-type assumptions too narrow. Codec validation throws runtime_error, service checks invalid_argument. Only new rejection assertions changed to std::exception; final fresh engine runs pass. SAN01 completed814 components before the stop; overall attempt is not a pass."
+  ],
+  "renderer_expectation_correction": "Both initial full1759-case engine runs passed1758 and failed only the new renderer assertion, which compared separately stored unscaled rotation to a scaled expectation. Corrected only the new assertion to inspect the final drawable getMatrix() including scale. Final fresh03 runs pass; production/native bits unchanged.",
+  "post_check_documentation": "Receipt, audit and provenance written after checks; tested code and editable expected values remain unchanged.",
+  "leak_coverage": false,
+  "limits": [
+    "No normal Player reaction factory or persistent dual renderer roots yet.",
+    "Old FP outgoing/parallel ownership and clock scheduling remain open.",
+    "No full Player-helper/cache/resource-load proof from the onebone manager probes.",
+    "Broader reaction replacements, mastery/effects/directional powers and full opponent/input/view/FPS course remain open."
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-review-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-review-01/scope-before-matrix.json",
+      "sha256": "542888e314ea9cbd4a8ffcaa1d984b4c23ffd7d82ca17593855e10cc43371e1d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-review-01/probe-01.py",
+      "sha256": "bb66a5857c97e0fdb0ab34321a05ff52f4b28c37cea9f89d4ecbf5ec588a0451"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-review-01/verify.py",
+      "sha256": "0a54347db4ffad17257df7a47d319671a5783f0974e29a3d399269216cc4df39"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-review-01/verification.json",
+      "sha256": "b196d1e2e14ae28ced72c20f07f04361e11f629f9fcd42b7db40843aee1653f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cumulative-review-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cumulative-review-01/scope-before-matrix.json",
+      "sha256": "706ba7e7ab8adad41f14eda91548985cc0a9df82e7b0e8197d66839fda3619a3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cumulative-review-01/probe-01.py",
+      "sha256": "e562b26e2863afd9c8c2f6d3736401204428991f4b8d472984d8a9d13563df9d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cumulative-review-01/verify.py",
+      "sha256": "f140e7d9e7c445ef27c5462d9dad60e041a7b5b98f3edc75c74f38f065d2f826"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cumulative-review-01/verification.json",
+      "sha256": "223ad8dab0a50d26469fd2df142d528b9335de6b09413aded4c698a0973bac7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/inputs.json",
+      "sha256": "e421c01bf1ccbdb81a9fd0bc16b3e930b0e89d13e7e3a39dc25f1364987ab2bc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/staged-inputs.json",
+      "sha256": "d247ea2c503dcfa9c6251a45b997be49f0c3179dedea212c16893fc49c63623f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/function-identities.json",
+      "sha256": "9a70fe6faeecf8a620547d630f0fa5ba15085de75061fe0da2852bc7bcbc4752"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/census.py",
+      "sha256": "65a5069ccdb53a3db07f961a8ef7ed6690dfebd01d997167975e4bb9e51535e5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/run-census.py",
+      "sha256": "b91358270947aebaee567ef373ac33afaa64dbd49a7f25f665a57fb561336a3f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/verify.py",
+      "sha256": "8fa5ca014f9d180eaa09a589f6ae6baa4f9415070f87cace2e0128dcf37b4ff4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/verification.json",
+      "sha256": "20d852cffc11a57dc6a37c8d9b9819394986419e543545ae6da72bd469125321"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/visual-review.json",
+      "sha256": "7d52fbe9c8b6e82920e3aee8d978a45cdb146e31bdd45de0fff4aec7c115d665"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/cleanup-inputs.json",
+      "sha256": "c3910aa894c49384cd749c877fbda88b67beaa1589ae57a4788238419042fed6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/content-after.json",
+      "sha256": "f74d94285d4acc83c0ab5e69080555d4c02360c8aff686b9a5f7bd6c6f286e19"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/game-exit.json",
+      "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/steam-exit.json",
+      "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/input-log.jsonl",
+      "sha256": "82766d618294e1047c8419922b3cb9fbccd3be168957dea26415e4a093bccd17"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/firstperson-drawn-01-sample.json",
+      "sha256": "1b45a5f502e5f6b2f64064d44430e3838cec61d1034350d1ec4a39c148d806bc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/firstperson-drawn.png",
+      "sha256": "64bc1c4bd2ae5cf52dba7bbb33095773cf05558859f8a2620c674fbed0ee8873"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/firstperson-idle-01-sample.json",
+      "sha256": "b211126a4415b37e2412b5cc2ce7dc4d53953cfda583703256d139c11d507509"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/loaded.png",
+      "sha256": "a0593c03528dce489709a6cf5157eb13e55cfe6456e72ca61f34499847d835b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/firstperson-drawn-02-sample.json",
+      "sha256": "5a7eebe0413e2605ccca3f4e41f6943e1dd828b1a3c5c251d5810184d888378a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/firstperson-drawn-reset.png",
+      "sha256": "1e82bfa8f06c3a468f159c9705b37a79272e538f03dad53b5305cca0cec83ab9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/thirdperson-drawn-01-sample.json",
+      "sha256": "0c0c5b21130e5258dd325066981451b6e34cf1a16d237dcb2f0a99a64e8bbc29"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/thirdperson-drawn.png",
+      "sha256": "ca32341d399a59b60fa49da65642fb55ab4af0c89136801e9a08cf2913d1f75a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/thirdperson-idle-01-sample.json",
+      "sha256": "f2b5412335424cd436e0006419367fe32ded719a74f6f0d7568ad267be3c7749"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-roots-original-live-01/thirdperson-idle.png",
+      "sha256": "05e64eb5facb28318ad8809c988070701c05b724d0e3c82998e923aef55560b6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-01/review-stop.json",
+      "sha256": "77766207f70b9b93e078f05e9dbb281d2cff1fd6503a72c3da3cde588692b829"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-01/verification.json",
+      "sha256": "4d7eee6308d428f85ad70e3e2eeb9458baf4d7e85ec27de986f6b86f3cdf48f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-sanitized-01/review-stop.json",
+      "sha256": "551623e5e9fc2ecc1d41253b763680e4155a609b711c4431ad2c82542c679cfd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-sanitized-01/verification.json",
+      "sha256": "114ba3c9cffd1b9e4edc751bb59895127132a7710de376b5b45e94e1873f0502"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-02/verification.json",
+      "sha256": "6804843bc2d3c4df8731ac695a7439d1c85dc1361531ad2f80a39d1464307cdf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-02/engine.xml",
+      "sha256": "eaec3407c009d0eb5b0dafa8e7d016bf9b7b140b1a47b9e29b991f4772d7ed7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-normal-02/engine-inventory.txt",
+      "sha256": "5293ce441c39ba87b05123d4b05349a2cf464f29283633ae7436a7ee1cb3e133"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-02/verification.json",
+      "sha256": "14197de271cab03f5cfd9c93ae114b09a1bb3fbead13a38a98cc84922655cadd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-02/engine.xml",
+      "sha256": "a6536a2b98cf9fc063ce4ae0a97c1d54d83be3f6bc0159aa802130c8da90b01e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-02/engine-inventory.txt",
+      "sha256": "5293ce441c39ba87b05123d4b05349a2cf464f29283633ae7436a7ee1cb3e133"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-engine-sanitized-03/engine-sanitizer-environment.json",
+      "sha256": "70e580193106f6637144e1c1a78fd00df4ea8d865057f7372080a0c22ad66c9b"
+    }
+  ],
+  "component_input_scope": "Component code and numeric corpus are unchanged by later test-only World exception-type and renderer matrix assertion corrections. Both final engine profiles test the same current-source fingerprint."
+}

@@ -26994,3 +26994,139 @@ TEST(OblivionWorldTest, FirstPersonReactionRetiresAfterBodyRecoveryWithoutOwning
     ASSERT_TRUE(world.commitOblivionPhysicalContact(next, fixture.mAttacker, fixture.mPlayer, request));
     EXPECT_EQ(service.findMeleeState(actor)->mFirstPerson->mReaction->mContactId, next);
 }
+
+TEST(OblivionWorldTest, PlayerOwnedPoseViewsMatchOriginalCumulativeClockBoundariesAcrossRestore)
+{
+    // Actual original474530/6C5C70 ->6CA950. Eight role/clock cases,
+    // with identical timing across roles, groups28/30/31 and CW027F/037F.
+    // Each row: clock, last, weighted, output, native offset, start, end, state.
+    constexpr std::array<std::array<std::array<std::uint32_t, 8>, 7>, 4> expected{{
+        {{
+            {0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3dcccccdu, 0x00000005u},
+            {0x3ccccccdu, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3dcccccdu, 0x00000005u},
+            {0x3d4ccccdu, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3dcccccdu, 0x00000005u},
+            {0x3d99999au, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3dcccccdu, 0x00000005u},
+            {0x3dcccccdu, 0x00000000u, 0x00000000u, 0x00000000u, 0xbdcccccdu, 0x00000000u, 0x3dcccccdu, 0x00000001u},
+            {0x3e000000u, 0x3cccccccu, 0x3cccccccu, 0x3cccccccu, 0xbdcccccdu, 0x00000000u, 0x3dcccccdu, 0x00000001u},
+            {0x3e4ccccdu, 0x3dcccccdu, 0x3dcccccdu, 0x3dcccccdu, 0xbdcccccdu, 0x3cccccccu, 0x3dcccccdu, 0x00000001u}
+        }},
+        {{
+            {0x3e800000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3e800000u, 0x3eb33333u, 0x00000005u},
+            {0x3e8ccccdu, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3e800000u, 0x3eb33333u, 0x00000005u},
+            {0x3e99999au, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3e800000u, 0x3eb33333u, 0x00000005u},
+            {0x3ea66667u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3e800000u, 0x3eb33333u, 0x00000005u},
+            {0x3eb33334u, 0x00000000u, 0x00000000u, 0x00000000u, 0xbeb33334u, 0x3e800000u, 0x3eb33333u, 0x00000001u},
+            {0x3ec00001u, 0x3cccccd0u, 0x3cccccd0u, 0x3cccccd0u, 0xbeb33334u, 0x00000000u, 0x3eb33333u, 0x00000001u},
+            {0x3ee66668u, 0x3dccccd0u, 0x3dccccd0u, 0x3dccccd0u, 0xbeb33334u, 0x3cccccd0u, 0x3eb33333u, 0x00000001u}
+        }},
+        {{
+            {0x3f000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3f000000u, 0x3f19999au, 0x00000005u},
+            {0x3f066666u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3f000000u, 0x3f19999au, 0x00000005u},
+            {0x3f0cccccu, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3f000000u, 0x3f19999au, 0x00000005u},
+            {0x3f133332u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3f000000u, 0x3f19999au, 0x00000005u},
+            {0x3f199998u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x3f000000u, 0x3f19999au, 0x00000005u},
+            {0x3f1ffffeu, 0x00000000u, 0x00000000u, 0x00000000u, 0xbf1ffffeu, 0x3f000000u, 0x3f19999au, 0x00000001u},
+            {0x3f333331u, 0x3d999998u, 0x3d999998u, 0x3d999998u, 0xbf1ffffeu, 0x00000000u, 0x3f19999au, 0x00000001u}
+        }},
+        {{
+            {0x40000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x40000000u, 0x40066666u, 0x00000005u},
+            {0x4001999au, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x40000000u, 0x40066666u, 0x00000005u},
+            {0x40033334u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x40000000u, 0x40066666u, 0x00000005u},
+            {0x4004ccceu, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x40000000u, 0x40066666u, 0x00000005u},
+            {0x40066668u, 0x00000000u, 0x00000000u, 0x00000000u, 0xc0066668u, 0x40000000u, 0x40066666u, 0x00000001u},
+            {0x40080002u, 0x3ccccd00u, 0x3ccccd00u, 0x3ccccd00u, 0xc0066668u, 0x00000000u, 0x40066666u, 0x00000001u},
+            {0x400ccccfu, 0x3dcccce0u, 0x3dcccce0u, 0x3dcccce0u, 0xc0066668u, 0x3ccccd00u, 0x40066666u, 0x00000001u}
+        }}
+    }};
+    constexpr std::array<float, 4> clocks{0, .25f, .5f, 2};
+    constexpr std::array<float, 7> durations{0, .025f, .025f, .025f, .025f, .025f, .075f};
+    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil,
+             ESM4::MeleeReactionKind::Stagger})
+    for (const auto pair : {std::array<unsigned, 2>{2, 0}, {2, 1}, {2, 2}, {2, 3}, {0, 2}})
+    {
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        auto seed = fixture.snapshot();
+        seed.mNativeAnimationClocks.at(actor) = clocks[pair[0]];
+        seed.mNativeMeleeStates.at(actor).mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{clocks[pair[1]], {}};
+        service.restore(seed, world.getStore());
+        const auto id = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        auto request = fixture.request(id, kind);
+        const float q = std::bit_cast<float>(0x3f3504f3u);
+        request.mVictimReaction->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+            {{"Pelvis", {11, 22, 33}, {1, 0, 0, 0}, 2, 9}}};
+        request.mVictimFirstPerson->mReaction->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+            {{"Pelvis", {-4, 5, 6}, {q, 0, 0, q}, .5f, 9}}};
+        for (auto* reaction : {&*request.mVictimReaction, &*request.mVictimFirstPerson->mReaction})
+        {
+            reaction->mSequenceTiming.mEasing = true;
+            reaction->mSequenceTiming.mEaseEnd = .1f;
+        }
+        const auto reject = [&](auto mutate) {
+            auto invalid = request; mutate(*invalid.mVictimFirstPerson->mReaction);
+            const auto before = fixture.snapshot().serializeBinary();
+            // Codec-level malformed state and service-level unsupported starts
+            // have distinct exception types; both must preserve the transaction.
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, invalid),
+                std::exception);
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        };
+        reject([](auto& r) { r.mPoseSnapshot.reset(); });
+        reject([](auto& r) { r.mSequenceTiming.mEasing = false; });
+        reject([](auto& r) { r.mSequenceTiming.mEaseEnd = 0; });
+        reject([](auto& r) { r.mSequenceTiming.mOffset = 0; });
+        reject([](auto& r) { r.mSequenceTiming.mLastInput = 0; });
+        reject([](auto& r) { r.mSequenceTiming.mEaseStart = 0; });
+        reject([](auto& r) { r.mSequenceTiming.mOutputTime = .01f; });
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, request));
+        const auto settled = fixture.snapshot();
+        std::array<MWMechanics::OblivionMeleeSequenceMetadata, 2> sources{{
+            {"handtohandblockhit", 1, 0, 2, 0, 2, std::array<float, 2>{0, 2}, .1f},
+            {"handtohandblockhit", 1, 0, 2, 0, 2, std::array<float, 2>{0, 2}, .1f}}};
+        sources[1].mFirstPerson = true;
+        for (std::size_t sample = 0; sample < durations.size(); ++sample)
+        {
+            SCOPED_TRACE(::testing::Message() << unsigned(kind) << ',' << pair[0] << ',' << pair[1] << ',' << sample);
+            const auto before = fixture.snapshot().serializeBinary();
+            auto frame = service.prepareMeleeReactionFrame(actor, durations[sample], sources);
+            ASSERT_TRUE(frame); EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+            ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+            EXPECT_FALSE(service.commitMeleeReactionFrame(*frame));
+            const auto* state = service.findMeleeState(actor);
+            ASSERT_TRUE(state->mReaction); ASSERT_TRUE(state->mFirstPerson->mReaction);
+            for (unsigned view = 0; view < 2; ++view)
+            {
+                const auto& row = expected[pair[view]][sample];
+                const auto& reaction = view ? *state->mFirstPerson->mReaction : *state->mReaction;
+                const auto& timing = reaction.mSequenceTiming;
+                const auto bits = [](float f) { return std::bit_cast<std::uint32_t>(f); };
+                EXPECT_EQ(bits(view ? state->mFirstPerson->mClock : service.animationClock(actor)), row[0]);
+                ASSERT_TRUE(timing.mLastInput); ASSERT_TRUE(timing.mOffset); ASSERT_TRUE(timing.mEaseStart);
+                EXPECT_EQ(bits(*timing.mLastInput), row[1]);
+                EXPECT_EQ(bits(timing.mWeightedTime), row[2]);
+                EXPECT_EQ(bits(timing.mOutputTime), row[3]);
+                EXPECT_EQ(bits(reaction.mAnimationTime), row[3]);
+                EXPECT_EQ(bits(*timing.mEaseStart), row[5]); EXPECT_EQ(bits(timing.mEaseEnd), row[6]);
+                EXPECT_EQ(timing.mEasing, row[7] == 5);
+                EXPECT_EQ(reaction.mPoseSnapshot.has_value(), row[7] == 5);
+                if (reaction.mPoseSnapshot)
+                {
+                    EXPECT_EQ(bits(reaction.mPoseSnapshot->mDestinationFrame), row[4]);
+                    EXPECT_EQ(reaction.mPoseSnapshot, view ? request.mVictimFirstPerson->mReaction->mPoseSnapshot
+                                                         : request.mVictimReaction->mPoseSnapshot);
+                }
+                else EXPECT_EQ(bits(*timing.mOffset), row[4]);
+            }
+            EXPECT_EQ(service.getProcessAction(actor), state->mReaction->processAction());
+            const auto saved = fixture.snapshot();
+            EXPECT_EQ(saved.mCombatRngState, settled.mCombatRngState);
+            EXPECT_EQ(saved.mPhysicalActions, settled.mPhysicalActions);
+            EXPECT_EQ(saved.mNativeActorValues, settled.mNativeActorValues);
+            // Restore every intermediate state, including one-view-only pose ownership.
+            service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), saved.serializeBinary());
+        }
+    }
+}

@@ -16549,3 +16549,56 @@ service frames reproduce the immutable incoming timing bits. Actual runtime
 regressions cover existing held-NPC BlockHit and schema-56-to-57 promotion with
 no invented first-person state. New Player mirror projection and full M15S4
 acceptance remain open.
+
+
+### Player owned-root pose continuation after independent mirror ownership
+
+The original-executable identity remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+A fresh isolated original-game episode supplies the body identity check that the
+preceding dispatch-prefix receipt left open: four accepted first/third-person,
+idle/drawn samples all have body AnimData root = Player `+3C`, first-person root
+= Player `+5D0`, and manager root = its AnimData root. Both roots and AnimData
+objects persist across these camera/draw changes. GDB only reads memory and
+checks six instruction hashes; it sets no breakpoints and makes no inferior
+calls. The separate visual review excludes a vanity-camera attempt. Private
+inputs are restored, source prefix/content hashes are unchanged, and owned
+original-game/Steam/display processes are terminal. Equal clocks are an
+observation in these four idle/draw snapshots, not a combat scheduler rule.
+
+Two fresh manager-level matrices execute actual `474530`, `660110`/`612220`,
+`6C5C70`/`6C9F10`, `6CA950` and `6CC3A0` with real manager, sequence, transform
+controller, blend and authored-interpolator constructors. One bound transform
+is prescribed separately for each root role. Each matrix has 48 contexts and
+336 samples (two roles, four initial clocks, three groups and two x87 precision
+words). The first uses absolute clock inputs; the second uses cumulative float32
+frame stores. Heap/OS imports and declared scene boundaries remain supplied;
+full Player helper, resource/cache loading, actual scheduler and gameplay are
+outside this experiment. All group/precision replicas agree per role/clock.
+
+Owned-root fresh activation produces incoming state 5 and frozen snapshot state
+4. The first update noticing the inclusive stored fade end changes to state 1,
+removes the snapshot and anchors destination zero at that update's actual clock,
+including any overshoot. Under cumulative .025f durations, clock .5 stays in
+state 5 at nominal .100 and finishes at .125; clock zero finishes at .100. Native
+state-5 offset is the destination frame, represented by the runtime snapshot;
+only after state 1 should it be compared to service sequence offset. Initial
+sentinel timing fields are abstracted by uninitialized runtime optionals. A
+captured first-person quarter-turn quaternion retains components `0x3f3504f3`,
+while two-slot initial blending renormalizes them to `0x3f3504f4` even with zero
+incoming ease. Captured data remains unchanged after mutating the live root.
+
+The editable eight-representative corpus is
+`scripts/data/oblivion_compat/m15_native_player_owned_pose_expected.json`.
+Service tests compare exact original timing bits across three reaction kinds,
+five clock pairs and seven sequential frames with binary restore after every
+frame; component tests compare all 56 representative transform samples. A
+renderer test checks the actual drawable quarter-turn matrix, translation and
+scale at incoming ease zero. Packet admission now permits fresh captured poses
+in both views, with independent clocks and pose data and atomic rejection of
+initialized/malformed starts. Existing cached/outgoing first-person replacement
+is still guarded. No schema change is made. The public receipt
+[M15-PLAYER-OWNED-POSE-VERIFICATION.json](M15-PLAYER-OWNED-POSE-VERIFICATION.json)
+pins test/source/native/live evidence and retained failed attempts. This closes
+fresh packet/service pose acceptance, not normal Player generation, persistent
+dual renderer roots, actual Player input/save-restart or the full M15S4 gate.

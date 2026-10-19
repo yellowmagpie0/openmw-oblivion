@@ -1,0 +1,2329 @@
+{
+  "schema_version": 1,
+  "scope": "Original474530 owned-root pose activation through actual6C5C70/6C9F10 and6CA950/6CC3A0, one prescribed bound transform per view. No full Player caller/cache/resource loading/rendered gameplay acceptance.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "tested_contexts": 48,
+  "samples": 336,
+  "representative": {
+    "group": 28,
+    "control_word": 639,
+    "comparison": "All group28/30/31 and CW027F/037F replicas agree per role/clock. Eight role/clock representatives retained."
+  },
+  "model_mapping": "While native state5 is active, native offset stores destination frame0, represented by RuntimeMeleePoseSnapshot.destination_frame. The service timing offset is an unused initialized backup until pose end; compare native offset to it only after state1. Before first update native last/weighted/output sentinel fields are abstracted by uninitialized optional timing.",
+  "clock_inputs": "Cumulative float32 stores of supplied frame durations; actual game scheduler/clock driver is outside this probe. First update noticing the inclusive end anchors offset at that update clock, including overshoot.",
+  "normalization": "Captured FP quarter-turn quaternion components0x3f3504f3 remain constant; first blend output renormalizes them to0x3f3504f4 while two input slots exist, even when incoming ease0.",
+  "cases": [
+    {
+      "view": "body",
+      "clock": 0.0,
+      "captured_pose_bits": [
+        1093664768,
+        1102053376,
+        1107558400,
+        1065353216,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "authored_pose_bits": [
+        1120403456,
+        1128792064,
+        1133903872,
+        1065353216,
+        0,
+        0,
+        0,
+        1077936128
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.0,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.02500000037252903,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1107623936,
+            1116012544,
+            1120370688,
+            1065353216,
+            0,
+            0,
+            0,
+            1074790400
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.05000000074505806,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1113456640,
+            1121845248,
+            1126596608,
+            1065353216,
+            0,
+            0,
+            0,
+            1075838976
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.07500000298023224,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1117487104,
+            1125875712,
+            1130971136,
+            1065353216,
+            0,
+            0,
+            0,
+            1076887552
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.10000000149011612,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3184315597,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.125,
+          "timing_bits": {
+            "last_input": 1020054732,
+            "weighted_time": 1020054732,
+            "output_time": 1020054732,
+            "offset": 3184315597,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1020054732,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.20000000298023224,
+          "timing_bits": {
+            "last_input": 1036831949,
+            "weighted_time": 1036831949,
+            "output_time": 1036831949,
+            "offset": 3184315597,
+            "ease_start": 1020054732,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1036831949,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        }
+      ]
+    },
+    {
+      "view": "body",
+      "clock": 0.25,
+      "captured_pose_bits": [
+        1093664768,
+        1102053376,
+        1107558400,
+        1065353216,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "authored_pose_bits": [
+        1120403456,
+        1128792064,
+        1133903872,
+        1065353216,
+        0,
+        0,
+        0,
+        1077936128
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.25,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.2750000059604645,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1107623938,
+            1116012546,
+            1120370692,
+            1065353216,
+            0,
+            0,
+            0,
+            1074790401
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.30000001192092896,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1113456645,
+            1121845253,
+            1126596612,
+            1065353216,
+            0,
+            0,
+            0,
+            1075838977
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.32500001788139343,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1117487107,
+            1125875715,
+            1130971140,
+            1065353216,
+            0,
+            0,
+            0,
+            1076887553
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.3500000238418579,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3199415092,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.3750000298023224,
+          "timing_bits": {
+            "last_input": 1020054736,
+            "weighted_time": 1020054736,
+            "output_time": 1020054736,
+            "offset": 3199415092,
+            "ease_start": 0,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1020054736,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.4500000476837158,
+          "timing_bits": {
+            "last_input": 1036831952,
+            "weighted_time": 1036831952,
+            "output_time": 1036831952,
+            "offset": 3199415092,
+            "ease_start": 1020054736,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1036831952,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        }
+      ]
+    },
+    {
+      "view": "body",
+      "clock": 0.5,
+      "captured_pose_bits": [
+        1093664768,
+        1102053376,
+        1107558400,
+        1065353216,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "authored_pose_bits": [
+        1120403456,
+        1128792064,
+        1133903872,
+        1065353216,
+        0,
+        0,
+        0,
+        1077936128
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.5,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.5249999761581421,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1107623929,
+            1116012537,
+            1120370677,
+            1065353216,
+            0,
+            0,
+            0,
+            1074790399
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.5499999523162842,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1113456626,
+            1121845234,
+            1126596597,
+            1065353216,
+            0,
+            0,
+            0,
+            1075838974
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.5749999284744263,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1117487093,
+            1125875701,
+            1130971120,
+            1065353216,
+            0,
+            0,
+            0,
+            1076887548
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.5999999046325684,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1120403442,
+            1128792050,
+            1133903861,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936123
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.6249998807907104,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3206545406,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.6999998688697815,
+          "timing_bits": {
+            "last_input": 1033476504,
+            "weighted_time": 1033476504,
+            "output_time": 1033476504,
+            "offset": 3206545406,
+            "ease_start": 0,
+            "ease_end": 1058642330
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1033476504,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        }
+      ]
+    },
+    {
+      "view": "body",
+      "clock": 2.0,
+      "captured_pose_bits": [
+        1093664768,
+        1102053376,
+        1107558400,
+        1065353216,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "authored_pose_bits": [
+        1120403456,
+        1128792064,
+        1133903872,
+        1065353216,
+        0,
+        0,
+        0,
+        1077936128
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 2.0,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 2.0250000953674316,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1107623964,
+            1116012572,
+            1120370730,
+            1065353216,
+            0,
+            0,
+            0,
+            1074790405
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 2.0500001907348633,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1113456695,
+            1121845303,
+            1126596650,
+            1065353216,
+            0,
+            0,
+            0,
+            1075838986
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 2.075000286102295,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1117487146,
+            1125875754,
+            1130971198,
+            1065353216,
+            0,
+            0,
+            0,
+            1076887567
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 2.1000003814697266,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3221644904,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 2.125000476837158,
+          "timing_bits": {
+            "last_input": 1020054784,
+            "weighted_time": 1020054784,
+            "output_time": 1020054784,
+            "offset": 3221644904,
+            "ease_start": 0,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1020054784,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 2.200000524520874,
+          "timing_bits": {
+            "last_input": 1036831968,
+            "weighted_time": 1036831968,
+            "output_time": 1036831968,
+            "offset": 3221644904,
+            "ease_start": 1020054784,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1036831968,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        }
+      ]
+    },
+    {
+      "view": "first_person",
+      "clock": 0.0,
+      "captured_pose_bits": [
+        3229614080,
+        1084227584,
+        1086324736,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1056964608
+      ],
+      "authored_pose_bits": [
+        3267887104,
+        3276275712,
+        3281387520,
+        1065353216,
+        0,
+        0,
+        0,
+        1069547520
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.0,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439284,
+            0,
+            0,
+            1060439284,
+            1056964608
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.02500000037252903,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3252682752,
+            3258515456,
+            3264020480,
+            1062451959,
+            0,
+            0,
+            1058006417,
+            1061158912
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.05000000074505806,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3260022784,
+            3267559424,
+            3272802304,
+            1064076127,
+            0,
+            0,
+            1053028117,
+            1065353216
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.07500000298023224,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3264741376,
+            3272916992,
+            3277815808,
+            1065056096,
+            0,
+            0,
+            1044372673,
+            1067450368
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.10000000149011612,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3184315597,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.125,
+          "timing_bits": {
+            "last_input": 1020054732,
+            "weighted_time": 1020054732,
+            "output_time": 1020054732,
+            "offset": 3184315597,
+            "ease_start": 0,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1020054732,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.20000000298023224,
+          "timing_bits": {
+            "last_input": 1036831949,
+            "weighted_time": 1036831949,
+            "output_time": 1036831949,
+            "offset": 3184315597,
+            "ease_start": 1020054732,
+            "ease_end": 1036831949
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1036831949,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        }
+      ]
+    },
+    {
+      "view": "first_person",
+      "clock": 0.25,
+      "captured_pose_bits": [
+        3229614080,
+        1084227584,
+        1086324736,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1056964608
+      ],
+      "authored_pose_bits": [
+        3267887104,
+        3276275712,
+        3281387520,
+        1065353216,
+        0,
+        0,
+        0,
+        1069547520
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.25,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439284,
+            0,
+            0,
+            1060439284,
+            1056964608
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.2750000059604645,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3252682757,
+            3258515461,
+            3264020484,
+            1062451959,
+            0,
+            0,
+            1058006416,
+            1061158914
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.30000001192092896,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3260022789,
+            3267559429,
+            3272802308,
+            1064076127,
+            0,
+            0,
+            1053028113,
+            1065353218
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.32500001788139343,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3264741379,
+            3272916995,
+            3277815813,
+            1065056096,
+            0,
+            0,
+            1044372661,
+            1067450370
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.3500000238418579,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3199415092,
+            "ease_start": 1048576000,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.3750000298023224,
+          "timing_bits": {
+            "last_input": 1020054736,
+            "weighted_time": 1020054736,
+            "output_time": 1020054736,
+            "offset": 3199415092,
+            "ease_start": 0,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1020054736,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.4500000476837158,
+          "timing_bits": {
+            "last_input": 1036831952,
+            "weighted_time": 1036831952,
+            "output_time": 1036831952,
+            "offset": 3199415092,
+            "ease_start": 1020054736,
+            "ease_end": 1051931443
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1036831952,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        }
+      ]
+    },
+    {
+      "view": "first_person",
+      "clock": 0.5,
+      "captured_pose_bits": [
+        3229614080,
+        1084227584,
+        1086324736,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1056964608
+      ],
+      "authored_pose_bits": [
+        3267887104,
+        3276275712,
+        3281387520,
+        1065353216,
+        0,
+        0,
+        0,
+        1069547520
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 0.5,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439284,
+            0,
+            0,
+            1060439284,
+            1056964608
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 0.5249999761581421,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3252682737,
+            3258515440,
+            3264020468,
+            1062451956,
+            0,
+            0,
+            1058006420,
+            1061158907
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 0.5499999523162842,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3260022769,
+            3267559408,
+            3272802292,
+            1064076123,
+            0,
+            0,
+            1053028132,
+            1065353206
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 0.5749999284744263,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3264741364,
+            3272916980,
+            3277815790,
+            1065056094,
+            0,
+            0,
+            1044372720,
+            1067450360
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 0.5999999046325684,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3267887089,
+            3276275696,
+            3281387508,
+            1065353216,
+            0,
+            0,
+            895632946,
+            1069547510
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 0.6249998807907104,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3206545406,
+            "ease_start": 1056964608,
+            "ease_end": 1058642330
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 0.6999998688697815,
+          "timing_bits": {
+            "last_input": 1033476504,
+            "weighted_time": 1033476504,
+            "output_time": 1033476504,
+            "offset": 3206545406,
+            "ease_start": 0,
+            "ease_end": 1058642330
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1033476504,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        }
+      ]
+    },
+    {
+      "view": "first_person",
+      "clock": 2.0,
+      "captured_pose_bits": [
+        3229614080,
+        1084227584,
+        1086324736,
+        1060439283,
+        0,
+        0,
+        1060439283,
+        1056964608
+      ],
+      "authored_pose_bits": [
+        3267887104,
+        3276275712,
+        3281387520,
+        1065353216,
+        0,
+        0,
+        0,
+        1069547520
+      ],
+      "before_update": {
+        "state": 5,
+        "float_bits": {
+          "last_input": 4286578687,
+          "weighted_time": 4286578687,
+          "output_time": 4286578687,
+          "offset": 0,
+          "ease_start": 4286578687,
+          "ease_end": 1036831949
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "delta_bits": 0,
+          "clock": 2.0,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439284,
+            0,
+            0,
+            1060439284,
+            1056964608
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.025,
+          "delta_bits": 1020054733,
+          "clock": 2.0250000953674316,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3252682812,
+            3258515520,
+            3264020528,
+            1062451967,
+            0,
+            0,
+            1058006403,
+            1061158932
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.05,
+          "delta_bits": 1020054733,
+          "clock": 2.0500001907348633,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3260022844,
+            3267559488,
+            3272802352,
+            1064076139,
+            0,
+            0,
+            1053028055,
+            1065353236
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.075,
+          "delta_bits": 1020054733,
+          "clock": 2.075000286102295,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 0,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            3264741421,
+            3272917040,
+            3277815879,
+            1065056106,
+            0,
+            0,
+            1044372487,
+            1067450398
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.1,
+          "delta_bits": 1020054733,
+          "clock": 2.1000003814697266,
+          "timing_bits": {
+            "last_input": 0,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 3221644904,
+            "ease_start": 1073741824,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.125,
+          "delta_bits": 1020054733,
+          "clock": 2.125000476837158,
+          "timing_bits": {
+            "last_input": 1020054784,
+            "weighted_time": 1020054784,
+            "output_time": 1020054784,
+            "offset": 3221644904,
+            "ease_start": 0,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1020054784,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        },
+        {
+          "elapsed": 0.2,
+          "delta_bits": 1033476506,
+          "clock": 2.200000524520874,
+          "timing_bits": {
+            "last_input": 1036831968,
+            "weighted_time": 1036831968,
+            "output_time": 1036831968,
+            "offset": 3221644904,
+            "ease_start": 1020054784,
+            "ease_end": 1074161254
+          },
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            3267887104,
+            3276275712,
+            3281387520,
+            1065353216,
+            0,
+            0,
+            0,
+            1069547520
+          ],
+          "target_time_bits": 1036831968,
+          "snapshot_pose_bits": [
+            3229614080,
+            1084227584,
+            1086324736,
+            1060439283,
+            0,
+            0,
+            1060439283,
+            1056964608
+          ]
+        }
+      ]
+    }
+  ]
+}

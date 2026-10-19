@@ -8164,3 +8164,83 @@ layers and actual view scheduling remain open. `CharacterController` still
 projects the existing body path. Broader reaction replacements, Multiple RNG
 ordering, mastery/effects/directional powers and the full opponent/input/view/FPS
 course remain open. **M15S4 remains incomplete.**
+
+
+### Player owned-root pose activation and independent fade completion
+
+A new isolated original-game episode closes the root-identity condition left
+open by the preceding ownership chunk. Four accepted, read-only memory samples
+cover idle/drawn hands in first/third person. In every sample body AnimData root
+is Player `+3C`, first-person root is Player `+5D0`, and each sequence manager
+points to its own root. Both roots and AnimData objects persist across these
+camera/draw changes. Equal clock bits in these four samples establish only that
+observation; combat scheduling remains open. A retained first-person drawn
+attempt showed the automatic vanity camera and is excluded from the accepted
+visual matrix. The game, Steam and private display processes exited, private
+inputs were restored by hash, and the source prefix/content remained unchanged.
+
+Independent original `474530` now executes through actual `660110`/`612220`,
+owned-root selection, `6C5C70`/`6C9F10` capture, `6CA950` sequence updates and
+`6CC3A0` transform blending. Real manager/sequence/controller/blend/interpolator
+constructors bind one prescribed transform per view. The allocator, OS imports,
+scene predicates and scene-update boundaries remain supplied; this is not the
+full Player helper/cache/resource path or rendered gameplay acceptance. Two
+48-context matrices cover both root roles, four initial clocks, three reaction
+groups and both x87 precision words: 336 samples each, absolute-clock control and
+cumulative float32 frame increments. Captured pose data remains frozen after
+changing the live root. All group/precision replicas agree per role/clock.
+
+Incoming state 5 and captured state 4 last until the first update noticing the
+inclusive stored fade end. That update anchors destination time zero at its
+actual clock, including overshoot. With cumulative .025 frame durations, an
+initial clock .5 is still below its stored end at nominal .100 and finishes at
+.125; initial clock zero finishes at .100. During state 5 the original offset
+field is the destination frame, represented by `RuntimeMeleePoseSnapshot`, not
+the service's unused backup offset. The captured quarter-turn quaternion has
+components `0x3f3504f3`; the two-slot initial blend renormalizes to `0x3f3504f4`
+even with incoming ease zero.
+
+Contact preparation now accepts a fresh captured first-person pose alongside
+its body reaction. It requires uninitialized timing, a positive easing span,
+the matching consumed cause/kind and exact persistent view-clock bits. Invalid
+initialized timing, easing without a snapshot and malformed spans reject
+atomically. Old first-person owner replacement remains guarded. New World cases
+compare the original timing bits for both clock orders, all three reaction
+kinds and five clock pairs, restoring every intermediate state. They cover
+one-view-only pose ownership without changing settled AV/RNG/contact state or
+body process ownership. The component test compares all 56 retained native
+blend samples; a renderer test applies the captured first-person quarter turn
+at incoming ease zero. No wire/schema change is needed.
+
+This extends packet/service and synthetic renderer acceptance. Normal Player
+resource generation, persistent dual renderer roots, old first-person outgoing
+or parallel layers and normal-input save/restart acceptance remain open.
+Broader M15S4 reaction, mastery/effect and runtime-course gates remain open.
+**M15S4 remains incomplete.**
+
+
+The initial normal engine run passed1,758 tests and failed only the new renderer
+assertion: it compared a separately stored, unscaled rotation matrix against a
+scaled expectation. Translation and the separately stored scale passed, as did
+the full new World test. The corrected assertion checks the final drawable
+matrix, including scale. Both original failures remain retained; production
+behavior and native expected bits are unchanged by this test correction.
+
+
+Final fresh normal and ASan/UBSan engine runs each pass **1,759 tests in 125
+suites**, with exact inventory/XML agreement and no failures or skips. Their
+shared tested fingerprint is
+`616f3c9b166367c3fab4eace7d6d33ddc6a80eb0f25e55d6b7a40b993c32e2d1`
+(parent `f29387e476`). The unchanged component inputs pass six selected normal
+blend tests and all **814 selected ESM4 sanitizer component tests**. Actual
+sanitizer engine process environment is retained: ASan disables leak detection
+and halts on error; UBSan halts with stack traces. This is not leak coverage.
+The earlier prior desktop LSan limitation remains open. Only documentation is
+added after these checks; the tested code and editable numeric corpus stay
+unchanged. The initial stopped builds, both full runs with the incorrect renderer
+assertion, venv-path failure and excluded vanity-camera observation are retained.
+
+[M15-PLAYER-OWNED-POSE-VERIFICATION.json](M15-PLAYER-OWNED-POSE-VERIFICATION.json)
+records this continuation. It supplies live root identities and full manager
+pose activation beyond the preceding dispatch-prefix proof. It does not supply
+normal Player reaction rendering or new normal-input gameplay acceptance.

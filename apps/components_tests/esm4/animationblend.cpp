@@ -195,3 +195,43 @@ TEST(ESM4NativeAnimationBlend, OriginalPoseTransitionDestinationTimingBits)
     EXPECT_EQ(count, 448u);
     EXPECT_THROW(ESM4::updateMeleeSequenceTiming({}, 0, 1, 0, 1, 0), std::invalid_argument);
 }
+
+TEST(ESM4NativeAnimationBlend, OriginalPlayerOwnedPoseCapturesAndBlendsAcrossCumulativeClockEnd)
+{
+    boost::property_tree::ptree document;
+    boost::property_tree::read_json((std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR)
+        / "scripts/data/oblivion_compat/m15_native_player_owned_pose_expected.json").string(), document);
+    unsigned cases = 0, samples = 0;
+    for (const auto& row : document.get_child("cases"))
+    {
+        const auto& value = row.second;
+        const std::array<ESM4::SequenceBlendPose, 2> poses{
+            pose(bits(value.get_child("captured_pose_bits"))), pose(bits(value.get_child("authored_pose_bits")))};
+        const float start = value.get<float>("clock");
+        const float end = static_cast<float>(double(start) + .1f);
+        for (const auto& sample : value.get_child("samples"))
+        {
+            SCOPED_TRACE(::testing::Message() << value.get<std::string>("view") << ',' << start << ','
+                << sample.second.get<float>("elapsed"));
+            const float clock = sample.second.get<float>("clock");
+            const bool easing = sample.second.get<unsigned>("target_state") == 5;
+            const float incoming = ESM4::sequenceBlendEase(clock, start, end, false);
+            const float outgoing = ESM4::sequenceBlendEase(clock, start, end, true);
+            const std::array<ESM4::SequenceBlendWeight, 2> slots{{{1, outgoing, 9}, {1, incoming, 9}}};
+            const auto weights = ESM4::normalizeSequenceBlendWeights(slots, 0, false);
+            // The inactive snapshot slot is removed at state1. Before then a
+            // zero-weight incoming slot still triggers native quaternion normalization.
+            const auto result = easing ? ESM4::blendSequenceTransforms(poses, weights) : poses[1];
+            const auto expected = bits(sample.second.get_child("output_bits"));
+            ASSERT_TRUE(result.mTranslation); ASSERT_TRUE(result.mRotation); ASSERT_TRUE(result.mScale);
+            for (unsigned i = 0; i < 3; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>((*result.mTranslation)[i]), expected[i]);
+            for (unsigned i = 0; i < 4; ++i)
+                EXPECT_EQ(std::bit_cast<std::uint32_t>((*result.mRotation)[i]), expected[i + 3]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*result.mScale), expected[7]);
+            ++samples;
+        }
+        ++cases;
+    }
+    EXPECT_EQ(cases, 8u); EXPECT_EQ(samples, 56u);
+}
