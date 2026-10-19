@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 55
+CURRENT_VERSION = 56
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1497,6 +1497,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if reaction is not None:
             fields = {"contact_id", "kind", "animation_group", "animation_time", "started", "sequence_timing", "retirement"}
             if version >= 55: fields.add("inactive")
+            if version >= 56: fields.add("pose_snapshot")
             if version < 54 or not isinstance(reaction, dict) or set(reaction) != fields or strike is not None:
                 raise RuntimeStateError("Invalid or conflicting TES4 melee reaction")
             identity, kind = reaction["contact_id"], reaction["kind"]
@@ -1540,6 +1541,33 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                             or clock_values[actor] < native_float(native_float(retirement["start_clock"])
                                 + native_float(retirement["duration"])))))):
                     raise RuntimeStateError("Invalid or premature inactive TES4 melee reaction")
+            if version >= 56 and reaction["pose_snapshot"] is not None:
+                pose = reaction["pose_snapshot"]
+                if (not isinstance(pose, dict) or set(pose) != {"destination_frame", "tracks"}
+                        or not timing["easing"] or retirement is not None or reaction["inactive"]
+                        or native_float(timing["ease_end"]) <= (native_float(timing["ease_start"])
+                            if timing["ease_start"] is not None else 0)):
+                    raise RuntimeStateError("Invalid TES4 reaction pose transition")
+                native_float(pose["destination_frame"])
+                bones = set()
+                for track in check_collection(pose["tracks"], "captured melee pose tracks"):
+                    if (not isinstance(track, dict)
+                            or set(track) != {"bone", "translation", "rotation", "scale", "priority"}
+                            or not isinstance(track["bone"], str) or not track["bone"] or "\0" in track["bone"]
+                            or len(track["bone"].encode("utf-8")) > MAX_STRING
+                            or type(track["priority"]) is not int or not 0 <= track["priority"] <= 255):
+                        raise RuntimeStateError("Invalid TES4 captured pose track")
+                    bone = "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in track["bone"])
+                    if bone in bones:
+                        raise RuntimeStateError("Duplicate TES4 captured pose bone")
+                    bones.add(bone)
+                    for key, count in (("translation", 3), ("rotation", 4)):
+                        if not isinstance(track[key], list) or len(track[key]) != count:
+                            raise RuntimeStateError("Invalid TES4 captured pose channel")
+                        for value in track[key]: native_float(value)
+                    if not any(native_float(v) != 0 for v in track["rotation"]):
+                        raise RuntimeStateError("Zero TES4 captured pose quaternion")
+                    native_float(track["scale"])
             reaction_actors.add(actor)
         if version >= 55:
             for sequence in check_collection(entry["retiring_sequences"], "retiring melee sequences"):
@@ -2155,6 +2183,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                       "start_clock": reader.unpack("<f") if melee_boolean() else None}
                     reaction["retirement"] = retirement
                     if version >= 55: reaction["inactive"] = melee_boolean()
+                    if version >= 56:
+                        pose = None
+                        if melee_boolean():
+                            pose = {"destination_frame": reader.unpack("<f"), "tracks": []}
+                            for _ in range(reader.count()):
+                                pose["tracks"].append({"bone": reader.string(),
+                                    "translation": [reader.unpack("<f") for _ in range(3)],
+                                    "rotation": [reader.unpack("<f") for _ in range(4)],
+                                    "scale": reader.unpack("<f"), "priority": reader.unpack("<B")})
+                        reaction["pose_snapshot"] = pose
                 entry["reaction"] = reaction
             if version >= 55:
                 entry["retiring_sequences"] = []
@@ -2700,6 +2738,17 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         if retirement["start_clock"] is not None:
                             writer.pack("<f", retirement["start_clock"])
                     if version >= 55: writer.pack("<B", int(reaction["inactive"]))
+                    if version >= 56:
+                        pose = reaction["pose_snapshot"]
+                        writer.pack("<B", int(pose is not None))
+                        if pose is not None:
+                            writer.pack("<f", pose["destination_frame"])
+                            writer.pack("<I", len(pose["tracks"]))
+                            for track in pose["tracks"]:
+                                writer.string(track["bone"])
+                                for value in (*track["translation"], *track["rotation"], track["scale"]):
+                                    writer.pack("<f", value)
+                                writer.pack("<B", track["priority"])
             if version >= 55:
                 writer.pack("<I", len(entry["retiring_sequences"]))
                 for sequence in entry["retiring_sequences"]:
@@ -3038,6 +3087,16 @@ def _upgrade_melee_retirement(state: dict[str, Any]) -> None:
                 reaction["inactive"] = False
 
 
+def _upgrade_melee_pose_snapshots(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 56:
+        for entry in state.get("native_melee_states", []):
+            reaction = entry.get("reaction")
+            if reaction is not None:
+                if reaction.get("pose_snapshot") is not None:
+                    raise RuntimeStateError("Legacy TES4 save cannot carry captured melee poses")
+                reaction["pose_snapshot"] = None
+
+
 def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 49:
         for entry in state.get("native_melee_states", []):
@@ -3055,6 +3114,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_power_melee_phases(state)
     _upgrade_melee_reactions(state)
     _upgrade_melee_retirement(state)
+    _upgrade_melee_pose_snapshots(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
@@ -3132,6 +3192,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_power_melee_phases(result)
     _upgrade_melee_reactions(result)
     _upgrade_melee_retirement(result)
+    _upgrade_melee_pose_snapshots(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)

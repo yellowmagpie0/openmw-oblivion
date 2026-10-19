@@ -1108,5 +1108,9 @@
   "boundary_label_correction": {
     "receipt": "docs/oblivion/M15-REACTION-SCENE-GATE-VERIFICATION.json",
     "meaning": "The supplied47F7B0=false predicate previously provisionally labeled ancestry is a world-bound-sphere/camera-frustum test. Original input/output hashes and supplied false value remain unchanged. The restart observations cover the supplied direct-activation scene domain; visible actor pose-capture/ease is a separate unimplemented path."
+  },
+  "pose_snapshot_followup": {
+    "receipt": "M15-POSE-SNAPSHOT-VERIFICATION.json",
+    "scope": "Original snapshot core, schema56 owned storage, renderer projection and state5 timing now have bounded evidence. New real-engine courses inject a synthetic pose/span; normal contact generation and separate Player body/first-person ownership remain open."
   }
 }

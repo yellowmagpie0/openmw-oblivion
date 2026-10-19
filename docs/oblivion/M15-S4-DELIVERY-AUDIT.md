@@ -7873,3 +7873,64 @@ fixtures, native paths and hashes; the cached-reaction receipt links this
 correction. Its supplied false boundary and recorded outputs remain unchanged.
 Visible actors can select the separate scene-pose capture path, which still
 requires implementation and runtime acceptance. **M15S4 remains incomplete.**
+
+## Captured pose and transition destination checkpoint
+
+Owned melee reactions can now persist a captured local pose in schema 56 and
+project it through a silent constant renderer layer. Capture copies translation,
+unscaled rotation, scale and per-bone priority from the current controlled nodes.
+Later changes to those nodes do not change the snapshot. The destination stays
+at its requested frame during the transition, then rebases its clock when the
+first manager update reaches transition end. The snapshot is removed on that
+update; the following actor prefix resumes the normal reaction guards.
+
+Independent execution of original `6C5C70` now includes actual manager/sequence
+constructors, registration, pose capture and transition setup. It produces
+snapshot state 4 and destination state 5. One real transform-controlled block
+retains the captured local after deliberate node mutation, and actual sequence
+and blend updates reproduce all seven observed transforms. Native zero-duration
+transitions clamp to binary32(1e-4); callers of the new owned-state path must
+supply a positive transition span.
+
+The production matrix-to-quaternion conversion matches all **2,060 observations
+from 1,030 original matrices** under precision words `027F` and `037F`. The transition
+comparison matches **448 updates across 64 contexts**, including nonzero begins,
+requested frames and large clock origins. Sequence `+3C` contains the clamped
+sample; accumulated history is `+38`. The editable fixture retains 80 rotation
+observations and all 448 timing samples.
+
+Final normal checks pass **2,952 component tests, 1,751 engine tests and 330 Python
+tests**. The separate ASan/UBSan build passes **805 selected ESM4 component tests
+and 1,751 engine tests**. Exact inventories agree with XML, with no failures or
+skips and unchanged tested source. C++ binary/JSON and Python codecs reproduce
+identical schema 56 bytes, including signed zero. The tested source fingerprint is
+`642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca`.
+
+Normal and instrumented real-engine courses save during an explicitly injected
+one-bone pose transition, quit, load the exact output in a fresh process, await
+actual reaction recovery and resave. The first output preserves the pose exactly
+with destination time 0 and easing active. The final output has no reaction or
+snapshot and action -1. Ledger/combat RNG and all nine actors' Health bits remain
+unchanged. All four captures were directly reviewed: the deliberately artificial
+pelvis pose holds the Player nearly horizontal, then recovery returns upright
+idle. The typed editable fixture reproduces the staged save byte-for-byte; four
+editable manifests retain the actual courses. The four-second span and pelvis
+transform are synthetic, not stock caller duration or live pose-capture evidence.
+
+The full desktop-engine LeakSanitizer run remains **failed** on 19,738 bytes in 372
+allocations, despite all 1,751 assertions passing. An existing 13-test input/window/
+local-map subset reproduces that exact total without the new pose tests; an
+offscreen backend plus SDL's DBus shutdown debug hint still leaks. One traced
+root enters SDL/DBus; other roots are unsymbolized. Full ASan/UBSan acceptance
+therefore uses leak detection disabled. Separately, all 805 selected ESM4 component
+tests and the three new pose engine tests pass with leak detection enabled. The
+rendered courses also disable leak detection. No full-engine or rendered-session
+leak-free claim is made.
+
+`M15-POSE-SNAPSHOT-VERIFICATION.json` pins the original artifacts and declared
+allocator/CRT-registration/OS boundaries, expected values, source hashes, checks,
+codec interoperability, runtime epochs/saves/captures and retained failed attempts.
+Normal contact adapters still generate no reaction or snapshot descriptors.
+Player body/first-person ownership, general reaction replacement, Stagger's
+resident attack channel and the full normal-input matrix remain open.
+**M15S4 is still incomplete.**

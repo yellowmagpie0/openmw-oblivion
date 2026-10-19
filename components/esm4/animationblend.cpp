@@ -34,6 +34,38 @@ namespace ESM4
                                : (current - start) / (double(end) - start));
     }
 
+    std::array<float, 4> captureSequenceRotation(const std::array<float, 9>& matrix)
+    {
+        for (float value : matrix)
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite native captured rotation matrix");
+        const float trace = stored(double(matrix[0]) + matrix[4] + matrix[8]);
+        std::array<float, 4> result{};
+        if (trace > 0)
+        {
+            const float root = stored(std::sqrt(double(stored(double(trace) + 1.))));
+            result[0] = stored(double(root) * .5);
+            const float factor = stored(.5 / double(root));
+            result[1] = stored((double(matrix[7]) - matrix[5]) * factor);
+            result[2] = stored((double(matrix[2]) - matrix[6]) * factor);
+            result[3] = stored((double(matrix[3]) - matrix[1]) * factor);
+        }
+        else
+        {
+            unsigned i = 0;
+            if (matrix[4] > matrix[0]) i = 1;
+            if (matrix[8] > matrix[i * 4]) i = 2;
+            const unsigned j = (i + 1) % 3, k = (j + 1) % 3;
+            const float root = stored(std::sqrt(double(stored(
+                double(matrix[i * 4]) - matrix[j * 4] - matrix[k * 4] + 1.))));
+            result[i + 1] = stored(double(root) * .5);
+            const float factor = stored(.5 / double(root));
+            result[0] = stored((double(matrix[k * 3 + j]) - matrix[j * 3 + k]) * factor);
+            result[j + 1] = stored((double(matrix[i * 3 + j]) + matrix[j * 3 + i]) * factor);
+            result[k + 1] = stored((double(matrix[i * 3 + k]) + matrix[k * 3 + i]) * factor);
+        }
+        return result;
+    }
+
     std::vector<float> normalizeSequenceBlendWeights(
         std::span<const SequenceBlendWeight> slots, float threshold, bool onlyHighest)
     {

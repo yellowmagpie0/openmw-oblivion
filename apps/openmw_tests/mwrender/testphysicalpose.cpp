@@ -1,4 +1,5 @@
 #include <apps/openmw/mwrender/animation.hpp>
+#include <components/esm4/runtimestate.hpp>
 #include <components/misc/osguservalues.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/nifosg/matrixtransform.hpp>
@@ -218,6 +219,74 @@ namespace
         result->mPose.mRotation = rotated ? osg::Quat(0, 0, q, q) : osg::Quat();
         result->mPose.mScale = scale;
         return result;
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, CapturedNativePoseRemainsConstantAndBlendsIntoDestination)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto destination = nativeTrack({100, 200, 300}, 3);
+        mAnimation->addNativeSource("native-reaction", destination, 9);
+        mBone->setTranslation({11, 22, 33}); mBone->setScale(2);
+        const auto captured = mAnimation->captureNativeSequencePose("native-reaction", 0);
+        ASSERT_TRUE(captured); ASSERT_EQ(captured->mTracks.size(), 1u);
+        EXPECT_EQ(captured->mTracks[0].mTranslation, (std::array<float, 3>{11, 22, 33}));
+        EXPECT_EQ(captured->mTracks[0].mRotation, (std::array<float, 4>{1, 0, 0, 0}));
+        EXPECT_EQ(captured->mTracks[0].mScale, 2); EXPECT_EQ(captured->mTracks[0].mPriority, 9);
+        const auto snapshot = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*captured);
+        mBone->setTranslation({-111, -222, -333});
+        std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, 1, false, snapshot},
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, 0}}};
+        unsigned builds = 0;
+        for (unsigned i = 0; i <= 4; ++i)
+        {
+            layers[0].mEase = 1 - i * .25f; layers[1].mEase = i * .25f;
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+            if (i == 0) builds = mAnimation->mControllerBuilds;
+            EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+            mFrameStamp->setFrameNumber(i); traverse();
+            const auto local = mBone->getControllerTransform();
+            if (i == 0) EXPECT_EQ(destination->mObserved->mSamples, 0u);
+            // Full original6C5C70/6CA950/6CC3A0 one-block observations.
+            EXPECT_EQ(local.mTranslation.x(), 11 + i * 22.25f);
+            EXPECT_EQ(local.mTranslation.y(), 22 + i * 44.5f);
+            EXPECT_EQ(local.mTranslation.z(), 33 + i * 66.75f);
+            EXPECT_EQ(local.mScale, 2 + i * .25f);
+            EXPECT_EQ(destination->mObserved->mTime, i == 0 ? -1 : 0);
+        }
+        auto replacement = std::make_shared<ESM4::RuntimeMeleePoseSnapshot>(*captured);
+        replacement->mTracks[0].mTranslation = {7, 8, 9};
+        layers[0].mPoseSnapshot = replacement; layers[0].mEase = 1; layers[1].mEase = 0;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        EXPECT_GT(mAnimation->mControllerBuilds, builds);
+        mFrameStamp->setFrameNumber(5); traverse();
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 7);
+        auto invalid = layers; invalid[0].mFollowAnimationTime = true;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(invalid), std::invalid_argument);
+        EXPECT_FALSE(mAnimation->captureNativeSequencePose("missing", 0));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, CapturedNativeRotationPreservesQuarterTurnAtNegativeAndZeroScale)
+    {
+        mAnimation->addNativeSource("native-reaction", nativeTrack({100, 200, 300}), 9);
+        Nif::Matrix3 rotation;
+        const std::array<float, 9> values{0, -1, 0, 1, 0, 0, 0, 0, 1};
+        for (unsigned row = 0; row < 3; ++row)
+            for (unsigned column = 0; column < 3; ++column)
+                rotation.mValues[row][column] = values[row * 3 + column];
+        for (float scale : {-2.f, -0.f, 0.f, 2.f})
+        {
+            mBone->setRotation(rotation); mBone->setScale(scale); mBone->setTranslation({11, 22, 33});
+            const auto captured = mAnimation->captureNativeSequencePose("native-reaction", 0);
+            ASSERT_TRUE(captured); ASSERT_EQ(captured->mTracks.size(), 1u);
+            const auto& pose = captured->mTracks.front();
+            EXPECT_EQ(pose.mTranslation, (std::array<float, 3>{11, 22, 33}));
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(pose.mScale), std::bit_cast<std::uint32_t>(scale));
+            // Original7150F0 quarter-turn-z fixture, no quaternion normalization.
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(pose.mRotation[0]), 1060439283u);
+            EXPECT_EQ(pose.mRotation[1], 0); EXPECT_EQ(pose.mRotation[2], 0);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(pose.mRotation[3]), 1060439283u);
+        }
     }
 
     TEST_F(PhysicalPoseAnimationTest, NativeSequenceLayersUseAuthoredPriorityAndCallerFramesWithoutRebuilding)

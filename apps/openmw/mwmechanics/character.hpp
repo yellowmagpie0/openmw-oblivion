@@ -228,6 +228,7 @@ namespace MWMechanics
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
         std::uint64_t mOblivionRenderedReaction = 0;
         std::string mOblivionReactionGroup;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionPoseSnapshot;
         bool mOblivionMeleeProjection = false;
         void updateIdleStormState(bool inwater) const;
 

@@ -34,6 +34,8 @@ namespace ESM
     struct MagicEffect;
 }
 
+namespace ESM4 { struct RuntimeMeleePoseSnapshot; }
+
 namespace Resource
 {
     class ResourceSystem;
@@ -143,6 +145,7 @@ namespace MWRender
             // Background tracks follow their existing shared animation clock.
             // Reactions and outgoing tracks keep explicit service-owned times.
             bool mFollowAnimationTime = false;
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mPoseSnapshot = nullptr;
         };
 
         class TextKeyListener
@@ -562,6 +565,8 @@ namespace MWRender
         // Malformed frames throw. Empty input releases the projection.
         bool setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers);
         std::vector<NativeSequenceLayer> nativePlayingSequenceLayers(std::span<const std::string_view> excluded);
+        std::optional<ESM4::RuntimeMeleePoseSnapshot> captureNativeSequencePose(
+            std::string_view group, float destinationFrame);
 
         /** Disables the specified animation group;
          * \param groupname Animation group to disable.

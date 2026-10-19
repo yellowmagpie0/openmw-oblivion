@@ -1,0 +1,1292 @@
+{
+  "schema_version": 1,
+  "scope": "Captured pose storage, silent renderer projection and state5 destination timing for explicitly owned melee reactions. Normal contacts still generate no reaction descriptors.",
+  "tested_source": {
+    "head": "325e98d89461493aa1d678930c3571f1aa498016",
+    "source_fingerprint": "642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca"
+  },
+  "runtime_state_version": 56,
+  "tested_source_files": [
+    {
+      "path": "apps/components_tests/esm4/animationblend.cpp",
+      "sha256": "d0f3cffce0a9c10dfdf9f6c128f1939297fbdab18189e52d7bc950b8ab0e9588"
+    },
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "3474a0749619194e75959a5cfcd15dd8966cd8e5d6fc7a7269bd1c77c975d307"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.cpp",
+      "sha256": "7fd6d2d9449bef5ff11bc15abbc710c048811b44b2d8a1fc4942495b778c17d5"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.hpp",
+      "sha256": "fa560cb0f9cf58dedcb171b2ba1a1cfd7518226f181dd8bb34bdc675b71192be"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "d36bd5a8febff7ecc7ce7a45ac5a66411b6632bc6cd653a244f53a041c8342a5"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "1f03c8947b34546bf5f80511d71800320a7cbe50d09271b60ae81f2e414602f3"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "8b2dc22c26078c0d4aa9068e49e11d4da3b4af9c53321dafdae14d43bd461ab3"
+    },
+    {
+      "path": "apps/openmw/mwrender/animblendcontroller.cpp",
+      "sha256": "3cdab468a84165df3be1d91484c537871437c16e1601db5ca334146b5621cf4d"
+    },
+    {
+      "path": "apps/openmw/mwrender/animblendcontroller.hpp",
+      "sha256": "cf12c2ba5e7e6a0ab227cb1b76a335bf63802f6ffa452b05779336b234585c61"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testphysicalpose.cpp",
+      "sha256": "25a393ed7f6fd3d16d1a81cae4f25707d2c3222cedc8156ea8110596efa60928"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "92241f9aeba5453eec79114567b1c1df383a9b85316857c2262dc4919c300630"
+    },
+    {
+      "path": "components/esm4/animationblend.cpp",
+      "sha256": "e7017837e6726edcfc66c2aee92cf4fc503fafbada171c14171e81db4a233953"
+    },
+    {
+      "path": "components/esm4/animationblend.hpp",
+      "sha256": "38385aae82985e7976f28019bd9ff7de5f593e71f48c467aac024b98bdaca05e"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "78d610d81921e26c8c5e0ee223c3cc72ea8a697f283efa57c1d9624d66666b94"
+    },
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "5465dea17a1dd49fbf1ffecad910e32c4e24d13c0688e8e37e498e0cd08fe99e"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "464bed47d0fe42e4fd3e7e6d24749902be421432ecc03e7597f368da1a45a946"
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "deddf9d74f28baabaf0ba1c142fff64be582e51499afe18ff8c6482b35fbfde9"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "46b6babc4e1bcdab571cdef34ad900ddc9f05763dc16eaf849480785c434064a"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "4dd50a5d38e518fb5f69fbab9258af47da2c67eb5cc1f67694eeb40a9af10188"
+    }
+  ],
+  "fixture_reproduction": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/fixture-reproduction.json",
+    "sha256": "4cc54a65681564298c16a12f3d6a2dece087ed76090f4efb6933ab6aadbf1fcd",
+    "result": {
+      "passed": true,
+      "fixture": "scripts/data/oblivion_compat/m15_pose_snapshot_controller_fixture.json",
+      "fixture_sha256": "5ec61e22dff73e948d0222f15e5f6240dbe89841f5dd6324c995db2949ae54d4",
+      "source": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/staged-input.omwsave",
+      "source_sha256": "7534e73f5242ba90a69aa502fc78c52840d04f7bb5e6b442198634c7a8585b4c",
+      "reconstructed_save_sha256": "822e1d6cb4d5e90e4f1158f533461f4ebbf3d6d40d360d4f18193af495085769",
+      "exact_runtime_staged_input_reproduced": true
+    }
+  },
+  "independent_original": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "full_paths": [
+      "6C5520 manager constructor",
+      "6C7FB0 sequence constructor",
+      "6C5760 registration and actual native map/array operations",
+      "6C5C70 -> 6C5860/6C9F10/6C78B0 -> 6C9D30 pose capture and transition",
+      "6C3570 transform controller pose capture -> 7150F0 rotation conversion -> 6D5C30 constant transform interpolator",
+      "6CA950 sequence updates and 6CC3A0 transform composition"
+    ],
+    "boundaries": [
+      "401F00 zeroed bump allocation; 401F20 checks ownership and duplicate frees, no address reuse",
+      "981FB4 atexit callback registration returns success; process-exit callbacks are not executed",
+      "A28078/A2807C supplied single-thread atomic increment/decrement perform actual memory updates",
+      "A2806C/A28074 critical-section entry/leave are no-ops in this single-thread fixture; A2808C returns thread ID1"
+    ],
+    "no_core_stubs": "No sequence/capture/transform/controller/map/array or CRT sqrt/string/memcpy routine is stubbed.",
+    "precision_words": [
+      639,
+      895
+    ],
+    "verification": {
+      "passed": true,
+      "rotation_observations": 2060,
+      "transition_contexts": 64,
+      "transition_updates": 448,
+      "full_controlled_block_updates": 7,
+      "snapshot_survived_local_node_mutation": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/original-exe.json",
+          "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-manager-probe-07.py",
+          "sha256": "08ba52c608c60304c817925a9f42fb53200af3ed0400a7c21139b9e2817b5608"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-manager-probe-10.py",
+          "sha256": "5a2078c011e08261c8fd76cf63ca841d6fb90c23f0d5d8f335da95770db0316e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-manager-result10.json",
+          "sha256": "2f64f0c6744e6ab3d8f1b3fd604c3b659afeb96c85652f01f845b14305928c92"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-matrix-probe-03.py",
+          "sha256": "f9560bc2e18b0a273612fd7aa2505de5a0015e8217761f7d801fe090bdbb194c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-matrix-corpus03.json",
+          "sha256": "a690f945fff303d1f0074d2ddd26aee9499775ad247df612e9738f79d39ed126"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/snapshot-quaternion-probe.py",
+          "sha256": "8e7b7a4645743ab3353e91755daf1d91da12139ced34fe0bb1c46b25f85462ba"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/snapshot-quaternion-corpus.json",
+          "sha256": "acbbb9d16da6cde750d800f345a500bac346dfac79cc3a835ceb032175ac17b4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/additional-os-import-identities.json",
+          "sha256": "1a116765c245d3d9f329f951c7d85aea5ef414e6884558c078fc0c7e7929a2d8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/pose-class-identities.json",
+          "sha256": "fde1565d4e27c7e164a3e409e54733114c360456a5a0459053987644f32f8a6f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/verify-native.py",
+          "sha256": "dcdffbf35402d4f2a4fbd063232f66eaa0661f9d112fee59b3e8c10352e4e690"
+        }
+      ]
+    },
+    "one_block_observations": {
+      "samples": [
+        {
+          "clock": 0.0,
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.025,
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1107623936,
+            1116012544,
+            1120370688,
+            1065353216,
+            0,
+            0,
+            0,
+            1074790400
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.05,
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1113456640,
+            1121845248,
+            1126596608,
+            1065353216,
+            0,
+            0,
+            0,
+            1075838976
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.075,
+          "target_state": 5,
+          "snapshot_state": 4,
+          "output_bits": [
+            1117487104,
+            1125875712,
+            1130971136,
+            1065353216,
+            0,
+            0,
+            0,
+            1076887552
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.1,
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 0,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.125,
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1020054732,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        },
+        {
+          "clock": 0.2,
+          "target_state": 1,
+          "snapshot_state": 0,
+          "output_bits": [
+            1120403456,
+            1128792064,
+            1133903872,
+            1065353216,
+            0,
+            0,
+            0,
+            1077936128
+          ],
+          "target_time_bits": 1036831949,
+          "snapshot_pose_bits": [
+            1093664768,
+            1102053376,
+            1107558400,
+            1065353216,
+            0,
+            0,
+            0,
+            1073741824
+          ]
+        }
+      ],
+      "captured_pose_bits": [
+        1093664768,
+        1102053376,
+        1107558400,
+        1065353216,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "authored_pose_bits": [
+        1120403456,
+        1128792064,
+        1133903872,
+        1065353216,
+        0,
+        0,
+        0,
+        1077936128
+      ],
+      "snapshot_priority": 9
+    },
+    "rotation_comparison": {
+      "matrices": 1030,
+      "observations": 2060,
+      "mismatches": 0,
+      "production_helper": "ESM4::captureSequenceRotation"
+    },
+    "transition_comparison": {
+      "contexts": 64,
+      "updates": 448,
+      "mismatches": 0,
+      "native_sample_field": "sequence+3C is clamped sample; accumulated history is sequence+38"
+    }
+  },
+  "editable_expected_fixture": {
+    "path": "scripts/data/oblivion_compat/m15_native_pose_snapshot_expected.json",
+    "sha256": "2a4cf082683b1f59a67e56ed5affe6f65f37bf9fe2742192749210a71c969881"
+  },
+  "build_checks": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-checks-04/verification.json",
+      "sha256": "2576e12da2f0aa493d743d1f819fdc95bcff5795f4d4801964e93a4ad5123e69",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "6"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 0.968
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-checks-04/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 15.4
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "6"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 41.429
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.165
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-checks-04/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 28.585
+          },
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-m",
+              "unittest",
+              "discover",
+              "-s",
+              "scripts/tests"
+            ],
+            "log": "python.log",
+            "returncode": 0,
+            "seconds": 62.504
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2952,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "f348be3441480d78f6982371f85a179930890446b7ffa72be1fa2e2430dd1f05",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "7439c30a910c9d69320d2f1af9b917a756d7ad4543192667b6bb57f09ba4e223",
+            "inventory_sha256": "7c2f9ba4e4e60431da9f3486df1982d67a2e6dd4157030a5f0ec8a8f24bc0340",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1751,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "f030d82e5c3616cc83979c30f8f365c621b940995b025d85d77213d32a5fe04a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "6552bd5005b25ff2e36f0f483c402b8024d137196cd23faf3780873a4b307dd0",
+            "inventory_sha256": "5db297999af5dbcbe532c8a7077cf78a20f33c0048941ec7a0d6a5dfa4d3a17f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "python": {
+            "executed": 330,
+            "passed": true,
+            "log_sha256": "6fd86c45fa4ad320529b4b69a8e1061807d9951621b1cc266667659088890ed9"
+          }
+        },
+        "source_before": {
+          "head": "325e98d89461493aa1d678930c3571f1aa498016",
+          "source_fingerprint": "642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca"
+        },
+        "source_after": {
+          "head": "325e98d89461493aa1d678930c3571f1aa498016",
+          "source_fingerprint": "642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-sanitized-checks-05/verification.json",
+      "sha256": "340c9dbbfb64e518db795655bc10750d4131a8e36e77a43069308d604d64f159",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 0.917
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-sanitized-checks-05/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 35.608
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "4"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 2.972
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-sanitized-checks-05/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 169.843
+          }
+        ],
+        "results": {
+          "sanitize": {
+            "executed": 805,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "f4fb76bef5eb966b32d0930d0dd1b2a944403ac6e9fae8716d5d40f7d6b9dbfb",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "0100aadec3e25ddaa4f80d1702a2de2da2f97779f7a2bb3777d6f04503de3c61",
+            "inventory_sha256": "e084e88e97750674c83a7ac606b568265b11cd6ee2286a75e75aa52726ec7245",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1751,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "8b790a29359ae6fe01e4a1eebdcab7cf271a959ad547ea023c6f416e2bc059d0",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "73b6d5ae58cdca8112baeb454518760933509dba679329abfa898e294c446034",
+            "inventory_sha256": "5db297999af5dbcbe532c8a7077cf78a20f33c0048941ec7a0d6a5dfa4d3a17f",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "325e98d89461493aa1d678930c3571f1aa498016",
+          "source_fingerprint": "642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca"
+        },
+        "source_after": {
+          "head": "325e98d89461493aa1d678930c3571f1aa498016",
+          "source_fingerprint": "642f06ccfc4b98d96f61e66919e6126b8b2c03be4ad4c2568772b61ea6c2a6ca"
+        }
+      }
+    }
+  ],
+  "codec_interoperability": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/interop-normal04.json",
+      "sha256": "3f28ba8b3d19be8803ffa8dc497b03deeddbd34767209c9415c054aa0e701206",
+      "result": {
+        "passed": true,
+        "xml": "build/oblivion-compat/m15/S4/native-pose-snapshot-checks-04/components.xml",
+        "xml_sha256": "7439c30a910c9d69320d2f1af9b917a756d7ad4543192667b6bb57f09ba4e223",
+        "wire_sha256": "e0b0b38b690df158631c03b9f7f531aae4fc8083165487646f20108cc0dd3bd8",
+        "schema": 56,
+        "binary_roundtrip": true,
+        "cpp_json_to_python_wire_exact": true
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-pose-capture-review-01/interop-sanitized05.json",
+      "sha256": "1c5a4cf437b2656895ce57be6ffeaaa0f83735257d29aaab8a5cd30d99df853f",
+      "result": {
+        "passed": true,
+        "xml": "build/oblivion-compat/m15/S4/native-pose-snapshot-sanitized-checks-05/sanitize.xml",
+        "xml_sha256": "0100aadec3e25ddaa4f80d1702a2de2da2f97779f7a2bb3777d6f04503de3c61",
+        "wire_sha256": "e0b0b38b690df158631c03b9f7f531aae4fc8083165487646f20108cc0dd3bd8",
+        "schema": 56,
+        "binary_roundtrip": true,
+        "cpp_json_to_python_wire_exact": true
+      }
+    }
+  ],
+  "sanitizer_scope": {
+    "component": "ASan/UBSan ESM4*; ASAN_OPTIONS=detect_leaks=0, UBSAN_OPTIONS=halt_on_error=1",
+    "engine": "ASan/UBSan own build; ASAN_OPTIONS=detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1",
+    "limits": "Full-engine and rendered runtime acceptance disable leak detection. Additional 805 ESM4 component and 3 new engine pose tests pass with detect_leaks=1. Full desktop-engine leak detection remains failed; see leak_review."
+  },
+  "retained_attempts": [
+    {
+      "path": "native-pose-snapshot-sanitized-checks-04",
+      "reason": "All 1,751 assertions passed; LeakSanitizer made the process fail on 19,738 bytes in 372 allocations. Existing 13-test input/window/local-map subset reproduces the exact total without new pose tests; offscreen plus DBus shutdown debug hint also leaks. This failure remains unresolved, not suppressed."
+    },
+    {
+      "paths": [
+        "native-pose-snapshot-checks-03",
+        "native-pose-snapshot-sanitized-checks-03"
+      ],
+      "reason": "Normal engine passed 1,750 / 1,751; new renderer test wrongly expected destination sample time0 while its weight0 correctly left it unsampled at sentinel-1. Corrected only that expectation. Instrumented engine build was stopped before the edit; its 805 component cases passed."
+    },
+    {
+      "paths": [
+        "native-pose-snapshot-checks-01",
+        "native-pose-snapshot-sanitized-checks-01"
+      ],
+      "reason": "Builds intentionally stopped before edits after focused new Python test found multiargument _Writer.pack TypeError. Fixed to individual scalar writes."
+    },
+    {
+      "paths": [
+        "native-pose-snapshot-checks-02",
+        "native-pose-snapshot-sanitized-checks-02"
+      ],
+      "reason": "Components passed 2,952 normal/805 selected instrumented. Engine builds intentionally stopped for omitted-default warnings, review correction to the new Start-prefix test, and additional renderer rotation/scale coverage. Engine tests did not run."
+    },
+    {
+      "paths": [
+        "pose-manager-probe-01.py",
+        "pose-manager-probe-02.py",
+        "pose-manager-probe-03.py"
+      ],
+      "reason": "Uninitialized CRT atexit registration boundary during actual registration; not a native assertion failure."
+    },
+    {
+      "paths": [
+        "pose-manager-probe-04.py",
+        "pose-manager-probe-05.py",
+        "pose-manager-probe-06.py"
+      ],
+      "reason": "Unresolved Windows IAT thunks in emulator fixture. Corrected from parsed PE imports in 07."
+    },
+    {
+      "path": "pose-manager-probe-09.py",
+      "reason": "Execution succeeded but inspection sliced constant-pose payload at+10 instead of+0C. Only corrected 10 supports payload claims."
+    },
+    {
+      "paths": [
+        "pose-matrix-probe-01.py",
+        "pose-matrix-probe-02.py"
+      ],
+      "reason": "Python import-star syntax and closure heap-variable failures; corrected 03 is the 64-context corpus."
+    }
+  ],
+  "limits": [
+    "Full desktop-engine LeakSanitizer run remains failed on existing window/backend allocation paths; full ASan/UBSan acceptance uses detect_leaks=0. Targeted 805 component and 3 new engine pose cases pass with leak checking enabled.",
+    "No normal contact adapter calls captureNativeSequencePose or creates snapshot/reaction descriptors. This is a bounded owned-state capability, not normal-input reaction acceptance.",
+    "New normal and instrumented real-engine courses inject a synthetic one-bone pelvis pose and four-second transition. They prove bounded projection/save/recovery, not automatic live capture or stock gameplay pose/duration.",
+    "Snapshot source4 and destination5 were proved through native synthetic manager/controller/node fixtures, not original-game camera or stock gameplay capture.",
+    "Separate Player body/first-person snapshots, resource/cache insertion order, variant selection ownership and full view switching remain open.",
+    "General previous-owned/eased/different-group replacement and Stagger resident attack-channel retention remain open. Existing explicit no-ease cached restart stays bounded.",
+    "Normal caller474530 requests destination0. Generic timing comparisons also cover nonzero requested frames; full renderer monotonicity for arbitrary nonzero-frame rebasing is not established.",
+    "Native activation weight1 versus authored custom source weight, live byteC4 mapping and custom INI import remain separate work."
+  ],
+  "leak_review": {
+    "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/verification.json",
+    "sha256": "ff4354d2900a5cd57196b7da83d4291502cd305d2653e9157c4cc0b0869858ed",
+    "result": {
+      "scope": "Isolate full desktop-engine LeakSanitizer failure without suppressing it. Exit codes were observed from the corresponding tool executions. No source changes or suppressions were used.",
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "desktop_full_failure": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-sanitized-checks-04/verification.json",
+        "sha256": "607643e6b0e3e535b4ff9594153846b2ff0e3e35d25d67a4ba9d773f50de13f7",
+        "passed": false,
+        "reason": "All 1,751 assertions passed, process failed on 19,738 leaked bytes in 372 allocations."
+      },
+      "runs": [
+        {
+          "name": "input-display",
+          "process_exit_code": 0,
+          "assertions": {
+            "executed": 6,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "InputRuntimeFacade.*"
+          },
+          "leak_bytes": 0,
+          "leak_allocations": 0,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/input-display.log",
+            "sha256": "a404a5b5aa197e017ba119cf61f76a662e13302d97b056108f03329e1de81769"
+          },
+          "xml": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/input-display.xml",
+            "sha256": "7578cb8110f1cf6a8765c9fda73d7cf0ea6327105bddd70b424312a9332af878"
+          }
+        },
+        {
+          "name": "window-display",
+          "process_exit_code": 1,
+          "assertions": {
+            "executed": 13,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "InputRuntimeFacade.*:RuntimeViewerTest.*:LocalMapCoordinatesTest.*"
+          },
+          "leak_bytes": 19738,
+          "leak_allocations": 372,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/window-display.log",
+            "sha256": "cf503406c65a07ea65d3f78fbfe55b6800e0d32431d608d98e179e7fe4f3f4f0"
+          },
+          "xml": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/window-display.xml",
+            "sha256": "9f0952f8b5d9f2a3afe37d2a434203828bc65e8dc8ee0d66bbdd31ab171dd14c"
+          }
+        },
+        {
+          "name": "window-offscreen",
+          "process_exit_code": 1,
+          "assertions": {
+            "executed": 13,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "InputRuntimeFacade.*:RuntimeViewerTest.*:LocalMapCoordinatesTest.*"
+          },
+          "leak_bytes": 19986,
+          "leak_allocations": 374,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/window-offscreen.log",
+            "sha256": "f7108c878ff7c0bee40b04536e8dc4b5e4aaeacab7fb254847656ec59d624652"
+          },
+          "xml": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/window-offscreen.xml",
+            "sha256": "a392be254bd5ba7b3363175e13173d73b8a4e9aba7236c9baf54565064ab16cf"
+          }
+        },
+        {
+          "name": "new-pose",
+          "process_exit_code": 0,
+          "assertions": {
+            "executed": 3,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "PhysicalPoseAnimationTest.CapturedNative*:OblivionWorldTest.PoseTransitionPinsDestinationAndSurvivesPreparedFrameRestore"
+          },
+          "leak_bytes": 0,
+          "leak_allocations": 0,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/new-pose.log",
+            "sha256": "00ffa9bf75a63317774a8c6cca1a0380611e857ef0a1520d2d04423fe6871dd5"
+          },
+          "xml": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/new-pose.xml",
+            "sha256": "a5325ba9c61c6c3782d38b1b1673c6cda122d6f15cd61553db8fc034db52e7d4"
+          }
+        },
+        {
+          "name": "components",
+          "process_exit_code": 0,
+          "assertions": {
+            "executed": 805,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*"
+          },
+          "leak_bytes": 0,
+          "leak_allocations": 0,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/components.log",
+            "sha256": "b7fe89e606328fdc096f24d0c5427abf54effed0a498429f7ed47e39ab067c6f"
+          },
+          "xml": {
+            "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-leak-review-01/components.xml",
+            "sha256": "8b00fd37acbe08c5ccbceff7104833bb1b1e4320c5df56a58012841833e14c2e"
+          }
+        }
+      ],
+      "offscreen_environment": {
+        "SDL_VIDEODRIVER": "offscreen",
+        "EGL_PLATFORM": "surfaceless",
+        "LIBGL_ALWAYS_SOFTWARE": "1",
+        "SDL_SHUTDOWN_DBUS_ON_QUIT": "1"
+      },
+      "conclusion": "Existing 13-test input/window/local-map subset reproduces the full desktop leak total without any new pose tests. One traced root enters SDL/DBus; other roots are unsymbolized. Offscreen plus the documented DBus shutdown debug hint does not eliminate leaks. Full desktop leak coverage remains failed; 805 ESM4 component tests and 3 new pose engine tests exit cleanly with leak checking enabled.",
+      "verifier_sha256": "9c3761aa70c0da6d0684e1b360024fa81e8092e3402ef23bd45dc56ca568e941"
+    }
+  },
+  "runtime_courses": [
+    {
+      "profile": "normal",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/verification.json",
+        "sha256": "6e7a0578729c9b3595d8f04a7b3161e2c41a92717797f90db15fb5944a503647",
+        "result": {
+          "passed": true,
+          "scope": "Injected synthetic one-bone pose and four-second transition. No live pose-capture factory, stock duration or normal-contact claim.",
+          "schema_version": 56,
+          "first_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": false,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null,
+            "reaction": {
+              "contact_id": 1,
+              "kind": 2,
+              "animation_group": "handtohandstagger",
+              "animation_time": 0.0,
+              "started": false,
+              "sequence_timing": {
+                "easing": true,
+                "offset": -15.994014739990234,
+                "ease_start": 15.994014739990234,
+                "last_input": 0.0,
+                "ease_end": 19.994014739990234,
+                "weighted_time": 0.0,
+                "output_time": 0.0
+              },
+              "retirement": null,
+              "inactive": false,
+              "pose_snapshot": {
+                "destination_frame": 0.0,
+                "tracks": [
+                  {
+                    "bone": "bip01 pelvis",
+                    "translation": [
+                      11.0,
+                      22.0,
+                      33.0
+                    ],
+                    "rotation": [
+                      1.0,
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    "scale": 1.0,
+                    "priority": 75
+                  }
+                ]
+              }
+            },
+            "retiring_sequences": []
+          },
+          "final_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": true,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null,
+            "reaction": null,
+            "retiring_sequences": []
+          },
+          "first_clock": 16.32601547241211,
+          "exact_first_output_as_second_input": true,
+          "recovery_event_before_save": true,
+          "ledger_unchanged": true,
+          "combat_rng_unchanged": true,
+          "all_actor_health_bits_unchanged": true,
+          "health_actor_count": 9,
+          "camera_first_person": false,
+          "binary_pin": {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "sha256": "8470c88b7f53a11a32efb3838845542ae02e140bf4e66e53d83200abf5030e49"
+          },
+          "process_epochs": [
+            {
+              "pid": 683219,
+              "start_ticks": 16656935,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "8470c88b7f53a11a32efb3838845542ae02e140bf4e66e53d83200abf5030e49"
+            },
+            {
+              "pid": 683313,
+              "start_ticks": 16663574,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "8470c88b7f53a11a32efb3838845542ae02e140bf4e66e53d83200abf5030e49"
+            }
+          ],
+          "saves": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/staged-input.omwsave",
+              "sha256": "822e1d6cb4d5e90e4f1158f533461f4ebbf3d6d40d360d4f18193af495085769"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+              "sha256": "6d16393ec69326189d9350d80f20a7ad011ca0341a2c0554e24a6c6098712a7e"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+              "sha256": "46255bfd65319d1b60f1f4f79d1e395df42190a73f6498a81656e2e1f331fb38"
+            }
+          ],
+          "verifier_sha256": "92ddd4c110a041e40b60aff99b5225fb5c2e671f551564afdf31527eb11ecaf2",
+          "visual_review_required_separately": true
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/visual-review.json",
+        "sha256": "b4b212cadca9517b1921f8224c381d6894ef71696111e3dc5a090bd74ef77cc5",
+        "result": {
+          "passed": true,
+          "scope": "Direct visual review of injected artificial pose projection and upright recovery, without native-game pose equivalence claim.",
+          "images": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/first/pose-snapshot-first.png",
+              "sha256": "ce68ab8064c5bc4263d27a0b8e52ea7a1bc5036f8554dffb01b653af1014e241",
+              "review": "Artificial pelvis transform visibly holds the Player nearly horizontal above the floor during transition."
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/second/pose-snapshot-second.png",
+              "sha256": "fce5c7b56763f3ebcebdcf55f7c2ee8bc3d87db52bef8dadcff5c5bea4ed894a",
+              "review": "Player stands upright in idle after recovery; opponent, dungeon and HUD remain present."
+            }
+          ]
+        }
+      },
+      "preregistered_acceptance": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-normal-01/preregistered-acceptance.json",
+        "sha256": "106122fc64786bfdabebb0af8b9666edb203badc9d4ca7eaddcec0e151aef20f"
+      },
+      "manifests": [
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_pose_snapshot_controller.json",
+          "sha256": "881e29f89b1a889ca3095bfac77b5039cdea3ce76fb3147f6276cedd095ad3b5"
+        },
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_pose_snapshot_controller_continuation.json",
+          "sha256": "7d2dfb9840f390e301b622bfa57973527fdaf799fa385395d5beea1780bd98ec"
+        }
+      ],
+      "sanitizer_environment": {}
+    },
+    {
+      "profile": "sanitized",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/verification.json",
+        "sha256": "929a27d2c0ec4788b7a9ae9dfcee1e701e2a95629eae3bc54220b3b41be3fc1b",
+        "result": {
+          "passed": true,
+          "scope": "Injected synthetic one-bone pose and four-second transition. No live pose-capture factory, stock duration or normal-contact claim.",
+          "schema_version": 56,
+          "first_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": false,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null,
+            "reaction": {
+              "contact_id": 1,
+              "kind": 2,
+              "animation_group": "handtohandstagger",
+              "animation_time": 0.0,
+              "started": false,
+              "sequence_timing": {
+                "easing": true,
+                "offset": -15.994014739990234,
+                "ease_start": 15.994014739990234,
+                "last_input": 0.0,
+                "ease_end": 19.994014739990234,
+                "weighted_time": 0.0,
+                "output_time": 0.0
+              },
+              "retirement": null,
+              "inactive": false,
+              "pose_snapshot": {
+                "destination_frame": 0.0,
+                "tracks": [
+                  {
+                    "bone": "bip01 pelvis",
+                    "translation": [
+                      11.0,
+                      22.0,
+                      33.0
+                    ],
+                    "rotation": [
+                      1.0,
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    "scale": 1.0,
+                    "priority": 75
+                  }
+                ]
+              }
+            },
+            "retiring_sequences": []
+          },
+          "final_melee": {
+            "actor": "dynamic:player:0000000000000001",
+            "input": {
+              "held_seconds": 0.0,
+              "input_held": false,
+              "prefer_left": true,
+              "queued": 0
+            },
+            "strike": null,
+            "ai_intent": null,
+            "reaction": null,
+            "retiring_sequences": []
+          },
+          "first_clock": 16.32601547241211,
+          "exact_first_output_as_second_input": true,
+          "recovery_event_before_save": true,
+          "ledger_unchanged": true,
+          "combat_rng_unchanged": true,
+          "all_actor_health_bits_unchanged": true,
+          "health_actor_count": 9,
+          "camera_first_person": false,
+          "binary_pin": {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "sha256": "9c9b09308da1e0cd3daeded6f56a8bc94ab821dd35728a2fdaa8b8d6381ec28a"
+          },
+          "process_epochs": [
+            {
+              "pid": 683419,
+              "start_ticks": 16675546,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "9c9b09308da1e0cd3daeded6f56a8bc94ab821dd35728a2fdaa8b8d6381ec28a"
+            },
+            {
+              "pid": 683793,
+              "start_ticks": 16703313,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "9c9b09308da1e0cd3daeded6f56a8bc94ab821dd35728a2fdaa8b8d6381ec28a"
+            }
+          ],
+          "saves": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/staged-input.omwsave",
+              "sha256": "822e1d6cb4d5e90e4f1158f533461f4ebbf3d6d40d360d4f18193af495085769"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+              "sha256": "3d0efa72363d92a6db4abdb4a0810936d08b192d47ab30ea101b45f116921ad3"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+              "sha256": "5a1c78c3a9969327f23f198a8aef25ce833359e0cfc6b1dae82b7de84908c19f"
+            }
+          ],
+          "verifier_sha256": "92ddd4c110a041e40b60aff99b5225fb5c2e671f551564afdf31527eb11ecaf2",
+          "visual_review_required_separately": true
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/visual-review.json",
+        "sha256": "ad47fe086c312c4d7fd7af85a1a1595ecaedef49e13a70c100ba035e6b76b626",
+        "result": {
+          "passed": true,
+          "scope": "Direct visual review of injected artificial pose projection and upright recovery, without native-game pose equivalence claim.",
+          "images": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/first/pose-snapshot-first.png",
+              "sha256": "d5891afc5500e4c32be6ee8a12b16cc21a331331ad7cd0177288671e537796e9",
+              "review": "Artificial pelvis transform visibly holds the Player nearly horizontal above the floor during transition."
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/second/pose-snapshot-second.png",
+              "sha256": "6e2840c65bfe480358c79557ec1ac458f27eadc2731911ced9f62e1a3464ff43",
+              "review": "Player stands upright in idle after recovery; opponent, dungeon and HUD remain present."
+            }
+          ]
+        }
+      },
+      "preregistered_acceptance": {
+        "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-runtime-sanitized-01/preregistered-acceptance.json",
+        "sha256": "106122fc64786bfdabebb0af8b9666edb203badc9d4ca7eaddcec0e151aef20f"
+      },
+      "manifests": [
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_pose_snapshot_controller_sanitized.json",
+          "sha256": "c884ddd9647275d0c5226872b7a47c143d31926c671b660f95832225521b9d8e"
+        },
+        {
+          "path": "scripts/data/oblivion_compat/oblivion_m15_pose_snapshot_controller_sanitized_continuation.json",
+          "sha256": "a43bf1778166a09b634616252d41295420d41a1becc16e9ce95af9778c4b2198"
+        }
+      ],
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=0",
+        "UBSAN_OPTIONS": "halt_on_error=1"
+      }
+    }
+  ],
+  "controller_fixture": {
+    "path": "scripts/data/oblivion_compat/m15_pose_snapshot_controller_fixture.json",
+    "sha256": "5ec61e22dff73e948d0222f15e5f6240dbe89841f5dd6324c995db2949ae54d4"
+  },
+  "full_M15S4_acceptance": false,
+  "final_manifest_and_data_check": {
+    "path": "build/oblivion-compat/m15/S4/native-pose-snapshot-final-data-checks-01/verification.json",
+    "sha256": "ec14535aeba44ce852aeb0f3454753b62e8929a758ae015c9809948c9df8a765",
+    "result": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "/usr/bin/python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests"
+          ],
+          "log": "python.log",
+          "returncode": 0,
+          "seconds": 54.78
+        }
+      ],
+      "results": {
+        "python": {
+          "executed": 330,
+          "passed": true,
+          "log_sha256": "3bad41a1e869bd6225013daed973f7faf8db065dfc79a6d5960c9b02938f5c69"
+        }
+      },
+      "source_before": {
+        "head": "325e98d89461493aa1d678930c3571f1aa498016",
+        "source_fingerprint": "c601455cc1a53cedc31151d600c73590ddd547fd69d7e437b9c3852affb6505f"
+      },
+      "source_after": {
+        "head": "325e98d89461493aa1d678930c3571f1aa498016",
+        "source_fingerprint": "c601455cc1a53cedc31151d600c73590ddd547fd69d7e437b9c3852affb6505f"
+      }
+    }
+  }
+}

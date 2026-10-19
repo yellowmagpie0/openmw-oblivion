@@ -509,7 +509,7 @@ namespace ESM4
     }
 
     MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
-        float animationClock, float frequency, float begin, float end)
+        float animationClock, float frequency, float begin, float end, std::optional<float> transitionFrame)
     {
         finite(animationClock);
         finite(frequency);
@@ -518,6 +518,12 @@ namespace ESM4
         finite(state.mEaseEnd);
         finite(state.mWeightedTime);
         finite(state.mOutputTime);
+        if (transitionFrame)
+        {
+            finite(*transitionFrame);
+            if (!state.mEasing)
+                throw std::invalid_argument("native transition destination must be easing");
+        }
         for (const auto value : {state.mOffset, state.mEaseStart, state.mLastInput})
             if (value)
                 finite(*value);
@@ -534,16 +540,23 @@ namespace ESM4
         float clock = animationClock;
         if (result.mEasing)
         {
-            // A completed state2 changes to1 on this update, but doesn't
+            // A completed state2 or5 changes to1 on this update, but doesn't
             // enter state1's separate previous-output assignment until next.
             if (clock >= result.mEaseEnd)
+            {
+                if (transitionFrame)
+                {
+                    result.mOffset = rounded(double(*transitionFrame) - clock);
+                    transitionFrame.reset();
+                }
                 result.mEasing = false;
+            }
             else if (clock < *result.mEaseStart)
                 clock = *result.mEaseStart;
         }
         else
             result.mEaseStart = state.mOutputTime;
-        const float input = rounded(double(clock) + *result.mOffset);
+        const float input = transitionFrame ? *transitionFrame : rounded(double(clock) + *result.mOffset);
         const float delta = state.mLastInput ? rounded(double(input) - *state.mLastInput) : input;
         const float previous = state.mLastInput ? state.mWeightedTime : 0.f;
         result.mWeightedTime = rounded(double(frequency) * delta + previous);

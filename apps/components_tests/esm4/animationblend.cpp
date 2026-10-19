@@ -1,4 +1,5 @@
 #include <components/esm4/animationblend.hpp>
+#include <components/esm4/physicalcombat.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <gtest/gtest.h>
@@ -131,4 +132,66 @@ TEST(ESM4NativeAnimationBlend, RejectsMalformedFramesBeforeComposition)
     EXPECT_THROW(ESM4::blendSequenceTransforms(poses, {}), std::invalid_argument);
     EXPECT_TRUE(ESM4::normalizeSequenceBlendWeights({}).empty());
     EXPECT_EQ(ESM4::blendSequenceTransforms({}, {}), ESM4::SequenceBlendPose{});
+}
+
+TEST(ESM4NativeAnimationBlend, OriginalCapturedLocalRotationBits)
+{
+    boost::property_tree::ptree document;
+    boost::property_tree::read_json((std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR)
+        / "scripts/data/oblivion_compat/m15_native_pose_snapshot_expected.json").string(), document);
+    unsigned count = 0;
+    for (const auto& row : document.get_child("rotations"))
+    {
+        std::array<float, 9> matrix{};
+        unsigned i = 0;
+        for (const auto& value : row.second.get_child("matrix_bits"))
+            matrix.at(i++) = std::bit_cast<float>(value.second.get_value<std::uint32_t>());
+        const auto actual = ESM4::captureSequenceRotation(matrix);
+        i = 0;
+        for (const auto& value : row.second.get_child("quaternion_bits"))
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(actual.at(i++)), value.second.get_value<std::uint32_t>())
+                << row.second.get<std::string>("label");
+        }
+        ++count;
+    }
+    EXPECT_EQ(count, 80u);
+    std::array<float, 9> invalid{};
+    invalid[0] = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::captureSequenceRotation(invalid), std::invalid_argument);
+}
+
+TEST(ESM4NativeAnimationBlend, OriginalPoseTransitionDestinationTimingBits)
+{
+    boost::property_tree::ptree document;
+    boost::property_tree::read_json((std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR)
+        / "scripts/data/oblivion_compat/m15_native_pose_snapshot_expected.json").string(), document);
+    unsigned count = 0;
+    for (const auto& row : document.get_child("transitions"))
+    {
+        const auto& context = row.second.get_child("context");
+        ESM4::MeleeSequenceTiming timing;
+        timing.mEasing = true;
+        timing.mEaseEnd = std::max(context.get<float>("duration"), 1e-4f);
+        const float frequency = context.get<float>("frequency");
+        std::optional<float> frame = static_cast<float>(double(context.get<float>("destination")) / frequency);
+        for (const auto& sample : row.second.get_child("samples"))
+        {
+            timing = ESM4::updateMeleeSequenceTiming(timing, sample.second.get<float>("clock"), frequency,
+                context.get<float>("begin"), 2, frame);
+            if (!timing.mEasing) frame.reset();
+            std::array<std::uint32_t, 6> expected{};
+            unsigned i = 0;
+            for (const auto& value : sample.second.get_child("target_timing_bits"))
+                expected.at(i++) = value.second.get_value<std::uint32_t>();
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*timing.mOffset), expected[0]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*timing.mEaseStart), expected[1]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(timing.mEaseEnd), expected[2]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*timing.mLastInput), expected[4]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(timing.mOutputTime), expected[5]);
+            ++count;
+        }
+    }
+    EXPECT_EQ(count, 448u);
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming({}, 0, 1, 0, 1, 0), std::invalid_argument);
 }

@@ -26540,3 +26540,55 @@ TEST(OblivionWorldTest, ReactionFramesRetainOutgoingFadeAndRecoverActionOnlyOnFo
             EXPECT_EQ(end.mCombatRngState, initial.mCombatRngState);
         }
 }
+
+TEST(OblivionWorldTest, PoseTransitionPinsDestinationAndSurvivesPreparedFrameRestore)
+{
+    NativeWorldFixture fixture; auto& world = fixture.mWorld;
+    const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+    ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+    auto& service = *world.getOblivionCombatService();
+    const auto a = attacker.getCellRef().getFormKey(), v = victim.getCellRef().getFormKey();
+    service.initializeConstructedActorProcess(a); service.initializeConstructedActorProcess(v);
+    const auto id = service.beginMeleeStrike(a, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+    ASSERT_TRUE(service.bindMeleePlayback(id, a));
+    MWMechanics::OblivionPhysicalContactDeltas contact;
+    contact.mAttackerReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Recoil, "reaction"};
+    auto& reaction = *contact.mAttackerReaction;
+    reaction.mSequenceTiming.mEasing = true; reaction.mSequenceTiming.mEaseEnd = .125f;
+    reaction.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+        {{"Pelvis", {11, 22, 33}, {1, 0, 0, 0}, 2, 9}}};
+    ASSERT_TRUE(world.commitOblivionPhysicalContact(id, attacker, victim, contact));
+    const std::array<MWMechanics::OblivionMeleeSequenceMetadata, 1> sources{{
+        {"reaction", 1, 0, 1, 0, 1, std::array<float, 2>{0, .5f}, .125f}}};
+    const auto snapshot = [&] {
+        auto state = captureNativeActorState(fixture, attacker);
+        state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front()); return state;
+    };
+    const auto initial = snapshot();
+    auto tick = [&](float delta) {
+        const auto before = snapshot().serializeBinary();
+        auto frame = service.prepareMeleeReactionFrame(a, delta, sources);
+        ASSERT_TRUE(frame); EXPECT_EQ(snapshot().serializeBinary(), before);
+        ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+        EXPECT_FALSE(service.commitMeleeReactionFrame(*frame));
+    };
+    tick(0); tick(.0625f);
+    auto current = service.findMeleeState(a)->mReaction;
+    ASSERT_TRUE(current); ASSERT_TRUE(current->mPoseSnapshot);
+    EXPECT_EQ(current->mAnimationTime, 0); EXPECT_FALSE(current->mStarted);
+    const auto saved = snapshot();
+    auto stale = service.prepareMeleeReactionFrame(a, .0625f, sources); ASSERT_TRUE(stale);
+    service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+    EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(service.commitMeleeReactionFrame(*stale));
+    EXPECT_EQ(snapshot().serializeBinary(), saved.serializeBinary());
+    tick(.0625f);
+    current = service.findMeleeState(a)->mReaction; ASSERT_TRUE(current);
+    EXPECT_FALSE(current->mPoseSnapshot); EXPECT_FALSE(current->mSequenceTiming.mEasing);
+    EXPECT_EQ(current->mAnimationTime, 0); EXPECT_FALSE(current->mStarted);
+    tick(0); EXPECT_FALSE(service.findMeleeState(a)->mReaction->mStarted);
+    tick(.0625f); EXPECT_TRUE(service.findMeleeState(a)->mReaction->mStarted);
+    EXPECT_EQ(service.findMeleeState(a)->mReaction->mAnimationTime, .0625f);
+    const auto end = snapshot();
+    EXPECT_EQ(end.mPhysicalActions, initial.mPhysicalActions);
+    EXPECT_EQ(end.mCombatRngState, initial.mCombatRngState);
+}

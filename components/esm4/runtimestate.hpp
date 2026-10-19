@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 55;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 56;
 
     struct RuntimeContentIdentity
     {
@@ -561,6 +561,24 @@ namespace ESM4
         std::optional<float> mStartClock = std::nullopt;
         friend bool operator==(const RuntimeReactionRetirement&, const RuntimeReactionRetirement&) = default;
     };
+    struct RuntimeMeleePoseTrack
+    {
+        std::string mBone;
+        std::array<float, 3> mTranslation{};
+        std::array<float, 4> mRotation{1, 0, 0, 0}; // w,x,y,z
+        float mScale = 1;
+        std::uint8_t mPriority = 0;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleePoseTrack&, const RuntimeMeleePoseTrack&) = default;
+    };
+    struct RuntimeMeleePoseSnapshot
+    {
+        // Original destination sequence +54: requested sample / frequency.
+        float mDestinationFrame = 0;
+        std::vector<RuntimeMeleePoseTrack> mTracks;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleePoseSnapshot&, const RuntimeMeleePoseSnapshot&) = default;
+    };
     struct RuntimeMeleeReaction
     {
         // The already consumed contact, shared by both participants if needed.
@@ -575,6 +593,9 @@ namespace ESM4
         // v55: manager deactivation precedes the following actor-prefix
         // action recovery. Preserve that interval across a save.
         bool mInactive = false;
+        // v56: state4 source pose paired with this state5 destination. The
+        // destination holds its requested sample until the transition ends.
+        std::optional<RuntimeMeleePoseSnapshot> mPoseSnapshot = std::nullopt;
         std::int16_t processAction() const;
         void validate() const;
         friend bool operator==(const RuntimeMeleeReaction&, const RuntimeMeleeReaction&) = default;

@@ -1,6 +1,8 @@
 #include "animation.hpp"
 
 #include <components/sceneutil/postphysicsupdatevisitor.hpp>
+#include <components/esm4/runtimestate.hpp>
+#include <components/nif/nativetransform.hpp>
 
 #include <exception>
 
@@ -1767,6 +1769,61 @@ namespace MWRender
         return result;
     }
 
+    std::optional<ESM4::RuntimeMeleePoseSnapshot> Animation::captureNativeSequencePose(
+        std::string_view group, float destinationFrame)
+    {
+        const auto source = nativeSequenceSource(group);
+        const auto* metadata = getControllerSequenceMetadata(group);
+        if (!source || !metadata) return {};
+        ESM4::RuntimeMeleePoseSnapshot result;
+        result.mDestinationFrame = destinationFrame;
+        const auto& nodes = getNodeMap();
+        for (const auto& [bone, priority] : metadata->mTransformPriorities)
+        {
+            const auto name = Misc::StringUtils::lowerCase(bone);
+            const auto found = nodes.find(name);
+            if (found == nodes.end()) return {};
+            const auto* node = dynamic_cast<const NifOsg::MatrixTransform*>(found->second.get());
+            if (!node) return {};
+            bool controlled = false;
+            for (const auto& map : source->mControllerMap) controlled |= map.contains(name);
+            if (!controlled) return {};
+            auto local = Nif::NiTransform::getIdentity();
+            if (node->mScale != 0) local = node->getControllerTransform();
+            else
+            {
+                // At zero scale the retained unscaled rotation is still the
+                // native local. There is no inverse scale to reconstruct it.
+                const auto& matrix = node->getMatrix();
+                if (matrix(3, 3) != 1) return {};
+                local.mRotation = node->mRotationScale;
+                local.mScale = node->mScale;
+                for (unsigned row = 0; row < 3; ++row)
+                {
+                    if (matrix(row, 3) != 0
+                        || !Nif::tryStoreNativeTransformFloat(matrix(3, row), local.mTranslation[row])) return {};
+                    for (unsigned column = 0; column < 3; ++column)
+                        if (matrix(column, row) != 0) return {};
+                }
+            }
+            ESM4::RuntimeMeleePoseTrack track;
+            track.mBone = name;
+            track.mPriority = priority;
+            track.mScale = local.mScale;
+            std::array<float, 9> rotation;
+            for (unsigned row = 0; row < 3; ++row)
+            {
+                track.mTranslation[row] = local.mTranslation[row];
+                for (unsigned column = 0; column < 3; ++column)
+                    rotation[row * 3 + column] = local.mRotation.mValues[row][column];
+            }
+            track.mRotation = ESM4::captureSequenceRotation(rotation);
+            result.mTracks.push_back(std::move(track));
+        }
+        result.validate();
+        return result;
+    }
+
     bool Animation::setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers)
     {
         if (layers.size() > 255)
@@ -1784,9 +1841,16 @@ namespace MWRender
             auto source = nativeSequenceSource(layer.mGroup);
             const auto* metadata = getControllerSequenceMetadata(layer.mGroup);
             if (!source || !metadata) return false;
+            if (layer.mPoseSnapshot)
+            {
+                layer.mPoseSnapshot->validate();
+                if (layer.mFollowAnimationTime)
+                    throw std::invalid_argument("captured native pose cannot follow an animation clock");
+            }
             if (!std::isfinite(metadata->mTimelineStart) || !std::isfinite(metadata->mTimelineStop)
                 || metadata->mTimelineStop < metadata->mTimelineStart
-                || layer.mTime < metadata->mTimelineStart || layer.mTime > metadata->mTimelineStop)
+                || (!layer.mPoseSnapshot
+                    && (layer.mTime < metadata->mTimelineStart || layer.mTime > metadata->mTimelineStop)))
                 throw std::invalid_argument("native sequence sample outside source timeline");
             std::shared_ptr<const float> clock;
             if (layer.mFollowAnimationTime)
@@ -1803,7 +1867,8 @@ namespace MWRender
         bool same = layers.size() == mNativeSequenceLayers.size() && sources == mNativeSequenceSources;
         for (std::size_t i = 0; same && i < layers.size(); ++i)
             same = layers[i].mGroup == mNativeSequenceLayers[i].mGroup
-                && layers[i].mBlendMask == mNativeSequenceLayers[i].mBlendMask;
+                && layers[i].mBlendMask == mNativeSequenceLayers[i].mBlendMask
+                && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot;
         if (same)
         {
             for (std::size_t i = 0; i < layers.size(); ++i)
@@ -1836,6 +1901,24 @@ namespace MWRender
             frame->mEase = layer.mEase;
             frame->mAnimationTime = clocks[i];
             frames.push_back(frame);
+            if (layer.mPoseSnapshot)
+            {
+                for (const auto& pose : layer.mPoseSnapshot->mTracks)
+                {
+                    const auto name = Misc::StringUtils::lowerCase(pose.mBone);
+                    const auto node = nodes.find(name);
+                    if (!priorities.contains(name) || node == nodes.end()
+                        || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get())) return false;
+                    bool admitted = false;
+                    for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
+                        if ((layer.mBlendMask & (1 << mask)) && sources[i]->mControllerMap[mask].contains(name))
+                            admitted = true;
+                    if (!admitted) return false;
+                    tracks[node->second].push_back({nullptr, frame, pose.mPriority,
+                        ESM4::SequenceBlendPose{pose.mTranslation, pose.mRotation, pose.mScale}});
+                }
+                continue;
+            }
             for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
             {
                 if (!(layer.mBlendMask & (1 << mask))) continue;

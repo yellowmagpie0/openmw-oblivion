@@ -163,5 +163,9 @@
     "Verify real scene/view/C4 mode and actual Player-node inputs before normal reaction acceptance."
   ],
   "runtime_acceptance": false,
-  "full_M15S4_acceptance": false
+  "full_M15S4_acceptance": false,
+  "pose_snapshot_followup": {
+    "receipt": "M15-POSE-SNAPSHOT-VERIFICATION.json",
+    "scope": "Original snapshot core, schema56 owned storage, renderer projection and state5 timing now have bounded evidence. New real-engine courses inject a synthetic pose/span; normal contact generation and separate Player body/first-person ownership remain open."
+  }
 }

@@ -4210,3 +4210,42 @@ TEST(ESM4RuntimeState, Reaction55PreservesInactiveActionAndOrderedOutgoingSequen
         EXPECT_NO_THROW(state.serializeBinary());
     }
 }
+
+TEST(ESM4RuntimeState, Reaction56PreservesCapturedLocalPoseAndRejectsInvalidOwnership)
+{
+    auto state = reactionState(); state.mVersion = 56;
+    const auto actor = state.mReferences.front().mKey;
+    auto& reaction = *state.mNativeMeleeStates.at(actor).mReaction;
+    reaction.mSequenceTiming.mEasing = true;
+    reaction.mSequenceTiming.mEaseEnd = .1f;
+    reaction.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+        {{"Bip01 Pelvis", {11, 22, 33}, {1, 0, 0, 0}, 2, 9},
+         {"Bip01 Head", {-0.f, 0, 0}, {0, 0, 0, 1}, -0.f, 255}}};
+    const auto bytes = state.serializeBinary();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+    EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+    EXPECT_EQ(loaded.serializeBinary(), bytes);
+    EXPECT_TRUE(std::signbit(loaded.mNativeMeleeStates.at(actor).mReaction->mPoseSnapshot->mTracks[1].mScale));
+    std::string wire; constexpr char hex[] = "0123456789abcdef";
+    for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+    RecordProperty("reaction56_hex", wire);
+    RecordProperty("reaction56_json", state.canonicalJson());
+    auto bad = state; bad.mVersion = 55;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = state; bad.mNativeMeleeStates.at(actor).mReaction->mSequenceTiming.mEasing = false;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = state; bad.mNativeMeleeStates.at(actor).mReaction->mSequenceTiming.mEaseEnd = 0;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = state;
+    auto& tracks = bad.mNativeMeleeStates.at(actor).mReaction->mPoseSnapshot->mTracks;
+    tracks.push_back(tracks.front()); tracks.back().mBone = "bip01 pelvis";
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    tracks.pop_back(); tracks.front().mRotation = {};
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    tracks.front().mRotation = {1, 0, 0, 0};
+    tracks.front().mTranslation[0] = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    reaction.mPoseSnapshot->mTracks.clear();
+    EXPECT_NO_THROW(state.serializeBinary()); // A sequence can have no transform-controlled blocks.
+}

@@ -40,6 +40,7 @@ namespace MWRender
             osg::ref_ptr<SceneUtil::KeyframeController> mController;
             std::shared_ptr<NativeSequenceFrame> mFrame;
             std::uint8_t mPriority = 0;
+            std::optional<ESM4::SequenceBlendPose> mPose = std::nullopt;
         };
         NativeSequenceController() = default;
         NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest);

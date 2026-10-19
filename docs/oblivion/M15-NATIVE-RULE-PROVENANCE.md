@@ -16362,3 +16362,44 @@ Their supplied values and original observations remain unchanged, but they
 must not be generalized to visible actors' scene-pose capture/easing. Full
 6C5860/6C5C70 snapshot execution, controlled-track capture and runtime integration
 remain open. This correction adds no rendered or normal-contact acceptance.
+
+## Captured melee pose and state 5 destination timing
+
+`M15-POSE-SNAPSHOT-VERIFICATION.json` supersedes the earlier open snapshot-core
+status with bounded implementation and independent execution evidence. The
+original image hash remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Actual `6C5520`/`6C7FB0` constructors and `6C5760` registration supply the manager and
+sequences for full `6C5C70 -> 6C5860/6C9F10/6C78B0 -> 6C9D30` execution. The resulting
+source is state 4; its destination is state 5, held at the requested sample until
+transition completion. Original `6CA950` updates and `6CC3A0` composition retain an
+actual captured transform after the source node is changed.
+
+Actual transform controller `6C3570` reads the node's local matrix, translation and
+scale, calls `7150F0` and constructs a constant transform interpolator through
+`6D5C30`. The interpolator's pose begins at `+0C`. The snapshot copies the target
+controlled block's priority and controller/blend binding. Native matrix conversion
+uses explicit float stores, trace/dominant-diagonal branches and no quaternion
+normalization. Both precision words `027F`/`037F` agree across 1,030 matrices; the
+production helper matches all 2,060 observations. The separate 64-context matrix
+matches 448 destination-timing updates. Original sequence `+3C` is clamped sampled
+time; `+38` holds accumulated history. Zero requested transition duration clamps
+to the native float `1e-4` constant.
+
+The declared boundaries supply checked allocation/free, CRT exit registration,
+actual single-thread refcount updates, no-op critical sections and thread ID 1.
+No pose, sequence, map/array, transform, CRT sqrt/string or memcpy core is stubbed.
+Retained early failures came from missing CRT/IAT fixture boundaries and Python
+probe errors. One successful early report read the pose at the wrong offset;
+only its corrected successor supports payload claims. The public receipt pins
+those distinctions and the editable expected inputs; proprietary bytes and bulky
+corpora remain ignored.
+
+Schema 56 storage, renderer capture/projection and service timing have component,
+engine and codec coverage. Normal and instrumented fresh-process courses verify
+an injected synthetic pose and span, not automatic live capture or normal contact
+generation. They preserve the saved snapshot, then recover to idle without a new
+contact, RNG draw or Health change. Full desktop-engine leak checking remains
+failed on the existing window subset; targeted ESM4/pose leak checks pass. See the
+receipt for exact selections, sanitizer settings, runtime limits and remaining
+Player/view/channel work. This checkpoint does not close M15S4.

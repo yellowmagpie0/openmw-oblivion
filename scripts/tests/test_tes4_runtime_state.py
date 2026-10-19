@@ -3095,6 +3095,42 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             self.assertEqual(promoted["native_actor_values"][0]["process_action"], action)
 
 
+    def test_reaction56_roundtrip_pose_snapshot_and_validation(self):
+        state = self.reaction_state()
+        state_io._upgrade_melee_retirement(state)
+        state_io._upgrade_melee_pose_snapshots(state)
+        state["schema_version"] = 56
+        reaction = state["native_melee_states"][0]["reaction"]
+        reaction["sequence_timing"].update(easing=True, ease_end=.1)
+        reaction["pose_snapshot"] = {"destination_frame": 0., "tracks": [
+            {"bone": "Bip01 Pelvis", "translation": [11., 22., 33.], "rotation": [1., 0., 0., 0.],
+             "scale": 2., "priority": 9},
+            {"bone": "Bip01 Head", "translation": [-0., 0., 0.], "rotation": [0., 0., 0., 1.],
+             "scale": -0., "priority": 255}]}
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        pose = loaded["native_melee_states"][0]["reaction"]["pose_snapshot"]
+        self.assertEqual(pose, reaction["pose_snapshot"])
+        self.assertEqual(struct.pack("<f", pose["tracks"][1]["scale"]), b"\0\0\0\x80")
+        mutations = [lambda r: r["sequence_timing"].update(easing=False),
+                     lambda r: r["sequence_timing"].update(ease_end=0),
+                     lambda r: r["pose_snapshot"]["tracks"][0].update(priority=True),
+                     lambda r: r["pose_snapshot"]["tracks"][0].update(priority=256),
+                     lambda r: r["pose_snapshot"]["tracks"][0].update(rotation=[0., 0., 0., 0.]),
+                     lambda r: r["pose_snapshot"]["tracks"][0].update(translation=[float("inf"), 0., 0.]),
+                     lambda r: r["pose_snapshot"]["tracks"][1].update(bone="bip01 pelvis")]
+        for mutation in mutations:
+            bad = copy.deepcopy(state)
+            mutation(bad["native_melee_states"][0]["reaction"])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state); bad["schema_version"] = 55
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        for cut in range(len(payload)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:cut])
+
+
 class SaveEnvelopeAdmissionTests(unittest.TestCase):
     @staticmethod
     def record(name, body):

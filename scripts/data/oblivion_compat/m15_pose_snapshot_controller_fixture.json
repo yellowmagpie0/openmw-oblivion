@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "scope": "Injected synthetic one-bone pose and four-second transition. No live pose-capture factory, stock duration or normal-contact claim.",
+  "source_save": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-controller-third-person-normal-03/staged-input.omwsave",
+    "sha256": "7534e73f5242ba90a69aa502fc78c52840d04f7bb5e6b442198634c7a8585b4c"
+  },
+  "runtime_state_version": 56,
+  "preconditions": {
+    "actor": "dynamic:player:0000000000000001",
+    "actor_alive": true,
+    "actor_process": "Active",
+    "consumed_cause": 1,
+    "physical_actions": {
+      "next": 2,
+      "pending": []
+    },
+    "camera_first_person": false
+  },
+  "actor_animation_clock": 15.994014739990234,
+  "process_action": 8,
+  "melee_state": {
+    "actor": "dynamic:player:0000000000000001",
+    "input": {
+      "held_seconds": 0.0,
+      "input_held": false,
+      "prefer_left": false,
+      "queued": 0
+    },
+    "strike": null,
+    "ai_intent": null,
+    "reaction": {
+      "contact_id": 1,
+      "kind": 2,
+      "animation_group": "handtohandstagger",
+      "animation_time": 0.0,
+      "started": false,
+      "sequence_timing": {
+        "easing": true,
+        "offset": null,
+        "ease_start": null,
+        "last_input": null,
+        "ease_end": 4.0,
+        "weighted_time": 0.0,
+        "output_time": 0.0
+      },
+      "retirement": null,
+      "inactive": false,
+      "pose_snapshot": {
+        "destination_frame": 0.0,
+        "tracks": [
+          {
+            "bone": "bip01 pelvis",
+            "translation": [
+              11.0,
+              22.0,
+              33.0
+            ],
+            "rotation": [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": 1.0,
+            "priority": 75
+          }
+        ]
+      }
+    },
+    "retiring_sequences": []
+  },
+  "apply": "Read a private source copy. Upgrade legacy optional pose fields before selecting schema56. Replace this actor melee entry, retaining its process action, clock and consumed action ledger. Write to a separate private save with tes4_runtime_state.write_save and decode before launch.",
+  "synthetic_scope": "The pelvis transform11/22/33 with identity rotation, priority75 and four-second transition is deliberately artificial. It makes the projected layer and mid-transition save visible; no stock duration, live pose capture or original-game visual equivalence is claimed.",
+  "expected": {
+    "first": {
+      "pose_snapshot_unchanged": true,
+      "easing": true,
+      "animation_time": 0.0,
+      "started": false
+    },
+    "second": {
+      "reaction": null,
+      "retiring_sequences": [],
+      "process_action": -1
+    },
+    "unchanged": [
+      "physical_actions",
+      "combat_rng_state",
+      "all actor Health bits"
+    ],
+    "fresh_process_required": true
+  }
+}

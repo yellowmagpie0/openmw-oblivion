@@ -13,6 +13,10 @@ namespace ESM4
     // The caller omits a retired sequence once clock reaches its stored end.
     float sequenceBlendEase(float clock, float start, float end, bool retiring);
 
+    // Original pose capture converts the node's unscaled, row-major local
+    // matrix to w,x,y,z without a subsequent quaternion normalization.
+    std::array<float, 4> captureSequenceRotation(const std::array<float, 9>& matrix);
+
     struct SequenceBlendWeight
     {
         float mWeight = 1;

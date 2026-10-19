@@ -923,6 +923,38 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 melee sequence retirement interval");
     }
 
+    void RuntimeMeleePoseTrack::validate() const
+    {
+        if (mBone.empty() || mBone.size() > sMaximumStringSize || mBone.find('\0') != std::string::npos
+            || !std::isfinite(mScale))
+            throw std::runtime_error("Invalid TES4 captured melee pose track");
+        for (float value : mTranslation)
+            if (!std::isfinite(value)) throw std::runtime_error("Nonfinite TES4 captured pose translation");
+        bool rotation = false;
+        for (float value : mRotation)
+        {
+            if (!std::isfinite(value)) throw std::runtime_error("Nonfinite TES4 captured pose rotation");
+            rotation |= value != 0;
+        }
+        if (!rotation) throw std::runtime_error("Zero TES4 captured pose quaternion");
+    }
+
+    void RuntimeMeleePoseSnapshot::validate() const
+    {
+        if (!std::isfinite(mDestinationFrame) || mTracks.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Invalid TES4 melee pose snapshot");
+        std::set<std::string> bones;
+        for (const auto& track : mTracks)
+        {
+            track.validate();
+            auto bone = track.mBone;
+            for (char& value : bone)
+                if (value >= 'A' && value <= 'Z') value += 'a' - 'A';
+            if (!bones.insert(std::move(bone)).second)
+                throw std::runtime_error("Duplicate TES4 captured pose bone");
+        }
+    }
+
     void RuntimeMeleeReaction::validate() const
     {
         (void)processAction();
@@ -931,6 +963,14 @@ namespace ESM4
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
             throw std::runtime_error("Invalid TES4 melee reaction identity or animation");
         validateMeleeTiming(mSequenceTiming);
+        if (mPoseSnapshot)
+        {
+            mPoseSnapshot->validate();
+            if (!mSequenceTiming.mEasing || mRetirement || mInactive
+                || (mSequenceTiming.mEaseStart ? mSequenceTiming.mEaseEnd <= *mSequenceTiming.mEaseStart
+                                              : mSequenceTiming.mEaseEnd <= 0))
+                throw std::runtime_error("Invalid TES4 reaction pose transition");
+        }
         if (mInactive && (mSequenceTiming.mEasing || !mSequenceTiming.mOffset
                 || (mRetirement && !mRetirement->mStartClock)))
             throw std::runtime_error("Invalid inactive TES4 melee reaction");
@@ -1282,7 +1322,8 @@ namespace ESM4
             {
                 const auto& reaction = *melee.mReaction;
                 const auto values = reactionValues.find(actor);
-                if (mVersion < 54 || !mNativeAnimationClocks.contains(actor)
+                if (mVersion < 54 || (mVersion < 56 && reaction.mPoseSnapshot)
+                    || !mNativeAnimationClocks.contains(actor)
                     || reaction.mContactId >= mPhysicalActions.mNext || pendingActions.contains(reaction.mContactId)
                     || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active
                     || values->second->mProcessAction != reaction.processAction())
@@ -2204,6 +2245,24 @@ namespace ESM4
                                 writer.floating(*reaction.mRetirement->mStartClock);
                         }
                         if (mVersion >= 55) writer.integer<std::uint8_t>(reaction.mInactive);
+                        if (mVersion >= 56)
+                        {
+                            writer.integer<std::uint8_t>(reaction.mPoseSnapshot.has_value());
+                            if (reaction.mPoseSnapshot)
+                            {
+                                const auto& pose = *reaction.mPoseSnapshot;
+                                writer.floating(pose.mDestinationFrame);
+                                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mTracks.size()));
+                                for (const auto& track : pose.mTracks)
+                                {
+                                    writer.string(track.mBone);
+                                    for (float value : track.mTranslation) writer.floating(value);
+                                    for (float value : track.mRotation) writer.floating(value);
+                                    writer.floating(track.mScale);
+                                    writer.integer(track.mPriority);
+                                }
+                            }
+                        }
                     }
                 }
                 if (mVersion >= 55)
@@ -3143,6 +3202,24 @@ namespace ESM4
                         reaction.mRetirement = retirement;
                     }
                     if (result.mVersion >= 55) reaction.mInactive = boolean();
+                    if (result.mVersion >= 56 && boolean())
+                    {
+                        RuntimeMeleePoseSnapshot pose;
+                        pose.mDestinationFrame = reader.float32();
+                        const auto tracks = reader.count();
+                        pose.mTracks.reserve(tracks);
+                        for (std::uint32_t k = 0; k < tracks; ++k)
+                        {
+                            RuntimeMeleePoseTrack track;
+                            track.mBone = reader.string();
+                            for (float& value : track.mTranslation) value = reader.float32();
+                            for (float& value : track.mRotation) value = reader.float32();
+                            track.mScale = reader.float32();
+                            track.mPriority = reader.integer<std::uint8_t>();
+                            pose.mTracks.push_back(std::move(track));
+                        }
+                        reaction.mPoseSnapshot = std::move(pose);
+                    }
                     melee.mReaction = std::move(reaction);
                 }
                 if (result.mVersion >= 55)
@@ -4231,6 +4308,38 @@ namespace ESM4
                             stream << '}';
                         }
                         if (mVersion >= 55) stream << ",\"inactive\":" << (reaction.mInactive ? "true" : "false");
+                        if (mVersion >= 56)
+                        {
+                            stream << ",\"pose_snapshot\":";
+                            if (!reaction.mPoseSnapshot) stream << "null";
+                            else
+                            {
+                                const auto& pose = *reaction.mPoseSnapshot;
+                                stream << "{\"destination_frame\":"; floating(pose.mDestinationFrame);
+                                stream << ",\"tracks\":[";
+                                bool firstTrack = true;
+                                for (const auto& track : pose.mTracks)
+                                {
+                                    if (!firstTrack) stream << ',';
+                                    firstTrack = false;
+                                    stream << "{\"bone\":\"" << escapeJson(track.mBone) << "\",\"translation\":[";
+                                    for (std::size_t i = 0; i < track.mTranslation.size(); ++i)
+                                    {
+                                        if (i) stream << ',';
+                                        floating(track.mTranslation[i]);
+                                    }
+                                    stream << "],\"rotation\":[";
+                                    for (std::size_t i = 0; i < track.mRotation.size(); ++i)
+                                    {
+                                        if (i) stream << ',';
+                                        floating(track.mRotation[i]);
+                                    }
+                                    stream << "],\"scale\":"; floating(track.mScale);
+                                    stream << ",\"priority\":" << unsigned(track.mPriority) << '}';
+                                }
+                                stream << "]}";
+                            }
+                        }
                         stream << '}';
                     }
                 }

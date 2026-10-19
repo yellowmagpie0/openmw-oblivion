@@ -1657,7 +1657,9 @@ namespace MWMechanics
                 reaction.mInactive = !updateRetirement(timing, reaction.mAnimationTime, *reaction.mRetirement, source);
             else if (!reaction.mInactive)
             {
-                timing = ESM4::updateMeleeSequenceTiming(timing, nextClock, source.mFrequency, source.mBegin, source.mEnd);
+                timing = ESM4::updateMeleeSequenceTiming(timing, nextClock, source.mFrequency, source.mBegin, source.mEnd,
+                    reaction.mPoseSnapshot ? std::optional(reaction.mPoseSnapshot->mDestinationFrame) : std::nullopt);
+                if (!timing.mEasing) reaction.mPoseSnapshot.reset();
                 const float target = source.rendererTime(timing.mOutputTime);
                 if (target < reaction.mAnimationTime) throw std::invalid_argument("native reaction renderer rewind");
                 reaction.mAnimationTime = target;

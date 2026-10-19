@@ -1586,6 +1586,7 @@ namespace MWMechanics
         {
             const auto old = std::exchange(mOblivionReactionGroup, {});
             mOblivionRenderedReaction = 0;
+            mOblivionPoseSnapshot.reset();
             if (!old.empty()) mAnimation->disable(old);
         }
         if (!reaction || reaction->mInactive) return false;
@@ -1609,6 +1610,8 @@ namespace MWMechanics
         }
         mOblivionRenderedReaction = reaction->mContactId;
         mOblivionReactionGroup = reaction->mAnimationGroup;
+        mOblivionPoseSnapshot = reaction->mPoseSnapshot
+            ? std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*reaction->mPoseSnapshot) : nullptr;
         const float fraction = (std::max(start, reaction->mAnimationTime) - start) / (stop - start);
         // Distinct shared priority keeps BlockIdle resident during BlockHit.
         // Native per-bone priorities determine the projected pose.
@@ -1668,6 +1671,15 @@ namespace MWMechanics
         if (next.mReaction && !next.mReaction->mInactive)
         {
             const auto& reaction = *next.mReaction;
+            if (reaction.mPoseSnapshot)
+            {
+                if (!mOblivionPoseSnapshot)
+                    throw std::invalid_argument("native reaction lost its captured pose binding");
+                const auto& timing = reaction.mSequenceTiming;
+                layers.push_back({reaction.mAnimationGroup, MWRender::BlendMask_All, 0, 1,
+                    ESM4::sequenceBlendEase(clock, *timing.mEaseStart, timing.mEaseEnd, true),
+                    false, mOblivionPoseSnapshot});
+            }
             append(reaction.mAnimationGroup, reaction.mAnimationTime, reaction.mRetirement
                     ? retirementEase(*reaction.mRetirement) : activationEase(reaction.mSequenceTiming));
         }
