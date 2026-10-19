@@ -1,0 +1,1789 @@
+{
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_states": {
+    "inactive": 0,
+    "active": 1,
+    "easing_in": 2,
+    "retiring": 3
+  },
+  "resident_channel_groups": [
+    0,
+    27,
+    33,
+    "20 for action2;28 for action6;30 for action7;20 beside action8",
+    2
+  ],
+  "group_channels": {
+    "Idle": 0,
+    "BlockIdle": 1,
+    "TorchIdle": 2,
+    "AttackLeft": 3,
+    "BlockHit": 3,
+    "BlockAttack": 3,
+    "Recoil": 3,
+    "Stagger": 0,
+    "SpecialIdle": 4
+  },
+  "actor_scope": "NPC High process, drawn unarmed equipment, no movement flags, selected Single cache present or wholly missing; original resolver and fallback execute. Two precision words and native encoded prefix1 or prefix0 fallback have identical listed outcomes. Actor action8 carries Stagger in channel0. Actor/process/resource/empty-controller fixtures, no original game process or render acceptance.",
+  "actor_cases": [
+    {
+      "helper": "block",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "block",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "block",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "block",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "block",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "block",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "block",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "block",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "counter",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "counter",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "counter",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "counter",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "counter",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "counter",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "counter",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "counter",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "empty",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        0,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "empty",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "empty",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        3,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "new",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        0,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "empty",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "recoil",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        3,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "new",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 2,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 2,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 2,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        3,
+        0,
+        1,
+        1,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "new",
+        "empty",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 6,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 6,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 6,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        3,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "new",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 7,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 7,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 7,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-3"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        3,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 2,
+      "slots": [
+        "new",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "new"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 8,
+      "gate": 0,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "present",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    },
+    {
+      "helper": "stagger",
+      "old_action": 8,
+      "gate": 1,
+      "resolution": "missing-cache",
+      "new_action": 8,
+      "old_states": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "target_state": 0,
+      "slots": [
+        "old-0",
+        "old-1",
+        "old-2",
+        "old-3",
+        "old-4"
+      ],
+      "action_sequence": "old-0"
+    }
+  ],
+  "cached_clamp_scope": "Full474530, Recoil30, supplied new target same/different object, state0/1/2/3, prefix0/1, both x87 words, NPC direct-activation scene domain. Same target restart has no new ease; stale ease-end memory is not active ease.",
+  "cached_clamp_cases": [
+    {
+      "same_cached_sequence": false,
+      "old_state": 0,
+      "new_state": 1,
+      "old_state_after": 0,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": false,
+      "old_state": 1,
+      "new_state": 2,
+      "old_state_after": 3,
+      "crossfade": true
+    },
+    {
+      "same_cached_sequence": false,
+      "old_state": 2,
+      "new_state": 1,
+      "old_state_after": 0,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": false,
+      "old_state": 3,
+      "new_state": 1,
+      "old_state_after": 0,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": true,
+      "old_state": 0,
+      "new_state": 1,
+      "old_state_after": 1,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": true,
+      "old_state": 1,
+      "new_state": 1,
+      "old_state_after": 1,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": true,
+      "old_state": 2,
+      "new_state": 1,
+      "old_state_after": 1,
+      "crossfade": false
+    },
+    {
+      "same_cached_sequence": true,
+      "old_state": 3,
+      "new_state": 1,
+      "old_state_after": 1,
+      "crossfade": false
+    }
+  ],
+  "multiple_variant_scope": "Full actor/helper/group resolver/cache Multiple chooser/CRT RNG/playback; drawn unarmed NPC, prefix1, old action2, both x87 words; four helpers have identical listed RNG results. Even a Multiple collection of one draws twice. Single selection does not draw.",
+  "multiple_variant_cases": [
+    {
+      "seed": 0,
+      "variant_count": 1,
+      "draws": 2,
+      "selections": [
+        0,
+        0
+      ],
+      "next_state": 505908858
+    },
+    {
+      "seed": 0,
+      "variant_count": 2,
+      "draws": 2,
+      "selections": [
+        0,
+        1
+      ],
+      "next_state": 505908858
+    },
+    {
+      "seed": 0,
+      "variant_count": 3,
+      "draws": 2,
+      "selections": [
+        2,
+        0
+      ],
+      "next_state": 505908858
+    },
+    {
+      "seed": 1,
+      "variant_count": 1,
+      "draws": 2,
+      "selections": [
+        0,
+        0
+      ],
+      "next_state": 3357800067
+    },
+    {
+      "seed": 1,
+      "variant_count": 2,
+      "draws": 2,
+      "selections": [
+        1,
+        1
+      ],
+      "next_state": 3357800067
+    },
+    {
+      "seed": 1,
+      "variant_count": 3,
+      "draws": 2,
+      "selections": [
+        2,
+        2
+      ],
+      "next_state": 3357800067
+    },
+    {
+      "seed": 5540,
+      "variant_count": 1,
+      "draws": 2,
+      "selections": [
+        0,
+        0
+      ],
+      "next_state": 3093492030
+    },
+    {
+      "seed": 5540,
+      "variant_count": 2,
+      "draws": 2,
+      "selections": [
+        1,
+        0
+      ],
+      "next_state": 3093492030
+    },
+    {
+      "seed": 5540,
+      "variant_count": 3,
+      "draws": 2,
+      "selections": [
+        0,
+        1
+      ],
+      "next_state": 3093492030
+    },
+    {
+      "seed": 305419896,
+      "variant_count": 1,
+      "draws": 2,
+      "selections": [
+        0,
+        0
+      ],
+      "next_state": 1530878130
+    },
+    {
+      "seed": 305419896,
+      "variant_count": 2,
+      "draws": 2,
+      "selections": [
+        1,
+        1
+      ],
+      "next_state": 1530878130
+    },
+    {
+      "seed": 305419896,
+      "variant_count": 3,
+      "draws": 2,
+      "selections": [
+        2,
+        1
+      ],
+      "next_state": 1530878130
+    },
+    {
+      "seed": 3735928559,
+      "variant_count": 1,
+      "draws": 2,
+      "selections": [
+        0,
+        0
+      ],
+      "next_state": 1108892897
+    },
+    {
+      "seed": 3735928559,
+      "variant_count": 2,
+      "draws": 2,
+      "selections": [
+        1,
+        0
+      ],
+      "next_state": 1108892897
+    },
+    {
+      "seed": 3735928559,
+      "variant_count": 3,
+      "draws": 2,
+      "selections": [
+        1,
+        0
+      ],
+      "next_state": 1108892897
+    }
+  ],
+  "frame_scope": "After actual accepted helper, execute all five channel metadata updates476F95..4774C9 followed by actual6CA950 per noninactive sequence at clocks.75,1,1.25; no later actor dispatcher, full manager traversal, geometry or effect/contact callback proof.",
+  "frame_cases": [
+    {
+      "helper": "block",
+      "old_attack_states": [
+        3,
+        0,
+        0
+      ],
+      "channel3_phases": [
+        0,
+        0,
+        1
+      ],
+      "incoming_states": [
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "helper": "counter",
+      "old_attack_states": [
+        3,
+        0,
+        0
+      ],
+      "channel3_phases": [
+        0,
+        0,
+        0
+      ],
+      "incoming_states": [
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "helper": "recoil",
+      "old_attack_states": [
+        3,
+        0,
+        0
+      ],
+      "channel3_phases": [
+        0,
+        0,
+        1
+      ],
+      "incoming_states": [
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "helper": "stagger",
+      "old_attack_states": [
+        1,
+        1,
+        1
+      ],
+      "channel3_phases": [
+        1,
+        2,
+        2
+      ],
+      "incoming_states": [
+        2,
+        1,
+        1
+      ]
+    }
+  ]
+}

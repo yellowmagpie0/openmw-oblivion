@@ -2313,15 +2313,24 @@ namespace MWMechanics
             }
             request->validate();
             const auto& timing = request->mSequenceTiming;
+            const bool cachedRestart = previous && previous->mReaction
+                && request->mKind != ESM4::MeleeReactionKind::Stagger
+                && previous->mReaction->mKind == request->mKind
+                && previous->mReaction->mAnimationGroup == request->mAnimationGroup
+                && !timing.mEasing && timing.mEaseEnd == 0 && !outgoing
+                && std::none_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),
+                    [&](const auto& sequence) { return sequence.mAnimationGroup == request->mAnimationGroup; });
             if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted || request->mInactive
                 || request->mRetirement || timing.mOffset || timing.mEaseStart || timing.mLastInput
                 || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
                 || timing.mEasing != (timing.mEaseEnd > 0)
                 || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
                 || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
-                || (previous && previous->mReaction) || mBowStates.contains(values.mActor))
+                || (previous && previous->mReaction && !cachedRestart) || mBowStates.contains(values.mActor))
                 throw std::invalid_argument("invalid or unsupported native contact reaction start");
             auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+            // Original474530 deactivates and restarts the same resident clamp
+            // target. Replacing its ownership below retains no outgoing copy.
             if (outgoing)
             {
                 outgoing->validate();

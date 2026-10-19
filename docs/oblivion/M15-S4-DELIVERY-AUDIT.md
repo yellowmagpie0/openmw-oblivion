@@ -7817,3 +7817,49 @@ Normal contact adapters still create no reaction/outgoing descriptors. Native
 caller decisions, activation weights, cached/repeated group semantics,
 variant/RNG selection and the remaining mastery/effect/control cases must be
 finished before closing the normal-input gate. **M15S4 is still incomplete.**
+
+## Cached reaction restart and native caller checkpoint
+
+Prepared contact publication now supports repeating an owned BlockHit or Recoil
+with the same selected resource and an explicit no-ease start. The new contact
+replaces the old cause, resets playback and Start/retirement/inactive state, and
+retains no outgoing copy of that cached sequence. Unrelated retiring layers
+survive. Different resources/kinds, eased replacements, supplied outgoing copies
+and conflicting detached instances remain outside this bounded path. General
+previous-reaction replacement and Stagger channel retention remain open.
+
+The full engine inventory passes **1,748 tests / 125 suites in each of the normal
+and ASan/UBSan profiles**, with no failures or skips and unchanged source during
+both runs. The new test covers two reaction kinds and four prior native sequence
+states, rejected requests, stale preparation, atomic Health publication,
+unrelated layers, unchanged RNG/clock/action allocation, codec restoration and
+replay refusal. Leak detection is disabled; existing warnings remain. Component
+and Python implementations did not change in this chunk.
+
+Independent original-instruction execution now records **1,008 contexts** across
+NPC and Player callers, group resolution, cache selection, initialized CRT RNG,
+sequence activation and following channel updates. AttackLeft, BlockHit,
+BlockAttack and Recoil use channel3; Stagger uses channel0. Recoil/BlockHit can
+crossfade the active channel3 attack. Stagger instead leaves channel3 resident
+and advancing through its attack phases in the tested update prefix. The first
+incorrectly placed attack fixture was rejected and retained; it is not evidence
+of native attack replacement.
+
+Native Single caches select without RNG. Multiple caches select with a CRT draw
+modulo their count, even when an explicitly supplied Multiple cache contains one
+entry. NPC group resolution and playback both select, and the second selection
+chooses the played resource. Player group resolution also depends on camera
+routing between body and first-person caches; first-person basename matching
+can avoid a further draw, while its fallback can consume one. Mixed cache kinds
+therefore have distinct draw counts. These are synthetic resource/cache and
+scene fixtures executing original code, with each boundary stated in the
+receipt. Resource insertion order, winning overrides and actual scene-pose
+capture are not established by these cases.
+
+`M15-CACHED-REACTION-VERIFICATION.json` pins the implementation, both builds,
+editable expected values, original corpora, verifier scripts and retained failed
+fixtures. It includes the separate 16-case full actor same-cached restart proof
+and Player results. There is **no new rendered or normal-input restart course**
+in this chunk. The prior owned-state continuation remains historical controller
+evidence and its Stagger/outgoing duration is synthetic. Normal contact adapters
+still generate no reaction descriptors. **M15S4 is still incomplete.**

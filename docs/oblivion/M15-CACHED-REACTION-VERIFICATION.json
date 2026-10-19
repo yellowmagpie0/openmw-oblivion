@@ -1,0 +1,1108 @@
+{
+  "status": "Owned same-cached BlockHit/Recoil contact restart implemented and verified; normal reaction descriptor generation and full M15S4 remain incomplete",
+  "code_state": {
+    "head": "52dd61e484351ae23abc305fa780dcf35df43549",
+    "source_fingerprint": "7a5de560d5f8d0bd20728f7b291423454718717987391f8a1f9f2c7ca4059423"
+  },
+  "tested_code": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "829fc83c7798cc3909b8967064879ad52266c00c79947df5e43f792976d043e3"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "416cfbe402c72008828da8ff5cb6086f8703b1b4d9d1d1426101640f5c720ab7"
+    }
+  ],
+  "editable_expectations": {
+    "path": "scripts/data/oblivion_compat/m15_native_cached_reaction_expected.json",
+    "sha256": "1463a4b63c7840b5b035b62202fba9b28bd90938bab01ae02aa02aac3b5e74e7"
+  },
+  "implemented": [
+    "A prepared contact can restart an existing owned BlockHit/Recoil only when selected group and kind match, incoming timing has no ease, no outgoing copy is supplied and no detached sequence conflicts with that cache identity.",
+    "Restart publishes the new consumed cause and zero-time/uninitialized native timing, clears previous Start/retirement/inactive state, publishes resource deltas atomically, preserves unrelated retiring layers and participant lease checks, and allocates no additional action or RNG draw.",
+    "Different kind/group, eased restart, outgoing duplicate, detached same-source conflict and existing unsupported process/action domains remain rejected without publication. General different-resource replacement and Stagger resident-channel retention are not implemented here."
+  ],
+  "build_checks": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-cached-reaction-restart-normal-01/verification.json",
+        "sha256": "14d4525c62c13e608416d89a2345f06c72ca715479179ba8861fac3717540c04"
+      },
+      "source_state": {
+        "head": "52dd61e484351ae23abc305fa780dcf35df43549",
+        "source_fingerprint": "7a5de560d5f8d0bd20728f7b291423454718717987391f8a1f9f2c7ca4059423"
+      },
+      "results": {
+        "executed": 1748,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "4ffc8c2ec03391304cefe7f8bffbb596c15a7b671760b2d7fe7b94c12c0a25a2",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "2badc1779de7cabb7960225870a5445324373ad096122e903eb1373178d9ca0c",
+        "inventory_sha256": "b3336c24a7755c432c06c35ff52e5c3a9da8e5718beb362a573ae24ca1ba1820",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-cached-reaction-restart-sanitized-01/verification.json",
+        "sha256": "2aa60a974c01fa09de303c3adf789a589a43589884b3c53e00a51a774296dcb7"
+      },
+      "source_state": {
+        "head": "52dd61e484351ae23abc305fa780dcf35df43549",
+        "source_fingerprint": "7a5de560d5f8d0bd20728f7b291423454718717987391f8a1f9f2c7ca4059423"
+      },
+      "results": {
+        "executed": 1748,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1558b1c854f99bcd791efa1ffc4eb9cc4479f0454d8abe95ee5eb3aa7e6a56e5",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "0a4d5f8997621bbb39061d2cd5fdce9db438c1584223e35654305e1b15aae61b",
+        "inventory_sha256": "b3336c24a7755c432c06c35ff52e5c3a9da8e5718beb362a573ae24ca1ba1820",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "test_scope": "Full engine inventory1748/125suites in each profile; one new test covers BlockHit/Recoil times four prior native states with transactional rejection, stale lease, resource, retirement, ledger/RNG/clock and codec restore assertions. Component/codec implementations unchanged; no new component/Python run required.",
+  "warnings": "Existing aggregate/range-loop/enum/GoogleTest warnings remain, including priorVictimContact dangling-else warning. No warning-free or leak coverage claim.",
+  "original_instruction_evidence": {
+    "caller": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/caller-verification.json",
+        "sha256": "14ee67686154550fd1ec824481df34759fdec2e678aeb1b0f564952dba775ab4"
+      },
+      "results": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "actor_cases": 256,
+        "multiple_variant_cases": 120,
+        "cached_activation_cases": 32,
+        "followup_contexts": 8,
+        "followup_channel_updates": 120,
+        "boundaries": [
+          "Animation getter4D8370 supplies fixture AnimData.",
+          "Synthetic one-bucket hash and exact-key comparison virtuals; actual470960 traversal/476260 resolver/470D20 fallback execute.",
+          "Actual Single vtableA3C72C/471710 and MultipleA3C758/470BF0; synthetic resident resource lists.",
+          "Full original47DF80/9859DD RNG; only CRT TLS98C0F5 supplies fixture TLS; initialized stream, no wall-clock seeding.",
+          "Scene update471230 captured; view predicate578F60=false, debug5790E0=false, ancestry47F7B0=false, distinct Player scene node.",
+          "Actual sequence6C9BA0/6C9CB0/6C4000 and High action reader/writer/notification execute; empty-controller sequences and preallocated manager.",
+          "Windows atomic refcounts use supplied read/increment/decrement/store OS boundary.",
+          "Cached activation32 contexts separately supplies selected target/group; followup stops before later scene/actor processing."
+        ],
+        "fixtures_sha256": "1463a4b63c7840b5b035b62202fba9b28bd90938bab01ae02aa02aac3b5e74e7",
+        "artifacts": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-probe-07.py",
+            "sha256": "be27ab816152a5a829a7ac94c58710598134e50fec1ba4e00633a70719f4a690"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus07.json",
+            "sha256": "6efb2a63cf550c8543a2c6ae75ad7f77beb363f24fdf0258a1582035c9c8c315"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-probe-11.py",
+            "sha256": "803172d62c6cbee325bdd661756b159c3067670fc0ee21827aaa639065547b1d"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus11.json",
+            "sha256": "1be7b2f8ac816e9679e9875decf7fd94bc38751c0b84a98f7199a2f7b4692ba6"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-probe-10.py",
+            "sha256": "f3cfd16b5957e2d3ed21860e3cc68221f394cd37dfcaaa0da3af354a1cbb50f0"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus10.json",
+            "sha256": "0f8d467f27025637238fbdb0f0676c422dc0bacecb6a6e3c38e86f914cc5f446"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/cached-activation-probe-03.py",
+            "sha256": "6a6cf09c4403d55ff0f8f083b00e86ab45714ce181279f9a1ecb8feb3866e444"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/cached-activation-corpus03.json",
+            "sha256": "249bb7fbdfaad5e21efb807c43dffe33e18e9434ab302c16bd99daa87716a4e0"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/collection-vtable-identities.json",
+            "sha256": "c34b6ec3b02d4ad218ecc1eb5a6936a0101be1b9052f26b76789f1cebbeb1e94"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/verify-caller.py",
+            "sha256": "0c96f34c670bf6a1c5dd58feb569c5593b57f6e5eca997c3a0b70e0d4891708b"
+          }
+        ],
+        "retained_failures": [
+          "actor-channel-fixture-review01.json: incorrect native group/channel placement;384 executed rows cannot establish real attack replacement.",
+          "actor-channel-probe09 failed in Python ctypes before frame execution; bytearray converted to bytes in10.",
+          "cached-activation-attempt01: incomplete pose-capture manager fixture, no success.",
+          "cached-activation-attempt02: missing Windows atomic increment IAT mapping; corrected03."
+        ],
+        "scope": "Independent original instruction and typed fixture evidence only; no normal contact descriptor generation or original-game/rendered acceptance; full M15S4 remains incomplete."
+      }
+    },
+    "same_cached_actor": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/full-cached-actor-verification.json",
+        "sha256": "f2cb3a85f03f22e6df79293daf926e2ee9fb9dcee2d41b93a5c82a6937169f18"
+      },
+      "results": {
+        "passed": true,
+        "cases": 16,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "scope": "Full NPC actor BlockHit/Recoil helper, native group resolution, Single cache, playback, reset and process writer. Selected resource is the same current channel3 clamp object. Both precision words and actual native prior states0/1/2/3 created with real activation/update/deactivation. All finish same object active1, unchanged five current slot pointers, same process action, no crossfade or outgoing clone. Scene/predicate/hash/refcount/AnimData-getter fixture boundaries as caller-verification.json; no rendered/runtime acceptance.",
+        "artifacts": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-probe-12.py",
+            "sha256": "84a514d57a54ce05ecf6956cc4c76740f3756b711db682356f46c9a3309acd70"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus12.json",
+            "sha256": "4b44e9616e801ae4ebe209f58b1fe8774ac613b390949e52ef3e979697c889f8"
+          }
+        ]
+      }
+    },
+    "player": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-verification.json",
+        "sha256": "c5431c361ef165bbcfba2ccdaa90e1242049a218b43e398853dddc232db7ff8e"
+      },
+      "results": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "single_cases": 16,
+        "multiple_cases": 240,
+        "cache_kind_cases": 320,
+        "cache_kind_results": [
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 0
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 2531011
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 1,
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "next_state": 2531011
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 2745024
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 1,
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "next_state": 2745024
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 2,
+            "firstperson_variant": 2,
+            "next_state": 3357800067
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 5540
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1188163031
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1188163031
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 305419896
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 3018423131
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 1,
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "next_state": 3018423131
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 3735928559
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 1,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 3349274102
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 1,
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "next_state": 3349274102
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 0
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 0
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 2,
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "next_state": 3357800067
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 2,
+            "firstperson_variant": 2,
+            "next_state": 3357800067
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 5540
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 5540
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 305419896
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 305419896
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "main_cache": "single",
+            "first_cache": "single",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 3735928559
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "main_cache": "single",
+            "first_cache": "multiple",
+            "draws": 0,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 3735928559
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "main_cache": "multiple",
+            "first_cache": "single",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "main_cache": "multiple",
+            "first_cache": "multiple",
+            "draws": 2,
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "next_state": 1108892897
+          }
+        ],
+        "distinct_multiple_results": 30,
+        "artifacts": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-probe-05.py",
+            "sha256": "0deb6ffc5ffe09f01b69b0e28fb39ef85d58f212c3fc0ee9b9327d5d84cf4ad2"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-corpus05.json",
+            "sha256": "4e1ba66e71a9c567997b01e6b0b50e9d511a3a8501836229be8fae7171bd31fc"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-probe-04.py",
+            "sha256": "028eb07c66cf7d73301ceea492792d895e1e1dcf864a045d23866f59b0a8b1f0"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-corpus04.json",
+            "sha256": "6e3c318f90ae22f72f97f183c0392cc64bddf751f1b08b4d92b9fe64d0dd7fb6"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-probe-06.py",
+            "sha256": "2b8925293aef91285de69f48cb0deffa6cc513dfb83abe0ae83d1e7126726565"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-corpus06.json",
+            "sha256": "c9ce37d4ad1325de1a8873037e59176ca7139ab17f2ab0f10e9fb5b26c8842bb"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/verify-player.py",
+            "sha256": "67c4a7f674f7b6405a04cdc4d9c0cf1a22e0600d658eebdb5b6e60fc604f2523"
+          }
+        ],
+        "multiple_results": [
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "first_count": 1,
+            "draws": 2,
+            "selections": [
+              0,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              0,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 0,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              0,
+              2,
+              0
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 415139642
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "first_count": 2,
+            "draws": 3,
+            "selections": [
+              1,
+              2,
+              0
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 415139642
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 1,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              2
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 2,
+            "matching_failed": false,
+            "next_state": 3357800067
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              0,
+              1,
+              0
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 4073472777
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              1,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 5540,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              0,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              0,
+              1,
+              0
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 3423460525
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              1,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 305419896,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "first_count": 1,
+            "draws": 2,
+            "selections": [
+              0,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              1,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 0,
+            "seed": 3735928559,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              1,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "first_count": 1,
+            "draws": 2,
+            "selections": [
+              2,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              2,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 0,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 505908858
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              2,
+              2,
+              0
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 415139642
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "first_count": 2,
+            "draws": 3,
+            "selections": [
+              2,
+              2,
+              0
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 415139642
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 1,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              2
+            ],
+            "main_variant": 2,
+            "firstperson_variant": 2,
+            "matching_failed": false,
+            "next_state": 3357800067
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              0,
+              1,
+              0
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 4073472777
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              0,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 5540,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              0,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 3093492030
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "first_count": 1,
+            "draws": 3,
+            "selections": [
+              2,
+              1,
+              0
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 0,
+            "matching_failed": true,
+            "next_state": 3423460525
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              2,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 305419896,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              2,
+              1
+            ],
+            "main_variant": 1,
+            "firstperson_variant": 1,
+            "matching_failed": false,
+            "next_state": 1530878130
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "first_count": 1,
+            "draws": 2,
+            "selections": [
+              1,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "first_count": 2,
+            "draws": 2,
+            "selections": [
+              1,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          },
+          {
+            "camera_byte588": 1,
+            "seed": 3735928559,
+            "first_count": 3,
+            "draws": 2,
+            "selections": [
+              1,
+              0
+            ],
+            "main_variant": 0,
+            "firstperson_variant": 0,
+            "matching_failed": false,
+            "next_state": 1108892897
+          }
+        ],
+        "scope": "Full original Player helpers/group selection/playback/process setter/65D790 first-person mirror with actual Player+164=65D720 view routing and4D8370 High-process AnimData getter. Synthetic separate body/first-person caches, mainMultiple count3, firstMultiple1/2/3, five initialized CRT seeds, two precision words, camera byte5880/1; matching source/first-person Windows path basenames supplied. With both caches Single, three selections use no RNG. With both Multiple, two draws occur, plus one when first-person basename missing and available group falls back. The mixed-cache matrix separately proves the number of draws depends on the actual preflight/playback cache kind and camera routing; it ranges from zero to two when all basenames match. Metadata/list load order and real-game scheduling/view/geometry/audio acceptance are not proved.",
+        "boundaries": [
+          "Synthetic one-bucket hash/equality/cache lists; scene-update471230 captured.",
+          "View578F60=false/debug5790E0=false/ancestry47F7B0=false, Player scene-node660110 supplied distinct node; this is supplied scene domain, not real first/third-person rendering.",
+          "Actual47DF80/9859DD initialized RNG, only98C0F5 supplies TLS.",
+          "Actual filename strrchr/strcmp matcher470C40 executes; provided resource paths, not file loader behavior.",
+          "Actual native sequence manager primitives with empty controllers/preallocated managers; OS atomicrefcount supplied."
+        ],
+        "retained_failure": {
+          "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-channel-fixture-review03.json",
+          "sha256": "05362bda33042616f8d00f1c99fab49e4bfe106ef6f2e9f81593f404f22fc17f"
+        }
+      }
+    }
+  },
+  "native_contexts": 1008,
+  "native_context_breakdown": {
+    "NPC_single_cache": 256,
+    "NPC_multiple_cache_and_real_CRT": 120,
+    "core_cached_activation": 32,
+    "full_actor_same_cached_restart": 16,
+    "following_channel_updates": 8,
+    "Player_single_cache": 16,
+    "Player_multiple_cache_and_mirror": 240,
+    "Player_cache_kind_matrix": 320
+  },
+  "native_findings": [
+    "AttackLeft/BlockHit/BlockAttack/Recoil use channel3. Stagger uses channel0, BlockIdle1, TorchIdle2. The initial incorrectly placed attack fixture was rejected and retained.",
+    "Recoil/BlockHit replace the old channel3 attack through crossfade when it is active; in the supplied direct-activation scene domain a same-cached clamp request resets/restarts one object without creating an outgoing duplicate. Scene-pose capture/ease is a separate path; the service restart accepts only an explicit no-ease descriptor. Easing/retiring replacement has different reset behavior.",
+    "Stagger replaces channel0 and preserves channel3 attack through the tested all-channel updates, including attack phase advancement. The current injected Stagger/outgoing fixture remains explicitly synthetic.",
+    "Native Single selection returns its stored sequence without RNG. Multiple selection executes initialized CRT draw modulo count, including an explicitly Multiple collection of one. NPC resolution and playback each select; the second determines played resource. Player mixed-cache results separately account for which cache each selection uses.",
+    "Player+164=65D720 routes resource resolution by camera byte588; actual4D8370 returns body AnimData from High process. Player notification mirrors first-person resources by basename when possible, otherwise may perform an additional Multiple draw. The recorded Player cases use supplied resource path names and scene predicates.",
+    "Invalid resolved group and cache loss after supplied group resolution have distinct process-action behavior. Stable missing-cache full-resolver cases are recorded separately from supplied-group/cache-loss boundaries."
+  ],
+  "runtime_acceptance": {
+    "new_restart_normal_input": false,
+    "new_rendered_course": false,
+    "scope": "This chunk proves prepared service publication plus independent original instruction paths. Prior committed visible controller continuation remains historical evidence for owned-state playback; it does not exercise this new repeated-contact path. No native-game process, quantitative pose/audio, normal contact or full input/view/FPS acceptance is claimed."
+  },
+  "remaining": [
+    "Generate normal-contact reaction/resource descriptors without dropping the earlier Health/Fatigue sink or changing RNG order on missing resources.",
+    "Implement retained active channel3 state for Stagger, general previous-owned/different-resource crossfade and scene-pose capture paths.",
+    "Verify actual resource insertion/winning override/list order and map cache identity and source selection in live renderer.",
+    "Finish custom General INI/live byteC4, interruptions, actual repeated normal contacts and required save/fresh-process input/view/FPS matrices."
+  ],
+  "full_M15S4_acceptance": false
+}

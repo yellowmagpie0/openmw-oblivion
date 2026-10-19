@@ -16294,3 +16294,50 @@ loose-body velocity continuation. Boundary-rich recipes, failed attempts and
 hashes are in `M15-NPC-MELEE-BREAK-PROBE.json` and the verification index entry
 `native_npc_melee_break_followup`. Defensive breaks, native reactions/FSM/GetUp,
 mastery/effects and remaining S4 matrix/restart requirements stay open.
+
+### Cached reaction requests, channels and two-stage resource selection
+
+The pinned original executable's native group table assigns AttackLeft20,
+BlockHit28, BlockAttack29 and Recoil30 to channel3; Stagger31 uses channel0,
+BlockIdle27 channel1 and TorchIdle33 channel2. Full NPC helpers5F4E10/5F4F00/
+5F4FD0, resolver5E5690/470D20, cache470960/476260 and playback477B60/474530
+confirm channel-local replacement in the supplied direct-activation scene
+domain. With an active channel3 attack, BlockHit/Recoil crossfade that sequence;
+Stagger replaces channel0 while channel3 remains active and advances its attack
+phase in subsequent476F95..4774C9 updates. This prefix does not establish later
+actor hit dispatch or complete original-game scene application.
+
+For a repeated request selecting the same clamp object,474530 explicitly
+resets/deactivates it before activation. In the tested direct-activation domain,
+all prior states0/1/2/3 finish as the same active object with reset timing and no
+outgoing duplicate. Both precision words agree; a separate full NPC actor/cache
+probe covers BlockHit and Recoil. This does not generalize the no-ease result to
+the separate6C5C70 scene-pose capture path. The service accepts only an explicit
+no-ease same-resource descriptor; it does not infer a native scene mode.
+
+RTTI and actual vtables identify SingleA3C72C (selection471710) and
+MultipleA3C758 (selection470BF0). Single returns its stored sequence without a
+random draw. Multiple calls actual47DF80/9859DD, then reduces the draw modulo the
+list count; a supplied Multiple of one still draws. In the full NPC path,
+resolution470D20 and playback476260 each select. The second choice determines
+the played sequence. Original initialized CRT execution, with only its TLS
+accessor supplied, verifies the exact consumed states and selected indices.
+
+For Player, actual virtual+164=65D720 routes resolution using camera byte588
+and the available first-person AnimData; actual4D8370 obtains body AnimData from
+the High process. Notification65D790 attempts first-person basename matching
+through474BE0/470C40, otherwise checks group availability and calls477B60.
+Separate body/first-person cache fixtures verify both Single caches without
+RNG, both Multiple caches with two draws plus a possible matching-fallback draw,
+and mixed-cache counts dependent on camera routing. Provided resource names,
+cache lists and scene predicates are explicit boundaries. These results do not
+prove original loader ordering, winning resource overrides or real-game view,
+pose, audio and RNG scheduling.
+
+`M15-CACHED-REACTION-VERIFICATION.json` records1,008 original contexts, their
+hashes and boundaries. The editable cached-reaction expectations record the
+NPC/channel/restart/selection cases; Player expected results are embedded in
+the receipt. The initial wrong-channel fixture and the initial Player fixture
+that failed to clear its extended memory region are retained as rejected
+attempts. Normal-contact descriptor generation and runtime acceptance remain
+open.
