@@ -1047,12 +1047,18 @@ namespace MWMechanics
             // Original5F39C7 invalidates armor rating through60E260. Only
             // slot13 enters the equipment consequence branch at5F3A10;
             // ordinary body armor remains equipped when its condition is zero.
+            auto change = priorCondition != result.mConditions.end() ? *priorCondition
+                : captureOblivionPhysicalConditionChange(victim, candidate.mItem, *condition);
+            change.mCondition = *condition;
             if (*condition == 0 && (candidate.mBase->mArmorFlags & ESM4::Armor::TES4_Shield))
-                return std::nullopt; // Later selected-wear break needs its distinct posture/equipment caller audit.
+                change.mBreakDisposition = shieldBreakDisposition(world, service, victim, *candidate.mBase);
+            // Preserve the original expected condition when two wear writes
+            // merge. Original5FF914 captured shield sound before this later
+            // break, so its material survives the equipment consequence.
             if (priorCondition != result.mConditions.end())
-                priorCondition->mCondition = *condition;
+                *priorCondition = std::move(change);
             else
-                result.mConditions.push_back(captureOblivionPhysicalConditionChange(victim, candidate.mItem, *condition));
+                result.mConditions.push_back(std::move(change));
             return result;
         }
     }

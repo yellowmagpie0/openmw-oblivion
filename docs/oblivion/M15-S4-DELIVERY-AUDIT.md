@@ -12,12 +12,12 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Spell-free, unarmed Creature ordinary strikes now reach the same contact owner through stationary AI and stock handtohand KFs. Spell-free Creature victims now accept bounded ordinary contacts and timed force; defensive/effect branches, armed sources and the complete input/view matrix remain open. Trace and verify every admitted actor route. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions, initially broken equipment and later selected-shield wear-to-zero remain rejected. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions and initially broken equipment remain rejected. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
-| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield breaks and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
+| 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
 weapon resistance, negative incoming damage, and remaining breakage branches.
@@ -7448,3 +7448,50 @@ acceptance recipe and `M15-PICKUP-DROPPER-CLEANUP-VERIFICATION.json` record thes
 layers and limits. The old stale-list observation in
 `M15-SHIELD-DROP-VERIFICATION.json` remains historical evidence. No migration of
 already-collected stale-list saves is claimed. **M15S4 is still incomplete.**
+
+## Later selected-shield break transaction checkpoint
+
+Later selected armor wear now applies the native shield equipment consequence
+when it reaches zero. It merges with an earlier blocking-wear change while
+retaining the original pre-contact condition for validation. The shared prepared
+transaction then retains/unequips Player or quest armor, or publishes one ordinary
+NPC dropped shield and body, with posture withdrawal and resource/RNG publication.
+Body armor zero-condition policy is unchanged. Sound material captured before this
+later wear is retained, unlike a break during the earlier blocking-wear stage.
+
+Original-instruction probes cover 3,456 contexts, including 432 later breaks
+(324 retained unequips and 108 NPC drops/notifications), plus 12 exact condition40
+regression contexts. First wear leaves28.75; later wear reaches0 only under the
+native attacker action6/baseBlock-below50 gate. The executable hash, full executed
+paths, original caller/material reads and inventory/scene/audio boundaries are
+recorded separately. The first probe using condition.4 broke at the initial wear
+and exercised zero later breaks; its apparent generic pass is not accepted for
+this branch. The corrected probe requires initial survival and later-break cases.
+
+World tests cover Player/quest retention, mastery/posture controls, Player god
+mode, original expected-condition preservation, single and merged wear changes,
+ordinary NPC body creation, scene-failure rollback/retry and no duplicate commit.
+The first normal attempt exposed two fixture errors: a missing actor reference
+in a serialized snapshot and a factory attack weapon retaining its enchantment.
+Those failures are retained with corrected-input provenance.
+
+This checkpoint is not normal-input E2E acceptance. Current held-block handling
+returns before attacking; beginBlocking rejects a pending melee strike, while
+melee playback accepts actions-1/2/3. The actual native later-wear gate queries
+the attacker action6, so controller reachability remains unproved. No fabricated
+contact or exercise-time state mutation substitutes for that missing evidence.
+The full S4 controller/input/mastery/reaction/effect and restart gates remain
+open. **M15S4 is still incomplete.**
+
+Normal `native-selected-shield-normal-02` and ASan/UBSan
+`native-selected-shield-sanitized-01` each pass **1,737 engine tests /125 suites**,
+exact inventories with no failures/skips. They share dirty-source fingerprint
+`2f473dd5c67e2b98b1c286473bf0911c64607368eaf3d318dc66077a92c506c4`
+on parent `0c58180c2ea922eab0bf0a0fe523dd501d63ec2e`. Only engine source and its
+World tests changed; the prior 2,938 component results remain historical evidence
+for the unchanged components. The sanitizer run disables leak detection and is
+not leak coverage. The test fixture's zero/enum conditional emits a compiler
+warning; this checkpoint does not claim a warning-free build.
+`M15-SELECTED-SHIELD-BREAK-VERIFICATION.json` and the editable
+`m15_selected_shield_break_contract.json` record the source pins, original case
+receipts, test inventories, retained failures and the open input gate.

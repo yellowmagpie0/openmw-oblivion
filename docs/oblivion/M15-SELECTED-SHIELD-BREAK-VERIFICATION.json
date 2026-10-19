@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "status": "Later selected shield zero-condition consequences implemented and verified through original instructions plus World/render/physics integration. Normal-input reachability remains open; full M15S4 incomplete.",
+  "source_pin": {
+    "parent": "0c58180c2ea922eab0bf0a0fe523dd501d63ec2e",
+    "files": {
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "365a8551e0543206a827d16545b6b07e7795f2093a6dd928a87ce8cec7c43789",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "97f88b2821243000bde1ea52fef6aa486e7810eebe9d15b4a3a3c1677f0f0f4b"
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-selected-shield-normal-02/verification.json",
+      "sha256": "71cd76a203450afbd7a2ab1bed1f76cf465bac710858fc22ac038dcaea602e21",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 253.856
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.165
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-selected-shield-normal-02/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 26.841
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1737,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "dbb2f35a1906d7c316809184a216da426628d8d615f4e9dd13a5c74641f2c6d4",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "b252aa552d3288a67e830a0babb8f04bcf20318071b3ad78702310f28b222f06",
+            "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "0c58180c2ea922eab0bf0a0fe523dd501d63ec2e",
+          "source_fingerprint": "2f473dd5c67e2b98b1c286473bf0911c64607368eaf3d318dc66077a92c506c4"
+        },
+        "source_after": {
+          "head": "0c58180c2ea922eab0bf0a0fe523dd501d63ec2e",
+          "source_fingerprint": "2f473dd5c67e2b98b1c286473bf0911c64607368eaf3d318dc66077a92c506c4"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-selected-shield-sanitized-01/verification.json",
+      "sha256": "ba5481e5007b3a1b49cdce778afd8a20f5487f62c43d31d483a345866a6630f0",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 452.072
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.717
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-selected-shield-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 164.413
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1737,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d4da088081d8dc41fa9d6595dc70ca675c2e08e2941cbf8ef49c82090667e420",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "3e1a60f8187aaec44a1d2672dd88e5941422924dbfb3de4efd83ec4c060127d9",
+            "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "0c58180c2ea922eab0bf0a0fe523dd501d63ec2e",
+          "source_fingerprint": "2f473dd5c67e2b98b1c286473bf0911c64607368eaf3d318dc66077a92c506c4"
+        },
+        "source_after": {
+          "head": "0c58180c2ea922eab0bf0a0fe523dd501d63ec2e",
+          "source_fingerprint": "2f473dd5c67e2b98b1c286473bf0911c64607368eaf3d318dc66077a92c506c4"
+        }
+      }
+    }
+  },
+  "original_contexts": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-break-oracle-02/caller-report.json",
+    "sha256": "6b2779dc84ba6a28e09610a1dfaf5ae787e9da5652a20eb868f35610fd2c707e",
+    "result": {
+      "passed": true,
+      "cases": 3456,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "39fa6109fc467b52e8556d893401e85e2a448a259272d86cac8c52cc1d6215bd",
+      "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+      "observation": "Selected shield later wear crosses zero only under attacker action6 and baseBlock below50. Active worn Player or flag400 armor requests unequip; ordinary NPC requests drop and notification. Sound arguments retain the shield material captured before later wear; weapon-out byte is irrelevant.",
+      "rows_file": "caller-corpus.json"
+    }
+  },
+  "original_context_coverage": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-break-oracle-02/coverage.json",
+    "sha256": "a3cead7f994146e0a143f5db42da6361677735e7e25a90b084ffa8ea1dc00add",
+    "result": {
+      "passed": true,
+      "cases": 3456,
+      "later_break_cases": 432,
+      "outcomes": {
+        "unequip": 324,
+        "drop": 108,
+        "notification": 108
+      },
+      "all_later_breaks_have_action6_block5": true,
+      "initial_wear_all_survive": true,
+      "sound_material_preserved": true,
+      "limits": "Original arithmetic/caller/equipment request only; actual inventory mutation, dropped references, sound playback, physics and game process remain boundaries."
+    }
+  },
+  "original_exact_profile": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-runtime-oracle-01/runtime-selection-report.json",
+    "sha256": "d2de73ee973a785a766b37874112dc09661f660aeecd6b289988ecb7c74dde2c",
+    "result": {
+      "passed": true,
+      "cases": 12,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "327de2a1bd9a94a377cbdd495a40d276fe86f2bcd7ffa30c503ee9847c34ad3c",
+      "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+      "observation": "Exact regression profile:40 minus blocking wear7.5*1.5=28.75; later raw armor wear45 with fraction.5 produces0 and ordinaryNPCdrop+notification only for action6 and baseBlock5. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.",
+      "rows_file": "runtime-selection-corpus.json"
+    }
+  },
+  "original_probe_sha256": {
+    "contexts": "0702ffb9f1620505e4c060ada4f150563d940d7f009d10dfdfafd59bf9744217",
+    "wear": "5a7ec865f4d8b143dc27678729b7121a22b5a264cb1742a27e74f383036afa8f",
+    "exact_profile": "2386159c9c785c8aed0d010e2784f845f53083aa16f06357b77592509f0b065f"
+  },
+  "contract": {
+    "schema_version": 1,
+    "scope": "Independent native selected-shield consequence contract; World integration inputs, not a normal-input scenario.",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "exact_profile": {
+      "shield_condition": 40,
+      "early_blocking_wear": 7.5,
+      "armor_novice_multiplier": 1.5,
+      "condition_after_first_wear": 28.75,
+      "later_raw_armor_wear": 45,
+      "blocked_fraction": 0.5,
+      "condition_after_second_wear": 0,
+      "requires_attacker_action": 6,
+      "requires_attacker_base_block_below": 50,
+      "expected_condition_for_transaction_validation": 40,
+      "sound_material": "shield material captured before later wear"
+    },
+    "outcomes": {
+      "active_worn_player_or_armor_flag_0x400": "retain and unequip",
+      "active_worn_ordinary_npc": "one drop and notification",
+      "zero_body_armor": "remains equipped"
+    },
+    "normal_input_acceptance": false
+  },
+  "world_tests": [
+    "LaterSelectedShieldWearMergesBreakAndPreservesEarlierSoundAndExpectedCondition",
+    "LaterSelectedNpcShieldBreakPublishesOneBodyAndRollsBackMergedWearAndRandomOnFailure"
+  ],
+  "retained_normal01": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-integration-01/normal01-failures.json",
+    "sha256": "96db17a66c1ea97c19592a9dc8e4d908348404077236e7195fc6bc72ad6f4bc1",
+    "result": {
+      "executed": 1737,
+      "failures": [
+        {
+          "suite": "OblivionWorldTest",
+          "name": "LaterSelectedShieldWearMergesBreakAndPreservesEarlierSoundAndExpectedCondition",
+          "failure": [
+            "unknown file\nC++ exception with description \"Dangling or mismatched TES4 native actor-value reference\" thrown in the test body.\n"
+          ]
+        },
+        {
+          "suite": "OblivionWorldTest",
+          "name": "LaterSelectedNpcShieldBreakPublishesOneBodyAndRollsBackMergedWearAndRandomOnFailure",
+          "failure": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:26088\nValue of: resolved\n  Actual: false\nExpected: true\nGoogle Test trace:\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:26046: false\n/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:26045: false\n"
+          ]
+        }
+      ],
+      "diagnosis": {
+        "snapshot": "captureNativeActorState captures all active actor values; new retained test omitted non-Player victim RuntimeReferenceState, so serialize correctly rejected a dangling actor. Add its authored reference to the snapshot.",
+        "factory": "installNativeLooseItemCapture authors an enchanted bow. Factory changes it to a blade but retains native enchantment950. New selected weapon-hit fixture must author an unenchanted attack blade; this is independent of the shield consequences.",
+        "production": "No production change required for these initial fixture failures; first run did not establish acceptance."
+      }
+    }
+  },
+  "retained_original_attempt01": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-break-oracle-01",
+    "status": "Insufficient branch coverage: current.4 broke in first wear; no later break. Preserved, not accepted for this branch."
+  },
+  "normal_input_reachability": {
+    "path": "build/oblivion-compat/m15/S4/native-selected-shield-integration-01/reachability-audit.json",
+    "sha256": "4b9ea8e200e9f85847612071b669982b3218c8daa559758f25e803bd34341af3",
+    "result": {
+      "status": "Open: normal-input reachability is unproved.",
+      "native_gate": "Actual5FFC3D queries attacker EDI through5E5670 and5F23B0; later shield wear requires attacker action6 and baseBlock below50.",
+      "current_controller": "CharacterController accepts held block before attack update and returns; releaseBlock runs before melee playback. OblivionCombatService::beginBlocking rejects a pending melee strike; bindMeleePlayback admits actions -1/2/3, not6.",
+      "tests": "World rule and compound publication tests may supply the native process context through the actual service API; they do not claim a normal-input hit while action6.",
+      "decision": "Preserve the native gate, implement complete consequence, and keep full S4 normal-input acceptance open. Do not manufacture a hit or mutate exercise state to claim E2E.",
+      "original_probe_receipts": {
+        "build/oblivion-compat/m15/S4/native-selected-shield-break-oracle-02/caller-report.json": "6b2779dc84ba6a28e09610a1dfaf5ae787e9da5652a20eb868f35610fd2c707e",
+        "build/oblivion-compat/m15/S4/native-selected-shield-break-oracle-02/coverage.json": "a3cead7f994146e0a143f5db42da6361677735e7e25a90b084ffa8ea1dc00add",
+        "build/oblivion-compat/m15/S4/native-selected-shield-runtime-oracle-01/runtime-selection-report.json": "d2de73ee973a785a766b37874112dc09661f660aeecd6b289988ecb7c74dde2c"
+      }
+    }
+  },
+  "warnings": [
+    "Test conditional combines zero with the persistent flag enum; compiler emits -Wextra. No warning-free claim."
+  ],
+  "limits": [
+    "Native helpers/caller execute with declared item/current/max/AV/settings/allocation/equipment/audio boundaries; no whole original game process or physical scene claim.",
+    "World tests exercise actual compound dropped-reference/render/physics publication and failure rollback; they do not establish normal-input hit reachability under attacker action6.",
+    "No new component implementation changed; prior full2938 component results belong to the pickup checkpoint and are not relabeled as this revision.",
+    "Sanitizer engine run uses detect_leaks=0; no leak-coverage claim."
+  ],
+  "full_M15S4_acceptance": false,
+  "normal_input_E2E_acceptance": false
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "scope": "Independent native selected-shield consequence contract; World integration inputs, not a normal-input scenario.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "exact_profile": {
+    "shield_condition": 40,
+    "early_blocking_wear": 7.5,
+    "armor_novice_multiplier": 1.5,
+    "condition_after_first_wear": 28.75,
+    "later_raw_armor_wear": 45,
+    "blocked_fraction": 0.5,
+    "condition_after_second_wear": 0,
+    "requires_attacker_action": 6,
+    "requires_attacker_base_block_below": 50,
+    "expected_condition_for_transaction_validation": 40,
+    "sound_material": "shield material captured before later wear"
+  },
+  "outcomes": {
+    "active_worn_player_or_armor_flag_0x400": "retain and unequip",
+    "active_worn_ordinary_npc": "one drop and notification",
+    "zero_body_armor": "remains equipped"
+  },
+  "normal_input_acceptance": false
+}
