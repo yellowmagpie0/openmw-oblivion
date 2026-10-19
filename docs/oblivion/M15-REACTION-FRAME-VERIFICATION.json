@@ -1,0 +1,261 @@
+{
+  "status": "Native melee retirement persistence and prepared service frames verified; CharacterController/contact integration and full M15S4 remain incomplete",
+  "code_state": {
+    "head": "d6444613ba348c64e07c1edd08c725eabe384838",
+    "source_fingerprint": "1a39e0fe98fd52075d80c4ebe51df69229f862e5a65d029136df3f86aad560a5"
+  },
+  "tested_source_sha256": {
+    "apps/components_tests/esm4/runtimestate.cpp": "742eaf2a12a7b80b1fa07a7ded5e781ec01e1e17c4cc7d5568d7ba3b4b007d31",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "3b089d2659a6ab48ebb8a4606fa359b7cae7d286320becaece29ce4a30883788",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "97d46c9ccb0c5d3c6d29429b16dcbfcfd020df2c32150704b5fd9d3736512fba",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "e7b9e4b138d936220807ff25dce3a46c40ec05540c12006c6b6cc9aa61e738a9",
+    "components/esm4/runtimestate.cpp": "4af28b32bc08bb570580ee2d6717a5173b86ef96ea3067a14c203bb240c0df03",
+    "components/esm4/runtimestate.hpp": "468c583bda5ee400763258b1498c6596cb9b6bd8b89b395d53c9713e903aebe3",
+    "scripts/tes4_runtime_state.py": "d9b6b6ecfacd9f6252e0682735a20a17b201dfb34d5b07ec8541ad5782cd43a3",
+    "scripts/tests/test_tes4_runtime_state.py": "71fa91239eafbf98df1148439290155b8c2bbb8c19e3e838030a6ed689d35006"
+  },
+  "implemented": [
+    "Schema55 preserves an inactive owned reaction until the following actor-prefix recovery, separately from ordered outgoing sequence layers that can continue to fade after action recovery.",
+    "C++ and Python codecs preserve sequence timing, retirement duration/optional absolute anchor, signed zero and outgoing order. Legacy promotion adds no reaction, fade timer or outgoing layer. Anchored outgoing retirement requires initialized timing.",
+    "Contact preparation accepts an explicitly supplied outgoing strike only when its cause, group, displayed time and existing native timing match the replaced strike. Publication shares the existing atomic resources/action/RNG transaction.",
+    "Prepared reaction frames stage actor-clock advancement, strict Start/inclusive End checks, native manager timing and retirement. Positive retirement anchors on the manager update and becomes inactive at its stored end; nonpositive retirement deactivates immediately. Outgoing expiry removes only the detached layer.",
+    "Commit rejects stale actor/life/melee/clock/action ownership and publishes without callbacks, allocation or RNG consumption. Prefix recovery releases the owned action, retaining BlockHit action6 only with an actual BlockIdle supplied by the caller."
+  ],
+  "build_checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-frame-normal-02/verification.json",
+      "sha256": "3a4b479817bb703d80eb396936823ae4967f3b77fe41d3d168ff42448d64c3e8",
+      "results": {
+        "components": {
+          "executed": 2948,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "754448e84e17120a55469cd6ec02c9605954c8e81d24b5c0b12e720c2dbab516",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "16d3f4c4a52a3adfd37e4f24a7caee1ef5106a08ed829ddcf2cba0a10b941833",
+          "inventory_sha256": "a668d9b158a6e57ff601062ccda01e14d8c5b77dc0418e23f7526a5278ebd1e0",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1746,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f29c86067d454ef2c11d169942904bb284a317df33f5f26e59070a144309ff01",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9e4b42edfcbcc79a67a87c99747f00b38848cbd1f916bd5e03ecc90ac5290ac6",
+          "inventory_sha256": "99ebcb908746a025ec37fd1b25e9cbf565be96da40b63fd0d002ea95765d6fcc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 329,
+          "passed": true,
+          "log_sha256": "4a2edc8384cf2a5aff745cdf00e6c6ca77b73efaa07e78574e399dcaba1b60cc"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-frame-sanitized-02/verification.json",
+      "sha256": "d6322340e90c7b266b815d4d4280e35d57175b8a17931027a1c2891139515f2a",
+      "results": {
+        "sanitize": {
+          "executed": 801,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "35483f003eca6aa87f2f2d5164bb360c3a883d777f76109e8837198d8eb4caa5",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "05a57a040c8e54965f69e9eb73137d14ed699585e4b98ecef0bbf11692610c0b",
+          "inventory_sha256": "4594eec42a74fffe8f45c492ba6f927fcc17fb2729e3ff2d019fc007ca69735e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1746,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3b808f67c7b10a7292da025380ff90b1b2ae63c2cbfbfad5235ee88eb0a88d82",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f9e5980338617282368d14def86e938fbb5beaa1e1d2cc8108b9fe5fe13abd51",
+          "inventory_sha256": "99ebcb908746a025ec37fd1b25e9cbf565be96da40b63fd0d002ea95765d6fcc",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "source_unchanged_during_each_check": true,
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "warning_free": false,
+  "cross_language": [
+    {
+      "profile": "normal",
+      "path": "build/oblivion-compat/m15/S4/native-reaction-frame-normal-02/cross-language55.json",
+      "sha256": "df374009a3a79af200d368c8c63ce0ff69fd9ccd092c933a27cb7a0bf5eb2833",
+      "result": {
+        "passed": true,
+        "fixtures": [
+          {
+            "fixture": "reaction55_unanchored",
+            "bytes": 2086,
+            "sha256": "8c881223eb5efe87c0e33c863474c110ad1b045bb44520fd7fe944a61e6fa13a",
+            "byte_and_json_roundtrip": true
+          },
+          {
+            "fixture": "reaction55_anchored",
+            "bytes": 2094,
+            "sha256": "3cc0f3e5a84d7d928419ecc351e85b1e0687d324167e040339664c3fe34f2843",
+            "byte_and_json_roundtrip": true
+          }
+        ],
+        "scope": "C++ binary and canonical JSON decoded and re-encoded by Python; exact normal/instrumented agreement; no application runtime acceptance"
+      }
+    },
+    {
+      "profile": "sanitized",
+      "path": "build/oblivion-compat/m15/S4/native-reaction-frame-sanitized-02/cross-language55.json",
+      "sha256": "df374009a3a79af200d368c8c63ce0ff69fd9ccd092c933a27cb7a0bf5eb2833",
+      "result": {
+        "passed": true,
+        "fixtures": [
+          {
+            "fixture": "reaction55_unanchored",
+            "bytes": 2086,
+            "sha256": "8c881223eb5efe87c0e33c863474c110ad1b045bb44520fd7fe944a61e6fa13a",
+            "byte_and_json_roundtrip": true
+          },
+          {
+            "fixture": "reaction55_anchored",
+            "bytes": 2094,
+            "sha256": "3cc0f3e5a84d7d928419ecc351e85b1e0687d324167e040339664c3fe34f2843",
+            "byte_and_json_roundtrip": true
+          }
+        ],
+        "scope": "C++ binary and canonical JSON decoded and re-encoded by Python; exact normal/instrumented agreement; no application runtime acceptance"
+      }
+    }
+  ],
+  "service_case": "OblivionWorldTest.ReactionFramesRetainOutgoingFadeAndRecoverActionOnlyOnFollowingPrefix",
+  "service_case_scope": "BlockHit/Recoil/Stagger, zero and positive fade, initial outgoing strike before first manager update, frozen clock, stale prepared frame, save/restore during retirement and after deactivation, following-prefix action recovery, continuing outgoing fade, unchanged ledger/RNG. Synthetic world fixtures; not application runtime acceptance.",
+  "independent_rule_provenance": [
+    "docs/oblivion/M15-REACTION-SLOT-VERIFICATION.json",
+    "docs/oblivion/M15-NATIVE-SEQUENCE-BLEND-VERIFICATION.json"
+  ],
+  "supplemental_native_activation_boundary": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/active-sequence-reactivation-verification.json",
+    "sha256": "b4183b186eefec38e2ffef239fa6455ee39842059f0c2960b0af9ca3fe72d394",
+    "script": "build/oblivion-compat/m15/S4/native-reaction-lifecycle-review-01/active-sequence-reactivation-probe.py",
+    "script_sha256": "e889be4ef63d8228fb12adccd9d08d9a0ad12c3ed7a18a22eb7a6c632b7c5319",
+    "result": {
+      "passed": true,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x6c9ba0",
+      "cases": [
+        {
+          "state": 1,
+          "fpcw": 639,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 1,
+          "fpcw": 895,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 2,
+          "fpcw": 639,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 2,
+          "fpcw": 895,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 3,
+          "fpcw": 639,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 3,
+          "fpcw": 895,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 4,
+          "fpcw": 639,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 4,
+          "fpcw": 895,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 5,
+          "fpcw": 639,
+          "returned_false": true,
+          "sequence_unchanged": true
+        },
+        {
+          "state": 5,
+          "fpcw": 895,
+          "returned_false": true,
+          "sequence_unchanged": true
+        }
+      ],
+      "scope": "Original activation entry rejects every supplied nonzero sequence state before modifying sequence storage. No stubs or intercepted calls. Does not establish cached group resolution, caller deactivation, reaction replacement or gameplay behavior."
+    },
+    "production_comparison": false
+  },
+  "earlier_checks": [
+    "native-reaction-frame-normal-01 passed before the additional anchored-timing validation.",
+    "native-reaction-frame-sanitized-01 and native-reaction-frame-engine-sanitized-01 passed before that validation. Final02 reports above supersede their source fingerprints."
+  ],
+  "remaining": [
+    "CharacterController does not yet consume the prepared reaction frames, recover inactive actions at actor prefix, project the ordered sequence layers or clear them on interruption.",
+    "Normal contact adapters do not yet create reaction/outgoing descriptors. ReactionOnly and Expert/Master guards remain. Repeated reaction activation, cached resolution and native variant/RNG selection are not implemented by this checkpoint.",
+    "Retirement duration and raw sequence metadata are explicit caller inputs. This does not implement custom original INI import or native group resolution.",
+    "No new application course, normal-input reaction acceptance or fresh-process in-action restart is claimed. Full S4 mastery/effect/control/view/FPS and other audit gates remain open."
+  ],
+  "full_m15s4_delivered": false
+}

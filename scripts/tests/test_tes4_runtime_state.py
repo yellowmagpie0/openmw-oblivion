@@ -2246,6 +2246,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_melee_ai(migrated)
         state_io._upgrade_power_melee_phases(migrated)
         state_io._upgrade_melee_reactions(migrated)
+        state_io._upgrade_melee_retirement(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
@@ -3024,6 +3025,57 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         for cut in range(len(payload)):
             with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
                 state_io.decode_payload(payload[:cut])
+
+    def test_reaction55_preserves_inactive_action_and_ordered_outgoing_sequences(self):
+        for anchored in (False, True):
+            state = self.reaction_state()
+            state_io._upgrade_melee_retirement(state)
+            state["schema_version"] = 55
+            reaction = state["native_melee_states"][0]["reaction"]
+            reaction["sequence_timing"].update(offset=-0., ease_start=.25, last_input=.5,
+                                               weighted_time=.5, output_time=.5)
+            reaction.update(inactive=True, started=True, animation_time=.5)
+            reaction["retirement"] = {"duration": .125, "start_clock": .5}
+            state["native_animation_clocks"][0]["clock"] = .625
+            outgoing = {"contact_id": 3, "animation_group": "handtohandattackleft", "animation_time": .25,
+                        "sequence_timing": copy.deepcopy(reaction["sequence_timing"]),
+                        "retirement": {"duration": .25, "start_clock": .5 if anchored else None}}
+            melee = state["native_melee_states"][0]
+            melee["retiring_sequences"] = [outgoing, copy.deepcopy(outgoing)]
+            melee["retiring_sequences"][1]["animation_group"] = "handtohandrecoil"
+            payload = state_io.encode_payload(state)
+            loaded = state_io.decode_payload(payload)
+            self.assertEqual(state_io.encode_payload(loaded), payload)
+            self.assertEqual(loaded["native_melee_states"], state["native_melee_states"])
+            self.assertEqual(loaded["physical_actions"], state["physical_actions"])
+            self.assertEqual(struct.pack("<f", loaded["native_melee_states"][0]["reaction"]["sequence_timing"]["offset"]),
+                             bytes.fromhex("00000080"))
+            mutations = [lambda s: s.update(schema_version=54),
+                         lambda s: s["native_animation_clocks"][0].update(clock=.5),
+                         lambda s: s["native_melee_states"][0]["reaction"].update(inactive=1),
+                         lambda s: s["native_melee_states"][0]["retiring_sequences"][0].update(contact_id=1),
+                         lambda s: s["native_melee_states"][0]["retiring_sequences"][0]["retirement"].update(duration=0),
+                         lambda s: s["native_melee_states"][0]["retiring_sequences"][0]["sequence_timing"].update(easing=True)]
+            for mutate in mutations:
+                bad = copy.deepcopy(state); mutate(bad)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+            uninitialized = copy.deepcopy(state)
+            sequence = uninitialized["native_melee_states"][0]["retiring_sequences"][0]
+            sequence["sequence_timing"].update(offset=None, ease_start=None, last_input=None)
+            if anchored:
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(uninitialized)
+            sequence["retirement"]["start_clock"] = None
+            self.assertEqual(state_io.decode_payload(state_io.encode_payload(uninitialized))["native_melee_states"],
+                             uninitialized["native_melee_states"])
+
+    def test_reaction55_legacy_upgrade_adds_no_timer_or_pose(self):
+        state = self.reaction_state()
+        state_io._upgrade_melee_retirement(state)
+        state["schema_version"] = 55
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertFalse(loaded["native_melee_states"][0]["reaction"]["inactive"])
+        self.assertEqual(loaded["native_melee_states"][0]["retiring_sequences"], [])
+        self.assertEqual(loaded["native_animation_clocks"], state["native_animation_clocks"])
 
     def test_reaction54_legacy_promotion_preserves_unowned_raw_actions(self):
         for action in (6, 7, 8):

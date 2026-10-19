@@ -42,6 +42,18 @@ namespace MWMechanics
     class NpcStats;
     class OblivionCombatService;
 
+    struct OblivionMeleeSequenceMetadata
+    {
+        std::string_view mGroup;
+        float mFrequency = 1;
+        float mBegin = 0, mEnd = 0;
+        float mTimelineBegin = 0, mTimelineEnd = 0;
+        std::optional<std::array<float, 2>> mReactionKeys;
+        float mRetirementDuration = 0;
+        float rendererTime(float time) const;
+        void validate() const;
+    };
+
     // Keeps first-time lifecycle adoption inside a writer's transaction.
     // Prepare before adoption; commit only after the native writer succeeds.
     class OblivionActorLifeAdoption
@@ -234,6 +246,8 @@ namespace MWMechanics
         std::optional<OblivionKnockbackContact> mKnockback{};
         std::optional<ESM4::RuntimeMeleeReaction> mAttackerReaction{};
         std::optional<ESM4::RuntimeMeleeReaction> mVictimReaction{};
+        std::optional<ESM4::RuntimeRetiringMeleeSequence> mAttackerRetiringSequence{};
+        std::optional<ESM4::RuntimeRetiringMeleeSequence> mVictimRetiringSequence{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -494,6 +508,31 @@ namespace MWMechanics
         // Cancels an owned reaction without consuming its causal contact again.
         // A foreign process action is preserved. Renderer release is external.
         bool cancelMeleeReaction(std::uint64_t contact, const ESM::FormKey& actor) noexcept;
+        class PreparedMeleeReactionFrame
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedMeleeReactionFrame(std::unique_ptr<Data> data);
+            friend class OblivionCombatService;
+        public:
+            ~PreparedMeleeReactionFrame();
+            PreparedMeleeReactionFrame(const PreparedMeleeReactionFrame&) = delete;
+            PreparedMeleeReactionFrame& operator=(const PreparedMeleeReactionFrame&) = delete;
+            bool isValid() const noexcept;
+            float clock() const;
+            const ESM4::RuntimeMeleeState& state() const;
+        };
+        // A complete candidate manager update. The renderer validates/projects
+        // the candidate before the service publishes its clock and sequences.
+        // duration0 also updates outgoing layers after a strike advanced the
+        // shared actor clock; it must not advance that clock a second time.
+        std::unique_ptr<PreparedMeleeReactionFrame> prepareMeleeReactionFrame(const ESM::FormKey& actor,
+            float duration, std::span<const OblivionMeleeSequenceMetadata> metadata, bool freezeClock = false);
+        bool commitMeleeReactionFrame(PreparedMeleeReactionFrame& frame) noexcept;
+        // Actor prefix, before this frame's animation manager. No new contact
+        // or ledger consumption. BlockHit can keep an actual cached BlockIdle.
+        bool recoverInactiveMeleeReaction(const ESM::FormKey& actor, bool blockIdlePresent);
+        void clearRetiringMeleeSequences(const ESM::FormKey& actor) noexcept;
         // No allocation or Alive precondition: safe after death/life cancellation.
         void clearMeleeInput(const ESM::FormKey& actor) noexcept;
         std::uint64_t allocateAction();

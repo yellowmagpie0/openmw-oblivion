@@ -4158,3 +4158,55 @@ TEST(ESM4RuntimeState, Reaction54DoesNotInventLegacySequenceOrClockOwnership)
         EXPECT_EQ(current.mNativeActorValues.front().mProcessAction, action);
     }
 }
+
+TEST(ESM4RuntimeState, Reaction55PreservesInactiveActionAndOrderedOutgoingSequences)
+{
+    for (bool anchored : {false, true})
+    {
+        auto state = reactionState(); state.mVersion = 55;
+        const auto actor = state.mReferences.front().mKey;
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        auto& reaction = *melee.mReaction;
+        reaction.mSequenceTiming = ESM4::updateMeleeSequenceTiming({}, 0, 1, 0, 1);
+        reaction.mSequenceTiming.mOffset = -0.f;
+        reaction.mSequenceTiming.mEaseStart = .25f;
+        reaction.mSequenceTiming.mLastInput = .5f;
+        reaction.mSequenceTiming.mWeightedTime = .5f;
+        reaction.mSequenceTiming.mOutputTime = .5f;
+        reaction.mAnimationTime = .5f; reaction.mStarted = true; reaction.mInactive = true;
+        reaction.mRetirement = ESM4::RuntimeReactionRetirement{.125f, .5f};
+        state.mNativeAnimationClocks.at(actor) = .625f;
+        ESM4::RuntimeRetiringMeleeSequence outgoing{3, "handtohandattackleft", .25f,
+            reaction.mSequenceTiming, {.25f, anchored ? std::optional<float>(.5f) : std::nullopt}};
+        melee.mRetiringSequences = {outgoing, outgoing};
+        melee.mRetiringSequences.back().mAnimationGroup = "handtohandrecoil";
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(loaded.mPhysicalActions, state.mPhysicalActions);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_TRUE(std::signbit(*loaded.mNativeMeleeStates.at(actor).mReaction->mSequenceTiming.mOffset));
+        const std::string prefix = anchored ? "reaction55_anchored" : "reaction55_unanchored";
+        std::string wire; constexpr char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+        RecordProperty(prefix + "_hex", wire);
+        RecordProperty(prefix + "_json", state.canonicalJson());
+        auto bad = state; bad.mVersion = 54;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        bad = state; bad.mNativeAnimationClocks.at(actor) = .5f;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        bad = state; bad.mNativeMeleeStates.at(actor).mRetiringSequences.front().mContactId = 1;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        bad = state; bad.mNativeMeleeStates.at(actor).mRetiringSequences.front().mRetirement.mDuration = 0;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        // A detached strike can be interrupted before its first manager update.
+        melee.mRetiringSequences.front().mSequenceTiming = {};
+        if (anchored)
+        {
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+            melee.mRetiringSequences.front().mRetirement.mStartClock.reset();
+        }
+        EXPECT_NO_THROW(state.serializeBinary());
+    }
+}

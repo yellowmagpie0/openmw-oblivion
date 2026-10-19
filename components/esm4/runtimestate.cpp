@@ -914,6 +914,15 @@ namespace ESM4
         throw std::runtime_error("Invalid TES4 melee reaction kind");
     }
 
+    static void validateMeleeRetirement(const RuntimeReactionRetirement& retirement)
+    {
+        if (!std::isfinite(retirement.mDuration) || retirement.mDuration <= 0
+            || (retirement.mStartClock && (!std::isfinite(*retirement.mStartClock)
+                || *retirement.mStartClock < 0
+                || !std::isfinite(static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration)))))
+            throw std::runtime_error("Invalid TES4 melee sequence retirement interval");
+    }
+
     void RuntimeMeleeReaction::validate() const
     {
         (void)processAction();
@@ -922,16 +931,27 @@ namespace ESM4
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
             throw std::runtime_error("Invalid TES4 melee reaction identity or animation");
         validateMeleeTiming(mSequenceTiming);
+        if (mInactive && (mSequenceTiming.mEasing || !mSequenceTiming.mOffset
+                || (mRetirement && !mRetirement->mStartClock)))
+            throw std::runtime_error("Invalid inactive TES4 melee reaction");
         if (mRetirement)
         {
-            const auto& retirement = *mRetirement;
-            if (!std::isfinite(retirement.mDuration) || retirement.mDuration <= 0
-                || mSequenceTiming.mEasing || !mSequenceTiming.mOffset
-                || (retirement.mStartClock && (!std::isfinite(*retirement.mStartClock)
-                    || *retirement.mStartClock < 0
-                    || !std::isfinite(static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration)))))
+            validateMeleeRetirement(*mRetirement);
+            if (mSequenceTiming.mEasing || !mSequenceTiming.mOffset)
                 throw std::runtime_error("Invalid TES4 melee reaction retirement");
         }
+    }
+
+    void RuntimeRetiringMeleeSequence::validate() const
+    {
+        if (mContactId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
+            || mAnimationGroup.find('\0') != std::string::npos
+            || !std::isfinite(mAnimationTime) || mAnimationTime < 0 || mSequenceTiming.mEasing)
+            throw std::runtime_error("Invalid TES4 retiring melee sequence");
+        validateMeleeTiming(mSequenceTiming);
+        validateMeleeRetirement(mRetirement);
+        if (mRetirement.mStartClock && !mSequenceTiming.mOffset)
+            throw std::runtime_error("Uninitialized TES4 retiring sequence with anchored retirement");
     }
 
     void RuntimeMeleeState::validate() const
@@ -940,6 +960,9 @@ namespace ESM4
         if (mStrike) mStrike->validate();
         if (mAiIntent) mAiIntent->validate();
         if (mReaction) mReaction->validate();
+        if (mRetiringSequences.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Too many TES4 retiring melee sequences");
+        for (const auto& sequence : mRetiringSequences) sequence.validate();
         if (mStrike && mReaction)
             throw std::runtime_error("TES4 melee strike and reaction cannot own playback together");
     }
@@ -1235,7 +1258,7 @@ namespace ESM4
                 throw std::runtime_error("Invalid or dangling TES4 native animation clock");
         std::map<ESM::FormKey, const RuntimeActorValues*> reactionValues;
         if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
-                [](const auto& entry) { return entry.second.mReaction.has_value(); }))
+                [](const auto& entry) { return entry.second.mReaction || !entry.second.mRetiringSequences.empty(); }))
             for (const auto& values : mNativeActorValues) reactionValues.emplace(values.mActor, &values);
         std::set<std::uint64_t> meleeIds;
         for (const auto& [actor, melee] : mNativeMeleeStates)
@@ -1264,6 +1287,19 @@ namespace ESM4
                     || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active
                     || values->second->mProcessAction != reaction.processAction())
                     throw std::runtime_error("Unowned, replaying or mismatched TES4 melee reaction");
+                if (reaction.mInactive && (mVersion < 55
+                        || (reaction.mRetirement && mNativeAnimationClocks.at(actor)
+                            < static_cast<float>(double(*reaction.mRetirement->mStartClock)
+                                + reaction.mRetirement->mDuration))))
+                    throw std::runtime_error("Premature or unsupported TES4 melee reaction deactivation");
+            }
+            for (const auto& sequence : melee.mRetiringSequences)
+            {
+                const auto values = reactionValues.find(actor);
+                if (mVersion < 55 || !mNativeAnimationClocks.contains(actor)
+                    || sequence.mContactId >= mPhysicalActions.mNext || pendingActions.contains(sequence.mContactId)
+                    || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active)
+                    throw std::runtime_error("Unowned or replaying TES4 retiring melee sequence");
             }
             if (melee.mStrike)
             {
@@ -2167,6 +2203,30 @@ namespace ESM4
                             if (reaction.mRetirement->mStartClock)
                                 writer.floating(*reaction.mRetirement->mStartClock);
                         }
+                        if (mVersion >= 55) writer.integer<std::uint8_t>(reaction.mInactive);
+                    }
+                }
+                if (mVersion >= 55)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(melee.mRetiringSequences.size()));
+                    for (const auto& sequence : melee.mRetiringSequences)
+                    {
+                        writer.integer(sequence.mContactId);
+                        writer.string(sequence.mAnimationGroup);
+                        writer.floating(sequence.mAnimationTime);
+                        const auto& timing = sequence.mSequenceTiming;
+                        writer.integer<std::uint8_t>(timing.mEasing);
+                        for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+                        {
+                            writer.integer<std::uint8_t>(value.has_value());
+                            if (value) writer.floating(*value);
+                        }
+                        writer.floating(timing.mEaseEnd);
+                        writer.floating(timing.mWeightedTime);
+                        writer.floating(timing.mOutputTime);
+                        writer.floating(sequence.mRetirement.mDuration);
+                        writer.integer<std::uint8_t>(sequence.mRetirement.mStartClock.has_value());
+                        if (sequence.mRetirement.mStartClock) writer.floating(*sequence.mRetirement.mStartClock);
                     }
                 }
             }
@@ -3082,7 +3142,30 @@ namespace ESM4
                         if (boolean()) retirement.mStartClock = reader.float32();
                         reaction.mRetirement = retirement;
                     }
+                    if (result.mVersion >= 55) reaction.mInactive = boolean();
                     melee.mReaction = std::move(reaction);
+                }
+                if (result.mVersion >= 55)
+                {
+                    const auto sequences = reader.count();
+                    melee.mRetiringSequences.reserve(sequences);
+                    for (std::uint32_t j = 0; j < sequences; ++j)
+                    {
+                        RuntimeRetiringMeleeSequence sequence;
+                        sequence.mContactId = reader.integer<std::uint64_t>();
+                        sequence.mAnimationGroup = reader.string();
+                        sequence.mAnimationTime = reader.float32();
+                        auto& timing = sequence.mSequenceTiming;
+                        timing.mEasing = boolean();
+                        for (auto* value : {&timing.mOffset, &timing.mEaseStart, &timing.mLastInput})
+                            if (boolean()) *value = reader.float32();
+                        timing.mEaseEnd = reader.float32();
+                        timing.mWeightedTime = reader.float32();
+                        timing.mOutputTime = reader.float32();
+                        sequence.mRetirement.mDuration = reader.float32();
+                        if (boolean()) sequence.mRetirement.mStartClock = reader.float32();
+                        melee.mRetiringSequences.push_back(std::move(sequence));
+                    }
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
@@ -4147,8 +4230,43 @@ namespace ESM4
                             optional("start_clock", reaction.mRetirement->mStartClock);
                             stream << '}';
                         }
+                        if (mVersion >= 55) stream << ",\"inactive\":" << (reaction.mInactive ? "true" : "false");
                         stream << '}';
                     }
+                }
+                if (mVersion >= 55)
+                {
+                    stream << ",\"retiring_sequences\":[";
+                    bool firstSequence = true;
+                    for (const auto& sequence : melee.mRetiringSequences)
+                    {
+                        if (!firstSequence) stream << ',';
+                        firstSequence = false;
+                        const auto floating = [&](float value) {
+                            if (value == 0 && std::signbit(value)) stream << "-0.0";
+                            else stream << std::setprecision(17) << value;
+                        };
+                        const auto optional = [&](std::string_view name, std::optional<float> value) {
+                            stream << ",\"" << name << "\":";
+                            if (value) floating(*value);
+                            else stream << "null";
+                        };
+                        stream << "{\"contact_id\":" << sequence.mContactId
+                            << ",\"animation_group\":\"" << escapeJson(sequence.mAnimationGroup)
+                            << "\",\"animation_time\":";
+                        floating(sequence.mAnimationTime);
+                        const auto& timing = sequence.mSequenceTiming;
+                        stream << ",\"sequence_timing\":{\"easing\":" << (timing.mEasing ? "true" : "false");
+                        optional("offset", timing.mOffset); optional("ease_start", timing.mEaseStart);
+                        optional("last_input", timing.mLastInput);
+                        stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                        stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                        stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                        stream << "},\"retirement\":{\"duration\":"; floating(sequence.mRetirement.mDuration);
+                        optional("start_clock", sequence.mRetirement.mStartClock);
+                        stream << "}}";
+                    }
+                    stream << ']';
                 }
                 stream << '}';
             }

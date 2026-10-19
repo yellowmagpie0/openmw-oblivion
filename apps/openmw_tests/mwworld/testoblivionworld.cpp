@@ -26373,3 +26373,76 @@ TEST(OblivionWorldTest, BlockingEquipmentWithdrawalRetiresExistingReactionInTheC
     saved.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
     ASSERT_NO_THROW(saved.serializeBinary());
 }
+
+TEST(OblivionWorldTest, ReactionFramesRetainOutgoingFadeAndRecoverActionOnlyOnFollowingPrefix)
+{
+    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil,
+             ESM4::MeleeReactionKind::Stagger})
+        for (float fade : {0.f, .125f})
+        {
+            NativeWorldFixture fixture; auto& world = fixture.mWorld;
+            const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+            ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+            auto& service = *world.getOblivionCombatService();
+            const auto a = attacker.getCellRef().getFormKey(), v = victim.getCellRef().getFormKey();
+            service.initializeConstructedActorProcess(a); service.initializeConstructedActorProcess(v);
+            const auto id = service.beginMeleeStrike(a, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+            ASSERT_TRUE(service.bindMeleePlayback(id, a));
+            MWMechanics::OblivionPhysicalContactDeltas contact;
+            contact.mAttackerReaction = ESM4::RuntimeMeleeReaction{id, kind, "reaction"};
+            contact.mAttackerRetiringSequence = ESM4::RuntimeRetiringMeleeSequence{
+                id, "handtohandattackleft", 0, {}, {.5f, {}}};
+            ASSERT_TRUE(world.commitOblivionPhysicalContact(id, attacker, victim, contact));
+            const auto snapshot = [&] {
+                auto s = captureNativeActorState(fixture, attacker);
+                s.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front()); return s;
+            };
+            const auto initial = snapshot();
+            const std::array<MWMechanics::OblivionMeleeSequenceMetadata, 2> sources{{
+                {"reaction", 1, 0, 1, 0, 1, std::array<float, 2>{0, .25f}, fade},
+                {"handtohandattackleft", 1, 0, 1, 0, 1, {}, .5f}}};
+            auto tick = [&](float delta, bool freeze = false) {
+                const auto before = snapshot().serializeBinary();
+                auto frame = service.prepareMeleeReactionFrame(a, delta, sources, freeze);
+                EXPECT_TRUE(frame); if (!frame) return;
+                EXPECT_TRUE(frame->isValid()); EXPECT_EQ(snapshot().serializeBinary(), before);
+                EXPECT_TRUE(service.commitMeleeReactionFrame(*frame));
+                EXPECT_FALSE(frame->isValid()); EXPECT_FALSE(service.commitMeleeReactionFrame(*frame));
+            };
+            tick(.125f);
+            EXPECT_FALSE(service.findMeleeState(a)->mReaction->mStarted); // Strict Start guard precedes manager init.
+            EXPECT_EQ(service.findMeleeState(a)->mRetiringSequences.front().mRetirement.mStartClock, .125f);
+            tick(1, true); EXPECT_EQ(service.animationClock(a), .125f);
+            auto stale = service.prepareMeleeReactionFrame(a, .125f, sources);
+            ASSERT_TRUE(stale); service.advanceAnimationClock(a, .125f);
+            EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(service.commitMeleeReactionFrame(*stale));
+            tick(0);
+            EXPECT_TRUE(service.findMeleeState(a)->mReaction->mStarted);
+            tick(.125f); // Inclusive End; positive fade anchors on this manager pass.
+            EXPECT_EQ(service.findMeleeState(a)->mReaction->mInactive, fade == 0);
+            if (fade > 0)
+            {
+                EXPECT_EQ(service.findMeleeState(a)->mReaction->mRetirement->mStartClock, .375f);
+                const auto saved = snapshot();
+                service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+                EXPECT_EQ(snapshot().serializeBinary(), saved.serializeBinary());
+                tick(.125f);
+            }
+            ASSERT_TRUE(service.findMeleeState(a)->mReaction->mInactive);
+            EXPECT_EQ(service.getProcessAction(a), (kind == ESM4::MeleeReactionKind::BlockHit ? 6 :
+                kind == ESM4::MeleeReactionKind::Recoil ? 7 : 8));
+            const auto inactive = snapshot();
+            service.restore(ESM4::RuntimeState::deserializeBinary(inactive.serializeBinary()), world.getStore());
+            EXPECT_EQ(snapshot().serializeBinary(), inactive.serializeBinary());
+            EXPECT_TRUE(service.recoverInactiveMeleeReaction(a, true));
+            EXPECT_EQ(service.getProcessAction(a), kind == ESM4::MeleeReactionKind::BlockHit ? 6 : -1);
+            EXPECT_FALSE(service.recoverInactiveMeleeReaction(a, true));
+            EXPECT_FALSE(service.findMeleeState(a)->mReaction);
+            ASSERT_EQ(service.findMeleeState(a)->mRetiringSequences.size(), 1u);
+            tick(.25f);
+            EXPECT_TRUE(service.findMeleeState(a)->mRetiringSequences.empty());
+            const auto end = snapshot();
+            EXPECT_EQ(end.mPhysicalActions, initial.mPhysicalActions);
+            EXPECT_EQ(end.mCombatRngState, initial.mCombatRngState);
+        }
+}

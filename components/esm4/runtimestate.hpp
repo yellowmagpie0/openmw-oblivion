@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 54;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 55;
 
     struct RuntimeContentIdentity
     {
@@ -572,9 +572,24 @@ namespace ESM4
         bool mStarted = false;
         MeleeSequenceTiming mSequenceTiming{};
         std::optional<RuntimeReactionRetirement> mRetirement = std::nullopt;
+        // v55: manager deactivation precedes the following actor-prefix
+        // action recovery. Preserve that interval across a save.
+        bool mInactive = false;
         std::int16_t processAction() const;
         void validate() const;
         friend bool operator==(const RuntimeMeleeReaction&, const RuntimeMeleeReaction&) = default;
+    };
+    struct RuntimeRetiringMeleeSequence
+    {
+        // Already consumed causal action. A strike and its resulting reaction
+        // can share a cause while remaining separate ordered sequence layers.
+        std::uint64_t mContactId = 0;
+        std::string mAnimationGroup;
+        float mAnimationTime = 0;
+        MeleeSequenceTiming mSequenceTiming{};
+        RuntimeReactionRetirement mRetirement{};
+        void validate() const;
+        friend bool operator==(const RuntimeRetiringMeleeSequence&, const RuntimeRetiringMeleeSequence&) = default;
     };
     struct RuntimeMeleeState
     {
@@ -584,6 +599,8 @@ namespace ESM4
         std::optional<RuntimeMeleeAiIntent> mAiIntent = std::nullopt;
         // v54: owns the selected sequence and its clock through blend retirement.
         std::optional<RuntimeMeleeReaction> mReaction = std::nullopt;
+        // v55: detached slots still contribute poses through manager retirement.
+        std::vector<RuntimeRetiringMeleeSequence> mRetiringSequences = {};
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

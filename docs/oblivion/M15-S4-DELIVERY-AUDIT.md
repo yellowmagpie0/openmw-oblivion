@@ -7721,3 +7721,44 @@ state until the following actor recovery, outgoing/replaced sequence persistence
 retirement, group/variant resolution and normal-input in-action restart remain
 open, along with the other S4 mastery/effect/control/view/FPS gates. No application
 runtime or full owned-reaction acceptance is claimed. **M15S4 is still incomplete.**
+
+
+## Native reaction retirement persistence and service-frame checkpoint
+
+Schema55 now distinguishes an inactive owned reaction awaiting the following
+actor-prefix recovery from ordered outgoing sequence layers that still fade.
+Both codecs retain raw timing, optional retirement anchors and signed zero.
+Legacy promotion creates no timer or layer. An anchored outgoing fade requires
+initialized timing; an interruption before the first manager update remains
+representable with an unanchored fade.
+
+Contact preparation can retain an explicitly supplied replaced strike after
+checking its source action, group, time and native timing. Prepared service
+frames stage the actor clock, strict Start/inclusive End checks, manager timing,
+retirement and outgoing expiry. Stale handles reject publication. Positive fades
+anchor on the manager update and become inactive at their stored end; nonpositive
+fades deactivate immediately. Action recovery is separate: BlockHit retains
+posture6 only when the caller supplies actual BlockIdle presence. These
+transitions consume no new action ID or RNG.
+
+Final normal checks pass **2,948 component, 1,746 engine and 329 Python tests**.
+ASan/UBSan checks pass **801 selected ESM4* component and 1,746 engine tests**.
+Exact inventories agree with no failures/skips; leak detection is disabled and
+existing compiler warnings remain. Normal and instrumented schema55 binary/JSON
+fixtures round-trip exactly through Python. The world service test covers all
+three reaction kinds, immediate/positive fade, freeze/stale preparation,
+save/restore during retirement and after deactivation, following-prefix recovery,
+continuing outgoing fade and unchanged action/RNG state. It uses synthetic world
+fixtures and does not establish normal-input application acceptance.
+
+`M15-REACTION-FRAME-VERIFICATION.json` pins final02 source fingerprints, binaries,
+inventories, XML and codec comparison receipts. Earlier01 checks passed before
+the final anchored-timing validation and are retained separately. A supplemental
+original-instruction probe confirms only that low-level activation refuses an
+already nonzero sequence state; cached resolution and caller replacement remain
+open. Existing guards against replacing an owned reaction remain.
+
+CharacterController and normal contact adapters do not yet consume these APIs
+or generate the descriptors. Sequence projection, actual group/variant/RNG
+selection, interruption handling and normal-input fresh-process reaction courses
+remain open, along with the other S4 gates. **M15S4 is still incomplete.**

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 54
+CURRENT_VERSION = 55
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1424,12 +1424,49 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     reaction_actors: set[str] = set()
     native_value_states = {entry["actor"]: entry for entry in native_actors}
     owner_map = {entry["id"]: entry["actor"] for entry in action_owners}
+    clock_values = {entry["actor"]: entry["clock"] for entry in state.get("native_animation_clocks", [])}
+    def retiring_sequence(sequence, actor):
+        fields = {"contact_id", "animation_group", "animation_time", "sequence_timing", "retirement"}
+        if not isinstance(sequence, dict) or set(sequence) != fields:
+            raise RuntimeStateError("Invalid TES4 retiring melee sequence fields")
+        identity = sequence["contact_id"]
+        if (type(identity) is not int or not 0 < identity < next_action or identity in seen_actions
+                or actor not in clock_actors or native_value_states[actor]["process"] != 1
+                or native_float(sequence["animation_time"]) < 0):
+            raise RuntimeStateError("Unowned or replaying TES4 retiring melee sequence")
+        group = sequence["animation_group"]
+        if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
+            raise RuntimeStateError("Invalid TES4 retiring melee group")
+        timing = sequence["sequence_timing"]
+        if (not isinstance(timing, dict)
+                or set(timing) != {"easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"}
+                or timing["easing"] is not False):
+            raise RuntimeStateError("Invalid TES4 retiring sequence timing")
+        optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
+        if any(v is None for v in optional) and not all(v is None for v in optional):
+            raise RuntimeStateError("Partial TES4 retiring sequence initialization")
+        for value in optional:
+            if value is not None: native_float(value)
+        for key in ("ease_end", "weighted_time", "output_time"): native_float(timing[key])
+        retirement = sequence["retirement"]
+        if (not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}
+                or native_float(retirement["duration"]) <= 0):
+            raise RuntimeStateError("Invalid TES4 outgoing retirement interval")
+        start = retirement["start_clock"]
+        if start is not None:
+            if timing["offset"] is None:
+                raise RuntimeStateError("Uninitialized TES4 retiring sequence with anchored retirement")
+            start = native_float(start)
+            if start < 0: raise RuntimeStateError("Invalid TES4 outgoing retirement clock")
+            native_float(start + native_float(retirement["duration"]))
     for entry in melee_states:
         fields = {"actor", "input", "strike"}
         if version >= 28:
             fields.add("ai_intent")
         if version >= 54:
             fields.add("reaction")
+        if version >= 55:
+            fields.add("retiring_sequences")
         if not isinstance(entry, dict) or set(entry) != fields:
             raise RuntimeStateError("Invalid TES4 melee state")
         actor = entry["actor"]
@@ -1459,6 +1496,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         reaction = entry.get("reaction")
         if reaction is not None:
             fields = {"contact_id", "kind", "animation_group", "animation_time", "started", "sequence_timing", "retirement"}
+            if version >= 55: fields.add("inactive")
             if version < 54 or not isinstance(reaction, dict) or set(reaction) != fields or strike is not None:
                 raise RuntimeStateError("Invalid or conflicting TES4 melee reaction")
             identity, kind = reaction["contact_id"], reaction["kind"]
@@ -1495,7 +1533,17 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     if start < 0:
                         raise RuntimeStateError("Invalid TES4 reaction retirement clock")
                     native_float(start + native_float(retirement["duration"]))
+            if version >= 55:
+                inactive = reaction["inactive"]
+                if type(inactive) is not bool or (inactive and (timing["easing"] or timing["offset"] is None
+                        or (retirement is not None and (retirement["start_clock"] is None
+                            or clock_values[actor] < native_float(native_float(retirement["start_clock"])
+                                + native_float(retirement["duration"])))))):
+                    raise RuntimeStateError("Invalid or premature inactive TES4 melee reaction")
             reaction_actors.add(actor)
+        if version >= 55:
+            for sequence in check_collection(entry["retiring_sequences"], "retiring melee sequences"):
+                retiring_sequence(sequence, actor)
         if strike is None:
             continue
         strike_fields = {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}
@@ -2106,7 +2154,21 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         retirement = {"duration": reader.unpack("<f"),
                                       "start_clock": reader.unpack("<f") if melee_boolean() else None}
                     reaction["retirement"] = retirement
+                    if version >= 55: reaction["inactive"] = melee_boolean()
                 entry["reaction"] = reaction
+            if version >= 55:
+                entry["retiring_sequences"] = []
+                for _ in range(reader.count()):
+                    sequence = {"contact_id": reader.unpack("<Q"), "animation_group": reader.string(),
+                                "animation_time": reader.unpack("<f")}
+                    timing = {"easing": melee_boolean()}
+                    for key in ("offset", "ease_start", "last_input"):
+                        timing[key] = reader.unpack("<f") if melee_boolean() else None
+                    for key in ("ease_end", "weighted_time", "output_time"): timing[key] = reader.unpack("<f")
+                    sequence["sequence_timing"] = timing
+                    sequence["retirement"] = {"duration": reader.unpack("<f"),
+                        "start_clock": reader.unpack("<f") if melee_boolean() else None}
+                    entry["retiring_sequences"].append(sequence)
             result["native_melee_states"].append(entry)
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
@@ -2637,6 +2699,24 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                         writer.pack("<B", int(retirement["start_clock"] is not None))
                         if retirement["start_clock"] is not None:
                             writer.pack("<f", retirement["start_clock"])
+                    if version >= 55: writer.pack("<B", int(reaction["inactive"]))
+            if version >= 55:
+                writer.pack("<I", len(entry["retiring_sequences"]))
+                for sequence in entry["retiring_sequences"]:
+                    writer.pack("<Q", sequence["contact_id"])
+                    writer.string(sequence["animation_group"])
+                    writer.pack("<f", sequence["animation_time"])
+                    timing = sequence["sequence_timing"]
+                    writer.pack("<B", int(timing["easing"]))
+                    for key in ("offset", "ease_start", "last_input"):
+                        value = timing[key]
+                        writer.pack("<B", int(value is not None))
+                        if value is not None: writer.pack("<f", value)
+                    for key in ("ease_end", "weighted_time", "output_time"): writer.pack("<f", timing[key])
+                    retirement = sequence["retirement"]
+                    writer.pack("<f", retirement["duration"])
+                    writer.pack("<B", int(retirement["start_clock"] is not None))
+                    if retirement["start_clock"] is not None: writer.pack("<f", retirement["start_clock"])
     if version >= 23:
         clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
         writer.pack("<I", len(clocks))
@@ -2945,6 +3025,19 @@ def _upgrade_melee_reactions(state: dict[str, Any]) -> None:
             entry["reaction"] = None
 
 
+def _upgrade_melee_retirement(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 55:
+        for entry in state.get("native_melee_states", []):
+            if entry.get("retiring_sequences"):
+                raise RuntimeStateError("Legacy TES4 save cannot carry retiring sequences")
+            entry["retiring_sequences"] = []
+            reaction = entry.get("reaction")
+            if reaction is not None:
+                if reaction.get("inactive", False) is not False:
+                    raise RuntimeStateError("Legacy TES4 save cannot carry inactive reaction ownership")
+                reaction["inactive"] = False
+
+
 def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 49:
         for entry in state.get("native_melee_states", []):
@@ -2961,6 +3054,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_phases(state)
     _upgrade_power_melee_phases(state)
     _upgrade_melee_reactions(state)
+    _upgrade_melee_retirement(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
@@ -3037,6 +3131,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_phases(result)
     _upgrade_power_melee_phases(result)
     _upgrade_melee_reactions(result)
+    _upgrade_melee_retirement(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)

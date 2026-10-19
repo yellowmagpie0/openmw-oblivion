@@ -1516,6 +1516,203 @@ namespace MWMechanics
         return true;
     }
 
+    void OblivionMeleeSequenceMetadata::validate() const
+    {
+        for (float value : {mFrequency, mBegin, mEnd, mTimelineBegin, mTimelineEnd, mRetirementDuration})
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite native melee sequence metadata");
+        if (mGroup.empty() || mFrequency <= 0 || mEnd < mBegin || mTimelineBegin < 0
+            || mTimelineEnd <= mTimelineBegin || !std::isfinite(mEnd - mBegin)
+            || !std::isfinite(mTimelineEnd - mTimelineBegin))
+            throw std::invalid_argument("invalid native melee sequence metadata");
+        if (mReactionKeys) (void)ESM4::advanceReactionSlot(false, 0, 0, *mReactionKeys);
+    }
+
+    float OblivionMeleeSequenceMetadata::rendererTime(float time) const
+    {
+        if (time <= mBegin) return mTimelineBegin;
+        if (time >= mEnd) return mTimelineEnd;
+        const float fraction = (time - mBegin) / (mEnd - mBegin);
+        return mTimelineBegin + fraction * (mTimelineEnd - mTimelineBegin);
+    }
+
+    struct OblivionCombatService::PreparedMeleeReactionFrame::Data
+    {
+        OblivionCombatService* mOwner = nullptr;
+        std::weak_ptr<const char> mIdentity;
+        ESM::FormKey mActor;
+        ESM4::RuntimeActorValues mValues;
+        ESM4::RuntimeActorLife mLife;
+        ESM4::RuntimeMeleeState mExpected, mNext;
+        float mClock = 0, mNextClock = 0;
+        bool mCommitted = false;
+    };
+
+    OblivionCombatService::PreparedMeleeReactionFrame::PreparedMeleeReactionFrame(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    OblivionCombatService::PreparedMeleeReactionFrame::~PreparedMeleeReactionFrame() = default;
+
+    bool OblivionCombatService::PreparedMeleeReactionFrame::isValid() const noexcept
+    {
+        if (!mData || mData->mCommitted || mData->mIdentity.expired()) return false;
+        const auto& data = *mData;
+        const auto& owner = *data.mOwner;
+        const auto* state = owner.findMeleeState(data.mActor);
+        const auto* values = owner.findActorValues(data.mActor);
+        const auto* life = owner.findActorLife(data.mActor);
+        const auto clock = owner.mAnimationClocks.find(data.mActor);
+        if (!state || !values || !life || *state != data.mExpected || *values != data.mValues
+            || *life != data.mLife || clock == owner.mAnimationClocks.end() || clock->second != data.mClock)
+            return false;
+        if (state->mReaction && !owner.isActionConsumed(state->mReaction->mContactId)) return false;
+        for (const auto& sequence : state->mRetiringSequences)
+            if (!owner.isActionConsumed(sequence.mContactId)) return false;
+        if (state->mStrike && (state->mStrike->mContactCommitted
+                ? !owner.isActionConsumed(state->mStrike->mActionId)
+                : !owner.isActionPending(state->mStrike->mActionId, data.mActor))) return false;
+        return true;
+    }
+
+    float OblivionCombatService::PreparedMeleeReactionFrame::clock() const
+    {
+        if (!isValid()) throw std::invalid_argument("stale native melee reaction frame");
+        return mData->mNextClock;
+    }
+
+    const ESM4::RuntimeMeleeState& OblivionCombatService::PreparedMeleeReactionFrame::state() const
+    {
+        if (!isValid()) throw std::invalid_argument("stale native melee reaction frame");
+        return mData->mNext;
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedMeleeReactionFrame>
+    OblivionCombatService::prepareMeleeReactionFrame(const ESM::FormKey& actor, float duration,
+        std::span<const OblivionMeleeSequenceMetadata> metadata, bool freezeClock)
+    {
+        const auto* state = findMeleeState(actor);
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!state || (!state->mReaction && state->mRetiringSequences.empty()) || !values || !life
+            || values->mProcess != ESM4::ActorValueProcess::Active || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return {};
+        std::map<std::string_view, const OblivionMeleeSequenceMetadata*, std::less<>> sources;
+        for (const auto& source : metadata)
+        {
+            source.validate();
+            if (!sources.emplace(source.mGroup, &source).second)
+                throw std::invalid_argument("ambiguous native melee frame metadata");
+        }
+        const auto sourceFor = [&](std::string_view group) -> const auto& {
+            const auto found = sources.find(group);
+            if (found == sources.end()) throw std::invalid_argument("missing native melee frame metadata");
+            return *found->second;
+        };
+        const auto clock = mAnimationClocks.find(actor);
+        if (clock == mAnimationClocks.end()) throw std::invalid_argument("native melee reaction has no actor clock");
+        const float nextClock = ESM4::advanceMeleeAnimationClock(clock->second, freezeClock ? 0.f : duration);
+        // Validate duration even when the native mode5 clock is frozen.
+        (void)ESM4::advanceMeleeAnimationClock(clock->second, duration);
+        auto next = *state;
+        const auto updateRetirement = [&](ESM4::MeleeSequenceTiming& timing, float& animationTime,
+                                          ESM4::RuntimeReactionRetirement& retirement,
+                                          const OblivionMeleeSequenceMetadata& source) {
+            if (!retirement.mStartClock) retirement.mStartClock = nextClock;
+            const float end = static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration);
+            if (!std::isfinite(end)) throw std::invalid_argument("overflowing native melee retirement clock");
+            if (nextClock >= end) return false;
+            // State3 retains its absolute retirement start/end rather than
+            // state1's previous-output assignment to the same native fields.
+            auto manager = timing;
+            manager.mEasing = true;
+            manager.mEaseStart = retirement.mStartClock;
+            manager.mEaseEnd = end;
+            timing = ESM4::updateMeleeSequenceTiming(manager, nextClock,
+                source.mFrequency, source.mBegin, source.mEnd);
+            timing.mEasing = false;
+            const float target = source.rendererTime(timing.mOutputTime);
+            if (target < animationTime) throw std::invalid_argument("native retiring sequence renderer rewind");
+            animationTime = target;
+            return true;
+        };
+        if (next.mReaction && !next.mReaction->mInactive)
+        {
+            auto& reaction = *next.mReaction;
+            if (values->mProcessAction != reaction.processAction())
+                throw std::invalid_argument("mismatched native melee reaction action");
+            const auto& source = sourceFor(reaction.mAnimationGroup);
+            if (!source.mReactionKeys) throw std::invalid_argument("native reaction has no Start/End keys");
+            auto& timing = reaction.mSequenceTiming;
+            if (!reaction.mRetirement && !freezeClock && !timing.mEasing && timing.mOffset)
+            {
+                const auto progress = ESM4::advanceReactionSlot(
+                    reaction.mStarted, *timing.mOffset, nextClock, *source.mReactionKeys);
+                reaction.mStarted = progress.mStarted;
+                if (progress.mRetire)
+                {
+                    if (source.mRetirementDuration > 0)
+                        reaction.mRetirement = ESM4::RuntimeReactionRetirement{source.mRetirementDuration, {}};
+                    else reaction.mInactive = true;
+                }
+            }
+            if (!reaction.mInactive && reaction.mRetirement)
+                reaction.mInactive = !updateRetirement(timing, reaction.mAnimationTime, *reaction.mRetirement, source);
+            else if (!reaction.mInactive)
+            {
+                timing = ESM4::updateMeleeSequenceTiming(timing, nextClock, source.mFrequency, source.mBegin, source.mEnd);
+                const float target = source.rendererTime(timing.mOutputTime);
+                if (target < reaction.mAnimationTime) throw std::invalid_argument("native reaction renderer rewind");
+                reaction.mAnimationTime = target;
+            }
+        }
+        auto retained = next.mRetiringSequences.begin();
+        for (auto current = next.mRetiringSequences.begin(); current != next.mRetiringSequences.end(); ++current)
+            if (updateRetirement(current->mSequenceTiming, current->mAnimationTime,
+                    current->mRetirement, sourceFor(current->mAnimationGroup)))
+            {
+                if (retained != current) *retained = std::move(*current);
+                ++retained;
+            }
+        next.mRetiringSequences.erase(retained, next.mRetiringSequences.end());
+        next.validate();
+        auto data = std::make_unique<PreparedMeleeReactionFrame::Data>();
+        if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
+        data->mOwner = this; data->mIdentity = mPreparedReleaseIdentity.mValue;
+        data->mActor = actor; data->mValues = *values; data->mLife = *life;
+        data->mExpected = *state; data->mNext = std::move(next);
+        data->mClock = clock->second; data->mNextClock = nextClock;
+        return std::unique_ptr<PreparedMeleeReactionFrame>(new PreparedMeleeReactionFrame(std::move(data)));
+    }
+
+    bool OblivionCombatService::commitMeleeReactionFrame(PreparedMeleeReactionFrame& frame) noexcept
+    {
+        if (!frame.isValid() || frame.mData->mOwner != this) return false;
+        auto& data = *frame.mData;
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        std::swap(mMeleeStates.find(data.mActor)->second, data.mNext);
+        mAnimationClocks.find(data.mActor)->second = data.mNextClock;
+        data.mCommitted = true;
+        return true;
+    }
+
+    bool OblivionCombatService::recoverInactiveMeleeReaction(const ESM::FormKey& actor, bool blockIdlePresent)
+    {
+        const auto found = mMeleeStates.find(actor);
+        const auto values = mActorValues.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mReaction || !found->second.mReaction->mInactive
+            || values == mActorValues.end() || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessAction != found->second.mReaction->processAction()) return false;
+        const bool keepBlock = found->second.mReaction->mKind == ESM4::MeleeReactionKind::BlockHit && blockIdlePresent;
+        values->second.mProcessAction = keepBlock ? 6 : -1;
+        found->second.mReaction.reset();
+        found->second.mInput = {};
+        return true;
+    }
+
+    void OblivionCombatService::clearRetiringMeleeSequences(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end()) found->second.mRetiringSequences.clear();
+    }
+
     bool OblivionCombatService::cancelMeleeReaction(std::uint64_t contact, const ESM::FormKey& actor) noexcept
     {
         const auto melee = mMeleeStates.find(actor);
@@ -1954,7 +2151,8 @@ namespace MWMechanics
         ESM::FormKey victimKey;
         if (victim.isEmpty())
         {
-            if (deltas.mAttackerReaction || deltas.mVictimReaction)
+            if (deltas.mAttackerReaction || deltas.mVictimReaction
+                || deltas.mAttackerRetiringSequence || deltas.mVictimRetiringSequence)
                 throw std::invalid_argument("native missed swing cannot start contact reactions");
             if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
@@ -2094,10 +2292,12 @@ namespace MWMechanics
         std::map<ESM::FormKey, float> reactionClocks;
         std::vector<std::uint64_t> reactionCanceledActions;
         const auto prepareReaction = [&](const std::optional<ESM4::RuntimeMeleeReaction>& request,
+                                         const std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing,
                                          ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorLife& life) {
             const auto* previous = findMeleeState(values.mActor);
             if (!request)
             {
+                if (outgoing) throw std::invalid_argument("native outgoing sequence requires a replacement reaction");
                 // Equipment consequences can withdraw action6 independently
                 // of starting another sequence. Retire its old ownership in
                 // the same transaction, before any observer can save it.
@@ -2113,7 +2313,7 @@ namespace MWMechanics
             }
             request->validate();
             const auto& timing = request->mSequenceTiming;
-            if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted
+            if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted || request->mInactive
                 || request->mRetirement || timing.mOffset || timing.mEaseStart || timing.mLastInput
                 || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
                 || timing.mEasing != (timing.mEaseEnd > 0)
@@ -2122,6 +2322,23 @@ namespace MWMechanics
                 || (previous && previous->mReaction) || mBowStates.contains(values.mActor))
                 throw std::invalid_argument("invalid or unsupported native contact reaction start");
             auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+            if (outgoing)
+            {
+                outgoing->validate();
+                if (!candidate.mStrike || outgoing->mContactId != candidate.mStrike->mActionId
+                    || outgoing->mAnimationGroup != candidate.mStrike->mAnimationGroup
+                    || outgoing->mAnimationTime != candidate.mStrike->mAnimationTime
+                    || outgoing->mRetirement.mStartClock)
+                    throw std::invalid_argument("native outgoing sequence does not match the replaced strike");
+                if (candidate.mStrike->mSequenceTiming)
+                {
+                    auto expected = *candidate.mStrike->mSequenceTiming;
+                    expected.mEasing = false;
+                    if (outgoing->mSequenceTiming != expected)
+                        throw std::invalid_argument("native outgoing sequence changed existing timing");
+                }
+                candidate.mRetiringSequences.push_back(*outgoing);
+            }
             if (candidate.mStrike && !candidate.mStrike->mContactCommitted
                 && candidate.mStrike->mActionId != id)
                 reactionCanceledActions.push_back(candidate.mStrike->mActionId);
@@ -2138,10 +2355,11 @@ namespace MWMechanics
             if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
             values.mProcessAction = request->processAction();
         };
-        prepareReaction(deltas.mAttackerReaction, attacking, *findActorLife(attackerKey));
+        prepareReaction(deltas.mAttackerReaction, deltas.mAttackerRetiringSequence,
+            attacking, *findActorLife(attackerKey));
         if (deltas.mVictimReaction && !receiving)
             throw std::invalid_argument("native missed swing cannot start a victim reaction");
-        if (receiving) prepareReaction(deltas.mVictimReaction, *receiving, *receivingLife);
+        if (receiving) prepareReaction(deltas.mVictimReaction, deltas.mVictimRetiringSequence, *receiving, *receivingLife);
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
@@ -4448,6 +4666,11 @@ namespace MWMechanics
         if (state.mVersion < 54 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mReaction.has_value(); }))
             throw std::invalid_argument("native owned melee reactions require an Oblivion v54+ save");
+        if (state.mVersion < 55 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
+                return !entry.second.mRetiringSequences.empty()
+                    || (entry.second.mReaction && entry.second.mReaction->mInactive);
+            }))
+            throw std::invalid_argument("native melee retirement ownership requires an Oblivion v55+ save");
         if (state.mVersion < 37 && mPlayerBowTimer)
             throw std::invalid_argument("native Player bow timer requires an Oblivion v37+ save");
         if (state.mVersion < 23 && (!mAnimationClocks.empty()
