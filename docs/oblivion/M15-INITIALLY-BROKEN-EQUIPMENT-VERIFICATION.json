@@ -1,0 +1,2480 @@
+{
+  "schema_version": 1,
+  "status": "Initially broken equipment now enters blocking. Native positive-wear/mastery consequences publish through shared contact transaction; bounded zero-shield normal/sanitized and zero-weapon normal input/restart evidence. Full M15S4 incomplete.",
+  "source_pin": {
+    "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+    "files": {
+      "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+    }
+  },
+  "probe_sha256": {
+    "build/oblivion-compat/m15/S4/native-initially-broken-weapon-wear-oracle-04/probe.py": "f8e7fba2103cd3d1de31cf729e1659868e540409b68629610897aca695005122",
+    "build/oblivion-compat/m15/S4/native-initially-broken-block-wear-oracle-01/probe.py": "66437ef4b6be7758080678455643c7d4a4cbcecce737a57f31da8370bd01477b",
+    "build/oblivion-compat/m15/S4/native-initially-broken-block-caller-oracle-03/probe.py": "5be7916caf7730341df7bce51ec94801002a9296b69ef570628562c44b28646d",
+    "build/oblivion-compat/m15/S4/native-initially-broken-npc-shield-runtime-oracle-01/probe.py": "4cccddc1253e4c6c9c36924f93e56aa23dc77b0521ca1998d88d33fbea9c8cc2",
+    "build/oblivion-compat/m15/S4/native-initially-broken-npc-shield-runtime-oracle-01/sink-probe.py": "80c2054edd3b651ad3d985eec4e6d09fa9dc48590136be2137745e613a663793"
+  },
+  "retained_original_attempts": {
+    "weapon_wear": [
+      "native-initially-broken-weapon-wear-oracle-01",
+      "native-initially-broken-weapon-wear-oracle-02",
+      "native-initially-broken-weapon-wear-oracle-03"
+    ],
+    "reason": "Missing weapon-specific cached node field caused an unmapped native node read; a diagnostic editing syntax failure is also retained. Corrected04 supplies actual+FC/+100 cache fields; no changed expected condition/equipment rules."
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+      "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 350.08
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.265
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 30.901
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1737,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+            "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+          "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+        },
+        "source_after": {
+          "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+          "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/verification.json",
+      "sha256": "f95d7faac6dd52768fa70e52696e4612c9b1450788fe08c13cc0876af8b5231f",
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 498.846
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.717
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 176.243
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1737,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b66f42034ccd53c818f6b311026da74a1cfbffe86722f3da0a2844d83be0df45",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c8b7f9b2e81af9af541b9950ce34e74880aa2c8bd54b6a3315d8675ee5051d7f",
+            "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+          "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+        },
+        "source_after": {
+          "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+          "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+        }
+      }
+    }
+  },
+  "runtime": {
+    "shield_normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/verification.json",
+        "sha256": "265adfb5b2f398d88f7353c4a5686fc625ba9ae17ea6a33e8e339a0a9bfca2ed",
+        "result": {
+          "passed": true,
+          "scope": "Normal-input Player unarmed strike against NPC public block control; initially broken carried-left IronShield receives positive blocking wear and is removed, publishes one owner-selected world body, preserves right sword, then actual fresh-process load/resave. First-person keyboard1FPS bounded branch; full M15S4 remains open.",
+          "epochs": [
+            {
+              "pid": 593444,
+              "start_ticks": 13910667,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+            },
+            {
+              "pid": 593977,
+              "start_ticks": 13925670,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+            }
+          ],
+          "source_sha256": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+          "save_sha256": [
+            "28b5ef57cda8335b78dc6f1acafded4f535e10d8f144b194899c876923d26f7e",
+            "8531b93ceb6ff536d018909b748b2649aa1cbd28cf5ff157b9d214aec9973497"
+          ],
+          "native_actor_arrays": 9,
+          "actor_float32_bits_preserved_except_expected_health": true,
+          "npc_health_damage_bits": 1065898475,
+          "independent_expected_contact_fatigue_damage_bits": 1067722998,
+          "fatigue_regenerated_before_save": true,
+          "dynamic_reference": "dynamic:native-reference:0000000000000001",
+          "source_carried_shield_count": 0,
+          "dropped_shield_condition": 0,
+          "dropper": "content:oblivion.esm:01fc43",
+          "posture_at_contact": -1,
+          "saved_postures": [
+            -1,
+            -1
+          ],
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "physical": [
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:0352c1",
+              "model": "meshes/armor/iron/shield.nif",
+              "asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 5,
+                "node_record": 0,
+                "rotation": [
+                  -0.2163141816854477,
+                  -0.006972652394324541,
+                  0.9762989282608032,
+                  0.950154721736908,
+                  0.22846657037734985,
+                  0.21215322613716125,
+                  -0.22453093528747559,
+                  0.9735267758369446,
+                  -0.04279546067118645
+                ],
+                "position": [
+                  655.4740600585938,
+                  -7.401156902313232,
+                  -101.43479919433594
+                ],
+                "linear_velocity": [
+                  1.7326117753982544,
+                  -0.29408565163612366,
+                  0.13670247793197632
+                ],
+                "angular_velocity": [
+                  0.09895118325948715,
+                  0.46865978837013245,
+                  0.004208308178931475
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    0.247549906373024,
+                    -0.04201800003647804,
+                    0.019531603902578354,
+                    0.0
+                  ],
+                  "angular": [
+                    0.09895118325948715,
+                    0.46865978837013245,
+                    0.004208308178931475,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.21631407737731934,
+                  -0.006972640752792358,
+                  0.9762988686561584,
+                  0.9501547813415527,
+                  0.22846657037734985,
+                  0.21215322613716125,
+                  -0.2245308756828308,
+                  0.9735268354415894,
+                  -0.042795419692993164
+                ],
+                "position": [
+                  655.4740600585938,
+                  -7.401156425476074,
+                  -101.4347915649414
+                ],
+                "scale": 1.0
+              }
+            },
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:0352c1",
+              "model": "meshes/armor/iron/shield.nif",
+              "asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 5,
+                "node_record": 0,
+                "rotation": [
+                  -0.2087981253862381,
+                  -0.02439284697175026,
+                  0.9776545166969299,
+                  0.9501505494117737,
+                  0.23163935542106628,
+                  0.20870357751846313,
+                  -0.23155413568019867,
+                  0.9724958539009094,
+                  -0.025188986212015152
+                ],
+                "position": [
+                  655.1686401367188,
+                  -7.384211540222168,
+                  -101.31269073486328
+                ],
+                "linear_velocity": [
+                  -0.032183703035116196,
+                  -0.0008157541742548347,
+                  -0.004390551708638668
+                ],
+                "angular_velocity": [
+                  0.0017022695392370224,
+                  -0.006589936558157206,
+                  -0.0008194036781787872
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    -0.00459830230101943,
+                    -0.00011655229172902182,
+                    -0.0006273076869547367,
+                    0.0
+                  ],
+                  "angular": [
+                    0.0017022695392370224,
+                    -0.006589936558157206,
+                    -0.0008194036781787872,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.20879817008972168,
+                  -0.02439284324645996,
+                  0.9776545763015747,
+                  0.9501505494117737,
+                  0.23163938522338867,
+                  0.2087036371231079,
+                  -0.23155418038368225,
+                  0.9724959135055542,
+                  -0.02518904209136963
+                ],
+                "position": [
+                  655.1686401367188,
+                  -7.384211540222168,
+                  -101.31268310546875
+                ],
+                "scale": 1.0
+              }
+            }
+          ],
+          "runtime_visual_review": "passed for carried/contact captures; persisted floor-model view is separate",
+          "full_M15S4_acceptance": false,
+          "limits": "Public NPC block intent with AI disabled is a bounded subsystem fixture, not full autonomous defensive AI. No quantitative stock PCM correlation, original-game scene/fade equivalence or fullS4 acceptance. Contact Fatigue log has six-digit precision and regenerates before save; saved raw Health bits are exact."
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/visual-review.json",
+        "sha256": "84dc24354307b1c7ec2c06604ebc95c63f5049931c8fbc9589a23a720b593d58",
+        "result": {
+          "passed": true,
+          "directly_reviewed": true,
+          "scope": "Carried shield and contact consequence in three course captures; direct persisted floor-model view is a separate pending diagnostic.",
+          "captures": [
+            {
+              "path": "first/npc-shield-before-contact.png",
+              "sha256": "5d82f814f193aa6dee4c843b499b032c5c31a25b7e0e09989dea5bcbe514c999"
+            },
+            {
+              "path": "first/npc-shield-break-first.png",
+              "sha256": "29c1e49c3c0969569e0ea713c0539e0f3e61f7ebb346b0e8a94c9379fe210413"
+            },
+            {
+              "path": "second/npc-shield-break-second.png",
+              "sha256": "35a88cca6c3b248d69357f33a2b63f26190ed91d2fbb4b362980c428bab28ecd"
+            }
+          ],
+          "observations": "Before: one Iron Shield held visibly in block posture at condition0 from pinned input; right sword visible. After ordinary unarmed contact: left arm clears, right sword stays, separate shield model visible low in the frame near the NPC. Fresh second process: no carried shield or block, right sword and Player hands/dungeon still render. Dropped body is below final framing; no direct floor-position claim from that image. Physical state and exact actor/resource assertions are independent decoded-save checks."
+        }
+      },
+      "audit": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/extra-content-reference-audit.json",
+        "sha256": "9382b1731920099676a3e193bd391a7f306d71bd4c9265ce7cccdfa5eafe077a",
+        "result": {
+          "passed": true,
+          "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "counts": [
+            {
+              "count": 2997,
+              "identity_base_cell_sha256": "28299538406f312b3db46dea744072562f652adb7db110fa2321904fb210c759"
+            },
+            {
+              "count": 6830,
+              "identity_base_cell_sha256": "12c1cccbadd51559b840efcc2483b0069712faeeb3775860db33b48f91b2746e"
+            }
+          ],
+          "persistent_exterior_references": [
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe3",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49940.359375,
+                71301.6328125,
+                968.0
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe5",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49756.6953125,
+                72590.3828125,
+                1478.694580078125
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe6",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                50100.5078125,
+                72846.6953125,
+                1694.3038330078125
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:055001",
+              "base": "content:oblivion.esm:000034",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49477.35546875,
+                71223.046875,
+                967.42919921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe3",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49940.359375,
+                71301.6328125,
+                968.0
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe5",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49756.6953125,
+                72590.3828125,
+                1478.694580078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe6",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                50100.5078125,
+                72846.6953125,
+                1694.3038330078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:055001",
+              "base": "content:oblivion.esm:000034",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49477.35546875,
+                71223.046875,
+                967.42919921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:05512a",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d279",
+              "coordinates": [
+                6,
+                3
+              ],
+              "unchanged_master_position": [
+                27857.37109375,
+                15426.46484375,
+                463.6805419921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:05512d",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d279",
+              "coordinates": [
+                6,
+                3
+              ],
+              "unchanged_master_position": [
+                28081.640625,
+                14233.56640625,
+                200.197265625
+              ]
+            }
+          ],
+          "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim."
+        }
+      },
+      "application": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+      },
+      "preregistered_pin": {
+        "staged-input.omwsave": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+        "manifest.json": "7bc51a8f8bd32f99b7d6a3afa18eabe021644618a0230634661c03c123757a89",
+        "continuation.json": "0dba8b959dca84c653db32651904ad9d8aa8375460086e6b0b2f1fa2b2ad3e08",
+        "preregistered-acceptance.json": "71cc817bbc88f16d3e8fe779b0a9001abda3d0330f07dafe337d5350353109eb",
+        "verify.py": "feedb631581ad25b27f43401d573066dca338f3d1739aaba3be5e1b8866359c1",
+        "launcher.py": "ca3f72ebb596c5cca85b096cfed9861a20da35c05def9c8b06b85b2b45d4762a",
+        "epoch-monitor.py": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b",
+        "audit-extra-content.py": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb"
+      },
+      "accepted_builds": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/accepted-builds.json",
+        "sha256": "b1bf4de47cd40a91400f89b67b1ece54d12a76cafbb21278735d92984ae9d2dd",
+        "result": {
+          "passed": true,
+          "source_state": {
+            "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+          },
+          "source_pin": {
+            "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "files": {
+              "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+            }
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+              "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 350.08
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 30.901
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            },
+            "sanitized": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/verification.json",
+              "sha256": "f95d7faac6dd52768fa70e52696e4612c9b1450788fe08c13cc0876af8b5231f",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 498.846
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.717
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 176.243
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "b66f42034ccd53c818f6b311026da74a1cfbffe86722f3da0a2844d83be0df45",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "c8b7f9b2e81af9af541b9950ce34e74880aa2c8bd54b6a3315d8675ee5051d7f",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            }
+          },
+          "policy": "Own-profile full1737 engine checks authorize that runtime while the other profile builds, with source frozen. Final checkpoint acceptance/commit require both profiles full checks and both runtime courses. No expected values or final gates relaxed."
+        }
+      },
+      "own_profile_before_launch": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/accepted-profile-before-launch.json",
+        "sha256": "120b08ce22611628da6b34a10e273f465e354203a1ba0a9338595f0a68d91f13",
+        "result": {
+          "passed": true,
+          "source_state": {
+            "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+          },
+          "source_pin": {
+            "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "files": {
+              "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+            }
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+              "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 350.08
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 30.901
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            }
+          },
+          "policy": "Own-profile full1737 engine checks authorize that runtime while the other profile builds, with source frozen. Final checkpoint acceptance/commit require both profiles full checks and both runtime courses. No expected values or final gates relaxed."
+        }
+      }
+    },
+    "shield_sanitized": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/verification.json",
+        "sha256": "78d160e8014fddd11fb4acd8a7bf94887ea8ad0bfad68dd082d0d4671fd70eac",
+        "result": {
+          "passed": true,
+          "scope": "Normal-input Player unarmed strike against NPC public block control; initially broken carried-left IronShield receives positive blocking wear and is removed, publishes one owner-selected world body, preserves right sword, then actual fresh-process load/resave. First-person keyboard1FPS bounded branch; full M15S4 remains open.",
+          "epochs": [
+            {
+              "pid": 596532,
+              "start_ticks": 13961045,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "c3daa6809da7f870f5d7a2baa330b8d2f0686d57f02ce6bcf01f2daaff9feec3"
+            },
+            {
+              "pid": 596728,
+              "start_ticks": 13996591,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "c3daa6809da7f870f5d7a2baa330b8d2f0686d57f02ce6bcf01f2daaff9feec3"
+            }
+          ],
+          "source_sha256": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+          "save_sha256": [
+            "d34560db0ce2870b5b0c26414aa6a6664c179445bff73ec18c7c2a9b930ff5b3",
+            "02f948704d69db3b84a812abce66910a485c6b3d0e8de9123fa55507d3af2770"
+          ],
+          "native_actor_arrays": 9,
+          "actor_float32_bits_preserved_except_expected_health": true,
+          "npc_health_damage_bits": 1065898475,
+          "independent_expected_contact_fatigue_damage_bits": 1067722998,
+          "fatigue_regenerated_before_save": true,
+          "dynamic_reference": "dynamic:native-reference:0000000000000001",
+          "source_carried_shield_count": 0,
+          "dropped_shield_condition": 0,
+          "dropper": "content:oblivion.esm:01fc43",
+          "posture_at_contact": -1,
+          "saved_postures": [
+            -1,
+            -1
+          ],
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "physical": [
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:0352c1",
+              "model": "meshes/armor/iron/shield.nif",
+              "asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 5,
+                "node_record": 0,
+                "rotation": [
+                  -0.8215258717536926,
+                  0.14653675258159637,
+                  0.5510192513465881,
+                  0.13347689807415009,
+                  0.9889829754829407,
+                  -0.06400435417890549,
+                  -0.5543276071548462,
+                  0.020967109128832817,
+                  -0.8320344090461731
+                ],
+                "position": [
+                  682.5934448242188,
+                  27.504331588745117,
+                  -83.02869415283203
+                ],
+                "linear_velocity": [
+                  -28.762849807739258,
+                  -0.5702359080314636,
+                  -3.2681498527526855
+                ],
+                "angular_velocity": [
+                  0.3141971528530121,
+                  -1.3559486865997314,
+                  -0.02365720272064209
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    -4.109541893005371,
+                    -0.0814734399318695,
+                    -0.46694257855415344,
+                    0.0
+                  ],
+                  "angular": [
+                    0.3141971528530121,
+                    -1.3559486865997314,
+                    -0.02365720272064209,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.8215258121490479,
+                  0.14653675258159637,
+                  0.5510191917419434,
+                  0.13347689807415009,
+                  0.9889829754829407,
+                  -0.06400434672832489,
+                  -0.5543276071548462,
+                  0.020967109128832817,
+                  -0.8320343494415283
+                ],
+                "position": [
+                  682.5933837890625,
+                  27.504331588745117,
+                  -83.02869415283203
+                ],
+                "scale": 1.0
+              }
+            },
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:0352c1",
+              "model": "meshes/armor/iron/shield.nif",
+              "asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 5,
+                "node_record": 0,
+                "rotation": [
+                  -0.250520795583725,
+                  -0.039371661841869354,
+                  0.9673103094100952,
+                  0.9399855136871338,
+                  0.22920086979866028,
+                  0.2527730166912079,
+                  -0.23166045546531677,
+                  0.9725825786590576,
+                  -0.020410794764757156
+                ],
+                "position": [
+                  653.0213623046875,
+                  -14.333605766296387,
+                  -101.30961608886719
+                ],
+                "linear_velocity": [
+                  0.38829413056373596,
+                  0.08636000752449036,
+                  -0.01886538416147232
+                ],
+                "angular_velocity": [
+                  -0.027110505849123,
+                  0.11188864707946777,
+                  -0.00024809487513266504
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    0.05547820031642914,
+                    0.012338835746049881,
+                    -0.0026954244822263718,
+                    0.0
+                  ],
+                  "angular": [
+                    -0.027110505849123,
+                    0.11188864707946777,
+                    -0.00024809487513266504,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.2505207061767578,
+                  -0.039371639490127563,
+                  0.9673102498054504,
+                  0.9399855136871338,
+                  0.2292008399963379,
+                  0.2527729868888855,
+                  -0.23166042566299438,
+                  0.9725825190544128,
+                  -0.020410776138305664
+                ],
+                "position": [
+                  653.0213623046875,
+                  -14.333605766296387,
+                  -101.30961608886719
+                ],
+                "scale": 1.0
+              }
+            }
+          ],
+          "runtime_visual_review": "passed for carried/contact captures; dropped body below final framing, separate floor inspection pending",
+          "full_M15S4_acceptance": false,
+          "limits": "Public NPC block intent with AI disabled is a bounded subsystem fixture, not full autonomous defensive AI. No quantitative stock PCM correlation, original-game scene/fade equivalence or fullS4 acceptance. Contact Fatigue log has six-digit precision and regenerates before save; saved raw Health bits are exact."
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/visual-review.json",
+        "sha256": "c3f0a98b8e2fdb3f0128d9b5a24308f20b4153fee1b20a33b7062c269d5d6d4f",
+        "result": {
+          "passed": true,
+          "directly_reviewed": true,
+          "captures": [
+            {
+              "path": "first/npc-shield-before-contact.png",
+              "sha256": "6568e9a8fad37608272dabab6cf7acd29f86cb32f6f424af2b8b54dd8715ceac"
+            },
+            {
+              "path": "first/npc-shield-break-first.png",
+              "sha256": "1d02200462cc07097113cee5c02b5f8278299da7f97cf6130411d989d0fb73bc"
+            },
+            {
+              "path": "second/npc-shield-break-second.png",
+              "sha256": "46971bdba24ca6d0a2cdfa04656f5792ce1dfe41cf4bc28a61f1a730a9a6f996"
+            }
+          ],
+          "scope": "Carried shield/contact consequence in three captures. Body persistence/placement is independently checked in decoded saves; dropped body is below final framing.",
+          "observations": "First person: shield visibly raised before contact, right sword retained. After ordinary hit: carried-left arm clears, separate shield model is low in the frame; right sword remains. Fresh second process: no held shield or resumed block; sword, Player hands and dungeon remain visible. No direct floor-position assertion from final framing."
+        }
+      },
+      "audit": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/extra-content-reference-audit.json",
+        "sha256": "dcd5cea6e4768016672d3293ece3cbfad44ab4a93f4f441e1ae0bb3b6fae3488",
+        "result": {
+          "passed": true,
+          "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "counts": [
+            {
+              "count": 1076,
+              "identity_base_cell_sha256": "ec0ad1fd709e695092bcb234286d8735101fa99bcd44dc1d8aea3148bbce3ea0"
+            },
+            {
+              "count": 3702,
+              "identity_base_cell_sha256": "66d3e9ccd1359323915db7a9ce51dff1e5f7cc9bf1c1476010bd035e196802a7"
+            }
+          ],
+          "persistent_exterior_references": [
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe3",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49940.359375,
+                71301.6328125,
+                968.0
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe5",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49756.6953125,
+                72590.3828125,
+                1478.694580078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe6",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                50100.5078125,
+                72846.6953125,
+                1694.3038330078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:055001",
+              "base": "content:oblivion.esm:000034",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49477.35546875,
+                71223.046875,
+                967.42919921875
+              ]
+            }
+          ],
+          "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim."
+        }
+      },
+      "application": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "c3daa6809da7f870f5d7a2baa330b8d2f0686d57f02ce6bcf01f2daaff9feec3"
+      },
+      "preregistered_pin": {
+        "staged-input.omwsave": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+        "manifest.json": "da3a74b17c2e270cfc2dc67151b76df407e796293da3d3d3d9e0b8fe2b484f8a",
+        "continuation.json": "209afd6fd279a5c5ca5e754e5c14eedd6e7152bb59d4ef5a45ca23fe0e1f626d",
+        "preregistered-acceptance.json": "71cc817bbc88f16d3e8fe779b0a9001abda3d0330f07dafe337d5350353109eb",
+        "verify.py": "feedb631581ad25b27f43401d573066dca338f3d1739aaba3be5e1b8866359c1",
+        "launcher.py": "ca3f72ebb596c5cca85b096cfed9861a20da35c05def9c8b06b85b2b45d4762a",
+        "epoch-monitor.py": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b",
+        "audit-extra-content.py": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb"
+      },
+      "accepted_builds": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-sanitized-01/accepted-builds.json",
+        "sha256": "b1bf4de47cd40a91400f89b67b1ece54d12a76cafbb21278735d92984ae9d2dd",
+        "result": {
+          "passed": true,
+          "source_state": {
+            "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+          },
+          "source_pin": {
+            "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "files": {
+              "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+            }
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+              "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 350.08
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 30.901
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            },
+            "sanitized": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/verification.json",
+              "sha256": "f95d7faac6dd52768fa70e52696e4612c9b1450788fe08c13cc0876af8b5231f",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 498.846
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.717
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 176.243
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "b66f42034ccd53c818f6b311026da74a1cfbffe86722f3da0a2844d83be0df45",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "c8b7f9b2e81af9af541b9950ce34e74880aa2c8bd54b6a3315d8675ee5051d7f",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            }
+          },
+          "policy": "Own-profile full1737 engine checks authorize that runtime while the other profile builds, with source frozen. Final checkpoint acceptance/commit require both profiles full checks and both runtime courses. No expected values or final gates relaxed."
+        }
+      }
+    },
+    "weapon_normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/verification.json",
+        "sha256": "1b783b48289a4ab087de0568528d9d444449782ceaab2df4f31f648f51d483e9",
+        "result": {
+          "passed": true,
+          "scope": "Normal-input Player unarmed strike against NPC public block control with an initially zero-condition worn right sword. Positive wear removes it through the existing native body factory; save/quit/fresh-process resave with no contact replay. Normal first-person keyboard1FPS subsystem fixture, not fullS4.",
+          "epochs": [
+            {
+              "pid": 597123,
+              "start_ticks": 14051562,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+            },
+            {
+              "pid": 597227,
+              "start_ticks": 14067693,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+            }
+          ],
+          "source_sha256": "1ada154bb81b6202be1a6e102c07f0d2d4ef76221dc1eabbfc20ed9f839cf125",
+          "save_sha256": [
+            "2b4745311416f3c76a0763e466cf112fbd3d203f91cbf8432f4c8d18b17e84a1",
+            "42e1162fc03fa2d1b83aff3c2bc98ae71c055f0d0b861ede7236b3c295b6b98a"
+          ],
+          "native_actor_arrays": 9,
+          "actor_float32_bits_preserved_except_expected_health": true,
+          "npc_health_damage_bits": 1067387453,
+          "independent_expected_contact_fatigue_damage_bits": 1069516063,
+          "fatigue_regenerated_before_save": true,
+          "dynamic_reference": "dynamic:native-reference:0000000000000001",
+          "source_carried_weapon_count": 0,
+          "dropped_weapon_condition": 0,
+          "dropper": "content:oblivion.esm:01fc43",
+          "posture_at_contact": -1,
+          "saved_postures": [
+            -1,
+            -1
+          ],
+          "action_next": 3,
+          "combat_rng": 505908858,
+          "physical": [
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:090615",
+              "model": "meshes/weapons/iron/shortsword.nif",
+              "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 7,
+                "node_record": 20,
+                "rotation": [
+                  -0.09173576533794403,
+                  0.995777428150177,
+                  0.003450610674917698,
+                  -0.995073676109314,
+                  -0.09180064499378204,
+                  0.037430379539728165,
+                  0.037589095532894135,
+                  9.298553749204075e-08,
+                  0.9992932677268982
+                ],
+                "position": [
+                  645.18017578125,
+                  25.77978515625,
+                  -109.75684356689453
+                ],
+                "linear_velocity": [
+                  -0.0005755624733865261,
+                  -0.0002030954055953771,
+                  0.000406627485062927
+                ],
+                "angular_velocity": [
+                  -0.00017831950390245765,
+                  -5.628836788673652e-06,
+                  4.2997886339435354e-05
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    -8.223448094213381e-05,
+                    -2.9017608540016226e-05,
+                    5.8097608416574076e-05,
+                    0.0
+                  ],
+                  "angular": [
+                    -0.00017831950390245765,
+                    -5.628836788673652e-06,
+                    4.2997886339435354e-05,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.09173595905303955,
+                  0.9957773685455322,
+                  0.0034506116062402725,
+                  -0.995073676109314,
+                  -0.09180080890655518,
+                  0.03743038326501846,
+                  0.037589095532894135,
+                  9.872019290924072e-08,
+                  0.9992932677268982
+                ],
+                "position": [
+                  645.18017578125,
+                  25.77978515625,
+                  -109.7568359375
+                ],
+                "scale": 1.0
+              }
+            },
+            {
+              "reference": "dynamic:native-reference:0000000000000001",
+              "base": "content:oblivion.esm:090615",
+              "model": "meshes/weapons/iron/shortsword.nif",
+              "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+              "physical_scale": 1.0,
+              "scene_collision_flags": 1,
+              "body": {
+                "record": 7,
+                "node_record": 20,
+                "rotation": [
+                  -0.09161680191755295,
+                  0.9957883954048157,
+                  0.003444298170506954,
+                  -0.9950846433639526,
+                  -0.09168152511119843,
+                  0.037430644035339355,
+                  0.037588778883218765,
+                  1.907861133076949e-06,
+                  0.9992932677268982
+                ],
+                "position": [
+                  645.1770629882812,
+                  25.784835815429688,
+                  -109.75685119628906
+                ],
+                "linear_velocity": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "angular_velocity": [
+                  0.0,
+                  0.0,
+                  0.0
+                ],
+                "native_packed_velocity": {
+                  "linear": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                  ],
+                  "angular": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "native_motion": 1
+              },
+              "root_local": {
+                "rotation": [
+                  -0.09161698818206787,
+                  0.9957883358001709,
+                  0.003444299101829529,
+                  -0.9950846433639526,
+                  -0.09168171882629395,
+                  0.037430644035339355,
+                  0.037588778883218765,
+                  1.914799213409424e-06,
+                  0.9992932677268982
+                ],
+                "position": [
+                  645.177001953125,
+                  25.784833908081055,
+                  -109.75684356689453
+                ],
+                "scale": 1.0
+              }
+            }
+          ],
+          "runtime_visual_review": "passed; see visual-review.json",
+          "full_M15S4_acceptance": false,
+          "limits": "NPC control intent is authored through existing public Actor control API; not full autonomous defensive AI. No exact native fade timing or uninterrupted real-content trajectory equivalence. Captured PCM retained; two identical sound IDs cannot prove separate voices when same stock variant is selected."
+        }
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/visual-review.json",
+        "sha256": "243e55ed1c742565863ad7284a980f3f6fa6dc9f6e268082bb5c7b7fa850ba78",
+        "result": {
+          "passed": true,
+          "directly_reviewed": true,
+          "captures": [
+            {
+              "path": "first/npc-broken-weapon-before-contact.png",
+              "sha256": "80d8c06cef94986b43dd2f9415a8afa18f3c006347c05eccbf055fe55fdd65db"
+            },
+            {
+              "path": "first/npc-defensive-weapon-break-first.png",
+              "sha256": "11d03d249aa6f78dc9d33b1d55da1bea8d8be359a2b2da2c7ab579cfb42b72ef"
+            },
+            {
+              "path": "second/npc-defensive-weapon-break-second.png",
+              "sha256": "13320f7c4a8444dedd07d4798233e30f0d51f16760a73b675e797eb58bb15141"
+            }
+          ],
+          "observations": "Before: condition-zero sword from pinned input is visibly raised in one-handed block pose. After actual unarmed Player strike: no sword remains in hand; NPC takes the drawn unarmed stance. Fresh process: still unarmed, no resumed weapon block; Player hands/dungeon render. Dropped sword is below final framing; physical body/identity checks are separate decoded-save evidence."
+        }
+      },
+      "audit": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/extra-content-reference-audit.json",
+        "sha256": "9382b1731920099676a3e193bd391a7f306d71bd4c9265ce7cccdfa5eafe077a",
+        "result": {
+          "passed": true,
+          "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "counts": [
+            {
+              "count": 2997,
+              "identity_base_cell_sha256": "28299538406f312b3db46dea744072562f652adb7db110fa2321904fb210c759"
+            },
+            {
+              "count": 6830,
+              "identity_base_cell_sha256": "12c1cccbadd51559b840efcc2483b0069712faeeb3775860db33b48f91b2746e"
+            }
+          ],
+          "persistent_exterior_references": [
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe3",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49940.359375,
+                71301.6328125,
+                968.0
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe5",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49756.6953125,
+                72590.3828125,
+                1478.694580078125
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:054fe6",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                50100.5078125,
+                72846.6953125,
+                1694.3038330078125
+              ]
+            },
+            {
+              "phase": "first",
+              "reference": "content:oblivion.esm:055001",
+              "base": "content:oblivion.esm:000034",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49477.35546875,
+                71223.046875,
+                967.42919921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe3",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49940.359375,
+                71301.6328125,
+                968.0
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe5",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49756.6953125,
+                72590.3828125,
+                1478.694580078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:054fe6",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                50100.5078125,
+                72846.6953125,
+                1694.3038330078125
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:055001",
+              "base": "content:oblivion.esm:000034",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d312",
+              "coordinates": [
+                12,
+                17
+              ],
+              "unchanged_master_position": [
+                49477.35546875,
+                71223.046875,
+                967.42919921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:05512a",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d279",
+              "coordinates": [
+                6,
+                3
+              ],
+              "unchanged_master_position": [
+                27857.37109375,
+                15426.46484375,
+                463.6805419921875
+              ]
+            },
+            {
+              "phase": "second",
+              "reference": "content:oblivion.esm:05512d",
+              "base": "content:oblivion.esm:00003b",
+              "world": "content:oblivion.esm:009f18",
+              "persistent_storage_cell": "content:oblivion.esm:009f19",
+              "saved_physical_cell": "content:oblivion.esm:00d279",
+              "coordinates": [
+                6,
+                3
+              ],
+              "unchanged_master_position": [
+                28081.640625,
+                14233.56640625,
+                200.197265625
+              ]
+            }
+          ],
+          "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim."
+        }
+      },
+      "application": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+      },
+      "preregistered_pin": {
+        "staged-input.omwsave": "1ada154bb81b6202be1a6e102c07f0d2d4ef76221dc1eabbfc20ed9f839cf125",
+        "manifest.json": "b64bb402c189ba5943ba442972477eb2768f02ffc1ab4f4536408942b8136730",
+        "continuation.json": "8e044ff821e44a12625a2d9409ec7f2868c4b22fb2450b8b9496d8b5a0d3cdd6",
+        "preregistered-acceptance.json": "6fad2798a05e8f1885dcd539509cc4cb93befc7f5f28d5667b6bea532616daed",
+        "verify.py": "0b311f5953eee6950f51baebd34f64bba2f1dcc1fafdc1ca92f4bdbc7a33be40",
+        "launcher.py": "ca3f72ebb596c5cca85b096cfed9861a20da35c05def9c8b06b85b2b45d4762a",
+        "epoch-monitor.py": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b",
+        "audit-extra-content.py": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb"
+      },
+      "accepted_builds": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/accepted-builds.json",
+        "sha256": "b1bf4de47cd40a91400f89b67b1ece54d12a76cafbb21278735d92984ae9d2dd",
+        "result": {
+          "passed": true,
+          "source_state": {
+            "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+          },
+          "source_pin": {
+            "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "files": {
+              "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+            }
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+              "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 350.08
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 30.901
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            },
+            "sanitized": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/verification.json",
+              "sha256": "f95d7faac6dd52768fa70e52696e4612c9b1450788fe08c13cc0876af8b5231f",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 498.846
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.717
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-sanitized-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 176.243
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "b66f42034ccd53c818f6b311026da74a1cfbffe86722f3da0a2844d83be0df45",
+                    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+                    "xml_sha256": "c8b7f9b2e81af9af541b9950ce34e74880aa2c8bd54b6a3315d8675ee5051d7f",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "Debug",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            }
+          },
+          "policy": "Own-profile full1737 engine checks authorize that runtime while the other profile builds, with source frozen. Final checkpoint acceptance/commit require both profiles full checks and both runtime courses. No expected values or final gates relaxed."
+        }
+      },
+      "own_profile_before_launch": {
+        "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-runtime-normal-01/accepted-profile-before-launch.json",
+        "sha256": "120b08ce22611628da6b34a10e273f465e354203a1ba0a9338595f0a68d91f13",
+        "result": {
+          "passed": true,
+          "source_state": {
+            "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+          },
+          "source_pin": {
+            "parent": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+            "files": {
+              "apps/openmw/mwmechanics/oblivionmelee.cpp": "287051659a908dd3d83b43bb045cc451f7fa0562d1fdf6e5770cfa5f9747a8ec",
+              "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2def17039dad6008c28396dd7c7a317a7491cd825aef01dbfc13b16f51b6675e"
+            }
+          },
+          "reports": {
+            "normal": {
+              "path": "build/oblivion-compat/m15/S4/native-initially-broken-normal-01/verification.json",
+              "sha256": "5026ecf3bbbd68615653733ad0414f5cb04f40938854b5ff784b58330c75f48d",
+              "report": {
+                "schema_version": 1,
+                "passed": true,
+                "commands": [
+                  {
+                    "argv": [
+                      "cmake",
+                      "--build",
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+                      "--target",
+                      "openmw",
+                      "openmw-tests",
+                      "esmtool",
+                      "-j",
+                      "3"
+                    ],
+                    "log": "engine-build.log",
+                    "returncode": 0,
+                    "seconds": 350.08
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_list_tests"
+                    ],
+                    "log": "engine-inventory.txt",
+                    "returncode": 0,
+                    "seconds": 0.265
+                  },
+                  {
+                    "argv": [
+                      "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+                      "--gtest_filter=*",
+                      "--gtest_repeat=1",
+                      "--gtest_shuffle=0",
+                      "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-normal-01/engine.xml"
+                    ],
+                    "log": "engine.log",
+                    "returncode": 0,
+                    "seconds": 30.901
+                  }
+                ],
+                "results": {
+                  "engine": {
+                    "executed": 1737,
+                    "inventory_matches": true,
+                    "failed": 0,
+                    "skipped": 0,
+                    "filter": "*",
+                    "binary_sha256": "28afb44cc93a5636932ee6b77094506b72edf14f248d25099513b54815c30239",
+                    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+                    "xml_sha256": "1604d5d81f334679218499cc4a72291a168d746efe987e54f301ad63ac3674d2",
+                    "inventory_sha256": "8df8f3695cd9a7275b57817a0eff4976773d9d813c4eeec2df7078053b134f77",
+                    "configuration": {
+                      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+                      "CMAKE_CXX_FLAGS": "",
+                      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+                    }
+                  }
+                },
+                "source_before": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                },
+                "source_after": {
+                  "head": "5c9e28ba5886884a206e43450f04d7aabb2eb8a3",
+                  "source_fingerprint": "8e6d0d804b78b38458add884eebc9313ad43f56fb094f6151c6cf082f3dfa642"
+                }
+              }
+            }
+          },
+          "policy": "Own-profile full1737 engine checks authorize that runtime while the other profile builds, with source frozen. Final checkpoint acceptance/commit require both profiles full checks and both runtime courses. No expected values or final gates relaxed."
+        }
+      }
+    }
+  },
+  "original_instructions": {
+    "shield_wear": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-block-wear-oracle-01/verification.json",
+      "sha256": "3fd1e912bdc4ca7b87310c1581940e4f4e4638b06ab68f6fa191dfa80b22f643",
+      "result": {
+        "passed": true,
+        "cases": 640,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "7808b12f02775e8efe2a127d1ccacf62f1957ac51871128d20be0433ad80be15",
+        "zero_wear_cases": 320,
+        "observation": "Zero wear returns false without writer/cache/equipment consequence even at initial0. Positivewear.25 under supplied novice armor multiplier1.5 subtracts.375, clamps results strictly below1 to0, requests active+worn Player/quest unequip or ordinaryNPCdrop+notification.",
+        "limits": "Full armor-wear helper and actual worn-entry/retention reads; native current/base-skill/max-health/settings/condition-writer and final unequip/drop are declared boundaries. Does not execute incoming block calculation or actual scene, original process, or C++ acceptance."
+      }
+    },
+    "shield_block_caller": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-block-caller-oracle-03/verification.json",
+      "sha256": "58de173ff06a2f7954a2f1233a1d3b09f76cd61cb171d67e43f23ece68daada0",
+      "result": {
+        "passed": true,
+        "cases": 192,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "bae0d7bb0570721ab918610bcd9b936c2a188769a07f1df6fb682dec3a413397",
+        "scope": "Actual block caller5F5C0F..5F5CD6 with actual56A300 mastery thresholds and547590 cost; actualPlayer65FF10/NPC5F3870 wear plus worn-entry/retention helpers. Base/current Block and baseHeavy5 getters supplied; Fatigue sink5E07D0 and process withdrawal5F4AE0 captured, plus prior wear-probe reader/writer/equipment boundaries.",
+        "observation": "BelowBlock25 spends Fatigue; belowBlock50 calls item wear. Existingzero shield is removed only with positive wear and Block below50; native caller requests process withdrawal0 after true break return. Block50/74 preserves broken worn shield.",
+        "normal_input_acceptance": false
+      }
+    },
+    "weapon_wear": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-weapon-wear-oracle-04/verification.json",
+      "sha256": "a1e395b0d2f5f4c28e8f6c87f4e546fb520bfc3fa136745b142484b941223c6a",
+      "result": {
+        "passed": true,
+        "cases": 128,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "fc2b7018a91fbb3aee1e87c70bfb4cc9d7e477302d2006069ef1fc51feac22c2",
+        "scope": "FullPlayer65FF10/NPC5F3870 WEAP type21, actual RTTI-identified WEAP primary vtableA45354/retention4D7030; real High/Low process+304 weapon-out reader. Actualprocess64B110 cachedweaponnode reader uses supplied+FC/+100 node with position11/12/13 and identity rotation; same supplied current/maxhealth/bookkeeping/conditionwriter/query-mode/equipment boundaries as copied wear-probe.",
+        "observation": "Initially zero weapon with positive wear requests Player/quest retention or ordinaryNPC drop only with weapon-out active process. Zero wear does not write or remove it. Nonzero40 remains39.75. Shield-slot getter and armor-rating cache invalidation are never called.",
+        "normal_input_acceptance": false
+      }
+    },
+    "zero_shield_runtime": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-npc-shield-runtime-oracle-01/report.json",
+      "sha256": "bb2488e381ea1c831e0c8bf747eee3d5d33d223f25d3ed9697e9709fb52536b3",
+      "result": {
+        "passed": true,
+        "cases": 2,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "profiles": [
+          {
+            "cw": 639,
+            "wear_bits": 1052099215,
+            "condition_bits": 0,
+            "equipment_events": [
+              {
+                "kind": "drop",
+                "base": 33574912,
+                "extra": 33572352,
+                "count": 1,
+                "position": [
+                  11.0,
+                  12.0,
+                  13.0
+                ],
+                "rotation": [
+                  -0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              {
+                "kind": "notification",
+                "args": [
+                  33558528,
+                  33579008
+                ]
+              }
+            ],
+            "armor_rating_bits": 0,
+            "incoming_bits": 1068876431,
+            "post_armor_bits": 1068876431,
+            "block_fraction_bits": 1048576000,
+            "block_cost_bits": 0,
+            "health_bits": 1065898475
+          },
+          {
+            "cw": 895,
+            "wear_bits": 1052099215,
+            "condition_bits": 0,
+            "equipment_events": [
+              {
+                "kind": "drop",
+                "base": 33574912,
+                "extra": 33572352,
+                "count": 1,
+                "position": [
+                  11.0,
+                  12.0,
+                  13.0
+                ],
+                "rotation": [
+                  -0.0,
+                  0.0,
+                  0.0
+                ]
+              },
+              {
+                "kind": "notification",
+                "args": [
+                  33558528,
+                  33579008
+                ]
+              }
+            ],
+            "armor_rating_bits": 0,
+            "incoming_bits": 1068876431,
+            "post_armor_bits": 1068876431,
+            "block_fraction_bits": 1048576000,
+            "block_cost_bits": 0,
+            "health_bits": 1065898475
+          }
+        ],
+        "corpus_sha256": "3678946c419091fc1c25cb866726e02a9ea501d0e6f06ed0c757f11016a46994",
+        "scope": "Full original488CB0 IronShield1200/max225/currentfloat0.0/currentHeavy5/Luck50 entry; supplied native max/current AV/ExtraHealth readers. Actual5FF712 mitigation with supplied aggregate equal to single equipped shield entry,547260; actual5474A0 shield Block25/fullFatigue,5FF8F3 Health store; baseBlock25 suppresses the Fatigue-cost call as independently proven in192-case native block-caller probe03. Incoming bits1068876431 independently frozen in raw hand corpus10b5fd2b (args10/50/40/fullFat). Also executes actual5F5BAB wear store and fullNPC5F3870 mutation with drop/notification sinks; no actual native world insertion/physics. Native settings supplied as published original runtime profile. No full collision/contact/mutation/audio/gameplay acceptance."
+      }
+    },
+    "zero_shield_sink": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-npc-shield-runtime-oracle-01/sink-report.json",
+      "sha256": "1f0302674ed5fccff19a5dab6a11459c4baa25a5c3ce6bb88bd6dda444659a62",
+      "result": {
+        "passed": true,
+        "cases": 2,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "raw_hand_profile": {
+          "args": [
+            10,
+            50,
+            40,
+            1.0,
+            false
+          ],
+          "health_bits": 1068876431,
+          "fatigue_bits": 1071309128
+        },
+        "raw_corpus_sha256": "10b5fd2be992852840fea596b53156afc410d43fdfdae21d27303a62a4f3ff2e",
+        "profiles": [
+          {
+            "x87": 639,
+            "health_damage_bits": 1065898475,
+            "fatigue_damage_bits": 1067722998,
+            "resource_writer_calls": [
+              {
+                "actor": 33558528,
+                "av": 8,
+                "delta_bits": 3213382123,
+                "source": 33574912
+              },
+              {
+                "actor": 33558528,
+                "av": 10,
+                "delta_bits": 3215206646,
+                "source": 33574912
+              }
+            ]
+          },
+          {
+            "x87": 895,
+            "health_damage_bits": 1065898475,
+            "fatigue_damage_bits": 1067722998,
+            "resource_writer_calls": [
+              {
+                "actor": 33558528,
+                "av": 8,
+                "delta_bits": 3213382123,
+                "source": 33574912
+              },
+              {
+                "actor": 33558528,
+                "av": 10,
+                "delta_bits": 3215206646,
+                "source": 33574912
+              }
+            ]
+          }
+        ],
+        "scope": "Original ratio5FFEB5..6000E2 and full physical sink5E58F0/difficulty5E2560; supplied independently frozen hand raw formula and block remainder. Player attacker, NPC victim, neutral difficulty. Score/Dead getters and resource sink writer are explicit boundaries. No contact, equipment, reaction or gameplay acceptance."
+      }
+    }
+  },
+  "retained_helper_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-initially-broken-integration-01/guard-attempt01.json",
+    "sha256": "190f41bfa615e85dcc7818dfe5f61a65c3a113d8abad875a032e42e613180801",
+    "result": {
+      "passed": false,
+      "action": "accept-builds.py normal before any application launch",
+      "cause": "runpy helper needed its verify_gtest module directory on sys.path; import failed before receipts or runtime launch",
+      "correction": "Add actual checkout skill scripts directory to sys.path; expected values and acceptance conditions unchanged."
+    }
+  },
+  "retained_early_check_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/first-output-early-attempt01.json",
+    "sha256": "144afe3de0f96bd98e65426179be01d5e7acadbe38b166caadd735317d468151",
+    "result": {
+      "passed": false,
+      "scope": "Ad hoc early first-save check, not preregistered final verifier.",
+      "cause": "Actor-bit/body/action checks passed; final ad hoc assertion incorrectly equated the entire NPC inventory with the right sword, omitting the two original clothing items.",
+      "correction": "Use the already preregistered full source inventory minus the shield. No recipe, expected resource values or production code changed.",
+      "diagnostic": {
+        "av_differences": [],
+        "body_count": 1,
+        "rng": 505908858,
+        "serial": 2,
+        "actions": {
+          "next": 3,
+          "pending": []
+        },
+        "npc_list": [
+          "dynamic:native-reference:0000000000000001"
+        ],
+        "inventory": [
+          {
+            "base": "content:oblivion.esm:027319",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 4,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null
+          },
+          {
+            "base": "content:oblivion.esm:027318",
+            "count": 1,
+            "condition": -1.0,
+            "charge": -1.0,
+            "equipped_slots": 8,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null
+          },
+          {
+            "base": "content:oblivion.esm:090615",
+            "count": 1,
+            "condition": 55.875,
+            "charge": -1.0,
+            "equipped_slots": 65536,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null
+          }
+        ],
+        "expected_sword": {
+          "base": "content:oblivion.esm:090615",
+          "count": 1,
+          "condition": 55.875,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null
+        }
+      }
+    }
+  },
+  "limits": [
+    "Original instruction paths use declared AV/current/max/settings/writer/equipment/scene boundaries; no whole original-game process equivalence.",
+    "NPC block intent uses public controls with AI disabled in a subsystem fixture; no full autonomous defensive AI claim.",
+    "Contact Fatigue has six-digit log precision and regenerates before save; saved raw Health and other float32 actor channels are checked exactly.",
+    "Completed-contact fresh-process restart only; in-action/input/view/FPS and combined S4 gates remain open.",
+    "Undrawn broken-weapon blocking with positive wear remains rejected; controller requires drawn weapon to maintain block. Zero-wear mastery controls preserve equipment.",
+    "No quantitative stock-PCM correlation or whole-scene visual equivalence.",
+    "Component sources unchanged; previous full component results are not relabeled as current-profile tests. Sanitizer leak detection disabled."
+  ],
+  "full_M15S4_acceptance": false,
+  "separate_floor_inspection": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-floor-visual-normal-01/verification.json",
+      "sha256": "c662cd5930463690750d6f198d69b472dcd23f807807bc32e0fc2d964b7dd49b",
+      "result": {
+        "passed": true,
+        "scope": "Camera/position setup only in a copy of the completed normal fresh-process output. Additional direct floor-model inspection, not an ordinary camera-input or exact-lineage restart proof.",
+        "source_sha256": "8531b93ceb6ff536d018909b748b2649aa1cbd28cf5ff157b9d214aec9973497",
+        "staged_sha256": "29170a51b4361c5029e59b410f4f97a9f99437e3f75ba88ed0e52c258b6b1080",
+        "output_sha256": "3d35bdee67ce8b82b231726e0e500d784f40a1365bad42bbddb3ee2a24e5661e",
+        "epoch": {
+          "pid": 597518,
+          "start_ticks": 14103075,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-floor-visual-normal-01/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-initially-broken-shield-floor-visual-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "bfd0916d32e962247e0dc4aade90d6206b967682d674001d51ae2b4692f882fa"
+        },
+        "body_displacement": 0.011234268713068731,
+        "body_count": 1,
+        "actor_float32_bits_preserved": true,
+        "no_new_contact_pickup_or_sound": true,
+        "visual_review": "passed; see visual-review.json",
+        "verifier_correction": {
+          "passed": false,
+          "phase": "verifier after actual runtime terminal0",
+          "cause": "sha helper called read_bytes on epoch command path string at final executable identity assertion; requires Path normalization. Actor/resource/body/movement assertions had passed before that line.",
+          "frozen_verifier_sha256": "0bb7d76876839787b7827afe153e8af530ca6c92e8a0a4bb9bb6e8d7ddc794c5",
+          "correction": "New verify-02.py changes only sha input normalization and adds correction provenance. Original preregistered verifier/pins/recipe/output remain untouched; no acceptance values changed."
+        },
+        "executed_verifier_sha256": "caadaa5f09dfb5e0a4dc121518423ae2a463d36cb175485232139f4816baf9a8",
+        "full_M15S4_acceptance": false
+      }
+    },
+    "visual_review": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-floor-visual-normal-01/visual-review.json",
+      "sha256": "dd243b9ef91b35002ba7e78bc8d68b500e319ff3fa58ca5a6ed2470afd981ee3",
+      "result": {
+        "passed": true,
+        "directly_reviewed": true,
+        "capture": {
+          "path": "first/persisted-shield-floor.png",
+          "sha256": "f483446264c827c1c263b9bc11194ed2a0adf9abfd32f6ce9fa668924b1863b8"
+        },
+        "observations": "One stock shield model is clearly visible at the prison floor by the NPC feet, with Iron Shield focus label. NPC right sword remains held; Player hands and the dungeon floor/bed/table render. This is a camera/position-only setup copy of the previously completed normal fresh output, not ordinary mouse-look or an exact-lineage continuation claim."
+      }
+    },
+    "recipe": {
+      "path": "build/oblivion-compat/m15/S4/native-initially-broken-shield-floor-visual-normal-01/preregistered-acceptance.json",
+      "sha256": "d802b5deb3f14581aebb91ed982b7a34f6280e3c981278945addc42e6bbe3783",
+      "result": {
+        "scope": "Camera/position setup only in a copy of the completed normal fresh-process output. Additional direct floor-model inspection, not an ordinary camera-input or exact-lineage restart proof.",
+        "source": "build/oblivion-compat/m15/S4/native-initially-broken-shield-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "8531b93ceb6ff536d018909b748b2649aa1cbd28cf5ff157b9d214aec9973497",
+        "staged_sha256": "29170a51b4361c5029e59b410f4f97a9f99437e3f75ba88ed0e52c258b6b1080",
+        "only_changed_path": "player.position",
+        "before": [
+          672.0,
+          -40.0,
+          -109.68915557861328,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after": [
+          575.1686401367188,
+          -7.384211540222168,
+          -108.23680877685547,
+          0.971354603767395,
+          0.0,
+          1.5707963705062866
+        ],
+        "target_body_position": [
+          655.1686401367188,
+          -7.384211540222168,
+          -101.31269073486328
+        ],
+        "maximum_body_displacement": 4,
+        "required_body_count": 1,
+        "forbidden_new_contacts_pickups_and_sounds": true
+      }
+    }
+  }
+}

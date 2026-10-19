@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "scope": "Initially worn zero-condition equipment; bounded input/restart courses. Full M15S4 incomplete.",
+  "recipes": {
+    "shield_normal": {
+      "scope": "Normal-input Player unarmed strike against NPC public block control; initially broken carried-left IronShield receives positive blocking wear and is removed, publishes one owner-selected world body, preserves right sword, then actual fresh-process load/resave. First-person keyboard1FPS bounded branch; full M15S4 remains open.",
+      "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+      "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+      "staged_source_sha256": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+      "fixture_changes": {
+        "npc_sword_condition": 55.875,
+        "npc_shield_condition": 0.0,
+        "npc_shield_equipped_slots": 8192,
+        "npc_intent": "public self.controls.block while CarriedLeft exists; AI disabled; right sword stays equipped; no damage/contact injection"
+      },
+      "expected": {
+        "attacker": "dynamic:player:0000000000000001",
+        "victim": "content:oblivion.esm:01fc43",
+        "weapon": "content:oblivion.esm:0352c1",
+        "health_damage_bits": 1065898475,
+        "fatigue_damage_bits": 1067722998,
+        "block_fraction": 0.25,
+        "block_fatigue": 0,
+        "attacker_fatigue_debit": 7,
+        "victim_posture_at_contact": -1,
+        "victim_posture_at_save": -1,
+        "dynamic_reference": "dynamic:native-reference:0000000000000001",
+        "dynamic_serial": 2,
+        "action_next": 3,
+        "combat_rng": 505908858,
+        "sound_edids": [
+          "PHYDamageFlesh",
+          "WPNHitHand"
+        ],
+        "dropper": "content:oblivion.esm:01fc43",
+        "owner": null,
+        "world_model": "meshes/armor/iron/shield.nif",
+        "right_sword": {
+          "base": "content:oblivion.esm:090615",
+          "count": 1,
+          "condition": 55.875,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null
+        },
+        "world_asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+        "body_record": 5,
+        "node_record": 0,
+        "npc_source_shield_count": 0,
+        "dropped_shield_condition": 0
+      },
+      "oracle_report_sha256": "bb2488e381ea1c831e0c8bf747eee3d5d33d223f25d3ed9697e9709fb52536b3",
+      "sink_report_sha256": "1f0302674ed5fccff19a5dab6a11459c4baa25a5c3ce6bb88bd6dda444659a62",
+      "placement": {
+        "maximum_planar_distance_from_actor": 128,
+        "maximum_absolute_height_difference": 128,
+        "require_finite_position_rotation": true
+      },
+      "physical_continuation": "Preserve exact serialized independent reference/cache/body state through loader; live physics may advance. Require one finite body and dropped reference in each output, no duplicate allocation/resources/contact on restart. Native reference/cache separation applies; no absolute reference/body equality asserted.",
+      "limits": "Public NPC block intent with AI disabled is a bounded subsystem fixture, not full autonomous defensive AI. No quantitative stock PCM correlation, original-game scene/fade equivalence or fullS4 acceptance. Contact Fatigue log has six-digit precision and regenerates before save; saved raw Health bits are exact.",
+      "preregistered_before_this_course": true,
+      "second_max_linear_speed": 1,
+      "continuation_policy": "Exact first output is second input. Identical Lua content is retained across epochs;300wall seconds settling before final save. Corrects normal01 content-removal fixture failure before this new course.",
+      "physics_gate": "Both outputs require the admitted body and original identity/extras/resources. Placement bounds128 and cached-body agreement.01 apply; second linear speed<=1. Root reference may differ from cached local under native masked callback policy. Normal01 below-floor failure is retained; no whole S4 acceptance.",
+      "shield_template": "build/oblivion-compat/m15/S4/native-shield-attachment-runtime-normal-03/staged-input.omwsave",
+      "shield_template_sha256": "049e6bae211aa082bf345db613325b804e08fe1a62f9e2245b07c74c210d502d"
+    },
+    "shield_sanitized": {
+      "scope": "Normal-input Player unarmed strike against NPC public block control; initially broken carried-left IronShield receives positive blocking wear and is removed, publishes one owner-selected world body, preserves right sword, then actual fresh-process load/resave. First-person keyboard1FPS bounded branch; full M15S4 remains open.",
+      "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+      "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+      "staged_source_sha256": "019415aebb4f8fe57abdcec5619ce03745e3cc280c7ee5112d620fa5db72e5c8",
+      "fixture_changes": {
+        "npc_sword_condition": 55.875,
+        "npc_shield_condition": 0.0,
+        "npc_shield_equipped_slots": 8192,
+        "npc_intent": "public self.controls.block while CarriedLeft exists; AI disabled; right sword stays equipped; no damage/contact injection"
+      },
+      "expected": {
+        "attacker": "dynamic:player:0000000000000001",
+        "victim": "content:oblivion.esm:01fc43",
+        "weapon": "content:oblivion.esm:0352c1",
+        "health_damage_bits": 1065898475,
+        "fatigue_damage_bits": 1067722998,
+        "block_fraction": 0.25,
+        "block_fatigue": 0,
+        "attacker_fatigue_debit": 7,
+        "victim_posture_at_contact": -1,
+        "victim_posture_at_save": -1,
+        "dynamic_reference": "dynamic:native-reference:0000000000000001",
+        "dynamic_serial": 2,
+        "action_next": 3,
+        "combat_rng": 505908858,
+        "sound_edids": [
+          "PHYDamageFlesh",
+          "WPNHitHand"
+        ],
+        "dropper": "content:oblivion.esm:01fc43",
+        "owner": null,
+        "world_model": "meshes/armor/iron/shield.nif",
+        "right_sword": {
+          "base": "content:oblivion.esm:090615",
+          "count": 1,
+          "condition": 55.875,
+          "charge": -1.0,
+          "equipped_slots": 65536,
+          "hotkey": -1,
+          "owner": "null",
+          "remaining_usage_time": -1.0,
+          "ownership_rank": null,
+          "ownership_global": "null",
+          "extra_scale": null
+        },
+        "world_asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+        "body_record": 5,
+        "node_record": 0,
+        "npc_source_shield_count": 0,
+        "dropped_shield_condition": 0
+      },
+      "oracle_report_sha256": "bb2488e381ea1c831e0c8bf747eee3d5d33d223f25d3ed9697e9709fb52536b3",
+      "sink_report_sha256": "1f0302674ed5fccff19a5dab6a11459c4baa25a5c3ce6bb88bd6dda444659a62",
+      "placement": {
+        "maximum_planar_distance_from_actor": 128,
+        "maximum_absolute_height_difference": 128,
+        "require_finite_position_rotation": true
+      },
+      "physical_continuation": "Preserve exact serialized independent reference/cache/body state through loader; live physics may advance. Require one finite body and dropped reference in each output, no duplicate allocation/resources/contact on restart. Native reference/cache separation applies; no absolute reference/body equality asserted.",
+      "limits": "Public NPC block intent with AI disabled is a bounded subsystem fixture, not full autonomous defensive AI. No quantitative stock PCM correlation, original-game scene/fade equivalence or fullS4 acceptance. Contact Fatigue log has six-digit precision and regenerates before save; saved raw Health bits are exact.",
+      "preregistered_before_this_course": true,
+      "second_max_linear_speed": 1,
+      "continuation_policy": "Exact first output is second input. Identical Lua content is retained across epochs;300wall seconds settling before final save. Corrects normal01 content-removal fixture failure before this new course.",
+      "physics_gate": "Both outputs require the admitted body and original identity/extras/resources. Placement bounds128 and cached-body agreement.01 apply; second linear speed<=1. Root reference may differ from cached local under native masked callback policy. Normal01 below-floor failure is retained; no whole S4 acceptance.",
+      "shield_template": "build/oblivion-compat/m15/S4/native-shield-attachment-runtime-normal-03/staged-input.omwsave",
+      "shield_template_sha256": "049e6bae211aa082bf345db613325b804e08fe1a62f9e2245b07c74c210d502d"
+    },
+    "weapon_normal": {
+      "scope": "Normal-input Player unarmed strike against NPC public block control with an initially zero-condition worn right sword. Positive wear removes it through the existing native body factory; save/quit/fresh-process resave with no contact replay. Normal first-person keyboard1FPS subsystem fixture, not fullS4.",
+      "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+      "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+      "staged_source_sha256": "1ada154bb81b6202be1a6e102c07f0d2d4ef76221dc1eabbfc20ed9f839cf125",
+      "fixture_changes": {
+        "relative_to_source": "Only NPC right sword condition changed from 1.000100016593933 to0. All source actor arrays, equipment slots, actions, RNG and Player input state retained.",
+        "npc_intent": "Existing public self.controls.block follows right slot; AI disabled; no contact or damage injection."
+      },
+      "expected": {
+        "attacker": "dynamic:player:0000000000000001",
+        "victim": "content:oblivion.esm:01fc43",
+        "weapon": "content:oblivion.esm:090615",
+        "health_damage_bits": 1067387453,
+        "fatigue_damage_bits": 1069516063,
+        "block_fraction": 0.125,
+        "block_fatigue": 0,
+        "attacker_fatigue_debit": 7,
+        "victim_posture_at_contact": -1,
+        "victim_posture_at_save": -1,
+        "npc_source_weapon_count": 0,
+        "dropped_weapon_condition": 0,
+        "dynamic_reference": "dynamic:native-reference:0000000000000001",
+        "dynamic_serial": 2,
+        "action_next": 3,
+        "combat_rng": 505908858,
+        "sound_edids": [
+          "WPNBlockHand",
+          "WPNBlockHand"
+        ],
+        "dropper": "content:oblivion.esm:01fc43",
+        "owner": null
+      },
+      "oracle_report_sha256": "a891186796e4d5d12dc82a1baa3eeb6975d5373840cf7ea863ff975bebc8d807",
+      "sink_report_sha256": "e432f887a58b4a06c7ccf59b9fd8d08dfdf3235e9dac103e524911bb30b75b58",
+      "placement": {
+        "maximum_planar_distance_from_actor": 128,
+        "maximum_absolute_height_difference": 128,
+        "require_finite_position_rotation": true
+      },
+      "physical_continuation": "Preserve exact serialized independent reference/cache/body state through loader; live physics may advance. Require one finite body and dropped reference in each output, no duplicate allocation/resources/contact on restart. Native reference/cache separation applies; no absolute reference/body equality asserted.",
+      "limits": "NPC control intent is authored through existing public Actor control API; not full autonomous defensive AI. No exact native fade timing or uninterrupted real-content trajectory equivalence. Captured PCM retained; two identical sound IDs cannot prove separate voices when same stock variant is selected.",
+      "preregistered_before_this_course": true,
+      "second_max_linear_speed": 1,
+      "continuation_policy": "Exact first output is second input. Identical Lua content is retained across epochs;300wall seconds settling before final save. Corrects normal01 content-removal fixture failure before this new course.",
+      "physics_gate": "Both outputs require the admitted body and original identity/extras/resources. Placement bounds128 and cached-body agreement.01 apply; second linear speed<=1. Root reference may differ from cached local under native masked callback policy. Normal01 below-floor failure is retained; no whole S4 acceptance.",
+      "expected_provenance": "Unchanged block damage/mitigation profile from accepted defensive weapon course; initially0 positive-wear behavior independently executed in native-initially-broken-weapon-wear-oracle-04. Source wear condition is not a block-fraction input. No production C++ supplies expected values."
+    }
+  },
+  "full_M15S4_acceptance": false
+}

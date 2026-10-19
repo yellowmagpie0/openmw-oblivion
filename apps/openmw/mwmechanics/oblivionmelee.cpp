@@ -796,8 +796,9 @@ namespace MWMechanics
                     : double(ref.getCharge()) + ref.getChargeIntRemainder();
                 if (!std::isfinite(itemCondition) || itemCondition < 0)
                     throw std::invalid_argument("invalid native blocking item condition");
-                if (itemCondition == 0)
-                    return std::nullopt; // Broken equipped state needs the break/unequip transition.
+                // A worn zero-condition item can still block. Native5F5C69
+                // calls its wear helper only below Journeyman; positive wear
+                // then reports the break, while zero wear leaves it equipped.
             }
             const float fatigue = player ? service.getPlayerValue(10) : service.getNonPlayerValue(victim, 10);
             result.mAccepted = true;

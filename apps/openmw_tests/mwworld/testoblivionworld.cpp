@@ -9040,15 +9040,28 @@ namespace
                     }
         ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 15, ESM4::ActorValueCommand::Set,
             ESM4::ActorValueCommandSource::Script, 50));
-        auto& inventory = victim.getClass().getInventoryStore(victim);
-        const auto brokenShield = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-        brokenShield.getCellRef().setNativeItemCondition(0);
-        const auto beforeBroken = snapshot();
-        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false));
+        // Native5F5C64 suppresses item wear at Journeyman, even for an
+        // already broken item. No removal or posture withdrawal is requested.
         const auto source = *attacker.getClass().getInventoryStore(attacker).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
-        EXPECT_EQ(snapshot(), beforeBroken);
-        EXPECT_EQ(brokenShield.getCellRef().getNativeItemCondition(), 0);
+        for (bool shieldEquipped : {false, true})
+        {
+            SCOPED_TRACE(shieldEquipped);
+            ESM4::RuntimeInventoryItem broken;
+            broken.mBase = shieldEquipped ? shieldKey : swordKey; broken.mCount = 1; broken.mCondition = 0;
+            broken.mEquippedSlots = shieldEquipped ? ESM4::Armor::TES4_Shield : ESM4::InventorySlotWeapon;
+            installEquipmentInventory(fixture, victim, {broken});
+            auto& inventory = victim.getClass().getInventoryStore(victim);
+            const auto item = *inventory.getSlot(shieldEquipped ? MWWorld::InventoryStore::Slot_CarriedLeft
+                : MWWorld::InventoryStore::Slot_CarriedRight);
+            const auto beforeBroken = snapshot();
+            const auto resolved = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+            ASSERT_TRUE(resolved); EXPECT_TRUE(resolved->mBlockAccepted);
+            EXPECT_TRUE(resolved->mVictimConditionChanges.empty());
+            EXPECT_EQ(snapshot(), beforeBroken);
+            EXPECT_EQ(service.getProcessAction(key), 6);
+            EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+            EXPECT_TRUE(inventory.isEquipped(item));
+        }
     }
 
     ESM::FormKey installMeleeAiStyle(NativeWorldFixture& fixture)
@@ -24830,11 +24843,13 @@ namespace
 
 TEST(OblivionWorldTest, BlockingWeaponWearToZeroAtomicallyUnequipsAndWithdrawsPosture)
 {
+    for (float initialCondition : {0.f, 1.125f})
     for (int blockSkill : {5, 25})
         for (bool throwingObserver : {false, true})
         {
             SCOPED_TRACE(throwingObserver);
             SCOPED_TRACE(blockSkill);
+            SCOPED_TRACE(initialCondition);
             NativeWorldFixture fixture;
             auto& world = fixture.mWorld;
             auto& store = world.getStore();
@@ -24850,7 +24865,7 @@ TEST(OblivionWorldTest, BlockingWeaponWearToZeroAtomicallyUnequipsAndWithdrawsPo
                 ESM4::ActorValueCommandSource::Script, blockSkill));
             const float blockDebit = blockSkill < 25 ? 20.25f : 0.f;
             ESM4::RuntimeInventoryItem equipped;
-            equipped.mBase = weaponKey; equipped.mCount = 1; equipped.mCondition = 1.125f;
+            equipped.mBase = weaponKey; equipped.mCount = 1; equipped.mCondition = initialCondition;
             equipped.mCharge = 7.25f; equipped.mExtraScale = .13f; equipped.mEquippedSlots = ESM4::InventorySlotWeapon;
             installEquipmentInventory(fixture, victim, {equipped});
             victim.getClass().getCreatureStats(victim).setDrawState(MWMechanics::DrawState::Weapon);
@@ -24920,6 +24935,7 @@ TEST(OblivionWorldTest, BlockingWeaponWearToZeroAtomicallyUnequipsAndWithdrawsPo
 
 TEST(OblivionWorldTest, BlockingRetainedShieldBreakProjectsRemovalBeforeArmorSelectionAndPublishesAtomically)
 {
+    for (float initialCondition : {0.f, 1.125f})
     for (bool weaponAttack : {false, true})
       for (bool drawn : {false, true})
        for (int blockSkill : {5, 25})
@@ -24927,6 +24943,7 @@ TEST(OblivionWorldTest, BlockingRetainedShieldBreakProjectsRemovalBeforeArmorSel
         {
             SCOPED_TRACE(throwingObserver);
             SCOPED_TRACE(blockSkill);
+            SCOPED_TRACE(initialCondition);
             NativeWorldFixture fixture;
             auto& world = fixture.mWorld;
             auto& store = world.getStore();
@@ -24962,7 +24979,7 @@ TEST(OblivionWorldTest, BlockingRetainedShieldBreakProjectsRemovalBeforeArmorSel
                 ESM4::ActorValueCommandSource::Script, blockSkill));
             const float blockDebit = blockSkill < 25 ? 20.5f : 0.f;
             ESM4::RuntimeInventoryItem equipped;
-            equipped.mBase = shieldKey; equipped.mCount = 1; equipped.mCondition = 1.125f;
+            equipped.mBase = shieldKey; equipped.mCount = 1; equipped.mCondition = initialCondition;
             equipped.mCharge = 7.25f; equipped.mExtraScale = .13f; equipped.mEquippedSlots = ESM4::Armor::TES4_Shield;
             installEquipmentInventory(fixture, victim, {equipped});
             victim.getClass().getCreatureStats(victim).setDrawState(
@@ -25187,9 +25204,11 @@ TEST(OblivionWorldTest, GodModeSuppressedDefensiveWeaponBreakKeepsBlockingAndEqu
 
 TEST(OblivionWorldTest, PlayerShieldBreakRetentionAndGodModeKeepConditionEquipmentAndPostureConsistent)
 {
+    for (float initialCondition : {0.f, 1.125f})
     for (bool godMode : {false, true})
     {
         SCOPED_TRACE(godMode);
+        SCOPED_TRACE(initialCondition);
         NativeWorldFixture fixture;
         auto& world = fixture.mWorld;
         auto& store = world.getStore();
@@ -25210,7 +25229,7 @@ TEST(OblivionWorldTest, PlayerShieldBreakRetentionAndGodModeKeepConditionEquipme
         view.mData.mType = ESM::Armor::Shield; view.mData.mHealth = 1; store.insertStatic(view);
         configureNativeDefensiveBreakRules(fixture, player);
         ESM4::RuntimeInventoryItem equipped;
-        equipped.mBase = shieldKey; equipped.mCount = 1; equipped.mCondition = 1.125f;
+        equipped.mBase = shieldKey; equipped.mCount = 1; equipped.mCondition = initialCondition;
         equipped.mExtraScale = .13f; equipped.mCharge = 7.25f; equipped.mEquippedSlots = ESM4::Armor::TES4_Shield;
         installEquipmentInventory(fixture, player, {equipped});
         auto& service = *world.getOblivionCombatService();
@@ -25248,7 +25267,7 @@ TEST(OblivionWorldTest, PlayerShieldBreakRetentionAndGodModeKeepConditionEquipme
             -resolved->mBlockFatigueDebit, changes, {}};
         ASSERT_TRUE(world.commitOblivionPhysicalContact(action, attacker, player, deltas));
         EXPECT_EQ(service.getProcessAction(key), godMode ? 6 : -1);
-        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), godMode ? 1.125f : 0.f);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), godMode ? initialCondition : 0.f);
         EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft) == inventory.end(), !godMode);
         EXPECT_EQ(item.getCellRef().getCount(), 1);
         EXPECT_EQ(item.getCellRef().getNativeItemScale(), .13f);
@@ -25618,9 +25637,11 @@ TEST(OblivionWorldTest, NativeLooseShieldSnapshotReadmitsOwnerWorldBodyAndPacked
 
 TEST(OblivionWorldTest, BlockingNpcShieldBreakPublishesOneContactDropAndPostureOrRollsBackEverything)
 {
+    for (float initialCondition : {0.f, .0001f})
     for (bool reject : {false,true})
     {
         SCOPED_TRACE(reject);
+        SCOPED_TRACE(initialCondition);
         NativeWeaponFactoryFixture fixture(false,1,false,false,true);
         auto& world=fixture.mWorld; auto& store=world.getStore();
         const auto attacker=prepareNativeDropContactActors(fixture), victim=fixture.mActor;
@@ -25631,7 +25652,7 @@ TEST(OblivionWorldTest, BlockingNpcShieldBreakPublishesOneContactDropAndPostureO
         configureNativeDefensiveBreakRules(fixture,victim);
         ASSERT_TRUE(world.executeOblivionActorValueCommand(victim,27,ESM4::ActorValueCommand::Set,
             ESM4::ActorValueCommandSource::Script,15));
-        fixture.mItem.getCellRef().setNativeItemCondition(.0001f);
+        fixture.mItem.getCellRef().setNativeItemCondition(initialCondition);
         auto& service=*world.getOblivionCombatService();
         const auto key=victim.getCellRef().getFormKey(); ASSERT_TRUE(service.beginBlocking(key));
         const auto action=world.beginOblivionPhysicalAction(attacker);
