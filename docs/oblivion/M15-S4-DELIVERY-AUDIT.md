@@ -7982,3 +7982,37 @@ instruction reports, live observations, boundaries and retained failed attempts.
 The editable cache fixture records input axes and selected original orders.
 Normal contact descriptor generation and the remaining view/channel work are
 still open. **M15S4 remains incomplete.**
+
+## Active owned reaction replacement (2026-10-19)
+
+The contact transaction now accepts a distinct BlockHit/Recoil resource replacing
+an already active owned BlockHit/Recoil. It moves the exact old causal ID,
+resource, sample and timing into a silent outgoing layer, starts the new incoming
+crossfade, and publishes the resource deltas and process action together.
+Preparing the replacement leaves live state unchanged; a clock change invalidates
+the prepared lease. Saving during retirement preserves both owners and clocks,
+and inclusive fade completion removes only the old layer.
+
+This follows 16 previously published full original NPC caller contexts selected
+from the independent corpus: old actions6/7, new BlockHit/Recoil, two supplied
+prefixes and both precision words. Native474530/6C9D30 retires the old channel3
+resource as state3 and activates the distinct target as state2. These are selected
+existing cases, not additional oracle runs. The original cache resources are
+supplied fixtures; the engine's private causal ledger is separately tested.
+
+The new world test covers all four old/new reaction pairs, actual transaction
+publication, stale leases, Health-once, exact outgoing identity/timing, binary
+save/restore before and during retirement, continued old samples and no RNG/ID
+allocation or replay. It rejects altered causal/sample/clock inputs, prematurely
+anchored retirement, missing outgoing ownership, same-resource fade duplication,
+Stagger, and an existing detached layer for either old or incoming resource.
+The latter collision was found during review: both initial builds were stopped
+before editing, and their failed reports/logs remain retained.
+
+Final normal and separate ASan/UBSan full engine runs each pass **1,752 tests /125 suites**, exact inventories, no failures/skips and unchanged tested source. Fingerprint `276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb`. Sanitizer options are `detect_leaks=0:halt_on_error=1` and UBSan halt/stacktrace; the previously recorded desktop LSan failure is still open. `M15-OWNED-REACTION-CROSSFADE-VERIFICATION.json` pins source, independent expected cases, build reports, actual environment and retained stopped builds.
+
+This implements only active state1 sources with initialized timing and positive
+direct crossfade descriptors. State2/3/5 replacement, incoming pose transitions,
+Stagger's separate channel, Player view ownership and normal contact descriptor
+generation remain outside this checkpoint. No new fork application runtime course
+is claimed. **M15S4 remains incomplete.**

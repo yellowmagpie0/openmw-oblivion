@@ -1,0 +1,439 @@
+{
+  "status": "Bounded active owned BlockHit/Recoil resource replacement implemented and engine-verified; normal factory and full M15S4 incomplete.",
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false,
+  "native_proof": {
+    "passed": true,
+    "contexts": 16,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Selected existing full original NPC caller cases: active channel3 BlockHit/Recoil replaced by a distinct cached resource through native474530/6C9D30. Native resources are supplied; no real loader or private engine causal-ledger ownership claim.",
+    "source_corpus": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus07.json",
+    "source_corpus_sha256": "6efb2a63cf550c8543a2c6ae75ad7f77beb363f24fdf0258a1582035c9c8c315",
+    "source_probe_sha256": "be27ab816152a5a829a7ac94c58710598134e50fec1ba4e00633a70719f4a690",
+    "source_report": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-caller-review-01/caller-verification.json",
+    "source_report_sha256": "14ee67686154550fd1ec824481df34759fdec2e678aeb1b0f564952dba775ab4",
+    "expected": [
+      {
+        "helper": "block",
+        "old_action": 6,
+        "prefix": 0,
+        "cw": 639,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 6,
+        "prefix": 0,
+        "cw": 895,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 6,
+        "prefix": 1,
+        "cw": 639,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 6,
+        "prefix": 1,
+        "cw": 895,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 7,
+        "prefix": 0,
+        "cw": 639,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 7,
+        "prefix": 0,
+        "cw": 895,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 7,
+        "prefix": 1,
+        "cw": 639,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "block",
+        "old_action": 7,
+        "prefix": 1,
+        "cw": 895,
+        "new_action": 6,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 6,
+        "prefix": 0,
+        "cw": 639,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 0,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 6,
+        "prefix": 0,
+        "cw": 895,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 0,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 6,
+        "prefix": 1,
+        "cw": 639,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 0,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 6,
+        "prefix": 1,
+        "cw": 895,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 0,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 7,
+        "prefix": 0,
+        "cw": 639,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 7,
+        "prefix": 0,
+        "cw": 895,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 7,
+        "prefix": 1,
+        "cw": 639,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      },
+      {
+        "helper": "recoil",
+        "old_action": 7,
+        "prefix": 1,
+        "cw": 895,
+        "new_action": 7,
+        "old_channel3_state": 3,
+        "new_state": 2,
+        "old_block_idle_state": 1,
+        "fade_bits": 1036831949
+      }
+    ],
+    "limitations": [
+      "Active state1 source only. State2/3/5 replacement, Stagger channel0 and arbitrary view routing remain outside this implementation.",
+      "Incoming sequence must have a distinct alias and a positive direct crossfade; no pose transition.",
+      "Native .1 span observed here. Service accepts caller-validated positive descriptor span; original INI imports are not implemented."
+    ]
+  },
+  "implementation": {
+    "accepts": "Active state1 old owned BlockHit/Recoil -> distinct BlockHit/Recoil alias, positive direct crossfade, exact outgoing old cause/group/sample/timing.",
+    "guards": [
+      "Old must have Started, initialized offset/lastInput, matching process action, no Strike, inactive/retirement/pose/easing.",
+      "Incoming must be a distinct alias with positive ease and no pose. Stagger source/destination remain guarded.",
+      "No existing outgoing layer may share old or incoming group.",
+      "Exact old causal ID/resource/sample/timing; retirement must be unanchored."
+    ],
+    "publication": "One existing prepared contact commits resources/process/incoming/outgoing atomically; no extra action ID or RNG allocation.",
+    "clock": "Old timing continues through its detached retirement; anchors fade on next manager update and removes it at inclusive completion.",
+    "schema_change": false
+  },
+  "tested_source": {
+    "head": "d3911f7e7bd940de4ff4798a728fc57623a80033",
+    "source_fingerprint": "276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb"
+  },
+  "source_sha256": {
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "43687e997a96e3376b3f91778f06e244fb56cafcc70d135ee0fa7c4a4dc0e45d",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "eff9fb89dea94ca06276c0ab3a7e9f547a3f6bfd90abc0f225ec4ed6485cb5b7"
+  },
+  "checks": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-03/verification.json",
+      "sha256": "282e01363afdf92ad286a3ef059b36cb6d4f28ed06e4c3abba062d6a14d0d7d1",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "4"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 293.216
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-03/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 29.793
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1752,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ff39f64a469ae4c2b650b905d761ae3b36b6188a08229f6f417a3efc4ad37368",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "c38bb16dc2c4fd74f502dbfed30b3db4c6404dca79d2935de4352f2cdaefb65c",
+            "inventory_sha256": "405d369ceada761ec9869404d069a1a1a1c19e2512f7502a75ffd99c3ca6a631",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "d3911f7e7bd940de4ff4798a728fc57623a80033",
+          "source_fingerprint": "276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb"
+        },
+        "source_after": {
+          "head": "d3911f7e7bd940de4ff4798a728fc57623a80033",
+          "source_fingerprint": "276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-03/verification.json",
+      "sha256": "90481af3ad6c1be7c1c32102313933dacc4498c7a92fcd7f9ccc21c901cf535e",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 532.388
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-03/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 173.309
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1752,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "3f0ae6837c0847f70dbe90ed1ded045a0d761b0ccb336379956220082cf146d0",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "c04f5b685d163e0608e56b7064721829fd64da19bf3b30d3ed87185e6f25f734",
+            "inventory_sha256": "405d369ceada761ec9869404d069a1a1a1c19e2512f7502a75ffd99c3ca6a631",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "d3911f7e7bd940de4ff4798a728fc57623a80033",
+          "source_fingerprint": "276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb"
+        },
+        "source_after": {
+          "head": "d3911f7e7bd940de4ff4798a728fc57623a80033",
+          "source_fingerprint": "276139b1a9ae3e11dd5838886d4f342413fa55a9499cc26c5bc52279d4db7fbb"
+        }
+      }
+    }
+  ],
+  "sanitizer": {
+    "actual_environment": {
+      "pid": 698869,
+      "start_ticks": 17249679,
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "coverage": "Full engine ASan/UBSan with leak detection disabled. Existing desktop LSan19738bytes/372allocations remains unresolved; no new leak coverage claim."
+  },
+  "new_test": {
+    "name": "OblivionWorldTest.DistinctContactReactionCrossfadesExistingOwnerWithItsOriginalClockAndCause",
+    "reaction_pairs": 4,
+    "assertions": "Preparation purity, causal/sample/clock rejection, both detached-group collisions, stale clock lease, Health once, no RNG/ID/clock change at commit, binary save/restore immediately and during fade, old sample .375/.4375 and inclusive .5 removal, both causes consumed, no replay."
+  },
+  "retained_stopped_builds": {
+    "reason": "Stopped both owned build groups before source edit to add old/incoming detached-layer collision guard (01), then braces around a new GTest assertion to remove its compiler warning (02). All four reports passedfalse with build return\u221215. No test assertion failure claimed.",
+    "reports": [
+      "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-01/verification.json",
+      "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-01/verification.json",
+      "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-02/verification.json",
+      "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-02/verification.json"
+    ]
+  },
+  "artifact_pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-03/verification.json",
+      "sha256": "282e01363afdf92ad286a3ef059b36cb6d4f28ed06e4c3abba062d6a14d0d7d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-03/verification.json",
+      "sha256": "90481af3ad6c1be7c1c32102313933dacc4498c7a92fcd7f9ccc21c901cf535e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-01/verification.json",
+      "sha256": "7c55d16d2ae84c1c369941c1ae466c5ae6a6706440e6f7043a49ecc75550e982"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-01/verification.json",
+      "sha256": "aed59ac60c33cf1ef0223f02039ee2671b27bdeb1af5625d91dbde42093b758b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-checks-02/verification.json",
+      "sha256": "409d9113136810c6164f424eb50e57e4a7605d2ce7d1d59b9a8321702770a7d4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-sanitized-checks-02/verification.json",
+      "sha256": "1da74bf7af8b656414910176d54120182d13c8dc425f8414e26a43b4575b6be8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-review-01/verify-native.py",
+      "sha256": "4df5d812696cbf2e1275cea56a374ed014f7cb11967464ca4449b7a6cf6432a3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-review-01/native-verification.json",
+      "sha256": "97b2bfac22fe7461b394be16aa89fa6f7dfc07a3de2f9adc97b0a1c1cffa2d55"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-owned-reaction-crossfade-review-01/sanitizer-env.json",
+      "sha256": "cb038ba5e068d6836d3366991003c996b245ed36f10374d5c791bb5b2a9db679"
+    }
+  ],
+  "remaining": [
+    "Normal contact adapters still generate no descriptors.",
+    "Easing/retiring/pose source replacement and Stagger resident attack channel.",
+    "Normal resource classification/variant catalog, view/resource clocks and live scene capture gates.",
+    "Full normal-input interrupt/view/input/FPS/mastery/effect and E2E acceptance matrix."
+  ],
+  "application_runtime": "No new fork app course for this service-only change. Existing injected pose/runtime courses are historical checkpoints; do not claim this new replacement was exercised by them."
+}

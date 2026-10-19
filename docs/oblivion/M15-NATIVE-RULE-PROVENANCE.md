@@ -16432,3 +16432,26 @@ receipt's CRT `strcmp` label is corrected to ASCII case-insensitive comparison;
 its exact-case observations are unchanged. Proprietary bytes, extracted assets,
 images and bulky corpora remain ignored; the editable fixture records axes and
 selected original expectations. M15S4 remains open.
+
+## Active owned reaction crossfade (2026-10-19)
+
+`M15-OWNED-REACTION-CROSSFADE-VERIFICATION.json` selects 16 existing full
+original NPC caller cases from the published caller corpus: active channel3
+BlockHit/Recoil sources, distinct target resources, both supplied prefix cases
+and both precision words. Actual `474530`/`6C9D30` retires the old sequence as
+state3 and activates the new sequence as state2. These are not new native runs.
+The supplied cache resources and original caller boundaries remain those of the
+referenced corpus; private engine causal ownership is a separate implementation
+contract, tested through the world transaction.
+
+The service now preserves an active old reaction's cause, resource and timing in
+a detached outgoing layer when a valid distinct-resource direct crossfade
+replaces it. Normal and ASan/UBSan full engine runs each pass 1,752 tests across
+125 suites. The new test covers all four reaction pairs, atomic resources/action
+publication, stale leases, invalid ownership and clock inputs, conflicting old or
+incoming detached layers, save/restore and continued outgoing timing through
+inclusive retirement. Initial build attempts stopped for a guard correction and
+a new test warning are retained; neither is called a passing check. Full-engine
+leak detection stays disabled with the prior desktop LSan failure still open.
+This does not establish state2/3/5 replacement, Stagger's separate channel,
+automatic normal descriptors, Player view ownership or a new app runtime course.

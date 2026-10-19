@@ -2322,13 +2322,34 @@ namespace MWMechanics
                 && !timing.mEasing && timing.mEaseEnd == 0 && !outgoing
                 && std::none_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),
                     [&](const auto& sequence) { return sequence.mAnimationGroup == request->mAnimationGroup; });
+            // Native474530 crossfades a distinct channel3 resource from an
+            // active BlockHit/Recoil just as it does from an attack. Keep the
+            // old resource's clock and causal identity in the detached layer.
+            // State2/3/5 sources and Stagger's separate channel remain guarded.
+            const bool reactionCrossfade = previous && previous->mReaction && !previous->mStrike
+                && outgoing && request->mKind != ESM4::MeleeReactionKind::Stagger
+                && previous->mReaction->mKind != ESM4::MeleeReactionKind::Stagger
+                && previous->mReaction->mStarted && !previous->mReaction->mInactive
+                && !previous->mReaction->mRetirement && !previous->mReaction->mPoseSnapshot
+                && !previous->mReaction->mSequenceTiming.mEasing
+                && previous->mReaction->mSequenceTiming.mOffset
+                && previous->mReaction->mSequenceTiming.mLastInput
+                && values.mProcessAction == previous->mReaction->processAction()
+                && previous->mReaction->mAnimationGroup != request->mAnimationGroup
+                && timing.mEasing && timing.mEaseEnd > 0 && !request->mPoseSnapshot
+                && std::none_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),
+                    [&](const auto& sequence) {
+                        return sequence.mAnimationGroup == request->mAnimationGroup
+                            || sequence.mAnimationGroup == previous->mReaction->mAnimationGroup;
+                    });
             if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted || request->mInactive
                 || request->mRetirement || timing.mOffset || timing.mEaseStart || timing.mLastInput
                 || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
                 || timing.mEasing != (timing.mEaseEnd > 0)
                 || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
                 || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
-                || (previous && previous->mReaction && !cachedRestart) || mBowStates.contains(values.mActor))
+                || (previous && previous->mReaction && !cachedRestart && !reactionCrossfade)
+                || mBowStates.contains(values.mActor))
                 throw std::invalid_argument("invalid or unsupported native contact reaction start");
             auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
             // Original474530 deactivates and restarts the same resident clamp
@@ -2336,14 +2357,21 @@ namespace MWMechanics
             if (outgoing)
             {
                 outgoing->validate();
-                if (!candidate.mStrike || outgoing->mContactId != candidate.mStrike->mActionId
-                    || outgoing->mAnimationGroup != candidate.mStrike->mAnimationGroup
-                    || outgoing->mAnimationTime != candidate.mStrike->mAnimationTime
+                const auto cause = reactionCrossfade ? candidate.mReaction->mContactId
+                    : candidate.mStrike ? candidate.mStrike->mActionId : 0;
+                const auto group = reactionCrossfade ? candidate.mReaction->mAnimationGroup
+                    : candidate.mStrike ? candidate.mStrike->mAnimationGroup : std::string{};
+                const auto time = reactionCrossfade ? candidate.mReaction->mAnimationTime
+                    : candidate.mStrike ? candidate.mStrike->mAnimationTime : 0.f;
+                if (!cause || outgoing->mContactId != cause
+                    || outgoing->mAnimationGroup != group || outgoing->mAnimationTime != time
                     || outgoing->mRetirement.mStartClock)
-                    throw std::invalid_argument("native outgoing sequence does not match the replaced strike");
-                if (candidate.mStrike->mSequenceTiming)
+                    throw std::invalid_argument("native outgoing sequence does not match the replaced owner");
+                const auto oldTiming = reactionCrossfade ? std::optional(candidate.mReaction->mSequenceTiming)
+                    : candidate.mStrike->mSequenceTiming;
+                if (oldTiming)
                 {
-                    auto expected = *candidate.mStrike->mSequenceTiming;
+                    auto expected = *oldTiming;
                     expected.mEasing = false;
                     if (outgoing->mSequenceTiming != expected)
                         throw std::invalid_argument("native outgoing sequence changed existing timing");
