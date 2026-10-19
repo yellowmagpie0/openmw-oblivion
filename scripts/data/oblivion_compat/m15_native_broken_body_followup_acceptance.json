@@ -1,0 +1,32 @@
+{
+  "expected_health_damage_bits": 1062469140,
+  "expected_weapon_condition_bits": 1113397658,
+  "expected_armor_condition_bits": 0,
+  "expected_rng": [
+    415139642,
+    415139642
+  ],
+  "physical_action_next": 3,
+  "expected_sounds": [
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "source_oracle": "native-broken-body-followup-oracle-01/verification.json",
+  "actor_values": "Prior actual Health damage plus floatbits1062469140, accumulated modifier bits1070806774; all other arrays unchanged after regen.",
+  "restart": "New hit against already zero-condition equipped cuirass; armor selection/writes/draws0. Exact fresh-process output continuation without replay.",
+  "visual": "Named target still wears zero-condition cuirass; Player sword visible.",
+  "pcm_joint_correlation_minimum": 0.9,
+  "pcm_per_family_minimum_explained_energy": 0.01,
+  "pcm_candidate_minimum_individual_correlation": 0.2,
+  "pcm_families": [
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "pcm_expected_clusters": [
+    1,
+    0
+  ],
+  "pcm_method": "Unchanged analysis from native-armor-hit-feedback-runtime-03; first contact1 joint material/body/blade cluster, fresh continuation0.",
+  "expected_cumulative_health_damage_bits": 1070806774,
+  "audio_dsp": "Default Doppler factor .25. Native SOUN directory component boundary fixed; unchanged correlation>=.90 and per-family>=1%, with actual selected paths audited."
+}

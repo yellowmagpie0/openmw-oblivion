@@ -5168,5 +5168,135 @@
     "Current armor query recomputes equipment; original60E260 cache sentinel-1 requires no new serialized fork cache.",
     "Full M15S4 remains incomplete."
   ],
-  "full_M15S4_acceptance": false
+  "full_M15S4_acceptance": false,
+  "restored_zero_condition_followup": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-NATIVE-SOUND-DIRECTORY-PROBE.json",
+    "source": "Exact real normal body-armor continuation bytes, SHA256a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221. No staging changes.",
+    "melee_implementation_changed": false,
+    "sound_selection_fix": "SOUN folder component boundary; this further course exposed sibling enchanted audio selection.",
+    "expected_mechanics": {
+      "prior_health_damage_bits": 1062367192,
+      "new_health_delta_bits": 1062469140,
+      "cumulative_health_damage_bits": 1070806774,
+      "weapon_condition_bits": 1113397658,
+      "armor_condition_bits": 0,
+      "combat_rng_state": 415139642,
+      "armor_selection_draws": 0,
+      "armor_writes": 0,
+      "action_id": 2,
+      "saved_action_next": 3
+    },
+    "original_followup_mechanics": {
+      "passed": true,
+      "rows": [
+        {
+          "cw": 127,
+          "weapon_damage_bits": 1062469140,
+          "weapon_damage": 0.8280956745147705,
+          "health_damage_bits": 1062469140,
+          "health_damage": 0.8280956745147705
+        },
+        {
+          "cw": 639,
+          "weapon_damage_bits": 1062469140,
+          "weapon_damage": 0.8280956745147705,
+          "health_damage_bits": 1062469140,
+          "health_damage": 0.8280956745147705
+        },
+        {
+          "cw": 895,
+          "weapon_damage_bits": 1062469140,
+          "weapon_damage": 0.8280956745147705,
+          "health_damage_bits": 1062469140,
+          "health_damage": 0.8280956745147705
+        }
+      ],
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "probe_sha256": "31618ce940a14bac678ee3a4d52680e1a31d4c558ef1c466d43bf7d912cf8b1a",
+      "input": {
+        "weapon_damage_word": 5,
+        "weapon_max_condition": 56,
+        "instance_condition": 55.57500076293945,
+        "current_float_av": {
+          "0": 40,
+          "7": 50,
+          "10": 140,
+          "14": 10,
+          "16": 10
+        },
+        "base_fatigue": 140,
+        "attack_bonus": 0,
+        "armor_rating": 0,
+        "maximum_armor_fraction": 0.85
+      },
+      "scope": "Full original484F80 ->547070, then native5FF712..5FF7BD mitigation. Declared float/integer AV, damage/max/condition readers and armor query boundaries. CW007F is the previously observed live main precision; wider words are sensitivity only. Input is the prior actual completed-contact sword condition; equipped body armor is zero so independently established native armor entry is zero. No game process or condition sink here."
+    },
+    "normal_epochs": [
+      {
+        "pid": 478940,
+        "start_ticks": 10928281,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "f5ab0b146d255fc743bce0cea42cfccec7833cdac00320fe556f250fbfb9a3c3"
+      },
+      {
+        "pid": 481371,
+        "start_ticks": 10946693,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "f5ab0b146d255fc743bce0cea42cfccec7833cdac00320fe556f250fbfb9a3c3"
+      }
+    ],
+    "sanitized_epochs": [
+      {
+        "pid": 481475,
+        "start_ticks": 10958011,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "5a8cddcbe2b8cc2efed4545fe9345e453aa9084ddf5b8a5b6992fc0290287eaa"
+      },
+      {
+        "pid": 481670,
+        "start_ticks": 10987889,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "5a8cddcbe2b8cc2efed4545fe9345e453aa9084ddf5b8a5b6992fc0290287eaa"
+      }
+    ],
+    "scope": "Native SOUN directory selection honors path component boundaries. Actual further contact against previously broken equipped body armor plus completed-contact fresh-process continuation, normally and under ASan/UBSan. Full M15S4 remains incomplete.",
+    "full_M15S4_acceptance": false
+  }
 }

@@ -1,5 +1,6 @@
 #include "soundbuffer.hpp"
 #include "nativeaudioutils.hpp"
+#include "nativesounddirectory.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -24,6 +25,25 @@
 
 namespace MWSound
 {
+    std::vector<VFS::Path::Normalized> nativeSoundDirectoryFiles(
+        const VFS::Manager& vfs, VFS::Path::NormalizedView directory)
+    {
+        // VFS ranges match raw prefixes. A SOUN folder must end on a path
+        // component: bladeflesh/ must never select bladefleshenchanted/.
+        std::string prefix(directory.value());
+        if (!prefix.empty() && !prefix.ends_with('/'))
+            prefix.push_back('/');
+        std::vector<VFS::Path::Normalized> candidates;
+        for (const VFS::Path::Normalized& path : vfs.getRecursiveDirectoryIterator(prefix))
+        {
+            const auto extension = path.extension();
+            if (extension == "mp3" || extension == "wav" || extension == "ogg" || extension == "flac")
+                candidates.push_back(path);
+        }
+        std::sort(candidates.begin(), candidates.end());
+        return candidates;
+    }
+
     const ESM4::Sound* resolveNativeAnimationSound(const MWWorld::ESMStore& store, std::string_view editorId)
     {
         if (editorId.empty() || editorId.find('\0') != std::string_view::npos)
@@ -76,17 +96,9 @@ namespace MWSound
 
             const VFS::Path::Normalized directory
                 = soundDir / VFS::Path::toNormalized(value.substr(0, value.size() - 1));
-            std::vector<VFS::Path::Normalized> candidates;
-            for (const VFS::Path::Normalized& path
-                : vfs->getRecursiveDirectoryIterator(VFS::Path::NormalizedView(directory)))
-            {
-                const auto extension = path.extension();
-                if (extension == "mp3" || extension == "wav" || extension == "ogg" || extension == "flac")
-                    candidates.push_back(path);
-            }
+            auto candidates = nativeSoundDirectoryFiles(*vfs, VFS::Path::NormalizedView(directory));
             if (candidates.empty())
                 return directory;
-            std::sort(candidates.begin(), candidates.end());
             auto copiedGenerator = Misc::Rng::getGenerator();
             const auto selected = static_cast<std::size_t>(Misc::Rng::rollDice(
                 static_cast<int>(candidates.size()), isolated ? copiedGenerator : Misc::Rng::getGenerator()));

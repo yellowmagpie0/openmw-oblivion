@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "../../openmw/mwsound/nativeaudioutils.hpp"
+#include "../../openmw/mwsound/nativesounddirectory.hpp"
+
+#include <components/testing/util.hpp>
 
 namespace
 {
@@ -48,4 +51,33 @@ namespace
         EXPECT_FALSE(nativeRegionSoundMatches(11, 1500000, 1, 15));
         EXPECT_TRUE(nativeRegionSoundMatches(15, 10000000, 8, 99));
     }
+}
+
+TEST(NativeAudioTest, NativeDirectoryDoesNotSelectSiblingPrefixes)
+{
+    using VFS::Path::Normalized;
+    const auto vfs = TestingOpenMW::createTestVFS({
+        {Normalized("sound/fx/bladeflesh/c.wav"), nullptr},
+        {Normalized("sound/fx/bladeflesh/a.mp3"), nullptr},
+        {Normalized("sound/fx/bladeflesh/nested/b.ogg"), nullptr},
+        {Normalized("sound/fx/bladeflesh/d.flac"), nullptr},
+        {Normalized("sound/fx/bladeflesh/readme.txt"), nullptr},
+        {Normalized("sound/fx/bladefleshenchanted/magic.wav"), nullptr},
+        {Normalized("sound/fx/bladeflesh2/other.wav"), nullptr},
+        {Normalized("sound/fx/bladeflesh.wav"), nullptr},
+        {Normalized("sound/fx/blade/swing.wav"), nullptr},
+    });
+    const std::vector<Normalized> expected{
+        Normalized("sound/fx/bladeflesh/a.mp3"), Normalized("sound/fx/bladeflesh/c.wav"),
+        Normalized("sound/fx/bladeflesh/d.flac"), Normalized("sound/fx/bladeflesh/nested/b.ogg")};
+    EXPECT_EQ(MWSound::nativeSoundDirectoryFiles(*vfs, VFS::Path::NormalizedView("sound/fx/bladeflesh")), expected);
+    EXPECT_EQ(MWSound::nativeSoundDirectoryFiles(*vfs, VFS::Path::NormalizedView("sound/fx/bladeflesh/")), expected);
+}
+
+TEST(NativeAudioTest, NativeDirectoryMissingDoesNotBorrowSiblingAudio)
+{
+    const auto vfs = TestingOpenMW::createTestVFS({
+        {VFS::Path::Normalized("sound/fx/bladefleshenchanted/magic.wav"), nullptr}});
+    EXPECT_TRUE(MWSound::nativeSoundDirectoryFiles(*vfs,
+        VFS::Path::NormalizedView("sound/fx/bladeflesh")).empty());
 }

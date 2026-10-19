@@ -6768,3 +6768,75 @@ restart route. Shield breaks, remaining weapon initial-zero routes, mastery,
 effects/reactions, full input/view/FPS and in-action restarts, and the combined
 named-target/block/miss/wall/stagger course remain open.
 **Full M15S4 remains incomplete.**
+
+## Native sound folders and the next contact after armor reaches zero
+
+Native SOUN folder selection now respects path component boundaries. VFS
+recursive ranges intentionally match raw prefixes; the old native sound caller
+removed the stored trailing separator and passed`bladeflesh` rather than
+`bladeflesh/`. This admitted the adjacent`bladefleshenchanted` folder. Ordinary
+Rusty Iron Shortsword hits could therefore play an enchanted impact asset.
+The fix adds a separator for native folder enumeration while preserving direct
+filenames, supported formats, recursive descendants, sorting and the existing
+random-choice mechanism. VFS prefix semantics are unchanged.
+
+Independent raw Oblivion.esm SOUN audit identifies ordinary18B9F1 with
+`fx\wpn\weaponhit\bladeflesh\` and enchanted0C73BC with the distinct sibling
+folder. Master SHA256 is
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`;
+the sounds BSA is
+`f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec`.
+The archive contains three ordinary and three adjacent enchanted variants. This
+is a raw content/path audit, not a new original-executable folder-search probe.
+
+The next-contact course exposed the defect through actual mixer output. The
+first ordinary-folder logs select enchanted siblings, and plain-impact fits
+fail the declared .90 correlation criterion. A diagnostic model using each
+logged unwanted enchanted asset matches those failed recordings at .99964 and
+.99924. Those fits identify the wrong route; they are not correct-route
+acceptance. An earlier Doppler hypothesis is discarded: the normal zero-Doppler
+control happened to select an ordinary file, while the instrumented zero-Doppler
+control still selected an enchanted file and failed. No threshold is lowered.
+Final corrected courses restore default Doppler.25 and audit every logged
+native directory selection for the required component boundary.
+
+Two owned VFS regression cases fail before the correction: ordinary selection
+includes sibling folders and an adjacent same-stem file; a missing folder borrows
+sibling audio. Both pass after the fix, including supported formats, sorted
+order, real recursive descendants and an already terminated directory prefix.
+Final full engine inventories pass **1716 cases /124 suites** normally and
+under ASan/UBSan, without failures/skips. Leak checks are disabled. Tested parent
+is585f364123 plus dirty source fingerprint
+`482cc55dc0de776612120cde726b37e2084ef22698811318ecab927fc0215582`.
+App executable hashes are recorded separately from test-binary hashes.
+
+The further melee course starts from exact real body-armor continuation output,
+SHA256`a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221`,
+without condition/resource/inventory/pose/AI edits. Its cuirass is already
+worn at0 and its sword is55.57500076293945. Full original484F80 and
+5FF712..5FF7BD execution freezes new damage1062469140
+(0.8280956745147705), with the established native zero armor entry, in all three
+x87 words. Action2 commits cumulative Health Damage bits1070806774
+(-1.6501147747039795), sword condition bits1113397658, Fatigue140->132.2,
+zero armor writes and zero combat random draws. RNG stays415139642; the cuirass
+remains equipped at0. This exercises actual post-load armor mitigation through
+a new ordinary contact. The melee implementation is unchanged from the body
+armor chunk.
+
+Both corrected normal/instrumented courses verify all nine actors' complete
+value arrays, complete prior inventory multisets and declared lifecycle
+contracts. Exact first-output bytes enter a distinct process. Action-next3,
+empty pending/owner lists and no replay are verified. Directly reviewed captures
+retain the named NPC, cuirass and drawn Player sword. Actual PCM contains the
+required Flesh/ordinary BladeFlesh impact, with no Heavy request, then zero
+impact clusters in continuation; default Doppler and the original .90 joint
+criterion /1% per-family energy bounds apply.
+
+Editable probes, retained failures/controls, full check receipts and current
+runtime evidence are in`M15-NATIVE-SOUND-DIRECTORY-PROBE.json`; the body probe
+links this subsequent-contact result. Canonical follow-up manifests are source.
+This remains first-person keyboard with a1FPS cap, prior authored NPC restraint
+and completed-contact restarts. Shield and initially broken weapon policies,
+mastery/effects/reactions, full input/view/FPS and in-action restarts, and the
+combined named-target/block/miss/wall/stagger course remain open.
+**Full M15S4 is incomplete.**

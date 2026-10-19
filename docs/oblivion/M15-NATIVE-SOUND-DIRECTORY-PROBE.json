@@ -1,0 +1,2293 @@
+{
+  "schema_version": 1,
+  "scope": "Native SOUN directory selection honors path component boundaries. Actual further contact against previously broken equipped body armor plus completed-contact fresh-process continuation, normally and under ASan/UBSan. Full M15S4 remains incomplete.",
+  "source_pins": [
+    {
+      "path": "apps/openmw/mwsound/soundbuffer.cpp",
+      "sha256": "85f20e436630a21fbb9131c0bc5f4a3d145507fd88e1fb858d1e5be4401a383b"
+    },
+    {
+      "path": "apps/openmw/mwsound/nativesounddirectory.hpp",
+      "sha256": "c2ed51ee608b7c87230ec12a8336176051bb00c4ee6036258c579fd587cbc681"
+    },
+    {
+      "path": "apps/openmw_tests/mwsound/testnativeaudio.cpp",
+      "sha256": "7f962ea95494f5566f1d3226f93f623cee495e21a64d3def36495fb8dfa55bc9"
+    }
+  ],
+  "independent_content": {
+    "passed": true,
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "records": [
+      {
+        "form": "0xc3c6",
+        "editor_id": "WPNHitBladeFleshEnchantedX",
+        "folder": "fx\\wpn\\360lofi\\weaponhit\\bladefleshenchanted\\wpn_hit_bladeflesh_enchanted_x.wav",
+        "record_sha256": "9e194716ffc342d3ee2ac9d054ffd7efcdf89022a6af368c39027c1760f4de9d"
+      },
+      {
+        "form": "0xc3c5",
+        "editor_id": "WPNHitBladeFleshX",
+        "folder": "fx\\wpn\\360lofi\\weaponhit\\bladeflesh\\wpn_hit_bladeflesh_x.wav",
+        "record_sha256": "06c33a5e81fa3b365f04359f8ecec62db9b9b85d999d46935244276837cf3330"
+      },
+      {
+        "form": "0xc73bc",
+        "editor_id": "WPNHitBladeFleshEnchanted",
+        "folder": "fx\\wpn\\weaponhit\\bladefleshenchanted\\",
+        "record_sha256": "38f84e54a749214781b56c4f030c3102a8b21d398111d9ab93532f84f9b0de77"
+      },
+      {
+        "form": "0x18b9f1",
+        "editor_id": "WPNHitBladeFlesh",
+        "folder": "fx\\wpn\\weaponhit\\bladeflesh\\",
+        "record_sha256": "d6058f89e5b4d371785e8ca92077db53fef5cb78928d64abb0c17a5a80541b75"
+      }
+    ],
+    "ordinary_directory_prefix": "sound/fx/wpn/weaponhit/bladeflesh/",
+    "correct_directory_members": [
+      "sound/fx/wpn/weaponhit/bladeflesh/wpn_hit_bladeflesh_01.wav",
+      "sound/fx/wpn/weaponhit/bladeflesh/wpn_hit_bladeflesh_02.wav",
+      "sound/fx/wpn/weaponhit/bladeflesh/wpn_hit_bladeflesh_03.wav"
+    ],
+    "incorrect_adjacent_members": [
+      "sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_01.wav",
+      "sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_02.wav",
+      "sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_03.wav"
+    ],
+    "old_candidate_count": 6,
+    "fixed_candidate_count": 3,
+    "scope": "Independent raw SOUN EDID/FNAM/record-hash audit plus original sounds BSA listing. Ordinary and enchanted folders are separate sibling components. Original executable directory enumeration was not newly executed."
+  },
+  "editable_content_audit": "from pathlib import Path\nimport hashlib,json,struct,zlib\nout=Path(__file__).parent;master=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');data=master.read_bytes();assert hashlib.sha256(data).hexdigest()=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nrecords=[]\ndef walk(begin,end):\n pos=begin\n while pos<end:\n  tag=data[pos:pos+4];size=struct.unpack_from('<I',data,pos+4)[0]\n  if tag==b'GRUP':walk(pos+20,pos+size);pos+=size;continue\n  if tag==b'SOUN':\n   flags,fid=struct.unpack_from('<II',data,pos+8);body=data[pos+20:pos+20+size]\n   if flags&0x40000:\n    expected=struct.unpack_from('<I',body)[0];body=zlib.decompress(body[4:]);assert len(body)==expected\n   fields={};i=0;extended=None\n   while i<len(body):\n    st=body[i:i+4];n=struct.unpack_from('<H',body,i+4)[0];i+=6\n    if st==b'XXXX':extended=struct.unpack_from('<I',body,i)[0];i+=n;continue\n    if extended is not None:n=extended;extended=None\n    fields[st]=body[i:i+n];i+=n\n   assert i==len(body)\n   ed=fields.get(b'EDID',b'').rstrip(b'\\0').decode()\n   if ed.lower().startswith('wpnhitbladeflesh'):records.append({'form':hex(fid),'editor_id':ed,'folder':fields.get(b'FNAM',b'').rstrip(b'\\0').decode(),'record_sha256':hashlib.sha256(data[pos:pos+20+size]).hexdigest()})\n  pos+=20+size\n assert pos==end\nwalk(0,len(data));plain=next(x for x in records if x['editor_id'].lower()=='wpnhitbladeflesh');assert plain['folder'].endswith(('\\\\','/'))\nfiles=[line.strip().replace('\\\\','/').lower() for line in (out/'blade-assets.txt').read_text().splitlines()]\nprefix='sound/'+plain['folder'].replace('\\\\','/').lower();assert prefix.endswith('/')\ncorrect=sorted(x for x in files if x.startswith(prefix));old=sorted(x for x in files if x.startswith(prefix[:-1]));siblings=sorted(set(old)-set(correct));assert len(correct)==3 and len(siblings)==3\nreport={'passed':True,'master_sha256':hashlib.sha256(data).hexdigest(),'records':records,'ordinary_directory_prefix':prefix,'correct_directory_members':correct,'incorrect_adjacent_members':siblings,'old_candidate_count':len(old),'fixed_candidate_count':len(correct),'scope':'Independent raw SOUN EDID/FNAM/record-hash audit plus original sounds BSA listing. Ordinary and enchanted folders are separate sibling components. Original executable directory enumeration was not newly executed.'}\n(out/'folder-report.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n",
+  "content_artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-stock-audit-01/blade-assets.txt",
+      "sha256": "2ac998c32528025468c76645ac13bbcf0d62aa09f764938eb4d5cdb57ae67cd2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-stock-audit-01/prepare-controls.py",
+      "sha256": "0166723ea915e5aadd23c60b87a41785553a49a1c9272db0d9caffbbe5c92039"
+    },
+    {
+      "path": "build/bsatool",
+      "sha256": "85e37a09d7454dbd4d2c56be47a345f09ad56c38304bf4b72737892872dede44"
+    }
+  ],
+  "unexpected_sibling_controls": {
+    "normal": {
+      "passed": true,
+      "expected_clusters": 1,
+      "clusters": [
+        {
+          "time": 51.9715,
+          "joint_correlation": 0.9996403236588126,
+          "family_explained_energy": {
+            "PHYDamageFlesh": 0.2827297200728724,
+            "UnexpectedEnchantedBlade": 0.6420254440280152
+          },
+          "selected_coefficients": {
+            "phy_dmgflesh_04.wav": 87.892324769199,
+            "phy_dmgflesh_05.wav": 180193.78557025976,
+            "wpn_hit_bladeflesh_enchanted_01.wav": 271739.43159808376
+          },
+          "accepted": true
+        }
+      ],
+      "candidate_groups": [
+        {
+          "time": 51.9715,
+          "joint_correlation": 0.9996403236588126,
+          "family_explained_energy": {
+            "PHYDamageFlesh": 0.2827297200728724,
+            "UnexpectedEnchantedBlade": 0.6420254440280152
+          },
+          "selected_coefficients": {
+            "phy_dmgflesh_04.wav": 87.892324769199,
+            "phy_dmgflesh_05.wav": 180193.78557025976,
+            "wpn_hit_bladeflesh_enchanted_01.wav": 271739.43159808376
+          },
+          "accepted": true
+        }
+      ],
+      "individual_peaks": [
+        {
+          "asset": "phy_dmgflesh_01.wav",
+          "family": "PHYDamageFlesh",
+          "top": []
+        },
+        {
+          "asset": "phy_dmgflesh_02.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              52.056416666666664,
+              0.34149472662710395
+            ],
+            [
+              53.24966666666667,
+              0.3319860600258684
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_03.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              52.7835,
+              0.3217028252413675
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_04.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              52.0015,
+              0.2811752308981679
+            ],
+            [
+              53.19433333333333,
+              0.216674199980933
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_05.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              52.041,
+              0.5978717053669981
+            ],
+            [
+              53.23425,
+              0.31056983701338187
+            ]
+          ]
+        },
+        {
+          "asset": "wpn_hit_bladeflesh_enchanted_01.wav",
+          "family": "UnexpectedEnchantedBlade",
+          "top": [
+            [
+              52.041,
+              0.8464940288097762
+            ]
+          ]
+        }
+      ],
+      "pcm_sha256": "3384b5219a8cef819ec9ee93cd15ebd40f07f5a17dac1a1eb606c584f871d930",
+      "scope": "Diagnostic only: actual PCM fitted against the logged UNWANTED enchanted sibling and Flesh. This is not correct-route audio acceptance. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+    },
+    "sanitized": {
+      "passed": true,
+      "expected_clusters": 1,
+      "clusters": [
+        {
+          "time": 176.231,
+          "joint_correlation": 0.9992422196664023,
+          "family_explained_energy": {
+            "PHYDamageFlesh": 0.32552084270035214,
+            "UnexpectedEnchantedBlade": 0.6551885230559349
+          },
+          "selected_coefficients": {
+            "phy_dmgflesh_01.wav": 185910.14636470674,
+            "wpn_hit_bladeflesh_enchanted_03.wav": 268453.38611498923
+          },
+          "accepted": true
+        }
+      ],
+      "candidate_groups": [
+        {
+          "time": 176.231,
+          "joint_correlation": 0.9992422196664023,
+          "family_explained_energy": {
+            "PHYDamageFlesh": 0.32552084270035214,
+            "UnexpectedEnchantedBlade": 0.6551885230559349
+          },
+          "selected_coefficients": {
+            "phy_dmgflesh_01.wav": 185910.14636470674,
+            "wpn_hit_bladeflesh_enchanted_03.wav": 268453.38611498923
+          },
+          "accepted": true
+        }
+      ],
+      "individual_peaks": [
+        {
+          "asset": "phy_dmgflesh_01.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              176.261,
+              0.5685440752039275
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_02.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              177.45258333333334,
+              0.3367148633700463
+            ],
+            [
+              176.4275,
+              0.21979755541051021
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_03.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              176.98641666666666,
+              0.33462721930248246
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_04.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              177.39725,
+              0.22454335980179252
+            ]
+          ]
+        },
+        {
+          "asset": "phy_dmgflesh_05.wav",
+          "family": "PHYDamageFlesh",
+          "top": [
+            [
+              176.81866666666667,
+              0.31682453133529964
+            ]
+          ]
+        },
+        {
+          "asset": "wpn_hit_bladeflesh_enchanted_03.wav",
+          "family": "UnexpectedEnchantedBlade",
+          "top": [
+            [
+              176.281,
+              0.820432861808225
+            ]
+          ]
+        }
+      ],
+      "pcm_sha256": "682624c59e67239785a07e549a2caa1f3aecd7fe4ff7995e7c442d006e9a822b",
+      "scope": "Diagnostic only: actual PCM fitted against the logged UNWANTED enchanted sibling and Flesh. This is not correct-route audio acceptance. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+    }
+  },
+  "unexpected_control_scope": "These high-correlation fits intentionally use the WRONG enchanted asset to identify the bug. They are not correct-route audio acceptance.",
+  "editable_unexpected_control_preparer": "from pathlib import Path\nimport json,hashlib\nroot=Path.cwd();out=Path(__file__).parent;base=root/'build/oblivion-compat/m15/S4'\nmaster=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');bsa=master.parent/'Oblivion - Sounds.bsa'\nassert hashlib.sha256(master.read_bytes()).hexdigest()=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nassert hashlib.sha256(bsa.read_bytes()).hexdigest()=='f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec'\nfor kind,cohort,num in [('normal','01','01'),('sanitized','02','03')]:\n src=base/('native-broken-body-followup-runtime-'+kind+'-'+cohort);dest=out/(kind+'-enchanted-control');dest.mkdir(exist_ok=False)\n d=json.loads((src/'sound-assets.json').read_text());d['assets']=[x for x in d['assets'] if x['family']=='PHYDamageFlesh']\n f=out/'assets'/('wpn_hit_bladeflesh_enchanted_'+num+'.wav');d['assets'].append({'path':str(f),'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'family':'UnexpectedEnchantedBlade'})\n (dest/'sound-assets.json').write_text(json.dumps(d,indent=2)+'\\n')\n r=json.loads((src/'preregistered-acceptance.json').read_text());r['pcm_families']=['PHYDamageFlesh','UnexpectedEnchantedBlade'];(dest/'preregistered-acceptance.json').write_text(json.dumps(r,indent=2)+'\\n')\n s=(src/'analyse-impact.py').read_text().replace(\"(phase/'impact-audio-verification.json')\",\"(base/'unexpected-sibling-fit.json')\").replace('Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms.','Diagnostic only: actual PCM fitted against the logged UNWANTED enchanted sibling and Flesh. This is not correct-route audio acceptance.')\n (dest/'fit.py').write_text(s)\n print(kind,src/'first')\n",
+  "baseline": {
+    "schema_version": 1,
+    "passed": false,
+    "commands": [
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+          "--target",
+          "openmw",
+          "openmw-tests",
+          "esmtool",
+          "-j",
+          "3"
+        ],
+        "log": "engine-build.log",
+        "returncode": 0,
+        "seconds": 66.96
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "engine-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.165
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+          "--gtest_filter=NativeAudioTest.NativeDirectory*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sound-directory-boundary-baseline-01/engine.xml"
+        ],
+        "log": "engine.log",
+        "returncode": 1,
+        "seconds": 0.165
+      }
+    ],
+    "results": {},
+    "source_before": {
+      "head": "585f36412383dced378605cc1f6507e0a16a29a3",
+      "source_fingerprint": "bcc735c65bf70c09e9fecff3d4224f4a83440dd4467ab5b5f9be727e4aac2ccc"
+    },
+    "error": "engine.log: command exited 1"
+  },
+  "baseline_log": {
+    "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-baseline-01/engine.log",
+    "sha256": "edda3a3acd7c9ad3d42c7ce69e98cc7f8e75beb7579a54bc76c7fb1272b84ad7"
+  },
+  "checks": {
+    "normal": {
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 73.377
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 25.988
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1716,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "ab705638e7f940311a72ecacb6da700e816b37c77913e9674c4a1188c975010b",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "15f59513a1001950a961e86bd76628679107105419e69feba1b6e72ffabf2062",
+            "inventory_sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "585f36412383dced378605cc1f6507e0a16a29a3",
+          "source_fingerprint": "482cc55dc0de776612120cde726b37e2084ef22698811318ecab927fc0215582"
+        },
+        "source_after": {
+          "head": "585f36412383dced378605cc1f6507e0a16a29a3",
+          "source_fingerprint": "482cc55dc0de776612120cde726b37e2084ef22698811318ecab927fc0215582"
+        }
+      },
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/engine-inventory.txt",
+          "sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/engine.xml",
+          "sha256": "15f59513a1001950a961e86bd76628679107105419e69feba1b6e72ffabf2062"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/engine.log",
+          "sha256": "1101ff5e9499484daf3f991051d57fa3166542790caaa6355c67ed9a6aa988fd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/verification.json",
+          "sha256": "ec97e8d11cf922ffa87f6b7965111289ddecba548e5afa1a5d9ac0ab5a8035a5"
+        }
+      ]
+    },
+    "sanitized": {
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 122.713
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 161.751
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1716,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "017ea3064c8a310caf80545b4ede638d3caa6a6c0f475ea8a7fdbfe7e7be9c00",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "b8c171091bf09cb802691e92212cef32545d24d124f9547fc8d1928711b2e3d1",
+            "inventory_sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "585f36412383dced378605cc1f6507e0a16a29a3",
+          "source_fingerprint": "482cc55dc0de776612120cde726b37e2084ef22698811318ecab927fc0215582"
+        },
+        "source_after": {
+          "head": "585f36412383dced378605cc1f6507e0a16a29a3",
+          "source_fingerprint": "482cc55dc0de776612120cde726b37e2084ef22698811318ecab927fc0215582"
+        }
+      },
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/engine-inventory.txt",
+          "sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/engine.xml",
+          "sha256": "b8c171091bf09cb802691e92212cef32545d24d124f9547fc8d1928711b2e3d1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/engine.log",
+          "sha256": "88fd13b3ff15a48efee9b9b6e00544423f00959b88be4f7fb705610a6a49091b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/verification.json",
+          "sha256": "438bdcb5b7bbd058dfbd5a11a146c2df0b08d201ea9281a9188a434aac59217e"
+        }
+      ]
+    }
+  },
+  "original_followup_mechanics": {
+    "passed": true,
+    "rows": [
+      {
+        "cw": 127,
+        "weapon_damage_bits": 1062469140,
+        "weapon_damage": 0.8280956745147705,
+        "health_damage_bits": 1062469140,
+        "health_damage": 0.8280956745147705
+      },
+      {
+        "cw": 639,
+        "weapon_damage_bits": 1062469140,
+        "weapon_damage": 0.8280956745147705,
+        "health_damage_bits": 1062469140,
+        "health_damage": 0.8280956745147705
+      },
+      {
+        "cw": 895,
+        "weapon_damage_bits": 1062469140,
+        "weapon_damage": 0.8280956745147705,
+        "health_damage_bits": 1062469140,
+        "health_damage": 0.8280956745147705
+      }
+    ],
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "probe_sha256": "31618ce940a14bac678ee3a4d52680e1a31d4c558ef1c466d43bf7d912cf8b1a",
+    "input": {
+      "weapon_damage_word": 5,
+      "weapon_max_condition": 56,
+      "instance_condition": 55.57500076293945,
+      "current_float_av": {
+        "0": 40,
+        "7": 50,
+        "10": 140,
+        "14": 10,
+        "16": 10
+      },
+      "base_fatigue": 140,
+      "attack_bonus": 0,
+      "armor_rating": 0,
+      "maximum_armor_fraction": 0.85
+    },
+    "scope": "Full original484F80 ->547070, then native5FF712..5FF7BD mitigation. Declared float/integer AV, damage/max/condition readers and armor query boundaries. CW007F is the previously observed live main precision; wider words are sensitivity only. Input is the prior actual completed-contact sword condition; equipped body armor is zero so independently established native armor entry is zero. No game process or condition sink here."
+  },
+  "editable_original_followup_probe": "from pathlib import Path\nimport json,struct,hashlib\nfrom unicorn.x86_const import *\nb=Path('build/oblivion-compat/m15/S4');p=Path(__file__).resolve().parent\nsource=(b/'native-weapon-entry-oracle-02/probe.py').read_text();scope={};exec(source.split('for typ,skill,luck,strength,condition,fatigue,bonus in itertools.product')[0],scope)\nassert hashlib.sha256(scope['n']['data']).hexdigest()=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nscope.update(damage=5,maximum=56,basefatigue=140,bonus=0,current={0:40,7:50,10:140,14:10,16:10})\nu,w,ri,fl,rf=(scope[k] for k in ('u','w','ri','fl','rf'));stack=scope['stack'];end=scope['end'];u.mem_write(scope['weapon']+0x90,b'\\x00');u.mem_write(0x2006510,struct.pack('<d',55.57500076293945))\nw(scope['table']+0x348,0x2000800);u.mem_write(0x2000800,b'\\xd9\\x05'+struct.pack('<I',0x2006600)+b'\\xc3');fl(0x2006600,0);fl(0xb36ea0,.85);fl(0xb36e18,9)\nrows=[]\nfor cw in (0x7f,0x27f,0x37f):\n w(stack,end);w(stack+4,scope['actor']);fl(stack+8,1)\n for reg,value in [(UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,scope['item']),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)]:u.reg_write(reg,value)\n u.emu_start(0x484f80,end,count=10000);assert u.reg_read(UC_X86_REG_EIP)==end\n u.emu_start(0x2000500,0x2000506,count=2);damage=ri(0x2006504)\n u.mem_write(stack,b'\\0'*0x100);w(stack+0x18,damage);fl(stack+0x3c,0)\n for reg,value in [(UC_X86_REG_ESP,stack),(UC_X86_REG_ESI,scope['actor']),(UC_X86_REG_EBP,0),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)]:u.reg_write(reg,value)\n u.emu_start(0x5ff712,0x5ff7bd,count=1000);assert u.reg_read(UC_X86_REG_EIP)==0x5ff7bd and u.reg_read(UC_X86_REG_ESP)==stack\n rows.append({'cw':cw,'weapon_damage_bits':damage,'weapon_damage':rf(0x2006504),'health_damage_bits':ri(stack+0x18),'health_damage':rf(stack+0x18)})\nr={'passed':True,'rows':rows,'executable_sha256':hashlib.sha256(scope['n']['data']).hexdigest(),'probe_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'input':{'weapon_damage_word':5,'weapon_max_condition':56,'instance_condition':55.57500076293945,'current_float_av':scope['current'],'base_fatigue':140,'attack_bonus':0,'armor_rating':0,'maximum_armor_fraction':.85},'scope':'Full original484F80 ->547070, then native5FF712..5FF7BD mitigation. Declared float/integer AV, damage/max/condition readers and armor query boundaries. CW007F is the previously observed live main precision; wider words are sensitivity only. Input is the prior actual completed-contact sword condition; equipped body armor is zero so independently established native armor entry is zero. No game process or condition sink here.'}\n(p/'verification.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r))\n",
+  "original_dependency_pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-weapon-entry-oracle-02/probe.py",
+      "sha256": "22c00fb82ca85ed4700ce2c0835ddd9331d0d11aaeb49b955da094ccf806e714"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-armor-hit-feedback-precision-oracle-01/probe.py",
+      "sha256": "6b5121f55f916534cbbfb4d1871b3632b114ec4c0fc48194dfd7044757ab3bfa"
+    }
+  ],
+  "expected_mechanics": {
+    "prior_health_damage_bits": 1062367192,
+    "new_health_delta_bits": 1062469140,
+    "cumulative_health_damage_bits": 1070806774,
+    "weapon_condition_bits": 1113397658,
+    "armor_condition_bits": 0,
+    "combat_rng_state": 415139642,
+    "armor_selection_draws": 0,
+    "armor_writes": 0,
+    "action_id": 2,
+    "saved_action_next": 3
+  },
+  "runtime": {
+    "normal": {
+      "verification": {
+        "passed": true,
+        "native_directory_selection_audit": [
+          {
+            "phase": "first",
+            "selected_paths": 406,
+            "sha256": "eec74bf8777d5a8ec435d45fde6772608160bc9f30bf17ca54fe76e90de77be8"
+          },
+          {
+            "phase": "second",
+            "selected_paths": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          }
+        ],
+        "epochs": [
+          {
+            "pid": 478940,
+            "start_ticks": 10928281,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "f5ab0b146d255fc743bce0cea42cfccec7833cdac00320fe556f250fbfb9a3c3"
+          },
+          {
+            "pid": 481371,
+            "start_ticks": 10946693,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "f5ab0b146d255fc743bce0cea42cfccec7833cdac00320fe556f250fbfb9a3c3"
+          }
+        ],
+        "input_sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221",
+        "save_sha256": [
+          "da92f865acaf567b5a37db111f0c359eb60d27e1be6a1c4ed46d22c82f249b82",
+          "c6d664b9ca947811fc4bf165a72f6925871065ee3c1750dec273a689f015e705"
+        ],
+        "expected": {
+          "expected_health_damage_bits": 1062469140,
+          "expected_weapon_condition_bits": 1113397658,
+          "expected_armor_condition_bits": 0,
+          "expected_rng": [
+            415139642,
+            415139642
+          ],
+          "physical_action_next": 3,
+          "expected_sounds": [
+            "PHYDamageFlesh",
+            "WPNHitBladeFlesh"
+          ],
+          "source_oracle": "native-broken-body-followup-oracle-01/verification.json",
+          "actor_values": "Prior actual Health damage plus floatbits1062469140, accumulated modifier bits1070806774; all other arrays unchanged after regen.",
+          "restart": "New hit against already zero-condition equipped cuirass; armor selection/writes/draws0. Exact fresh-process output continuation without replay.",
+          "visual": "Named target still wears zero-condition cuirass; Player sword visible.",
+          "pcm_joint_correlation_minimum": 0.9,
+          "pcm_per_family_minimum_explained_energy": 0.01,
+          "pcm_candidate_minimum_individual_correlation": 0.2,
+          "pcm_families": [
+            "PHYDamageFlesh",
+            "WPNHitBladeFlesh"
+          ],
+          "pcm_expected_clusters": [
+            1,
+            0
+          ],
+          "pcm_method": "Unchanged analysis from native-armor-hit-feedback-runtime-03; first contact1 joint material/body/blade cluster, fresh continuation0.",
+          "expected_cumulative_health_damage_bits": 1070806774,
+          "audio_dsp": "Default Doppler factor .25. Native SOUN directory component boundary fixed; unchanged correlation>=.90 and per-family>=1%, with actual selected paths audited."
+        },
+        "artifacts": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/process.log",
+            "sha256": "dc08333b59e76896bf2f94d48320997d4ebf3c8652e314eabdaab2433752d4b7"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/script-report.json",
+            "sha256": "1d4bceaf1eb0fc09f9d188239311f6dd37384ab49b5be7c9a02a63cfa80d2ca7"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/rendered-audio.wav",
+            "sha256": "440cc08e6c14d66610fa6a8829de12b520b2f16256118c738b6cbbfba5aa9d6b"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/impact-audio-verification.json",
+            "sha256": "c0b32be24efd246b7120e38186e62b2aa50591fffc567b2cb02281c7c8d4d8cc"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/process.log",
+            "sha256": "1702e522137e2d6ced19c7d9fd6d229603bc93e25f13ca7693141dad12f53026"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/script-report.json",
+            "sha256": "09daab08b62d04c7129c3400cd0b528d2e62f48d57a9112240220f8906d0e200"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/rendered-audio.wav",
+            "sha256": "58ede3f77abccebbcad910718842ce67070a8daf36d45b9cb6299b4f75d562b0"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/impact-audio-verification.json",
+            "sha256": "57b7e86b7a38ce0e923c87113cbd4f7b530482b928c7d94c767a4f46ee906402"
+          }
+        ],
+        "scope": "Normal-input follow-up against already broken equipped body armor with actual resource/condition/RNG deltas and exact-byte fresh process continuation. Direct visual and PCM analysis are separate layers."
+      },
+      "visual_review": {
+        "passed": true,
+        "scope": "Direct review of normal follow-up and fresh-process screenshots; no camera edits.",
+        "observations": [
+          "Named NPC retains visible IronCuirass after already-zero-condition follow-up contact.",
+          "Player sword remains visibly drawn.",
+          "Continuation preserves named target and cuirass appearance."
+        ],
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/weapon-victim-after-hit.png",
+            "sha256": "a4d893c7242fc33aec04d1033c9c7e3bf16175644b7b77bbb0d3f120ff3e8560"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/weapon-victim-continuation.png",
+            "sha256": "5ac2fa77b50465c7b4a5a168c7fa120530c48c907763b3eb6426942555338594"
+          }
+        ]
+      },
+      "audio": [
+        {
+          "passed": true,
+          "expected_clusters": 1,
+          "clusters": [
+            {
+              "time": 52.2295,
+              "joint_correlation": 0.9991319601082242,
+              "family_explained_energy": {
+                "PHYDamageFlesh": 0.310513680519171,
+                "WPNHitBladeFlesh": 0.7570557067280256
+              },
+              "selected_coefficients": {
+                "wpn_hit_bladeflesh_02.wav": 236719.202125335,
+                "phy_dmgflesh_04.wav": 152159.81392193283
+              },
+              "accepted": true
+            }
+          ],
+          "candidate_groups": [
+            {
+              "time": 52.2295,
+              "joint_correlation": 0.9991319601082242,
+              "family_explained_energy": {
+                "PHYDamageFlesh": 0.310513680519171,
+                "WPNHitBladeFlesh": 0.7570557067280256
+              },
+              "selected_coefficients": {
+                "wpn_hit_bladeflesh_02.wav": 236719.202125335,
+                "phy_dmgflesh_04.wav": 152159.81392193283
+              },
+              "accepted": true
+            }
+          ],
+          "individual_peaks": [
+            {
+              "asset": "wpn_hit_bladeflesh_01.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": [
+                [
+                  52.2595,
+                  0.2937374120299981
+                ]
+              ]
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_02.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": [
+                [
+                  52.301,
+                  0.8257591831423781
+                ]
+              ]
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_03.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": [
+                [
+                  52.32808333333333,
+                  0.22325429956351103
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_01.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_02.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  52.976333333333336,
+                  0.3303849246766908
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_03.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  52.294916666666666,
+                  0.20545394952406576
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_04.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  52.301,
+                  0.4806137015337925
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_05.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  52.81916666666667,
+                  0.25120313872260613
+                ]
+              ]
+            }
+          ],
+          "pcm_sha256": "440cc08e6c14d66610fa6a8829de12b520b2f16256118c738b6cbbfba5aa9d6b",
+          "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+        },
+        {
+          "passed": true,
+          "expected_clusters": 0,
+          "clusters": [],
+          "candidate_groups": [],
+          "individual_peaks": [
+            {
+              "asset": "wpn_hit_bladeflesh_01.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_02.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_03.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_01.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_02.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_03.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_04.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_05.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            }
+          ],
+          "pcm_sha256": "58ede3f77abccebbcad910718842ce67070a8daf36d45b9cb6299b4f75d562b0",
+          "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+        }
+      ],
+      "source_recipe": {
+        "source": "build/oblivion-compat/m15/S4/native-body-armor-break-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221",
+        "change": "None: exact bytes of prior normal body-armor completed-contact fresh continuation.",
+        "scope": "Follow-up normal attack with previously broken equipped cuirass; not staged damage/condition or a replay of the first contact."
+      },
+      "first": {
+        "schema_version": 1,
+        "name": "native-broken-body-followup-runtime-normal-03-first",
+        "cwd": "{source}",
+        "files": [
+          {
+            "path": "config/openmw.cfg",
+            "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+          },
+          {
+            "path": "config/settings.cfg",
+            "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 1\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n\n[Sound]\nmaster volume = 1\nmusic volume = 0\nvoice volume = 0\nfootsteps volume = 0\nsfx volume = 1\n\ndoppler factor = 0.25\n"
+          },
+          {
+            "path": "test-data/events.txt",
+            "content": "at 0 command player getav Health\nat 0 command player getav Magicka\nat 0 command player getav Fatigue\nat 0 command player getdead\n"
+          },
+          {
+            "path": "config/input_v3.xml",
+            "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n</Controller>"
+          },
+          {
+            "path": "config/alsoft.conf",
+            "content": "[general]\ndrivers=wave\nchannels=stereo\nsample-type=int16\nfrequency=48000\n[wave]\nfile={output}/rendered-audio.wav\n"
+          }
+        ],
+        "command": [
+          "{openmw}",
+          "--replace=config",
+          "--config",
+          "{output}/config",
+          "--no-grab",
+          "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "xvfb": false,
+        "width": 1280,
+        "height": 720,
+        "actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 30
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "key_down",
+            "value": "u"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M11 animation playing: ref=\"Player\" group=onehandattack",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "key_up",
+            "value": "u"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 fatigue_cost=7.8",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2 action=-1",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 30
+          },
+          {
+            "type": "key_held",
+            "value": "F5"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "Writing saved game 'Quicksave'",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "screenshot",
+            "name": "weapon-victim-after-hit.png",
+            "minimum_entropy": 0.03,
+            "timeout_seconds": 240
+          }
+        ],
+        "terminate_after_actions": true,
+        "timeout_seconds": 900,
+        "expected_exit": 0,
+        "expected_log": [
+          "Applied TES4 runtime state:",
+          "Writing saved game 'Quicksave'",
+          "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+          "group=onehandattack",
+          "M15 melee hit committed:",
+          "victim=content:oblivion.esm:01fc43",
+          "sound=PHYDamageFlesh played=1",
+          "sound=WPNHitBladeFlesh played=1"
+        ],
+        "forbidden_log": [
+          "Error in frame",
+          "onFrame failed",
+          "Segmentation fault",
+          "Assertion.*failed",
+          "Aborted",
+          "M15 melee miss committed:",
+          "ERROR: AddressSanitizer",
+          "runtime error:",
+          "sound=PHYArmorHitHeavy played=1"
+        ],
+        "environment": {
+          "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+          "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+          "ALSOFT_CONF": "{output}/config/alsoft.conf"
+        },
+        "sdl_offscreen_input": true,
+        "sdl_input_timeout_seconds": 60
+      },
+      "second": {
+        "schema_version": 1,
+        "name": "native-broken-body-followup-runtime-normal-03-second",
+        "cwd": "{source}",
+        "files": [
+          {
+            "path": "config/openmw.cfg",
+            "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+          },
+          {
+            "path": "config/settings.cfg",
+            "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 5\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n\n[Sound]\nmaster volume = 1\nmusic volume = 0\nvoice volume = 0\nfootsteps volume = 0\nsfx volume = 1\n\ndoppler factor = 0.25\n"
+          },
+          {
+            "path": "test-data/events.txt",
+            "content": "at 0 command player getav Health\nat 0 command player getav Magicka\nat 0 command player getav Fatigue\nat 0 command player getdead\n"
+          },
+          {
+            "path": "config/input_v3.xml",
+            "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n</Controller>"
+          },
+          {
+            "path": "config/alsoft.conf",
+            "content": "[general]\ndrivers=wave\nchannels=stereo\nsample-type=int16\nfrequency=48000\n[wave]\nfile={output}/rendered-audio.wav\n"
+          }
+        ],
+        "command": [
+          "{openmw}",
+          "--replace=config",
+          "--config",
+          "{output}/config",
+          "--no-grab",
+          "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "xvfb": false,
+        "width": 1280,
+        "height": 720,
+        "actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 20
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "sleep",
+            "seconds": 20
+          },
+          {
+            "type": "key_held",
+            "value": "F5"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "Writing saved game 'Quicksave'",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "screenshot",
+            "name": "weapon-victim-continuation.png",
+            "minimum_entropy": 0.03,
+            "timeout_seconds": 240
+          }
+        ],
+        "terminate_after_actions": true,
+        "timeout_seconds": 900,
+        "expected_exit": 0,
+        "expected_log": [
+          "Applied TES4 runtime state:",
+          "Writing saved game 'Quicksave'",
+          "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0"
+        ],
+        "forbidden_log": [
+          "Error in frame",
+          "onFrame failed",
+          "Segmentation fault",
+          "Assertion.*failed",
+          "Aborted",
+          "M15 melee selection:",
+          "M15 melee restore:",
+          "M15 melee interrupt:",
+          "M15 melee hit committed:",
+          "M15 melee hit sound requested:",
+          "ERROR: AddressSanitizer",
+          "runtime error:"
+        ],
+        "environment": {
+          "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+          "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+          "ALSOFT_CONF": "{output}/config/alsoft.conf"
+        },
+        "sdl_offscreen_input": true,
+        "sdl_input_timeout_seconds": 60
+      },
+      "editable_verifier": "from pathlib import Path\nimport copy,json,hashlib,struct,sys,re\nsys.path.insert(0,'scripts');from tes4_runtime_state import load_save,CURRENT_VERSION\np=Path(sys.argv[1]);sha=lambda f:hashlib.sha256(f.read_bytes()).hexdigest();bits=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\na=load_save(p/'staged-input.omwsave');saves=[p/phase/'userdata/saves/M15Review/Quicksave.omwsave' for phase in ('first','second')];states=[load_save(f) for f in saves];target='content:oblivion.esm:01fc43';player='dynamic:player:0000000000000001';recipe=json.loads((p/'preregistered-acceptance.json').read_text());health=struct.unpack('<f',struct.pack('<I',recipe['expected_health_damage_bits']))[0]\nreferences={id(s):{x['key']:x for x in s['references']} for s in [a]+states}\ndef inv(s,key):return {i['base']:i for i in (s['player']['inventory'] if key==player else references[id(s)][key]['inventory'])}\nassert sha(p/'first/input-pristine.omwsave')==sha(p/'staged-input.omwsave')\nassert sha(p/'second/input-pristine.omwsave')==sha(saves[0])\nfor s in states:\n assert s['schema_version']==CURRENT_VERSION\n assert s['physical_actions']=={'next':3,'pending':[]} and s['physical_action_owners']==[]\n assert s['combat_rng_state']==recipe['expected_rng'][1]\n assert s['native_loose_weapons']==[]\n assert s['next_dynamic_serial']==a['next_dynamic_serial']==1\n for old in a['native_actor_values']:\n  new=next(x for x in s['native_actor_values'] if x['actor']==old['actor']);expected=copy.deepcopy(old['values'])\n  if old['actor']==target:expected[8][3]=struct.unpack('<f',struct.pack('<f',(expected[8][3] or 0)-health))[0]\n  assert new['values']==expected,old['actor']\n for field in ['native_actor_life','native_actor_breath','native_actor_bases','native_death_counts','pending_death_events','next_death_event','native_combat_engagements']:\n  assert s[field]==a[field],field\n for key in [player]+[v['key'] for v in a['references']]:\n  expected=copy.deepcopy(inv(a,key))\n  if key==target:expected['content:oblivion.esm:01c6d1']['condition']=0.\n  if key==player:expected['content:oblivion.esm:090615']['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected_weapon_condition_bits']))[0]\n  assert inv(s,key)==expected,key\n  # Compare complete inventory multisets as well as targeted base lookup;\n  # repeated instances of one base must retain their multiplicity and extras.\n  before_items=a['player']['inventory'] if key==player else references[id(a)][key]['inventory']\n  after_items=s['player']['inventory'] if key==player else references[id(s)][key]['inventory']\n  all_expected=copy.deepcopy(before_items)\n  for entry in all_expected:\n   if key==target and entry['base']=='content:oblivion.esm:01c6d1':entry['condition']=0.\n   if key==player and entry['base']=='content:oblivion.esm:090615':entry['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected_weapon_condition_bits']))[0]\n  canonical=lambda entries:sorted(json.dumps(v,sort_keys=True,separators=(',',':')) for v in entries)\n  assert canonical(after_items)==canonical(all_expected),key\n assert inv(s,target)['content:oblivion.esm:01c6d1']['equipped_slots']==4\n assert all(x['strike'] is None for x in s['native_melee_states'])\nepochs=[];artifacts=[];directory_audits=[]\nfor phase in ('first','second'):\n d=p/phase;launch=json.loads((d/'launcher.json').read_text());scenario=json.loads((d/'scenario.json').read_text());e=json.loads((d/'process-epoch.json').read_text());script=json.loads((d/'script-report.json').read_text());log=(d/'process.log').read_text()\n assert launch['scenario_returncode']==launch['monitor_returncode']==0\n assert scenario['passed'] and scenario['shutdown_requested'] and not scenario['timed_out'] and not scenario['unreviewed_error_log_findings']\n assert script['compilation_failures']==0 and script['diagnostics']==[]\n assert e['executable_sha256']==launch['binary_sha256_before_launch'];epochs.append(e)\n assert json.loads((d/'impact-audio-verification.json').read_text())['passed']\n assert 'Quitting peacefully.' in log\n selections=re.findall(r'M10 native sound directory: (.+?) -> (.+)',log)\n for directory,selected in selections:assert selected.startswith(directory.rstrip('/')+'/'),(directory,selected)\n if phase=='first':assert any(directory=='sound/fx/wpn/weaponhit/bladeflesh' for directory,selected in selections)\n directory_audits.append({'phase':phase,'selected_paths':len(selections),'sha256':hashlib.sha256(json.dumps(selections).encode()).hexdigest()})\n assert not any(x in log for x in ['ERROR: AddressSanitizer','runtime error:','M15 melee miss committed:'])\n if phase=='first':\n  hits=re.findall(r'M15 melee hit committed:.*',log);assert len(hits)==1\n  assert 'id=2 fatigue_cost=7.8 before=140 after=132.2' in hits[0]\n  assert 'health_damage=0.828096' in hits[0] and 'armor_condition_writes=0 combat_random_draws=0' in hits[0]\n  for sound in recipe['expected_sounds']:assert len(re.findall(r'M15 melee hit sound requested:.*sound='+sound+' played=1',log))==1\n else:assert all(x not in log for x in ['M15 melee hit committed:','M15 melee hit sound requested:','M15 melee selection:'])\n for name in ['process.log','script-report.json','mixed-output.wav','rendered-audio.wav','impact-audio-verification.json']:\n  f=d/name\n  if f.exists():artifacts.append({'path':str(f),'sha256':sha(f)})\nassert (epochs[0]['boot_id'],epochs[0]['pid'],epochs[0]['start_ticks'])!=(epochs[1]['boot_id'],epochs[1]['pid'],epochs[1]['start_ticks'])\nassert epochs[0]['executable_sha256']==epochs[1]['executable_sha256']\nassert json.loads((p/'extra-content-reference-audit.json').read_text())['passed']\nresult=dict(passed=True,native_directory_selection_audit=directory_audits,epochs=epochs,input_sha256=sha(p/'staged-input.omwsave'),save_sha256=[sha(f) for f in saves],expected=recipe,artifacts=artifacts,scope='Normal-input follow-up against already broken equipped body armor with actual resource/condition/RNG deltas and exact-byte fresh process continuation. Direct visual and PCM analysis are separate layers.')\n(p/'verification.json').write_text(json.dumps(result,indent=2)+'\\n');print(json.dumps({'passed':True,'epochs':[x['pid'] for x in epochs]}))\n",
+      "editable_launcher": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path('/home/maciek/openmw-oblivion/openmw-oblivion');base=root/'build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03';phase=sys.argv[1];assert phase in ('first','second');out=base/phase;out.mkdir(parents=True,exist_ok=True)\nassert not (out/\"launcher.json\").exists() and not (out/\"process.log\").exists()\nmanifest=str(base/(phase+'.json'))\nif True:\n source=base/'staged-input.omwsave'\n if phase!='first':\n  previous='first' if phase=='second' else 'second'\n  pristine=hashlib.sha256((base/previous/'input-pristine.omwsave').read_bytes()).hexdigest()\n  changed=[p for p in (base/previous/'userdata/saves').glob('*/*.omwsave') if hashlib.sha256(p.read_bytes()).hexdigest()!=pristine]\n  assert len(changed)==1,changed\n  source=changed[0]\n slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',manifest,'--output',str(out),'--variable','openmw='+str(root/'build/openmw'),'--variable','resources='+str(root/'build/resources'),'--variable','miss_fixture='+str(root/'build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nassert json.loads((root/'build/oblivion-compat/m15/S4/native-sound-directory-boundary-normal-01/verification.json').read_text())['passed']\nsha=hashlib.sha256((root/'build/openmw').read_bytes()).hexdigest()\nwith (out/'launcher.log').open('w') as log:\n p=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'epoch-monitor.py'),str(out)],cwd=root,capture_output=True,text=True)\n (out/'epoch-monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=p.wait(timeout=1000)\n(out/'launcher.json').write_text(json.dumps({'command':cmd,'scenario_runner_pid':p.pid,'scenario_returncode':code,'monitor_returncode':monitor.returncode,'binary_sha256_before_launch':sha},indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256((root/'build/openmw').read_bytes()).hexdigest()==sha\nprint(json.dumps({'phase':phase,'passed':True,'epoch':json.loads((out/'process-epoch.json').read_text())},indent=2))\n",
+      "artifact_pins": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/staged-input.omwsave",
+          "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/first/input-pristine.omwsave",
+          "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/second/input-pristine.omwsave",
+          "sha256": "da92f865acaf567b5a37db111f0c359eb60d27e1be6a1c4ed46d22c82f249b82"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/epoch-monitor.py",
+          "sha256": "419c097fd272fd4c14ede7de8b0db1f78d2297638431f616808a055c97be9921"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/analyse-impact.py",
+          "sha256": "ef962c35385e295284ae0715daafdb48eb339e83b03b0b9e3825e9beaec0b2cc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/sound-assets.json",
+          "sha256": "1ec4624cd3ad9f5b68b8ed738d837eeb6b6684ba3b3779296123bd452d72dc65"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/audit-extra-content-02.py",
+          "sha256": "0919995a9a5d16d5f728ae36e8d0de6505348763cdb5873afe9c9d6ba11e1bd3"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-03/extra-content-reference-audit.json",
+          "sha256": "0311349b33a60446fda3068e0fcf7d1763e5a39b750c33db7dd22b6603d237d0"
+        }
+      ],
+      "content_reference_counts": [
+        {
+          "count": 1950,
+          "identity_base_cell_sha256": "c9834ae8fad39649cf4317cce083aee7bd6fb1250c597c08dcb48ee42305a07f"
+        },
+        {
+          "count": 2482,
+          "identity_base_cell_sha256": "d58c947c14b55abc5a5f9f24af7b1178e70ac46e129d66c76df6bc3bb3fa1a58"
+        }
+      ]
+    },
+    "sanitized": {
+      "verification": {
+        "passed": true,
+        "native_directory_selection_audit": [
+          {
+            "phase": "first",
+            "selected_paths": 406,
+            "sha256": "73a150ba0f79664b03644e1b8a434779d4e52d57137f32d3d60f50566aeac76a"
+          },
+          {
+            "phase": "second",
+            "selected_paths": 0,
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          }
+        ],
+        "epochs": [
+          {
+            "pid": 481475,
+            "start_ticks": 10958011,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5a8cddcbe2b8cc2efed4545fe9345e453aa9084ddf5b8a5b6992fc0290287eaa"
+          },
+          {
+            "pid": 481670,
+            "start_ticks": 10987889,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5a8cddcbe2b8cc2efed4545fe9345e453aa9084ddf5b8a5b6992fc0290287eaa"
+          }
+        ],
+        "input_sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221",
+        "save_sha256": [
+          "0d53ef348131e7b4b79ef578d63c4170f65234a4b4df31c06766030508cdae8e",
+          "794586d65c3bb7f1bdce129960afb5e2c42f3172849770af1f53825ee6babdbb"
+        ],
+        "expected": {
+          "expected_health_damage_bits": 1062469140,
+          "expected_weapon_condition_bits": 1113397658,
+          "expected_armor_condition_bits": 0,
+          "expected_rng": [
+            415139642,
+            415139642
+          ],
+          "physical_action_next": 3,
+          "expected_sounds": [
+            "PHYDamageFlesh",
+            "WPNHitBladeFlesh"
+          ],
+          "source_oracle": "native-broken-body-followup-oracle-01/verification.json",
+          "actor_values": "Prior actual Health damage plus floatbits1062469140, accumulated modifier bits1070806774; all other arrays unchanged after regen.",
+          "restart": "New hit against already zero-condition equipped cuirass; armor selection/writes/draws0. Exact fresh-process output continuation without replay.",
+          "visual": "Named target still wears zero-condition cuirass; Player sword visible.",
+          "pcm_joint_correlation_minimum": 0.9,
+          "pcm_per_family_minimum_explained_energy": 0.01,
+          "pcm_candidate_minimum_individual_correlation": 0.2,
+          "pcm_families": [
+            "PHYDamageFlesh",
+            "WPNHitBladeFlesh"
+          ],
+          "pcm_expected_clusters": [
+            1,
+            0
+          ],
+          "pcm_method": "Unchanged analysis from native-armor-hit-feedback-runtime-03; first contact1 joint material/body/blade cluster, fresh continuation0.",
+          "expected_cumulative_health_damage_bits": 1070806774,
+          "audio_dsp": "Default Doppler factor .25. Native SOUN directory component boundary fixed; unchanged correlation>=.90 and per-family>=1%, with actual selected paths audited."
+        },
+        "artifacts": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/process.log",
+            "sha256": "09142e4858be0801f04402e4e64252fc0f55646302d0e3d22bd013da35bd4196"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/script-report.json",
+            "sha256": "5172bf472b4186714e7da64ca7a605067f08669b0539b5e12710a91f96c781fb"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/rendered-audio.wav",
+            "sha256": "086dcbae40b58426ced36c83819fa07c92cb30bf86c041fb9a3277d90eff3998"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/impact-audio-verification.json",
+            "sha256": "c77c375254b6069730ef3f2a0dafa0e5e3f5e489a6511002a349737195b97058"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/process.log",
+            "sha256": "8e1495bc7e8962717b7c3cc995e9d7ab0d3025de8fa0ecbe56a57065cb2f1ba9"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/script-report.json",
+            "sha256": "0f067145c80f3a51298be817b78478df1e1e9a64d2d30868ff1177ea002c3daa"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/rendered-audio.wav",
+            "sha256": "dd955f3df45ae83b5916057edb76e6783e8a5c017a500cf55bb3f02295494156"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/impact-audio-verification.json",
+            "sha256": "5ea18fcfb28ca082aeb4ef1db2f1daa7b0dd7987ed3a8e6d01f78b8463470ff2"
+          }
+        ],
+        "scope": "Normal-input follow-up against already broken equipped body armor with actual resource/condition/RNG deltas and exact-byte fresh process continuation. Direct visual and PCM analysis are separate layers."
+      },
+      "visual_review": {
+        "passed": true,
+        "scope": "Direct review of instrumented follow-up and fresh-process screenshots; no camera edits.",
+        "observations": [
+          "Named NPC retains visible IronCuirass after already-zero-condition follow-up contact.",
+          "Player sword remains visibly drawn.",
+          "Continuation preserves named target and cuirass appearance."
+        ],
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/weapon-victim-after-hit.png",
+            "sha256": "6a74baf413a9fa74d085d12f41765705a293f97dc69e1bb02e85a36097909603"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/weapon-victim-continuation.png",
+            "sha256": "be9199f85e2df4eb5c10a1397e778b3a77acba758bf97a3dbc207182a92d667e"
+          }
+        ]
+      },
+      "audio": [
+        {
+          "passed": true,
+          "expected_clusters": 1,
+          "clusters": [
+            {
+              "time": 176.03608333333332,
+              "joint_correlation": 0.9996180633110212,
+              "family_explained_energy": {
+                "PHYDamageFlesh": 0.2752146343913926,
+                "WPNHitBladeFlesh": 0.5785319457097194
+              },
+              "selected_coefficients": {
+                "wpn_hit_bladeflesh_01.wav": 226303.73120375458,
+                "phy_dmgflesh_02.wav": 151155.02608346567
+              },
+              "accepted": true
+            }
+          ],
+          "candidate_groups": [
+            {
+              "time": 176.03608333333332,
+              "joint_correlation": 0.9996180633110212,
+              "family_explained_energy": {
+                "PHYDamageFlesh": 0.2752146343913926,
+                "WPNHitBladeFlesh": 0.5785319457097194
+              },
+              "selected_coefficients": {
+                "wpn_hit_bladeflesh_01.wav": 226303.73120375458,
+                "phy_dmgflesh_02.wav": 151155.02608346567
+              },
+              "accepted": true
+            }
+          ],
+          "individual_peaks": [
+            {
+              "asset": "wpn_hit_bladeflesh_01.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": [
+                [
+                  176.121,
+                  0.8508992911968951
+                ]
+              ]
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_02.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": [
+                [
+                  176.16383333333334,
+                  0.21245245349854153
+                ]
+              ]
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_03.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_01.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  176.24083333333334,
+                  0.23071213070408747
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_02.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  176.121,
+                  0.6183570894747024
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_03.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  176.10116666666667,
+                  0.24534669852255656
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_04.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  176.06608333333332,
+                  0.44120225904276983
+                ]
+              ]
+            },
+            {
+              "asset": "phy_dmgflesh_05.wav",
+              "family": "PHYDamageFlesh",
+              "top": [
+                [
+                  176.10591666666667,
+                  0.36207733268942904
+                ]
+              ]
+            }
+          ],
+          "pcm_sha256": "086dcbae40b58426ced36c83819fa07c92cb30bf86c041fb9a3277d90eff3998",
+          "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+        },
+        {
+          "passed": true,
+          "expected_clusters": 0,
+          "clusters": [],
+          "candidate_groups": [],
+          "individual_peaks": [
+            {
+              "asset": "wpn_hit_bladeflesh_01.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_02.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "wpn_hit_bladeflesh_03.wav",
+              "family": "WPNHitBladeFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_01.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_02.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_03.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_04.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            },
+            {
+              "asset": "phy_dmgflesh_05.wav",
+              "family": "PHYDamageFlesh",
+              "top": []
+            }
+          ],
+          "pcm_sha256": "dd955f3df45ae83b5916057edb76e6783e8a5c017a500cf55bb3f02295494156",
+          "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+        }
+      ],
+      "source_recipe": {
+        "source": "build/oblivion-compat/m15/S4/native-body-armor-break-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+        "source_sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221",
+        "change": "None: exact bytes of prior normal body-armor completed-contact fresh continuation.",
+        "scope": "Follow-up normal attack with previously broken equipped cuirass; not staged damage/condition or a replay of the first contact."
+      },
+      "first": {
+        "schema_version": 1,
+        "name": "native-broken-body-followup-runtime-sanitized-03-first",
+        "cwd": "{source}",
+        "files": [
+          {
+            "path": "config/openmw.cfg",
+            "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+          },
+          {
+            "path": "config/settings.cfg",
+            "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 1\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n\n[Sound]\nmaster volume = 1\nmusic volume = 0\nvoice volume = 0\nfootsteps volume = 0\nsfx volume = 1\n\ndoppler factor = 0.25\n"
+          },
+          {
+            "path": "test-data/events.txt",
+            "content": "at 0 command player getav Health\nat 0 command player getav Magicka\nat 0 command player getav Fatigue\nat 0 command player getdead\n"
+          },
+          {
+            "path": "config/input_v3.xml",
+            "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n</Controller>"
+          },
+          {
+            "path": "config/alsoft.conf",
+            "content": "[general]\ndrivers=wave\nchannels=stereo\nsample-type=int16\nfrequency=48000\n[wave]\nfile={output}/rendered-audio.wav\n"
+          }
+        ],
+        "command": [
+          "{openmw}",
+          "--replace=config",
+          "--config",
+          "{output}/config",
+          "--no-grab",
+          "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "xvfb": false,
+        "width": 1280,
+        "height": 720,
+        "actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 30
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "key_down",
+            "value": "u"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M11 animation playing: ref=\"Player\" group=onehandattack",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "key_up",
+            "value": "u"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 fatigue_cost=7.8",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2 action=-1",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 30
+          },
+          {
+            "type": "key_held",
+            "value": "F5"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "Writing saved game 'Quicksave'",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "screenshot",
+            "name": "weapon-victim-after-hit.png",
+            "minimum_entropy": 0.03,
+            "timeout_seconds": 240
+          }
+        ],
+        "terminate_after_actions": true,
+        "timeout_seconds": 900,
+        "expected_exit": 0,
+        "expected_log": [
+          "Applied TES4 runtime state:",
+          "Writing saved game 'Quicksave'",
+          "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0",
+          "group=onehandattack",
+          "M15 melee hit committed:",
+          "victim=content:oblivion.esm:01fc43",
+          "sound=PHYDamageFlesh played=1",
+          "sound=WPNHitBladeFlesh played=1"
+        ],
+        "forbidden_log": [
+          "Error in frame",
+          "onFrame failed",
+          "Segmentation fault",
+          "Assertion.*failed",
+          "Aborted",
+          "M15 melee miss committed:",
+          "ERROR: AddressSanitizer",
+          "runtime error:",
+          "sound=PHYArmorHitHeavy played=1"
+        ],
+        "environment": {
+          "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+          "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+          "ALSOFT_CONF": "{output}/config/alsoft.conf",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "sdl_offscreen_input": true,
+        "sdl_input_timeout_seconds": 60
+      },
+      "second": {
+        "schema_version": 1,
+        "name": "native-broken-body-followup-runtime-sanitized-03-second",
+        "cwd": "{source}",
+        "files": [
+          {
+            "path": "config/openmw.cfg",
+            "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+          },
+          {
+            "path": "config/settings.cfg",
+            "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 5\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n\n[Sound]\nmaster volume = 1\nmusic volume = 0\nvoice volume = 0\nfootsteps volume = 0\nsfx volume = 1\n\ndoppler factor = 0.25\n"
+          },
+          {
+            "path": "test-data/events.txt",
+            "content": "at 0 command player getav Health\nat 0 command player getav Magicka\nat 0 command player getav Fatigue\nat 0 command player getdead\n"
+          },
+          {
+            "path": "config/input_v3.xml",
+            "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n</Controller>"
+          },
+          {
+            "path": "config/alsoft.conf",
+            "content": "[general]\ndrivers=wave\nchannels=stereo\nsample-type=int16\nfrequency=48000\n[wave]\nfile={output}/rendered-audio.wav\n"
+          }
+        ],
+        "command": [
+          "{openmw}",
+          "--replace=config",
+          "--config",
+          "{output}/config",
+          "--no-grab",
+          "--load-savegame={output}/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "xvfb": false,
+        "width": 1280,
+        "height": 720,
+        "actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "sleep",
+            "seconds": 20
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "sleep",
+            "seconds": 20
+          },
+          {
+            "type": "key_held",
+            "value": "F5"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "Writing saved game 'Quicksave'",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "screenshot",
+            "name": "weapon-victim-continuation.png",
+            "minimum_entropy": 0.03,
+            "timeout_seconds": 240
+          }
+        ],
+        "terminate_after_actions": true,
+        "timeout_seconds": 900,
+        "expected_exit": 0,
+        "expected_log": [
+          "Applied TES4 runtime state:",
+          "Writing saved game 'Quicksave'",
+          "M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=getdead result=0"
+        ],
+        "forbidden_log": [
+          "Error in frame",
+          "onFrame failed",
+          "Segmentation fault",
+          "Assertion.*failed",
+          "Aborted",
+          "M15 melee selection:",
+          "M15 melee restore:",
+          "M15 melee interrupt:",
+          "M15 melee hit committed:",
+          "M15 melee hit sound requested:",
+          "ERROR: AddressSanitizer",
+          "runtime error:"
+        ],
+        "environment": {
+          "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+          "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+          "ALSOFT_CONF": "{output}/config/alsoft.conf",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "sdl_offscreen_input": true,
+        "sdl_input_timeout_seconds": 60
+      },
+      "editable_verifier": "from pathlib import Path\nimport copy,json,hashlib,struct,sys,re\nsys.path.insert(0,'scripts');from tes4_runtime_state import load_save,CURRENT_VERSION\np=Path(sys.argv[1]);sha=lambda f:hashlib.sha256(f.read_bytes()).hexdigest();bits=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\na=load_save(p/'staged-input.omwsave');saves=[p/phase/'userdata/saves/M15Review/Quicksave.omwsave' for phase in ('first','second')];states=[load_save(f) for f in saves];target='content:oblivion.esm:01fc43';player='dynamic:player:0000000000000001';recipe=json.loads((p/'preregistered-acceptance.json').read_text());health=struct.unpack('<f',struct.pack('<I',recipe['expected_health_damage_bits']))[0]\nreferences={id(s):{x['key']:x for x in s['references']} for s in [a]+states}\ndef inv(s,key):return {i['base']:i for i in (s['player']['inventory'] if key==player else references[id(s)][key]['inventory'])}\nassert sha(p/'first/input-pristine.omwsave')==sha(p/'staged-input.omwsave')\nassert sha(p/'second/input-pristine.omwsave')==sha(saves[0])\nfor s in states:\n assert s['schema_version']==CURRENT_VERSION\n assert s['physical_actions']=={'next':3,'pending':[]} and s['physical_action_owners']==[]\n assert s['combat_rng_state']==recipe['expected_rng'][1]\n assert s['native_loose_weapons']==[]\n assert s['next_dynamic_serial']==a['next_dynamic_serial']==1\n for old in a['native_actor_values']:\n  new=next(x for x in s['native_actor_values'] if x['actor']==old['actor']);expected=copy.deepcopy(old['values'])\n  if old['actor']==target:expected[8][3]=struct.unpack('<f',struct.pack('<f',(expected[8][3] or 0)-health))[0]\n  assert new['values']==expected,old['actor']\n for field in ['native_actor_life','native_actor_breath','native_actor_bases','native_death_counts','pending_death_events','next_death_event','native_combat_engagements']:\n  assert s[field]==a[field],field\n for key in [player]+[v['key'] for v in a['references']]:\n  expected=copy.deepcopy(inv(a,key))\n  if key==target:expected['content:oblivion.esm:01c6d1']['condition']=0.\n  if key==player:expected['content:oblivion.esm:090615']['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected_weapon_condition_bits']))[0]\n  assert inv(s,key)==expected,key\n  # Compare complete inventory multisets as well as targeted base lookup;\n  # repeated instances of one base must retain their multiplicity and extras.\n  before_items=a['player']['inventory'] if key==player else references[id(a)][key]['inventory']\n  after_items=s['player']['inventory'] if key==player else references[id(s)][key]['inventory']\n  all_expected=copy.deepcopy(before_items)\n  for entry in all_expected:\n   if key==target and entry['base']=='content:oblivion.esm:01c6d1':entry['condition']=0.\n   if key==player and entry['base']=='content:oblivion.esm:090615':entry['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected_weapon_condition_bits']))[0]\n  canonical=lambda entries:sorted(json.dumps(v,sort_keys=True,separators=(',',':')) for v in entries)\n  assert canonical(after_items)==canonical(all_expected),key\n assert inv(s,target)['content:oblivion.esm:01c6d1']['equipped_slots']==4\n assert all(x['strike'] is None for x in s['native_melee_states'])\nepochs=[];artifacts=[];directory_audits=[]\nfor phase in ('first','second'):\n d=p/phase;launch=json.loads((d/'launcher.json').read_text());scenario=json.loads((d/'scenario.json').read_text());e=json.loads((d/'process-epoch.json').read_text());script=json.loads((d/'script-report.json').read_text());log=(d/'process.log').read_text()\n assert launch['scenario_returncode']==launch['monitor_returncode']==0\n assert scenario['passed'] and scenario['shutdown_requested'] and not scenario['timed_out'] and not scenario['unreviewed_error_log_findings']\n assert script['compilation_failures']==0 and script['diagnostics']==[]\n assert e['executable_sha256']==launch['binary_sha256_before_launch'];epochs.append(e)\n assert json.loads((d/'impact-audio-verification.json').read_text())['passed']\n assert 'Quitting peacefully.' in log\n selections=re.findall(r'M10 native sound directory: (.+?) -> (.+)',log)\n for directory,selected in selections:assert selected.startswith(directory.rstrip('/')+'/'),(directory,selected)\n if phase=='first':assert any(directory=='sound/fx/wpn/weaponhit/bladeflesh' for directory,selected in selections)\n directory_audits.append({'phase':phase,'selected_paths':len(selections),'sha256':hashlib.sha256(json.dumps(selections).encode()).hexdigest()})\n assert not any(x in log for x in ['ERROR: AddressSanitizer','runtime error:','M15 melee miss committed:'])\n if phase=='first':\n  hits=re.findall(r'M15 melee hit committed:.*',log);assert len(hits)==1\n  assert 'id=2 fatigue_cost=7.8 before=140 after=132.2' in hits[0]\n  assert 'health_damage=0.828096' in hits[0] and 'armor_condition_writes=0 combat_random_draws=0' in hits[0]\n  for sound in recipe['expected_sounds']:assert len(re.findall(r'M15 melee hit sound requested:.*sound='+sound+' played=1',log))==1\n else:assert all(x not in log for x in ['M15 melee hit committed:','M15 melee hit sound requested:','M15 melee selection:'])\n for name in ['process.log','script-report.json','mixed-output.wav','rendered-audio.wav','impact-audio-verification.json']:\n  f=d/name\n  if f.exists():artifacts.append({'path':str(f),'sha256':sha(f)})\nassert (epochs[0]['boot_id'],epochs[0]['pid'],epochs[0]['start_ticks'])!=(epochs[1]['boot_id'],epochs[1]['pid'],epochs[1]['start_ticks'])\nassert epochs[0]['executable_sha256']==epochs[1]['executable_sha256']\nassert json.loads((p/'extra-content-reference-audit.json').read_text())['passed']\nresult=dict(passed=True,native_directory_selection_audit=directory_audits,epochs=epochs,input_sha256=sha(p/'staged-input.omwsave'),save_sha256=[sha(f) for f in saves],expected=recipe,artifacts=artifacts,scope='Normal-input follow-up against already broken equipped body armor with actual resource/condition/RNG deltas and exact-byte fresh process continuation. Direct visual and PCM analysis are separate layers.')\n(p/'verification.json').write_text(json.dumps(result,indent=2)+'\\n');print(json.dumps({'passed':True,'epochs':[x['pid'] for x in epochs]}))\n",
+      "editable_launcher": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path('/home/maciek/openmw-oblivion/openmw-oblivion');base=root/'build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03';phase=sys.argv[1];assert phase in ('first','second');out=base/phase;out.mkdir(parents=True,exist_ok=True)\nassert not (out/\"launcher.json\").exists() and not (out/\"process.log\").exists()\nmanifest=str(base/(phase+'.json'))\nif True:\n source=base/'staged-input.omwsave'\n if phase!='first':\n  previous='first' if phase=='second' else 'second'\n  pristine=hashlib.sha256((base/previous/'input-pristine.omwsave').read_bytes()).hexdigest()\n  changed=[p for p in (base/previous/'userdata/saves').glob('*/*.omwsave') if hashlib.sha256(p.read_bytes()).hexdigest()!=pristine]\n  assert len(changed)==1,changed\n  source=changed[0]\n slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',manifest,'--output',str(out),'--variable','openmw='+str(root/'build/m15-sanitize/openmw'),'--variable','resources='+str(root/'build/resources'),'--variable','miss_fixture='+str(root/'build/oblivion-compat/m15/S4/native-player-removeitem-restart-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nassert json.loads((root/'build/oblivion-compat/m15/S4/native-sound-directory-boundary-sanitized-01/verification.json').read_text())['passed']\nsha=hashlib.sha256((root/'build/m15-sanitize/openmw').read_bytes()).hexdigest()\nwith (out/'launcher.log').open('w') as log:\n p=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'epoch-monitor.py'),str(out)],cwd=root,capture_output=True,text=True)\n (out/'epoch-monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=p.wait(timeout=1000)\n(out/'launcher.json').write_text(json.dumps({'command':cmd,'scenario_runner_pid':p.pid,'scenario_returncode':code,'monitor_returncode':monitor.returncode,'binary_sha256_before_launch':sha},indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256((root/'build/m15-sanitize/openmw').read_bytes()).hexdigest()==sha\nprint(json.dumps({'phase':phase,'passed':True,'epoch':json.loads((out/'process-epoch.json').read_text())},indent=2))\n",
+      "artifact_pins": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/staged-input.omwsave",
+          "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/first/input-pristine.omwsave",
+          "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/second/input-pristine.omwsave",
+          "sha256": "0d53ef348131e7b4b79ef578d63c4170f65234a4b4df31c06766030508cdae8e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/epoch-monitor.py",
+          "sha256": "ebc88b8b927d12805f5b564e48a676c011f698bb91777c12c40971a23fe55652"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/analyse-impact.py",
+          "sha256": "ef962c35385e295284ae0715daafdb48eb339e83b03b0b9e3825e9beaec0b2cc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/sound-assets.json",
+          "sha256": "1ec4624cd3ad9f5b68b8ed738d837eeb6b6684ba3b3779296123bd452d72dc65"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/audit-extra-content-02.py",
+          "sha256": "0919995a9a5d16d5f728ae36e8d0de6505348763cdb5873afe9c9d6ba11e1bd3"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-03/extra-content-reference-audit.json",
+          "sha256": "f877098f82f433ee048dca78be1427039f6602852978e62a05c8face9c20f539"
+        }
+      ],
+      "content_reference_counts": [
+        {
+          "count": 697,
+          "identity_base_cell_sha256": "1bbf8b615790e9ac072855320767c801046c0f85873f77fa08672a5ef74a9454"
+        },
+        {
+          "count": 697,
+          "identity_base_cell_sha256": "1bbf8b615790e9ac072855320767c801046c0f85873f77fa08672a5ef74a9454"
+        }
+      ]
+    }
+  },
+  "retained_pre_fix_controls": {
+    "normal-01": {
+      "scope": "Retained pre-fix control; not final fixed-directory acceptance. Normal02 passes with a plain asset by chance; all other first-impact fits fail with unwanted enchanted selections.",
+      "audio_first": {
+        "passed": false,
+        "expected_clusters": 1,
+        "clusters": [],
+        "candidate_groups": [
+          {
+            "time": 51.9715,
+            "joint_correlation": 0.8889715875746271,
+            "family_explained_energy": {
+              "PHYDamageFlesh": 0.2868908840941699,
+              "WPNHitBladeFlesh": 0.4329247146015172
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_01.wav": 223287.0676103704,
+              "phy_dmgflesh_02.wav": 1341.4720687990628,
+              "phy_dmgflesh_04.wav": 2177.5211829284253,
+              "phy_dmgflesh_05.wav": 180032.7102146194
+            },
+            "accepted": false
+          }
+        ],
+        "individual_peaks": [
+          {
+            "asset": "wpn_hit_bladeflesh_01.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                52.041,
+                0.7122820078606693
+              ]
+            ]
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_02.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_03.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_01.wav",
+            "family": "PHYDamageFlesh",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_02.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                52.056416666666664,
+                0.34149472662710395
+              ],
+              [
+                53.24966666666667,
+                0.3319860600258684
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_03.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                52.7835,
+                0.3217028252413675
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_04.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                52.0015,
+                0.2811752308981679
+              ],
+              [
+                53.19433333333333,
+                0.216674199980933
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_05.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                52.041,
+                0.5978717053669981
+              ],
+              [
+                53.23425,
+                0.31056983701338187
+              ]
+            ]
+          }
+        ],
+        "pcm_sha256": "3384b5219a8cef819ec9ee93cd15ebd40f07f5a17dac1a1eb606c584f871d930",
+        "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+      },
+      "input": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-01/staged-input.omwsave",
+        "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+      },
+      "first_scenario": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-01/first/scenario.json",
+        "sha256": "6233799f27d2970960c32fa86bef9e50644d6559f4e66072859ea0af4f8b7023"
+      },
+      "first_log": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-01/first/process.log",
+        "sha256": "df0cbf7f7afd0758fcceb353e6899f4c8d6da4ad0dfd90ef0fbb8558741f7a46"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-01/first.json",
+        "sha256": "c90773c1f350afc938e319dff699cd7c37edd322a9bb2f70bff9d918d28b1295"
+      },
+      "observed_blade_directory_selections": [
+        "[18:20:04.074 V] M10 native sound directory: sound/fx/wpn/weaponhit/bladeflesh -> sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_01.wav"
+      ]
+    },
+    "sanitized-01": {
+      "scope": "Retained pre-fix control; not final fixed-directory acceptance. Normal02 passes with a plain asset by chance; all other first-impact fits fail with unwanted enchanted selections.",
+      "audio_first": {
+        "passed": false,
+        "expected_clusters": 1,
+        "clusters": [],
+        "candidate_groups": [
+          {
+            "time": 175.89008333333334,
+            "joint_correlation": 0.8726295761995897,
+            "family_explained_energy": {
+              "PHYDamageFlesh": 0.2994233793052901,
+              "WPNHitBladeFlesh": 0.4497657090472494
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_01.wav": 3475.846060655719,
+              "wpn_hit_bladeflesh_02.wav": 221222.6398933841,
+              "phy_dmgflesh_01.wav": 5417.614780559663,
+              "phy_dmgflesh_02.wav": 686.2043592578237,
+              "phy_dmgflesh_05.wav": 181387.28309325216
+            },
+            "accepted": false
+          }
+        ],
+        "individual_peaks": [
+          {
+            "asset": "wpn_hit_bladeflesh_01.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                175.92008333333334,
+                0.3205409147874601
+              ]
+            ]
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_02.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                175.961,
+                0.672463948945035
+              ]
+            ]
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_03.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_01.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                176.03475,
+                0.2107850107317705
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_02.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                177.11025,
+                0.33740638172024945
+              ],
+              [
+                175.97516666666667,
+                0.3262677324006556
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_03.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                176.64458333333334,
+                0.33476028617098486
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_04.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                175.92075,
+                0.2576025100146946
+              ],
+              [
+                177.05508333333333,
+                0.2259378858337594
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_05.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                175.961,
+                0.5314319041135008
+              ],
+              [
+                177.09491666666668,
+                0.3166378204096742
+              ]
+            ]
+          }
+        ],
+        "pcm_sha256": "d4e13ed137e9e7df6c98dd50f94b91e3320fe01bec78c29097c977d9e7d20acc",
+        "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+      },
+      "input": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-01/staged-input.omwsave",
+        "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+      },
+      "first_scenario": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-01/first/scenario.json",
+        "sha256": "7cc909af162b8e97f854f0f90e620f164ce1cd70a3053ce8ab03c9917b0a2af2"
+      },
+      "first_log": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-01/first/process.log",
+        "sha256": "dd856a0ee7ccd5e3f01939d0e35876e77ff621e3d816826df0d7fcaf1c3abf21"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-01/first.json",
+        "sha256": "d3c570407c2a2377a547981fe76e3815067f0bd4ca6caab852508238bf10d8ca"
+      },
+      "observed_blade_directory_selections": [
+        "[18:27:47.503 V] M10 native sound directory: sound/fx/wpn/weaponhit/bladeflesh -> sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_02.wav"
+      ]
+    },
+    "normal-02": {
+      "scope": "Retained pre-fix control; not final fixed-directory acceptance. Normal02 passes with a plain asset by chance; all other first-impact fits fail with unwanted enchanted selections.",
+      "audio_first": {
+        "passed": true,
+        "expected_clusters": 1,
+        "clusters": [
+          {
+            "time": 50.86425,
+            "joint_correlation": 0.9994823928131157,
+            "family_explained_energy": {
+              "PHYDamageFlesh": 0.30111984275216064,
+              "WPNHitBladeFlesh": 0.6385736252610849
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_03.wav": 225259.47281463863,
+              "phy_dmgflesh_04.wav": 151681.86787883952
+            },
+            "accepted": true
+          }
+        ],
+        "candidate_groups": [
+          {
+            "time": 50.86425,
+            "joint_correlation": 0.9994823928131157,
+            "family_explained_energy": {
+              "PHYDamageFlesh": 0.30111984275216064,
+              "WPNHitBladeFlesh": 0.6385736252610849
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_03.wav": 225259.47281463863,
+              "phy_dmgflesh_04.wav": 151681.86787883952
+            },
+            "accepted": true
+          }
+        ],
+        "individual_peaks": [
+          {
+            "asset": "wpn_hit_bladeflesh_01.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_02.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                50.89425,
+                0.24239379911984515
+              ]
+            ]
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_03.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                50.921,
+                0.8344432481419488
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_01.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                50.9805,
+                0.22078696905445408
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_02.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                50.97566666666667,
+                0.35864535726053715
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_03.wav",
+            "family": "PHYDamageFlesh",
+            "top": []
+          },
+          {
+            "asset": "phy_dmgflesh_04.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                50.921,
+                0.5756253659253547
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_05.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                50.93958333333333,
+                0.26229693732711157
+              ]
+            ]
+          }
+        ],
+        "pcm_sha256": "09fc0b47adf894db3c5ad71370a8aa57fc203f8dafba03dd4fc5f9796b7f4ab7",
+        "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+      },
+      "input": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-02/staged-input.omwsave",
+        "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+      },
+      "first_scenario": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-02/first/scenario.json",
+        "sha256": "d89a93c58ca464bfb6387c2bc54806d6a07a6b3335d14ff62e73b9a0e3a6b595"
+      },
+      "first_log": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-02/first/process.log",
+        "sha256": "beb21db26de624395b40ba37bca8d00cc237cabcdf6a8012e617802825cebd25"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-normal-02/first.json",
+        "sha256": "f0b686491205d99e09645a74dee1711f8ef0a483c695d8e6ce9f30ab3a81f4df"
+      },
+      "observed_blade_directory_selections": [
+        "[18:30:07.514 V] M10 native sound directory: sound/fx/wpn/weaponhit/bladeflesh -> sound/fx/wpn/weaponhit/bladeflesh/wpn_hit_bladeflesh_03.wav"
+      ]
+    },
+    "sanitized-02": {
+      "scope": "Retained pre-fix control; not final fixed-directory acceptance. Normal02 passes with a plain asset by chance; all other first-impact fits fail with unwanted enchanted selections.",
+      "audio_first": {
+        "passed": false,
+        "expected_clusters": 1,
+        "clusters": [],
+        "candidate_groups": [
+          {
+            "time": 176.231,
+            "joint_correlation": 0.8798515076412082,
+            "family_explained_energy": {
+              "PHYDamageFlesh": 0.32624655383671614,
+              "WPNHitBladeFlesh": 0.4281520235458764
+            },
+            "selected_coefficients": {
+              "wpn_hit_bladeflesh_03.wav": 213607.3036411988,
+              "phy_dmgflesh_01.wav": 183371.3297238074,
+              "phy_dmgflesh_02.wav": 27146.95024851766
+            },
+            "accepted": false
+          }
+        ],
+        "individual_peaks": [
+          {
+            "asset": "wpn_hit_bladeflesh_01.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_02.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": []
+          },
+          {
+            "asset": "wpn_hit_bladeflesh_03.wav",
+            "family": "WPNHitBladeFlesh",
+            "top": [
+              [
+                176.281,
+                0.6752498340815671
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_01.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                176.261,
+                0.5685440752039275
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_02.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                177.45258333333334,
+                0.3367148633700463
+              ],
+              [
+                176.4275,
+                0.21979755541051021
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_03.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                176.98641666666666,
+                0.33462721930248246
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_04.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                177.39725,
+                0.22454335980179252
+              ]
+            ]
+          },
+          {
+            "asset": "phy_dmgflesh_05.wav",
+            "family": "PHYDamageFlesh",
+            "top": [
+              [
+                176.81866666666667,
+                0.31682453133529964
+              ]
+            ]
+          }
+        ],
+        "pcm_sha256": "682624c59e67239785a07e549a2caa1f3aecd7fe4ff7995e7c442d006e9a822b",
+        "scope": "Actual PCM fitted jointly against hash-identified original Heavy/Flesh/BladeFlesh waveforms. Nonnegative coordinate-descent fit, predeclared correlation>=.90 and each family contributes>=1% explained energy. Individual peaks seed temporal groups; same method applies to silent-impact baseline and fresh continuation."
+      },
+      "input": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-02/staged-input.omwsave",
+        "sha256": "a788e9cacb984210349824b4c8a48f5bd4a0c7bb1613d827dd0ad9a9a2279221"
+      },
+      "first_scenario": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-02/first/scenario.json",
+        "sha256": "e1f9839febe4a067f2c0f919e5584879bed61c2d6acf7f02fb3d8d6d21be0ce7"
+      },
+      "first_log": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-02/first/process.log",
+        "sha256": "0ca22974f57f6787503121a5a41b055c3a631915d0ee1c2168c04ba10cb5ab18"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-broken-body-followup-runtime-sanitized-02/first.json",
+        "sha256": "8839ffd39dd992a6dde5233a7b25aa23a8c592ae1336408a8feb643c5258e026"
+      },
+      "observed_blade_directory_selections": [
+        "[18:35:51.101 V] M10 native sound directory: sound/fx/wpn/weaponhit/bladeflesh -> sound/fx/wpn/weaponhit/bladefleshenchanted/wpn_hit_bladeflesh_enchanted_03.wav"
+      ]
+    }
+  },
+  "discarded_doppler_hypothesis": "Initial matching onsets suggested DSP variation. Doppler-zero normal control happened to select a plain file, whereas Doppler-zero instrumented control still selected an enchanted file and failed. Logged wrong sibling assets fit failed PCM at>.999. Correcting folder boundaries resolves the route; final cases use default Doppler .25 and unchanged correlation>=.90 / family explained-energy>=.01. No DSP workaround or lowered threshold is used.",
+  "scope_limits": [
+    "VFS raw-prefix iteration itself is unchanged; only native SOUN folder queries append a separator. Direct filenames, supported extensions, recursive descendants, sorting and random-choice mechanism are preserved.",
+    "Independent raw installed master/BSA audit and actual mixer controls are supplied; original executable folder enumeration was not newly executed.",
+    "Follow-up starts from exact real prior output; no condition/resource/inventory/pose/AI edits. Prior authored restraint remains. First-person keyboard with1FPS cap and completed-contact restart only.",
+    "No new enchanted-weapon effects, shielding, mastery/reaction or full input/view/FPS/in-action-restart/combined-course acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}

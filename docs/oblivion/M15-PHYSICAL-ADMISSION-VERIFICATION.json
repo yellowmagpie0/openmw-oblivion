@@ -12070,5 +12070,11 @@
     "probe": "docs/oblivion/M15-BODY-ARMOR-BREAK-PROBE.json",
     "scope": "Body armor wear to zero retains equipped body inventory. Shield break consequences remain rejected. Actual Player left attack against staged restrained NPC plus completed-contact fresh-process continuation, normally and with ASan/UBSan. No full M15S4 acceptance.",
     "full_M15S4_acceptance": false
+  },
+  "native_sound_directory_boundary": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-NATIVE-SOUND-DIRECTORY-PROBE.json",
+    "scope": "Native SOUN directory selection honors path component boundaries. Actual further contact against previously broken equipped body armor plus completed-contact fresh-process continuation, normally and under ASan/UBSan. Full M15S4 remains incomplete.",
+    "full_M15S4_acceptance": false
   }
 }
