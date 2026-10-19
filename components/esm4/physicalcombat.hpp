@@ -101,6 +101,35 @@ namespace ESM4
     PowerMeleeKeys powerMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
     // Native subtype0/1 slots consume Start/End without an attack Hit key.
     ReactionKeys reactionKeyTimes(std::span<const MeleeTextKey> textKeys);
+    // Original436DA0/51B490: internal name before its first underscore is
+    // the gameplay group; the resource basename supplies movement/family.
+    // This bounded parser recognizes BlockHit28, Recoil30 and Stagger31.
+    std::optional<std::uint16_t> nativeReactionSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename);
+    struct NativeNpcBlockHitGroupInput
+    {
+        std::optional<std::uint8_t> mWeaponType;
+        bool mWeaponDrawn115 = false;
+        // The second native process byte is kept explicit: its full gameplay
+        // meaning is not inferred from its use in this selector.
+        bool mFlag114 = false;
+        bool mShield = false;
+        std::uint16_t mMovementFlags = 0;
+    };
+    // Original NPC5E5690, ordinary BlockHit request with no Player override
+    // or forced-unarmed argument. Returns the packed pre-fallback group.
+    std::uint16_t nativeNpcBlockHitGroup(const NativeNpcBlockHitGroupInput& input);
+    // Original470D20 family/movement fallback for those three groups over
+    // nonempty cached collections. Missing reactions return no selection;
+    // the original's eventual Idle fallback is rejected by reaction callers.
+    // Variant choice and its RNG draw belong to the selected collection.
+    std::optional<std::uint16_t> resolveNativeReactionSequenceGroup(
+        std::uint16_t requested, std::span<const std::uint16_t> available);
+    // Original47DA70/47F7B0: sphere(x,y,z,r), planes(nx,ny,nz,d)
+    // using normal.dot(point)-d. A sphere tangent on the negative side is
+    // outside, including a zero-radius point exactly on a plane.
+    bool nativeReactionSphereInFrustum(const std::array<float, 4>& sphere,
+        const std::array<std::array<float, 4>, 6>& planes);
     // Original raw Blend: decimal parsing stores the low byte; last match wins.
     // Integer overflow and malformed leading CR without LF are unsupported.
     std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys);

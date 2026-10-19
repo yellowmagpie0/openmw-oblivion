@@ -1,12 +1,15 @@
 #include "renderingmanager.hpp"
 
+#include <algorithm>
 #include <cstdlib>
+#include <stdexcept>
 
 #include <osg/ClipControl>
 #include <osg/ComputeBoundsVisitor>
 #include <osg/Group>
 #include <osg/Material>
 #include <osg/Matrix>
+#include <osg/Polytope>
 #include <osg/UserDataContainer>
 
 #include <osgUtil/LineSegmentIntersector>
@@ -16,6 +19,7 @@
 #include <components/nifosg/nifloader.hpp>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm4/physicalcombat.hpp>
 
 #include <components/stereo/multiview.hpp>
 #include <components/stereo/stereomanager.hpp>
@@ -71,6 +75,7 @@
 #include "../mwbase/world.hpp"
 
 #include "actorspaths.hpp"
+#include "animation.hpp"
 #include "camera.hpp"
 #include "effectmanager.hpp"
 #include "esm4npcanimation.hpp"
@@ -1583,6 +1588,25 @@ namespace MWRender
     float RenderingManager::getFieldOfView() const
     {
         return mFieldOfViewOverridden ? mFieldOfViewOverridden : mFieldOfView;
+    }
+
+    bool RenderingManager::nativeReactionIntersectsFrustum(const Animation& animation) const
+    {
+        const auto sphere = animation.nativeReactionWorldBound(*mSceneRoot);
+        if (!sphere) return false;
+        osg::Polytope frustum;
+        frustum.setToUnitFrustum(true, true);
+        // The master camera retains the unreversed projection for culling.
+        frustum.transformProvidingInverse(
+            mViewer->getCamera()->getViewMatrix() * mViewer->getCamera()->getProjectionMatrix());
+        const auto& source = frustum.getPlaneList();
+        if (source.size() != 6)
+            throw std::invalid_argument("native reaction requires six camera planes");
+        std::array<std::array<float, 4>, 6> planes;
+        for (std::size_t i = 0; i < planes.size(); ++i)
+            planes[i] = {static_cast<float>(source[i][0]), static_cast<float>(source[i][1]),
+                static_cast<float>(source[i][2]), static_cast<float>(-source[i][3])};
+        return ESM4::nativeReactionSphereInFrustum(*sphere, planes);
     }
 
     osg::Vec3f RenderingManager::getHalfExtents(const MWWorld::ConstPtr& object) const

@@ -16455,3 +16455,53 @@ a new test warning are retained; neither is called a passing check. Full-engine
 leak detection stays disabled with the prior desktop LSan failure still open.
 This does not establish state2/3/5 replacement, Stagger's separate channel,
 automatic normal descriptors, Player view ownership or a new app runtime course.
+
+
+## Normal NPC BlockHit catalog, selection and bound-pose capture (2026-10-19)
+
+The original executable identified by SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+supplies the expected classification, fallback, selector and capture rules in
+[M15-NPC-BLOCKHIT-VERIFICATION.json](M15-NPC-BLOCKHIT-VERIFICATION.json).
+Production pure-helper comparisons match 288 classifier, 864 reaction-fallback,
+1,078 frustum and 896 NPC-selector observations. Repeated seeds/precision words
+are not additional unique inputs. The fallback subset has 144 unique
+view/request contexts; the selector has 448 inputs; frustum cases have 537 unique
+spheres, both precision words and 4 repeats.
+
+Classifier 436DA0/51B490 uses the authored sequence name before its first underscore,
+with ASCII case-insensitive matching; the resource basename supplies movement
+and weapon-family prefixes. NPC 5E5690, common 4D8370 and actual 470D20/cache methods
+verify weapon-type families [2,3,2,3,4,5], shield prefix 0 for BlockHit, and movement
+priority Swim/Fly/Sneak. Worn-slot query results and typed entries are supplied
+boundaries; their inventory traversal is not executed. The probe's provisional
+`spell_drawn` field supplies only raw byte 114. No Spell identity is established;
+production exposes `mFlag114`. Native 5E5690 itself does not reject fallback Idle;
+the reaction callers check the returned low-byte group. The live bounded path
+uses Weapon draw 115=true and installed Single BlockHit collections, so selection
+consumes no RNG.
+
+Original 47F7B0/47DCA0/718200/717A40/47DA70 verifies the sphere predicate's two
+float stores and rejection at negative-side tangency. This establishes the
+predicate, not exact current-renderer/native camera or world-bound geometry.
+Production VFS/keyframe inspection independently loads 323 body and 322 first-person
+root KFs and matches original live reaction cache keys, resource names and BSA
+variant order: 15/19 and 14/18 groups/resources. Actual BlockHit serializes an
+8-byte name; the following 73 controlled-block count is not a trailing character
+in that name.
+
+Full original 6C5C70/6C9F10 pose activation and 6CA950/6CC3A0 playback verifies six
+missing-controller/interpolator contexts across CW 027F/037F. The valid pose and
+42 blend samples match the published one-block control. Allocated snapshot slots
+can include an empty slot; they are not bound-track counts. A retained fixture
+with an absent controller but a live shared blend pointer duplicated incoming
+contributions and failed the blend-control comparison. Its corrected fixture
+clears that absent binding and passes. Production captures bound tracks rather
+than requiring every authored target, admitting the actual stock NPC clip with 73 authored tracks and 64 bound tracks.
+
+Normal and instrumented actual contacts now save that 64-track pose and rebind it
+from the exact first output in fresh processes, recovering to held action 6 without
+numerical/RNG/impact replay. The receipt keeps these runtime observations separate
+from arithmetic, synthetic manager fixtures and semantic loader inspection. Player
+view ownership, broader reaction replacement, Multiple RNG ordering, mastery,
+effects and full M15S4 acceptance remain open.

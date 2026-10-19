@@ -259,6 +259,7 @@ namespace MWRender
 
         // camera stuff
         Camera* getCamera() { return mCamera.get(); }
+        bool nativeReactionIntersectsFrustum(const Animation& animation) const;
 
         /// temporarily override the field of view with given value.
         void overrideFieldOfView(float val);

@@ -1,0 +1,608 @@
+{
+  "scope": "Independent original classification, captured native cache fallback and frustum goldens. No production-generated expectations.",
+  "classification_axes": {
+    "groups": {
+      "BlockHit": 28,
+      "Recoil": 30,
+      "Stagger": 31
+    },
+    "movement": [
+      "",
+      "Sneak",
+      "Swim",
+      "Fly"
+    ],
+    "family": [
+      "",
+      "HandToHand",
+      "OneHand",
+      "TwoHand",
+      "Staff",
+      "Bow"
+    ],
+    "suffix": "_01_extra",
+    "case_modes": [
+      "original",
+      "swapASCII"
+    ],
+    "expected_code": "movement_index*4096+family_index*256+group",
+    "native_observations": 288,
+    "unique_inputs": 144
+  },
+  "fallback": {
+    "bases": [
+      28,
+      30,
+      31
+    ],
+    "movement": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "family": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "matrix_order": "base, movement, family",
+    "no_selection": 65535,
+    "available_codes": {
+      "body": [
+        28,
+        284,
+        286,
+        287,
+        540,
+        542,
+        543,
+        796,
+        798,
+        799,
+        1052,
+        1055,
+        1308,
+        5148,
+        8223
+      ],
+      "firstperson": [
+        28,
+        284,
+        286,
+        287,
+        540,
+        542,
+        543,
+        796,
+        798,
+        799,
+        1052,
+        1055,
+        1308,
+        5148
+      ]
+    },
+    "expected": {
+      "body": [
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        5148,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543,
+        8223,
+        8223,
+        8223,
+        8223,
+        8223,
+        8223,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543
+      ],
+      "firstperson": [
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        5148,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        28,
+        284,
+        540,
+        796,
+        1052,
+        1308,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        286,
+        542,
+        798,
+        798,
+        542,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543,
+        65535,
+        287,
+        543,
+        799,
+        1055,
+        543
+      ]
+    },
+    "native_observations": 864,
+    "unique_inputs": 144
+  },
+  "frustum": {
+    "plane_bits": [
+      1065353216,
+      0,
+      0,
+      1065353216,
+      3212836864,
+      2147483648,
+      2147483648,
+      3267887104,
+      1060439283,
+      0,
+      1060439283,
+      0,
+      1060439283,
+      0,
+      3207922931,
+      0,
+      1060439283,
+      3207922931,
+      0,
+      0,
+      1060439283,
+      1060439283,
+      0,
+      0
+    ],
+    "expected": [
+      {
+        "sphere_bits": [
+          1092616192,
+          0,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          3240099840,
+          0,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          1092616192,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          3240099840,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          0,
+          1092616192,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          0,
+          3240099840,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1065353216,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1120403456,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1120534528,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          0,
+          0,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          855638016,
+          0,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          864026624,
+          0,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          1092616192,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          0,
+          1092616192,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1065353215,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1065353217,
+          0,
+          0,
+          0
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1120403455,
+          0,
+          0,
+          0
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1120403457,
+          0,
+          0,
+          0
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          3241582749,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          3241582750,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          3241582751,
+          0,
+          1065353216
+        ],
+        "inside": false
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          1094099101,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          1094099102,
+          0,
+          1065353216
+        ],
+        "inside": true
+      },
+      {
+        "sphere_bits": [
+          1092616192,
+          1094099103,
+          0,
+          1065353216
+        ],
+        "inside": false
+      }
+    ],
+    "full_native_observations": 1078,
+    "unique_spheres": 537
+  },
+  "npc_block_selector": {
+    "native_observations": 896,
+    "unique_inputs": 448,
+    "weapon_types": [
+      null,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "raw_flags": [
+      "process115",
+      "process114"
+    ],
+    "movement_masks": [
+      0,
+      1024,
+      2048,
+      3072,
+      8192,
+      9216,
+      10240,
+      11264
+    ],
+    "expected_movement": [
+      0,
+      1,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2
+    ],
+    "family_rows_by_weapon_then_flag115_plus_twice_flag114": [
+      [
+        0,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        3,
+        3,
+        3
+      ],
+      [
+        0,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        3,
+        3,
+        3
+      ],
+      [
+        0,
+        4,
+        4,
+        4
+      ],
+      [
+        0,
+        5,
+        5,
+        5
+      ]
+    ],
+    "shield": "forces family0 after selection",
+    "request_base": 28,
+    "normal_bridge": "Drawn NPC Weapon state uses process115true; raw114 does not affect this branch. Other draw states remain guarded."
+  },
+  "unbound_snapshot_blocks": {
+    "native_function": "6C9F10 through6C5C70",
+    "source_blocks": 2,
+    "first_block_modes": [
+      "missing-controller",
+      "missing-interpolator",
+      "both"
+    ],
+    "precision_words": [
+      639,
+      895
+    ],
+    "bound_priority": 9,
+    "captured_pose_bits": [
+      1093664768,
+      1102053376,
+      1107558400,
+      1065353216,
+      0,
+      0,
+      0,
+      1073741824
+    ],
+    "interpretation": "Only bound tracks contribute poses; allocated metadata slots are not bound-track counts."
+  }
+}

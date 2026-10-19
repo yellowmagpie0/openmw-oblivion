@@ -18,6 +18,8 @@
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 
 #include <gtest/gtest.h>
+#include <osg/Geode>
+#include <osg/MatrixTransform>
 #include <osgUtil/UpdateVisitor>
 #include <array>
 #include <bit>
@@ -145,6 +147,7 @@ namespace
         void rebuildControllers() { resetActiveGroups(); }
         void bindRoots(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
         { bindNativeReactionRoot(sequences); }
+        void replaceBoundRoot(osg::Group* root) { mObjectRoot = root; }
         osg::ref_ptr<SceneUtil::KeyframeHolder> addNativeSource(
             std::string group, osg::ref_ptr<NativeTrack> track, std::uint8_t priority)
         {
@@ -221,6 +224,29 @@ namespace
         return result;
     }
 
+    TEST_F(PhysicalPoseAnimationTest, ReactionWorldBoundUsesParentPlacementOnceAndRejectsAmbiguousPaths)
+    {
+        osg::ref_ptr<osg::MatrixTransform> actor = new osg::MatrixTransform;
+        actor->setMatrix(osg::Matrixf::scale(2, 2, 2) * osg::Matrixf::translate(100, 200, 300));
+        mParent->addChild(actor);
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        model->setMatrix(osg::Matrixf::translate(10, 0, 0));
+        actor->addChild(model);
+        osg::ref_ptr<osg::Geode> geometry = new osg::Geode;
+        geometry->setInitialBound(osg::BoundingSphere(osg::Vec3f(1, 2, 3), 2));
+        model->addChild(geometry);
+        mAnimation->replaceBoundRoot(model);
+        const auto bound = mAnimation->nativeReactionWorldBound(*mParent);
+        ASSERT_TRUE(bound);
+        EXPECT_EQ(*bound, (std::array<float, 4>{122, 204, 306, 4}));
+        osg::ref_ptr<osg::Group> unrelated = new osg::Group;
+        EXPECT_FALSE(mAnimation->nativeReactionWorldBound(*unrelated));
+        osg::ref_ptr<osg::Group> secondPlacement = new osg::Group;
+        mParent->addChild(secondPlacement);
+        secondPlacement->addChild(model);
+        EXPECT_THROW(mAnimation->nativeReactionWorldBound(*mParent), std::invalid_argument);
+    }
+
     TEST_F(PhysicalPoseAnimationTest, CapturedNativePoseRemainsConstantAndBlendsIntoDestination)
     {
         mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
@@ -264,6 +290,35 @@ namespace
         auto invalid = layers; invalid[0].mFollowAnimationTime = true;
         EXPECT_THROW(mAnimation->setNativeSequenceLayers(invalid), std::invalid_argument);
         EXPECT_FALSE(mAnimation->captureNativeSequencePose("missing", 0));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, CapturedPoseSkipsAuthoredTracksWithoutBoundControllers)
+    {
+        mRoot->setName("uncontrolled-root");
+        auto destination = nativeTrack({100, 200, 300}, 3);
+        auto holder = mAnimation->addNativeSource("native-reaction", destination, 9);
+        auto& priorities = holder->mControllerSequences.front().mTransformPriorities;
+        priorities.insert(priorities.begin(), {"missing-before", 99});
+        priorities.emplace_back("uncontrolled-root", 77);
+        priorities.emplace_back("missing-after", 88);
+        holder->mKeyframeControllers.emplace("missing-before", nativeTrack({7, 8, 9}));
+        mBone->setTranslation({11, 22, 33}); mBone->setScale(2);
+        const auto captured = mAnimation->captureNativeSequencePose("native-reaction", 0);
+        ASSERT_TRUE(captured);
+        ASSERT_EQ(captured->mTracks.size(), 1u);
+        EXPECT_EQ(captured->mTracks.front().mBone, "pelvis");
+        EXPECT_EQ(captured->mTracks.front().mPriority, 9);
+        EXPECT_EQ(captured->mTracks.front().mTranslation, (std::array<float, 3>{11, 22, 33}));
+        EXPECT_EQ(captured->mTracks.front().mScale, 2);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        const std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, .5f, false,
+                std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*captured)},
+            {"native-reaction", MWRender::BlendMask_All, 0, 1, .5f}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        traverse();
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 55.5f);
+        EXPECT_EQ(mBone->getControllerTransform().mScale, 2.5f);
     }
 
     TEST_F(PhysicalPoseAnimationTest, CapturedNativeRotationPreservesQuarterTurnAtNegativeAndZeroScale)

@@ -144,30 +144,6 @@ namespace
         }
     }
 
-    MWMechanics::OblivionMeleeSequenceMetadata nativeReactionMetadata(
-        MWRender::Animation& animation, std::string_view group, bool reaction)
-    {
-        const auto* source = animation.getControllerSequenceMetadata(group);
-        if (!source || source->mCycleType != 2)
-            throw std::invalid_argument("native reaction requires a clamp sequence");
-        const auto raw = nativeRawKeys(*source);
-        const auto blend = std::bit_cast<std::int8_t>(ESM4::meleeBlendFrames(raw));
-        // Reviewed original General INI defaults: fAnimationDefaultBlend=.1,
-        // fAnimationMult=1. Custom original INI import is not implemented.
-        const float retirement = blend == 0 ? .1f : static_cast<float>(double(blend) / 30.);
-        MWMechanics::OblivionMeleeSequenceMetadata result{group, source->mFrequency,
-            source->mStartTime, source->mStopTime, source->mTimelineStart, source->mTimelineStop, {}, retirement};
-        if (reaction)
-        {
-            const auto keys = ESM4::reactionKeyTimes(raw);
-            if (keys.mMatchedCount != 2)
-                throw std::invalid_argument("native reaction requires Start/End keys");
-            result.mReactionKeys = keys.mTimes;
-        }
-        result.validate();
-        return result;
-    }
-
     const ESM::RefId wolfRun = ESM::RefId::stringRefId("WolfRun");
 
     std::string_view getBestAttack(const ESM::Weapon* weapon)
@@ -1592,7 +1568,7 @@ namespace MWMechanics
         if (!reaction || reaction->mInactive) return false;
         if (mOblivionRenderedReaction == reaction->mContactId
             && mAnimation->getInfo(reaction->mAnimationGroup)) return true;
-        (void)nativeReactionMetadata(*mAnimation, reaction->mAnimationGroup, true);
+        (void)captureOblivionMeleeSequenceMetadata(*mAnimation, reaction->mAnimationGroup, true);
         const float start = mAnimation->getTextKeyTimeInGroup(reaction->mAnimationGroup,
             reaction->mAnimationGroup + ": start");
         const float stop = mAnimation->getTextKeyTimeInGroup(reaction->mAnimationGroup,
@@ -1618,7 +1594,8 @@ namespace MWMechanics
         playBlendedAnimation(mOblivionReactionGroup, Priority_Hit, MWRender::BlendMask_All,
             false, 0.f, "start", "stop", fraction, 0);
         Log(Debug::Verbose) << "M15 reaction bind: actor=" << actor.serialize()
-                            << " cause=" << reaction->mContactId << " group=" << reaction->mAnimationGroup;
+                            << " cause=" << reaction->mContactId << " group=" << reaction->mAnimationGroup
+                            << " pose_tracks=" << (reaction->mPoseSnapshot ? reaction->mPoseSnapshot->mTracks.size() : 0);
         return true;
     }
 
@@ -1645,7 +1622,7 @@ namespace MWMechanics
         for (const auto& sequence : state->mRetiringSequences) groups.insert(sequence.mAnimationGroup);
         std::vector<OblivionMeleeSequenceMetadata> metadata;
         for (const auto group : groups)
-            metadata.push_back(nativeReactionMetadata(*mAnimation, group,
+            metadata.push_back(captureOblivionMeleeSequenceMetadata(*mAnimation, group,
                 state->mReaction && state->mReaction->mAnimationGroup == group));
         auto prepared = service->prepareMeleeReactionFrame(actor, duration, metadata);
         if (!prepared) return false;
@@ -1961,6 +1938,76 @@ namespace MWMechanics
         {
             interrupt();
             return false;
+        }
+        // BlockHit keeps the held BlockIdle channel resident. A fresh renderer
+        // has neither layer yet, so reconstruct the held NPC layer before
+        // recovery decides whether channel1 is present. This projects existing
+        // action6; beginBlocking would reject an owned reaction and must not be
+        // used to manufacture another authority transition here.
+        if (const auto* state = service->findMeleeState(actor);
+            state && state->mReaction && state->mReaction->mKind == ESM4::MeleeReactionKind::BlockHit
+            && mOblivionBlockGroup.empty() && !player && mPtr.getType() == ESM::REC_NPC_4 && drawn
+            && service->getProcessAction(actor) == 6
+            && !isScriptedAnimPlaying() && !isKnockedOut() && !isKnockedDown() && !isRecovery()
+            && oblivionKnockedState(*world, mPtr) == 0 && !oblivionParalyzed(*world, mPtr) && !mSkipAnim)
+        {
+            const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
+            if (controls && controls->mBlock)
+                try
+                {
+                    const auto cause = state->mReaction->mContactId;
+                    auto& inventory = cls.getInventoryStore(mPtr);
+                    const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                    const MWWorld::Ptr weapon = right == inventory.end() ? MWWorld::Ptr{} : *right;
+                    std::string family = "handtohand";
+                    int weaponType = ESM::Weapon::HandToHand;
+                    if (!weapon.isEmpty())
+                    {
+                        const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                            world->getStore(), weapon.getCellRef().getRefId());
+                        const auto* form = id.getIf<ESM::FormId>();
+                        const auto* record = form ? world->getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+                        if (!record || record->mData.type > 3)
+                            throw std::invalid_argument("unsupported held BlockHit weapon binding");
+                        family = record->mData.type % 2 ? "twohand" : "onehand";
+                        weaponType = record->mData.type % 2
+                            ? ESM::Weapon::LongBladeTwoHand : ESM::Weapon::LongBladeOneHand;
+                    }
+                    bool shield = false;
+                    if (const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                        left != inventory.end() && left->getType() == ESM::REC_ARMO)
+                    {
+                        const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                            world->getStore(), left->getCellRef().getRefId());
+                        const auto* form = id.getIf<ESM::FormId>();
+                        const auto* armor = form ? world->getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                        if (!armor || !(armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+                            throw std::invalid_argument("unsupported held BlockHit shield binding");
+                        shield = true;
+                    }
+                    const std::string group = shield ? "blockidle" : family + "blockidle";
+                    const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
+                    const float start = mAnimation->getTextKeyTimeInGroup(group, group + ": start");
+                    const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
+                    if (!metadata || metadata->mCycleType != 0 || start < 0 || stop <= start)
+                        throw std::invalid_argument("held BlockHit requires a cyclic BlockIdle resource");
+                    mWeapon = weapon;
+                    mWeaponType = weaponType;
+                    mUpperBodyState = UpperBodyState::WeaponEquipped;
+                    mAnimation->showWeapons(true);
+                    mOblivionBlockGroup = group;
+                    playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_UpperBody,
+                        false, 1.f, "start", "stop", 0.f, std::numeric_limits<std::uint32_t>::max(), true);
+                    Log(Debug::Verbose) << "M15 block begin: actor=" << actor.serialize() << " group=" << group
+                                        << " restored_reaction=" << cause;
+                }
+                catch (const std::exception& error)
+                {
+                    Log(Debug::Verbose) << "M15 reaction binding rejected: actor=" << actor.serialize()
+                                        << " reason=" << error.what();
+                    interrupt();
+                    return false;
+                }
         }
         const bool blockIdlePresent = !mOblivionBlockGroup.empty() && mAnimation->getInfo(mOblivionBlockGroup);
         const auto* recovering = service->findMeleeState(actor);

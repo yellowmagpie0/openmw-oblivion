@@ -21260,6 +21260,7 @@ namespace
             MWMechanics::OblivionPhysicalContactDeltas deltas{-7, lethal ? -1000.f : -3.f, -1};
             if (!lethal) deltas.mRandomTransition = service.prepareCombatRandom(1);
             auto prepared = prepareContact(fixture, id, a, b, deltas); ASSERT_TRUE(prepared);
+            EXPECT_EQ(prepared->victimRemainsAlive(), !lethal);
             if (lethal) ASSERT_TRUE(world.killOblivionActor(c, {}));
             else
             {
@@ -21286,6 +21287,7 @@ namespace
             ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
             const auto id = world.beginOblivionPhysicalAction(a);
             auto prepared = prepareContact(fixture, id, a, b, {-7, -1000, 0}); ASSERT_TRUE(prepared);
+            EXPECT_FALSE(prepared->victimRemainsAlive());
             EXPECT_EQ(world.getOblivionCombatService()->findActorLife(b.getCellRef().getFormKey())->mPhase,
                 ESM4::ActorLifePhase::Alive);
             ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());

@@ -50,6 +50,7 @@ namespace MWMechanics
         float mTimelineBegin = 0, mTimelineEnd = 0;
         std::optional<std::array<float, 2>> mReactionKeys;
         float mRetirementDuration = 0;
+        std::uint8_t mBlendFrames = 0;
         float rendererTime(float time) const;
         void validate() const;
     };
@@ -559,6 +560,9 @@ namespace MWMechanics
             // Safe entry points even after service/participant destruction.
             bool isValid() const noexcept;
             bool commit() noexcept;
+            // Inspect the prepared lifecycle, including this contact's damage,
+            // without publishing it or creating a second lifecycle authority.
+            bool victimRemainsAlive() const noexcept;
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;

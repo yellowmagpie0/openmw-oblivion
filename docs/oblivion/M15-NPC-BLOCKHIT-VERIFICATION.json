@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "status": "Bounded normal NPC BlockHit selection, actual pose capture and held-block fresh-process recovery verified. Full M15S4 remains incomplete.",
+  "sanitizer_runtime_environment": {
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "runtime_state_version": 56,
+  "evidence_root": "build/oblivion-compat/m15/S4",
+  "tested_source": {
+    "head": "2706e37be57da6c5d5aaad5eae42245ede9866c1",
+    "source_fingerprint": "cd3541a7311ef5ce25ad2d31051758b1bcb599932d0af258041e27a575f78a83"
+  },
+  "tested_source_files": [
+    {
+      "path": "apps/components_tests/bsa/testcompressedbsafile.cpp",
+      "sha256": "1d7ab0a009181e8d15a8d03dcb7ed4c4a8e3097d995cb497f0cd7d668755edf4"
+    },
+    {
+      "path": "apps/components_tests/esm4/physicalcombat.cpp",
+      "sha256": "a22bbd584064cc60497df833390bdee9f28f34bd5d64a0a57c4349ea56f37db9"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.cpp",
+      "sha256": "3ec1b2e21824f0b110de31648873e368e9d508757f35dd9bfb587573c769deb1"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "cef6a44fd23e24e0dfe301d4d69a85429eb114004a9371995ad9dd6a21f844ee"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "040e349f1d36654357087f16064765d8ac4f3dbf4f1a23f52e2f2230eba21b6c"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "4961ab73a56235eac388286d0fb99d467c518b99d129a965b51c6e5a58592349"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.hpp",
+      "sha256": "4716050e2c09f1dd43ffcdd266134ce99be0e2025f2abdc0e876a67390a383b3"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "9b6c76a7653f974b65e34e7b7ed3ed26a6e2f0e5e82a47157baebe3f803bee1b"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "5f619fb89eca8bab4d1ad9415a6ff19c39687f8c0985ae31fd04342b6a78fe36"
+    },
+    {
+      "path": "apps/openmw/mwrender/renderingmanager.cpp",
+      "sha256": "20fa3f12ca5d1bcbed67f1cf09e34d4d906e7406406d3133ed5343c682622c16"
+    },
+    {
+      "path": "apps/openmw/mwrender/renderingmanager.hpp",
+      "sha256": "cd06f1f20a1d8527e9ac5775f6317f6f8a67253b49cf9483061c4f38bb58dab9"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "f8be6d46ea078c54438440c00c61f7622c059eefe5d2c6fa94b7e31bb046cd37"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "4818240f3d566946dc582a87d43d6c4d379a6511c006edb7a10910d98d42ae98"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testphysicalpose.cpp",
+      "sha256": "2fd49d053d01acb654490843c87a3c113fecdb7bc4f439b593fc6b370bb5fc1e"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "e5ff8d32a8373dec942a6004c997c5e073c785cc100fa1c9b8ecf8510f880173"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "c5ea43cd35a03cbefbd9d6857688442c23d2233efa60e8dfafb084d0839a111b"
+    },
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "629b824cf48d427c626828f72f3d09aab7fc5034dae7c1c3f47602fca1148a0c"
+    },
+    {
+      "path": "components/vfs/manager.cpp",
+      "sha256": "03cf29d24612882232f745a39224706d6c5c1c4fba597567b0df2a684b2a4e44"
+    },
+    {
+      "path": "components/vfs/manager.hpp",
+      "sha256": "f1ba22ee0f7cdec359236f1e6a6d95b9ea2c8fdfd159c44f476ab771bad50769"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_reaction_catalog_expected.json",
+      "sha256": "6eeff83394db6a01c10b36f290322d76a00b580e79e8a2b7abeb62a10bbb4d72"
+    }
+  ],
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "implementation": [
+    "Winning compressed-BSA resource order is exposed separately from path-sorted VFS traversal; loose/mixed-archive variant order is rejected.",
+    "Exact authored sequence names classify BlockHit/Recoil/Stagger; resource basename supplies movement and weapon-family prefixes. Native same-base fallback is resolved before binding.",
+    "Normal equipped-block contacts prepare an NPC Single BlockHit descriptor, without another RNG draw or action ID. Multiple selection remains rejected until its cursor ordering is integrated.",
+    "Prepared numerical lifecycle determines whether a living victim can receive a reaction; renderer/root leases protect publication against model replacement.",
+    "Visible incoming resources capture actual bound local poses. Unbound authored targets are skipped as in original 6C9F10; absent/malformed supported bindings still reject.",
+    "Held NPC BlockIdle is reconstructed during restored BlockHit using existing process action 6, before recovery tests channel 1. This is renderer projection, not beginBlocking or contact replay."
+  ],
+  "native_comparisons": {
+    "pure_helpers": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-catalog-review-01/compare-verification.json",
+      "sha256": "ddfd9ec50ccd85c0df70b4bde8218e16d585bfa493eb7f8b296cd24f8d17ec8c"
+    },
+    "observations": {
+      "classification": 288,
+      "reaction_fallback": 864,
+      "frustum": 1078,
+      "npc_block_selector": 896
+    },
+    "uniqueness": "Observation totals include precision/seed replicas. Fallback: 144 unique view/request contexts; selector: 448 inputs; frustum: 537 unique spheres with both precision words plus 4 repeated observations.",
+    "fallback_full_original_path": {
+      "path": "build/oblivion-compat/m15/S4/native-live-cache-resolution-review-01/verification.json",
+      "sha256": "27ecb1f56e3309fc83c2d20dc6d4f82b1b51023ada7ac14c6cfc59772a631371"
+    },
+    "npc_selector": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-catalog-review-01/actor-selector-verification.json",
+      "sha256": "6153101bc950df2fbc9319897b83b7bf0300d2729eae75b6397e75d6c4c45bd2"
+    },
+    "raw_flag_correction": "Probe JSON field spell_drawn supplies only raw byte114; Spell identity is not established. Public API uses mFlag114. Normal integration admits Weapon draw115=true, making114 irrelevant.",
+    "unbound_targets": {
+      "path": "build/oblivion-compat/m15/S4/native-pose-unbound-target-review-03/verification.json",
+      "sha256": "6358f654f5703c5a6eaffabf3543057b97571eee7ad5c0710b79567ba3e34c60"
+    },
+    "unbound_contexts": 6,
+    "unbound_blend_samples_matching_published_control": 42,
+    "installed_assets": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-catalog-review-01/asset-probe-03/verification.json",
+      "sha256": "93df2479ad06b1f3a5d844992de768f59bcfa9edee121c21fc2ccb52f99e9351"
+    },
+    "installed_blockhit_serialized_name": {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-catalog-review-01/installed-blockhit-name.json",
+      "sha256": "2dfe69a27c734909b2552eaf3c9c36d2832a73d23f595c38637b466cd8d0db8f"
+    },
+    "installed_asset_counts": {
+      "body": {
+        "loaded_root_kfs": 323,
+        "reaction_groups": 15,
+        "resources": 19
+      },
+      "first_person": {
+        "loaded_root_kfs": 322,
+        "reaction_groups": 14,
+        "resources": 18
+      }
+    },
+    "boundaries": "Actor worn-slot queries supply declared typed entry pointers; captured cache topology uses nonzero sequence identity tokens. Full native selector/fallback and actual map/collection code run. Pose probes use original-constructed supplied manager/controller/root fixtures plus published checked allocator/OS boundaries. Neither emulation claims stock loading or real gameplay.",
+    "predicate_limit": "The numeric frustum predicate matches original float stores and negative-side tangent rejection. World bounds and planes come from the current renderer; bitwise native world-bound/camera geometry parity is not claimed."
+  },
+  "checks": {
+    "normal_final_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-normal-checks-03/verification.json",
+      "sha256": "0ae3c2e426067061c25e5422f5a36790d2959cdbbdf934538b6113c74201f794"
+    },
+    "sanitizer_final_engine": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-sanitized-checks-03/verification.json",
+      "sha256": "74198065c1c3af2975b6ca2bd1f76544ff1521fb618f0caad9adc2eaad38a98f"
+    },
+    "engine_counts": [
+      1754,
+      1754
+    ],
+    "preceding_component_python": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-normal-checks-01/verification.json",
+      "sha256": "d027e875c1b7a207935398b6d7a2db17713315bbaf9eec2faac3edcfe9ae8de0"
+    },
+    "preceding_counts": {
+      "components": 2957,
+      "python": 330
+    },
+    "preceding_sanitizer_components": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-sanitized-checks-01/verification.json",
+      "sha256": "73fbf678fcf17b35a05d6d245ecf25791fcc4828700d9f3c9db377565728b658"
+    },
+    "preceding_sanitizer_component_count": 810,
+    "preceding_scope": "These component/Python checks passed before the renderer-only capture/reload corrections. The stopped sanitizer report is not overall acceptance: only its completed sanitize result is claimed. Changed corrections are covered by final full engine suites and actual runtime courses.",
+    "sanitizer_engine_environment": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-sanitized-checks-03/observed-sanitizer-environment.json",
+      "sha256": "6dd277f7b35b5ff5eadb10326a4f75f6834652ec3a6fbf2df5167bb32013e499"
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "leak_coverage": false,
+    "known_lsan_failure": "Previously retained desktop LSan failure remains open; this checkpoint does not claim leak coverage."
+  },
+  "runtime": [
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/verification.json",
+        "sha256": "ee366257e2cf9ceb7552be69c5e2a6a20dd1ef8990f54f5980292dc46e88a8cb"
+      },
+      "actual_first_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/manifest.json",
+        "sha256": "31af9dcff35cc183881964bb6459f0b5ec1770e657dfe1d5cfed2a1c7a9469ae"
+      },
+      "actual_continuation_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/continuation.json",
+        "sha256": "448183e031e012776532f18722f44f58feef9be5b29c51cd74d891de239e6b62"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/visual-review.json",
+        "sha256": "a6d192d404fa8d244179b09050403d44d948b9e2e4449a4992079ad4fc34215f"
+      },
+      "extra_content_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/extra-content-reference-audit.json",
+        "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-normal-03/preregistered-acceptance.json",
+        "sha256": "1794e80b4e89e76320f556cd0824422382c2b9b3baae34a16919203a8d2490d4"
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "28acb41de3c3675798a99de0a22bf36149c4c83820f85b3ec976b23bf0f07bc0"
+      },
+      "captured_pose_tracks": 64,
+      "health_damage": -0.4110095500946045,
+      "combat_rng": 773150046,
+      "action_next": 3,
+      "normal_input": true,
+      "exact_first_output_as_fresh_input": true,
+      "contact_replay": false,
+      "pose_restored_and_recovered_to_action_6": true
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/verification.json",
+        "sha256": "201a8164f8472935e5d72d8647561c256436c621bfe0884b6fa35c9696d8799c"
+      },
+      "actual_first_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/manifest.json",
+        "sha256": "696121106ed446a963664ce17b6f0f534f6315181fead43fd989bfd93089cc70"
+      },
+      "actual_continuation_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/continuation.json",
+        "sha256": "73f1bc2660141b51d04f9776fe9956364574a974866bf2e3c12a21d831fb5486"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/visual-review.json",
+        "sha256": "ab9d948a0bd0312379bbd97a2dd2e0a570b3cbc3e866bae9d8eb644b8d6fa5a9"
+      },
+      "extra_content_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/extra-content-reference-audit.json",
+        "sha256": "ae18d2c994c70f703d3536c1327176744b3b9ceb9cb1db591902256e62b92044"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-block-reaction-runtime-sanitized-02/preregistered-acceptance.json",
+        "sha256": "1794e80b4e89e76320f556cd0824422382c2b9b3baae34a16919203a8d2490d4"
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "5ee3040a07fcf81bbd0ada65dcee2786ad041eda02ae4f2f91b10a12f77a869b"
+      },
+      "captured_pose_tracks": 64,
+      "health_damage": -0.4110095500946045,
+      "combat_rng": 773150046,
+      "action_next": 3,
+      "normal_input": true,
+      "exact_first_output_as_fresh_input": true,
+      "contact_replay": false,
+      "pose_restored_and_recovered_to_action_6": true
+    }
+  ],
+  "retained_attempts": [
+    {
+      "path": "native-npc-block-reaction-runtime-normal-01",
+      "reason": "Correct resource selected but contact rejected because capture required all 73 authored targets while loader bound 64."
+    },
+    {
+      "path": "native-npc-block-reaction-runtime-normal-02",
+      "reason": "First phase passed and saved actual 64-track pose. Fresh process rebound it but recovered action-1 before held BlockIdle restarted. Its expected action 6 gate failed."
+    },
+    {
+      "path": "native-npc-block-reaction-runtime-sanitized-01",
+      "reason": "Stopped during loading to correct the same resident-layer issue; no runtime acceptance."
+    },
+    {
+      "path": "native-npc-block-reaction-sanitized-checks-01",
+      "reason": "Stopped owned CMake group with SIGTERM before capture fix. Completed 810 sanitizer components; no engine acceptance."
+    },
+    {
+      "path": "native-npc-block-reaction-sanitized-checks-02",
+      "reason": "Stopped owned CMake group with SIGTERM before held BlockIdle reload fix. No completed engine acceptance."
+    },
+    {
+      "path": "native-reaction-catalog-review-01/syntax-01",
+      "reason": "Compilation database had only 105 MyGUI entries; setup failed before compiler."
+    },
+    {
+      "path": "native-reaction-catalog-review-01/syntax-02",
+      "reason": "Two Normalized.view string_view/NormalizedView call mismatches; corrected preflights03/04/05 passed."
+    },
+    {
+      "path": "native-reaction-catalog-review-01/asset-probe-01",
+      "reason": "Missing iterator header in standalone probe."
+    },
+    {
+      "path": "native-reaction-catalog-review-01/asset-probe-02",
+      "reason": "Incorrect working directory for target-relative linker paths."
+    },
+    {
+      "path": "native-live-cache-resolution-review-01/attempt01.json",
+      "reason": "Probe omitted already-seeded flag before native Multiple selection; failed OS/TLS setup. Corrected probe02 used seeded mode."
+    },
+    {
+      "path": "native-pose-unbound-target-review-02/verification.json",
+      "reason": "Missing-controller fixture retained a live shared blend binding and failed blend-preservation comparison. Corrected missing-controller+blend binding fixture03 passes; original interpretation retained separately."
+    }
+  ],
+  "limits": [
+    "Normal input: keyboard, first-person Player sword against public-Lua held NPC shield at1FPS, private staged equipment and deterministic stationary fixture. This does not cover the complete opponent/input/view/FPS matrix.",
+    "Held NPC Weapon-draw Single BlockHit is admitted. Multiple reaction choice/RNG ordering, Player body/first-person ownership, Creature reactions, ordinary Recoil/Stagger factories and mastery/effects remain open.",
+    "Independent cyclic BlockIdle phase and release-across-load behavior are not established by this held-input recovery course.",
+    "World-bound/camera equivalence, general state2/3/5 replacement, nonstock sequence weight/requested-frame domains and arbitrary loose/override variant order remain open.",
+    "Health magnitude is a preregistered nonlethal range0..2, with exact saved Damage-channel preservation across restart. This course does not independently establish its precise original-game magnitude.",
+    "Three successful impact sound requests and mixer output are retained; no new quantitative PCM or native pixel/motion equivalence claim."
+  ],
+  "runtime_acceptance": true,
+  "full_M15S4_acceptance": false,
+  "editable_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit.json",
+      "sha256": "31af9dcff35cc183881964bb6459f0b5ec1770e657dfe1d5cfed2a1c7a9469ae"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit_continuation.json",
+      "sha256": "448183e031e012776532f18722f44f58feef9be5b29c51cd74d891de239e6b62"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit_input.json",
+      "sha256": "1794e80b4e89e76320f556cd0824422382c2b9b3baae34a16919203a8d2490d4"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_reaction_catalog_expected.json",
+      "sha256": "6eeff83394db6a01c10b36f290322d76a00b580e79e8a2b7abeb62a10bbb4d72"
+    }
+  ]
+}

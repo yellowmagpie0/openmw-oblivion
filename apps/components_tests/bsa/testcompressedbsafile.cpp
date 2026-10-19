@@ -2,6 +2,9 @@
 
 #include <components/bsa/compressedbsafile.hpp>
 #include <components/testing/util.hpp>
+#include <components/vfs/bsaarchive.hpp>
+#include <components/vfs/filesystemarchive.hpp>
+#include <components/vfs/recursivedirectoryiterator.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -83,6 +86,73 @@ namespace Bsa
             const auto testInfo = UnitTest::GetInstance()->current_test_info();
             return TestingOpenMW::outputFilePath(
                 std::format("{}.{}.bsa", testInfo->test_suite_name(), testInfo->name()));
+        }
+
+        TEST(ESM4NativeArchiveOrder, WinningFileRetainsArchiveOrderAcrossSortedIndexAndOverrides)
+        {
+            const auto path = makeOutputPath();
+            const auto write = [](const std::filesystem::path& output, std::vector<FileRecord> files) {
+                std::uint32_t namesLength = 0;
+                for (const auto& file : files)
+                    namesLength += static_cast<std::uint32_t>(file.mName.size() + 1);
+                const auto count = static_cast<std::uint32_t>(files.size());
+                const CompressedBSAFile::Header header{
+                    .mFormat = static_cast<std::uint32_t>(BsaVersion::Compressed),
+                    .mVersion = CompressedBSAFile::Version_TES4,
+                    .mFoldersOffset = sizeof(CompressedBSAFile::Header),
+                    .mFlags = CompressedBSAFile::ArchiveFlag_FolderNames | CompressedBSAFile::ArchiveFlag_FileNames,
+                    .mFolderCount = 1,
+                    .mFileCount = count,
+                    .mFolderNamesLength = 7,
+                    .mFileNamesLength = namesLength,
+                    .mFileFlags = 0,
+                };
+                const NonSSEFolderRecord folder{1, count, 0, "folder", std::move(files)};
+                std::ofstream stream(output, std::ios::binary);
+                stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+                writeArchive(Archive{header, {folder}}, stream);
+            };
+            // Reader order follows the supplied archive hashes, not path order.
+            write(path, {{10, 0, 0, "hook.kf"}, {20, 0, 0, "base.kf"}, {30, 0, 0, "jab.kf"}});
+            VFS::Manager manager;
+            manager.addArchive(std::make_unique<VFS::BsaArchive<CompressedBSAFile>>(path, nullptr));
+            manager.buildIndex();
+            const VFS::Path::Normalized hook("folder/hook.kf"), base("folder/base.kf"), jab("folder/jab.kf");
+            const auto hookOrder = manager.getArchiveFileOrder(hook);
+            const auto baseOrder = manager.getArchiveFileOrder(base);
+            const auto jabOrder = manager.getArchiveFileOrder(jab);
+            ASSERT_TRUE(hookOrder); ASSERT_TRUE(baseOrder); ASSERT_TRUE(jabOrder);
+            EXPECT_EQ(hookOrder->mArchive, path);
+            EXPECT_EQ(baseOrder->mArchive, path);
+            EXPECT_EQ(jabOrder->mArchive, path);
+            EXPECT_EQ(hookOrder->mIndex, 0u);
+            EXPECT_EQ(baseOrder->mIndex, 1u);
+            EXPECT_EQ(jabOrder->mIndex, 2u);
+            std::vector<std::string> paths;
+            for (const auto& file : manager.getRecursiveDirectoryIterator(std::string_view("folder/")))
+                paths.emplace_back(file.value());
+            EXPECT_THAT(paths, ElementsAre("folder/base.kf", "folder/hook.kf", "folder/jab.kf"));
+
+            auto overridePath = path;
+            overridePath.replace_extension(".override.bsa");
+            write(overridePath, {{5, 0, 0, "base.kf"}});
+            manager.addArchive(std::make_unique<VFS::BsaArchive<CompressedBSAFile>>(overridePath, nullptr));
+            manager.buildIndex();
+            ASSERT_TRUE(manager.getArchiveFileOrder(base));
+            EXPECT_EQ(manager.getArchiveFileOrder(base)->mArchive, overridePath);
+            EXPECT_EQ(manager.getArchiveFileOrder(base)->mIndex, 0u);
+            EXPECT_EQ(manager.getArchiveFileOrder(hook), hookOrder);
+
+            auto loose = path;
+            loose.replace_extension(".loose");
+            std::filesystem::create_directories(loose / "folder");
+            std::ofstream(loose / "folder/base.kf") << "loose resource";
+            manager.addArchive(std::make_unique<VFS::FileSystemArchive>(loose));
+            manager.buildIndex();
+            EXPECT_FALSE(manager.getArchiveFileOrder(base));
+            EXPECT_EQ(manager.getArchiveFileOrder(hook), hookOrder);
+            const VFS::Path::Normalized missing("folder/missing.kf");
+            EXPECT_THROW(manager.getArchiveFileOrder(missing), std::runtime_error);
         }
 
         TEST(CompressedBSAFileTest, shouldHandleEmpty)

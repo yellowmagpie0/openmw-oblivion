@@ -292,6 +292,106 @@ namespace ESM4
             || characterState == 2;
     }
 
+    std::optional<std::uint16_t> nativeReactionSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename)
+    {
+        const auto prefix = [](std::string_view text, std::string_view expected) {
+            if (text.size() < expected.size()) return false;
+            for (std::size_t i = 0; i < expected.size(); ++i)
+            {
+                const auto c = text[i];
+                if ((c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c) != expected[i]) return false;
+            }
+            return true;
+        };
+        sequenceName = sequenceName.substr(0, sequenceName.find('\0'));
+        sequenceName = sequenceName.substr(0, sequenceName.find('_'));
+        std::uint16_t base = 0;
+        for (const auto& [name, group] : std::array<std::pair<std::string_view, std::uint16_t>, 3>{
+                 {{"blockhit", 28}, {"recoil", 30}, {"stagger", 31}}})
+            if (sequenceName.size() == name.size() && prefix(sequenceName, name)) base = group;
+        if (!base) return {};
+        resourceBasename = resourceBasename.substr(0, resourceBasename.find('\0'));
+        if (resourceBasename.find_first_of("/\\") != std::string_view::npos)
+            throw std::invalid_argument("native sequence prefix parser requires a resource basename");
+        constexpr std::array<std::string_view, 4> movementNames{"", "sneak", "swim", "fly"};
+        constexpr std::array<std::string_view, 6> familyNames{"", "handtohand", "onehand", "twohand", "staff", "bow"};
+        std::uint16_t movement = 0, family = 0;
+        for (std::uint16_t i = 1; i < movementNames.size(); ++i)
+            if (prefix(resourceBasename, movementNames[i]))
+            {
+                movement = i;
+                resourceBasename.remove_prefix(movementNames[i].size());
+                break;
+            }
+        for (std::uint16_t i = 1; i < familyNames.size(); ++i)
+            if (prefix(resourceBasename, familyNames[i]))
+            {
+                family = i;
+                break;
+            }
+        return static_cast<std::uint16_t>((movement << 12) | (family << 8) | base);
+    }
+
+    std::uint16_t nativeNpcBlockHitGroup(const NativeNpcBlockHitGroupInput& input)
+    {
+        unsigned family = input.mWeaponDrawn115 ? 1 : 0;
+        if ((input.mWeaponDrawn115 || input.mFlag114) && input.mWeaponType)
+        {
+            constexpr std::array<unsigned, 6> families{2, 3, 2, 3, 4, 5};
+            if (*input.mWeaponType >= families.size())
+                throw std::invalid_argument("unsupported native weapon type for BlockHit");
+            family = families[*input.mWeaponType];
+        }
+        if (input.mShield) family = 0;
+        const unsigned movement = input.mMovementFlags & 0x800 ? 2
+            : input.mMovementFlags & 0x2000 ? 3 : input.mMovementFlags & 0x400 ? 1 : 0;
+        return static_cast<std::uint16_t>((movement << 12) | (family << 8) | 28);
+    }
+
+    std::optional<std::uint16_t> resolveNativeReactionSequenceGroup(
+        std::uint16_t requested, std::span<const std::uint16_t> available)
+    {
+        const auto base = requested & 255;
+        const auto movement = requested >> 12;
+        const auto family = (requested >> 8) & 15;
+        if ((base != 28 && base != 30 && base != 31) || movement > 3 || family > 5)
+            throw std::invalid_argument("unsupported native reaction group");
+        const auto has = [&](std::uint16_t code) {
+            return std::find(available.begin(), available.end(), code) != available.end();
+        };
+        const auto resolve = [&](std::uint16_t mode) -> std::optional<std::uint16_t> {
+            const auto code = [&](unsigned weapon) { return static_cast<std::uint16_t>((mode << 12) | (weapon << 8) | base); };
+            if (has(code(family))) return code(family);
+            if (family == 4 && mode != 2 && has(code(3))) return code(3);
+            if (family >= 3 && has(code(2))) return code(2);
+            if (family && has(code(0))) return code(0);
+            return {};
+        };
+        if (const auto result = resolve(movement)) return result;
+        return movement ? resolve(0) : std::nullopt;
+    }
+
+    bool nativeReactionSphereInFrustum(const std::array<float, 4>& sphere,
+        const std::array<std::array<float, 4>, 6>& planes)
+    {
+        for (float value : sphere) finite(value);
+        nonnegative(sphere[3]);
+        for (const auto& plane : planes)
+            for (float value : plane) finite(value);
+        for (const auto& plane : planes)
+        {
+            // The original first stores the three-product sum, then subtracts
+            // the plane constant and stores again before either comparison.
+            const float dot = rounded(double(sphere[1]) * plane[1]
+                + double(sphere[0]) * plane[0] + double(sphere[2]) * plane[2]);
+            const float distance = rounded(double(dot) - plane[3]);
+            finite(distance);
+            if (distance <= -sphere[3]) return false;
+        }
+        return true;
+    }
+
     template <std::size_t Size>
     static MeleeKeys<Size> meleeKeyTimes(std::span<const MeleeTextKey> textKeys,
         const std::array<std::string_view, Size>& names)

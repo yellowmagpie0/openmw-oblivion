@@ -8016,3 +8016,76 @@ direct crossfade descriptors. State2/3/5 replacement, incoming pose transitions,
 Stagger's separate channel, Player view ownership and normal contact descriptor
 generation remain outside this checkpoint. No new fork application runtime course
 is claimed. **M15S4 remains incomplete.**
+
+
+## Normal NPC BlockHit and actual captured-pose restart (2026-10-19)
+
+Ordinary accepted NPC blocks now generate a Single BlockHit descriptor through
+the real contact transaction. The factory resolves the winning equipped item,
+native movement/family group and same-base cache fallback. It uses the prepared
+numerical lifecycle to suppress reactions for victims that will no longer be
+Alive, and retains animation/root leases until publication. Selection allocates
+no extra action ID and consumes no RNG for these installed Single resources.
+Multiple selection remains rejected until its ordering relative to armor-wear
+RNG is integrated. Player, Creature, normal Recoil/Stagger and mastery factories
+remain open.
+
+The resource catalog uses exact authored sequence names and winning compressed
+BSA listing order, independently of the sorted VFS iterator. Production loader
+inspection reads all **323 body and 322 first-person root KFs**; its reaction
+catalogs match the captured original caches exactly: **15 groups/19 resources**
+and **14 groups/18 resources**, respectively. Mixed-archive or loose variant
+ordering is not inferred. Independent production comparisons match **288
+classification, 864 reaction-fallback, 1,078 frustum and 896 NPC-selector
+observations**. These totals include seed/precision replicas. Raw byte 114 is
+not proven to mean Spell; the public primitive calls it `mFlag114`, and this
+live factory admits Weapon draw 115=true. Native 5E5690 returns the fallback;
+its reaction callers perform the low-byte group check.
+
+The first actual course exposed a capture error: the stock KF authors 73 tracks,
+but this actor binds 64. Original6C9F10 skips unbound blocks. Six new original
+pose-activation contexts, with missing controller/interpolator/both and both
+precision words, preserve the valid captured pose and all 42 blend samples from
+the published one-block control. Capture now uses admitted controller bindings.
+A renderer regression retains the valid pose while skipping missing targets and
+an existing uncontrolled node. A separate world-bound test prevents applying a
+model transform twice and rejects ambiguous scene placement. The original float
+frustum predicate is verified separately; exact native world-bound/camera geometry
+parity is not claimed.
+
+Normal and instrumented keyboard1FPS courses each commit one sword contact
+against the public-Lua held NPC shield, bind stock `blockhit`, and actually save
+its **64-track captured pose** at reaction time 0. The exact first output enters
+a fresh process, rebinds 64 tracks, reconstructs held BlockIdle, and recovers
+directly to action 6 without block release or contact replay. A second failed
+course had recovered action -1 before restarting BlockIdle; the corrected renderer
+reconstructs that resident layer using existing action 6, without calling
+`beginBlocking`. Independent cyclic BlockIdle phase and release-across-load
+behavior remain open.
+
+Both accepted courses preserve observed Health Damage **-0.4110095500946045**
+exactly through continuation, retain next action ID 3 with no pending owners, and
+retain combat RNG **773150046** after the declared four draws. Health magnitude
+is checked against the preregistered nonlethal 0..2 range, not claimed as an
+independently frozen original-game magnitude. Player sword wear matches its
+expected float bits; NPC equipment and all other settled AV channels remain
+unchanged. Additional loaded references independently match original-master
+identities, bases and CELL placement; none is a new dynamic drop. All four
+accepted images were directly inspected. Successful impact requests and mixer
+output are retained, without a new quantitative PCM or native pixel/motion claim.
+
+Final full normal and ASan/UBSan engine suites each pass **1,754 tests/125 suites**
+with exact inventory/XML agreement and no failures/skips. Tested fingerprint:
+`cd3541a7311ef5ce25ad2d31051758b1bcb599932d0af258041e27a575f78a83`.
+Before the renderer-only corrections, unchanged component/Python inputs passed
+**2,957 normal components, 810 selected sanitizer components and 330 Python tests**.
+The two stopped sanitizer builds are not overall passes; their completed results
+and SIGTERM reasons are retained. Final sanitizer tests and runtime use
+`detect_leaks=0:halt_on_error=1` and halting UBSan with stack traces. The previously
+recorded desktop LSan failure remains open.
+
+[M15-NPC-BLOCKHIT-VERIFICATION.json](M15-NPC-BLOCKHIT-VERIFICATION.json) pins the
+source, actual executables, exact checks, independent native evidence, editable
+manifests, save/reload assertions, images and retained failed attempts. This is
+bounded held-NPC reaction acceptance, not the complete opponent/input/view/FPS
+course. **M15S4 remains incomplete.**

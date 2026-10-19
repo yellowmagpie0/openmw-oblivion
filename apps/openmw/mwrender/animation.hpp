@@ -18,6 +18,7 @@
 #include <components/sceneutil/util.hpp>
 #include <components/vfs/pathutil.hpp>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -148,6 +149,14 @@ namespace MWRender
             std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mPoseSnapshot = nullptr;
         };
 
+        struct NativeReactionResources
+        {
+            std::uint16_t mNativeGroup;
+            // Fresh native cache construction makes one resource Single and
+            // promotes on the second. These are renderer resource aliases.
+            std::vector<std::string> mGroups;
+        };
+
         class TextKeyListener
         {
         public:
@@ -248,6 +257,8 @@ namespace MWRender
             std::string mGroup;
         };
         std::map<std::string, LazyAnimSource, std::less<>> mLazyAnimSources;
+        std::map<std::string, VFS::Path::Normalized, std::less<>> mNativeReactionFiles;
+        std::optional<std::vector<NativeReactionResources>> mNativeReactionCatalog;
         std::unordered_set<std::string> mLoadedLazyAnimations;
         std::unordered_set<std::string> mReportedLazyAnimations;
         mutable std::vector<std::pair<std::string, MWWorld::MovementDirectionFlags>> mSupportedDirections;
@@ -448,6 +459,8 @@ namespace MWRender
         osg::Group* getOrCreateObjectRoot();
 
         osg::Group* getObjectRoot();
+        const osg::Group* getObjectRoot() const { return mObjectRoot.get(); }
+        std::optional<std::array<float, 4>> nativeReactionWorldBound(const osg::Node& sceneRoot) const;
 
         /**
          * @brief Add an effect mesh attached to a bone or the insert scene node
@@ -544,6 +557,10 @@ namespace MWRender
         // Playing source wins; otherwise use the winning group source. Missing
         // or ambiguous metadata never falls back to an older source.
         const SceneUtil::ControllerSequenceMetadata* getControllerSequenceMetadata(std::string_view group);
+        // Classify root-directory KF resources by authored sequence name.
+        // Multiple variants require a known listing order from one archive
+        // and directory; ambiguous loose/overlay order is rejected.
+        const std::vector<NativeReactionResources>& getNativeReactionCatalog();
         // Actual currently selected group for a renderer body mask; no loading.
         std::string_view getActiveAnimationGroup(BoneGroup group) const;
 

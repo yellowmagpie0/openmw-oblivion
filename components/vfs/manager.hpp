@@ -3,8 +3,10 @@
 
 #include <components/files/istreamptr.hpp>
 
+#include <cstddef>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -16,6 +18,13 @@ namespace VFS
 {
     class Archive;
     class RecursiveDirectoryRange;
+
+    struct ArchiveFileOrder
+    {
+        std::filesystem::path mArchive;
+        std::size_t mIndex;
+        friend bool operator==(const ArchiveFileOrder&, const ArchiveFileOrder&) = default;
+    };
 
     /// @brief The main class responsible for loading files from a virtual file system.
     /// @par Various archive types (e.g. directories on the filesystem, or compressed archives)
@@ -56,6 +65,11 @@ namespace VFS
         Files::IStreamPtr get(Path::NormalizedView name) const;
 
         std::string getArchive(const Path::Normalized& name) const;
+
+        // Compressed-BSA listing position of the winning resource, independent
+        // of the path-sorted index. Positions compare only within one archive;
+        // other backends return no order. A missing resource throws.
+        std::optional<ArchiveFileOrder> getArchiveFileOrder(Path::NormalizedView name) const;
 
         /// Recursively iterate over the elements of the given path
         /// In practice it return all files of the VFS starting with the given path

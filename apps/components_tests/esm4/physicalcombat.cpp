@@ -5521,3 +5521,161 @@ TEST(ESM4PhysicalCombat, ReactionSlotRejectsMalformedSupportedDomainWithoutMutat
         std::numeric_limits<float>::max(), keys), std::invalid_argument);
     EXPECT_EQ(keys, (std::array<float, 2>{0, 1}));
 }
+
+TEST(ESM4NativeAnimationCatalog, InternalNamesAndResourcePrefixesMatchOriginalClassification)
+{
+    // Original436DA0/51B490, 288 observations paired across precision words.
+    constexpr std::array<std::pair<std::string_view, unsigned>, 3> groups{{
+        {"BlockHit", 28}, {"Recoil", 30}, {"Stagger", 31}}};
+    constexpr std::array<std::string_view, 4> movement{"", "Sneak", "Swim", "Fly"};
+    constexpr std::array<std::string_view, 6> family{"", "HandToHand", "OneHand", "TwoHand", "Staff", "Bow"};
+    for (const auto& [name, base] : groups)
+        for (unsigned move = 0; move < movement.size(); ++move)
+            for (unsigned weapon = 0; weapon < family.size(); ++weapon)
+                for (bool mixed : {false, true})
+                {
+                    std::string internal = std::string(name) + "_01_extra";
+                    std::string resource = std::string(movement[move]) + std::string(family[weapon])
+                        + std::string(name) + "_01.kf";
+                    if (mixed)
+                        for (auto* text : {&internal, &resource})
+                            for (char& c : *text)
+                                c = c >= 'A' && c <= 'Z' ? c + ('a' - 'A')
+                                    : c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c;
+                    EXPECT_EQ(ESM4::nativeReactionSequenceGroup(internal, resource),
+                        move * 4096 + weapon * 256 + base);
+                }
+    EXPECT_FALSE(ESM4::nativeReactionSequenceGroup(" Recoil", "onehandrecoil.kf"));
+    EXPECT_FALSE(ESM4::nativeReactionSequenceGroup("RecoilX", "onehandrecoil.kf"));
+    EXPECT_FALSE(ESM4::nativeReactionSequenceGroup("AttackLeft_Hook", "handtohandattackleft_hook.kf"));
+    EXPECT_THROW(ESM4::nativeReactionSequenceGroup("Recoil", "folder/onehandrecoil.kf"), std::invalid_argument);
+}
+
+TEST(ESM4NativeAnimationCatalog, CapturedBodyAndFirstPersonFallbacksMatchOriginal)
+{
+    // Native470D20 over captured original caches; 864 observations reduce to
+    // these 144 seed/precision-independent reaction requests. No selection is
+    // the caller rejecting native fallback to a different base group (Idle0).
+    constexpr std::array<std::uint16_t,15> bodyCodes{0x1c,0x11c,0x11e,0x11f,0x21c,0x21e,0x21f,0x31c,0x31e,0x31f,0x41c,0x41f,0x51c,0x141c,0x201f};
+    constexpr std::array<std::uint16_t,72> bodyExpected{
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x141c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f,
+        0x201f, 0x201f, 0x201f, 0x201f, 0x201f, 0x201f,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f
+    };
+    constexpr std::array<std::uint16_t,14> firstpersonCodes{0x1c,0x11c,0x11e,0x11f,0x21c,0x21e,0x21f,0x31c,0x31e,0x31f,0x41c,0x41f,0x51c,0x141c};
+    constexpr std::array<std::uint16_t,72> firstpersonExpected{
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x141c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0x1c, 0x11c, 0x21c, 0x31c, 0x41c, 0x51c,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11e, 0x21e, 0x31e, 0x31e, 0x21e,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f,
+        0xffff, 0x11f, 0x21f, 0x31f, 0x41f, 0x21f
+    };
+    for (unsigned view = 0; view < 2; ++view)
+    {
+        const std::span<const std::uint16_t> available = view == 0
+            ? std::span<const std::uint16_t>(bodyCodes) : std::span<const std::uint16_t>(firstpersonCodes);
+        const auto& expected = view == 0 ? bodyExpected : firstpersonExpected;
+        unsigned index = 0;
+        for (auto base : {28u, 30u, 31u})
+            for (unsigned movement = 0; movement < 4; ++movement)
+                for (unsigned family = 0; family < 6; ++family)
+                {
+                    const auto requested = static_cast<std::uint16_t>(movement * 4096 + family * 256 + base);
+                    EXPECT_EQ(ESM4::resolveNativeReactionSequenceGroup(requested, available).value_or(65535), expected[index++]);
+                }
+    }
+    EXPECT_FALSE(ESM4::resolveNativeReactionSequenceGroup(0x11c, {}));
+    EXPECT_THROW(ESM4::resolveNativeReactionSequenceGroup(20, bodyCodes), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolveNativeReactionSequenceGroup(0x461e, bodyCodes), std::invalid_argument);
+}
+
+TEST(ESM4NativeAnimationCatalog, FrustumUsesOriginalFloatStoresAndNegativeTangency)
+{
+    const std::array<std::array<float,4>,6> planes{{
+        {std::bit_cast<float>(0x3f800000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)},
+        {std::bit_cast<float>(0xbf800000u), std::bit_cast<float>(0x80000000u), std::bit_cast<float>(0x80000000u), std::bit_cast<float>(0xc2c80000u)},
+        {std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0x0u)},
+        {std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0xbf3504f3u), std::bit_cast<float>(0x0u)},
+        {std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0xbf3504f3u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)},
+        {std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0x3f3504f3u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}
+    }};
+    struct Case { std::array<float,4> mSphere; bool mInside; };
+    const std::array<Case,25> cases{{
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0xc1200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0xc1200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0xc1200000u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x3f800000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x42c80000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x42ca0000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x33000000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x33800000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x3f7fffffu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x3f800001u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, true},
+        {{{std::bit_cast<float>(0x42c7ffffu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, true},
+        {{{std::bit_cast<float>(0x42c80001u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x0u)}}, false},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0xc136a09du), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0xc136a09eu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0xc136a09fu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x4136a09du), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x4136a09eu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, true},
+        {{{std::bit_cast<float>(0x41200000u), std::bit_cast<float>(0x4136a09fu), std::bit_cast<float>(0x0u), std::bit_cast<float>(0x3f800000u)}}, false}
+    }};
+    for (const auto& entry : cases)
+        EXPECT_EQ(ESM4::nativeReactionSphereInFrustum(entry.mSphere, planes), entry.mInside);
+    EXPECT_THROW(ESM4::nativeReactionSphereInFrustum({0,0,0,-1}, planes), std::invalid_argument);
+    auto invalid = planes;
+    invalid[0][0] = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::nativeReactionSphereInFrustum({10,0,0,1}, invalid), std::invalid_argument);
+}
+
+TEST(ESM4NativeAnimationCatalog, NpcBlockHitPrefixesMatchOriginalActorSelector)
+{
+    // Actual NPC5E5690/4D8370/51A9B0, 896 native observations across both
+    // precision words. Byte114 remains a raw flag, not an inferred stance.
+    constexpr std::array<std::array<unsigned, 4>, 7> families{{
+        {0,1,0,1}, {0,2,2,2}, {0,3,3,3}, {0,2,2,2}, {0,3,3,3}, {0,4,4,4}, {0,5,5,5}}};
+    constexpr std::array<std::uint16_t, 8> flags{0,0x400,0x800,0xc00,0x2000,0x2400,0x2800,0x2c00};
+    constexpr std::array<unsigned, 8> movement{0,1,2,2,3,3,2,2};
+    for (unsigned weapon = 0; weapon < families.size(); ++weapon)
+        for (unsigned draw = 0; draw < 4; ++draw)
+            for (bool shield : {false, true})
+                for (unsigned mode = 0; mode < flags.size(); ++mode)
+                {
+                    ESM4::NativeNpcBlockHitGroupInput input;
+                    if (weapon) input.mWeaponType = static_cast<std::uint8_t>(weapon - 1);
+                    input.mWeaponDrawn115 = draw & 1;
+                    input.mFlag114 = draw & 2;
+                    input.mShield = shield;
+                    input.mMovementFlags = flags[mode];
+                    EXPECT_EQ(ESM4::nativeNpcBlockHitGroup(input),
+                        movement[mode] * 4096 + (shield ? 0 : families[weapon][draw]) * 256 + 28);
+                }
+    ESM4::NativeNpcBlockHitGroupInput invalid;
+    invalid.mWeaponType = 255;
+    EXPECT_EQ(ESM4::nativeNpcBlockHitGroup(invalid), 28); // Unused native type is not read.
+    invalid.mWeaponDrawn115 = true;
+    EXPECT_THROW(ESM4::nativeNpcBlockHitGroup(invalid), std::invalid_argument);
+}

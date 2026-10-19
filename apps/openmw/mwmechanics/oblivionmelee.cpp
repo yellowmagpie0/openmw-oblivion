@@ -18,11 +18,14 @@
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
 #include "../mwworld/worldimp.hpp"
+#include "../mwrender/animation.hpp"
+#include <components/sceneutil/keyframe.hpp>
 #include <components/esm/records.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/misc/strings/algorithm.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <set>
@@ -31,6 +34,34 @@
 
 namespace MWMechanics
 {
+    OblivionMeleeSequenceMetadata captureOblivionMeleeSequenceMetadata(
+        MWRender::Animation& animation, std::string_view group, bool reaction)
+    {
+        const auto* source = animation.getControllerSequenceMetadata(group);
+        if (!source || source->mCycleType != 2)
+            throw std::invalid_argument("native reaction requires a clamp sequence");
+        std::vector<ESM4::MeleeTextKey> raw;
+        raw.reserve(source->mTextKeys.size());
+        for (const auto& [time, text] : source->mTextKeys) raw.push_back({time, text});
+        const auto frames = ESM4::meleeBlendFrames(raw);
+        const auto blend = std::bit_cast<std::int8_t>(frames);
+        // Reviewed original General INI defaults. Custom original INI import
+        // is separate: fAnimationDefaultBlend=.1 and fAnimationMult=1.
+        const float retirement = blend == 0 ? .1f : static_cast<float>(double(blend) / 30.);
+        OblivionMeleeSequenceMetadata result{group, source->mFrequency,
+            source->mStartTime, source->mStopTime, source->mTimelineStart, source->mTimelineStop, {}, retirement};
+        result.mBlendFrames = frames;
+        if (reaction)
+        {
+            const auto keys = ESM4::reactionKeyTimes(raw);
+            if (keys.mMatchedCount != 2)
+                throw std::invalid_argument("native reaction requires Start/End keys");
+            result.mReactionKeys = keys.mTimes;
+        }
+        result.validate();
+        return result;
+    }
+
     OblivionMeleeAcquisitionSettings resolveOblivionMeleeAcquisitionSettings(
         std::span<const ESM4::GameSetting* const> settings)
     {
@@ -456,7 +487,10 @@ namespace MWMechanics
                     ESM4::buildKnockbackSettings(settings), ESM4::buildPhysicalCombatSettings(settings)};
             }
         }
-        if (!world.commitOblivionPhysicalContact(actionId, attacker, *contact, deltas))
+        const bool npcBlockHit = blockAccepted && !contact->isEmpty()
+            && *contact != world.getPlayerPtr() && contact->getType() == ESM::REC_NPC_4;
+        auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, deltas, npcBlockHit);
+        if (!prepared || !prepared->commit())
             return std::nullopt;
         return result;
     }

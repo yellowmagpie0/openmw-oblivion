@@ -10,9 +10,14 @@
 namespace ESM4 { struct GameSetting; }
 namespace MWBase { class World; }
 namespace MWPhysics { class Actor; }
+namespace MWRender { class Animation; }
 
 namespace MWMechanics
 {
+    // Shared raw KF timing/Blend inputs for contact preparation and playback.
+    OblivionMeleeSequenceMetadata captureOblivionMeleeSequenceMetadata(
+        MWRender::Animation& animation, std::string_view group, bool reaction);
+
     struct OblivionMeleeAcquisitionSettings
     {
         float mConeDegrees;

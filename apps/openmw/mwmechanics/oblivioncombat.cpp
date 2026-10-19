@@ -2070,6 +2070,11 @@ namespace MWMechanics
         return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->commitPhysicalContact(*this);
     }
 
+    bool OblivionCombatService::PreparedPhysicalContact::victimRemainsAlive() const noexcept
+    {
+        return mImpl && mImpl->mReceivingLife && mImpl->mReceivingLife->mPhase == ESM4::ActorLifePhase::Alive;
+    }
+
     void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
     {
         if (!mImpl || !mImpl->mCommitted || mImpl->mIdentity.expired()) return;

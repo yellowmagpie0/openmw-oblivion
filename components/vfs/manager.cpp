@@ -8,6 +8,7 @@
 #include <components/vfs/recursivedirectoryiterator.hpp>
 
 #include "archive.hpp"
+#include "bsaarchive.hpp"
 #include "file.hpp"
 #include "pathutil.hpp"
 #include "recursivedirectoryiterator.hpp"
@@ -79,6 +80,19 @@ namespace VFS
                 return (*it)->getDescription();
         }
         return {};
+    }
+
+    std::optional<ArchiveFileOrder> Manager::getArchiveFileOrder(Path::NormalizedView name) const
+    {
+        const auto found = mIndex.find(name);
+        if (found == mIndex.end())
+            throw std::runtime_error("Resource '" + std::string(name.value()) + "' not found");
+        const auto* file = dynamic_cast<const BsaArchiveFile<Bsa::CompressedBSAFile>*>(found->second);
+        if (!file)
+            return {};
+        const auto* archive = file->mFile->getFile();
+        return ArchiveFileOrder{archive->getPath(),
+            static_cast<std::size_t>(file->mInfo - archive->getList().data())};
     }
 
     std::filesystem::file_time_type Manager::getLastModified(VFS::Path::NormalizedView name) const

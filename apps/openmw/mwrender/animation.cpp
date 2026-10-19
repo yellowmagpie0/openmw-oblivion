@@ -680,6 +680,7 @@ namespace MWRender
 
     void Animation::addAnimDirectory(VFS::Path::NormalizedView directory)
     {
+        mNativeReactionCatalog.reset();
         constexpr VFS::Path::ExtensionView kf("kf");
         std::map<std::string, VFS::Path::Normalized, std::less<>> files;
         for (const VFS::Path::Normalized& name : mResourceSystem->getVFS()->getRecursiveDirectoryIterator(directory))
@@ -687,6 +688,8 @@ namespace MWRender
             if (name.extension() != kf)
                 continue;
             std::string group(name.stem());
+            if (name.parent() == directory)
+                mNativeReactionFiles.insert_or_assign(group, name);
             // Prefer the family-root KF over an idleanims file with the same
             // stem. Archive iterator ordering is not a compatibility rule.
             const auto [it, inserted] = files.try_emplace(group, name);
@@ -956,6 +959,8 @@ namespace MWRender
 
         mSupportedAnimations.clear();
         mLazyAnimSources.clear();
+        mNativeReactionFiles.clear();
+        mNativeReactionCatalog.reset();
         mLoadedLazyAnimations.clear();
         mReportedLazyAnimations.clear();
         mSupportedDirections.clear();
@@ -1088,6 +1093,61 @@ namespace MWRender
                     result = &sequence;
                 }
         return result;
+    }
+
+    const std::vector<Animation::NativeReactionResources>& Animation::getNativeReactionCatalog()
+    {
+        if (mNativeReactionCatalog) return *mNativeReactionCatalog;
+        if (!mResourceSystem)
+            throw std::invalid_argument("native reaction catalog requires a resource system");
+        struct Candidate
+        {
+            std::string mGroup;
+            VFS::Path::Normalized mPath;
+            std::optional<VFS::ArchiveFileOrder> mOrder;
+        };
+        std::map<std::uint16_t, std::vector<Candidate>> groups;
+        const auto* vfs = mResourceSystem->getVFS();
+        for (const auto& [group, path] : mNativeReactionFiles)
+        {
+            const auto source = mLazyAnimSources.find(group);
+            if (source == mLazyAnimSources.end() || source->second.mPath != path)
+                throw std::invalid_argument("native reaction resource lost its renderer alias");
+            const auto keyframes = mResourceSystem->getKeyframeManager()->get(path);
+            if (!keyframes) continue;
+            for (const auto& metadata : keyframes->mControllerSequences)
+                if (const auto code = ESM4::nativeReactionSequenceGroup(metadata.mSequenceName, path.filename().value()))
+                {
+                    if (keyframes->mControllerSequences.size() != 1)
+                        throw std::invalid_argument("native reaction KF contains ambiguous controller sequences");
+                    groups[*code].push_back({group, path, vfs->getArchiveFileOrder(path)});
+                }
+        }
+        std::vector<NativeReactionResources> result;
+        result.reserve(groups.size());
+        for (auto& [code, candidates] : groups)
+        {
+            if (candidates.size() > 1)
+            {
+                const auto& first = candidates.front();
+                if (!first.mOrder || std::any_of(candidates.begin(), candidates.end(), [&](const auto& candidate) {
+                        return !candidate.mOrder || candidate.mOrder->mArchive != first.mOrder->mArchive
+                            || candidate.mPath.parent() != first.mPath.parent();
+                    }))
+                    throw std::invalid_argument("native reaction variants have no established archive order");
+                std::sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) {
+                    return a.mOrder->mIndex < b.mOrder->mIndex;
+                });
+                for (std::size_t i = 1; i < candidates.size(); ++i)
+                    if (candidates[i - 1].mOrder->mIndex == candidates[i].mOrder->mIndex)
+                        throw std::invalid_argument("native reaction catalog duplicates an archive resource");
+            }
+            NativeReactionResources resources{code, {}};
+            for (const auto& candidate : candidates) resources.mGroups.push_back(candidate.mGroup);
+            result.push_back(std::move(resources));
+        }
+        mNativeReactionCatalog = std::move(result);
+        return *mNativeReactionCatalog;
     }
 
     std::string_view Animation::getActiveAnimationGroup(BoneGroup group) const
@@ -1769,6 +1829,29 @@ namespace MWRender
         return result;
     }
 
+    std::optional<std::array<float, 4>> Animation::nativeReactionWorldBound(const osg::Node& sceneRoot) const
+    {
+        const auto* root = getObjectRoot();
+        if (!root || !root->getBound().valid()) return {};
+        std::optional<osg::Matrixf> parentWorld;
+        for (auto path : root->getParentalNodePaths(const_cast<osg::Node*>(&sceneRoot)))
+            if (!path.empty() && path.front() == &sceneRoot)
+            {
+                if (parentWorld)
+                    throw std::invalid_argument("native reaction bound has multiple scene placements");
+                // A transform's bound is already in its parent's coordinates.
+                // Including the root again would apply its transform twice.
+                path.pop_back();
+                parentWorld = osg::Matrixf(osg::computeLocalToWorld(path));
+            }
+        if (!parentWorld) return {};
+        const auto& local = root->getBound();
+        const osg::Vec3f center = local.center() * *parentWorld;
+        const auto scale = parentWorld->getScale();
+        const float radius = static_cast<float>(double(local.radius()) * std::max({scale.x(), scale.y(), scale.z()}));
+        return std::array{center.x(), center.y(), center.z(), radius};
+    }
+
     std::optional<ESM4::RuntimeMeleePoseSnapshot> Animation::captureNativeSequencePose(
         std::string_view group, float destinationFrame)
     {
@@ -1781,13 +1864,16 @@ namespace MWRender
         for (const auto& [bone, priority] : metadata->mTransformPriorities)
         {
             const auto name = Misc::StringUtils::lowerCase(bone);
+            bool controlled = false;
+            for (const auto& map : source->mControllerMap) controlled |= map.contains(name);
+            // Original6C9F10 skips blocks without a controller/interpolator.
+            // Stock KFs also author tracks absent from this actor's skeleton;
+            // capture only the tracks admitted by the source binding.
+            if (!controlled) continue;
             const auto found = nodes.find(name);
             if (found == nodes.end()) return {};
             const auto* node = dynamic_cast<const NifOsg::MatrixTransform*>(found->second.get());
             if (!node) return {};
-            bool controlled = false;
-            for (const auto& map : source->mControllerMap) controlled |= map.contains(name);
-            if (!controlled) return {};
             auto local = Nif::NiTransform::getIdentity();
             if (node->mScale != 0) local = node->getControllerTransform();
             else
