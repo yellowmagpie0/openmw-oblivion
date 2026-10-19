@@ -1,0 +1,390 @@
+{
+  "status": "Reaction Start/End decoding and slot decision implemented and verified; live owned playback/recovery and full M15S4 remain incomplete",
+  "implemented": [
+    "reactionKeyTimes consumes native subtype0/1 Start/End in authored order through the existing native key decoder.",
+    "advanceReactionSlot preserves active Start progress and requests retirement at or after End. Start comparison is strict. These checks are independent and may both succeed in one update.",
+    "Three component regression tests cover immutable original expectations, key order and malformed supported-domain inputs."
+  ],
+  "native_instruction_observations": 1872,
+  "code_state": {
+    "head": "f1480527aa64155ae37900bead79d2eb7182945c",
+    "source_fingerprint": "21c5a7c68e632239df4cd227f243d0f2d0a3e6c3cd1fddeb001bb05c209d085c"
+  },
+  "tested_source_sha256": {
+    "components/esm4/physicalcombat.cpp": "8c3c5f5d4cbf8ff31a9f2fcefe34080bf489b2c256d215337b3b16ea521f06f7",
+    "components/esm4/physicalcombat.hpp": "91531ecf452788b1f5db2a0e20e78b71ac4c7f57afd745386c9d58f03c3b66c3",
+    "apps/components_tests/esm4/physicalcombat.cpp": "fbb76002f285ee26964bee260aa0ccec143d03d37abac899a5c2d82e16aec76f"
+  },
+  "build_checks": {
+    "report": "build/oblivion-compat/m15/S4/native-reaction-slot-checks-01/verification.json",
+    "report_sha256": "1e6ef162c7a020d7f6b4903da39858cacb9334a4bcffba428a70ea6a3cf81a8a",
+    "results": {
+      "components": {
+        "executed": 2941,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5f5810dc04f5e7ab5a5b6c265cce988e9f1278a357e20fd7a974a087adb3018d",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "66b6bc0d788da273d41de6d1ba06d5c18392d7c5609dff9614a6af16bed4f1fd",
+        "inventory_sha256": "80b453c317b42dd4d54532e12a0b6fee08840b6ceac8d33dec953df6d29872af",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 794,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "67ae3cf406a00b8df36eacb0e243777e5d62bf4e95f42a246b4a245f10120d4e",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "ae21d98ee58a674431e97d71445480686a588f7a969de3ff28010ea0b101c2e9",
+        "inventory_sha256": "d63b58af71cc75826956152a7bbab8300e84cf644e816329cae91a9f24e98b64",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_unchanged_during_checks": true,
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "scope": "Full normal component inventory; selected ESM4* component suites under ASan/UBSan. No engine/application rebuild or new runtime course for this timing-layer checkpoint."
+  },
+  "production_comparison": {
+    "passed": true,
+    "cases": 384,
+    "slot_cases": 264,
+    "lexical_key_cases": 120,
+    "scope": "Production advanceReactionSlot compared against every state1 row in independent528-row native corpus; production reactionKeyTimes compared against120 single-line native lexical observations. State2 caller guards and multi-line parsing are not this standalone comparison.",
+    "program": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/compare.cpp",
+    "program_sha256": "0e6c2f66215f9f8cc5f7fa038b058134902f425c4490de590a91e053b105c67b",
+    "binary_sha256": "85b27d2741c306a46cd5ecac91c3a858fda0ee9bc13e174a7a0623b5d36f07d9",
+    "expected_input_sha256": "59d0b251817696e49a37c523d5ab0c02c4915f0b36071f1b332facebdd9273eb",
+    "native_slot_corpus_sha256": "65bc2dada43a6fd826f5d3ece6bf1c3f37d2f53f85441edd8f8e891b9743917d",
+    "native_key_report_sha256": "8381c8525888be7b5ea8338a0721b3e11f12cc49c9548de168fa6043265b4e5d",
+    "source_sha256": {
+      "components/esm4/physicalcombat.cpp": "8c3c5f5d4cbf8ff31a9f2fcefe34080bf489b2c256d215337b3b16ea521f06f7",
+      "components/esm4/physicalcombat.hpp": "91531ecf452788b1f5db2a0e20e78b71ac4c7f57afd745386c9d58f03c3b66c3"
+    },
+    "build_arguments": [
+      "c++",
+      "-std=c++20",
+      "-O2",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-I.",
+      "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/compare.cpp",
+      "components/esm4/physicalcombat.cpp",
+      "-Wl,--gc-sections",
+      "-o",
+      "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/compare"
+    ],
+    "exit_code": 0,
+    "output": "384 independently expected slot/key observations match",
+    "full_runtime_reaction_acceptance": false
+  },
+  "native_probes": [
+    {
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-slot-probe-03.py",
+      "script_sha256": "e541e33db8e2d336645f39f55f44dfd04d17da82ec81e830a65fad5555ff6abd",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-slot-verification.json",
+      "report_sha256": "9973edb01ac02bb9074a5b8460b367c800871d0253e920cb4fb9ac17ce290619",
+      "summary": {
+        "passed": true,
+        "cases": 528,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "65bc2dada43a6fd826f5d3ece6bf1c3f37d2f53f85441edd8f8e891b9743917d",
+        "actual_paths": [
+          "Frame clock prefix476F95",
+          "Actual slot group decoding/subtype jump, clamp branch477414..4774BD",
+          "Actual group key reader51AE20"
+        ],
+        "boundaries": [
+          "Select one slot at476FA6, stop at4774BD before remaining slots and manager update.",
+          "Supply clamp-cycle sequence, Start0/End1 keys, no queued replacement, freeze mode-1, zero duration and listed clock/offset/state fixtures.",
+          "Capture4733A0 deactivation request; actual blend retirement/manager/process-action recovery not executed."
+        ],
+        "observation": "For sequence state1, update Start slot0->1 strictly after Start, then independently request retirement at or after End in the same update. Equality at Start does not cross, while equality at End requests retirement. State2 skips both. Slot phase never becomes2: retirement is a separate request. BlockHit/Recoil use slot3; Stagger uses slot0.",
+        "full_runtime_reaction_acceptance": false
+      }
+    },
+    {
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-key-probe.py",
+      "script_sha256": "5b00765599071451910a27fefef75ddeaf114d3e3b7c5bbf8f38dcca0cf6dec8",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-key-verification.json",
+      "report_sha256": "8381c8525888be7b5ea8338a0721b3e11f12cc49c9548de168fa6043265b4e5d",
+      "summary": {
+        "passed": true,
+        "observations": 128,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "scope": "Reaction subtype0 lexical observations, no production comparison. Original51B87C\u219251B95A/51B9B1 key matching/time storage, including full9864D9 case-insensitive prefix compare and original subtype/key-name tables. Supplied existing allocated TESAnimGroup count2/array and raw key/time inputs from stock audit; allocation, KF parsing, sequence advancement, suffix-side semantics and gameplay remain outside probe. Reaction subtype0 count2 consumes Start/End; no Hit or a: slot."
+      }
+    },
+    {
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-process-recovery-probe-05.py",
+      "script_sha256": "35f3006afb029e288f78bd455a916adcc31689b2d9a44984204df1a8ab65972e",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-process-recovery-verification.json",
+      "report_sha256": "4989ca7197f0c57213d821f45e3aa3abba68272553651227657fca7a1a957894",
+      "summary": {
+        "passed": true,
+        "cases": 160,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "98de3e18094c68ba151b254b44f56faf5bc53917318d14e36b712b0945f8dc5a",
+        "actual_paths": [
+          "5FCBB5 action/sequence admission through5FD7DE",
+          "Actual High action and sequence readers",
+          "Full5EFFD0 and High writer628220",
+          "Actual470720/4706E0 cached BlockIdle readers and51AA00 group decoding"
+        ],
+        "boundaries": [
+          "Supplied actor/High process, action/sequence pointer/state, animation channel1/BlockIdle sequence.",
+          "Reset channel1 and animation getter boundaries supplied. Actions -1/6/7/8 only; active attack/bow processing excluded.",
+          "Enter after full actor update eligibility prefix; stop before remaining actor update. No clock or blend manager executed."
+        ],
+        "observation": "Action7/8 survives sequence states1/2/3/4; missing or inactive0 sequence resets to action-1/null. Expired action6 uses channel1 BlockIdle group27 sequence when present, otherwise resets-1/null and channel1. Action-1 bypasses this reset.",
+        "full_runtime_reaction_acceptance": false
+      }
+    },
+    {
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-retirement-probe-03.py",
+      "script_sha256": "4d637dbb69818aaff98a331c64807b56b245254af5471d360c629afa585d87f3",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-retirement-verification.json",
+      "report_sha256": "ae56b7912f0f8f6815b38d9b8454effec3cbd3e7fb94ae6a793a0a06ab8a08de",
+      "summary": {
+        "passed": true,
+        "cases": 192,
+        "updates": 624,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "e3da57848e33d5d174b986c3497ca1b2cc252a0ee4d6d89061717f5af77a0d71",
+        "executed_calls": [
+          "0x6c5fc0",
+          "0x6c6a50",
+          "0x6c6ac0",
+          "0x6c6dc0",
+          "0x6c9ba0",
+          "0x6c9cb0",
+          "0x6ca950",
+          "0x73a5e0"
+        ],
+        "actual_paths": [
+          "Full6C9BA0 activation and6C9CB0 deactivation",
+          "Full6CA950 update with actual time conversion/empty-controller attachment, application and detach",
+          "No game function stubs; passive entry recording only"
+        ],
+        "boundaries": [
+          "Supplied clamp metadata/clock and preallocated manager array with empty controller set; null synchronization.",
+          "Does not execute actor animation-slot stop, blend-duration selection, renderer, input, contact or process-action recovery."
+        ],
+        "observation": "Positive deactivation duration sets sequence state3, resets ease-start sentinel and stores relative duration in ease-end. First following update sets absolute retirement start/end from its clock. State3 remains before end and becomes0 exactly at end. Zero or negative duration immediately sets0. Prior active/easing state and supplied frequency/begin do not change those state transitions.",
+        "full_runtime_reaction_acceptance": false
+      }
+    },
+    {
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-retirement-duration-probe.py",
+      "script_sha256": "30f6be7ecd334a4c5389e5e9db75bb24989741cf6dc0638c5b558d001a26e140",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-retirement-duration-verification.json",
+      "report_sha256": "ed8ad534233d737cc951ee66d790ab8296eba8776d690042108345c20c4787b3",
+      "summary": {
+        "passed": true,
+        "cases": 864,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "edcacee55cc8469bd00edc8cf7fa4b0ae8a8da3ac65552c5a3483031d8147ef1",
+        "actual_paths": [
+          "Full4733A0 retirement duration selection and float stores/division"
+        ],
+        "boundaries": [
+          "Supplied animation-slot sequence/group metadata and globalsB06538/B06530; no live settings or winning-record claim.",
+          "Capture470FC0 reset request; no actual sequence deactivation, manager, rendering or process-action change."
+        ],
+        "observation": "Absent sequence or animation byteC4 nonzero requests duration+0. Otherwise rawBlend byte0 uses default; nonzero byte is SIGN-EXTENDED then divided by30, storedfloat, divided by timeScale and storedfloat. Bytes128/255 produce negative retirement durations, unlike the unsigned activation Blend calculation.",
+        "full_runtime_reaction_acceptance": false
+      }
+    }
+  ],
+  "editable_case_manifests": {
+    "slot": {
+      "base_group": [
+        28,
+        30,
+        31
+      ],
+      "sequence_state": [
+        1,
+        2
+      ],
+      "started": [
+        false,
+        true
+      ],
+      "clock": [
+        0,
+        1000
+      ],
+      "offset": [
+        -1,
+        "-0",
+        "+0",
+        "binary32bits1",
+        0.5,
+        "binary32bits0x3f7fffff",
+        1,
+        "binary32bits0x3f800001",
+        2,
+        -1000,
+        -999
+      ],
+      "cw": [
+        "0x27f",
+        "0x37f"
+      ],
+      "start_key": 0,
+      "end_key": 1,
+      "cycle": 2,
+      "queued_group": 255,
+      "duration": 0,
+      "freeze": -1
+    },
+    "recovery": {
+      "action": [
+        -1,
+        6,
+        7,
+        8
+      ],
+      "sequence_present": [
+        false,
+        true
+      ],
+      "sequence_state": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "block_idle": [
+        false,
+        true
+      ],
+      "cw": [
+        "0x27f",
+        "0x37f"
+      ]
+    },
+    "retirement": {
+      "origin": [
+        0,
+        1000
+      ],
+      "initial_ease": [
+        0,
+        0.05
+      ],
+      "frequency": [
+        0.7,
+        1,
+        2
+      ],
+      "begin": [
+        0,
+        10
+      ],
+      "duration": [
+        -0.1,
+        0,
+        0.01,
+        0.1
+      ],
+      "cw": [
+        "0x27f",
+        "0x37f"
+      ],
+      "clock_samples": "first post-deactivation clock; immediately below, exactly at and immediately above stored binary32 retirement end, deduplicated and sorted"
+    },
+    "retirement_duration": {
+      "slot": [
+        0,
+        3
+      ],
+      "sequence_present": [
+        false,
+        true
+      ],
+      "bypass": [
+        false,
+        true
+      ],
+      "raw_blend_byte": [
+        0,
+        1,
+        2,
+        127,
+        128,
+        255
+      ],
+      "default_duration": [
+        0,
+        0.2,
+        1
+      ],
+      "time_scale": [
+        0.5,
+        1,
+        2
+      ],
+      "cw": [
+        "0x27f",
+        "0x37f"
+      ]
+    }
+  },
+  "retained_failures": [
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-slot-probe.py",
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-slot-probe-02.py"
+      ],
+      "reason": "An initial static reading inferred strict End. Actual equality at End requests retirement; corrected03 passes and production uses inclusive End."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-process-recovery-probe.py",
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-process-recovery-probe-02.py",
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-process-recovery-probe-03.py"
+      ],
+      "reason": "01 omitted caller-live ECX at midfunction entry.02/03 then entered active action2 attack processing without attack metadata. Accepted recovery domain is actions-1/6/7/8.04 passes with valid BlockIdle metadata;05 corrects the copied scope sentence. Active attack processing remains outside that probe."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-retirement-probe-02.py"
+      ],
+      "reason": "Added negative-duration control correctly became inactive, then failed a copied metadata assertion intended for positive retirement.03 limits the retirement-metadata assertion to positive duration; zero/negative immediate deactivation and 192 contexts/624 updates pass."
+    }
+  ],
+  "remaining_integration": [
+    "Use the new decision only for active clamp subtype0/1 slots without a queued replacement; caller retains easing/freeze guards. BlockAttack uses its separate attack subtype6 protocol.",
+    "Prepare and commit owned reaction metadata, action cancellation, resources/RNG and sound together. Persist animation activation, progress and retirement across save/quit/restart.",
+    "Implement the verified blend retirement contract: byte21 is signed for retirement, unlike unsigned activation Blend. Positive duration keeps state3 until absolute end; zero or negative duration deactivates immediately.",
+    "Recoil/Stagger action7/8 remains until its actual sequence is inactive0, not merely until End or the slot reset request. Expired action6 can retain channel1 BlockIdle.",
+    "Complete normal-input visual/audio recovery and in-action fresh-process courses in both profiles, required views/controls/FPS and every remaining S4 audit requirement."
+  ],
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false,
+  "loader_dependency_sha256": {
+    "build/oblivion-compat/m15/S2/oracle-emulator/fatigue-regeneration.py": "cb999c051b5132223666f38a713db69453af121f42a4fc72c0712b04bef88b53",
+    "build/oblivion-compat/m15/S2/oracle-emulator/detection.py": "771924a2a52376a9bf0bf401c1cd653ff234e79cf950c50206672b60166be62b"
+  }
+}

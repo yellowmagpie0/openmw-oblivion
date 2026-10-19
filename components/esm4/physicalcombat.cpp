@@ -359,6 +359,11 @@ namespace ESM4
         return meleeKeyTimes(textKeys, std::array<std::string_view, 3>{"start", "hit", "end"});
     }
 
+    ReactionKeys reactionKeyTimes(std::span<const MeleeTextKey> textKeys)
+    {
+        return meleeKeyTimes(textKeys, std::array<std::string_view, 2>{"start", "end"});
+    }
+
     std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys)
     {
         for (const auto& key : textKeys)
@@ -460,6 +465,19 @@ namespace ESM4
         float sequenceOffset, float animationClock, const std::array<float, 3>& keyTimes)
     {
         return advanceMeleePhase(phase, sequenceOffset, animationClock, keyTimes);
+    }
+
+    ReactionSlotProgress advanceReactionSlot(bool started, float sequenceOffset,
+        float animationClock, const std::array<float, 2>& keyTimes)
+    {
+        finite(sequenceOffset);
+        finite(animationClock);
+        for (float time : keyTimes)
+            nonnegative(time);
+        if (!std::is_sorted(keyTimes.begin(), keyTimes.end()))
+            throw std::invalid_argument("unordered native reaction keys");
+        const float groupTime = rounded(double(sequenceOffset) + animationClock);
+        return {started || groupTime > keyTimes[0], groupTime >= keyTimes[1]};
     }
 
     float advanceMeleeAnimationClock(float animationClock, float frameDuration)

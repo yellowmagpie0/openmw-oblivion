@@ -79,6 +79,32 @@ later contact-tail reaction routing in the inspected caller. Keep the existing
 ReactionOnly and Expert/Master guards until the complete action, input,
 resource/RNG, audio and saved-sequence consequences are implemented together.
 
+The [reaction-slot timing checkpoint](M15-REACTION-SLOT-VERIFICATION.json)
+implements native subtype0/1 Start/End decoding and the active clamp slot's
+completion decision. Start is strict; End is **inclusive**, unlike ordinary
+attack phase advancement. Both decisions can occur in one update. Execution
+invalidated an initial static reading that treated End as strict; the retained
+failed harnesses are not accepted evidence. The production comparison matches
+384 independent slot/key observations, and the component regression tests keep
+44 immutable active-slot expectations from the original instruction corpus.
+
+Both component profiles pass at tested source fingerprint
+`21c5a7c68e632239df4cd227f243d0f2d0a3e6c3cd1fddeb001bb05c209d085c`:
+2,941 normal tests and all 794 selected `ESM4*` tests under ASan/UBSan, with
+exact inventory agreement and no failures/skips. Leak checking is disabled.
+This checkpoint does not rebuild or exercise the engine application.
+
+The accompanying original-instruction probes establish the remaining recovery
+contract. Reaching End requests slot deactivation through the blend path; it
+does not itself mean sequence state0. Positive retirement duration enters
+state3 and anchors its interval on the first following sequence update, then
+becomes inactive at end equality. Recoil/Stagger process action7/8 remains
+through active and retiring states and resets when the sequence is missing or
+inactive. Expired action6 can instead retain the channel1 BlockIdle sequence.
+Retirement interprets a nonzero Blend byte as **signed**, unlike the existing
+unsigned activation duration. Live playback ownership, the complete retirement
+implementation and its saved-state/input/controller integration remain open.
+
 The same 49 selected cases pass under ASan/UBSan in
 `S4/current-melee-engine-sanitized-01`, with exact inventory agreement and zero
 failures/skips. ASan leak checking is disabled; UBSan halts on errors. Source

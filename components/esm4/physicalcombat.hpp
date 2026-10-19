@@ -93,11 +93,14 @@ namespace ESM4
     };
     using OrdinaryMeleeKeys = MeleeKeys<4>;
     using PowerMeleeKeys = MeleeKeys<3>;
+    using ReactionKeys = MeleeKeys<2>;
     // Original51B688: consume Start/Hit/a:/End in authored order, rather
     // than collecting independently named keys or sorting a renderer map.
     // Missing/unwritten slots retain the original zero initialization.
     OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
     PowerMeleeKeys powerMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
+    // Native subtype0/1 slots consume Start/End without an attack Hit key.
+    ReactionKeys reactionKeyTimes(std::span<const MeleeTextKey> textKeys);
     // Original raw Blend: decimal parsing stores the low byte; last match wins.
     // Integer overflow and malformed leading CR without LF are unsupported.
     std::uint8_t meleeBlendFrames(std::span<const MeleeTextKey> textKeys);
@@ -112,6 +115,19 @@ namespace ESM4
         float sequenceOffset, float animationClock, const std::array<float, 4>& keyTimes);
     PowerMeleePhase advancePowerMeleePhase(PowerMeleePhase phase,
         float sequenceOffset, float animationClock, const std::array<float, 3>& keyTimes);
+    struct ReactionSlotProgress
+    {
+        bool mStarted;
+        bool mRetire;
+        friend bool operator==(const ReactionSlotProgress&, const ReactionSlotProgress&) = default;
+    };
+    // Original477414..4774BD: an active, clamp-cycle subtype0/1 slot
+    // (BlockHit/Recoil/Stagger), with no queued replacement. Start is strict;
+    // End is inclusive and can retire on the same update that crosses Start.
+    // The caller owns the state1/easing/freeze guards, blend deactivation and
+    // process-action recovery. mRetire is a request, not an inactive sequence.
+    ReactionSlotProgress advanceReactionSlot(bool started, float sequenceOffset,
+        float animationClock, const std::array<float, 2>& keyTimes);
     float advanceMeleeAnimationClock(float animationClock, float frameDuration);
     // The caller has resolved a newly activated sequence's sentinel offset.
     // Original6CA950 initializes it from the current native animation clock.

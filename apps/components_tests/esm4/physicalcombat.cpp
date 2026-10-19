@@ -5423,3 +5423,101 @@ TEST(ESM4PhysicalTimer, ConnectedPauseCycleRetainsOriginalResumedIntervalAndCoun
         for (unsigned i = 0; i < actual.size(); ++i) EXPECT_EQ(actual[i], row[i + 2]);
     }
 }
+
+TEST(ESM4PhysicalCombat, ReactionSlotUsesIndependentNativeStartAndInclusiveEndComparisons)
+{
+    // Original-instruction corpus65bc2dada43a6fd826f5d3ece6bf1c3f37d2f53f85441edd8f8e891b9743917d.
+    // Actual477414..4774BD with Start0/End1 and no queued replacement.
+    struct Case { std::uint32_t mClock, mOffset; bool mStarted, mNextStarted, mRetire; };
+    constexpr Case cases[] = {
+        {0x00000000u, 0xbf800000u, false, false, false},
+        {0x00000000u, 0x80000000u, false, false, false},
+        {0x00000000u, 0x00000000u, false, false, false},
+        {0x00000000u, 0x00000001u, false, true, false},
+        {0x00000000u, 0x3f000000u, false, true, false},
+        {0x00000000u, 0x3f7fffffu, false, true, false},
+        {0x00000000u, 0x3f800000u, false, true, true},
+        {0x00000000u, 0x3f800001u, false, true, true},
+        {0x00000000u, 0x40000000u, false, true, true},
+        {0x00000000u, 0xc47a0000u, false, false, false},
+        {0x00000000u, 0xc479c000u, false, false, false},
+        {0x447a0000u, 0xbf800000u, false, true, true},
+        {0x447a0000u, 0x80000000u, false, true, true},
+        {0x447a0000u, 0x00000000u, false, true, true},
+        {0x447a0000u, 0x00000001u, false, true, true},
+        {0x447a0000u, 0x3f000000u, false, true, true},
+        {0x447a0000u, 0x3f7fffffu, false, true, true},
+        {0x447a0000u, 0x3f800000u, false, true, true},
+        {0x447a0000u, 0x3f800001u, false, true, true},
+        {0x447a0000u, 0x40000000u, false, true, true},
+        {0x447a0000u, 0xc47a0000u, false, false, false},
+        {0x447a0000u, 0xc479c000u, false, true, true},
+        {0x00000000u, 0xbf800000u, true, true, false},
+        {0x00000000u, 0x80000000u, true, true, false},
+        {0x00000000u, 0x00000000u, true, true, false},
+        {0x00000000u, 0x00000001u, true, true, false},
+        {0x00000000u, 0x3f000000u, true, true, false},
+        {0x00000000u, 0x3f7fffffu, true, true, false},
+        {0x00000000u, 0x3f800000u, true, true, true},
+        {0x00000000u, 0x3f800001u, true, true, true},
+        {0x00000000u, 0x40000000u, true, true, true},
+        {0x00000000u, 0xc47a0000u, true, true, false},
+        {0x00000000u, 0xc479c000u, true, true, false},
+        {0x447a0000u, 0xbf800000u, true, true, true},
+        {0x447a0000u, 0x80000000u, true, true, true},
+        {0x447a0000u, 0x00000000u, true, true, true},
+        {0x447a0000u, 0x00000001u, true, true, true},
+        {0x447a0000u, 0x3f000000u, true, true, true},
+        {0x447a0000u, 0x3f7fffffu, true, true, true},
+        {0x447a0000u, 0x3f800000u, true, true, true},
+        {0x447a0000u, 0x3f800001u, true, true, true},
+        {0x447a0000u, 0x40000000u, true, true, true},
+        {0x447a0000u, 0xc47a0000u, true, true, false},
+        {0x447a0000u, 0xc479c000u, true, true, true},
+    };
+    for (const auto& c : cases)
+    {
+        SCOPED_TRACE(::testing::Message() << c.mClock << "/" << c.mOffset << "/" << c.mStarted);
+        const auto result = ESM4::advanceReactionSlot(c.mStarted, std::bit_cast<float>(c.mOffset),
+            std::bit_cast<float>(c.mClock), {0, 1});
+        EXPECT_EQ(result.mStarted, c.mNextStarted);
+        EXPECT_EQ(result.mRetire, c.mRetire);
+    }
+    // Start and End may coincide. End equality can retire without crossing
+    // Start, unlike the one-phase-per-update ordinary attack protocol.
+    EXPECT_EQ(ESM4::advanceReactionSlot(false, 0, 0, {0, 0}), (ESM4::ReactionSlotProgress{false, true}));
+    // Compare the stored binary32 sum: the exact sum is below1 but rounds to1.
+    EXPECT_EQ(ESM4::advanceReactionSlot(false, -0x1p-25f, 1, {0, 1}),
+        (ESM4::ReactionSlotProgress{true, true}));
+}
+
+TEST(ESM4PhysicalCombat, ReactionKeysConsumeStartEndInAuthoredOrder)
+{
+    const std::array<ESM4::MeleeTextKey, 5> keys{{
+        {.1f, "End"}, {.25f, "sTaRt extra"}, {.5f, "Hit"}, {.6f, "a:R"}, {1.f, "EnD extra"}}};
+    EXPECT_EQ(ESM4::reactionKeyTimes(keys), (ESM4::ReactionKeys{{.25f, 1.f}, 2}));
+    const std::array<ESM4::MeleeTextKey, 1> combined{{{.5f, "Start\r\nEnd"}}};
+    EXPECT_EQ(ESM4::reactionKeyTimes(combined), (ESM4::ReactionKeys{{.5f, .5f}, 2}));
+    const std::array<ESM4::MeleeTextKey, 3> unwritten{{{-1.f, "start"}, {.5f, "end"}, {1.f, "end"}}};
+    EXPECT_EQ(ESM4::reactionKeyTimes(unwritten), (ESM4::ReactionKeys{{0, .5f}, 2}));
+    EXPECT_EQ(ESM4::reactionKeyTimes({}), ESM4::ReactionKeys{});
+}
+
+TEST(ESM4PhysicalCombat, ReactionSlotRejectsMalformedSupportedDomainWithoutMutatingKeys)
+{
+    const std::array<float, 2> keys{0, 1};
+    EXPECT_THROW(ESM4::advanceReactionSlot(false, 0, 0, {1, 0}), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceReactionSlot(false, 0, 0, {-1, 1}), std::invalid_argument);
+    for (float bad : {std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::advanceReactionSlot(false, bad, 0, keys), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceReactionSlot(false, 0, bad, keys), std::invalid_argument);
+        EXPECT_THROW(ESM4::advanceReactionSlot(true, 0, 0, {0, bad}), std::invalid_argument);
+        const std::array<ESM4::MeleeTextKey, 1> malformed{{{bad, "start"}}};
+        EXPECT_THROW(ESM4::reactionKeyTimes(malformed), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::advanceReactionSlot(true, std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(), keys), std::invalid_argument);
+    EXPECT_EQ(keys, (std::array<float, 2>{0, 1}));
+}
